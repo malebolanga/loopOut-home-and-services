@@ -1,0 +1,180 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import PrivateRoute from "./components/PrivateRoute";
+
+// Core Pages
+import Home from "./pages/Home";
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
+import Profile from "./pages/Profile";
+import Search from "./pages/Search";
+import Message from "./pages/Message";
+
+// Listing Related Pages
+import CreateListing from "./pages/CreateListing";
+import UpdateListing from "./pages/UpdateListing";
+import Listing from "./pages/Listing";
+import List from "./pages/List";
+import MyListing from "./pages/MyListing";
+import ListingsPage from "./pages/ListingsPage";
+import ForSale from "./pages/ForSale";
+import ForRent from "./pages/ForRent";
+import OverNight from "./pages/OverNight";
+import Commercial from "./pages/Commercial";
+import HelperList from "./pages/HelperList";
+import HelpersHomePage from './pages/HelpersHomePage';
+import EventsHomePage from './pages/EventsHomePage';
+import ListingsHomePage from './pages/ListingsHomePage';
+import ServicesHomePage from './pages/ServicesHomePage';
+
+// Service Pages
+import Services from './pages/Services';
+import HelperPage from './pages/HelperPage';
+import EventPage from './pages/EventPage';
+import PrivateTutor from './pages/PrivateTutor';
+import UpdateHelper from './pages/UpdateHelper';
+
+// AI & Content Pages
+import Ai from "./pages/Ai";
+import Content from "./pages/Content";
+import ArticlePages from './pages/ArticlePages';
+import AIHelpCenter from './pages/AIHelpCenter';
+
+// Informational Pages
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Become from "./pages/Become";
+import Adiver from "./pages/Adiver";
+import LifestyleDecor from "./pages/LifestyleDecor";
+import Users from './pages/Users';
+import UserListings from './pages/UserListings';
+
+// Payment & Promotion
+import PromotionSelection from './pages/PromotionSelection';
+import PaymentMethod from './pages/PaymentMethod';
+import Sale from "./pages/Sale";
+
+// Help & Resources
+import Newsroom from "./components/Newsroom";
+import HowItWorks from './components/HowItWorks';
+import Investors from './components/Investors';
+import DiversityPage from './components/DiversityPage';
+import HostingResources from './components/HostingResources';
+import HostYourHome from './components/HostYourHome';
+import HostExperience from './components/HostExperience';
+import ResponsibleHosting from './components/ResponsibleHosting';
+import CommunityCenter from './components/CommunityCenter';
+import TrustAndSafety from './components/TrustAndSafety';
+import SiteMap from './components/SiteMap';
+import CookiePolicy from './components/CookiePolicy';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsOfService from './components/TermsOfService';
+import LoginRequiredPage from './components/LoginRequiredPage';
+
+// User Features
+
+import Wishlist from './pages/WishList';
+import Events from './pages/Events';
+import Private from "./pages/Private";
+
+// ADD THIS IMPORT FOR THE NEW COMPONENT
+import TripSearch from './pages/TripSearch';  // Make sure this path is correct
+import TripDetail from './pages/TripDetail';
+import Trips from './pages/Trips';
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Header />
+      <Routes>
+        {/* Core Routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/sign-in" element={<SignIn />} />
+        <Route path="/sign-up" element={<SignUp />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/message" element={<Message />} />
+        
+        {/* Listing Routes */}
+        <Route path="/list" element={<List />} />
+        <Route path="/listings/:type" element={<ListingsPage />} />
+        <Route path="/for-rent" element={<ForRent />} />
+        <Route path="/for-sale" element={<ForSale />} />
+        <Route path="/helper-list" element={<HelperList />} />
+        <Route path="/commercial" element={<Commercial />} />
+        <Route path="/overnight" element={<OverNight />} />
+        <Route path="/overnight" element={<OverNight />} />
+        <Route path="/listing/:listingId" element={<Listing />} />
+        <Route path="/helper-home-page" element={<HelpersHomePage />} />
+        <Route path="/event-home-page" element={<EventsHomePage />} />
+        <Route path="/listing-home-page" element={<ListingsHomePage />} />
+         <Route path="/service-home-page" element={<ServicesHomePage />} />
+        {/* Trip Routes - ADDED NEW SECTION */}
+        <Route path="/trips" element={<Trips />} />
+        <Route path="/trip/:id" element={<TripDetail />} />
+        <Route path="/plan-trip" element={<TripSearch />} />  {/* New trip search route */}
+        
+        {/* Service Routes */}
+        <Route path="/helper/:id" element={<HelperPage />} />
+        <Route path="/event/:id" element={<EventPage />} />
+        <Route path="/privatetutor/:privatetutorId" element={<PrivateTutor />} />
+        <Route path="/service/:serviceId" element={<Services />} />
+        <Route path="/update-helper/:helperId" element={<UpdateHelper />} />
+        
+        {/* User Routes */}
+        <Route path="/:userId/list" element={<MyListing />} />
+        <Route path="/:userId/wishlist" element={<Wishlist />} />
+        <Route path="/users" element={<Users />} />
+        <Route path="/:userId/listings" element={<UserListings />} />
+        <Route path="/events/:id" element={<Events />} />
+        
+        {/* Content & AI Routes */}
+        <Route path="/ai" element={<Ai />} />
+        <Route path="/content" element={<Content />} />
+        <Route path="/first-time-buyers" element={<ArticlePages />} />
+        <Route path="/help-center" element={<AIHelpCenter />} />
+        
+        {/* Informational Routes */}
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/become" element={<Become />} />
+        <Route path="/adiver" element={<Adiver />} />
+        <Route path="/lifestyle-decor" element={<LifestyleDecor />} />
+        
+        {/* Payment & Promotion */}
+        <Route path="/promote" element={<PromotionSelection />} />
+        <Route path="/payment" element={<PaymentMethod />} />
+        
+        {/* Help & Resources */}
+        <Route path="/sitemap" element={<SiteMap />} />
+        <Route path="/login-required" element={<LoginRequiredPage />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/cookies" element={<CookiePolicy />} />
+        <Route path="/investors" element={<Investors />} />
+        <Route path="/trust" element={<TrustAndSafety />} />
+        <Route path="/community" element={<CommunityCenter />} />
+        <Route path="/responsible" element={<ResponsibleHosting />} />
+        <Route path="/host-experience" element={<HostExperience />} />
+        <Route path="/host" element={<HostYourHome />} />
+        <Route path="/hosting-resources" element={<HostingResources />} />
+        <Route path="/diversity-belonging" element={<DiversityPage />} />
+        <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/newsroom" element={<Newsroom />} />
+        <Route path='/listings/user/:id' element={<UserListings />} />
+        
+        {/* Private Routes */}
+        <Route element={<PrivateRoute />}>
+          <Route path="/sale" element={<Sale />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/:userId/create-listing" element={<CreateListing />} />
+          <Route path="/update-listing/:listingId" element={<UpdateListing />} />
+        </Route>
+        
+        {/* Additional Routes */}
+        <Route path="/private" element={<Private />} />
+      </Routes>
+      <Footer />
+    </BrowserRouter>
+  );
+}

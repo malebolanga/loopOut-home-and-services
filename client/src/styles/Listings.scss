@@ -1,0 +1,141 @@
+@import "./variables.scss";
+@import "./breakpoints.scss";
+
+.category-list {
+  padding: 50px 80px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 60px;
+
+  @include sm {
+    padding: 50px 20px;
+  }
+
+  .category {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: $darkgrey;
+    cursor: pointer;
+
+    &_icon {
+      font-size: 30px;
+    }
+
+    p {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    &:hover {
+      color: $pinkred;
+    }
+  }
+
+  .selected {
+    color: $pinkred;
+  }
+}
+
+.listings {
+  padding: 0 60px 120px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+
+  @include lg {
+    padding: 0 20px 120px;
+  }
+}
+
+.homepage {
+  display: flex;
+}
+
+.side-slide {
+  width: 20%;
+  background: #f9f9f9;
+  padding: 20px;
+  border-right: 1px solid #ddd;
+}
+
+.side-slide h3 {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+.icons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.icon-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-item img {
+  width: 30px;
+  height: 30px;
+}
+
+.content {
+  width: 80%;
+  padding: 20px;
+}
+
+.loupeout-section {
+  margin-top: 40px;
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 10px;
+}
+
+.loupeout-box {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.loupeout-box img {
+  width: 50%;
+  border-radius: 10px;
+}
+
+.loupeout-content {
+  width: 50%;
+}
+
+.loupeout-content h2 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.loupeout-content p {
+  font-size: 1rem;
+  color: #555;
+}
+.custom-calendar {
+  border: none;
+  font-family: 'Arial', sans-serif;
+}
+.custom-calendar {
+  width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 0.9rem;
+}
+.custom-calendar .react-calendar__tile {
+  background-color: #f9fafb;
+  color: #374151;
+  border-radius: 6px;
+}
+.custom-calendar .react-calendar__tile--active {
+  background-color: #6366f1;
+  color: white;
+  font-weight: bold;
+}

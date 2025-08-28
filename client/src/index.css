@@ -1,0 +1,21 @@
+/* src/index.css or src/App.css */
+
+/* Import Plus Jakarta Sans with various weights for flexibility */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Apply the font to the body (or your main app container) */
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  -webkit-font-smoothing: antialiased; /* Improves font rendering on macOS/iOS */
+  -moz-osx-font-smoothing: grayscale; /* Improves font rendering on macOS/iOS */
+}
+
+.hide-footer {
+  display: none;
+}
