@@ -391,7 +391,7 @@ export default function HelperPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center py-12 bg-white rounded-xl shadow-sm">
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">Helper not found</h2>
-          <p className="mt-2 text-gray-600">The helper you re looking for doesn t exist or may have been removed.</p>
+          <p className="mt-2 text-gray-600">The helper you re looking for doesn't exist or may have been removed.</p>
         </div>
       </div>
     );
@@ -491,7 +491,7 @@ export default function HelperPage() {
               </div>
               
               {/* Rating Widgets */}
-           <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100 w-full sm:w-auto">
+              <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100 w-full sm:w-auto">
                 <div className="flex flex-wrap items-center justify-center gap-4">
                   {/* Like/Dislike Widget */}
                   <div className="flex flex-col items-center">
@@ -547,17 +547,15 @@ export default function HelperPage() {
 
                   {/* User Reviews */}
                   <div className="text-center">
-                     <div className="flex items-center justify-center gap-1 text-gray-600 text-sm font-medium mb-1">
-                       <span className="text-lg">reviews</span>
-                     
-                     </div>
-                     <div className="flex items-end justify-center gap-1">
-                        <span className="text-2xl font-bold text-gray-900 leading-none">
-                         {commentCount} 
-                       </span>
-                      
-                     </div>
-                   </div>
+                    <div className="flex items-center justify-center gap-1 text-gray-600 text-sm font-medium mb-1">
+                      <span className="text-lg">reviews</span>
+                    </div>
+                    <div className="flex items-end justify-center gap-1">
+                      <span className="text-2xl font-bold text-gray-900 leading-none">
+                        {commentCount} 
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -572,7 +570,7 @@ export default function HelperPage() {
                   navigation={{ nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }}
                   thumbs={{ swiper: thumbsSwiper }}
                   zoom={true}
-                  className="h-64 w-100% sm:h-80 md:h-[450px] lg:h-[500px]"
+                  className="h-64 w-full sm:h-80 md:h-[450px] lg:h-[500px]"
                 >
                   {helper.imageUrls.map((img, index) => (
                     <SwiperSlide key={index}>
@@ -842,405 +840,394 @@ export default function HelperPage() {
           {/* Booking Card */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden lg:sticky lg:top-8">
             <div className="p-6 border-b border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Booking {helper.name}</h3>
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-gray-600 text-lg">Service Price:</span>
-                  <span className="text-3xl font-extrabold text-airbnb-red">R{helper.regularPrice}</span>
-                </div>
-                
-                {/* Show travel fee only for barbers when "Come to Me" is selected */}
-                {helper.type === 'barber' && 
-                  helper.travelFee && 
-                  bookingData.locationOption === 'comeToYou' && (
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-gray-600 text-lg">Travel Fee:</span>
-                    <span className="text-xl font-bold text-gray-700">R{helper.travelFee}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="p-6 space-y-5">
-              {/* Host information */}
-              <div className="flex items-center gap-3 text-gray-700">
-                <FaBandcamp className="text-airbnb-red text-xl" />
-                <span className="font-medium">Experience: {helper.host}</span>
-              </div>
-
-              {/* Contact Information */}
-              {helper.contact && (
-                <div className="flex items-center gap-3 text-gray-700">
-                  <FaPhone className="text-airbnb-red text-xl" />
-                  <span className="font-medium">Contact: {helper.contact}</span>
-                </div>
-              )}
-
-              {/* Availability Period */}
-              {helper.period && (
-                <div className="flex items-center gap-3 text-gray-700">
-                  <FaClock className="text-airbnb-red text-xl" />
-                  <span className="font-medium">Availability: {helper.period}</span>
-                </div>
-              )}
-
-              {/* Booking Form */}
-              <form onSubmit={handleBookingSubmit} className="pt-4 space-y-4">
-                {/* Name */}
+              <div className="flex justify-between items-start mb-4">
                 <div>
-                  <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-1">
+                  <h3 className="text-xl font-bold text-gray-900">R{helper.regularPrice}</h3>
+                  <p className="text-gray-600 text-sm">per {helper.type === 'tutor' ? 'hour' : 'service'}</p>
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <FaStar className="text-yellow-400 mr-1" />
+                  <span>{Number(aiRating.average).toFixed(1)}</span>
+                  <span className="mx-1">·</span>
+                  <span>{commentCount} reviews</span>
+                </div>
+              </div>
+
+              <form onSubmit={handleBookingSubmit} className="space-y-4">
+                {/* Name Field */}
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                     Your Name
                   </label>
                   <input
                     type="text"
-                    id="userName"
+                    id="name"
                     name="name"
                     value={bookingData.name}
                     onChange={handleBookingChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
                     required
-                    placeholder="John Doe"
+                    placeholder="Enter your full name"
                   />
                 </div>
 
-                {/* Phone */}
+                {/* Phone Field */}
                 <div>
-                  <label htmlFor="userPhone" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                     Phone Number
                   </label>
                   <input
                     type="tel"
-                    id="userPhone"
+                    id="phone"
                     name="phone"
                     value={bookingData.phone}
                     onChange={handleBookingChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
                     required
-                    placeholder="+27 12 345 6789"
+                    placeholder="Enter your phone number"
                   />
                 </div>
 
-                {/* NEW: Location Option */}
-                <div className="border-t border-gray-200 pt-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <FaMapMarkerAlt className="text-airbnb-red" />
-                    <label className="block text-sm font-medium text-gray-700">
+                {/* Date Field */}
+                <div>
+                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    id="date"
+                    name="date"
+                    value={bookingData.date}
+                    onChange={handleBookingChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                    required
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+
+                {/* Time Field */}
+                <div>
+                  <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-1">
+                    Time
+                  </label>
+                  <input
+                    type="time"
+                    id="time"
+                    name="time"
+                    value={bookingData.time}
+                    onChange={handleBookingChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                    required
+                  />
+                </div>
+
+                {/* Location Options */}
+                {(helper.type === 'barber' || helper.type === 'beauty') && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Service Location
                     </label>
-                  </div>
-                  <div className="space-y-3">
-                    <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-50">
-                      <input
-                        type="radio"
-                        name="locationOption"
-                        value="comeToYou"
-                        checked={bookingData.locationOption === 'comeToYou'}
-                        onChange={handleBookingChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                      />
-                      <div>
-                        <span className="font-medium text-gray-800">Come to Me</span>
-                        <p className="text-xs text-gray-500 mt-1">Helper comes to your location</p>
-                      </div>
-                    </label>
-
-                    {/* Only show Salon option for beauty and barber helpers */}
-                    {(helper.type === 'beauty' || helper.type === 'barber') && (
-                      <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-50">
+                    <div className="space-y-2">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="locationOption"
+                          value="comeToYou"
+                          checked={bookingData.locationOption === 'comeToYou'}
+                          onChange={handleBookingChange}
+                          className="mr-2 text-airbnb-red focus:ring-airbnb-red"
+                        />
+                        <span>Come to me</span>
+                        {helper.travelFee && (
+                          <span className="ml-2 text-sm text-gray-600">(Travel fee: R{helper.travelFee})</span>
+                        )}
+                      </label>
+                      <label className="flex items-center">
                         <input
                           type="radio"
                           name="locationOption"
                           value="goToSalon"
                           checked={bookingData.locationOption === 'goToSalon'}
                           onChange={handleBookingChange}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                          className="mr-2 text-airbnb-red focus:ring-airbnb-red"
                         />
-                        <div>
-                          <span className="font-medium text-gray-800">Go to Salon</span>
-                          <p className="text-xs text-gray-500 mt-1">You go to helpers salon</p>
-                        </div>
+                        <span>Ill go to salon</span>
                       </label>
-                    )}
-
-                    <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-50">
-                      <input
-                        type="radio"
-                        name="locationOption"
-                        value="helperPlace"
-                        checked={bookingData.locationOption === 'helperPlace'}
-                        onChange={handleBookingChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                      />
-                      <div>
-                        <span className="font-medium text-gray-800">Helpers Place</span>
-                        <p className="text-xs text-gray-500 mt-1">You go to helpers location</p>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-
-                {/* Conditionally render address field */}
-                {bookingData.locationOption === 'comeToYou' && (
-                  <div>
-                    <label htmlFor="userAddress" className="block text-sm font-medium text-gray-700 mb-1">
-                      Your Address
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        id="userAddress"
-                        name="address"
-                        value={bookingData.address}
-                        onChange={handleBookingChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                        placeholder="123 Main St, City"
-                        required
-                      />
-                      <FaMapMarkerAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="locationOption"
+                          value="helperPlace"
+                          checked={bookingData.locationOption === 'helperPlace'}
+                          onChange={handleBookingChange}
+                          className="mr-2 text-airbnb-red focus:ring-airbnb-red"
+                        />
+                        <span>Helpers place</span>
+                      </label>
                     </div>
-
-                    {/* Map preview link */}
-                    {bookingData.address && (
-                      <div className="mt-2 text-right">
-                        <a
-                          href={generateMapLink(bookingData.address)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
-                        >
-                          View on Map <FaExternalLinkAlt className="ml-1 text-xs" />
-                        </a>
-                      </div>
-                    )}
                   </div>
                 )}
 
-                {/* Date */}
-                <div>
-                  <label htmlFor="bookingDate" className="block text-sm font-medium text-gray-700 mb-1">
-                    Date
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      id="bookingDate"
-                      name="date"
-                      value={bookingData.date}
+                {/* Address Field (conditionally shown) */}
+                {bookingData.locationOption === 'comeToYou' && (
+                  <div>
+                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+                      Your Address
+                    </label>
+                    <textarea
+                      id="address"
+                      name="address"
+                      value={bookingData.address}
                       onChange={handleBookingChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                      required
-                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                      rows={3}
+                      placeholder="Enter your full address for the service"
+                      required={bookingData.locationOption === 'comeToYou'}
                     />
-                    <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   </div>
-                </div>
+                )}
 
-                {/* Time */}
+                {/* Food/Drinks Option (for barber/beauty) */}
+                {(helper.type === 'barber' || helper.type === 'beauty') && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Would you like food/drinks?
+                    </label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="bringFood"
+                          value="yes"
+                          checked={bookingData.bringFood === 'yes'}
+                          onChange={handleBookingChange}
+                          className="mr-2 text-airbnb-red focus:ring-airbnb-red"
+                        />
+                        <span>Yes</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="bringFood"
+                          value="no"
+                          checked={bookingData.bringFood === 'no'}
+                          onChange={handleBookingChange}
+                          className="mr-2 text-airbnb-red focus:ring-airbnb-red"
+                        />
+                        <span>No</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* Message Field */}
                 <div>
-                  <label htmlFor="bookingTime" className="block text-sm font-medium text-gray-700 mb-1">
-                    Time
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="time"
-                      id="bookingTime"
-                      name="time"
-                      value={bookingData.time}
-                      onChange={handleBookingChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                      required
-                    />
-                    <FaClock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  </div>
-                </div>
-
-                {/* Bring Your Food Option */}
-                <div className="border-t border-gray-200 pt-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <FaUtensils className="text-airbnb-red" />
-                    <label className="block text-sm font-medium text-gray-700">
-                      Food available?
-                    </label>
-                  </div>
-                  <div className="flex gap-6">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="bringFood"
-                        value="yes"
-                        checked={bookingData.bringFood === 'yes'}
-                        onChange={handleBookingChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-gray-700">Yes</span>
-                    </label>
-
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="bringFood"
-                        value="no"
-                        checked={bookingData.bringFood === 'no'}
-                        onChange={handleBookingChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-gray-700">No</span>
-                    </label>
-                  </div>
-                </div>
-
-                {/* Message */}
-                <div>
-                  <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
                     Special Requests
                   </label>
                   <textarea
-                    id="specialRequests"
+                    id="message"
                     name="message"
                     value={bookingData.message}
                     onChange={handleBookingChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-y"
-                    rows="3"
-                    placeholder="E.g., specific requirements, arrival instructions..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                    rows={3}
+                    placeholder="Any special requests or details the helper should know?"
                   />
                 </div>
 
-                {/* Attachments */}
+                {/* File Attachments */}
                 <div>
-                  <label htmlFor="attachments" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Attach Files (Optional)
                   </label>
-                  <div className="flex flex-col gap-2">
-                    <div className="relative">
-                      <input
-                        type="file"
-                        id="attachments"
-                        name="attachments"
-                        multiple
-                        accept="image/*,.pdf"
-                        onChange={handleAttachmentChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 opacity-0 absolute inset-0 z-10 cursor-pointer"
-                      />
-                      <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                        <FaPaperclip className="mx-auto text-gray-400 text-xl mb-2" />
-                        <p className="text-sm text-gray-600">
-                          <span className="text-blue-600 font-medium">Click to upload</span> or drag and drop
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">Images or PDF (max 2 files, 5MB each)</p>
-                      </div>
-                    </div>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                    <input
+                      type="file"
+                      id="attachments"
+                      multiple
+                      onChange={handleAttachmentChange}
+                      className="hidden"
+                      accept="image/*,.pdf"
+                    />
+                    <label htmlFor="attachments" className="cursor-pointer">
+                      <FaPaperclip className="mx-auto text-gray-400 text-xl mb-2" />
+                      <p className="text-sm text-gray-600">
+                        Click to attach images or PDFs (max 2 files, 5MB each)
+                      </p>
+                    </label>
+                  </div>
 
-                    {/* Preview section */}
-                    <div className="grid grid-cols-2 gap-2 mt-2">
+                  {/* Attachment preview */}
+                  {attachments.length > 0 && (
+                    <div className="mt-3 space-y-2">
                       {attachments.map((file, index) => (
-                        <div key={index} className="flex items-center border rounded-lg p-2 bg-gray-50">
-                          <div className="flex-shrink-0 mr-2">
+                        <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                          <div className="flex items-center">
                             {file.type.startsWith('image/') ? (
-                              <FaFileImage className="text-blue-500" />
+                              <FaFileImage className="text-blue-500 mr-2" />
                             ) : (
-                              <FaFilePdf className="text-red-500" />
+                              <FaFilePdf className="text-red-500 mr-2" />
                             )}
-                          </div>
-                          <div className="truncate flex-1">
-                            <p className="text-xs font-medium truncate">{file.name}</p>
-                            <p className="text-[10px] text-gray-500">
-                              {(file.size / 1024).toFixed(1)} KB
-                            </p>
+                            <span className="text-sm truncate max-w-xs">{file.name}</span>
+                            <span className="text-xs text-gray-500 ml-2">
+                              ({(file.size / 1024).toFixed(1)} KB)
+                            </span>
                           </div>
                           <button
                             type="button"
                             onClick={() => removeAttachment(index)}
-                            className="text-gray-400 hover:text-gray-700 ml-2"
+                            className="text-red-500 hover:text-red-700"
                           >
                             <FaTimes />
                           </button>
                         </div>
                       ))}
                     </div>
-                  </div>
+                  )}
                 </div>
 
+                {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={isUploading}
-                  className={`w-full ${isUploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-md`}
+                  className="w-full bg-airbnb-red hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   {isUploading ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Uploading Files...
-                    </span>
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Uploading files...
+                    </>
                   ) : (
-                    'Book via WhatsApp'
+                    <>
+                      <FaWhatsapp className="mr-2 text-lg" />
+                      Book via WhatsApp
+                    </>
                   )}
                 </button>
               </form>
+            </div>
 
-              {/* Update Helper Button */}
-              {currentUser && currentUser._id === helper.userRef && (
-                <button
-                  onClick={() => navigate(`/update-helper/${helper._id}`)}
-                  className="w-full mt-4 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-md"
-                >
-                  Update Helper Listing
-                </button>
-              )}
+            <div className="p-6 bg-gray-50">
+              <h4 className="font-semibold text-gray-800 mb-2">What s included</h4>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center">
+                  <FaCheckCircle className="text-green-500 mr-2" />
+                  <span>Secure booking through WhatsApp</span>
+                </li>
+                <li className="flex items-center">
+                  <FaCheckCircle className="text-green-500 mr-2" />
+                  <span>Direct communication with provider</span>
+                </li>
+                <li className="flex items-center">
+                  <FaCheckCircle className="text-green-500 mr-2" />
+                  <span>No booking fees</span>
+                </li>
+              </ul>
             </div>
           </div>
 
-          {/* Provider Info Sidebar */}
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 lg:sticky lg:top-[calc(100vh-400px)]">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">About {helper.name}</h2>
-
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                <FaUser className="text-3xl text-airbnb-red" />
-              </div>
-              <div>
-                <h4 className="text-sm font-semibold truncate">{helper.host.slice(0, 31)}</h4>
-                <p className="text-gray-600 text-xs">Pro helper</p>
-              </div>
-            </div>
-
+          {/* Provider Information Card */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Provider Information</h3>
+            
             <div className="space-y-4">
-              {/* Call Helper Button */}
+              {/* Contact Info */}
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <FaUser className="text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">{helper.name}</p>
+                  <p className="text-sm text-gray-600">Service Provider</p>
+                </div>
+              </div>
+
+              {/* Location */}
+              <div className="flex items-center gap-3">
+                <div className="bg-green-100 p-3 rounded-full">
+                  <FaMapMarkerAlt className="text-green-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">Location</p>
+                  <p className="text-sm text-gray-600">{helper.address}</p>
+                </div>
+              </div>
+
+              {/* Contact Number */}
               {helper.contact && (
-                <a
-                  href={`tel:${helper.contact}`}
-                  className="flex items-center justify-center gap-2 w-full bg-airbnb-red text-white py-3 rounded-lg hover:bg-red-700 transition-colors font-semibold shadow-md"
-                >
-                  <FaPhone />
-                  <span>Call Helper</span>
-                </a>
+                <div className="flex items-center gap-3">
+                  <div className="bg-purple-100 p-3 rounded-full">
+                    <FaPhone className="text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">Contact</p>
+                    <a 
+                      href={`tel:${helper.contact}`}
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      {helper.contact}
+                    </a>
+                  </div>
+                </div>
               )}
 
-              {/* WhatsApp Button */}
-              {whatsappLink && (
-                <a
-                  href={whatsappLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center gap-2 w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-colors font-semibold shadow-md"
-                >
-                  <FaWhatsapp />
-                  <span>Message on WhatsApp</span>
-                </a>
+              {/* WhatsApp Contact */}
+              {whatsappNumber && (
+                <div className="flex items-center gap-3">
+                  <div className="bg-green-100 p-3 rounded-full">
+                    <FaWhatsapp className="text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">WhatsApp</p>
+                    <a 
+                      href={whatsappLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      Message on WhatsApp
+                    </a>
+                  </div>
+                </div>
               )}
+
+              {/* Response Time */}
+              <div className="flex items-center gap-3">
+                <div className="bg-yellow-100 p-3 rounded-full">
+                  <FaClock className="text-yellow-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">Response Time</p>
+                  <p className="text-sm text-gray-600">Usually within a few hours</p>
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Security Verification */}
+          {helper.security && (
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-green-200">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="bg-green-100 p-3 rounded-full">
+                  <FaShieldAlt className="text-green-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">Identity Verified</h3>
+              </div>
+              <p className="text-sm text-gray-600">
+                This helper has provided identification and passed our verification process.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Comments Side Panel */}
-      {showCommentsPanel && (
-        <CommentsSidePanelHelper 
-          helperId={id} 
-          onClose={() => setShowCommentsPanel(false)} 
-        />
-      )}
+      <CommentsSidePanelHelper
+        isOpen={showCommentsPanel}
+        onClose={() => setShowCommentsPanel(false)}
+        helperId={id}
+      />
     </div>
   );
 }
