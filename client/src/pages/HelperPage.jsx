@@ -243,90 +243,98 @@ export default function HelperPage() {
 
     // --- End of new code ---
 
+ // Helper function to format phone number for WhatsApp
+  const formatContactForWhatsApp = (contact) => {
+    return contact.replace(/\D/g, '');
+  };
 
-    // Create WhatsApp message with improved formatting
-    let message = `📅 New Booking Request for *${helper.name}*%0A%0A`;
+  // Generate Google Maps link from address
+  const generateMapLink = (address) => {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+  };
 
-    // Service Details section
-    message += `*🛎️ SERVICE DETAILS*%0A`;
-    message += `• Price: R${helper.regularPrice}%0A`;
 
-    // Add barber/beauty travel fee only for "Come to Client" appointments
-    if (helper.type === 'barber' || helper.type === 'beauty') {
-      if (helper.travelFee && bookingData.locationOption === 'comeToYou') {
-        message += `• Travel Fee: R${helper.travelFee}%0A`;
-      }
+  // Start building message
+  let message = `📅 New Booking Request for *${helper.name}*%0A%0A`;
+
+  // Service Details
+  message += `*🛎️ SERVICE DETAILS*%0A`;
+  message += `• Price: R${helper.regularPrice}%0A`;
+
+  if ((helper.type === 'barber' || helper.type === 'beauty') &&
+      helper.travelFee &&
+      bookingData.locationOption === 'comeToYou') {
+    message += `• Travel Fee: R${helper.travelFee}%0A`;
+  }
+
+  message += `• Provider Contact: ${helper.contact}%0A%0A`;
+
+  // Client Details
+  message += `*👤 CLIENT DETAILS*%0A`;
+  message += `• Name: ${bookingData.name}%0A`;
+  message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
+  message += `• Date: ${bookingData.date}%0A`;
+  message += `• Time: ${bookingData.time}%0A`;
+
+  const locationDisplay =
+    bookingData.locationOption === 'comeToYou'
+      ? 'Come to Client'
+      : bookingData.locationOption === 'goToSalon'
+      ? 'Go to Salon'
+      : "Helper's Place";
+
+  message += `• Location: ${locationDisplay}%0A`;
+
+  if (helper.type === 'barber' || helper.type === 'beauty') {
+    if (locationDisplay === 'Come to Client' && helper.travelFee) {
+      message += `  _(Travel fee applies for home visits)_%0A`;
+    } else {
+      message += `  _(No travel fee - client visits ${locationDisplay === "Helper's Place" ? "helper" : "salon"})_%0A`;
     }
+  }
 
-    message += `• Provider Contact: ${helper.contact}%0A%0A`;
+  message += `• Food/Drinks: ${bookingData.bringFood === 'yes' ? 'Yes' : 'No'}%0A`;
+  message += `• Special Requests: ${bookingData.message || 'None'}%0A%0A`;
 
-    // Client Booking Details section
-    message += `*👤 CLIENT DETAILS*%0A`;
-    message += `• Name: ${bookingData.name}%0A`;
-    message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
-    message += `• Date: ${bookingData.date}%0A`;
-    message += `• Time: ${bookingData.time}%0A`;
+  // Location Details (for "Come to Client")
+  if (bookingData.locationOption === 'comeToYou' && bookingData.address) {
+    const mapLink = generateMapLink(bookingData.address);
+    message += `*📍 LOCATION DETAILS*%0A`;
+    message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
+    message += `• Navigation Link:%0A  ${mapLink}%0A%0A`;
+  }
 
-    // Add location option to message
-    const locationDisplay = bookingData.locationOption === 'comeToYou' 
-      ? 'Come to Client' 
-      : bookingData.locationOption === 'goToSalon' 
-        ? 'Go to Salon' 
-        : "Helper's Place";
+  // Attachments (images or files)
+  if (uploadedFiles.length > 0) {
+    message += `*📎 ATTACHMENTS*%0A`;
+    message += `_Files uploaded for your reference_%0A%0A`;
 
-    message += `• Location: ${locationDisplay}%0A`;
+    uploadedFiles.forEach((file) => {
+      message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: ${file.name}%0A`;
+      message += `  ${file.url}%0A%0A`;
+    });
+  }
 
-    // Explain travel fee logic in the message
-    if (helper.type === 'barber' || helper.type === 'beauty') {
-      if (locationDisplay === 'Come to Client' && helper.travelFee) {
-        message += `  _(Travel fee applies for home visits)_%0A`;
-      } else {
-        message += `  _(No travel fee - client visits ${locationDisplay === "Helper's Place" ? "helper" : "salon"})_%0A`;
-      }
-    }
-
-    message += `• Food/Drinks: ${bookingData.bringFood === 'yes' ? 'Yes' : 'No'}%0A`;
-    message += `• Special Requests: ${bookingData.message || 'None'}%0A%0A`;
-
-    // Only include address if location is "Come to Client"
-    if (bookingData.locationOption === 'comeToYou' && bookingData.address) {
-      const mapLink = generateMapLink(bookingData.address);
-      message += `*📍 LOCATION DETAILS*%0A`;
-      message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
-      message += `• Navigation Link:%0A  ${mapLink}%0A%0A`;
-    }
-
-    // Attachment section with clickable links
-    if (uploadedFiles.length > 0) {
-      message += `*📎 ATTACHMENTS*%0A`;
-      message += `_Files uploaded for your reference_%0A%0A`;
-
-      uploadedFiles.forEach((file) => {
-        message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: `;
-        message += `${file.name}%0A`;
-        message += `  ${file.url}%0A%0A`;
-      });
-    }
-
-    // --- Replaced the old response section with this new one ---
-    
+  // Action Required
+  if (acceptLink && declineLink) {
     message += `*ACTION REQUIRED*%0A`;
     message += `Click a link below to respond to the client:%0A%0A`;
-    
-    if(userPhoneForReply) {
-        message += `✅ *[Click here to ACCEPT]*(${acceptLink})%0A%0A`;
-        message += `❌ *[Click here to DECLINE]*(${declineLink})%0A%0A`;
-    }
-    
-    message += `💬 Or, reply directly to this message with any questions.%0A%0A`;
-    message += `_This message was sent via loopOut Booking System_`;
+    message += `✅ *[Click here to ACCEPT]*(${acceptLink})%0A`;
+    message += `❌ *[Click here to DECLINE]*(${declineLink})%0A%0A`;
+  }
 
-    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
-    window.open(whatsappUrl, '_blank');
+  message += `💬 Or, reply directly to this message with any questions.%0A%0A`;
+  message += `_This message was sent via loopOut Booking System_`;
 
-    // Clear attachments after submission
-    setAttachments([]);
-  };
+  // Create WhatsApp URL
+  const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
+
+  // Open WhatsApp chat
+  window.open(whatsappUrl, '_blank');
+
+  // Clear attachments after sending
+  setAttachments([]);
+};
 
   // Simulate AI analysis of comments
   const analyzeCommentsWithAI = () => {
