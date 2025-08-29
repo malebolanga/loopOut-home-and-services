@@ -233,108 +233,98 @@ export default function HelperPage() {
     // Get the client's phone number for reply links
     const userPhoneForReply = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
 
-    // Create predefined response messages
-    const acceptText = `Hi ${bookingData.name}, I'm happy to confirm your booking for the ${helper.name} service on ${bookingData.date} at ${bookingData.time}. See you then!`;
-    const declineText = `Hi ${bookingData.name}, unfortunately I'm unable to accept your booking for ${bookingData.date} at ${bookingData.time}. Would another day or time work for you?`;
+   // ...inside handleBookingSubmit, after `uploadedFiles` is ready and before you build `message`:
 
-    // Generate clickable WhatsApp action links
-    const acceptLink = `https://wa.me/${userPhoneForReply}?text=${encodeURIComponent(acceptText)}`;
-    const declineLink = `https://wa.me/${userPhoneForReply}?text=${encodeURIComponent(declineText)}`;
+// Ensure we DO NOT redeclare these helpers here; use the component-level versions.
 
-    // --- End of new code ---
+// Prepare the client's number in international format for the helper's quick-reply links
+const userPhoneForReply = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
 
- // Helper function to format phone number for WhatsApp
-  const formatContactForWhatsApp = (contact) => {
-    return contact.replace(/\D/g, '');
-  };
+// Build prefilled quick replies
+const acceptText = `Hi ${bookingData.name}, I accept your booking for ${helper.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
+const declineText = `Hi ${bookingData.name}, I'm unable to accept ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
 
-  // Generate Google Maps link from address
-  const generateMapLink = (address) => {
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-  };
+// Use plain URLs (clickable in WhatsApp). If the client's phone isn't provided, skip links.
+const acceptLink = userPhoneForReply
+  ? `https://wa.me/${userPhoneForReply}?text=${encodeURIComponent(acceptText)}`
+  : '';
+const declineLink = userPhoneForReply
+  ? `https://wa.me/${userPhoneForReply}?text=${encodeURIComponent(declineText)}`
+  : '';
 
+// Now start building the message sent to the HELPER
+let message = `📅 New Booking Request for *${helper.name}*%0A%0A`;
 
-  // Start building message
-  let message = `📅 New Booking Request for *${helper.name}*%0A%0A`;
+message += `*🛎️ SERVICE DETAILS*%0A`;
+message += `• Price: R${helper.regularPrice}%0A`;
+if ((helper.type === 'barber' || helper.type === 'beauty') &&
+    helper.travelFee &&
+    bookingData.locationOption === 'comeToYou') {
+  message += `• Travel Fee: R${helper.travelFee}%0A`;
+}
+message += `• Provider Contact: ${helper.contact}%0A%0A`;
 
-  // Service Details
-  message += `*🛎️ SERVICE DETAILS*%0A`;
-  message += `• Price: R${helper.regularPrice}%0A`;
+message += `*👤 CLIENT DETAILS*%0A`;
+message += `• Name: ${bookingData.name}%0A`;
+message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
+message += `• Date: ${bookingData.date}%0A`;
+message += `• Time: ${bookingData.time}%0A`;
 
-  if ((helper.type === 'barber' || helper.type === 'beauty') &&
-      helper.travelFee &&
-      bookingData.locationOption === 'comeToYou') {
-    message += `• Travel Fee: R${helper.travelFee}%0A`;
+const locationDisplay =
+  bookingData.locationOption === 'comeToYou'
+    ? 'Come to Client'
+    : bookingData.locationOption === 'goToSalon'
+    ? 'Go to Salon'
+    : "Helper's Place";
+
+message += `• Location: ${locationDisplay}%0A`;
+if (helper.type === 'barber' || helper.type === 'beauty') {
+  if (locationDisplay === 'Come to Client' && helper.travelFee) {
+    message += `  _(Travel fee applies for home visits)_%0A`;
+  } else {
+    message += `  _(No travel fee - client visits ${locationDisplay === "Helper's Place" ? "helper" : "salon"})_%0A`;
   }
+}
 
-  message += `• Provider Contact: ${helper.contact}%0A%0A`;
+message += `• Food/Drinks: ${bookingData.bringFood === 'yes' ? 'Yes' : 'No'}%0A`;
+message += `• Special Requests: ${bookingData.message || 'None'}%0A%0A`;
 
-  // Client Details
-  message += `*👤 CLIENT DETAILS*%0A`;
-  message += `• Name: ${bookingData.name}%0A`;
-  message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
-  message += `• Date: ${bookingData.date}%0A`;
-  message += `• Time: ${bookingData.time}%0A`;
+// Address details if "Come to Me"
+if (bookingData.locationOption === 'comeToYou' && bookingData.address) {
+  const mapLink = generateMapLink(bookingData.address);
+  message += `*📍 LOCATION DETAILS*%0A`;
+  message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
+  message += `• Navigation Link:%0A  ${mapLink}%0A%0A`;
+}
 
-  const locationDisplay =
-    bookingData.locationOption === 'comeToYou'
-      ? 'Come to Client'
-      : bookingData.locationOption === 'goToSalon'
-      ? 'Go to Salon'
-      : "Helper's Place";
+// Attachments summary (your upload code above stays the same)
+if (uploadedFiles.length > 0) {
+  message += `*📎 ATTACHMENTS*%0A`;
+  message += `_Files uploaded for your reference_%0A%0A`;
+  uploadedFiles.forEach((file) => {
+    message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: ${file.name}%0A`;
+    message += `  ${file.url}%0A%0A`;
+  });
+}
 
-  message += `• Location: ${locationDisplay}%0A`;
+// ✅ Only show Accept/Decline quick-reply links when the helper is asked to COME TO CLIENT
+if (bookingData.locationOption === 'comeToYou' && acceptLink && declineLink) {
+  message += `*ACTION REQUIRED*%0A`;
+  message += `Tap a link to reply to the client:%0A%0A`;
+  // Plain URLs (no markdown) so they’re clickable in WhatsApp:
+  message += `✅ Accept: ${acceptLink}%0A`;
+  message += `❌ Decline: ${declineLink}%0A%0A`;
+}
 
-  if (helper.type === 'barber' || helper.type === 'beauty') {
-    if (locationDisplay === 'Come to Client' && helper.travelFee) {
-      message += `  _(Travel fee applies for home visits)_%0A`;
-    } else {
-      message += `  _(No travel fee - client visits ${locationDisplay === "Helper's Place" ? "helper" : "salon"})_%0A`;
-    }
-  }
+message += `💬 You can also reply directly to this message.%0A%0A`;
+message += `_Sent via loopOut Booking System_`;
 
-  message += `• Food/Drinks: ${bookingData.bringFood === 'yes' ? 'Yes' : 'No'}%0A`;
-  message += `• Special Requests: ${bookingData.message || 'None'}%0A%0A`;
+// Send to the HELPER's WhatsApp
+const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
+window.open(whatsappUrl, '_blank');
 
-  // Location Details (for "Come to Client")
-  if (bookingData.locationOption === 'comeToYou' && bookingData.address) {
-    const mapLink = generateMapLink(bookingData.address);
-    message += `*📍 LOCATION DETAILS*%0A`;
-    message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
-    message += `• Navigation Link:%0A  ${mapLink}%0A%0A`;
-  }
-
-  // Attachments (images or files)
-  if (uploadedFiles.length > 0) {
-    message += `*📎 ATTACHMENTS*%0A`;
-    message += `_Files uploaded for your reference_%0A%0A`;
-
-    uploadedFiles.forEach((file) => {
-      message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: ${file.name}%0A`;
-      message += `  ${file.url}%0A%0A`;
-    });
-  }
-
-  // Action Required
-  if (acceptLink && declineLink) {
-    message += `*ACTION REQUIRED*%0A`;
-    message += `Click a link below to respond to the client:%0A%0A`;
-    message += `✅ *[Click here to ACCEPT]*(${acceptLink})%0A`;
-    message += `❌ *[Click here to DECLINE]*(${declineLink})%0A%0A`;
-  }
-
-  message += `💬 Or, reply directly to this message with any questions.%0A%0A`;
-  message += `_This message was sent via loopOut Booking System_`;
-
-  // Create WhatsApp URL
-  const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
-
-  // Open WhatsApp chat
-  window.open(whatsappUrl, '_blank');
-
-  // Clear attachments after sending
-  setAttachments([]);
-};
+// Clear attachments
+setAttachments([]);
 
   // Simulate AI analysis of comments
   const analyzeCommentsWithAI = () => {
