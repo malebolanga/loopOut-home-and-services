@@ -350,27 +350,28 @@ export default function EventPage() {
               </div>
 
               {/* Rating Widgets Section */}
-              <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100">
-                {/* Main Rating Row */}
-                <div className="flex items-center justify-between">
-                  {/* Like/Dislike Widget - Enhanced with emojis */}
+  <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100 w-full sm:w-auto">
+                <div className="flex flex-wrap items-center justify-center gap-4">
+                  {/* Like/Dislike Widget */}
                   <div className="flex flex-col items-center">
                     <div className="flex gap-3 mb-1">
                       <button
                         onClick={handleLike}
-                        className={`p-3 rounded-full transition-all duration-300 ${aiAssessment.userReaction === 'like'
-                            ? 'bg-green-100 text-green-600 shadow-md shadow-green-100'
+                        className={`p-3 rounded-full transition-all duration-300 ${
+                          aiAssessment.userReaction === 'like' 
+                            ? 'bg-green-100 text-green-600 shadow-md shadow-green-100' 
                             : 'text-gray-500 hover:text-green-600 hover:bg-green-50'
-                          }`}
+                        }`}
                       >
                         <span className="text-xl">👍</span>
                       </button>
                       <button
                         onClick={handleDislike}
-                        className={`p-3 rounded-full transition-all duration-300 ${aiAssessment.userReaction === 'dislike'
-                            ? 'bg-red-100 text-red-600 shadow-md shadow-red-100'
+                        className={`p-3 rounded-full transition-all duration-300 ${
+                          aiAssessment.userReaction === 'dislike' 
+                            ? 'bg-red-100 text-red-600 shadow-md shadow-red-100' 
                             : 'text-gray-500 hover:text-red-600 hover:bg-red-50'
-                          }`}
+                        }`}
                       >
                         <span className="text-xl">👎</span>
                       </button>
@@ -385,7 +386,7 @@ export default function EventPage() {
                     </div>
                   </div>
 
-                  {/* AI Rating - Enhanced with emoji */}
+                  {/* AI Rating */}
                   <div className="text-center px-3">
                     <div className="flex items-center justify-center gap-2 text-gray-600 text-sm font-medium mb-1">
                       <span className="text-lg">🤖</span>
@@ -403,19 +404,19 @@ export default function EventPage() {
                     )}
                   </div>
 
-                  {/* User Reviews - Enhanced with emoji */}
+                  {/* User Reviews */}
                   <div className="text-center">
-                    <div className="flex items-center justify-center gap-2 text-gray-600 text-sm font-medium mb-1">
-                      <span className="text-lg">⭐</span>
-                      <span>User Rating</span>
-                    </div>
-                    <div className="flex items-end justify-center gap-1">
-                      <span className="text-2xl font-bold text-gray-900 leading-none">
-                        {Number(aiRating.average).toFixed(1)}
-                      </span>
-                      <span className="text-gray-500 text-sm">({commentCount} reviews)</span>
-                    </div>
-                  </div>
+                     <div className="flex items-center justify-center gap-1 text-gray-600 text-sm font-medium mb-1">
+                       <span className="text-lg">reviews</span>
+                     
+                     </div>
+                     <div className="flex items-end justify-center gap-1">
+                        <span className="text-2xl font-bold text-gray-900 leading-none">
+                         {commentCount} 
+                       </span>
+                      
+                     </div>
+                   </div>
                 </div>
               </div>
             </div>

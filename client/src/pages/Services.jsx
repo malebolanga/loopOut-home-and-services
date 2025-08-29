@@ -43,8 +43,8 @@ const ServicePage = () => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
-  const [analyzingComments, setAnalyzingComments] = useState(false);
-  const [commentAnalysis, setCommentAnalysis] = useState({});
+  const [ setAnalyzingComments] = useState(false);
+  const [ setCommentAnalysis] = useState({});
 
   // AI Review for Comments
   const [aiRating] = useState({
@@ -395,11 +395,11 @@ const ServicePage = () => {
         </div>
       )}
 
-      {/* Main Content Grid */}
+   {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column - Main Content */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Service Header Section */}
+          {/* Header Section */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-4">
               <div className="flex-1 min-w-0">
@@ -414,10 +414,10 @@ const ServicePage = () => {
                   )}
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-2">
-                  {/* Rating Badge */}
-                  <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-full border border-airbnb-medium-gray">
-                    <span className="font-medium text-airbnb-dark">
+                     <div className="flex flex-wrap items-center gap-2">
+                              {/* Rating Badge */}
+                              <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-full border border-airbnb-medium-gray">
+                                <span className="font-medium text-airbnb-dark">
                       {service.rating ? (
                         <>
                           <span className="font-semibold">{service.rating}</span>
@@ -440,8 +440,9 @@ const ServicePage = () => {
               </div>
               
               {/* Rating Widgets */}
+            {/* Rating Widgets */}
               <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100 w-full sm:w-auto">
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center justify-center gap-4">
                   {/* Like/Dislike Widget */}
                   <div className="flex flex-col items-center">
                     <div className="flex gap-3 mb-1">
@@ -496,17 +497,17 @@ const ServicePage = () => {
 
                   {/* User Reviews */}
                   <div className="text-center">
-                    <div className="flex items-center justify-center gap-2 text-gray-600 text-sm font-medium mb-1">
-                      <span className="text-lg">⭐</span>
-                      <span>User Rating</span>
-                    </div>
-                    <div className="flex items-end justify-center gap-1">
-                      <span className="text-2xl font-bold text-gray-900 leading-none">
-                        {Number(aiRating.average).toFixed(1)}
-                      </span>
-                      <span className="text-gray-500 text-sm">({commentCount} reviews)</span>
-                    </div>
-                  </div>
+                                     <div className="flex items-center justify-center gap-1 text-gray-600 text-sm font-medium mb-1">
+                                       <span className="text-lg">reviews</span>
+                                     
+                                     </div>
+                                     <div className="flex items-end justify-center gap-1">
+                                        <span className="text-2xl font-bold text-gray-900 leading-none">
+                                         {commentCount} 
+                                       </span>
+                                      
+                                     </div>
+                                   </div>
                 </div>
               </div>
             </div>

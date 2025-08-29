@@ -496,8 +496,8 @@ export default function HelperPage() {
               </div>
               
               {/* Rating Widgets */}
-              <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100 w-full sm:w-auto">
-                <div className="flex items-center justify-between gap-4">
+           <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100 w-full sm:w-auto">
+                <div className="flex flex-wrap items-center justify-center gap-4">
                   {/* Like/Dislike Widget */}
                   <div className="flex flex-col items-center">
                     <div className="flex gap-3 mb-1">
@@ -552,17 +552,17 @@ export default function HelperPage() {
 
                   {/* User Reviews */}
                   <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-gray-600 text-sm font-medium mb-1">
-                      <span className="text-lg">reviews</span>
-                    
-                    </div>
-                    <div className="flex items-end justify-center gap-1">
-                       <span className="text-2xl font-bold text-gray-900 leading-none">
-                        {commentCount} 
-                      </span>
+                     <div className="flex items-center justify-center gap-1 text-gray-600 text-sm font-medium mb-1">
+                       <span className="text-lg">reviews</span>
                      
-                    </div>
-                  </div>
+                     </div>
+                     <div className="flex items-end justify-center gap-1">
+                        <span className="text-2xl font-bold text-gray-900 leading-none">
+                         {commentCount} 
+                       </span>
+                      
+                     </div>
+                   </div>
                 </div>
               </div>
             </div>
