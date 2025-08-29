@@ -1140,10 +1140,10 @@ export default function Home() {
         : { label: "Property Type", icon: "🏠" };
   } else if (activeTab === "services") {
     currentSelectedType = serviceType === "all"
-      ? { label: "Service Type", icon: "🔧" }
+      ? { label: "Service Type", icon: "🛎️" }
       : SERVICE_TYPES[serviceType]
         ? { ...SERVICE_TYPES[serviceType], icon: SERVICE_EMOJIS[serviceType] || "🔧" }
-        : { label: "Service Type", icon: "🔧" };
+        : { label: "Service Type", icon: "🛎️" };
   } else if (activeTab === "helper") {
     currentSelectedType = helperType === "all"
       ? { label: "Helper Type", icon: "👷" }

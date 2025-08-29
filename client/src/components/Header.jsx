@@ -376,7 +376,7 @@ export default function Header() {
                           to="/helper-home-page"
                           className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
                         >
-                          <span className="mr-3 text-lg">🛠️</span>
+                          <span className="mr-3 text-lg">👷</span>
                           <span>Helpers</span>
                         </Link>
                         <Link

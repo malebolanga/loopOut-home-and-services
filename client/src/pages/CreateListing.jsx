@@ -899,7 +899,7 @@ const handleHelperSubmit = async (e) => {
       <nav className="flex bg-gray-50 rounded-lg p-1.5">
         {[
           { id: 'stays', emoji: '🏠', label: 'Properties' },
-          { id: 'experiences', emoji: '🛠️', label: 'Services' },
+          { id: 'experiences', emoji: '🛎️', label: 'Services' },
           { id: 'online', emoji: '👷', label: 'Helpers' },
           { id: 'events', emoji: '🎪', label: 'Events' }
         ].map((tab) => (
