@@ -1231,7 +1231,7 @@ export default function Home() {
               {[
                 { id: "all", name: "all", icon: "🌎", label: "All" },
                 { id: "properties", name: "properties", icon: "🏠", label: "Properties" },
-                { id: "services", name: "services", icon: "🛠️", label: "Services" },
+                { id: "services", name: "services", icon: "🛎️", label: "Services" },
                 { id: "helper", name: "helper", icon: "👷", label: "Helpers" },
                 { id: "events", name: "events", icon: "📅", label: "Events" }
               ].map((tab) => (
