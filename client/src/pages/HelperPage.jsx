@@ -228,6 +228,23 @@ export default function HelperPage() {
     }
 
     // Create WhatsApp message with improved formatting
+// --- Start of new code ---
+
+    // Get the client's phone number for reply links
+    const userPhoneForReply = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
+
+    // Create predefined response messages
+    const acceptText = `Hi ${bookingData.name}, I'm happy to confirm your booking for the ${helper.name} service on ${bookingData.date} at ${bookingData.time}. See you then!`;
+    const declineText = `Hi ${bookingData.name}, unfortunately I'm unable to accept your booking for ${bookingData.date} at ${bookingData.time}. Would another day or time work for you?`;
+
+    // Generate clickable WhatsApp action links
+    const acceptLink = `https://wa.me/${userPhoneForReply}?text=${encodeURIComponent(acceptText)}`;
+    const declineLink = `https://wa.me/${userPhoneForReply}?text=${encodeURIComponent(declineText)}`;
+
+    // --- End of new code ---
+
+
+    // Create WhatsApp message with improved formatting
     let message = `📅 New Booking Request for *${helper.name}*%0A%0A`;
 
     // Service Details section
@@ -291,15 +308,18 @@ export default function HelperPage() {
       });
     }
 
-    // Action buttons with clear separation - UPDATED WITH CLEARER INSTRUCTIONS
-    message += `*❓ HOW TO RESPOND*%0A`;
-    message += `✅ To *ACCEPT* this booking, please reply with:%0A`;
-    message += `   *ACCEPT*%0A%0A`;
-    message += `❌ To *DECLINE* this booking, please reply with:%0A`;
-    message += `   *DECLINE*%0A%0A`;
-    message += `💬 Or reply with a custom message if you have questions%0A%0A`;
-    message += `_Please respond within 24 hours to confirm this booking_%0A%0A`;
-    message += `_This message was sent via Booking System_`;
+    // --- Replaced the old response section with this new one ---
+    
+    message += `*ACTION REQUIRED*%0A`;
+    message += `Click a link below to respond to the client:%0A%0A`;
+    
+    if(userPhoneForReply) {
+        message += `✅ *[Click here to ACCEPT]*(${acceptLink})%0A%0A`;
+        message += `❌ *[Click here to DECLINE]*(${declineLink})%0A%0A`;
+    }
+    
+    message += `💬 Or, reply directly to this message with any questions.%0A%0A`;
+    message += `_This message was sent via loopOut Booking System_`;
 
     const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
     window.open(whatsappUrl, '_blank');
