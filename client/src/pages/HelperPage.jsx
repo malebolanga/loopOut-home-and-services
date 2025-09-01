@@ -1,6 +1,7 @@
-/* eslint-disable no-unused-vars */
+
+/* eslint-disable react/prop-types */
 /* eslint-disable no-undef */
-// eslint-disable-next-line no-unused-vars
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -8,11 +9,11 @@ import {
   FaStar, FaMapMarkerAlt, FaPhone, FaUser,
   FaClock, FaShieldAlt, FaDog, FaUsers,
   FaGraduationCap, FaWhatsapp,
-  FaCalendarAlt, FaExclamationTriangle, FaCheckCircle,
-  FaThumbsUp, FaThumbsDown, FaRobot, FaExternalLinkAlt, FaArrowLeft,
-  FaBandcamp, FaUtensils, FaCut, FaTools, FaCar, 
-  FaInfoCircle, FaMoneyBillWave, FaPaperclip, FaTimes,
-   FaFileImage, FaFilePdf, FaChevronDown, FaUserFriends, FaBroom,FaArrowUp ,FaArrowDown
+  FaExclamationTriangle, FaCheckCircle,
+    FaRobot,  FaArrowLeft,
+  FaBandcamp, FaCut, FaTools, FaCar, 
+  FaInfoCircle, FaMoneyBillWave,  FaTimes,
+  FaFileImage, FaFilePdf, FaChevronDown, FaUserFriends, FaBroom, FaArrowUp, FaArrowDown
 } from 'react-icons/fa';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Zoom, Thumbs } from 'swiper/modules';
@@ -34,7 +35,7 @@ export default function HelperPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
-  const [aiRating, setAiRating] = useState({
+  const [aiRating] = useState({
     average: 4.5,
     categoryRatings: {
       cleanliness: 4.7,
@@ -70,8 +71,8 @@ export default function HelperPage() {
   });
 
   // AI Review for Comments
-  const [commentAnalysis, setCommentAnalysis] = useState({});
-  const [analyzingComments, setAnalyzingComments] = useState(false);
+  const [ setCommentAnalysis] = useState({});
+  const [ setAnalyzingComments] = useState(false);
 
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
@@ -226,24 +227,40 @@ export default function HelperPage() {
       setIsUploading(false);
     }
 
-    const userPhoneForReply = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
-    const acceptText = `Hi ${bookingData.name}, I accept your booking for ${helper.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
-    const declineText = `Hi ${bookingData.name}, I'm unable to accept ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
+    // Format the client's phone number for the reply link
+    const clientPhone = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
 
-    const acceptLink = userPhoneForReply
-      ? `https://wa.me/${userPhoneForReply}?text=${encodeURIComponent(acceptText)}`
-      : '';
-    const declineLink = userPhoneForReply
-      ? `https://wa.me/${userPhoneForReply}?text=${encodeURIComponent(declineText)}`
-      : '';
+    // Define the accept and decline messages and their corresponding links
+    const acceptMessage = `Hi ${bookingData.name}, I accept your booking for ${helper.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
+    const declineMessage = `Hi ${bookingData.name}, I'm unable to accept ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
 
-    let message = `📅 New Booking Request for *${helper.name}*%0A%0A`;
+    const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
+    const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
+
+    // Determine the location and travel fee message
+    let locationInfo = '';
+    let travelFeeMessage = '';
+    const isHomeVisit = bookingData.locationOption === 'comeToYou';
+    const hasTravelFee = helper.travelFee > 0 && isHomeVisit;
+
+    if (isHomeVisit) {
+      locationInfo = 'Come to Client';
+      if (hasTravelFee) {
+        travelFeeMessage = `• Travel Fee: R${helper.travelFee}%0A`;
+      }
+    } else if (bookingData.locationOption === 'goToSalon') {
+      locationInfo = 'Go to Salon';
+    } else {
+      locationInfo = "Helper's Place";
+    }
+
+    // Build the main WhatsApp message
+    let message = `*📅 New Booking Request for ${helper.name}*%0A%0A`;
+
     message += `*🛎️ SERVICE DETAILS*%0A`;
     message += `• Price: R${helper.regularPrice}%0A`;
-    if ((helper.type === 'barber' || helper.type === 'beauty') &&
-        helper.travelFee &&
-        bookingData.locationOption === 'comeToYou') {
-      message += `• Travel Fee: R${helper.travelFee}%0A`;
+    if (hasTravelFee) {
+      message += travelFeeMessage;
     }
     message += `• Provider Contact: ${helper.contact}%0A%0A`;
 
@@ -252,33 +269,19 @@ export default function HelperPage() {
     message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
     message += `• Date: ${bookingData.date}%0A`;
     message += `• Time: ${bookingData.time}%0A`;
-
-    const locationDisplay =
-      bookingData.locationOption === 'comeToYou'
-        ? 'Come to Client'
-        : bookingData.locationOption === 'goToSalon'
-        ? 'Go to Salon'
-        : "Helper's Place";
-
-    message += `• Location: ${locationDisplay}%0A`;
-    if (helper.type === 'barber' || helper.type === 'beauty' || helper.type === 'domestic' || helper.type === 'maid') {
-      if (locationDisplay === 'Come to Client' && helper.travelFee) {
-        message += `  _(Travel fee applies for home visits)_%0A`;
-      } else {
-        message += `  _(No travel fee - client visits ${locationDisplay === "Helper's Place" ? "helper" : "salon"})_%0A`;
-      }
-    }
-
+    message += `• Location: ${locationInfo}%0A`;
     message += `• Food/Drinks: ${bookingData.bringFood === 'yes' ? 'Yes' : 'No'}%0A`;
     message += `• Special Requests: ${bookingData.message || 'None'}%0A%0A`;
 
-    if (bookingData.locationOption === 'comeToYou' && bookingData.address) {
+    // Add location details for home visits
+    if (isHomeVisit && bookingData.address) {
       const mapLink = generateMapLink(bookingData.address);
       message += `*📍 LOCATION DETAILS*%0A`;
       message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
       message += `• Navigation Link:%0A  ${mapLink}%0A%0A`;
     }
 
+    // Add attachments if they exist
     if (uploadedFiles.length > 0) {
       message += `*📎 ATTACHMENTS*%0A_Files uploaded for your reference_%0A%0A`;
       uploadedFiles.forEach((file) => {
@@ -287,19 +290,24 @@ export default function HelperPage() {
       });
     }
 
-    if (bookingData.locationOption === 'comeToYou' && acceptLink && declineLink) {
-      message += `*ACTION REQUIRED*%0A`;
-      message += `Tap a link to reply to the client:%0A%0A`;
+    // Add action links for the helper to accept or decline
+    message += `*ACTION REQUIRED*%0A`;
+    message += `Tap a link to reply to the client:%0A%0A`;
+    if (acceptLink) {
       message += `✅ Accept: ${acceptLink}%0A`;
+    }
+    if (declineLink) {
       message += `❌ Decline: ${declineLink}%0A%0A`;
     }
 
     message += `💬 You can also reply directly to this message.%0A%0A`;
     message += `_Sent via loopOut Booking System_`;
 
+    // Open WhatsApp with the pre-filled message
     const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
     window.open(whatsappUrl, '_blank');
 
+    // Reset attachments after sending
     setAttachments([]);
   };
 
@@ -406,11 +414,17 @@ export default function HelperPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Navigation Button */}
       <div className="fixed bottom-4 left-4 z-50">
-        <button
-          onClick={() => navigate(-1)}
-          className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
-          title="Go back"
-        >
+       <button
+                onClick={() => {
+                  const routeMap = {
+      
+                    default: '/helper-home-page'
+                  };
+                  navigate(routeMap[helper?.type?.toLowerCase()] || routeMap.default);
+                }}
+                className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+                title="Go back to listings"
+              >
           <FaArrowLeft className="text-xl" />
         </button>
       </div>
@@ -925,6 +939,9 @@ export default function HelperPage() {
                       className="mr-2"
                     />
                     <span>Come to my location</span>
+                    {helper.travelFee > 0 && (
+                      <span className="ml-2 text-sm text-gray-500">(+R{helper.travelFee} travel fee)</span>
+                    )}
                   </label>
                   <label className="flex items-center">
                     <input
@@ -1093,8 +1110,9 @@ export default function HelperPage() {
                 By booking, you agree to our Terms of Service and Privacy Policy
               </p>
             </form>
-             <div className="p-6 bg-gray-50">
-              <h4 className="font-semibold text-gray-800 mb-2">What s included</h4>
+            
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <h4 className="font-semibold text-gray-800 mb-2">Whats included</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center">
                   <FaCheckCircle className="text-green-500 mr-2" />
@@ -1111,7 +1129,6 @@ export default function HelperPage() {
               </ul>
             </div>
           </div>
-
 
           {/* Provider Information */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
