@@ -261,7 +261,7 @@ export default function HelperPage() {
         : "Helper's Place";
 
     message += `• Location: ${locationDisplay}%0A`;
-    if (helper.type === 'barber' || helper.type === 'beauty') {
+    if (helper.type === 'barber' || helper.type === 'beauty' || helper.type === 'domestic' || helper.type === 'maid') {
       if (locationDisplay === 'Come to Client' && helper.travelFee) {
         message += `  _(Travel fee applies for home visits)_%0A`;
       } else {
@@ -922,7 +922,7 @@ export default function HelperPage() {
                 </div>
 
                 {/* Location Options */}
-                {(helper.type === 'barber' || helper.type === 'beauty') && (
+                {(helper.type === 'barber' || helper.type === 'domestic'  || helper.type === 'maid' || helper.type === 'beauty') && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Service Location
@@ -988,7 +988,7 @@ export default function HelperPage() {
                 )}
 
                 {/* Food/Drinks Option (for barber/beauty) */}
-                {(helper.type === 'barber' || helper.type === 'beauty') && (
+                {(helper.type === 'barber' || helper.type === 'domestic'  || helper.type === 'maid' || helper.type === 'beauty') && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Would you like food/drinks?
