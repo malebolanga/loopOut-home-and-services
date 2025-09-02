@@ -248,8 +248,8 @@ export default function HelperPage() {
       if (hasTravelFee) {
         travelFeeMessage = `• Travel Fee: R${helper.travelFee}%0A`;
       }
-    } else if (bookingData.locationOption === 'goToSalon') {
-      locationInfo = 'Go to Salon';
+    } else if (bookingData.locationOption === 'comeToYou') {
+      locationInfo = 'Come to Client';
     } else {
       locationInfo = "Helper's Place";
     }
@@ -938,7 +938,7 @@ export default function HelperPage() {
                       onChange={handleBookingChange}
                       className="mr-2"
                     />
-                    <span>Come to my location</span>
+                    <span>Come to my place</span>
                     {helper.travelFee > 0 && (
                       <span className="ml-2 text-sm text-gray-500">(+R{helper.travelFee} travel fee)</span>
                     )}
@@ -947,8 +947,8 @@ export default function HelperPage() {
                     <input
                       type="radio"
                       name="locationOption"
-                      value="goToSalon"
-                      checked={bookingData.locationOption === 'goToSalon'}
+                      value="comeToYou"
+                      checked={bookingData.locationOption === 'comeToYou'}
                       onChange={handleBookingChange}
                       className="mr-2"
                     />
