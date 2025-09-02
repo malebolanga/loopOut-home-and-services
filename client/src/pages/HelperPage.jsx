@@ -952,7 +952,7 @@ export default function HelperPage() {
                       onChange={handleBookingChange}
                       className="mr-2"
                     />
-                    <span>I ll go to their salon</span>
+                    <span>Go to request place</span>
                   </label>
                   <label className="flex items-center">
                     <input
