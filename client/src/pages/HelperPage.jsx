@@ -901,6 +901,8 @@ const handleBookingSubmit = async (e) => {
     cardStyle={true}
   />
 </section>
+
+
             {showCommentsPanel && (
   <CommentsSidePanelHelper
     helperId={id}
