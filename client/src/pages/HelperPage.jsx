@@ -202,114 +202,116 @@ export default function HelperPage() {
       };
     });
   };
+const handleBookingSubmit = async (e) => {
+  e.preventDefault();
 
-  // Handle form submission
-  const handleBookingSubmit = async (e) => {
-    e.preventDefault();
+  if (!helper?.contact) {
+    alert("Helper contact information is missing. Please try another contact method.");
+    return;
+  }
 
-    if (!helper?.contact) {
-      alert("Helper contact information is missing. Please try another contact method.");
+  let uploadedFiles = [];
+
+  if (attachments.length > 0) {
+    setIsUploading(true);
+    try {
+      uploadedFiles = await uploadFilesToCloud(attachments);
+    } catch (error) {
+      console.error("File upload failed:", error);
+      alert("Failed to upload attachments. Please try again without files or contact support.");
+      setIsUploading(false);
       return;
     }
+    setIsUploading(false);
+  }
 
-    let uploadedFiles = [];
+  // Format the client's phone number for the reply link
+  const clientPhone = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
 
-    if (attachments.length > 0) {
-      setIsUploading(true);
-      try {
-        uploadedFiles = await uploadFilesToCloud(attachments);
-      } catch (error) {
-        console.error("File upload failed:", error);
-        alert("Failed to upload attachments. Please try again without files or contact support.");
-        setIsUploading(false);
-        return;
-      }
-      setIsUploading(false);
-    }
+  // Define the accept and decline messages and their corresponding links
+  const acceptMessage = `Hi ${bookingData.name}, I accept your booking for ${helper.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
+  const declineMessage = `Hi ${bookingData.name}, I'm unable to accept ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
 
-    // Format the client's phone number for the reply link
-    const clientPhone = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
+  // This part of the code always creates the accept and decline links.
+  // This ensures they are present for both "comeToYou" and "Helper's Place" bookings.
+  const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
+  const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
 
-    // Define the accept and decline messages and their corresponding links
-    const acceptMessage = `Hi ${bookingData.name}, I accept your booking for ${helper.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
-    const declineMessage = `Hi ${bookingData.name}, I'm unable to accept ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
+  // Determine the location and travel fee message
+  let locationInfo = '';
+  let travelFeeMessage = '';
+  const isHomeVisit = bookingData.locationOption === 'comeToYou';
+  const hasTravelFee = helper.travelFee > 0 && isHomeVisit;
 
-    const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
-    const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
-
-    // Determine the location and travel fee message
-    let locationInfo = '';
-    let travelFeeMessage = '';
-    const isHomeVisit = bookingData.locationOption === 'comeToYou';
-    const hasTravelFee = helper.travelFee > 0 && isHomeVisit;
-
-    if (isHomeVisit) {
-      locationInfo = 'Come to Client';
-      if (hasTravelFee) {
-        travelFeeMessage = `• Travel Fee: R${helper.travelFee}%0A`;
-      }
-    } else if (bookingData.locationOption === 'comeToYou') {
-      locationInfo = 'Come to Client';
-    } else {
-      locationInfo = "Helper's Place";
-    }
-
-    // Build the main WhatsApp message
-    let message = `*📅 New Booking Request for ${helper.name}*%0A%0A`;
-
-    message += `*🛎️ SERVICE DETAILS*%0A`;
-    message += `• Price: R${helper.regularPrice}%0A`;
+  if (isHomeVisit) {
+    locationInfo = 'Come to Client';
     if (hasTravelFee) {
-      message += travelFeeMessage;
+      travelFeeMessage = `• Travel Fee: R${helper.travelFee}%0A`;
     }
-    message += `• Provider Contact: ${helper.contact}%0A%0A`;
+  } else if (bookingData.locationOption === 'comeToYou') {
+    locationInfo = 'Come to Client';
+  } else {
+    locationInfo = "Helper's Place";
+  }
 
-    message += `*👤 CLIENT DETAILS*%0A`;
-    message += `• Name: ${bookingData.name}%0A`;
-    message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
-    message += `• Date: ${bookingData.date}%0A`;
-    message += `• Time: ${bookingData.time}%0A`;
-    message += `• Location: ${locationInfo}%0A`;
-    message += `• Food/Drinks: ${bookingData.bringFood === 'yes' ? 'Yes' : 'No'}%0A`;
-    message += `• Special Requests: ${bookingData.message || 'None'}%0A%0A`;
+  // Build the main WhatsApp message
+  let message = `*📅 New Booking Request for ${helper.name}*%0A%0A`;
 
-    // Add location details for home visits
-    if (isHomeVisit && bookingData.address) {
-      const mapLink = generateMapLink(bookingData.address);
-      message += `*📍 LOCATION DETAILS*%0A`;
-      message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
-      message += `• Navigation Link:%0A  ${mapLink}%0A%0A`;
-    }
+  message += `*🛎️ SERVICE DETAILS*%0A`;
+  message += `• Price: R${helper.regularPrice}%0A`;
+  if (hasTravelFee) {
+    message += travelFeeMessage;
+  }
+  message += `• Provider Contact: ${helper.contact}%0A%0A`;
 
-    // Add attachments if they exist
-    if (uploadedFiles.length > 0) {
-      message += `*📎 ATTACHMENTS*%0A_Files uploaded for your reference_%0A%0A`;
-      uploadedFiles.forEach((file) => {
-        message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: ${file.name}%0A`;
-        message += `  ${file.url}%0A%0A`;
-      });
-    }
+  message += `*👤 CLIENT DETAILS*%0A`;
+  message += `• Name: ${bookingData.name}%0A`;
+  message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
+  message += `• Date: ${bookingData.date}%0A`;
+  message += `• Time: ${bookingData.time}%0A`;
+  message += `• Location: ${locationInfo}%0A`;
+  message += `• Food/Drinks: ${bookingData.bringFood === 'yes' ? 'Yes' : 'No'}%0A`;
+  message += `• Special Requests: ${bookingData.message || 'None'}%0A%0A`;
 
-    // Add action links for the helper to accept or decline
-    message += `*ACTION REQUIRED*%0A`;
-    message += `Tap a link to reply to the client:%0A%0A`;
-    if (acceptLink) {
-      message += `✅ Accept: ${acceptLink}%0A`;
-    }
-    if (declineLink) {
-      message += `❌ Decline: ${declineLink}%0A%0A`;
-    }
+  // This block checks if the booking is "comeToYou" and if an address exists.
+  // It then adds the map link and full address to the message.
+  if (isHomeVisit && bookingData.address) {
+    const mapLink = generateMapLink(bookingData.address);
+    message += `*📍 LOCATION DETAILS*%0A`;
+    message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
+    message += `• Navigation Link:%0A  ${mapLink}%0A%0A`;
+  }
 
-    message += `💬 You can also reply directly to this message.%0A%0A`;
-    message += `_Sent via loopOut Booking System_`;
+  // Add attachments if they exist
+  if (uploadedFiles.length > 0) {
+    message += `*📎 ATTACHMENTS*%0A_Files uploaded for your reference_%0A%0A`;
+    uploadedFiles.forEach((file) => {
+      message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: ${file.name}%0A`;
+      message += `  ${file.url}%0A%0A`;
+    });
+  }
 
-    // Open WhatsApp with the pre-filled message
-    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
-    window.open(whatsappUrl, '_blank');
+  // Add action links for the helper to accept or decline
+  message += `*ACTION REQUIRED*%0A`;
+  message += `Tap a link to reply to the client:%0A%0A`;
+  if (acceptLink) {
+    message += `✅ Accept: ${acceptLink}%0A`;
+  }
+  if (declineLink) {
+    message += `❌ Decline: ${declineLink}%0A%0A`;
+  }
 
-    // Reset attachments after sending
-    setAttachments([]);
-  };
+  message += `💬 You can also reply directly to this message.%0A%0A`;
+  message += `_Sent via loopOut Booking System_`;
+
+  // Open WhatsApp with the pre-filled message
+  const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
+  window.open(whatsappUrl, '_blank');
+
+  // Reset attachments after sending
+  setAttachments([]);
+};
+
 
   // Simulate AI analysis of comments
   const analyzeCommentsWithAI = () => {
@@ -749,16 +751,23 @@ export default function HelperPage() {
                   <FaBriefcase className="text-airbnb-red" />
                   Experience
                 </h3>
-                {helper.experience ? (
-                  <p className="text-gray-700">{helper.experience}</p>
+                {helper.near ? (
+                  <p className="text-gray-700">{helper.near}</p>
                 ) : (
                   <p className="text-gray-500">No experience information provided</p>
                 )}
                 
-                {helper.yearsExperience && (
+                {helper.host && (
                   <div className="mt-4">
                     <h4 className="font-medium text-gray-700 mb-2">Years of Experience</h4>
-                    <p className="text-gray-700">{helper.yearsExperience} years</p>
+                    <p className="text-gray-700">{helper.host} years</p>
+                  </div>
+                )}
+
+                 {helper.cancel && (
+                  <div className="mt-4">
+                    <h4 className="font-medium text-gray-700 mb-2">Languages Spoken</h4>
+                    <p className="text-gray-700">{helper.cancel} years</p>
                   </div>
                 )}
               </div>
@@ -770,15 +779,15 @@ export default function HelperPage() {
                   Qualifications
                 </h3>
                 {helper.qualifications ? (
-                  <p className="text-gray-700">{helper.qualifications}</p>
+                  <p className="text-gray-700">{helper.kind}</p>
                 ) : (
                   <p className="text-gray-500">No qualifications listed</p>
                 )}
                 
-                {helper.certifications && (
+                {helper.period && (
                   <div className="mt-4">
                     <h4 className="font-medium text-gray-700 mb-2">Certifications</h4>
-                    <p className="text-gray-700">{helper.certifications}</p>
+                    <p className="text-gray-700">{helper.certification}</p>
                   </div>
                 )}
               </div>
@@ -863,11 +872,11 @@ export default function HelperPage() {
                 <>
                   <li className="flex items-center gap-3">
                     <FaGraduationCap className="text-airbnb-red" />
-                    <span>Education Level: {helper.educationLevel || 'Not specified'}</span>
+                    <span>Education Level: {helper.specializations || 'Not specified'}</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <FaUsers className="text-airbnb-red" />
-                    <span>Group Sessions: {helper.groupSessions ? 'Available' : 'Not available'}</span>
+                    <span>Equipment: {helper.equipment ? 'Available' : 'Not available'}</span>
                   </li>
                 </>
               )}
@@ -885,8 +894,14 @@ export default function HelperPage() {
                 View All
               </button>
             </div>
-            <HelperComments helperId={id} onCommentCountChange={setCommentCount} />
+            <HelperComments helperId={id} onCommentCountChange={setCommentCount} cardStyle={true}/>
           </section>
+            {showCommentsPanel && (
+  <CommentsSidePanelHelper
+    helperId={id}
+    onClose={() => setShowCommentsPanel(false)}
+  />
+)}
         </div>
 
         {/* Right Column - Booking Form */}
@@ -1135,28 +1150,35 @@ export default function HelperPage() {
 
             {/* Host Information */}
             <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">About the Host</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Abouts the Host</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <FaUser className="text-airbnb-red" />
                   <span className="text-gray-700">{helper.name}</span>
                 </div>
-                {helper.responseTime && (
+                 {helper.contact && (
+                  <div className="flex items-center gap-3">
+                    <FaPhone className="text-airbnb-red" />
+                    <span className="text-gray-700">Contact Details: {helper.contact}</span>
+                  </div>
+                )}
+                
+               
                   <div className="flex items-center gap-3">
                     <FaClock className="text-airbnb-red" />
-                    <span className="text-gray-700">Response time: {helper.responseTime}</span>
+                    <span className="text-gray-700">Response time: 1hour to 24hours</span>
                   </div>
-                )}
-                {helper.experience && (
+               
+                {helper.host && (
                   <div className="flex items-center gap-3">
                     <FaBriefcase className="text-airbnb-red" />
-                    <span className="text-gray-700">Experience: {helper.experience}</span>
+                    <span className="text-gray-700">Experience: {helper.host}</span>
                   </div>
                 )}
-                {helper.languages && (
+                {helper.cancel && (
                   <div className="flex items-center gap-3">
                     <FaUsers className="text-airbnb-red" />
-                    <span className="text-gray-700">Languages: {helper.languages}</span>
+                    <span className="text-gray-700">Languages: {helper.cancel}</span>
                   </div>
                 )}
               </div>
