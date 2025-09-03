@@ -884,18 +884,23 @@ const handleBookingSubmit = async (e) => {
           </section>
 
           {/* Comments Section */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-semibold text-gray-800">Reviews & Feedback</h2>
-              <button
-                onClick={() => setShowCommentsPanel(true)}
-                className="text-airbnb-red hover:text-red-700 font-medium"
-              >
-                View All
-              </button>
-            </div>
-            <HelperComments helperId={id} onCommentCountChange={setCommentCount} cardStyle={true}/>
-          </section>
+         {/* Comments Section */}
+<section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+  <div className="flex items-center justify-between mb-6">
+    <h2 className="text-2xl font-semibold text-gray-800">Reviews & Feedback</h2>
+    <button
+      onClick={() => setShowCommentsPanel(true)}
+      className="text-airbnb-red hover:text-red-700 font-medium"
+    >
+      View All
+    </button>
+  </div>
+  <HelperComments 
+    helperId={id} 
+    onTotalComments={setCommentCount} 
+    cardStyle={true}
+  />
+</section>
             {showCommentsPanel && (
   <CommentsSidePanelHelper
     helperId={id}
@@ -1202,11 +1207,12 @@ const handleBookingSubmit = async (e) => {
       </div>
 
       {/* Comments Side Panel */}
-      <CommentsSidePanelHelper
-        isOpen={showCommentsPanel}
-        onClose={() => setShowCommentsPanel(false)}
-        helperId={id}
-      />
+        {showCommentsPanel && (
+             <CommentsSidePanelHelper
+               helperId={id}
+               onClose={() => setShowCommentsPanel(false)}
+             />
+           )}
     </div>
   );
 }

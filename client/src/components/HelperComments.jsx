@@ -61,7 +61,10 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, showSummar
         });
       }
 
-      if (onTotalComments) onTotalComments(data.totalComments || 0);
+      // Call the callback to update the comment count in parent component
+      if (onTotalComments) {
+        onTotalComments(data.totalComments || 0);
+      }
 
     } catch (err) {
       setError(err.message);
