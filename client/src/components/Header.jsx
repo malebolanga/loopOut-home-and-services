@@ -24,7 +24,9 @@ import {
 export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
   const [dropdownMenu, setDropdownMenu] = useState(false);
+  const [notificationMenu, setNotificationMenu] = useState(false);
   const menuRef = useRef();
+  const notificationRef = useRef();
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showMobileSearchBar, setShowMobileSearchBar] = useState(false);
@@ -38,6 +40,11 @@ export default function Header() {
     const saved = localStorage.getItem('searchHistory');
     return saved ? JSON.parse(saved) : [];
   });
+
+  // Notification states
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -56,6 +63,9 @@ export default function Header() {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setDropdownMenu(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(e.target)) {
+        setNotificationMenu(false);
       }
       if (mobileSearchRef.current && !mobileSearchRef.current.contains(e.target) && showMobileSearchBar) {
         setShowMobileSearchBar(false);
@@ -126,6 +136,95 @@ export default function Header() {
     setShowSuggestions(allSuggestions.length > 0);
   }, [searchTerm, activeType, searchHistory, showMobileSearchBar]);
 
+  // Fetch notifications from the server
+  const fetchNotifications = async () => {
+    if (!currentUser) return;
+    
+    try {
+      setIsLoadingNotifications(true);
+      const res = await fetch('/api/notifications', {
+        headers: {
+          'Authorization': `Bearer ${currentUser.token}`
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data.notifications || []);
+        setUnreadCount(data.unreadCount || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  };
+
+  // Mark notifications as read
+  const markAsRead = async (notificationId = null) => {
+    if (!currentUser) return;
+    
+    try {
+      const res = await fetch('/api/notifications/read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentUser.token}`
+        },
+        body: JSON.stringify({ notificationId })
+      });
+      
+      if (res.ok) {
+        // Update local state
+        if (notificationId) {
+          setNotifications(prev => prev.map(n => 
+            n._id === notificationId ? { ...n, read: true } : n
+          ));
+          setUnreadCount(prev => Math.max(0, prev - 1));
+        } else {
+          // Mark all as read
+          setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+          setUnreadCount(0);
+        }
+      }
+    } catch (error) {
+      console.error('Error marking notifications as read:', error);
+    }
+  };
+
+  // Set up WebSocket connection for real-time notifications
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Fetch initial notifications
+    fetchNotifications();
+
+    // Set up WebSocket connection (simulated with setInterval for demo)
+    const wsInterval = setInterval(() => {
+      // Simulate receiving new notifications
+      const shouldReceiveNotification = Math.random() > 0.8; // 20% chance
+      if (shouldReceiveNotification) {
+        const newNotification = {
+          _id: Date.now().toString(),
+          type: 'new_post',
+          message: 'New listing available in your area!',
+          data: {
+            postId: '123',
+            location: 'Your City',
+            title: 'Amazing Beach House'
+          },
+          read: false,
+          createdAt: new Date().toISOString()
+        };
+        
+        setNotifications(prev => [newNotification, ...prev]);
+        setUnreadCount(prev => prev + 1);
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => clearInterval(wsInterval);
+  }, [currentUser]);
+
   // Function to handle user sign-out
   const handleSignOut = async () => {
     try {
@@ -183,6 +282,18 @@ export default function Header() {
     setShowSuggestions(true);
   };
 
+  // Format notification time
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+    return `${Math.floor(diffInMinutes / 1440)}d ago`;
+  };
+
   return (
     <header className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? '' : 'bg-transparent'}`}>
       <div className="container mx-auto px-4 sm:px-6 py-3 max-w-7xl">
@@ -205,7 +316,7 @@ export default function Header() {
                       }`}
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="2.5"  // Increased stroke width
+                    strokeWidth="2.5"
                     viewBox="0 0 24 24"
                   >
                     <path
@@ -291,13 +402,115 @@ export default function Header() {
               <FiMessageSquare className="w-5 h-5 text-gray-600 hover:text-rose-600" />
             </button>
 
-            {/* Notification Icon */}
-            <button
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              title="Notifications"
-            >
-              <FiBell className="w-5 h-5 text-gray-600 hover:text-rose-600" />
-            </button>
+            {/* Notification Icon with Badge */}
+            <div className="relative" ref={notificationRef}>
+              <button
+                onClick={() => {
+                  setNotificationMenu(!notificationMenu);
+                  if (!notificationMenu && unreadCount > 0) {
+                    markAsRead(); // Mark all as read when opening
+                  }
+                }}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors relative"
+                title="Notifications"
+              >
+                <FiBell className="w-5 h-5 text-gray-600 hover:text-rose-600" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Notification Dropdown */}
+              {notificationMenu && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 max-h-96 overflow-y-auto">
+                  <div className="p-4 border-b border-gray-100">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-semibold text-gray-900">Notifications</h3>
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={() => markAsRead()}
+                          className="text-sm text-rose-500 hover:text-rose-700"
+                        >
+                          Mark all as read
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="p-2">
+                    {isLoadingNotifications ? (
+                      <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500 mx-auto"></div>
+                        <p className="text-gray-500 mt-2">Loading notifications...</p>
+                      </div>
+                    ) : notifications.length === 0 ? (
+                      <div className="text-center py-8">
+                        <FiBell className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                        <p className="text-gray-500">No notifications yet</p>
+                      </div>
+                    ) : (
+                      notifications.map((notification) => (
+                        <div
+                          key={notification._id}
+                          className={`p-3 rounded-lg mb-1 cursor-pointer transition-colors ${
+                            notification.read 
+                              ? 'bg-white hover:bg-gray-50' 
+                              : 'bg-blue-50 hover:bg-blue-100'
+                          }`}
+                          onClick={() => {
+                            // Handle notification click based on type
+                            if (notification.type === 'new_post' && notification.data?.postId) {
+                              navigate(`/listing/${notification.data.postId}`);
+                            }
+                            if (!notification.read) {
+                              markAsRead(notification._id);
+                            }
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-full ${
+                              notification.read ? 'bg-gray-100' : 'bg-rose-100'
+                            }`}>
+                              {notification.type === 'new_post' && (
+                                <FiMap className="w-4 h-4 text-rose-500" />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <p className={`text-sm font-medium ${
+                                notification.read ? 'text-gray-700' : 'text-gray-900'
+                              }`}>
+                                {notification.message}
+                              </p>
+                              {notification.data?.title && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {notification.data.title}
+                                </p>
+                              )}
+                              <p className="text-xs text-gray-400 mt-1">
+                                {formatTime(notification.createdAt)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {notifications.length > 0 && (
+                    <div className="p-3 border-t border-gray-100">
+                      <Link
+                        to="/notifications"
+                        className="block text-center text-sm text-rose-500 hover:text-rose-700 font-medium"
+                      >
+                        View all notifications
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* User Menu Dropdown */}
             <div className="relative" ref={menuRef}>
@@ -575,6 +788,7 @@ export default function Header() {
                     </div>
                   </div>
                 )}
+
 
                 {/* Suggestions */}
                 {suggestions.length > 0 && (
