@@ -8,7 +8,7 @@ import {
   FaTools, FaShieldAlt, FaClipboardCheck, FaTruck, FaRegClock,
   FaMoneyBillWave, FaUser, FaExternalLinkAlt, FaChild, FaArrowDown,
   FaCar, FaUserFriends, FaBaby, FaUtensils, FaCarSide, FaBus, FaChevronDown, FaArrowUp,
-  FaBroom, FaRobot
+  FaBroom, FaRobot,FaBriefcase,FaEnvelope
 } from 'react-icons/fa';
 import CommentsSidePanelService from '../components/CommentsSidePanelService';
 import Comment from '../components/Comment';
@@ -1004,45 +1004,47 @@ const ServicePage = () => {
           </div>
 
           {/* Provider Info Sidebar */}
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 lg:sticky lg:top-[calc(100vh-400px)]">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">About the Provider</h2>
+        {/* Provider Information */}
+        {/* Provider Information */}
+<div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+  <h3 className="text-lg font-semibold text-gray-800 mb-4">About the Provider</h3>
+  <div className="space-y-3">
+    <div className="flex items-center gap-3">
+      <FaUser className="text-airbnb-red" />
+      <span className="text-gray-700">{service.host}</span>
+    </div>
+    {service.contact && (
+      <div className="flex items-center gap-3">
+        <FaPhone className="text-airbnb-red" />
+        <span className="text-gray-700">{service.contact}</span>
+      </div>
+    )}
+    {service.email && (
+      <div className="flex items-center gap-3">
+        <FaEnvelope className="text-airbnb-red" />
+        <span className="text-gray-700">{service.email}</span>
+      </div>
+    )}
+    <div className="flex items-center gap-3">
+      <FaClock className="text-airbnb-red" />
+      <span className="text-gray-700">Response time: 1-24 hours</span>
+    </div>
+    {service.host && (
+      <div className="flex items-center gap-3">
+        <FaBriefcase className="text-airbnb-red" />
+        <span className="text-gray-700">Experience: {service.host}</span>
+      </div>
+    )}
+    {service.cancel && (
+      <div className="flex items-center gap-3">
+        <FaUserFriends className="text-airbnb-red" />
+        <span className="text-gray-700">Languages: {service.cancel}</span>
+      </div>
+    )}
+  </div>
+</div>
 
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <FaUser className="text-3xl text-blue-500" />
-              </div>
-              <div>
-                <h3 className="font-bold text-xl text-gray-900">{service.host}</h3>
-                <p className="text-gray-600 text-base">Service provider for {service.name}</p>
-              </div>
-            </div>
 
-            <div className="space-y-4">
-              {/* Call Provider Button */}
-              {service.contact && (
-                <a
-                  href={`tel:${service.contact}`}
-                  className="flex items-center justify-center gap-2 w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors font-semibold shadow-md"
-                >
-                  <FaPhone />
-                  <span>Call Provider</span>
-                </a>
-              )}
-
-              {/* WhatsApp Button */}
-              {whatsappLink && (
-                <a
-                  href={whatsappLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center gap-2 w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-colors font-semibold shadow-md"
-                >
-                  <FaWhatsapp />
-                  <span>Message on WhatsApp</span>
-                </a>
-              )}
-            </div>
-          </div>
           
           {/* Additional info for daycare */}
           {service.type === 'daycare' && (
