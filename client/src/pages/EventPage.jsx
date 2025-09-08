@@ -5,11 +5,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
   FaMapMarkerAlt, FaPhone, FaUser,
-  FaClock, FaTicketAlt, FaCalendarDay, FaUsers,
+  FaClock, FaTicketAlt, FaUsers,
   FaWhatsapp, FaLink, FaCar, FaUtensils, FaChild,
   FaCalendarAlt, FaExclamationTriangle,
   FaArrowUp, FaArrowDown, FaRobot, FaExternalLinkAlt,
-  FaInfoCircle, FaArrowLeft, FaChevronDown, FaStar, FaUserFriends, FaBroom
+  FaInfoCircle, FaArrowLeft, 
+  FaEnvelope,FaAward, FaShieldAlt, FaMoneyBillWave, FaTimes,
+  FaFileImage, FaFilePdf
 } from 'react-icons/fa';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Zoom, Thumbs } from 'swiper/modules';
@@ -29,13 +31,14 @@ export default function EventPage() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
-  const [aiRating, setAiRating] = useState({
+  const [attachments, setAttachments] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [ setAiRating] = useState({
     average: 4.5,
     categoryRatings: {
-      cleanliness: 4.7,
-      communication: 4.6,
-
-
+      organization: 4.7,
+      value: 4.6,
+      atmosphere: 4.8,
       staff: 4.3
     }
   });
@@ -60,8 +63,6 @@ export default function EventPage() {
     dislikes: 0,
     userReaction: null // 'like' or 'dislike'
   });
-
-
 
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
@@ -146,13 +147,68 @@ export default function EventPage() {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
   };
 
+  // Handle file attachments
+  const handleAttachmentChange = (e) => {
+    const files = Array.from(e.target.files);
+
+    // Validate files
+    const validFiles = files.filter(file => {
+      const isImage = file.type.startsWith('image/');
+      const isPDF = file.type === 'application/pdf';
+      const isSizeValid = file.size <= 5 * 1024 * 1024; // 5MB
+
+      return (isImage || isPDF) && isSizeValid;
+    });
+
+    // Limit to 2 files
+    const newAttachments = [...attachments, ...validFiles].slice(0, 2);
+    setAttachments(newAttachments);
+  };
+
+  // Remove attachment
+  const removeAttachment = (index) => {
+    setAttachments(attachments.filter((_, i) => i !== index));
+  };
+
+  // Upload files to cloud storage (mock implementation)
+  const uploadFilesToCloud = async (files) => {
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    return files.map(file => {
+      // Create a mock URL for demonstration
+      const mockUrl = `https://example.com/uploads/${Date.now()}_${file.name}`;
+      return {
+        name: file.name,
+        url: mockUrl,
+        type: file.type.startsWith('image/') ? 'image' : 'pdf',
+        size: file.size
+      };
+    });
+  };
+
   // Handle registration form submission
-  const handleRegistrationSubmit = (e) => {
+  const handleRegistrationSubmit = async (e) => {
     e.preventDefault();
 
     if (!event?.organizerContact) {
       alert("Organizer contact information is missing. Please try another contact method.");
       return;
+    }
+
+    let uploadedFiles = [];
+
+    if (attachments.length > 0) {
+      setIsUploading(true);
+      try {
+        uploadedFiles = await uploadFilesToCloud(attachments);
+      } catch (error) {
+        console.error("File upload failed:", error);
+        alert("Failed to upload attachments. Please try again without files or contact support.");
+        setIsUploading(false);
+        return;
+      }
+      setIsUploading(false);
     }
 
     let message = `New Registration for *${event.title}*%0A%0A`;
@@ -162,8 +218,22 @@ export default function EventPage() {
     message += `*Tickets:* ${registrationData.quantity}%0A`;
     message += `*Special Requests:* ${registrationData.message || 'None'}%0A%0A`;
 
+    // Add attachments if they exist
+    if (uploadedFiles.length > 0) {
+      message += `*📎 ATTACHMENTS*%0A_Files uploaded for your reference_%0A%0A`;
+      uploadedFiles.forEach((file) => {
+        message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: ${file.name}%0A`;
+        message += `  ${file.url}%0A%0A`;
+      });
+    }
+
+    message += `_Sent via loopOut Booking System_`;
+
     const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(event.organizerContact)}?text=${message}`;
     window.open(whatsappUrl, '_blank');
+
+    // Reset attachments after sending
+    setAttachments([]);
   };
 
   // Handle input changes
@@ -171,8 +241,6 @@ export default function EventPage() {
     const { name, value } = e.target;
     setRegistrationData(prev => ({ ...prev, [name]: value }));
   };
-
-
 
   const handleLike = () => {
     setAiAssessment(prev => ({
@@ -239,7 +307,7 @@ export default function EventPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center py-12 bg-white rounded-xl shadow-sm">
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">Event not found</h2>
-          <p className="mt-2 text-gray-600">The event you re looking for doesn t exist or may have been removed.</p>
+          <p className="mt-2 text-gray-600">The event you re looking for doesnt exist or may have been removed.</p>
         </div>
       </div>
     );
@@ -260,12 +328,11 @@ export default function EventPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
+      {/* Navigation Button */}
       <div className="fixed bottom-4 left-4 z-50">
         <button
           onClick={() => {
             const routeMap = {
-
               default: '/event-home-page'
             };
             navigate(routeMap[event?.type?.toLowerCase()] || routeMap.default);
@@ -276,7 +343,6 @@ export default function EventPage() {
           <FaArrowLeft className="text-xl" />
         </button>
       </div>
-
 
       {/* Floating Action Buttons */}
       {(event.contact || whatsappNumber) && (
@@ -304,16 +370,16 @@ export default function EventPage() {
         </div>
       )}
 
-      {/* Main Content */}
-      <div className="flex flex-col md:flex-row gap-8 mb-12">
-        {/* Event Information and Image Gallery */}
-        <div className="md:w-2/3">
-          <div className="max-w-4xl mx-auto">
-            {/* Profile Header Section */}
-            <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-6">
-              <div>
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column - Main Content */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Header Section */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-4">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-start gap-3 mb-3">
-                  <h1 className="text-2xl md:text-3xl font-bold text-dark flex-1 min-w-0 line-clamp-2 overflow-hidden text-ellipsis break-words">
+                  <h1 className="text-2xl md:text-3xl font-bold text-dark flex-1 min-w-0 overflow-hidden text-ellipsis break-words">
                     {event.name}
                   </h1>
                   {event.security && (
@@ -322,11 +388,10 @@ export default function EventPage() {
                     </span>
                   )}
                 </div>
-
-                <div className="flex items-center gap-2 whitespace-nowrap overflow-x-auto py-1 scrollbar-hide">
+                
+                <div className="flex flex-wrap items-center gap-2">
                   {/* Rating Badge */}
                   <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-full border border-airbnb-medium-gray">
-
                     <span className="font-medium text-airbnb-dark">
                       {event.rating ? (
                         <>
@@ -348,9 +413,9 @@ export default function EventPage() {
                   </div>
                 </div>
               </div>
-
-              {/* Rating Widgets Section */}
-  <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100 w-full sm:w-auto">
+              
+              {/* Rating Widgets */}
+              <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100 w-full sm:w-auto">
                 <div className="flex flex-wrap items-center justify-center gap-4">
                   {/* Like/Dislike Widget */}
                   <div className="flex flex-col items-center">
@@ -406,17 +471,15 @@ export default function EventPage() {
 
                   {/* User Reviews */}
                   <div className="text-center">
-                     <div className="flex items-center justify-center gap-1 text-gray-600 text-sm font-medium mb-1">
-                       <span className="text-lg">reviews</span>
-                     
-                     </div>
-                     <div className="flex items-end justify-center gap-1">
-                        <span className="text-2xl font-bold text-gray-900 leading-none">
-                         {commentCount} 
-                       </span>
-                      
-                     </div>
-                   </div>
+                    <div className="flex items-center justify-center gap-1 text-gray-600 text-sm font-medium mb-1">
+                      <span className="text-lg">reviews</span>
+                    </div>
+                    <div className="flex items-end justify-center gap-1">
+                      <span className="text-2xl font-bold text-gray-900 leading-none">
+                        {commentCount} 
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -431,15 +494,15 @@ export default function EventPage() {
                   navigation={{ nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }}
                   thumbs={{ swiper: thumbsSwiper }}
                   zoom={true}
-                  className="h-100% sm:h-80 md:h-[450px] lg:h-[550px] bg-white"
+                  className="h-64 w-full sm:h-80 md:h-[450px] lg:h-[500px]"
                 >
                   {event.imageUrls.map((img, index) => (
-                    <SwiperSlide key={index} className="flex items-center justify-center">
-                      <div className="swiper-zoom-container w-full h-full flex items-center justify-center p-4">
+                    <SwiperSlide key={index}>
+                      <div className="swiper-zoom-container w-full h-full">
                         <img
                           src={img}
                           alt={`Event image ${index + 1}`}
-                          className="max-w-full max-h-full object-contain"
+                          className="block w-full h-full object-cover cursor-zoom-in"
                         />
                       </div>
                     </SwiperSlide>
@@ -455,17 +518,15 @@ export default function EventPage() {
                     slidesPerView={4}
                     freeMode={true}
                     watchSlidesProgress={true}
-                    className="mt-4 h-24 bg-gray-50 p-2"
+                    className="mt-4 h-20"
                   >
                     {event.imageUrls.map((img, index) => (
-                      <SwiperSlide key={index} className="flex items-center justify-center">
-                        <div className="w-full h-full flex items-center justify-center bg-white p-1 border border-gray-200 rounded-md">
-                          <img
-                            src={img}
-                            alt={`Thumbnail ${index + 1}`}
-                            className="w-full h-full object-contain max-h-16"
-                          />
-                        </div>
+                      <SwiperSlide key={index}>
+                        <img
+                          src={img}
+                          alt={`Thumbnail ${index + 1}`}
+                          className="block w-full h-full object-cover rounded-lg cursor-pointer opacity-70 hover:opacity-100 transition-opacity border border-gray-200"
+                        />
                       </SwiperSlide>
                     ))}
                   </Swiper>
@@ -477,170 +538,149 @@ export default function EventPage() {
               </div>
             )}
           </div>
-        </div>
 
-        {/* Registration Card */}
-        <div className="md:w-1/3">
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden md:sticky md:top-8">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Register for Event</h3>
-              <div className="flex items-center justify-between mb-4">
-                {event.price ? (
-                  <>
-                    <span className="text-3xl font-extrabold text-airbnb-red">Free Admission</span>
-                    <span className="text-gray-600 text-lg">per ticket</span>
-                  </>
-                ) : (
-                  <span className="text-2xl font-bold text-green-600">R{event.regularPrice} per ticket</span>
+          {/* About Section */}
+          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">About This Event</h2>
 
-
-                )}
-              </div>
+            <div className="prose max-w-none text-gray-700 leading-relaxed">
+              <p className="whitespace-pre-line">{displayText}</p>
             </div>
 
-            <div className="p-6 space-y-5">
-              {/* Organizer information */}
-              <div className="flex items-center gap-3 text-gray-700">
-                <FaUser className="text-airbnb-red text-xl" />
-                <span className="font-medium">Organizer: {event.organizerName || event.host}</span>
-              </div>
+            {description.length > 300 && (
+              <button
+                onClick={toggleDescription}
+                className="mt-3 text-airbnb-red hover:text-red-700 font-medium flex items-center"
+              >
+                {showFullDescription ? 'Show Less' : 'Read More'}
+              </button>
+            )}
+          </section>
 
-              {/* Event Date/Time */}
-              {event.date && (
-                <div className="flex items-center gap-3 text-gray-700">
-                  <FaCalendarAlt className="text-airbnb-red text-xl" />
-                  <span className="font-medium">
+          {/* Event Details Section */}
+          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Event Details</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Date & Time */}
+              <div>
+                <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                  <FaCalendarAlt className="text-airbnb-red" />
+                  Date & Time
+                </h3>
+                {event.date && (
+                  <p className="text-gray-700">
                     {formatDateTime(event.date, event.time)}
-                  </span>
-                </div>
-              )}
-
-              {/* Event Location */}
-              {event.location && (
-                <div className="flex items-center gap-3 text-gray-700">
-                  <FaMapMarkerAlt className="text-airbnb-red text-xl" />
-                  <span className="font-medium">{event.address}</span>
-                </div>
-              )}
-
-              {/* Registration Form */}
-              <form onSubmit={handleRegistrationSubmit} className="pt-4 space-y-4">
-                {/* Name */}
-                <div>
-                  <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Your Name
-                  </label>
-                  <input
-                    type="text"
-                    id="userName"
-                    name="name"
-                    value={registrationData.name}
-                    onChange={handleRegistrationChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    required
-                    placeholder="John Doe"
-                  />
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label htmlFor="userEmail" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    id="userEmail"
-                    name="email"
-                    value={registrationData.email}
-                    onChange={handleRegistrationChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    required
-                    placeholder="you@example.com"
-                  />
-                </div>
-
-                {/* Phone */}
-                <div>
-                  <label htmlFor="userPhone" className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    id="userPhone"
-                    name="phone"
-                    value={registrationData.phone}
-                    onChange={handleRegistrationChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    required
-                    placeholder="+27 12 345 6789"
-                  />
-                </div>
-
-                {/* Ticket Quantity */}
-                {event.price > 0 && (
-                  <div>
-                    <label htmlFor="ticketQuantity" className="block text-sm font-medium text-gray-700 mb-1">
-                      Number of Tickets
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        id="ticketQuantity"
-                        name="quantity"
-                        min="1"
-                        max="10"
-                        value={registrationData.quantity}
-                        onChange={handleRegistrationChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                        required
-                      />
-                      <FaTicketAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    </div>
-                  </div>
+                    {event.endTime && ` to ${event.endTime}`}
+                  </p>
                 )}
+              </div>
 
-                {/* Message */}
+              {/* Location */}
+              <div>
+                <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                  <FaMapMarkerAlt className="text-airbnb-red" />
+                  Location
+                </h3>
+                <p className="text-gray-700">{event.address}</p>
+                {event.address && (
+                  <a
+                    href={generateMapLink(event.address)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 inline-flex items-center text-blue-600 hover:underline text-sm"
+                  >
+                    View on map <FaExternalLinkAlt className="ml-1 text-xs" />
+                  </a>
+                )}
+              </div>
+
+              {/* Organizer */}
+              {event.organizerName && (
                 <div>
-                  <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
-                    Special Requests
-                  </label>
-                  <textarea
-                    id="specialRequests"
-                    name="message"
-                    value={registrationData.message}
-                    onChange={handleRegistrationChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-y"
-                    rows="3"
-                    placeholder="Accessibility needs, dietary restrictions, etc..."
-                  />
+                  <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <FaUser className="text-airbnb-red" />
+                    Organizer
+                  </h3>
+                  <p className="text-gray-700">{event.organizerName || event.host}</p>
                 </div>
+              )}
 
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-md"
-                >
-                  {event.price > 0 ? 'Register & Pay via WhatsApp' : 'Register Now'}
-                </button>
-              </form>
-
-              {/* Update Event Button */}
-              {currentUser && currentUser._id === event.userRef && (
-                <button
-                  onClick={() => navigate(`/update-event/${event._id}`)}
-                  className="w-full mt-4 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-md"
-                >
-                  Update Event Listing
-                </button>
+              {/* Website */}
+              {event.website && (
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <FaLink className="text-airbnb-red" />
+                    Event Website
+                  </h3>
+                  <a
+                    href={event.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline break-all text-sm"
+                  >
+                    {event.website}
+                  </a>
+                </div>
               )}
             </div>
-          </div>
-        </div>
-      </div>
+          </section>
 
-      {/* Details Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content Area */}
-        <div className="lg:col-span-2 space-y-8">
+          {/* Additional Information */}
+          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Additional Information</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-medium text-gray-700 mb-3">Event Details</h3>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3">
+                    <FaTicketAlt className="text-airbnb-red" />
+                    <span>Ticket Price: {event.regularPrice ? `R${event.regularPrice}` : 'Free'}</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <FaUsers className="text-airbnb-red" />
+                    <span>Capacity: {event.capacity || 'Unlimited'}</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <FaInfoCircle className="text-airbnb-red" />
+                    <span>Category: {event.category || 'General'}</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-medium text-gray-700 mb-3">Amenities</h3>
+                <ul className="space-y-3">
+                  {event.ageRestriction && (
+                    <li className="flex items-center gap-3">
+                      <FaClock className="text-airbnb-red" />
+                      <span>Age Restriction: {event.ageRestriction}</span>
+                    </li>
+                  )}
+                  {event.parking && (
+                    <li className="flex items-center gap-3">
+                      <FaCar className="text-airbnb-red" />
+                      <span>Parking: {event.parking}</span>
+                    </li>
+                  )}
+                  {event.foodAvailable && (
+                    <li className="flex items-center gap-3">
+                      <FaUtensils className="text-airbnb-red" />
+                      <span>Food Available: {event.foodAvailable}</span>
+                    </li>
+                  )}
+                  {event.familyFriendly && (
+                    <li className="flex items-center gap-3">
+                      <FaChild className="text-airbnb-red" />
+                      <span>Family Friendly: {event.familyFriendly}</span>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </section>
+
           {/* AI Content Assessment */}
           <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <div className="flex items-center gap-3 mb-4">
@@ -699,262 +739,304 @@ export default function EventPage() {
             </div>
           </section>
 
-          {/* About Section */}
+          {/* Comments Section */}
           <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">About This Event</h2>
-
-            <div className="prose max-w-none text-gray-700 leading-relaxed">
-              <p className="whitespace-pre-line">{displayText}</p>
-            </div>
-
-            {description.length > 300 && (
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-semibold text-gray-800">Reviews & Feedback</h2>
               <button
-                onClick={toggleDescription}
-                className="mt-3 text-airbnb-red hover:text-red-700 font-medium flex items-center"
+                onClick={() => setShowCommentsPanel(true)}
+                className="text-airbnb-red hover:text-red-700 font-medium"
               >
-                {showFullDescription ? 'Show Less' : 'Read More'}
+                View All
               </button>
-            )}
-          </section>
-
-          {/* Event Details Section */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Event Details</h2>
-
-            <div className="space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <FaCalendarDay className="text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Date & Time</h3>
-                  <p className="text-gray-600">
-                    {formatDateTime(event.date, event.time)}
-                    {event.endTime && ` to ${event.endTime}`}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <FaMapMarkerAlt className="text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Location</h3>
-                  <p className="text-gray-600">{event.address}</p>
-                  {event.address && (
-                    <a
-                      href={generateMapLink(event.address)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-1 inline-flex items-center text-blue-600 hover:underline"
-                    >
-                      View on map <FaExternalLinkAlt className="ml-1 text-xs" />
-                    </a>
-                  )}
-                </div>
-              </div>
-
-              {event.organizerName && (
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <FaUser className="text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Organizer</h3>
-                    <p className="text-gray-600">{event.organizerName || event.host}</p>
-                  </div>
-                </div>
-              )}
-
-              {event.website && (
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <FaLink className="text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Event Website</h3>
-                    <a
-                      href={event.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline break-all"
-                    >
-                      {event.website}
-                    </a>
-                  </div>
-                </div>
-              )}
             </div>
+            <EventComments 
+              eventId={id} 
+              onTotalComments={setCommentCount}
+              onRatings={setAiRating}
+              cardStyle={true}
+            />
           </section>
 
-          {/* Additional Information */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Additional Information</h2>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-3">
-                <FaTicketAlt className="text-airbnb-red" />
-                <span>Ticket Price: {event.regularPrice ? `R${event.regularPrice}` : 'Free'}</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <FaUsers className="text-airbnb-red" />
-                <span>Capacity: {event.capacity || 'Unlimited'}</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <FaInfoCircle className="text-airbnb-red" />
-                <span>Category: {event.category || 'General'}</span>
-              </li>
-              {event.ageRestriction && (
-                <li className="flex items-center gap-3">
-                  <FaClock className="text-airbnb-red" />
-                  <span>Age Restriction: {event.ageRestriction}</span>
-                </li>
-              )}
-              {event.parking && (
-                <li className="flex items-center gap-3">
-                  <FaCar className="text-airbnb-red" />
-                  <span>Parking: {event.parking}</span>
-                </li>
-              )}
-              {event.foodAvailable && (
-                <li className="flex items-center gap-3">
-                  <FaUtensils className="text-airbnb-red" />
-                  <span>Food Available: {event.foodAvailable}</span>
-                </li>
-              )}
-              {event.familyFriendly && (
-                <li className="flex items-center gap-3">
-                  <FaChild className="text-airbnb-red" />
-                  <span>Family Friendly: {event.familyFriendly}</span>
-                </li>
-              )}
-            </ul>
-          </section>
+          {showCommentsPanel && (
+            <CommentsSidePanelEvent
+              eventId={id}
+              onClose={() => setShowCommentsPanel(false)}
+            />
+          )}
         </div>
 
-        {/* Organizer Info Sidebar */}
+        {/* Right Column - Registration Form */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 lg:sticky lg:top-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">About the Organizer</h2>
-
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                <FaUser className="text-3xl text-airbnb-red" />
+          <div className="sticky top-6 space-y-6">
+            {/* Price Card */}
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+              <div className="flex items-baseline justify-between mb-4">
+                <span className="text-3xl font-bold text-gray-900">
+                  {event.regularPrice ? `R${event.regularPrice}` : 'Free'}
+                </span>
+                <span className="text-gray-600 text-sm">per ticket</span>
               </div>
-              <div>
-                <h3 className="font-bold text-xl text-gray-900">{event.organizerName || event.host}</h3>
-                <p className="text-gray-600 text-base">Event Organizer</p>
-                {event.organizerContact && (
-                  <div className="flex items-center gap-1 text-gray-700 text-sm mt-2">
-                    <FaPhone className="text-blue-500" />
-                    <span>{event.contact}</span>
+
+              {/* Registration Form */}
+              <form onSubmit={handleRegistrationSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-1">
+                    Your Name
+                  </label>
+                  <input
+                    type="text"
+                    id="userName"
+                    name="name"
+                    value={registrationData.name}
+                    onChange={handleRegistrationChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    required
+                    placeholder="John Doe"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="userEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="userEmail"
+                    name="email"
+                    value={registrationData.email}
+                    onChange={handleRegistrationChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    required
+                    placeholder="you@example.com"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="userPhone" className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    id="userPhone"
+                    name="phone"
+                    value={registrationData.phone}
+                    onChange={handleRegistrationChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    required
+                    placeholder="+27 12 345 6789"
+                  />
+                </div>
+
+                {/* Ticket Quantity */}
+                {event.regularPrice > 0 && (
+                  <div>
+                    <label htmlFor="ticketQuantity" className="block text-sm font-medium text-gray-700 mb-1">
+                      Number of Tickets
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        id="ticketQuantity"
+                        name="quantity"
+                        min="1"
+                        max="10"
+                        value={registrationData.quantity}
+                        onChange={handleRegistrationChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
+                        required
+                      />
+                      <FaTicketAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
+                    Special Requests
+                  </label>
+                  <textarea
+                    id="specialRequests"
+                    name="message"
+                    value={registrationData.message}
+                    onChange={handleRegistrationChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-y"
+                    rows="3"
+                    placeholder="Accessibility needs, dietary restrictions, etc..."
+                  />
+                </div>
+
+                {/* File Attachments */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Attach Files (Optional)
+                  </label>
+                  <div className="space-y-3">
+                    <input
+                      type="file"
+                      id="attachments"
+                      multiple
+                      onChange={handleAttachmentChange}
+                      accept="image/*,.pdf"
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="attachments"
+                      className="flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors"
+                    >
+                      <FaFileImage className="text-gray-400 mr-2" />
+                      <span className="text-sm text-gray-600">Select images or PDFs</span>
+                    </label>
+
+                    {attachments.length > 0 && (
+                      <div className="space-y-2">
+                        {attachments.map((file, index) => (
+                          <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-lg">
+                            <div className="flex items-center">
+                              {file.type.startsWith('image/') ? (
+                                <FaFileImage className="text-blue-500 mr-2" />
+                              ) : (
+                                <FaFilePdf className="text-red-500 mr-2" />
+                              )}
+                              <span className="text-sm text-gray-700 truncate max-w-[120px]">
+                                {file.name}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeAttachment(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <FaTimes />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Maximum 2 files (images or PDFs), 5MB each
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isUploading}
+                  className={`w-full bg-airbnb-red hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center ${
+                    isUploading ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isUploading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <FaWhatsapp className="mr-2 text-lg" />
+                      Register via WhatsApp
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="mt-4 text-xs text-gray-500 text-center">
+                By registering, you agree to our{' '}
+                <a href="/terms" className="text-blue-600 hover:underline">
+                  Terms of Service
+                </a>{' '}
+                and{' '}
+                <a href="/privacy" className="text-blue-600 hover:underline">
+                  Privacy Policy
+                </a>
+              </div>
+            </div>
+
+            {/* Contact Info Card */}
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Contact Information</h3>
+              
+              <div className="space-y-3">
+                {event.organizerName && (
+                  <div className="flex items-center">
+                    <FaUser className="text-gray-500 mr-3" />
+                    <span className="text-gray-700">{event.organizerName}</span>
+                  </div>
+                )}
+
+                {event.contact && (
+                  <div className="flex items-center">
+                    <FaPhone className="text-gray-500 mr-3" />
+                    <a href={`tel:${event.contact}`} className="text-blue-600 hover:underline">
+                      {event.contact}
+                    </a>
+                  </div>
+                )}
+
+                {whatsappLink && (
+                  <div className="flex items-center">
+                    <FaWhatsapp className="text-green-500 mr-3" />
+                    <a
+                      href={whatsappLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      Message via WhatsApp
+                    </a>
+                  </div>
+                )}
+
+                {event.email && (
+                  <div className="flex items-center">
+                    <FaEnvelope className="text-gray-500 mr-3" />
+                    <a href={`mailto:${event.email}`} className="text-blue-600 hover:underline break-all">
+                      {event.email}
+                    </a>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="space-y-4">
-              {/* Call Organizer Button */}
-              {event.contact && (
-                <a
-                  href={`tel:${event.contact}`}
-                  className="flex items-center justify-center gap-2 w-full bg-airbnb-red text-white py-3 rounded-lg hover:bg-red-700 transition-colors font-semibold shadow-md"
-                >
-                  <FaPhone />
-                  <span>Call Organizer</span>
-                </a>
-              )}
+            {/* Security & Trust Badges */}
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Secure Booking</h3>
+              
+              <div className="space-y-4">
+                <div className="flex items-start">
+                  <div className="bg-blue-100 p-2 rounded-full mr-3">
+                    <FaShieldAlt className="text-blue-600 text-lg" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-800">Verified Organizer</h4>
+                    <p className="text-sm text-gray-600 mt-1">This event host has been verified by our team.</p>
+                  </div>
+                </div>
 
-              {/* WhatsApp Button */}
-              {whatsappLink && (
-                <a
-                  href={whatsappLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center gap-2 w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-colors font-semibold shadow-md"
-                >
-                  <FaWhatsapp />
-                  <span>Message on WhatsApp</span>
-                </a>
-              )}
+                <div className="flex items-start">
+                  <div className="bg-green-100 p-2 rounded-full mr-3">
+                    <FaMoneyBillWave className="text-green-600 text-lg" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-800">Secure Payment</h4>
+                    <p className="text-sm text-gray-600 mt-1">Your payment information is protected.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="bg-purple-100 p-2 rounded-full mr-3">
+                    <FaAward className="text-purple-600 text-lg" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-800">Quality Guarantee</h4>
+                    <p className="text-sm text-gray-600 mt-1">We ensure all events meet our quality standards.</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Reviews Section */}
-      <hr className="my-8 border-gray-200" />
-      <section className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Guest Reviews</h2>
-          <div className="flex items-center">
-            <FaStar className="text-yellow-400 mr-1" />
-            <span className="font-semibold">{Number(aiRating.average).toFixed(1)}</span>
-            <span className="mx-1">·</span>
-            <span className="text-gray-600">{commentCount} reviews</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Airbnb-style stats summary */}
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-            <h3 className="font-semibold text-lg mb-3">Review Highlights</h3>
-            <div className="space-y-3">
-              {Object.entries(aiRating.categoryRatings).map(([category, rating]) => (
-                <div key={category} className="flex items-center justify-between">
-                  <div className="flex items-center text-gray-700">
-                    {category === 'cleanliness' ? (
-                      <FaBroom className="mr-2 text-blue-500" />
-                    ) : (
-                      <FaUserFriends className="mr-2 text-blue-500" />
-                    )}
-                    <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${(rating / 5) * 100}%` }}
-                      ></div>
-                    </div>
-                    <span className="font-medium">{rating.toFixed(1)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Recent Reviews Card */}
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-semibold text-lg">Recent Reviews</h3>
-              {commentCount > 2 && (
-                <button
-                  onClick={() => setShowCommentsPanel(true)}
-                  className="text-blue-600 hover:underline flex items-center text-sm"
-                >
-                  View all <FaChevronDown className="ml-1 text-xs" />
-                </button>
-              )}
-            </div>
-
-            <EventComments
-              eventId={id}
-              maxComments={2}
-              onTotalComments={setCommentCount}
-              onRatings={setAiRating}
-              cardStyle={true}
-            />
-          </div>
-        </div>
-      </section>
-
-      {showCommentsPanel && (
-        <CommentsSidePanelEvent
-          eventId={id}
-          onClose={() => setShowCommentsPanel(false)}
-        />
-      )}
     </div>
   );
 }
