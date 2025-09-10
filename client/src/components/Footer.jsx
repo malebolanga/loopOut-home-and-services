@@ -70,7 +70,7 @@ const Footer = () => {
       },
       // NEW: My Listings tab
       {
-        to: currentUser ? `/${currentUser._id}/listings` : "/login-required",
+        to: currentUser ? `/${currentUser._id}/list` : "/login-required",
         icon: (
           <div className={`p-2 rounded-full ${window.location.pathname.includes('listings') ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}>
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

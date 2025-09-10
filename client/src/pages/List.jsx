@@ -1,44 +1,42 @@
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { MdLocationOn, MdStar } from 'react-icons/md';
-import { FaEdit, FaTrash, FaBuilding, FaTree, FaMoneyBillWave, FaKey, FaFilter, FaPlus, FaSpinner, FaHeart, FaRegHeart } from 'react-icons/fa';
-import { FiRefreshCw } from 'react-icons/fi';
 
 const ListingTypeConfig = {
   rent: {
     label: 'Long Term Rent',
-    icon: <FaKey className="w-4 h-4" />,
+    icon: '🏠',
     style: 'bg-blue-100 text-blue-800',
     gradient: 'from-blue-400 to-blue-600',
   },
   sale: {
     label: 'For Sale',
-    icon: <FaMoneyBillWave className="w-4 h-4" />,
+    icon: '💰',
     style: 'bg-green-100 text-green-800',
     gradient: 'from-green-400 to-green-600',
   },
   land: {
     label: 'Land',
-    icon: <FaTree className="w-4 h-4" />,
+    icon: '🌳',
     style: 'bg-amber-100 text-amber-800',
     gradient: 'from-amber-400 to-amber-600',
   },
   office: {
     label: 'Office Space',
-    icon: <FaBuilding className="w-4 h-4" />,
+    icon: '🏢',
     style: 'bg-purple-100 text-purple-800',
     gradient: 'from-purple-400 to-purple-600',
   },
   over: {
     label: 'Short Term',
-    icon: <FaBuilding className="w-4 h-4" />,
+    icon: '🏨',
     style: 'bg-rose-100 text-rose-800',
     gradient: 'from-rose-400 to-rose-600',
   },
 };
 
-export default function List() {
+export default function PropertyListings() {
   const { currentUser } = useSelector((state) => state.user);
   const [deletingId, setDeletingId] = useState(null);
   const [userListings, setUserListings] = useState([]);
@@ -46,6 +44,7 @@ export default function List() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [favorites, setFavorites] = useState([]);
+  const [sortBy, setSortBy] = useState('newest');
 
   const fetchListings = async () => {
     try {
@@ -121,9 +120,25 @@ export default function List() {
     return () => clearTimeout(timer);
   }, [currentUser]);
 
+  // Sort listings based on selected option
+  const sortedListings = [...userListings].sort((a, b) => {
+    switch (sortBy) {
+      case 'price-high':
+        return b.regularPrice - a.regularPrice;
+      case 'price-low':
+        return a.regularPrice - b.regularPrice;
+      case 'newest':
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      case 'oldest':
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      default:
+        return 0;
+    }
+  });
+
   const filteredListings = selectedTypes.length > 0
-    ? userListings.filter((l) => selectedTypes.includes(l.type))
-    : userListings;
+    ? sortedListings.filter((l) => selectedTypes.includes(l.type))
+    : sortedListings;
 
   if (loading) {
     return (
@@ -131,7 +146,7 @@ export default function List() {
         <div className="max-w-md mx-auto text-center">
           <div className="relative inline-block mb-6">
             <div className="w-24 h-24 rounded-full bg-blue-50 flex items-center justify-center mx-auto">
-              <FaBuilding className="text-blue-400 text-3xl animate-pulse" />
+              <span className="text-3xl">🏡</span>
             </div>
             <div className="absolute -inset-2 border-4 border-blue-100 rounded-full animate-spin-slow opacity-70"></div>
           </div>
@@ -139,7 +154,7 @@ export default function List() {
             Loading Your Properties
           </h1>
           <div className="flex justify-center mb-6">
-            <FaSpinner className="animate-spin text-2xl text-blue-500" />
+            <span className="text-2xl text-blue-500 animate-spin">⏳</span>
           </div>
           <p className="text-gray-500 text-lg">
             Preparing your property portfolio...
@@ -161,12 +176,13 @@ export default function List() {
       <div className="sticky top-0 p-2 z-30 bg-white/95 backdrop-blur-sm py-4 border-b border-gray-100 shadow-sm">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h1 className="text-2xl sm:text-2.5xl font-bold text-gray-900 tracking-tight">
+            <h1 className="text-2xl sm:text-2.5xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+              <span className="text-2xl">📋</span>
               Your Property Listings
             </h1>
             <p className="mt-1.5 text-sm text-gray-500 flex items-center gap-1.5">
               <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 text-xs font-medium text-gray-600">
-                {userListings.length} {userListings.length === 1 ? 'property' : 'properties'}
+                {filteredListings.length} of {userListings.length} {userListings.length === 1 ? 'property' : 'properties'}
               </span>
               <span>•</span>
               <span>Last updated: Just now</span>
@@ -174,41 +190,48 @@ export default function List() {
           </div>
           
           <div className="flex items-center gap-3.5 p-2">
+            <div className="relative">
+              <select 
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="py-2 pl-3 pr-10 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+              >
+                <option value="newest">🆕 Newest First</option>
+                <option value="oldest">📅 Oldest First</option>
+                <option value="price-high">💰 Price: High to Low</option>
+                <option value="price-low">💲 Price: Low to High</option>
+              </select>
+            </div>
+            
             <button
               onClick={refreshListings}
               className="p-2.5 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors shadow-xs"
               disabled={refreshing}
               aria-label="Refresh listings"
             >
-              <FiRefreshCw className={`w-4 h-4 text-gray-500 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className={`text-gray-500 ${refreshing ? 'animate-spin' : ''}`}>🔄</span>
             </button>
             
-            <Link
-              to={`/${currentUser?._id}/create-listing`}
-              className="inline-flex items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-xs text-white bg-rose-600 hover:bg-rose-700 transition-colors focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
-            >
-              <FaPlus className="mr-2 -ml-0.5 h-3.5 w-3.5" />
-              Add New
-            </Link>
+           
           </div>
         </div>
       </div>
 
       {/* Filter Bar */}
       <div className="sticky top-[68px] z-20 bg-white/95 backdrop-blur-sm py-3 border-b border-gray-100 shadow-xs">
-        <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-hide">
-          <div className="flex items-center gap-2 text-gray-500 shrink-0">
-            <FaFilter className="w-3.5 h-3.5 text-gray-400" />
-            <span className="text-xs font-medium uppercase tracking-wider">Filter By</span>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3 text-gray-500 shrink-0">
+            <span className="text-gray-400">🔍</span>
+            <span className="text-xs font-medium uppercase tracking-wider">Filter By Type</span>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {Object.entries(ListingTypeConfig).map(([type, config]) => (
               <button
                 key={type}
                 onClick={() => toggleTypeFilter(type)}
                 className={`
-                  p-2.5 rounded-lg transition-all duration-200 relative
+                  flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 relative
                   ${selectedTypes.includes(type)
                     ? 'bg-rose-100/80 text-rose-600 shadow-sm'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'
@@ -217,20 +240,10 @@ export default function List() {
                 `}
                 aria-label={config.label}
               >
-                <div className="relative w-5 h-5">
-                  {React.cloneElement(config.icon, {
-                    className: `w-full h-full transition-transform duration-200 ${
-                      selectedTypes.includes(type) 
-                        ? 'scale-110 text-rose-600' 
-                        : 'group-hover:scale-105 text-current'
-                    }`
-                  })}
-                  {selectedTypes.includes(type) && (
-                    <span className="absolute inset-0 rounded-full bg-rose-100/40 animate-pulse"></span>
-                  )}
-                </div>
+                <span className="text-base">{config.icon}</span>
+                <span className="text-sm font-medium">{config.label}</span>
                 {selectedTypes.includes(type) && (
-                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-rose-500 rounded-full border border-white"></span>
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 rounded-full border border-white"></span>
                 )}
               </button>
             ))}
@@ -243,7 +256,7 @@ export default function List() {
         {filteredListings.map((listing) => (
           <div
             key={listing._id}
-            className="group relative rounded-xl overflow-hidden transition-all duration-300 hover:shadow-md border border-gray-200 hover:border-gray-300 bg-white"
+            className="group relative rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl border border-gray-200 hover:border-gray-300 bg-white flex flex-col h-full"
           >
             {/* Favorite Button */}
             <button 
@@ -256,11 +269,18 @@ export default function List() {
               aria-label={favorites.includes(listing._id) ? "Remove from favorites" : "Add to favorites"}
             >
               {favorites.includes(listing._id) ? (
-                <FaHeart className="w-4 h-4" />
+                <span className="text-base">❤️</span>
               ) : (
-                <FaRegHeart className="w-4 h-4" />
+                <span className="text-base">🤍</span>
               )}
             </button>
+
+            {/* Status Badge */}
+            <div className="absolute top-3 left-3 z-10">
+              <span className={`px-2 py-1 text-xs font-medium rounded-full ${ListingTypeConfig[listing.type]?.style}`}>
+                {ListingTypeConfig[listing.type]?.icon} {ListingTypeConfig[listing.type]?.label}
+              </span>
+            </div>
 
             {/* Image */}
             <Link
@@ -273,30 +293,68 @@ export default function List() {
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+              
+              {/* Image Overlay Info */}
+              <div className="absolute bottom-3 left-3 text-white">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  {listing.bedrooms && (
+                    <span className="flex items-center gap-1 backdrop-blur-sm bg-black/30 px-2 py-1 rounded-md">
+                      🛏️ {listing.bedrooms}
+                    </span>
+                  )}
+                  {listing.bathrooms && (
+                    <span className="flex items-center gap-1 backdrop-blur-sm bg-black/30 px-2 py-1 rounded-md">
+                      🚿 {listing.bathrooms}
+                    </span>
+                  )}
+                </div>
+              </div>
             </Link>
 
             {/* Listing Details */}
-            <div className="p-4">
-              <div className="flex justify-between items-start">
-                <h3 className="text-lg font-semibold text-gray-900 truncate">
+            <div className="p-4 flex flex-col flex-grow">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
                   {listing.name}
                 </h3>
                 <div className="flex items-center gap-1">
-                  <MdStar className="text-yellow-400" />
+                  <span className="text-yellow-400">⭐</span>
                   <span className="text-sm font-medium">4.8</span>
                 </div>
               </div>
 
-              <div className="mt-1 flex items-center gap-1 text-sm text-gray-500">
-                <MdLocationOn className="text-rose-500 flex-shrink-0" />
+              <div className="mt-1 flex items-center gap-1 text-sm text-gray-500 mb-3">
+                <span className="text-rose-500 flex-shrink-0">📍</span>
                 <span className="truncate">{listing.address}</span>
               </div>
 
-              <div className="mt-3 flex justify-between items-center">
-                <span className={`px-2 py-1 text-xs font-medium rounded ${ListingTypeConfig[listing.type]?.style}`}>
-                  {ListingTypeConfig[listing.type]?.label}
-                </span>
+              {/* Property Features */}
+              {(listing.bedrooms || listing.bathrooms || listing.area) && (
+                <div className="flex items-center gap-4 text-gray-500 text-sm mb-4">
+                  {listing.bedrooms && (
+                    <div className="flex items-center gap-1">
+                      <span>🛏️</span>
+                      <span>{listing.bedrooms} {listing.bedrooms === 1 ? 'Bed' : 'Beds'}</span>
+                    </div>
+                  )}
+                  {listing.bathrooms && (
+                    <div className="flex items-center gap-1">
+                      <span>🚿</span>
+                      <span>{listing.bathrooms} {listing.bathrooms === 1 ? 'Bath' : 'Baths'}</span>
+                    </div>
+                  )}
+                  {listing.area && (
+                    <div className="flex items-center gap-1">
+                      <span>📐</span>
+                      <span>{listing.area.toLocaleString()} sqft</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Price */}
+              <div className="mt-auto flex justify-between items-center pt-3 border-t border-gray-100">
                 <div className="flex items-baseline gap-1">
                   <span className="text-lg font-bold text-gray-900">
                     R{listing.regularPrice?.toLocaleString()}
@@ -305,6 +363,9 @@ export default function List() {
                     <span className="text-sm text-gray-500">/month</span>
                   )}
                 </div>
+                <span className="text-xs text-gray-400">
+                  📅 {new Date(listing.createdAt).toLocaleDateString()}
+                </span>
               </div>
 
               {/* Action Buttons */}
@@ -313,7 +374,7 @@ export default function List() {
                   to={`/update-listing/${listing._id}`}
                   className="flex-1 py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
-                  <FaEdit className="w-3 h-3" />
+                  <span>✏️</span>
                   Edit
                 </Link>
                 <button
@@ -322,9 +383,9 @@ export default function List() {
                   className="flex-1 py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   {deletingId === listing._id ? (
-                    <FaSpinner className="animate-spin w-3 h-3" />
+                    <span className="animate-spin">⏳</span>
                   ) : (
-                    <FaTrash className="w-3 h-3" />
+                    <span>🗑️</span>
                   )}
                   Delete
                 </button>
@@ -338,7 +399,7 @@ export default function List() {
       {filteredListings.length === 0 && (
         <div className="text-center py-16 rounded-xl bg-gray-50 mt-6">
           <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-rose-50 flex items-center justify-center">
-            <FaBuilding className="text-rose-300 text-4xl" />
+            <span className="text-4xl">🏡</span>
           </div>
           <h2 className="text-xl font-medium text-gray-700">
             {userListings.length === 0 ? 'No properties yet' : 'No matching properties'}
@@ -352,7 +413,7 @@ export default function List() {
             to="/create-listing"
             className="inline-flex items-center px-6 py-3 mt-6 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-rose-600 hover:bg-rose-700 transition-colors"
           >
-            <FaPlus className="mr-2 -ml-1 h-4 w-4" />
+            <span className="mr-2 -ml-1">➕</span>
             Create Listing
           </Link>
         </div>
