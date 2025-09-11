@@ -122,48 +122,54 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
     }
   };
 
-  const handleLikeComment = async (commentId) => {
-    if (!currentUser) {
-      setError('You must be logged in to like comments');
-      return;
-    }
+// Example for handleLikeComment - apply similar pattern to others
+const handleLikeComment = async (commentId) => {
+  if (!currentUser) {
+    setError('You must be logged in to like comments');
+    return;
+  }
 
-    try {
-      setLoading(prev => ({ ...prev, liking: true }));
-      
-      const res = await fetch(`/api/comment/like/${commentId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentUser.token}`
-        }
-      });
-
-      const responseData = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(responseData.message || 'Failed to like comment');
+  try {
+    setLoading(prev => ({ ...prev, liking: true }));
+    
+    const res = await fetch(`/api/comment/like/${commentId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${currentUser.token}`
       }
+    });
 
-      // Optimistic update for likes
-      setComments(prev => prev.map(comment => {
-        if (comment._id === commentId) {
-          const isLiked = comment.likes?.includes(currentUser._id);
-          return {
-            ...comment,
-            likes: isLiked 
-              ? comment.likes.filter(id => id !== currentUser._id)
-              : [...(comment.likes || []), currentUser._id]
-          };
-        }
-        return comment;
-      }));
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(prev => ({ ...prev, liking: false }));
+    if (!res.ok) {
+      let errorMessage = 'Failed to like comment';
+      try {
+        const errorData = await res.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (parseError) {
+        errorMessage = res.statusText || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
-  };
+
+    // Optimistic update for likes
+    setComments(prev => prev.map(comment => {
+      if (comment._id === commentId) {
+        const isLiked = comment.likes?.includes(currentUser._id);
+        return {
+          ...comment,
+          likes: isLiked 
+            ? comment.likes.filter(id => id !== currentUser._id)
+            : [...(comment.likes || []), currentUser._id]
+        };
+      }
+      return comment;
+    }));
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(prev => ({ ...prev, liking: false }));
+  }
+};
 
   const handleSubmitReply = async (commentId) => {
     setError(null);

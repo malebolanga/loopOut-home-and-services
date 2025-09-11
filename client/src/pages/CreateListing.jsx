@@ -3,16 +3,7 @@ import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/
 import { app } from "../firebase";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import {
-  FaCamera, FaVideo, FaTimes, FaParking, FaSwimmingPool, FaUsers,
-  FaWifi, FaTv, FaUtensils, FaBed, FaBath, FaShower, FaDog,
-  FaCookie, FaBackspace, FaShieldAlt, FaChair, FaBolt, FaBoxes,
-  FaRulerCombined, FaPercent, FaTag, FaCoffee, FaMusic, FaCreditCard,
-  FaPaypal, FaUniversity, FaSpinner, FaClock, FaBan, FaCalendarAlt,
-  FaTicketAlt, FaChild,FaCar,
-} from "react-icons/fa";
 import "../styles/ListingDetails.scss";
-
 
 export default function CreateListing() {
   const { currentUser } = useSelector((state) => state.user);
@@ -821,7 +812,7 @@ const handleHelperSubmit = async (e) => {
         <div className="max-w-6xl mx-auto p-4 text-center">
           <h1 className="text-3xl font-bold my-7">Create New Listing</h1>
           <div className="flex justify-center py-10">
-            <FaSpinner className="animate-spin text-4xl text-blue-500" />
+            <span className="animate-spin text-4xl text-blue-500">⏳</span>
           </div>
           <p className="text-gray-500">Loading listing form...</p>
         </div>
@@ -840,7 +831,7 @@ const handleHelperSubmit = async (e) => {
           className="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600"
           disabled={loading}
         >
-          {loading ? <FaSpinner className="animate-spin" /> : "Pay R35 to Create More Listings"}
+          {loading ? <span className="animate-spin">⏳</span> : "Pay R35 to Create More Listings"}
         </button>
         {error && <p className="mt-3 text-red-600 text-sm">{error}</p>}
       </div>
@@ -858,7 +849,7 @@ const handleHelperSubmit = async (e) => {
       {uploading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg text-center min-w-[300px]">
-            <FaSpinner className="animate-spin text-4xl text-airbnb-red mb-4 mx-auto" />
+            <span className="animate-spin text-4xl text-airbnb-red mb-4 mx-auto">⏳</span>
             <p className="mb-2">Uploading {uploadProgress === 100 ? 'processing...' : `${Math.round(uploadProgress)}%`}</p>
             <div className="w-full bg-gray-200 rounded-full h-2.5">
               <div
@@ -966,483 +957,484 @@ const handleHelperSubmit = async (e) => {
 </div>
 
       {/* Property Form */}
-      {activeTab === 'stays' && (
-        <form onSubmit={handlePropertySubmit} className="space-y-8">
-          {/* Property Type Selection */}
-          <div className="p-6 bg-white rounded-xl shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Select Property Type</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {[
-                { id: "rent", label: "Room/Home Rent", emoji: "🏠" },
-                { id: "over", label: "Guest House", emoji: "🛌" },
-                { id: "office", label: "Accomodation Per Hour", emoji: "🕒" },
-                { id: "land", label: "Land", emoji: "🌳" },
-                { id: "sale", label: "For Sale", emoji: "💰" },
-              ].map((type) => (
+      {/* Property Form */}
+{activeTab === 'stays' && (
+  <form onSubmit={handlePropertySubmit} className="space-y-8">
+    {/* Property Type Selection */}
+    <div className="p-6 bg-white rounded-xl shadow-sm">
+      <h2 className="text-xl font-semibold text-gray-800 mb-6">Select Property Type</h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {[
+          { id: "rent", label: "Room/Home Rent", emoji: "🏠" },
+          { id: "over", label: "Guest House", emoji: "🛌" },
+          { id: "office", label: "Accomodation Per Hour", emoji: "🕒" },
+          { id: "land", label: "Land", emoji: "🌳" },
+          { id: "sale", label: "For Sale", emoji: "💰" },
+        ].map((type) => (
+          <button
+            key={type.id}
+            type="button"
+            onClick={() => setPropertyForm({ ...propertyForm, type: type.id })}
+            className={`p-4 border-2 rounded-lg flex flex-col items-center transition-all ${propertyForm.type === type.id
+                ? "border-airbnb-red bg-red-50"
+                : "border-gray-200 hover:border-airbnb-red/50"
+              }`}
+          >
+            <span className="text-2xl mb-2">{type.emoji}</span>
+            <span className="font-medium text-gray-700">{type.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* Basic Information */}
+    <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
+      <h2 className="text-xl font-semibold">Basic Information</h2>
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-1">
+          <label className="font-medium text-gray-700">Property Name</label>
+          <input
+            type="text"
+            id="name"
+            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+            placeholder="Cozy Mountain Cabin"
+            onChange={handlePropertyChange}
+            value={propertyForm.name}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="font-medium text-gray-700">Address</label>
+          <input
+            type="text"
+            id="address"
+            className="w-full p-3 border border-gray-200 rounded-lg"
+            placeholder="Enter full address"
+            onChange={handlePropertyChange}
+            value={propertyForm.address}
+          />
+        </div>
+
+        <div className="md:col-span-2 space-y-1">
+          <label className="font-medium text-gray-700">Description</label>
+          <textarea
+            id="description"
+            className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
+            placeholder="Describe your property..."
+            onChange={handlePropertyChange}
+            value={propertyForm.description}
+          />
+        </div>
+
+        <div className="md:col-span-2 space-y-1">
+          <label className="font-medium text-gray-700">Mention nearby points of interest</label>
+          <textarea
+            id="near"
+            className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
+            placeholder="Mention nearby points of interest"
+            onChange={handlePropertyChange}
+            value={propertyForm.near}
+          />
+        </div>
+
+        <div className="md:col-span-2 space-y-1">
+          <label className="font-medium text-gray-700">Enter any rules or regulations for the property</label>
+          <textarea
+            id="rules"
+            className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
+            placeholder="Enter any rules or regulations for the property"
+            onChange={handlePropertyChange}
+            value={propertyForm.rules}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="font-medium text-gray-700">Contact Details</label>
+          <input
+            type="number"
+            id="contact"
+            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+            placeholder="Contact Details"
+            onChange={handlePropertyChange}
+            value={propertyForm.contact}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="font-medium text-gray-700">Name of Host/Seller</label>
+          <input
+            type="text"
+            id="host"
+            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+            placeholder="Contact Details"
+            onChange={handlePropertyChange}
+            value={propertyForm.host}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="font-medium text-gray-700">Type (e.g., House or Room)</label>
+          <input
+            type="text"
+            id="kind"
+            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+            placeholder="Type (e.g., House or Room)"
+            onChange={handlePropertyChange}
+            value={propertyForm.kind}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="font-medium text-gray-700">Available from which date</label>
+          <input
+            type="text"
+            id="period"
+            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+            placeholder="Available from which date"
+            onChange={handlePropertyChange}
+            value={propertyForm.period}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="font-medium text-gray-700">Cancellation Policy</label>
+          <input
+            type="text"
+            id="cancel"
+            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+            placeholder="Cancellation Policy"
+            onChange={handlePropertyChange}
+            value={propertyForm.cancel}
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* Media Upload */}
+    <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
+      <h2 className="text-xl font-semibold">Add Photos & Video</h2>
+
+      {/* Image Upload */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <input
+            type="file"
+            id="images"
+            accept="image/*"
+            multiple
+            onChange={handleFileChange}
+            className="hidden"
+            disabled={uploading}
+          />
+          <label
+            htmlFor="images"
+            className={`flex-1 p-8 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${uploading ? 'border-gray-200 bg-gray-50' : 'border-gray-300 hover:border-airbnb-red'
+              }`}
+          >
+            <span className="text-3xl mb-2">📸</span>
+            <span className="text-gray-600">Drag photos or click to upload</span>
+            <span className="text-sm text-gray-500">Up to 10 photos (2MB max each)</span>
+          </label>
+          <button
+            type="button"
+            onClick={() => handleImageSubmit('property')}
+            className="h-full px-6 bg-airbnb-red text-black rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+            disabled={uploading || files.length === 0}
+          >
+            {uploading ? "Uploading..." : "Upload"}
+          </button>
+        </div>
+
+        {imageUploadError && (
+          <p className="text-red-500 text-sm">{imageUploadError}</p>
+        )}
+
+        {/* Image Previews */}
+        {propertyForm.imageUrls.length > 0 && (
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {propertyForm.imageUrls.map((url, index) => (
+              <div key={url} className="relative aspect-square">
+                <img
+                  src={url}
+                  alt="listing"
+                  className="w-full h-full object-cover rounded-lg"
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/300x300?text=Image+Not+Available';
+                  }}
+                />
                 <button
-                  key={type.id}
                   type="button"
-                  onClick={() => setPropertyForm({ ...propertyForm, type: type.id })}
-                  className={`p-4 border-2 rounded-lg flex flex-col items-center transition-all ${propertyForm.type === type.id
-                      ? "border-airbnb-red bg-red-50"
-                      : "border-gray-200 hover:border-airbnb-red/50"
-                    }`}
-                >
-                  <span className="text-2xl mb-2">{type.emoji}</span>
-                  <span className="font-medium text-gray-700">{type.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Basic Information */}
-          <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
-            <h2 className="text-xl font-semibold">Basic Information</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-1">
-                <label className="font-medium text-gray-700">Property Name</label>
-                <input
-                  type="text"
-                  id="name"
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                  placeholder="Cozy Mountain Cabin"
-                  onChange={handlePropertyChange}
-                  value={propertyForm.name}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-medium text-gray-700">Address</label>
-                <input
-                  type="text"
-                  id="address"
-                  className="w-full p-3 border border-gray-200 rounded-lg"
-                  placeholder="Enter full address"
-                  onChange={handlePropertyChange}
-                  value={propertyForm.address}
-                />
-              </div>
-
-              <div className="md:col-span-2 space-y-1">
-                <label className="font-medium text-gray-700">Description</label>
-                <textarea
-                  id="description"
-                  className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
-                  placeholder="Describe your property..."
-                  onChange={handlePropertyChange}
-                  value={propertyForm.description}
-                />
-              </div>
-
-              <div className="md:col-span-2 space-y-1">
-                <label className="font-medium text-gray-700">Mention nearby points of interest</label>
-                <textarea
-                  id="near"
-                  className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
-                  placeholder="Mention nearby points of interest"
-                  onChange={handlePropertyChange}
-                  value={propertyForm.near}
-                />
-              </div>
-
-              <div className="md:col-span-2 space-y-1">
-                <label className="font-medium text-gray-700">Enter any rules or regulations for the property</label>
-                <textarea
-                  id="rules"
-                  className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
-                  placeholder="Enter any rules or regulations for the property"
-                  onChange={handlePropertyChange}
-                  value={propertyForm.rules}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-medium text-gray-700">Contact Details</label>
-                <input
-                  type="number"
-                  id="contact"
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                  placeholder="Contact Details"
-                  onChange={handlePropertyChange}
-                  value={propertyForm.contact}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-medium text-gray-700">Name of Host/Seller</label>
-                <input
-                  type="text"
-                  id="host"
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                  placeholder="Contact Details"
-                  onChange={handlePropertyChange}
-                  value={propertyForm.host}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-medium text-gray-700">Type (e.g., House or Room)</label>
-                <input
-                  type="text"
-                  id="kind"
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                  placeholder="Type (e.g., House or Room)"
-                  onChange={handlePropertyChange}
-                  value={propertyForm.kind}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-medium text-gray-700">Available from which date</label>
-                <input
-                  type="text"
-                  id="period"
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                  placeholder="Available from which date"
-                  onChange={handlePropertyChange}
-                  value={propertyForm.period}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-medium text-gray-700">Cancellation Policy</label>
-                <input
-                  type="text"
-                  id="cancel"
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                  placeholder="Cancellation Policy"
-                  onChange={handlePropertyChange}
-                  value={propertyForm.cancel}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Media Upload */}
-          <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
-            <h2 className="text-xl font-semibold">Add Photos & Video</h2>
-
-            {/* Image Upload */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <input
-                  type="file"
-                  id="images"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFileChange}
-                  className="hidden"
+                  onClick={() => handleRemoveImage(index, 'property')}
+                  className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"
                   disabled={uploading}
-                />
-                <label
-                  htmlFor="images"
-                  className={`flex-1 p-8 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${uploading ? 'border-gray-200 bg-gray-50' : 'border-gray-300 hover:border-airbnb-red'
-                    }`}
                 >
-                  <FaCamera className="text-3xl text-gray-400 mb-2" />
-                  <span className="text-gray-600">Drag photos or click to upload</span>
-                  <span className="text-sm text-gray-500">Up to 10 photos (2MB max each)</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => handleImageSubmit('property')}
-                  className="h-full px-6 bg-airbnb-red text-black rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                  disabled={uploading || files.length === 0}
-                >
-                  {uploading ? "Uploading..." : "Upload"}
+                  ❌
                 </button>
               </div>
-
-              {imageUploadError && (
-                <p className="text-red-500 text-sm">{imageUploadError}</p>
-              )}
-
-              {/* Image Previews */}
-              {propertyForm.imageUrls.length > 0 && (
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {propertyForm.imageUrls.map((url, index) => (
-                    <div key={url} className="relative aspect-square">
-                      <img
-                        src={url}
-                        alt="listing"
-                        className="w-full h-full object-cover rounded-lg"
-                        onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/300x300?text=Image+Not+Available';
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(index, 'property')}
-                        className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"
-                        disabled={uploading}
-                      >
-                        <FaTimes />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Video Upload */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <input
-                  type="file"
-                  id="video"
-                  accept="video/*"
-                  onChange={(e) => setVideoFile(e.target.files[0])}
-                  className="hidden"
-                  disabled={uploading}
-                />
-                <label
-                  htmlFor="video"
-                  className={`flex-1 p-8 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${uploading ? 'border-gray-200 bg-gray-50' : 'border-gray-300 hover:border-airbnb-red'
-                    }`}
-                >
-                  <FaVideo className="text-3xl text-gray-400 mb-2" />
-                  <span className="text-gray-600">Upload a property video</span>
-                  <span className="text-sm text-gray-500">Max 50MB</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={handleVideoUpload}
-                  className="h-full px-6 bg-airbnb-red  text-black rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                  disabled={uploading || !videoFile}
-                >
-                  {uploading ? "Uploading..." : "Upload"}
-                </button>
-              </div>
-
-              {videoUploadError && (
-                <p className="text-red-500 text-sm">{videoUploadError}</p>
-              )}
-
-              {/* Video Preview */}
-              {propertyForm.videoUrl && (
-                <div className="relative rounded-lg overflow-hidden">
-                  <video controls className="w-full">
-                    <source src={propertyForm.videoUrl} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                  <button
-                    type="button"
-                    onClick={() => setPropertyForm({ ...propertyForm, videoUrl: "" })}
-                    className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"
-                    disabled={uploading}
-                  >
-                    <FaTimes />
-                  </button>
-                </div>
-              )}
-            </div>
+            ))}
           </div>
+        )}
+      </div>
 
-          {/* Amenities */}
-          <div className="bg-white p-6 rounded-xl shadow-sm">
-            <h2 className="text-xl font-semibold mb-6">Amenities</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {[
-                { id: "wifi", label: "WiFi", icon: <FaWifi className="text-xl" /> },
-                { id: "kitchen", label: "Kitchen", icon: <FaUtensils className="text-xl" /> },
-                { id: "parking", label: "Parking", icon: <FaParking className="text-xl" /> },
-                { id: "pool", label: "Pool", icon: <FaSwimmingPool className="text-xl" /> },
-                { id: "tv", label: "TV", icon: <FaTv className="text-xl" /> },
-                { id: "bedrooms", label: "Bedrooms", icon: <FaBed className="text-xl" /> },
-                { id: "bathrooms", label: "Baths", icon: <FaBath className="text-xl" /> },
-                { id: "stove", label: "Stovetop", icon: <FaCookie className="text-xl" /> },
-                { id: "storage", label: "Wardrobe", icon: <FaBackspace className="text-xl" /> },
-                { id: "security", label: "Security", icon: <FaShieldAlt className="text-xl" /> },
-                { id: "furnished", label: "Furnished", icon: <FaChair className="text-xl" /> },
-                { id: "hot", label: "Hot Shower", icon: <FaShower className="text-xl" /> },
-                { id: "pets", label: "Pets Allowed", icon: <FaDog className="text-xl" /> },
-                { id: "prepaid", label: "Electricity Pripaid", icon: <FaBolt className="text-xl" /> },
-                { id: "fridge", label: "Refrigerator", icon: <FaBoxes className="text-xl" /> },
-                { id: "share", label: "House Share", icon: <FaUsers className="text-xl" /> },
-                { id: "breakfast", label: "Breakfast", icon: <FaCoffee className="text-xl" /> },
-                { id: "party", label: "Non-Party", icon: <FaMusic className="text-xl" /> },
-              ].map((amenity) => (
-                <label
-                  key={amenity.id}
-                  className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer ${propertyForm[amenity.id] ? "border-airbnb-red bg-red-50" : "border-gray-200"
-                    }`}
-                >
-                  <input
-                    type="checkbox"
-                    id={amenity.id}
-                    checked={propertyForm[amenity.id]}
-                    onChange={handlePropertyChange}
-                    className="hidden"
-                  />
-                  {amenity.icon}
-                  <span className="font-medium">{amenity.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+      {/* Video Upload */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <input
+            type="file"
+            id="video"
+            accept="video/*"
+            onChange={(e) => setVideoFile(e.target.files[0])}
+            className="hidden"
+            disabled={uploading}
+          />
+          <label
+            htmlFor="video"
+            className={`flex-1 p-8 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${uploading ? 'border-gray-200 bg-gray-50' : 'border-gray-300 hover:border-airbnb-red'
+              }`}
+          >
+            <span className="text-3xl mb-2">🎥</span>
+            <span className="text-gray-600">Upload a property video</span>
+            <span className="text-sm text-gray-500">Max 50MB</span>
+          </label>
+          <button
+            type="button"
+            onClick={handleVideoUpload}
+            className="h-full px-6 bg-airbnb-red  text-black rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+            disabled={uploading || !videoFile}
+          >
+            {uploading ? "Uploading..." : "Upload"}
+          </button>
+        </div>
 
-          {/* Property Details */}
-          {/* Property Details Section */}
-          <div className="bg-white p-6 rounded-xl shadow-sm">
-            <h2 className="text-xl font-semibold mb-6">Property Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Square Meters for Land/Office or Bedrooms for other types */}
-              <div className="space-y-2">
-                <label htmlFor="bedrooms" className="flex items-center gap-2 text-gray-700 font-medium">
-                  {propertyForm.type === "land" || propertyForm.type === "office" ? (
-                    <>
-                      <FaRulerCombined className="text-airbnb-red" />
-                      Square Meters
-                    </>
-                  ) : (
-                    <>
-                      <FaBed className="text-airbnb-red" />
-                      Bedrooms
-                    </>
-                  )}
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    id="bedrooms"
-                    min={propertyForm.type === "land" || propertyForm.type === "" ? 0 : 1}
-                    max={propertyForm.type === "land" || propertyForm.type === "office" ? 1000000 : 10000}
-                    required
-                    className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                    onChange={handlePropertyChange}
-                    value={propertyForm.bedrooms}
-                  />
-                  {propertyForm.type === "land" || propertyForm.type === "" ? (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                      sqm
-                    </span>
-                  ) : null}
-                </div>
-              </div>
+        {videoUploadError && (
+          <p className="text-red-500 text-sm">{videoUploadError}</p>
+        )}
 
-              {/* Hide bathrooms for land/office */}
-              {propertyForm.type !== "land" && propertyForm.type !== "" && (
-                <div className="space-y-2">
-                  <label htmlFor="bathrooms" className="flex items-center gap-2 text-gray-700 font-medium">
-                    <FaBath className="text-airbnb-red" />
-                    Bathrooms
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      id="bathrooms"
-                      min="0"
-                      max="10"
-                      required
-                      className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                      onChange={handlePropertyChange}
-                      value={propertyForm.bathrooms}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Price Field */}
-              <div className="space-y-2">
-                <label htmlFor="regularPrice" className="flex items-center gap-2 text-gray-700 font-medium">
-                  <FaTag className="text-airbnb-red" />
-                  Price
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    id="regularPrice"
-                    min="50"
-                    max="10000000"
-                    required
-                    className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                    onChange={handlePropertyChange}
-                    value={propertyForm.regularPrice}
-                  />
-                  {propertyForm.type === "rent" && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                      / month
-                    </span>
-                  )}
-                  {propertyForm.type === "over" && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                      / night
-                    </span>
-                  )}
-                    {propertyForm.type === "office" && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                      / per hour
-                    </span>
-                  )}
-                  {(propertyForm.type === "land" || propertyForm.type === "" || propertyForm.type === "sale") && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                      total
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Offer Checkbox */}
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="offer"
-                  checked={propertyForm.offer}
-                  onChange={handlePropertyChange}
-                  className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
-                />
-                <label htmlFor="offer" className="font-medium text-gray-700">
-                  Offer Discount
-                </label>
-              </div>
-
-              {/* Discount Price */}
-              {propertyForm.offer && (
-                <div className="space-y-2">
-                  <label htmlFor="discountPrice" className="flex items-center gap-2 text-gray-700 font-medium">
-                    <FaPercent className="text-airbnb-red" />
-                    Discounted Price
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      id="discountPrice"
-                      min="0"
-                      max="10000000"
-                      required
-                      className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                      onChange={handlePropertyChange}
-                      value={propertyForm.discountPrice}
-                    />
-                    {propertyForm.type === "rent" && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                        / month
-                      </span>
-                    )}
-                    {propertyForm.type === "over" && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                        / night
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Submit Section */}
-          <div className="bg-white p-6 rounded-xl shadow-sm">
+        {/* Video Preview */}
+        {propertyForm.videoUrl && (
+          <div className="relative rounded-lg overflow-hidden">
+            <video controls className="w-full">
+              <source src={propertyForm.videoUrl} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
             <button
-              type="submit"
-              disabled={loading}
-                className="w-full bg-white text-airbnb-red border border-airbnb-red font-semibold rounded-lg hover:bg-gray-100 transition-colors py-4 disabled:opacity-70"
+              type="button"
+              onClick={() => setPropertyForm({ ...propertyForm, videoUrl: "" })}
+              className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"
+              disabled={uploading}
             >
-              {loading ? "Creating Listing..." : "Publish Property Listing"}
+              ❌
             </button>
-            {error && <p className="mt-3 text-red-600 text-sm">{error}</p>}
           </div>
-        </form>
-      )}
+        )}
+      </div>
+    </div>
+
+    {/* Amenities */}
+    <div className="bg-white p-6 rounded-xl shadow-sm">
+      <h2 className="text-xl font-semibold mb-6">Amenities</h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {[
+          { id: "wifi", label: "WiFi", emoji: "📶" },
+          { id: "kitchen", label: "Kitchen", emoji: "🍳" },
+          { id: "parking", label: "Parking", emoji: "🅿️" },
+          { id: "pool", label: "Pool", emoji: "🏊‍♂️" },
+          { id: "tv", label: "TV", emoji: "📺" },
+          { id: "bedrooms", label: "Bedrooms", emoji: "🛏️" },
+          { id: "bathrooms", label: "Baths", emoji: "🚿" },
+          { id: "stove", label: "Stovetop", emoji: "🔥" },
+          { id: "storage", label: "Wardrobe", emoji: "👔" },
+          { id: "security", label: "Security", emoji: "🔒" },
+          { id: "furnished", label: "Furnished", emoji: "🪑" },
+          { id: "hot", label: "Hot Shower", emoji: "🚿" },
+          { id: "pets", label: "Pets Allowed", emoji: "🐾" },
+          { id: "prepaid", label: "Electricity Pripaid", emoji: "⚡" },
+          { id: "fridge", label: "Refrigerator", emoji: "❄️" },
+          { id: "share", label: "House Share", emoji: "👥" },
+          { id: "breakfast", label: "Breakfast", emoji: "🍳" },
+          { id: "party", label: "Non-Party", emoji: "🔇" },
+        ].map((amenity) => (
+          <label
+            key={amenity.id}
+            className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer ${propertyForm[amenity.id] ? "border-airbnb-red bg-red-50" : "border-gray-200"
+              }`}
+          >
+            <input
+              type="checkbox"
+              id={amenity.id}
+              checked={propertyForm[amenity.id]}
+              onChange={handlePropertyChange}
+              className="hidden"
+            />
+            <span className="text-xl">{amenity.emoji}</span>
+            <span className="font-medium">{amenity.label}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+
+    {/* Property Details */}
+    {/* Property Details Section */}
+    <div className="bg-white p-6 rounded-xl shadow-sm">
+      <h2 className="text-xl font-semibold mb-6">Property Details</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Square Meters for Land/Office or Bedrooms for other types */}
+        <div className="space-y-2">
+          <label htmlFor="bedrooms" className="flex items-center gap-2 text-gray-700 font-medium">
+            {propertyForm.type === "land" || propertyForm.type === "office" ? (
+              <>
+                <span>📏</span>
+                Square Meters
+              </>
+            ) : (
+              <>
+                <span>🛏️</span>
+                Bedrooms
+              </>
+            )}
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              id="bedrooms"
+              min={propertyForm.type === "land" || propertyForm.type === "" ? 0 : 1}
+              max={propertyForm.type === "land" || propertyForm.type === "office" ? 1000000 : 10000}
+              required
+              className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+              onChange={handlePropertyChange}
+              value={propertyForm.bedrooms}
+            />
+            {propertyForm.type === "land" || propertyForm.type === "" ? (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                sqm
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Hide bathrooms for land/office */}
+        {propertyForm.type !== "land" && propertyForm.type !== "" && (
+          <div className="space-y-2">
+            <label htmlFor="bathrooms" className="flex items-center gap-2 text-gray-700 font-medium">
+              <span>🚿</span>
+              Bathrooms
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                id="bathrooms"
+                min="0"
+                max="10"
+                required
+                className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                onChange={handlePropertyChange}
+                value={propertyForm.bathrooms}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Price Field */}
+        <div className="space-y-2">
+          <label htmlFor="regularPrice" className="flex items-center gap-2 text-gray-700 font-medium">
+            <span>💰</span>
+            Price
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              id="regularPrice"
+              min="50"
+              max="10000000"
+              required
+              className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+              onChange={handlePropertyChange}
+              value={propertyForm.regularPrice}
+            />
+            {propertyForm.type === "rent" && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                / month
+              </span>
+            )}
+            {propertyForm.type === "over" && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                / night
+              </span>
+            )}
+              {propertyForm.type === "office" && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                / per hour
+              </span>
+            )}
+            {(propertyForm.type === "land" || propertyForm.type === "" || propertyForm.type === "sale") && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                total
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Offer Checkbox */}
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            id="offer"
+            checked={propertyForm.offer}
+            onChange={handlePropertyChange}
+            className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
+          />
+          <label htmlFor="offer" className="font-medium text-gray-700">
+            Offer Discount
+          </label>
+        </div>
+
+        {/* Discount Price */}
+        {propertyForm.offer && (
+          <div className="space-y-2">
+            <label htmlFor="discountPrice" className="flex items-center gap-2 text-gray-700 font-medium">
+              <span>🤑</span>
+              Discounted Price
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                id="discountPrice"
+                min="0"
+                max="10000000"
+                required
+                className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                onChange={handlePropertyChange}
+                value={propertyForm.discountPrice}
+              />
+              {propertyForm.type === "rent" && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                  / month
+                </span>
+              )}
+              {propertyForm.type === "over" && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                  / night
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* Submit Section */}
+    <div className="bg-white p-6 rounded-xl shadow-sm">
+      <button
+        type="submit"
+        disabled={loading}
+          className="w-full bg-white text-airbnb-red border border-airbnb-red font-semibold rounded-lg hover:bg-gray-100 transition-colors py-4 disabled:opacity-70"
+      >
+        {loading ? "Creating Listing..." : "Publish Property Listing"}
+      </button>
+      {error && <p className="mt-3 text-red-600 text-sm">{error}</p>}
+    </div>
+  </form>
+)}
 
       {/* Service Form */}
       {activeTab === 'experiences' && (
@@ -1665,7 +1657,7 @@ const handleHelperSubmit = async (e) => {
             htmlFor="images"
             className="flex-1 p-8 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-airbnb-red transition-colors"
           >
-            <FaCamera className="text-3xl text-gray-400 mb-2" />
+            <span className="text-3xl mb-2">📸</span>
             <span className="text-gray-600">Drag photos or click to upload</span>
             <span className="text-sm text-gray-500">Up to 10 photos</span>
           </label>
@@ -1697,7 +1689,7 @@ const handleHelperSubmit = async (e) => {
                   onClick={() => handleRemoveImage(index, 'service')}
                   className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"
                 >
-                  <FaTimes />
+                  ❌
                 </button>
               </div>
             ))}
@@ -1712,7 +1704,7 @@ const handleHelperSubmit = async (e) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <label htmlFor="regularPrice" className="flex items-center gap-2 text-gray-700 font-medium">
-            <FaTag className="text-airbnb-red" />
+            <span>💰</span>
             {serviceForm.type === "daycare" ? "Daily Rate" : "Hourly Rate"}
           </label>
           <div className="relative">
@@ -1734,7 +1726,7 @@ const handleHelperSubmit = async (e) => {
 
         <div className="space-y-2">
           <label htmlFor="kind" className="flex items-center gap-2 text-gray-700 font-medium">
-            <FaUsers className="text-airbnb-red" />
+            <span>👥</span>
             Service Category
           </label>
           <textarea
@@ -1753,7 +1745,7 @@ const handleHelperSubmit = async (e) => {
 
         <div className="space-y-2">
           <label htmlFor="period" className="flex items-center gap-2 text-gray-700 font-medium">
-            <FaClock className="text-airbnb-red" />
+            <span>⏰</span>
             Availability
           </label>
           <input
@@ -1772,7 +1764,7 @@ const handleHelperSubmit = async (e) => {
 
         <div className="space-y-2">
           <label htmlFor="cancel" className="flex items-center gap-2 text-gray-700 font-medium">
-            <FaBan className="text-airbnb-red" />
+            <span>🚫</span>
             Cancellation Policy
           </label>
           <input
@@ -1787,7 +1779,7 @@ const handleHelperSubmit = async (e) => {
 
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-gray-700 font-medium">
-            <FaShieldAlt className="text-airbnb-red" />
+            <span>🔒</span>
             Background Check
           </label>
           <div className="flex items-center gap-3">
@@ -1806,7 +1798,7 @@ const handleHelperSubmit = async (e) => {
 
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-gray-700 font-medium">
-            <FaDog className="text-airbnb-red" />
+            <span>🐾</span>
             {serviceForm.type === "daycare" ? "Special Needs Experience" : "Pet Friendly"}
           </label>
           <div className="flex items-center gap-3">
@@ -1829,7 +1821,7 @@ const handleHelperSubmit = async (e) => {
         {serviceForm.type === "daycare" && (
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-gray-700 font-medium">
-              <FaUtensils className="text-airbnb-red" />
+              <span>🍽️</span>
               Meal Service
             </label>
             <div className="flex items-center gap-3">
@@ -1851,7 +1843,7 @@ const handleHelperSubmit = async (e) => {
         {serviceForm.type === "schoolTransport" && (
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-gray-700 font-medium">
-              
+              <span>👶</span>
               Child Seats
             </label>
             <div className="flex items-center gap-3">
@@ -2141,7 +2133,7 @@ const handleHelperSubmit = async (e) => {
                   htmlFor="images"
                   className="flex-1 p-8 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-airbnb-red transition-colors"
                 >
-                  <FaCamera className="text-3xl text-gray-400 mb-2" />
+                  <span className="text-3xl mb-2">📸</span>
                   <span className="text-gray-600">Drag photos or click to upload</span>
                   <span className="text-sm text-gray-500">Up to 10 photos</span>
                 </label>
@@ -2174,7 +2166,7 @@ const handleHelperSubmit = async (e) => {
                         onClick={() => handleRemoveImage(index, 'helper')}
                         className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"
                       >
-                        <FaTimes />
+                        ❌
                       </button>
                     </div>
                   ))}
@@ -2189,7 +2181,7 @@ const handleHelperSubmit = async (e) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label htmlFor="regularPrice" className="flex items-center gap-2 text-gray-700 font-medium">
-                  <FaTag className="text-airbnb-red" />
+                  <span>💰</span>
                   {helperForm.type === "tutor"
                     ? "Hourly Rate"
                     : helperForm.type === "barber"
@@ -2232,7 +2224,7 @@ const handleHelperSubmit = async (e) => {
               {helperForm.type === "tutor" && (
                 <div className="space-y-2">
                   <label htmlFor="bathrooms" className="flex items-center gap-2 text-gray-700 font-medium">
-                    <FaUsers className="text-airbnb-red" />
+                    <span>👥</span>
                     Teaching Format
                   </label>
                   <select
@@ -2251,7 +2243,7 @@ const handleHelperSubmit = async (e) => {
               {helperForm.type === "domestic" && (
                 <div className="space-y-2">
                   <label htmlFor="bedrooms" className="flex items-center gap-2 text-gray-700 font-medium">
-                    <FaClock className="text-airbnb-red" />
+                    <span>⏰</span>
                     Minimum Hours
                   </label>
                   <div className="relative">
@@ -2276,7 +2268,7 @@ const handleHelperSubmit = async (e) => {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label htmlFor="travelFee" className="flex items-center gap-2 text-gray-700 font-medium">
-                      <FaCar className="text-airbnb-red" />
+                      <span>🚗</span>
                       Travel Fee
                     </label>
                     <div className="relative">
@@ -2290,13 +2282,13 @@ const handleHelperSubmit = async (e) => {
                         onChange={handleHelperChange}
                         value={helperForm.travelFee}
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">R</span>
+                      <span className="absolute right-3 top-1/2 -translate-Y-1/2 text-gray-500">R</span>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-gray-700 font-medium">
-                      <FaCalendarAlt className="text-airbnb-red" />
+                      <span>📅</span>
                       Booking Notice
                     </label>
                     <select
@@ -2317,7 +2309,7 @@ const handleHelperSubmit = async (e) => {
 
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-gray-700 font-medium">
-                  <FaShieldAlt className="text-airbnb-red" />
+                  <span>🔒</span>
                   Background Check
                 </label>
                 <div className="flex items-center gap-3">
@@ -2337,7 +2329,7 @@ const handleHelperSubmit = async (e) => {
               {helperForm.type !== "tutor" && (
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-gray-700 font-medium">
-                    <FaDog className="text-airbnb-red" />
+                    <span>🐾</span>
                     Pet Friendly
                   </label>
                   <div className="flex items-center gap-3">
@@ -2451,7 +2443,7 @@ const handleHelperSubmit = async (e) => {
               <div className="flex items-center gap-4">
                 <input type="file" id="images" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
                 <label htmlFor="images" className="flex-1 p-8 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors border-gray-300 hover:border-airbnb-red">
-                  <FaCamera className="text-3xl text-gray-400 mb-2" />
+                  <span className="text-3xl mb-2">📸</span>
                   <span className="text-gray-600">Upload event photos/posters</span>
                 </label>
                 <button type="button" onClick={() => handleImageSubmit('event')} className="h-full px-6 bg-airbnb-red text-black rounded-lg hover:bg-red-700" disabled={uploading}>
@@ -2464,7 +2456,7 @@ const handleHelperSubmit = async (e) => {
                   {eventForm.imageUrls.map((url, index) => (
                     <div key={url} className="relative aspect-square">
                       <img src={url} alt="event listing" className="w-full h-full object-cover rounded-lg" />
-                      <button type="button" onClick={() => handleRemoveImage(index, 'event')} className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"><FaTimes /></button>
+                      <button type="button" onClick={() => handleRemoveImage(index, 'event')} className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red">❌</button>
                     </div>
                   ))}
                 </div>
@@ -2477,7 +2469,7 @@ const handleHelperSubmit = async (e) => {
             <h2 className="text-xl font-semibold mb-6">Event Details & Pricing</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label htmlFor="regularPrice" className="flex items-center gap-2 text-gray-700 font-medium"><FaTicketAlt className="text-airbnb-red" /> Ticket Price</label>
+                <label htmlFor="regularPrice" className="flex items-center gap-2 text-gray-700 font-medium"><span>🎫</span> Ticket Price</label>
                 <div className="relative">
                   <input type="number" id="regularPrice" min="0" required className="w-full p-3 pl-10 border border-gray-200 rounded-lg" onChange={handleEventChange} value={eventForm.regularPrice} />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">R (0 for free)</span>
@@ -2486,13 +2478,13 @@ const handleHelperSubmit = async (e) => {
             </div>
             <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
               {[
-                { id: "parking", label: "Parking Available", icon: <FaParking /> },
-                { id: "foodAvailable", label: "Food & Drinks", icon: <FaUtensils /> },
-                { id: "familyFriendly", label: "Family Friendly", icon: <FaChild /> },
+                { id: "parking", label: "Parking Available", emoji: "🅿️" },
+                { id: "foodAvailable", label: "Food & Drinks", emoji: "🍔" },
+                { id: "familyFriendly", label: "Family Friendly", emoji: "👨‍👩‍👧‍👦" },
               ].map((amenity) => (
                 <label key={amenity.id} className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer ${eventForm[amenity.id] ? "border-airbnb-red bg-red-50" : "border-gray-200"}`}>
                   <input type="checkbox" id={amenity.id} checked={eventForm[amenity.id]} onChange={handleEventChange} className="hidden" />
-                  {amenity.icon}
+                  <span className="text-xl">{amenity.emoji}</span>
                   <span className="font-medium">{amenity.label}</span>
                 </label>
               ))}
@@ -2620,19 +2612,19 @@ const handleHelperSubmit = async (e) => {
                       id: 'card',
                       name: 'Credit/Debit Card',
                       description: 'Pay with Visa, Mastercard, etc.',
-                      icon: <FaCreditCard className="text-xl text-airbnb-red" />
+                      emoji: '💳'
                     },
                     {
                       id: 'paypal',
                       name: 'PayPal',
                       description: 'Pay with your PayPal account',
-                      icon: <FaPaypal className="text-xl text-blue-500" />
+                      emoji: '📱'
                     },
                     {
                       id: 'bank',
                       name: 'Bank Transfer',
                       description: 'Direct bank transfer',
-                      icon: <FaUniversity className="text-xl text-green-600" />
+                      emoji: '🏦'
                     }
                   ].map((method) => (
                     <div
@@ -2644,7 +2636,7 @@ const handleHelperSubmit = async (e) => {
                         }`}
                     >
                       <div className="flex items-center gap-3">
-                        {method.icon}
+                        <span className="text-2xl">{method.emoji}</span>
                         <div>
                           <h4 className="font-semibold">{method.name}</h4>
                           <p className="text-sm text-gray-600">{method.description}</p>
