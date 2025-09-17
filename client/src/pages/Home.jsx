@@ -1221,68 +1221,75 @@ export default function Home() {
         {/* Tab Navigation with 3D effect */}
 
         {/* Tab Navigation with 3D effect */}
-        <div
-          ref={containerRef}
-          className="rounded-3xl shadow-xl p-4 mb-0 transform -translate-y-24 relative z-20 bg-gray-50 bg-opacity-90 backdrop-blur-md"
-        >
-          {/* Responsive Tab Bar */}
-          <div className="flex mb-4 w-full justify-center">
-            <div className="flex flex-wrap justify-center gap-1 sm:gap-2 max-w-4xl mx-auto">
-              {[
-                { id: "all", name: "all", icon: "🌎", label: "All" },
-                { id: "properties", name: "properties", icon: "🏠", label: "Properties" },
-                { id: "services", name: "services", icon: "🛎️", label: "Services" },
-                { id: "helper", name: "helper", icon: "👷", label: "Helpers" },
-                { id: "events", name: "events", icon: "📅", label: "Events" }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.name)}
-                  className={`
-            flex flex-col items-center justify-center p-1 sm:p-2
-            transition-all duration-300 
-            ${activeTab === tab.name
-                      ? "text-red-600 transform scale-105 sm:scale-110"
-                      : "text-gray-700"
-                    }
-          `}
-                >
-                  <div
-                    className={`
-            ${tab.name === 'all' ? allRotation :
-                        tab.name === 'properties' ? propertiesRotation :
-                          tab.name === 'services' ? servicesRotation :
-                            tab.name === 'helper' ? helperRotation :
-                              eventsRotation
-                      } 
-            transition-transform duration-300 
-            text-4xl sm:text-4xl
-            w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center
-          `}
-                  >
-                    <span className="
-            scale-110 
-            drop-shadow-[0_2px_1px_rgba(0,0,0,0.3)]
-            hover:drop-shadow-[0_3px_2px_rgba(0,0,0,0.4)]
-            active:scale-100
-            transition-all duration-200
-            ${activeTab === tab.name ? 
-             
+<div
+  ref={containerRef}
+  className="rounded-3xl shadow-xl p-3 sm:p-6 transform -translate-y-20 relative z-20 
+             bg-gray-50/90 backdrop-blur-md border border-gray-100"
+>
+  {/* Responsive Tab Bar */}
+  <div className="w-full">
+    <div className="flex flex-nowrap sm:flex-wrap justify-between sm:justify-center gap-1 sm:gap-4 max-w-full sm:max-w-5xl mx-auto">
+      {[
+        { id: "all", name: "all", icon: "🌎", label: "All" },
+        { id: "properties", name: "properties", icon: "🏠", label: "Properties" },
+        { id: "services", name: "services", icon: "🛎️", label: "Services" },
+        { id: "helper", name: "helper", icon: "👷", label: "Helpers" },
+        { id: "events", name: "events", icon: "📅", label: "Events" }
+      ].map((tab) => (
+        <button
+          key={tab.id}
+          onClick={() => setActiveTab(tab.name)}
+          className={`
+            flex flex-col items-center justify-center flex-1
+            px-1 py-2 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl
+            transition-all duration-300 ease-in-out
+            ${
+              activeTab === tab.name
+                ? "text-red-600 bg-red-50 shadow-sm scale-105"
+                : "text-gray-700 hover:bg-gray-100"
             }
-          ">
-                      {tab.icon}
-                    </span>
-
-
-
-                  </div>
-                  <span className="mt-1 text-xs font-semibold capitalize truncate w-full max-w-[80px]">
-                    {tab.label}
-                  </span>
-                </button>
-              ))}
-            </div>
+          `}
+        >
+          <div
+            className={`
+              ${
+                tab.name === "all"
+                  ? allRotation
+                  : tab.name === "properties"
+                  ? propertiesRotation
+                  : tab.name === "services"
+                  ? servicesRotation
+                  : tab.name === "helper"
+                  ? helperRotation
+                  : eventsRotation
+              }
+              text-3xl sm:text-2xl   /* bigger on small, normal on desktop */
+              flex items-center justify-center
+              transition-transform duration-300
+            `}
+          >
+            <span className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)] hover:drop-shadow-[0_2px_2px_rgba(0,0,0,0.35)] transition-all duration-200">
+              {tab.icon}
+            </span>
           </div>
+          <span className="mt-1 text-[10px] sm:text-sm font-medium capitalize truncate max-w-[60px] sm:max-w-[100px]">
+            {tab.label}
+          </span>
+        </button>
+      ))}
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
 
 
 

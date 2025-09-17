@@ -541,7 +541,8 @@ export default function Header() {
 
               {/* Dropdown Menu Content */}
               {dropdownMenu && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 divide-y divide-gray-100">
+               <div className="absolute center mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 max-h-96 overflow-y-auto">
+
                   {!currentUser ? (
                     <>
                       <div className="py-1">
