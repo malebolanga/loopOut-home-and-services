@@ -278,7 +278,15 @@ const Footer = () => {
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div className="border-t border-gray-700/50 pt-8 mt-8">
       <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+          <div className="flex  mb-0">
+                <span className="text-2xl font-bold text-white">
+                  loop<span className="text-rose-600">Out</span>
+                </span>
+              </div>
+         
         <div className="flex items-center space-x-6">
+
+         
           <span className="text-sm text-gray-400">© 2025 loopOut, Inc.</span>
           <div className="flex space-x-4 text-sm text-gray-400">
             <Link to="/terms" className="hover:text-white transition-colors hover:underline">Terms</Link>

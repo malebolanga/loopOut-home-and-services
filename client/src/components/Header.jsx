@@ -422,9 +422,9 @@ export default function Header() {
                 )}
               </button>
 
-              {/* Notification Dropdown */}
+              {/* Notification Dropdown - Fixed for small screens */}
               {notificationMenu && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 max-h-96 overflow-y-auto">
+                <div className="absolute right-0 mt-2 w-80 max-w-[90vw] bg-white rounded-xl shadow-lg border border-gray-200 max-h-96 overflow-y-auto z-50">
                   <div className="p-4 border-b border-gray-100">
                     <div className="flex justify-between items-center">
                       <h3 className="font-semibold text-gray-900">Notifications</h3>
@@ -477,14 +477,14 @@ export default function Header() {
                                 <FiMap className="w-4 h-4 text-rose-500" />
                               )}
                             </div>
-                            <div className="flex-1">
-                              <p className={`text-sm font-medium ${
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm font-medium truncate ${
                                 notification.read ? 'text-gray-700' : 'text-gray-900'
                               }`}>
                                 {notification.message}
                               </p>
                               {notification.data?.title && (
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className="text-xs text-gray-500 mt-1 truncate">
                                   {notification.data.title}
                                 </p>
                               )}
@@ -539,10 +539,9 @@ export default function Header() {
                 )}
               </button>
 
-              {/* Dropdown Menu Content */}
+              {/* Dropdown Menu Content - Fixed for small screens */}
               {dropdownMenu && (
-               <div className="absolute center mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 max-h-96 overflow-y-auto">
-
+                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-xl shadow-lg border border-gray-200 max-h-96 overflow-y-auto z-50">
                   {!currentUser ? (
                     <>
                       <div className="py-1">
@@ -684,7 +683,7 @@ export default function Header() {
       {/* Enhanced Mobile Search Bar */}
       {showMobileSearchBar && (
         <div
-          className="absolute top-full left-0 w-full bg-white backdrop-blur-md shadow-lg md:hidden animate-fadeIn"
+          className="absolute top-full left-0 w-full bg-white backdrop-blur-md shadow-lg md:hidden animate-fadeIn z-50"
           ref={mobileSearchRef}
         >
           <div className="p-4">
