@@ -299,42 +299,69 @@ export default function Header() {
       <div className="container mx-auto px-4 sm:px-6 py-3 max-w-7xl">
         <div className="flex justify-between items-center">
           {/* Logo Section */}
-          <Link to="/" className="flex items-center hover:scale-105 transition-transform">
-            <div className="flex justify-center">
-              <div className="flex items-baseline">
-                <span className="text-2xl font-bold flex items-end">
-                  <span className={`mr-[-2px] font-extrabold text-xl ${isScrolled
-                    ? 'text-[#1877F2] bg-w'
-                    : 'text-gray-900 dark:text-white'
-                    }`}>
-                    loop
-                  </span>
-                  <svg
-                    className={`w-8 h-8 relative top-[1px] ${isScrolled
-                      ? 'text-rose-600'
-                      : 'text-rose-600 dark:text-rose-400'
-                      }`}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3 3l5.2 5.2m0 0a8.5 8.5 0 1012 12 8.5 8.5 0 00-12-12z"
-                    />
-                  </svg>
-                  <span className={`ml-[-1px] font-black text-xl ${isScrolled
-                    ? 'text-rose-600'
-                    : 'text-rose-600 dark:text-rose-400'
-                    }`}>
-                    <strong className="font-extrabold">ut</strong>
-                  </span>
-                </span>
-              </div>
-            </div>
-          </Link>
+<Link 
+  to="/" 
+  className="inline-flex items-center hover:scale-105 transition-transform"
+>
+  <span className="text-2xl font-bold inline-flex items-center">
+    {/* l + logo + p */}
+    <span
+      className={`font-extrabold text-xl inline-flex items-center  ${
+        isScrolled
+          ? "text-[#1877F2] bg-w"
+          : "text-gray-900 dark:text-white"
+      }`}
+    >
+      <span className="inline-flex items-center font-extrabold mr-[-8px]">l</span>
+      <span className="relative w-11 h-11 inline-flex items-center justify-center mr-[-2px]">
+        <svg
+          viewBox="0 0 100 100"
+          className={`w-full h-full relative top-[1px] mr-[-8px] ${
+            isScrolled ? "text-[#1877F2]" : "text-[#1877F2]"
+          }`}
+        >
+          <path
+            fill="currentColor"
+            d="M30,50 C30,30 50,30 50,50 C50,70 70,70 70,50 C70,30 50,30 50,50"
+            stroke="currentColor"
+            strokeWidth="9"
+            fill="none"
+          />
+          <circle cx="30" cy="50" r="8" fill="currentColor" />
+          <circle cx="70" cy="50" r="8" fill="currentColor" />
+        </svg>
+      </span>
+      <span className="inline-flex items-center mr-[-4px]">p</span>
+    </span>
+
+    {/* Magnifier icon */}
+    <svg
+      className={`w-6 h-6 relative top-[1px] ml-[-1px] ${
+        isScrolled ? "text-rose-600" : "text-rose-600 dark:text-rose-400"
+      }`}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3 3l5.2 5.2m0 0a8.5 8.5 0 1012 12 8.5 8.5 0 00-12-12z"
+      />
+    </svg>
+
+    {/* ut */}
+    <span
+      className={`ml-[-1px] font-black text-xl ${
+        isScrolled ? "text-rose-600" : "text-rose-600 dark:text-rose-400"
+      }`}
+    >
+      <strong className="font-extrabold">ut</strong>
+    </span>
+  </span>
+</Link>
+
 
           {/* Central Search Bar (Desktop) */}
           <div className="hidden md:flex flex-grow justify-center px-4">

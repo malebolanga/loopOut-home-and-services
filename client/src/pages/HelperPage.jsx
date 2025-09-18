@@ -13,7 +13,8 @@ import {
   FaBandcamp, FaCut, FaTools, FaCar, 
   FaInfoCircle, FaMoneyBillWave,  FaTimes,
   FaFileImage, FaFilePdf, FaChevronDown, FaUserFriends, FaBroom, FaArrowUp, FaArrowDown,
-  FaCalendar, FaEnvelope, FaBriefcase, FaAward
+  FaCalendar, FaEnvelope, FaBriefcase, FaAward,
+  FaTshirt, FaBroom as FaBroomClean, FaFire, FaBaby, FaGlassCheers, FaEllipsisH
 } from 'react-icons/fa';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Zoom, Thumbs } from 'swiper/modules';
@@ -54,8 +55,22 @@ export default function HelperPage() {
     time: '',
     bringFood: 'no',
     message: '',
-    locationOption: 'comeToYou'
+    locationOption: 'comeToYou',
+    selectedServices: [],
+    serviceDescription: ''
   });
+
+  // Service options for domestic helpers/maids
+  const serviceOptions = [
+    { id: 'laundry', name: 'Laundry', icon: <FaTshirt className="text-blue-500" /> },
+    { id: 'cleaning', name: 'House Cleaning', icon: <FaBroomClean className="text-green-500" /> },
+    { id: 'ironing', name: 'Ironing', icon: <FaTshirt className="text-purple-500" /> },
+    { id: 'yard', name: 'Yard Cleaning', icon: <FaBroom className="text-yellow-600" /> },
+    { id: 'cooking', name: 'Cooking', icon: <FaFire className="text-red-500" /> },
+    { id: 'babysitting', name: 'Baby Sitting', icon: <FaBaby className="text-pink-500" /> },
+    { id: 'eventCleaning', name: 'After Events Cleaning', icon: <FaGlassCheers className="text-indigo-500" /> },
+    { id: 'other', name: 'Other Services', icon: <FaEllipsisH className="text-gray-500" /> }
+  ];
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -163,6 +178,22 @@ export default function HelperPage() {
     setBookingData({ ...bookingData, [name]: value });
   };
 
+  // Handle service selection
+  const handleServiceSelection = (serviceId) => {
+    setBookingData(prev => {
+      const selectedServices = [...prev.selectedServices];
+      const serviceIndex = selectedServices.indexOf(serviceId);
+      
+      if (serviceIndex > -1) {
+        selectedServices.splice(serviceIndex, 1);
+      } else {
+        selectedServices.push(serviceId);
+      }
+      
+      return { ...prev, selectedServices };
+    });
+  };
+
   // Handle file attachments
   const handleAttachmentChange = (e) => {
     const files = Array.from(e.target.files);
@@ -202,116 +233,137 @@ export default function HelperPage() {
       };
     });
   };
-const handleBookingSubmit = async (e) => {
-  e.preventDefault();
 
-  if (!helper?.contact) {
-    alert("Helper contact information is missing. Please try another contact method.");
-    return;
-  }
+  const handleBookingSubmit = async (e) => {
+    e.preventDefault();
 
-  let uploadedFiles = [];
-
-  if (attachments.length > 0) {
-    setIsUploading(true);
-    try {
-      uploadedFiles = await uploadFilesToCloud(attachments);
-    } catch (error) {
-      console.error("File upload failed:", error);
-      alert("Failed to upload attachments. Please try again without files or contact support.");
-      setIsUploading(false);
+    if (!helper?.contact) {
+      alert("Helper contact information is missing. Please try another contact method.");
       return;
     }
-    setIsUploading(false);
-  }
 
-  // Format the client's phone number for the reply link
-  const clientPhone = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
-
-  // Define the accept and decline messages and their corresponding links
-  const acceptMessage = `Hi ${bookingData.name}, I accept your booking for ${helper.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
-  const declineMessage = `Hi ${bookingData.name}, I'm unable to accept ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
-
-  // This part of the code always creates the accept and decline links.
-  // This ensures they are present for both "comeToYou" and "Helper's Place" bookings.
-  const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
-  const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
-
-  // Determine the location and travel fee message
-  let locationInfo = '';
-  let travelFeeMessage = '';
-  const isHomeVisit = bookingData.locationOption === 'comeToYou';
-  const hasTravelFee = helper.travelFee > 0 && isHomeVisit;
-
-  if (isHomeVisit) {
-    locationInfo = 'Come to Client';
-    if (hasTravelFee) {
-      travelFeeMessage = `• Travel Fee: R${helper.travelFee}%0A`;
+    // Validate service selection for domestic helpers
+    if ((helper.type === 'domestic' || helper.type === 'maid') && bookingData.selectedServices.length === 0) {
+      alert("Please select at least one service you need.");
+      return;
     }
-  } else if (bookingData.locationOption === 'comeToYou') {
-    locationInfo = 'Come to Client';
-  } else {
-    locationInfo = "Helper's Place";
-  }
 
-  // Build the main WhatsApp message
-  let message = `*📅 New Booking Request for ${helper.name}*%0A%0A`;
+    let uploadedFiles = [];
 
-  message += `*🛎️ SERVICE DETAILS*%0A`;
-  message += `• Price: R${helper.regularPrice}%0A`;
-  if (hasTravelFee) {
-    message += travelFeeMessage;
-  }
-  message += `• Provider Contact: ${helper.contact}%0A%0A`;
+    if (attachments.length > 0) {
+      setIsUploading(true);
+      try {
+        uploadedFiles = await uploadFilesToCloud(attachments);
+      } catch (error) {
+        console.error("File upload failed:", error);
+        alert("Failed to upload attachments. Please try again without files or contact support.");
+        setIsUploading(false);
+        return;
+      }
+      setIsUploading(false);
+    }
 
-  message += `*👤 CLIENT DETAILS*%0A`;
-  message += `• Name: ${bookingData.name}%0A`;
-  message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
-  message += `• Date: ${bookingData.date}%0A`;
-  message += `• Time: ${bookingData.time}%0A`;
-  message += `• Location: ${locationInfo}%0A`;
-  message += `• Food/Drinks: ${bookingData.bringFood === 'yes' ? 'Yes' : 'No'}%0A`;
-  message += `• Special Requests: ${bookingData.message || 'None'}%0A%0A`;
+    // Format the client's phone number for the reply link
+    const clientPhone = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
 
-  // This block checks if the booking is "comeToYou" and if an address exists.
-  // It then adds the map link and full address to the message.
-  if (isHomeVisit && bookingData.address) {
-    const mapLink = generateMapLink(bookingData.address);
-    message += `*📍 LOCATION DETAILS*%0A`;
-    message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
-    message += `• Navigation Link:%0A  ${mapLink}%0A%0A`;
-  }
+    // Define the accept and decline messages and their corresponding links
+    const acceptMessage = `Hi ${bookingData.name}, I accept your booking for ${helper.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
+    const declineMessage = `Hi ${bookingData.name}, I'm unable to accept ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
 
-  // Add attachments if they exist
-  if (uploadedFiles.length > 0) {
-    message += `*📎 ATTACHMENTS*%0A_Files uploaded for your reference_%0A%0A`;
-    uploadedFiles.forEach((file) => {
-      message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: ${file.name}%0A`;
-      message += `  ${file.url}%0A%0A`;
-    });
-  }
+    // This part of the code always creates the accept and decline links.
+    // This ensures they are present for both "comeToYou" and "Helper's Place" bookings.
+    const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
+    const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
 
-  // Add action links for the helper to accept or decline
-  message += `*ACTION REQUIRED*%0A`;
-  message += `Tap a link to reply to the client:%0A%0A`;
-  if (acceptLink) {
-    message += `✅ Accept: ${acceptLink}%0A`;
-  }
-  if (declineLink) {
-    message += `❌ Decline: ${declineLink}%0A%0A`;
-  }
+    // Determine the location and travel fee message
+    let locationInfo = '';
+    let travelFeeMessage = '';
+    const isHomeVisit = bookingData.locationOption === 'comeToYou';
+    const hasTravelFee = helper.travelFee > 0 && isHomeVisit;
 
-  message += `💬 You can also reply directly to this message.%0A%0A`;
-  message += `_Sent via loopOut Booking System_`;
+    if (isHomeVisit) {
+      locationInfo = 'Come to Client';
+      if (hasTravelFee) {
+        travelFeeMessage = `• Travel Fee: R${helper.travelFee}%0A`;
+      }
+    } else if (bookingData.locationOption === 'comeToYou') {
+      locationInfo = 'Come to Client';
+    } else {
+      locationInfo = "Helper's Place";
+    }
 
-  // Open WhatsApp with the pre-filled message
-  const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
-  window.open(whatsappUrl, '_blank');
+    // Build the main WhatsApp message
+    let message = `*📅 New Booking Request for ${helper.name}*%0A%0A`;
 
-  // Reset attachments after sending
-  setAttachments([]);
-};
+    message += `*🛎️ SERVICE DETAILS*%0A`;
+    message += `• Price: R${helper.regularPrice}%0A`;
+    
+    // Add selected services for domestic helpers
+    if ((helper.type === 'domestic' || helper.type === 'maid') && bookingData.selectedServices.length > 0) {
+      const selectedServiceNames = bookingData.selectedServices.map(serviceId => {
+        const service = serviceOptions.find(s => s.id === serviceId);
+        return service ? service.name : serviceId;
+      }).join(', ');
+      
+      message += `• Services: ${selectedServiceNames}%0A`;
+      
+      if (bookingData.serviceDescription) {
+        message += `• Service Details: ${bookingData.serviceDescription}%0A`;
+      }
+    }
+    
+    if (hasTravelFee) {
+      message += travelFeeMessage;
+    }
+    message += `• Provider Contact: ${helper.contact}%0A%0A`;
 
+    message += `*👤 CLIENT DETAILS*%0A`;
+    message += `• Name: ${bookingData.name}%0A`;
+    message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
+    message += `• Date: ${bookingData.date}%0A`;
+    message += `• Time: ${bookingData.time}%0A`;
+    message += `• Location: ${locationInfo}%0A`;
+    message += `• Food/Drinks: ${bookingData.bringFood === 'yes' ? 'Yes' : 'No'}%0A`;
+    message += `• Special Requests: ${bookingData.message || 'None'}%0A%0A`;
+
+    // This block checks if the booking is "comeToYou" and if an address exists.
+    // It then adds the map link and full address to the message.
+    if (isHomeVisit && bookingData.address) {
+      const mapLink = generateMapLink(bookingData.address);
+      message += `*📍 LOCATION DETAILS*%0A`;
+      message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
+      message += `• Navigation Link:%0A  ${mapLink}%0A%0A`;
+    }
+
+    // Add attachments if they exist
+    if (uploadedFiles.length > 0) {
+      message += `*📎 ATTACHMENTS*%0A_Files uploaded for your reference_%0A%0A`;
+      uploadedFiles.forEach((file) => {
+        message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: ${file.name}%0A`;
+        message += `  ${file.url}%0A%0A`;
+      });
+    }
+
+    // Add action links for the helper to accept or decline
+    message += `*ACTION REQUIRED*%0A`;
+    message += `Tap a link to reply to the client:%0A%0A`;
+    if (acceptLink) {
+      message += `✅ Accept: ${acceptLink}%0A`;
+    }
+    if (declineLink) {
+      message += `❌ Decline: ${declineLink}%0A%0A`;
+    }
+
+    message += `💬 You can also reply directly to this message.%0A%0A`;
+    message += `_Sent via loopOut Booking System_`;
+
+    // Open WhatsApp with the pre-filled message
+    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
+    window.open(whatsappUrl, '_blank');
+
+    // Reset attachments after sending
+    setAttachments([]);
+  };
 
   // Simulate AI analysis of comments
   const analyzeCommentsWithAI = () => {
@@ -969,6 +1021,55 @@ const handleBookingSubmit = async (e) => {
                     placeholder="Enter your phone number"
                   />
                 </div>
+
+                {/* Service Selection for Domestic Helpers */}
+                {(helper.type === 'domestic' || helper.type === 'maid') && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Select Services Needed
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {serviceOptions.map((service) => (
+                          <div
+                            key={service.id}
+                            className={`relative flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-all ${
+                              bookingData.selectedServices.includes(service.id)
+                                ? 'border-airbnb-red bg-red-50'
+                                : 'border-gray-300 hover:border-gray-400'
+                            }`}
+                            onClick={() => handleServiceSelection(service.id)}
+                          >
+                            <div className="text-xl mb-1">
+                              {service.icon}
+                            </div>
+                            <span className="text-xs font-medium text-center">{service.name}</span>
+                            {bookingData.selectedServices.includes(service.id) && (
+                              <div className="absolute top-1 right-1 w-4 h-4 bg-airbnb-red rounded-full flex items-center justify-center">
+                                <FaCheckCircle className="text-white text-xs" />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="serviceDescription" className="block text-sm font-medium text-gray-700 mb-1">
+                        Service Details
+                      </label>
+                      <textarea
+                        id="serviceDescription"
+                        name="serviceDescription"
+                        value={bookingData.serviceDescription}
+                        onChange={handleBookingChange}
+                        rows={3}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                        placeholder="Please provide details about the services you need..."
+                      />
+                    </div>
+                  </>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
