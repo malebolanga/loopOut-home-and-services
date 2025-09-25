@@ -312,34 +312,36 @@ export default function HelperPage() {
       }
     }
     
-    if (hasTravelFee) {
-      message += travelFeeMessage;
-    }
-    message += `• Provider Contact: ${helper.contact}%0A%0A`;
+if (hasTravelFee) {
+  message += travelFeeMessage;
+}
+message += `• Provider Contact: ${helper.contact}%0A%0A`;
 
-    message += `*👤 CLIENT DETAILS*%0A`;
-    message += `• Name: ${bookingData.name}%0A`;
-    message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
-    message += `• Date: ${bookingData.date}%0A`;
-    message += `• Time: ${bookingData.time}%0A`;
-    message += `• Location: ${locationInfo}%0A`;
-    message += `• Food/Drinks: ${bookingData.bringFood === 'yes' ? 'Yes' : 'No'}%0A`;
-    message += `• Special Requests: ${bookingData.message || 'None'}%0A%0A`;
+message += `*👤 CLIENT DETAILS*%0A`;
+message += `• Name: ${bookingData.name}%0A`;
+message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
+message += `• Date: ${bookingData.date}%0A`;
+message += `• Time: ${bookingData.time}%0A`;
+message += `• Location: ${locationInfo}%0A`;
+message += `• Food/Drinks: ${bookingData.bringFood === 'yes' ? 'Yes' : 'No'}%0A`;
+message += `• Special Requests: ${bookingData.message || 'None'}%0A%0A`;
 
-  message += `*${detailsLabel}:* ${bookingData.message || 'None'}%0A%0A`;
-    
-    message += `Please respond:%0A`;
-    message += `✅ [Accept Booking](${acceptLink})%0A`;
-    message += `❌ [Decline Booking](${declineLink})%0A%0A`;
-    message += `Or reply directly to this message`;
-    // This block checks if the booking is "comeToYou" and if an address exists.
-    // It then adds the map link and full address to the message.
-    if (isHomeVisit && bookingData.address) {
-      const mapLink = generateMapLink(bookingData.address);
-      message += `*📍 LOCATION DETAILS*%0A`;
-      message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
-      message += `• Navigation Link:%0A  ${mapLink}%0A%0A`;
-    }
+// Remove this problematic line:
+// message += `*${detailsLabel}:* ${bookingData.message || 'None'}%0A%0A`;
+
+message += `Please respond:%0A`;
+message += `✅ [Accept Booking](${acceptLink})%0A`;
+message += `❌ [Decline Booking](${declineLink})%0A%0A`;
+message += `Or reply directly to this message`;
+
+// This block checks if the booking is "comeToYou" and if an address exists.
+// It then adds the map link and full address to the message.
+if (isHomeVisit && bookingData.address) {
+  const mapLink = generateMapLink(bookingData.address);
+  message += `*📍 LOCATION DETAILS*%0A`;
+  message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
+  message += `• Navigation Link:%0A  ${mapLink}%0A%0A`;
+}
 
     // Add attachments if they exist
     if (uploadedFiles.length > 0) {
