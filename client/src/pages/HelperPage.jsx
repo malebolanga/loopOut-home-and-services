@@ -326,6 +326,12 @@ export default function HelperPage() {
     message += `• Food/Drinks: ${bookingData.bringFood === 'yes' ? 'Yes' : 'No'}%0A`;
     message += `• Special Requests: ${bookingData.message || 'None'}%0A%0A`;
 
+  message += `*${detailsLabel}:* ${bookingData.message || 'None'}%0A%0A`;
+    
+    message += `Please respond:%0A`;
+    message += `✅ [Accept Booking](${acceptLink})%0A`;
+    message += `❌ [Decline Booking](${declineLink})%0A%0A`;
+    message += `Or reply directly to this message`;
     // This block checks if the booking is "comeToYou" and if an address exists.
     // It then adds the map link and full address to the message.
     if (isHomeVisit && bookingData.address) {

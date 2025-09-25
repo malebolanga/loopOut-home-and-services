@@ -2428,6 +2428,7 @@ const handleHelperSubmit = async (e) => {
                 <label className="font-medium text-gray-700">Event Time</label>
                 <input type="time" id="time" className="w-full p-3 border border-gray-200 rounded-lg" onChange={handleEventChange} value={eventForm.time} required />
               </div>
+                
 
               <div className="space-y-1">
                 <label className="font-medium text-gray-700">Organizer Contact</label>
