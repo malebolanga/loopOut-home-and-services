@@ -846,7 +846,7 @@ if (isHomeVisit && bookingData.address) {
                 
                 {helper.period && (
                   <div className="mt-4">
-                    <h4 className="font-medium text-gray-700 mb-2">Certifications</h4>
+                    <h4 className="font-medium text-gray-700 mb-2">Certification</h4>
                     <p className="text-gray-700">{helper.certification}</p>
                   </div>
                 )}
