@@ -579,13 +579,13 @@ export default function Header() {
                           <span className="mr-3 text-lg">🔑</span>
                           Sign In
                         </Link>
-                        <Link
-                          to="/sign-up"
-                          className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="mr-3 text-lg">✨</span>
-                          Sign Up
-                        </Link>
+                       <Link
+  to={`/${currentUser?._id}/create-listing`}
+  className="flex items-center px-4 py-3 text-rose-600 font-medium hover:bg-gray-50 transition-colors"
+>
+  <span className="mr-3 text-lg">➕</span>
+  <span>Create Listing</span>
+</Link>
                       </div>
                       <div className="py-1">
                         <Link
@@ -604,13 +604,13 @@ export default function Header() {
                       </div>
 
                       <div className="py-1">
-                        <Link
-                          to="/profile"
-                          className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="mr-3 text-lg">👤</span>
-                          <span>Profile</span>
-                        </Link>
+                       <Link
+  to="/profile"
+  className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
+>
+  <span className="mr-3 text-lg">🚶</span>
+  <span>Profile</span>
+</Link>
 
                         <Link
                           to="/helper-home-page"
@@ -664,13 +664,13 @@ export default function Header() {
                           <span className="mr-3 text-lg">📋</span>
                           <span>My Listings</span>
                         </Link>
-                        <Link
-                          to={`/${currentUser?._id}/create-listing`}
-                          className="flex items-center px-4 py-3 text-rose-600 font-medium hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="mr-3 text-lg">✨</span>
-                          <span>Create Listing</span>
-                        </Link>
+                       <Link
+  to={`/${currentUser?._id}/create-listing`}
+  className="flex items-center px-4 py-3 text-rose-600 font-medium hover:bg-gray-50 transition-colors"
+>
+  <span className="mr-3 text-lg">➕</span>
+  <span>Create Listing</span>
+</Link>
                       </div>
                       <div className="py-1">
                         <Link
