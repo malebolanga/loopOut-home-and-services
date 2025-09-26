@@ -108,7 +108,7 @@ export default function Listing() {
   const [selectedDate, setSelectedDate] = useState(new Date()); // Fixed missing state
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
-
+const [isExpanded, setIsExpanded] = useState(false);
   const [dateRange, setDateRange] = useState(() => {
     const today = new Date();
     const tomorrow = new Date(today);
@@ -976,10 +976,26 @@ export default function Listing() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">Nearby Amenities</h3>
-                  <p className="text-gray-900 font-medium">{listing.near || 'Residential Home'}</p>
-                </div>
+              <div>
+  <h3 className="text-sm font-medium text-gray-500 mb-1">Nearby Amenities</h3>
+  <p className="text-gray-900 font-medium">
+    {listing.near 
+      ? isNearExpanded 
+        ? listing.near
+        : listing.near.split(' ').slice(0, 15).join(' ') + 
+          (listing.near.split(' ').length > 15 ? '...' : '')
+      : 'Residential Home'
+    }
+    {listing.near && listing.near.split(' ').length > 15 && (
+      <button 
+        onClick={() => setIsNearExpanded(!isNearExpanded)}
+        className="text-blue-600 ml-1 hover:underline"
+      >
+        {isNearExpanded ? 'Read less' : 'Read more'}
+      </button>
+    )}
+  </p>
+</div>
               </div>
 
               <div className="flex items-start">
@@ -988,10 +1004,27 @@ export default function Listing() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                   </svg>
                 </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">Rules & Policies</h3>
-                  <p className="text-gray-900 font-medium">{listing.rule || 'Residential Home'}</p>
-                </div>
+  
+<div>
+  <h3 className="text-sm font-medium text-gray-500 mb-1">Rules & Policies</h3>
+  <p className="text-gray-900 font-medium">
+    {listing.rules 
+      ? isExpanded 
+        ? listing.rules
+        : listing.rules.split(' ').slice(0, 15).join(' ') + 
+          (listing.rules.split(' ').length > 15 ? '...' : '')
+      : 'Residential Home'
+    }
+    {listing.rules && listing.rules.split(' ').length > 20 && (
+      <button 
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="text-blue-600 ml-1 hover:underline"
+      >
+        {isExpanded ? 'Read less' : 'Read more'}
+      </button>
+    )}
+  </p>
+</div>
               </div>
                  
               <div className="flex items-start">
