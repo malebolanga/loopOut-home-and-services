@@ -40,7 +40,7 @@ import {
   FaArrowLeft,
   FaSpinner,
   FaComment,
- 
+
   FaTv,
   FaWarehouse,
   FaChevronDown,
@@ -49,7 +49,7 @@ import {
   FaThumbsUp,
   FaThumbsDown,
   FaPaperPlane,
-  FaExternalLinkAlt,FaUserFriends,FaBroom
+  FaExternalLinkAlt, FaUserFriends, FaBroom
 } from "react-icons/fa";
 
 // Styles
@@ -108,14 +108,15 @@ export default function Listing() {
   const [selectedDate, setSelectedDate] = useState(new Date()); // Fixed missing state
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
-const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isNearExpanded, setIsNearExpanded] = useState(false);
   const [dateRange, setDateRange] = useState(() => {
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     return [today, tomorrow];
   });
-  
+
   const [uiState, setUiState] = useState({
     loading: false,
     error: false,
@@ -123,19 +124,19 @@ const [isExpanded, setIsExpanded] = useState(false);
     showAllReviews: false,
     newReviewsAvailable: false
   });
-  
+
   const [contactForm, setContactForm] = useState({
     name: "",
     phone: "",
     message: "",
     phoneError: false
   });
-  
+
   const [fullscreenImage, setFullscreenImage] = useState({
     open: false,
     index: 0
   });
-  
+
   const [aiRating, setAiRating] = useState({
     average: 0,
     totalRatings: 0,
@@ -149,8 +150,8 @@ const [isExpanded, setIsExpanded] = useState(false);
 
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
   const breakfastPrice = 150;
-  
-  const nights = dateRange[0] && dateRange[1] 
+
+  const nights = dateRange[0] && dateRange[1]
     ? Math.ceil((dateRange[1].getTime() - dateRange[0].getTime()) / (1000 * 60 * 60 * 24))
     : 0;
 
@@ -158,19 +159,19 @@ const [isExpanded, setIsExpanded] = useState(false);
   const calculateTotalHours = (start, end) => {
     const [startHour, startMinute] = start.split(':').map(Number);
     const [endHour, endMinute] = end.split(':').map(Number);
-    
+
     const startInMinutes = startHour * 60 + startMinute;
     const endInMinutes = endHour * 60 + endMinute;
-    
+
     if (endInMinutes <= startInMinutes) {
       return 0;
     }
-    
+
     return (endInMinutes - startInMinutes) / 60;
   };
 
   const totalHours = calculateTotalHours(startTime, endTime);
-  const totalPrice = listing?.type === 'office' 
+  const totalPrice = listing?.type === 'office'
     ? (listing.regularPrice * totalHours).toFixed(2)
     : 0;
 
@@ -201,15 +202,15 @@ const [isExpanded, setIsExpanded] = useState(false);
     const roomTotal = listing.regularPrice * nights;
     const breakfastTotal = mealPlan === 'breakfast' ? breakfastPrice * nights : 0;
     const totalPrice = roomTotal + breakfastTotal;
-    
+
     // Format prices
-    const formatPrice = (price) => 
+    const formatPrice = (price) =>
       price.toLocaleString('en-ZA', { minimumFractionDigits: 2 });
-    
+
     // Robust WhatsApp number formatting
     let num = String(listing?.contact || '27123456789').replace(/\D/g, '');
     let whatsappNumber;
-    
+
     if (num.startsWith('27') && num.length === 11) {
       // Already valid international format
       whatsappNumber = num;
@@ -225,40 +226,40 @@ const [isExpanded, setIsExpanded] = useState(false);
 
     const message = encodeURIComponent(
       `🏨 *NEW BOOKING REQUEST* 🏨\n\n` +
-      
+
       `*PROPERTY DETAILS*\n` +
       `🏠 ${listing.name}\n` +
       `📍 Location: ${listing.address || 'Not specified'}\n\n` +
-      
+
       `📅 *DATES*\n` +
       `• Check-in: ${dateRange[0].toDateString()}\n` +
       `• Check-out: ${dateRange[1].toDateString()}\n` +
       `• ${nights} Night${nights > 1 ? 's' : ''}\n\n` +
-      
+
       `💰 *PRICE BREAKDOWN*\n` +
       `• Room Rate: R${formatPrice(listing.regularPrice)}/night\n` +
       `  → ${nights} night${nights > 1 ? 's' : ''}: R${formatPrice(roomTotal)}\n` +
-      `${mealPlan === 'breakfast' ? 
+      `${mealPlan === 'breakfast' ?
         `• Breakfast: R${formatPrice(breakfastPrice)}/night\n` +
         `  → ${nights} night${nights > 1 ? 's' : ''}: R${formatPrice(breakfastTotal)}\n` : ''}` +
       `*TOTAL: R${formatPrice(totalPrice)}*\n\n` +
-      
+
       `👤 *GUEST INFORMATION*\n` +
       `• Full Name: ${guestName}\n` +
       `• Contact: ${guestContact}\n` +
       `• Special Requests: ${specialRequests || 'None'}\n\n` +
-      
+
       `📋 *HOST ACTIONS*\n` +
       `Please reply with:\n` +
       `✅ \`ACCEPT\` - Confirm this booking\n` +
       `❌ \`DECLINE\` - Reject this request\n` +
       `💬 \`MESSAGE\` - Contact guest for details\n\n` +
-      
+
       `_Sent from ${window.location.hostname}_`
     );
 
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
-    
+
     // Reset form
     setGuestName('');
     setGuestContact('');
@@ -267,10 +268,10 @@ const [isExpanded, setIsExpanded] = useState(false);
 
   const handleOfficeWhatsAppBooking = () => {
     const formatPrice = (price) => price.toLocaleString('en-ZA', { minimumFractionDigits: 2 });
-    
+
     let num = String(listing?.contact || '27123456789').replace(/\D/g, '');
     let whatsappNumber;
-    
+
     if (num.startsWith('27') && num.length === 11) {
       whatsappNumber = num;
     } else {
@@ -282,38 +283,38 @@ const [isExpanded, setIsExpanded] = useState(false);
 
     const message = encodeURIComponent(
       `🏢 *NEW OFFICE BOOKING REQUEST* 🏢\n\n` +
-      
+
       `*PROPERTY DETAILS*\n` +
       `🏠 ${listing.name}\n` +
       `📍 Location: ${listing.address || 'Not specified'}\n\n` +
-      
+
       `📅 *BOOKING DATE*\n` +
       `• Date: ${selectedDate.toDateString()}\n` +
       `• Start Time: ${startTime}\n` +
       `• End Time: ${endTime}\n` +
       `• Total Hours: ${totalHours} hour${totalHours > 1 ? 's' : ''}\n\n` +
-      
+
       `💰 *PRICE BREAKDOWN*\n` +
       `• Hourly Rate: R${formatPrice(listing.regularPrice)}\n` +
       `  → ${totalHours} hour${totalHours > 1 ? 's' : ''}: R${formatPrice(totalPrice)}\n` +
       `*TOTAL: R${formatPrice(totalPrice)}*\n\n` +
-      
+
       `👤 *GUEST INFORMATION*\n` +
       `• Full Name: ${guestName}\n` +
       `• Contact: ${guestContact}\n` +
       `• Special Requests: ${specialRequests || 'None'}\n\n` +
-      
+
       `📋 *HOST ACTIONS*\n` +
       `Please reply with:\n` +
       `✅ \`ACCEPT\` - Confirm this booking\n` +
       `❌ \`DECLINE\` - Reject this request\n` +
       `💬 \`MESSAGE\` - Contact guest for details\n\n` +
-      
+
       `_Sent from ${window.location.hostname}_`
     );
 
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
-    
+
     // Reset form
     setGuestName('');
     setGuestContact('');
@@ -339,21 +340,21 @@ const [isExpanded, setIsExpanded] = useState(false);
   useEffect(() => {
     const fetchHostRatings = async () => {
       if (!currentUser || !listing?.userRef) return;
-      
+
       // Extract host ID from listing (userRef could be string or object)
-      const hostId = typeof listing.userRef === 'string' 
-        ? listing.userRef 
+      const hostId = typeof listing.userRef === 'string'
+        ? listing.userRef
         : listing.userRef._id;
-      
+
       if (!hostId) return;
-      
+
       try {
         const response = await fetch(`/api/user/host-ratings/${hostId}`, {
           headers: {
             'Authorization': `Bearer ${currentUser.access_token}`
           }
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           setHostData({
@@ -366,7 +367,7 @@ const [isExpanded, setIsExpanded] = useState(false);
         console.error('Error fetching host ratings:', error);
       }
     };
-    
+
     fetchHostRatings();
   }, [currentUser, listing]);
 
@@ -379,18 +380,18 @@ const [isExpanded, setIsExpanded] = useState(false);
       navigate('/sign-in');
       return;
     }
-    
+
     if (!listing?.userRef) return;
-    
+
     // Extract host ID from listing (userRef could be string or object)
-    const hostId = typeof listing.userRef === 'string' 
-      ? listing.userRef 
+    const hostId = typeof listing.userRef === 'string'
+      ? listing.userRef
       : listing.userRef._id;
-      
+
     if (!hostId) return;
-    
+
     setRatingLoading(true);
-    
+
     try {
       const response = await fetch(`/api/user/rate-host/${hostId}`, {
         method: 'PUT',
@@ -400,7 +401,7 @@ const [isExpanded, setIsExpanded] = useState(false);
         },
         body: JSON.stringify({ action })
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setHostData({
@@ -598,13 +599,13 @@ const [isExpanded, setIsExpanded] = useState(false);
       <FaSpinner className="animate-spin mr-3" /> Loading property details...
     </div>
   );
-  
+
   if (uiState.error) return (
     <div className="p-8 text-center text-red-600 text-xl flex items-center justify-center min-h-[50vh]">
       Error loading listing. Please try again later. <FaComment className="ml-2" />
     </div>
   );
-  
+
   if (!listing) return null;
 
   return (
@@ -650,8 +651,8 @@ const [isExpanded, setIsExpanded] = useState(false);
       <section className="relative mb-8 mt-10">
         <div
           className={`flex ${isMobile ? 'flex-col h-auto' :
-              isTablet ? 'flex-row h-[500px]' :
-                'flex-row h-[700px]'
+            isTablet ? 'flex-row h-[500px]' :
+              'flex-row h-[700px]'
             } gap-4`}
         >
           <Swiper
@@ -751,60 +752,60 @@ const [isExpanded, setIsExpanded] = useState(false);
         {/* Left Column - Property Details */}
         <div className="lg:col-span-2">
 
-     <header className="mb-6">
-  {/* Title and Verification Badge */}
-  <div className="flex items-center gap-3 mb-3">
-    <h1 className="text-2xl md:text-3xl font-bold text-dark flex-1 min-w-0 truncate">
-      {listing.name}
-    </h1>
-    {aiRating.verified && (
-      <span className="flex items-center bg-airbnb-light-red text-airbnb-red px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap shadow-sm">
-        <span className="mr-1.5">🏆</span> Verified
-      </span>
-    )}
-  </div>
+          <header className="mb-6">
+            {/* Title and Verification Badge */}
+            <div className="flex items-center gap-3 mb-3">
+              <h1 className="text-2xl md:text-3xl font-bold text-dark flex-1 min-w-0 truncate">
+                {listing.name}
+              </h1>
+              {aiRating.verified && (
+                <span className="flex items-center bg-airbnb-light-red text-airbnb-red px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap shadow-sm">
+                  <span className="mr-1.5">🏆</span> Verified
+                </span>
+              )}
+            </div>
 
-  {/* Property Details - Single Row */}
-  <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-airbnb-gray text-sm md:text-base px-1">
-    {/* Bedrooms/Size */}
-    {listing.bedrooms && (
-      <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-lg">
-        <span className="mr-2 text-airbnb-dark">
-          {listing.propertyType !== '' && listing.propertyType !== 'land' ? '🛏️' : '📐'}
-        </span>
-        <span className="font-medium">
-          {listing.propertyType === '' || listing.propertyType === 'land'
-            ? `${listing.bedrooms}m²`
-            : `${listing.bedrooms} ${listing.bedrooms === 1 ? 'bed' : 'beds'}`}
-        </span>
-      </div>
-    )}
+            {/* Property Details - Single Row */}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-airbnb-gray text-sm md:text-base px-1">
+              {/* Bedrooms/Size */}
+              {listing.bedrooms && (
+                <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-lg">
+                  <span className="mr-2 text-airbnb-dark">
+                    {listing.propertyType !== '' && listing.propertyType !== 'land' ? '🛏️' : '📐'}
+                  </span>
+                  <span className="font-medium">
+                    {listing.propertyType === '' || listing.propertyType === 'land'
+                      ? `${listing.bedrooms}m²`
+                      : `${listing.bedrooms} ${listing.bedrooms === 1 ? 'bed' : 'beds'}`}
+                  </span>
+                </div>
+              )}
 
-    {/* Bathrooms */}
-    {listing.bathrooms && listing.propertyType !== 'land' && (
-      <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-lg">
-        <span className="mr-2 text-airbnb-dark">🚿</span>
-        <span className="font-medium">{listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'}</span>
-      </div>
-    )}
+              {/* Bathrooms */}
+              {listing.bathrooms && listing.propertyType !== 'land' && (
+                <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-lg">
+                  <span className="mr-2 text-airbnb-dark">🚿</span>
+                  <span className="font-medium">{listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'}</span>
+                </div>
+              )}
 
-    {/* Rating */}
-    <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-lg">
-      <span className="mr-2 text-airbnb-yellow">⭐</span>
-      <span className="font-semibold text-airbnb-dark">{Number(aiRating.average).toFixed(1)}</span>
-      <span className="mx-2 text-airbnb-medium-gray">·</span>
-      <span className="text-airbnb-gray">{commentCount} reviews</span>
-    </div>
+              {/* Rating */}
+              <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-lg">
+                <span className="mr-2 text-airbnb-yellow">⭐</span>
+                <span className="font-semibold text-airbnb-dark">{Number(aiRating.average).toFixed(1)}</span>
+                <span className="mx-2 text-airbnb-medium-gray">·</span>
+                <span className="text-airbnb-gray">{commentCount} reviews</span>
+              </div>
 
-    {/* Location */}
-    <div className="flex items-center min-w-0 bg-airbnb-light-gray px-3 py-1.5 rounded-lg">
-      <span className="mr-2 text-airbnb-red">📍</span>
-      <span className="truncate font-medium" title={listing.address}>
-        {listing.address}
-      </span>
-    </div>
-  </div>
-</header>
+              {/* Location */}
+              <div className="flex items-center min-w-0 bg-airbnb-light-gray px-3 py-1.5 rounded-lg">
+                <span className="mr-2 text-airbnb-red">📍</span>
+                <span className="truncate font-medium" title={listing.address}>
+                  {listing.address}
+                </span>
+              </div>
+            </div>
+          </header>
 
           <section className="mb-6 section-card">
             <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Amenities</h2>
@@ -913,12 +914,12 @@ const [isExpanded, setIsExpanded] = useState(false);
                   <div className="p-2 bg-yellow-50 rounded-lg flex-shrink-0">
                     <FaStar className="h-5 w-5 text-yellow-600" />
                   </div>
-                   <div className="flex items-center">
-      <FaStar className="text-yellow-400 mr-1" />
-      <span className="font-semibold">{Number(aiRating.average).toFixed(1)}</span>
-      <span className="mx-1">·</span>
-      <span className="text-gray-600">{commentCount} reviews</span>
-    </div>
+                  <div className="flex items-center">
+                    <FaStar className="text-yellow-400 mr-1" />
+                    <span className="font-semibold">{Number(aiRating.average).toFixed(1)}</span>
+                    <span className="mx-1">·</span>
+                    <span className="text-gray-600">{commentCount} reviews</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -976,26 +977,26 @@ const [isExpanded, setIsExpanded] = useState(false);
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
-              <div>
-  <h3 className="text-sm font-medium text-gray-500 mb-1">Nearby Amenities</h3>
-  <p className="text-gray-900 font-medium">
-    {listing.near 
-      ? isNearExpanded 
-        ? listing.near
-        : listing.near.split(' ').slice(0, 15).join(' ') + 
-          (listing.near.split(' ').length > 15 ? '...' : '')
-      : 'Residential Home'
-    }
-    {listing.near && listing.near.split(' ').length > 15 && (
-      <button 
-        onClick={() => setIsNearExpanded(!isNearExpanded)}
-        className="text-blue-600 ml-1 hover:underline"
-      >
-        {isNearExpanded ? 'Read less' : 'Read more'}
-      </button>
-    )}
-  </p>
-</div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">Nearby Amenities</h3>
+                  <p className="text-gray-900 font-medium">
+                    {listing.near
+                      ? isNearExpanded
+                        ? listing.near
+                        : listing.near.split(' ').slice(0, 15).join(' ') +
+                        (listing.near.split(' ').length > 15 ? '...' : '')
+                      : 'Residential Home'
+                    }
+                    {listing.near && listing.near.split(' ').length > 15 && (
+                      <button
+                        onClick={() => setIsNearExpanded(!isNearExpanded)}
+                        className="text-blue-600 ml-1 hover:underline"
+                      >
+                        {isNearExpanded ? 'Read less' : 'Read more'}
+                      </button>
+                    )}
+                  </p>
+                </div>
               </div>
 
               <div className="flex items-start">
@@ -1004,29 +1005,29 @@ const [isExpanded, setIsExpanded] = useState(false);
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                   </svg>
                 </div>
-  
-<div>
-  <h3 className="text-sm font-medium text-gray-500 mb-1">Rules & Policies</h3>
-  <p className="text-gray-900 font-medium">
-    {listing.rules 
-      ? isExpanded 
-        ? listing.rules
-        : listing.rules.split(' ').slice(0, 15).join(' ') + 
-          (listing.rules.split(' ').length > 15 ? '...' : '')
-      : 'Residential Home'
-    }
-    {listing.rules && listing.rules.split(' ').length > 20 && (
-      <button 
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="text-blue-600 ml-1 hover:underline"
-      >
-        {isExpanded ? 'Read less' : 'Read more'}
-      </button>
-    )}
-  </p>
-</div>
+
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">Rules & Policies</h3>
+                  <p className="text-gray-900 font-medium">
+                    {listing.rules
+                      ? isExpanded
+                        ? listing.rules
+                        : listing.rules.split(' ').slice(0, 15).join(' ') +
+                        (listing.rules.split(' ').length > 15 ? '...' : '')
+                      : 'Residential Home'
+                    }
+                    {listing.rules && listing.rules.split(' ').length > 20 && (
+                      <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="text-blue-600 ml-1 hover:underline"
+                      >
+                        {isExpanded ? 'Read less' : 'Read more'}
+                      </button>
+                    )}
+                  </p>
+                </div>
               </div>
-                 
+
               <div className="flex items-start">
                 <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
                   <FaMapMarkerAlt className="w-5 h-5 text-gray-600" />
@@ -1035,9 +1036,9 @@ const [isExpanded, setIsExpanded] = useState(false);
                   <h3 className="text-sm font-medium text-gray-500 mb-1">Location</h3>
                   <p className="text-gray-900 font-medium">{listing.address}</p>
                   {listing.address && (
-                    <a 
-                      href={generateMapLink(listing.address)} 
-                      target="_blank" 
+                    <a
+                      href={generateMapLink(listing.address)}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="mt-1 inline-flex items-center text-blue-600 hover:underline text-sm"
                     >
@@ -1090,13 +1091,12 @@ const [isExpanded, setIsExpanded] = useState(false);
                   <button
                     onClick={() => handleRateHost('like')}
                     disabled={ratingLoading}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
-                      hostData.userAction === 'like' 
-                        ? 'bg-blue-500 text-white' 
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${hostData.userAction === 'like'
+                        ? 'bg-blue-500 text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-600'
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    <FaThumbsUp /> 
+                    <FaThumbsUp />
                     {ratingLoading && hostData.userAction === 'like' ? (
                       <FaSpinner className="animate-spin" />
                     ) : (
@@ -1106,13 +1106,12 @@ const [isExpanded, setIsExpanded] = useState(false);
                   <button
                     onClick={() => handleRateHost('dislike')}
                     disabled={ratingLoading}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
-                      hostData.userAction === 'dislike' 
-                        ? 'bg-red-500 text-white' 
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${hostData.userAction === 'dislike'
+                        ? 'bg-red-500 text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-red-100 hover:text-red-600'
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    <FaThumbsDown /> 
+                    <FaThumbsDown />
                     {ratingLoading && hostData.userAction === 'dislike' ? (
                       <FaSpinner className="animate-spin" />
                     ) : (
@@ -1122,9 +1121,9 @@ const [isExpanded, setIsExpanded] = useState(false);
                 </div>
                 <div className="flex items-center gap-1 text-yellow-500 text-xl">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <FaStar 
-                      key={i} 
-                      className={i < hostStarRating ? "text-yellow-500" : "text-gray-300"} 
+                    <FaStar
+                      key={i}
+                      className={i < hostStarRating ? "text-yellow-500" : "text-gray-300"}
                     />
                   ))}
                   <span className="ml-2 text-gray-700 text-base">
@@ -1191,371 +1190,371 @@ const [isExpanded, setIsExpanded] = useState(false);
             </div>
           </section>
           {listing.type === 'office' && (
-  <section className="mb-8 section-card">
-    <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Availability & Booking</h2>
-    
-    <div className="flex flex-col lg:flex-row gap-6">
-      {/* Calendar Section - 40% width */}
-      <div className="w-full lg:w-2/5">
-        <div className="sticky top-4">
-          <Calendar
-            onChange={setSelectedDate}
-            value={selectedDate}
-            minDate={new Date()}
-            className="rounded-xl shadow-lg w-full"
-          />
-          
-          {selectedDate && (
-            <div className="mt-6 bg-white p-4 rounded-lg border border-gray-200">
-              <h3 className="font-medium text-gray-700 mb-3">Select Hours</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                  <select 
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {generateTimeOptions().map(time => (
-                      <option key={time} value={time}>{time}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                  <select 
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {generateTimeOptions().map(time => (
-                      <option key={time} value={time}>{time}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* Booking Summary Section - 60% width */}
-      <div className="w-full lg:w-3/5">
-        <div className="">
-          <h3 className="text-lg font-semibold text-blue-800 mb-4">Booking Summary</h3>
-          
-          {selectedDate && startTime && endTime ? (
-            <div className="space-y-4">
-              {/* Selected Date & Time */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white p-4 rounded-lg border border-gray-200">
-                  <h4 className="font-medium text-gray-700 mb-2">Booking Date</h4>
-                  <p className="font-medium text-lg">{selectedDate.toDateString()}</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg border border-gray-200">
-                  <h4 className="font-medium text-gray-700 mb-2">Start Time</h4>
-                  <p className="font-medium text-lg">{startTime}</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg border border-gray-200">
-                  <h4 className="font-medium text-gray-700 mb-2">End Time</h4>
-                  <p className="font-medium text-lg">{endTime}</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg border border-gray-200">
-                  <h4 className="font-medium text-gray-700 mb-2">Total Hours</h4>
-                  <p className="font-medium text-lg">{totalHours} hour{totalHours > 1 ? 's' : ''}</p>
-                </div>
-              </div>
+            <section className="mb-8 section-card">
+              <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Availability & Booking</h2>
 
-              {/* Price Summary */}
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <h4 className="font-medium text-gray-700 mb-3">Price Summary</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Hourly Rate ({totalHours} hours)</span>
-                    <span className="font-medium">R{(listing.regularPrice * totalHours).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
-                  </div>
-                  
-                  <div className="pt-3 mt-2 border-t border-gray-200 font-semibold flex justify-between text-lg">
-                    <span>Total Amount</span>
-                    <span className="text-blue-600 font-bold">
-                      R{totalPrice.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Guest Information */}
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <h4 className="font-medium text-gray-700 mb-3">Your Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="guestName" className="block text-sm font-medium text-gray-700 mb-1">
-                      Full Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="guestName"
-                      value={guestName}
-                      onChange={(e) => setGuestName(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="As it appears on ID"
-                      required
+              <div className="flex flex-col lg:flex-row gap-6">
+                {/* Calendar Section - 40% width */}
+                <div className="w-full lg:w-2/5">
+                  <div className="sticky top-4">
+                    <Calendar
+                      onChange={setSelectedDate}
+                      value={selectedDate}
+                      minDate={new Date()}
+                      className="rounded-xl shadow-lg w-full"
                     />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="guestContact" className="block text-sm font-medium text-gray-700 mb-1">
-                      WhatsApp Number <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      id="guestContact"
-                      value={guestContact}
-                      onChange={(e) => setGuestContact(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="+27 82 123 4567"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="md:col-span-2">
-                    <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
-                      Special Requests
-                    </label>
-                    <textarea
-                      id="specialRequests"
-                      value={specialRequests}
-                      onChange={(e) => setSpecialRequests(e.target.value)}
-                      rows={3}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Equipment needs, meeting setup, etc."
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* WhatsApp Booking Button */}
-              <div className="pt-2">
-                <div className="mb-3 text-center text-sm text-gray-600">
-                  <p>You ll complete your booking via WhatsApp</p>
-                </div>
-                <button
-                  className="w-full bg-green-500 text-white py-2.5 px-4 rounded-md hover:bg-green-600 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-md hover:shadow-sm"
-                  onClick={handleOfficeWhatsAppBooking}
-                  disabled={!guestName || !guestContact}
-                >
-                  <FaWhatsapp className="text-base" />
-                  Book Office
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-6">
-              <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <p className="text-gray-600 mt-3 text-lg">
-                Please select a date and time to see pricing and book
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  </section>
-)}
 
-         {listing.type === 'over' && (
-          <section className="mb-8 section-card">
-            <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Availability & Booking</h2>
-            
-            <div className="flex flex-col lg:flex-row gap-6">
-              {/* Calendar Section - 40% width on large screens */}
-              <div className="w-full lg:w-2/5">
-                <div className="sticky top-4"> {/* Make calendar sticky on scroll */}
-                  <Calendar
-                    onChange={setDateRange}
-                    value={dateRange}
-                    selectRange={true}
-                    minDate={new Date()}
-                    className="rounded-xl shadow-lg w-full"
-                  />
-                </div>
-              </div>
-              
-              {/* Booking Summary Section - 60% width on large screens */}
-              <div className="w-full lg:w-3/5">
-                <div className="">
-                  <h3 className="text-lg font-semibold text-blue-800 mb-4">Booking Summary</h3>
-                  
-                  {dateRange[0] && dateRange[1] ? (
-                    <div className="space-y-4">
-                      {/* Selected Dates */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-white p-4 rounded-lg border border-gray-200">
-                          <h4 className="font-medium text-gray-700 mb-2">Check-in</h4>
-                          <p className="font-medium text-lg">{dateRange[0].toDateString()}</p>
-                        </div>
-                        <div className="bg-white p-4 rounded-lg border border-gray-200">
-                          <h4 className="font-medium text-gray-700 mb-2">Check-out</h4>
-                          <p className="font-medium text-lg">{dateRange[1].toDateString()}</p>
-                        </div>
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 md:col-span-2">
-                          <h4 className="font-medium text-gray-700 mb-2">Total Nights</h4>
-                          <p className="font-medium text-lg">{nights} night{nights > 1 ? 's' : ''}</p>
-                        </div>
-                      </div>
-
-                      {/* Meal Options */}
-                      <div className="bg-white p-4 rounded-lg border border-gray-200">
-                        <h4 className="font-medium text-gray-700 mb-3">Meal Options</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div 
-                            className={`p-4 border rounded-lg cursor-pointer transition-colors ${mealPlan === 'breakfast' ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:bg-gray-50'}`}
-                            onClick={() => setMealPlan('breakfast')}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${mealPlan === 'breakfast' ? 'bg-green-500 border-green-500' : 'border-gray-400'}`}>
-                                {mealPlan === 'breakfast' && (
-                                  <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                )}
-                              </div>
-                              <div>
-                                <p className="font-medium">Breakfast Included</p>
-                                <p className="text-sm text-gray-600 mt-1">+ R{breakfastPrice.toLocaleString('en-ZA')}/night</p>
-                              </div>
-                            </div>
+                    {selectedDate && (
+                      <div className="mt-6 bg-white p-4 rounded-lg border border-gray-200">
+                        <h3 className="font-medium text-gray-700 mb-3">Select Hours</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                            <select
+                              value={startTime}
+                              onChange={(e) => setStartTime(e.target.value)}
+                              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              {generateTimeOptions().map(time => (
+                                <option key={time} value={time}>{time}</option>
+                              ))}
+                            </select>
                           </div>
-                          
-                          <div 
-                            className={`p-4 border rounded-lg cursor-pointer transition-colors ${mealPlan === 'none' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'}`}
-                            onClick={() => setMealPlan('none')}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${mealPlan === 'none' ? 'bg-blue-500 border-blue-500' : 'border-gray-400'}`}>
-                                {mealPlan === 'none' && (
-                                  <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                )}
-                              </div>
-                              <div>
-                                <p className="font-medium">Room Only</p>
-                                <p className="text-sm text-gray-600 mt-1">No meals included</p>
-                              </div>
-                            </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                            <select
+                              value={endTime}
+                              onChange={(e) => setEndTime(e.target.value)}
+                              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              {generateTimeOptions().map(time => (
+                                <option key={time} value={time}>{time}</option>
+                              ))}
+                            </select>
                           </div>
                         </div>
                       </div>
+                    )}
+                  </div>
+                </div>
 
-                      {/* Price Summary */}
-                      <div className="bg-white p-4 rounded-lg border border-gray-200">
-                        <h4 className="font-medium text-gray-700 mb-3">Price Summary</h4>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Room Rate ({nights} nights)</span>
-                            <span className="font-medium">R{(listing.regularPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
-                          </div>
-                          
-                          {mealPlan === 'breakfast' && (
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Breakfast ({nights} nights)</span>
-                              <span className="font-medium">R{(breakfastPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
-                            </div>
-                          )}
-                          
-                          <div className="pt-3 mt-2 border-t border-gray-200 font-semibold flex justify-between text-lg">
-                            <span>Total Amount</span>
-                            <span className="text-blue-600 font-bold">
-                              R{(listing.regularPrice * nights + (mealPlan === 'breakfast' ? breakfastPrice * nights : 0)).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                {/* Booking Summary Section - 60% width */}
+                <div className="w-full lg:w-3/5">
+                  <div className="">
+                    <h3 className="text-lg font-semibold text-blue-800 mb-4">Booking Summary</h3>
 
-                      {/* Guest Information */}
-                      <div className="bg-white p-4 rounded-lg border border-gray-200">
-                        <h4 className="font-medium text-gray-700 mb-3">Your Information</h4>
+                    {selectedDate && startTime && endTime ? (
+                      <div className="space-y-4">
+                        {/* Selected Date & Time */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label htmlFor="guestName" className="block text-sm font-medium text-gray-700 mb-1">
-                              Full Name <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              id="guestName"
-                              value={guestName}
-                              onChange={(e) => setGuestName(e.target.value)}
-                              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              placeholder="As it appears on ID"
-                              required
-                            />
+                          <div className="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 className="font-medium text-gray-700 mb-2">Booking Date</h4>
+                            <p className="font-medium text-lg">{selectedDate.toDateString()}</p>
                           </div>
-                          
-                          <div>
-                            <label htmlFor="guestContact" className="block text-sm font-medium text-gray-700 mb-1">
-                              WhatsApp Number <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="tel"
-                              id="guestContact"
-                              value={guestContact}
-                              onChange={(e) => setGuestContact(e.target.value)}
-                              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              placeholder="+27 82 123 4567"
-                              required
-                            />
+                          <div className="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 className="font-medium text-gray-700 mb-2">Start Time</h4>
+                            <p className="font-medium text-lg">{startTime}</p>
                           </div>
-                          
-                          <div className="md:col-span-2">
-                            <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
-                              Special Requests
-                            </label>
-                            <textarea
-                              id="specialRequests"
-                              value={specialRequests}
-                              onChange={(e) => setSpecialRequests(e.target.value)}
-                              rows={3}
-                              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              placeholder="Dietary restrictions, accessibility needs, etc."
-                            />
+                          <div className="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 className="font-medium text-gray-700 mb-2">End Time</h4>
+                            <p className="font-medium text-lg">{endTime}</p>
+                          </div>
+                          <div className="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 className="font-medium text-gray-700 mb-2">Total Hours</h4>
+                            <p className="font-medium text-lg">{totalHours} hour{totalHours > 1 ? 's' : ''}</p>
                           </div>
                         </div>
+
+                        {/* Price Summary */}
+                        <div className="bg-white p-4 rounded-lg border border-gray-200">
+                          <h4 className="font-medium text-gray-700 mb-3">Price Summary</h4>
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Hourly Rate ({totalHours} hours)</span>
+                              <span className="font-medium">R{(listing.regularPrice * totalHours).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
+                            </div>
+
+                            <div className="pt-3 mt-2 border-t border-gray-200 font-semibold flex justify-between text-lg">
+                              <span>Total Amount</span>
+                              <span className="text-blue-600 font-bold">
+                                R{totalPrice.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Guest Information */}
+                        <div className="bg-white p-4 rounded-lg border border-gray-200">
+                          <h4 className="font-medium text-gray-700 mb-3">Your Information</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label htmlFor="guestName" className="block text-sm font-medium text-gray-700 mb-1">
+                                Full Name <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                id="guestName"
+                                value={guestName}
+                                onChange={(e) => setGuestName(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="As it appears on ID"
+                                required
+                              />
+                            </div>
+
+                            <div>
+                              <label htmlFor="guestContact" className="block text-sm font-medium text-gray-700 mb-1">
+                                WhatsApp Number <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="tel"
+                                id="guestContact"
+                                value={guestContact}
+                                onChange={(e) => setGuestContact(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="+27 82 123 4567"
+                                required
+                              />
+                            </div>
+
+                            <div className="md:col-span-2">
+                              <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
+                                Special Requests
+                              </label>
+                              <textarea
+                                id="specialRequests"
+                                value={specialRequests}
+                                onChange={(e) => setSpecialRequests(e.target.value)}
+                                rows={3}
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Equipment needs, meeting setup, etc."
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* WhatsApp Booking Button */}
+                        <div className="pt-2">
+                          <div className="mb-3 text-center text-sm text-gray-600">
+                            <p>You ll complete your booking via WhatsApp</p>
+                          </div>
+                          <button
+                            className="w-full bg-green-500 text-white py-2.5 px-4 rounded-md hover:bg-green-600 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-md hover:shadow-sm"
+                            onClick={handleOfficeWhatsAppBooking}
+                            disabled={!guestName || !guestContact}
+                          >
+                            <FaWhatsapp className="text-base" />
+                            Book Office
+                          </button>
+                        </div>
                       </div>
-                      
-                      {/* WhatsApp Booking Button */}
-                 <div className="pt-2">
-  <div className="mb-3 text-center text-sm text-gray-600">
-    <p>You ll complete your booking via WhatsApp</p>
-  </div>
-  <button
-    className="w-full bg-green-500 text-white py-2.5 px-4 rounded-md hover:bg-green-600 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-md hover:shadow-sm"
-    onClick={handleOvernightWhatsAppBooking}
-    disabled={!guestName || !guestContact}
-  >
-    <FaWhatsapp className="text-base" />
-    Submit
-  </button>
-</div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-6">
-                      <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <p className="text-gray-600 mt-3 text-lg">
-                        Please select check-in and check-out dates to see pricing and book
-                      </p>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="text-center py-6">
+                        <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p className="text-gray-600 mt-3 text-lg">
+                          Please select a date and time to see pricing and book
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
-        )}
+            </section>
+          )}
+
+          {listing.type === 'over' && (
+            <section className="mb-8 section-card">
+              <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Availability & Booking</h2>
+
+              <div className="flex flex-col lg:flex-row gap-6">
+                {/* Calendar Section - 40% width on large screens */}
+                <div className="w-full lg:w-2/5">
+                  <div className="sticky top-4"> {/* Make calendar sticky on scroll */}
+                    <Calendar
+                      onChange={setDateRange}
+                      value={dateRange}
+                      selectRange={true}
+                      minDate={new Date()}
+                      className="rounded-xl shadow-lg w-full"
+                    />
+                  </div>
+                </div>
+
+                {/* Booking Summary Section - 60% width on large screens */}
+                <div className="w-full lg:w-3/5">
+                  <div className="">
+                    <h3 className="text-lg font-semibold text-blue-800 mb-4">Booking Summary</h3>
+
+                    {dateRange[0] && dateRange[1] ? (
+                      <div className="space-y-4">
+                        {/* Selected Dates */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 className="font-medium text-gray-700 mb-2">Check-in</h4>
+                            <p className="font-medium text-lg">{dateRange[0].toDateString()}</p>
+                          </div>
+                          <div className="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 className="font-medium text-gray-700 mb-2">Check-out</h4>
+                            <p className="font-medium text-lg">{dateRange[1].toDateString()}</p>
+                          </div>
+                          <div className="bg-white p-4 rounded-lg border border-gray-200 md:col-span-2">
+                            <h4 className="font-medium text-gray-700 mb-2">Total Nights</h4>
+                            <p className="font-medium text-lg">{nights} night{nights > 1 ? 's' : ''}</p>
+                          </div>
+                        </div>
+
+                        {/* Meal Options */}
+                        <div className="bg-white p-4 rounded-lg border border-gray-200">
+                          <h4 className="font-medium text-gray-700 mb-3">Meal Options</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div
+                              className={`p-4 border rounded-lg cursor-pointer transition-colors ${mealPlan === 'breakfast' ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:bg-gray-50'}`}
+                              onClick={() => setMealPlan('breakfast')}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${mealPlan === 'breakfast' ? 'bg-green-500 border-green-500' : 'border-gray-400'}`}>
+                                  {mealPlan === 'breakfast' && (
+                                    <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="font-medium">Breakfast Included</p>
+                                  <p className="text-sm text-gray-600 mt-1">+ R{breakfastPrice.toLocaleString('en-ZA')}/night</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div
+                              className={`p-4 border rounded-lg cursor-pointer transition-colors ${mealPlan === 'none' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'}`}
+                              onClick={() => setMealPlan('none')}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${mealPlan === 'none' ? 'bg-blue-500 border-blue-500' : 'border-gray-400'}`}>
+                                  {mealPlan === 'none' && (
+                                    <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="font-medium">Room Only</p>
+                                  <p className="text-sm text-gray-600 mt-1">No meals included</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Price Summary */}
+                        <div className="bg-white p-4 rounded-lg border border-gray-200">
+                          <h4 className="font-medium text-gray-700 mb-3">Price Summary</h4>
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Room Rate ({nights} nights)</span>
+                              <span className="font-medium">R{(listing.regularPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
+                            </div>
+
+                            {mealPlan === 'breakfast' && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Breakfast ({nights} nights)</span>
+                                <span className="font-medium">R{(breakfastPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
+                              </div>
+                            )}
+
+                            <div className="pt-3 mt-2 border-t border-gray-200 font-semibold flex justify-between text-lg">
+                              <span>Total Amount</span>
+                              <span className="text-blue-600 font-bold">
+                                R{(listing.regularPrice * nights + (mealPlan === 'breakfast' ? breakfastPrice * nights : 0)).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Guest Information */}
+                        <div className="bg-white p-4 rounded-lg border border-gray-200">
+                          <h4 className="font-medium text-gray-700 mb-3">Your Information</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label htmlFor="guestName" className="block text-sm font-medium text-gray-700 mb-1">
+                                Full Name <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                id="guestName"
+                                value={guestName}
+                                onChange={(e) => setGuestName(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="As it appears on ID"
+                                required
+                              />
+                            </div>
+
+                            <div>
+                              <label htmlFor="guestContact" className="block text-sm font-medium text-gray-700 mb-1">
+                                WhatsApp Number <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="tel"
+                                id="guestContact"
+                                value={guestContact}
+                                onChange={(e) => setGuestContact(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="+27 82 123 4567"
+                                required
+                              />
+                            </div>
+
+                            <div className="md:col-span-2">
+                              <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
+                                Special Requests
+                              </label>
+                              <textarea
+                                id="specialRequests"
+                                value={specialRequests}
+                                onChange={(e) => setSpecialRequests(e.target.value)}
+                                rows={3}
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Dietary restrictions, accessibility needs, etc."
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* WhatsApp Booking Button */}
+                        <div className="pt-2">
+                          <div className="mb-3 text-center text-sm text-gray-600">
+                            <p>You ll complete your booking via WhatsApp</p>
+                          </div>
+                          <button
+                            className="w-full bg-green-500 text-white py-2.5 px-4 rounded-md hover:bg-green-600 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-md hover:shadow-sm"
+                            onClick={handleOvernightWhatsAppBooking}
+                            disabled={!guestName || !guestContact}
+                          >
+                            <FaWhatsapp className="text-base" />
+                            Submit
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-6">
+                        <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p className="text-gray-600 mt-3 text-lg">
+                          Please select check-in and check-out dates to see pricing and book
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
 
           <section className="mb-8 section-card">
             <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Contact Host</h2>
@@ -1644,88 +1643,88 @@ const [isExpanded, setIsExpanded] = useState(false);
             </div>
           </section>
 
-    
+
 
           {showCommentsPanel && (
-            <CommentsSidePanel 
-              listingId={listingId} 
-              onClose={() => setShowCommentsPanel(false)} 
+            <CommentsSidePanel
+              listingId={listingId}
+              onClose={() => setShowCommentsPanel(false)}
             />
           )}
 
-    <div>
-      {/* Guest Reviews Section */}
-      <section className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-    <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Guest Reviews</h2>
-    <div className="flex items-center">
-      <FaStar className="text-yellow-400 mr-1" />
-      <span className="font-semibold">{Number(aiRating.average).toFixed(1)}</span>
-      <span className="mx-1">·</span>
-      <span className="text-gray-600">{commentCount} reviews</span>
-    </div>
-  </div>
+          <div>
+            {/* Guest Reviews Section */}
+            <section className="mb-8">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Guest Reviews</h2>
+                <div className="flex items-center">
+                  <FaStar className="text-yellow-400 mr-1" />
+                  <span className="font-semibold">{Number(aiRating.average).toFixed(1)}</span>
+                  <span className="mx-1">·</span>
+                  <span className="text-gray-600">{commentCount} reviews</span>
+                </div>
+              </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-          {/* Airbnb-style stats summary */}
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-            <h3 className="font-semibold text-lg mb-3">Review Highlights</h3>
-            <div className="space-y-3">
-              {Object.entries(aiRating.categoryRatings).map(([category, rating]) => (
-                <div key={category} className="flex items-center justify-between">
-                  <div className="flex items-center text-gray-700">
-                    {category === 'cleanliness' ? (
-                      <FaBroom className="mr-2 text-blue-500" />
-                    ) : (
-                      <FaUserFriends className="mr-2 text-blue-500" />
-                    )}
-                    <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full" 
-                        style={{ width: `${(rating / 5) * 100}%` }}
-                      ></div>
-                    </div>
-                    
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                {/* Airbnb-style stats summary */}
+                <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+                  <h3 className="font-semibold text-lg mb-3">Review Highlights</h3>
+                  <div className="space-y-3">
+                    {Object.entries(aiRating.categoryRatings).map(([category, rating]) => (
+                      <div key={category} className="flex items-center justify-between">
+                        <div className="flex items-center text-gray-700">
+                          {category === 'cleanliness' ? (
+                            <FaBroom className="mr-2 text-blue-500" />
+                          ) : (
+                            <FaUserFriends className="mr-2 text-blue-500" />
+                          )}
+                          <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                            <div
+                              className="bg-blue-600 h-2 rounded-full"
+                              style={{ width: `${(rating / 5) * 100}%` }}
+                            ></div>
+                          </div>
+
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Recent Reviews Card */}
+                <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-semibold text-lg">Recent Reviews</h3>
+                    {commentCount > 2 && (
+                      <button
+                        onClick={() => setShowCommentsPanel(true)}
+                        className="text-blue-600 hover:underline flex items-center text-sm"
+                      >
+                        View all <FaChevronDown className="ml-1 text-xs" />
+                      </button>
+                    )}
+                  </div>
+
+                  <Comments
+                    listingId={listingId}
+                    maxComments={2}
+                    onTotalComments={setCommentCount}
+                    cardStyle={true}
+                  />
+                </div>
+              </div>
+            </section>
+
+            {showCommentsPanel && (
+              <CommentsSidePanel
+                listingId={listingId}
+                onClose={() => setShowCommentsPanel(false)}
+              />
+            )}
           </div>
-
-          {/* Recent Reviews Card */}
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-semibold text-lg">Recent Reviews</h3>
-              {commentCount > 2 && (
-                <button
-                  onClick={() => setShowCommentsPanel(true)}
-                  className="text-blue-600 hover:underline flex items-center text-sm"
-                >
-                  View all <FaChevronDown className="ml-1 text-xs" />
-                </button>
-              )}
-            </div>
-
-            <Comments 
-              listingId={listingId} 
-              maxComments={2}
-              onTotalComments={setCommentCount} 
-              cardStyle={true}
-            />
-          </div>
-        </div>
-      </section>
-
-      {showCommentsPanel && (
-        <CommentsSidePanel 
-          listingId={listingId} 
-          onClose={() => setShowCommentsPanel(false)} 
-        />
-      )}
-    </div>
 
 
         </div>
