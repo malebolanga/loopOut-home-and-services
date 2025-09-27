@@ -990,9 +990,9 @@ export default function Listing() {
                     {listing.near && listing.near.split(' ').length > 15 && (
                       <button
                         onClick={() => setIsNearExpanded(!isNearExpanded)}
-                        className="text-blue-600 ml-1 hover:underline"
+                        className="text-blue-600 ml-1 hover:underline text-sm"
                       >
-                        {isNearExpanded ? 'Read less' : 'Read more'}
+                        {isNearExpanded ? 'Read less' : 'Read'}
                       </button>
                     )}
                   </p>
@@ -1019,9 +1019,9 @@ export default function Listing() {
                     {listing.rules && listing.rules.split(' ').length > 20 && (
                       <button
                         onClick={() => setIsExpanded(!isExpanded)}
-                        className="text-blue-600 ml-1 hover:underline"
+                        className="text-blue-600 ml-1 hover:underline text-sm"
                       >
-                        {isExpanded ? 'Read less' : 'Read more'}
+                        {isExpanded ? 'Read less' : 'Read'}
                       </button>
                     )}
                   </p>
