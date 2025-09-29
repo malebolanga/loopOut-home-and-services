@@ -69,6 +69,7 @@ import TrustAndSafety from './components/TrustAndSafety';
 import SiteMap from './components/SiteMap';
 import CookiePolicy from './components/CookiePolicy';
 import PrivacyPolicy from './components/PrivacyPolicy';
+import AboutLoop from './components/AboutLoop';
 import TermsOfService from './components/TermsOfService';
 import LoginRequiredPage from './components/LoginRequiredPage';
 
@@ -150,6 +151,7 @@ export default function App() {
         <Route path="/login-required" element={<LoginRequiredPage />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/aboutloop" element={<AboutLoop />} />
         <Route path="/cookies" element={<CookiePolicy />} />
         <Route path="/investors" element={<Investors />} />
         <Route path="/trust" element={<TrustAndSafety />} />

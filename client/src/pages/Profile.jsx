@@ -37,7 +37,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
-import WishList from "./WishList";
+import WishList from "./WishListProfile";
 import MyListing from "./MyListing";
 
 // Reusable InputField Component
@@ -976,7 +976,7 @@ export default function Profile() {
                         </h2>
                       </Link>
                       <p className="text-lg text-gray-700 mt-2">
-                        ${listing.offer ? listing.discountPrice.toLocaleString('en-US') : listing.regularPrice.toLocaleString('en-US')}
+                        R{listing.offer ? listing.discountPrice.toLocaleString('en-US') : listing.regularPrice.toLocaleString('en-US')}
                         {listing.type === 'rent' && ' / month'}
                       </p>
                       <div className="flex items-center gap-4 text-gray-500 text-sm mt-3">

@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { Link } from "react-router-dom";
 import {
   FaStar, FaMapMarkerAlt, FaPhone, FaUser,
   FaClock, FaShieldAlt, FaDog, FaUsers,
@@ -1301,18 +1302,57 @@ if (isHomeVisit && bookingData.address) {
             </div>
 
             {/* Safety Tips */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-yellow-800 mb-3 flex items-center gap-2">
-                <FaShieldAlt />
-                Safety Tips
-              </h3>
-              <ul className="space-y-2 text-sm text-yellow-700">
-                <li>• Always meet in public places first</li>
-                <li>• Verify the helpers identity</li>
-                <li>• Don t pay the full amount upfront</li>
-                <li>• Trust your instincts</li>
-              </ul>
-            </div>
+          {/* Safety Tips */}
+<div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-300 rounded-2xl p-8 shadow-lg">
+  <div className="flex items-center gap-3 mb-4">
+    <div className="bg-yellow-100 p-3 rounded-full">
+      <FaShieldAlt className="text-yellow-600 text-xl" />
+    </div>
+    <h3 className="text-xl font-bold text-yellow-800">Essential Safety Guidelines</h3>
+  </div>
+  
+  <div className="space-y-4">
+    <div className="flex items-start gap-3">
+      <div className="bg-white p-1 rounded-full mt-1">
+        <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+      </div>
+      <span className="text-yellow-700 font-medium">Ensure someone is home at all times during the service</span>
+    </div>
+    
+    <div className="flex items-start gap-3">
+      <div className="bg-white p-1 rounded-full mt-1">
+        <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+      </div>
+      <span className="text-yellow-700 font-medium">Verify the helper s identity upon arrival</span>
+    </div>
+    
+    <div className="flex items-start gap-3">
+      <div className="bg-white p-1 rounded-full mt-1">
+        <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+      </div>
+      <span className="text-yellow-700 font-medium">Never pay the full amount upfront - only after satisfactory service</span>
+    </div>
+    
+    <div className="flex items-start gap-3">
+      <div className="bg-white p-1 rounded-full mt-1">
+        <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+      </div>
+      <span className="text-yellow-700 font-medium">Always trust your instincts - if something feels wrong, cancel the service</span>
+    </div>
+  </div>
+  
+  <div className="mt-6 pt-4 border-t border-yellow-200">
+    <Link 
+      to="/aboutloop" 
+      className="inline-flex items-center gap-2 text-yellow-700 hover:text-yellow-800 font-semibold transition-colors hover:underline group"
+    >
+      <span>Learn more about our safety policies</span>
+      <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+      </svg>
+    </Link>
+  </div>
+</div>
           </div>
         </div>
       </div>

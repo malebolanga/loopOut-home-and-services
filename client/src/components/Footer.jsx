@@ -242,6 +242,9 @@ const Footer = () => {
             <Link to="/terms" className="hover:text-white transition-colors hover:underline">Terms</Link>
             <Link to="/privacy" className="hover:text-white transition-colors hover:underline">Privacy</Link>
             <Link to="/cookies" className="hover:text-white transition-colors hover:underline">Cookies</Link>
+            <Link to="/terms" className="hover:text-white transition-colors hover:underline">Terms</Link>
+            <Link to="/privacy" className="hover:text-white transition-colors hover:underline">Privacy</Link>
+            <Link to="/aboutloop" className="hover:text-white transition-colors hover:underline">About</Link>
           </div>
         </div>
 
@@ -287,11 +290,12 @@ const Footer = () => {
         <div className="flex items-center space-x-6">
 
          
-          <span className="text-sm text-gray-400">© 2025 loopOut, Inc.</span>
+          <span className="text-sm text-gray-400">© 2025 loopOut</span>
           <div className="flex space-x-4 text-sm text-gray-400">
             <Link to="/terms" className="hover:text-white transition-colors hover:underline">Terms</Link>
             <Link to="/privacy" className="hover:text-white transition-colors hover:underline">Privacy</Link>
             <Link to="/cookies" className="hover:text-white transition-colors hover:underline">Cookies</Link>
+             <Link to="/aboutloop" className="hover:text-white transition-colors hover:underline">About</Link>
           </div>
         </div>
 

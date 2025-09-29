@@ -14,15 +14,16 @@ import cookieParser from 'cookie-parser';
 import helperCommentRouter from './routes/helper-comment.route.js';
 import eventCommentRouter from './routes/event-comment.route.js';
 import tripRouter from './routes/trip.js'; // Make sure this is imported
+import notificationRoute from './routes/notification.route.js';
 import path from 'path';
 dotenv.config();
 
 mongoose.connect(process.env.MONGO)
-.then(() => {
-    console.log('Connected to MongoDB');
-}).catch((err) => {
-    console.log(err);
-});
+    .then(() => {
+        console.log('Connected to MongoDB');
+    }).catch((err) => {
+        console.log(err);
+    });
 
 const __dirname = path.resolve();
 
@@ -44,23 +45,23 @@ app.use('/api/trips', tripRouter); // Make sure this is included
 app.use('/api/helper-comments', helperCommentRouter);
 app.use('/api/event-comments', eventCommentRouter);
 app.use('/api/service', serviceRouter);
-
+app.use('/api/notifications', notificationRoute);
 app.use(express.static(path.join(__dirname, '/client/dist')));
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
+    res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
 });
 
 app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
-  return res.status(statusCode).json({
-    success: false,
-    statusCode,
-    message,
-  });
+    const statusCode = err.statusCode || 500;
+    const message = err.message || 'Internal Server Error';
+    return res.status(statusCode).json({
+        success: false,
+        statusCode,
+        message,
+    });
 });
 
 app.listen(3000, () => {
-  console.log('Server is running on port 3000!');  
+    console.log('Server is running on port 3000!');
 });
