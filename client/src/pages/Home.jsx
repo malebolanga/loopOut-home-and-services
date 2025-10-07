@@ -1630,7 +1630,7 @@ export default function Home() {
 
                   {/* Description - Shorter */}
                   <p className="text-gray-500 text-xs leading-relaxed mb-1 line-clamp-1 min-h-[1rem]">
-                    {item.description?.substring(0, 80) || 'No description available'}
+                    {item.address?.substring(0, 80) || 'No description available'}
                   </p>
 
                   {/* Price - Smaller */}
