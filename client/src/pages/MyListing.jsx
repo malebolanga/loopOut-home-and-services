@@ -313,9 +313,9 @@ export default function PropertyListings() {
             </Link>
 
             {/* Listing Details */}
-            <div className="p-2 flex flex-col flex-grow">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
+            <div className="p-1 flex flex-col flex-grow">
+              <div className="flex justify-between items-start mb-0">
+                <h3 className="text-sm font-semibold text-gray-900 line-clamp-1">
                   {listing.name}
                 </h3>
                 <div className="flex items-center gap-1">
@@ -324,7 +324,7 @@ export default function PropertyListings() {
                 </div>
               </div>
 
-              <div className="mt-1 flex items-center gap-1 text-sm text-gray-500 mb-3">
+              <div className="mt-1 flex items-center gap-1 text-sm text-gray-500 mb-0">
                 <span className="text-rose-500 flex-shrink-0">📍</span>
                 <span className="truncate">{listing.address}</span>
               </div>
@@ -344,10 +344,10 @@ export default function PropertyListings() {
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-2 flex gap-2">
+              <div className="mt-1 flex gap-2">
                 <Link
                   to={`/update-listing/${listing._id}`}
-                  className="flex-1 py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-1 px-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <span>✏️</span>
                  
