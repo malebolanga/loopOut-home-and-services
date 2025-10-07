@@ -325,7 +325,7 @@ export default function Header() {
             d="M30,50 C30,30 50,30 50,50 C50,70 70,70 70,50 C70,30 50,30 50,50"
             stroke="currentColor"
             strokeWidth="9"
-            fill="none"
+        
           />
           <circle cx="30" cy="50" r="8" fill="currentColor" />
           <circle cx="70" cy="50" r="8" fill="currentColor" />
@@ -687,6 +687,8 @@ export default function Header() {
                           <span className="mr-3 text-lg">🤖</span>
                           <span>AI Help Center</span>
                         </Link>
+
+                    
                       </div>
 
                       <div className="py-1">

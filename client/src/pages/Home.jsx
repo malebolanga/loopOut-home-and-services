@@ -189,6 +189,85 @@ const fetchWithRetry = async (url, options = {}, retries = API_RETRY_LIMIT) => {
   }
 };
 
+
+const handleViewAllRecommendations = async () => {
+  try {
+    // Check if geolocation is available
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser');
+      return;
+    }
+
+    // Get current position
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        // Show loading state
+        setLoading(true);
+        
+        try {
+          // Call your API to get recommendations based on GPS location
+          const response = await fetch('/api/recommendations/nearby', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              latitude,
+              longitude,
+              radius: 50, // 50km radius
+              type: activeTab // current active tab type
+            })
+          });
+
+          if (response.ok) {
+            const nearbyRecommendations = await response.json();
+            
+            // Navigate to recommendations page with location-based data
+            navigate('/recommendations', {
+              state: {
+                recommendations: nearbyRecommendations,
+                userLocation: { latitude, longitude },
+                title: 'Recommended Near You'
+              }
+            });
+          } else {
+            throw new Error('Failed to fetch recommendations');
+          }
+        } catch (error) {
+          console.error('Error fetching location-based recommendations:', error);
+          alert('Unable to get recommendations for your location');
+        } finally {
+          setLoading(false);
+        }
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        alert('Unable to access your location. Please enable location services.');
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
+  } catch (error) {
+    console.error('Error in handleViewAllRecommendations:', error);
+  }
+};
+
+// Additional handler for individual card clicks
+const handleCardClick = (item) => {
+  navigate(`/listing/${item._id}`, { state: { item } });
+};
+
+// Handler for favorite clicks
+const handleFavoriteClick = (item) => {
+  // Add your favorite logic here
+  console.log('Favorite clicked for:', item.name);
+};
+
 /**
  * PropertySearchAI Class: Handles intelligent search, relevance scoring,
  * sentiment analysis, and image quality assessment for listings.
@@ -1425,107 +1504,177 @@ export default function Home() {
           {/* AI Recommendations Section for all tabs */}
           {/* AI Recommendations Section for all tabs */}
           {/* AI Recommendations Section for all tabs */}
-          {recommendations[activeTab]?.length > 0 && (
-            <div className="mt-0 mb-8 relative">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 text-center flex items-center justify-center">
-                <FaMagic className="mr-2 text-purple-600" />
-                AI Recommended for You
-              </h2>
+{recommendations[activeTab]?.length > 0 && (
+  <div className="mt-0 mb-10 relative">
+    {/* Header */}
+    <div className="flex items-center justify-between mb-5 px-2">
+      <div className="flex items-center">
+        <div className="w-6 h-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mr-2">
+          <FaMagic className="text-white text-xs" />
+        </div>
+        <h2 className="text-xl font-semibold text-gray-900">
+          Recommended for you
+        </h2>
+      </div>
+      <button 
+        onClick={handleViewAllRecommendations}
+        className="text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors flex items-center"
+      >
+        View all
+        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
+      </button>
+    </div>
 
-              <div className="relative ">
-                <Swiper
-                  slidesPerView={1.9}
-                  spaceBetween={16}
-                  navigation={{
-                    nextEl: '.recommendations-swiper-button-next',
-                    prevEl: '.recommendations-swiper-button-prev',
-                  }}
-                  modules={[Navigation]}
-                  className="mySwiper"
-                  breakpoints={{
-                    480: { slidesPerView: 2.5 },
-                    640: { slidesPerView: 3.3 },
-                    768: { slidesPerView: 4.3 },
-                    1024: { slidesPerView: 5.3 },
-                    1280: { slidesPerView: 6.3 },
-                  }}
-                >
-                  {recommendations[activeTab].map((item) => {
-                    // Airbnb-style medium card
-                    return (
-                      <SwiperSlide key={item._id}>
-                        <div className=" rounded-xl  hover:shadow-sm transition-all overflow-hidden  h-full flex flex-col">
-                          {/* Image container */}
-                          <div className="relative pb-[75%]"> {/* 4:3 aspect ratio */}
-                            {item.imageUrls?.[0] ? (
-                              <img
-                                src={item.imageUrls[0]}
-                                alt={item.name}
-                                className="absolute inset-0 w-full h-full rounded-2xl object-cover transition-transform duration-300 hover:scale-105"
-                                onError={(e) => e.target.src = 'https://via.placeholder.com/300x225?text=Image+Not+Available'}
-                              />
-                            ) : (
-                              <div className="absolute inset-0 bg-gray-200 border-2 border-dashed rounded-xl w-full h-full flex items-center justify-center">
-                                <FaHome className="text-gray-400 text-3xl" />
-                              </div>
-                            )}
-                            {/* Favorite button */}
-                            <button className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-gray-100">
-                              <FaHeart className="text-gray-500 hover:text-red-500" />
-                            </button>
-                          </div>
+    {/* Swiper Container */}
+    <div className="relative px-0">
+      <Swiper
+        slidesPerView={2.4}
+        spaceBetween={12}
+        navigation={{
+          nextEl: '.recommendations-swiper-button-next',
+          prevEl: '.recommendations-swiper-button-prev',
+        }}
+        modules={[Navigation]}
+        className="recommendations-swiper"
+        breakpoints={{
+          480: { slidesPerView: 2.3 },
+          640: { slidesPerView: 2.8 },
+          768: { slidesPerView: 3.3 },
+          1024: { slidesPerView: 4.3 },
+          1280: { slidesPerView: 5.3 },
+          1536: { slidesPerView: 6.3 },
+        }}
+      >
+        {recommendations[activeTab].map((item) => {
+          // Determine the route based on item type
+          const getItemRoute = (item) => {
+            switch (item.type) {
+              case 'helper':
+                return `/helper/${item._id}`;
+              case 'event':
+                return `/event/${item._id}`;
+              case 'service':
+                return `/service/${item._id}`;
+              case 'rent':
+              case 'sale':
+                return `/listing/${item._id}`;
+              default:
+                return `/listing/${item._id}`; // fallback
+            }
+          };
 
-                          {/* Card content - medium size */}
-                          <div className="p-3 flex-grow flex flex-col">
-                            <div className="flex justify-between items-start">
-                              <h3 className="font-semibold text-gray-800 text-base truncate">{item.name}</h3>
-                              <div className="flex items-center">
-                                <FaStar className="text-yellow-400 mr-1 text-sm" />
-                                <span className="font-medium text-sm">5.0</span>
-                              </div>
-                            </div>
+          const itemRoute = getItemRoute(item);
 
-                            <p className="text-gray-500 text-xs mt-1 line-clamp-2 h-8">
-                              {item.description?.substring(0, 80) || 'No description available'}
-                            </p>
+          return (
+            <SwiperSlide key={item._id}>
+              <Link 
+                to={itemRoute}
+                className="block bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-md transition-all duration-300 hover:border-gray-300 cursor-pointer transform hover:-translate-y-0.5"
+              >
+                {/* Image Section - Smaller */}
+                <div className="relative pb-[70%] overflow-hidden">
+                  {item.imageUrls?.[0] ? (
+                    <img
+                      src={item.imageUrls[0]}
+                      alt={item.name}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-400 hover:scale-105"
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=300&h=210&fit=crop';
+                      }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                      <FaHome className="text-gray-400 text-lg" />
+                    </div>
+                  )}
+                  
+                  {/* Favorite Button - Smaller */}
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleFavoriteClick(item);
+                    }}
+                    className="absolute top-2 right-2 w-6 h-6 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:bg-white hover:shadow-md transition-all duration-200"
+                  >
+                    <FaHeart className="text-gray-600 hover:text-red-500 text-xs" />
+                  </button>
 
-                            <div className="mt-auto pt-2">
-                              <div className="flex justify-between items-center">
-                                <p className="text-base font-semibold">
-                                  <span className="text-gray-800">{formatPrice(item.priceNumber || item.regularPrice || 0)}</span>
-                                  {item.type === 'rent' && <span className="text-gray-600 text-xs font-normal"> / mo</span>}
-                                </p>
-                                {item.type && (
-                                  <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-md">
-                                    {PROPERTY_TYPES[item.type]?.label ||
-                                      SERVICE_TYPES[item.type]?.label ||
-                                      HELPER_TYPES[item.type]?.label ||
-                                      LOCAL_EVENT_TYPES[item.type]?.label}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </SwiperSlide>
-                    );
-                  })}
-                </Swiper>
-
-                {/* Custom Navigation Buttons */}
-                <div className="recommendations-swiper-button-prev absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-lg cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-50">
-                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
+                  {/* Type Badge - Smaller */}
+                  {item.type && (
+                    <div className="absolute top-2 left-2">
+                      <span className="px-1.5 py-0.5 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-medium rounded">
+                        {PROPERTY_TYPES[item.type]?.label ||
+                         SERVICE_TYPES[item.type]?.label ||
+                         HELPER_TYPES[item.type]?.label ||
+                         LOCAL_EVENT_TYPES[item.type]?.label}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <div className="recommendations-swiper-button-next absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-lg cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-50">
-                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+
+                {/* Content Section - Compact */}
+                <div className="p-3">
+                  {/* Title and Rating */}
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-medium text-gray-900 text-sm leading-tight flex-1 pr-2 line-clamp-1">
+                      {item.name}
+                    </h3>
+                    <div className="flex items-center space-x-1 flex-shrink-0">
+                      <FaStar className="text-black text-xs" />
+                      <span className="font-medium text-xs text-gray-900">5.0</span>
+                    </div>
+                  </div>
+
+                  {/* Description - Shorter */}
+                  <p className="text-gray-500 text-xs leading-relaxed mb-1 line-clamp-1 min-h-[1rem]">
+                    {item.description?.substring(0, 80) || 'No description available'}
+                  </p>
+
+                  {/* Price - Smaller */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-base font-semibold text-gray-900">
+                        {formatPrice(item.priceNumber || item.regularPrice || 0)}
+                      </span>
+                      {item.type === 'rent' && (
+                        <span className="text-gray-600 text-xs ml-1">month</span>
+                      )}
+                    </div>
+                    <div className="text-gray-400 hover:text-gray-600 transition-colors">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+              </Link>
+            </SwiperSlide>
+          );
+        })}
+      </Swiper>
+
+      {/* Navigation Buttons - Smaller */}
+      <div className="recommendations-swiper-button-prev absolute left-1 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-md border border-gray-200 cursor-pointer opacity-0 group-hover:opacity-100 transition-all duration-300 hover:shadow-lg hover:scale-105">
+        <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </div>
+      <div className="recommendations-swiper-button-next absolute right-1 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-md border border-gray-200 cursor-pointer opacity-0 group-hover:opacity-100 transition-all duration-300 hover:shadow-lg hover:scale-105">
+        <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </div>
+    </div>
+  </div>
+)}
+          
+          
+          
+          
+          
           {/* Trending Section */}
           {trendingItems.length > 0 && (
             <div className="mt-0 mb-0">

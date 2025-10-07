@@ -16,7 +16,8 @@ import {
   UserIcon,
   CalendarIcon,
   WrenchIcon,
-  MapPinIcon
+  MapPinIcon,
+  MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import ListingItem from "../components/ListingItem";
 import ServiceItem from "../components/ServiceItem";
@@ -31,7 +32,16 @@ const Search = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [searchType, setSearchType] = useState('properties');
+  // Extract search type from URL or default to 'properties'
+  const getInitialSearchType = () => {
+    const urlParams = new URLSearchParams(location.search);
+    const typeFromUrl = urlParams.get('searchType');
+    return ['properties', 'services', 'helpers', 'events'].includes(typeFromUrl) 
+      ? typeFromUrl 
+      : 'properties';
+  };
+
+  const [searchType, setSearchType] = useState(getInitialSearchType());
   const [sidebarData, setSidebarData] = useState({
     searchTerm: '',
     type: 'all',
@@ -57,7 +67,11 @@ const Search = () => {
     laundry: false,
     address: '',
     name: '',
-    description: ''
+    description: '',
+    category: 'all',
+    location: '',
+    date: '',
+    availability: 'all'
   });
 
   const [loading, setLoading] = useState(false);
@@ -76,43 +90,60 @@ const Search = () => {
     'Luxury penthouse with pool',
     'Cleaning service for office',
     'Personal chef for dinner party',
-    'Weekend music festival tickets'
+    'Weekend music festival tickets',
+    'Math tutor for high school',
+    'Moving service this weekend'
   ]);
 
+  // Enhanced property types
   const propertyTypes = [
     { value: 'all', label: 'All Types', icon: <HomeIcon className="w-5 h-5" /> },
     { value: 'rent', label: 'For Rent', icon: <CurrencyDollarIcon className="w-5 h-5" /> },
     { value: 'sale', label: 'For Sale', icon: <TagIcon className="w-5 h-5" /> },
     { value: 'office', label: 'Office', icon: <BuildingOfficeIcon className="w-5 h-5" /> },
     { value: 'land', label: 'Land', icon: <MapIcon className="w-5 h-5" /> },
-    { value: 'guesthouse', label: 'Guest House', icon: <UserGroupIcon className="w-5 h-5" /> }
+    { value: 'guesthouse', label: 'Guest House', icon: <UserGroupIcon className="w-5 h-5" /> },
+    { value: 'apartment', label: 'Apartment', icon: <BuildingOfficeIcon className="w-5 h-5" /> },
+    { value: 'house', label: 'House', icon: <HomeIcon className="w-5 h-5" /> }
   ];
 
+  // Enhanced service types
   const serviceTypes = [
     { value: 'all', label: 'All Services', icon: <WrenchIcon className="w-5 h-5" /> },
     { value: 'cleaning', label: 'Cleaning', icon: '🧹' },
     { value: 'maintenance', label: 'Maintenance', icon: '🔧' },
     { value: 'moving', label: 'Moving', icon: '🚚' },
     { value: 'landscaping', label: 'Landscaping', icon: '🌿' },
-    { value: 'catering', label: 'Catering', icon: '🍳' }
+    { value: 'catering', label: 'Catering', icon: '🍳' },
+    { value: 'plumbing', label: 'Plumbing', icon: '🚰' },
+    { value: 'electrical', label: 'Electrical', icon: '⚡' },
+    { value: 'painting', label: 'Painting', icon: '🎨' }
   ];
 
+  // Enhanced helper types
   const helperTypes = [
     { value: 'all', label: 'All Helpers', icon: <UserIcon className="w-5 h-5" /> },
-    { value: 'domestic', label: 'General Help', icon: '👨‍💼' },
+    { value: 'domestic', label: 'Domestic Help', icon: '👨‍💼' },
     { value: 'errand', label: 'Errand Runner', icon: '🛒' },
     { value: 'tutor', label: 'Tutor', icon: '📚' },
     { value: 'chef', label: 'Chef', icon: '👨‍🍳' },
-    { value: 'maid', label: 'Maid', icon: '🧹' }
+    { value: 'maid', label: 'Maid', icon: '🧹' },
+    { value: 'driver', label: 'Driver', icon: '🚗' },
+    { value: 'nanny', label: 'Nanny', icon: '👶' },
+    { value: 'caregiver', label: 'Caregiver', icon: '❤️' }
   ];
 
+  // Enhanced event types
   const eventTypes = [
     { value: 'all', label: 'All Events', icon: <CalendarIcon className="w-5 h-5" /> },
     { value: 'music', label: 'Music', icon: '🎵' },
     { value: 'sports', label: 'Sports', icon: '⚽' },
     { value: 'art', label: 'Art & Culture', icon: '🎨' },
     { value: 'community', label: 'Community', icon: '👥' },
-    { value: 'food', label: 'Food & Drink', icon: '🍔' }
+    { value: 'food', label: 'Food & Drink', icon: '🍔' },
+    { value: 'business', label: 'Business', icon: '💼' },
+    { value: 'education', label: 'Education', icon: '🎓' },
+    { value: 'festival', label: 'Festival', icon: '🎪' }
   ];
 
   const getCurrentTypes = () => {
@@ -124,6 +155,7 @@ const Search = () => {
     }
   };
 
+  // Enhanced amenities with better organization
   const amenities = [
     { 
       category: 'Essentials',
@@ -165,27 +197,56 @@ const Search = () => {
     }
   ];
 
-  // Initialize search term from URL
+  // Initialize search from URL parameters
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    const searchTermParam = urlParams.get('searchTerm');
+    const initialData = { ...sidebarData };
     
-    if (searchTermParam) {
-      setSidebarData(prev => ({
-        ...prev,
-        searchTerm: searchTermParam
-      }));
-    }
+    // Set all parameters from URL
+    urlParams.forEach((value, key) => {
+      if (key in initialData) {
+        // Handle boolean values
+        if (typeof initialData[key] === 'boolean') {
+          initialData[key] = value === 'true';
+        } 
+        // Handle number values
+        else if (typeof initialData[key] === 'number') {
+          initialData[key] = Number(value);
+        }
+        // Handle string values
+        else {
+          initialData[key] = value;
+        }
+      }
+    });
+
+    setSidebarData(initialData);
   }, [location.search]);
 
-  // Fetch listings when search params change
+  // Update search type when URL changes
+  useEffect(() => {
+    const newSearchType = getInitialSearchType();
+    setSearchType(newSearchType);
+  }, [location.search]);
+
+  // Enhanced fetch function with better error handling
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // Fetch based on search type
+        // Remove empty parameters
+        const cleanParams = new URLSearchParams();
+        urlParams.forEach((value, key) => {
+          if (value && value !== 'false' && value !== '0') {
+            cleanParams.set(key, value);
+          }
+        });
+
+        // Add searchType to parameters
+        cleanParams.set('searchType', searchType);
+        
         let endpoint = '';
         switch(searchType) {
           case 'services':
@@ -201,21 +262,26 @@ const Search = () => {
             endpoint = '/api/listing/get';
         }
         
-        const res = await fetch(`${endpoint}?${urlParams.toString()}`);
+        const res = await fetch(`${endpoint}?${cleanParams.toString()}`);
+        if (!res.ok) throw new Error('Failed to fetch data');
+        
         const data = await res.json();
         
-        // Add type to each item
+        // Add type to each item for proper rendering
         const typedData = data.map(item => ({
           ...item,
           itemType: searchType,
           // Normalize price for all types
-          price: item.price || item.regularPrice || 0
+          price: item.price || item.regularPrice || item.fee || 0,
+          // Normalize image
+          imageUrls: item.imageUrls || [item.image] || []
         }));
         
         setListings(typedData);
         setShowMore(typedData.length >= DEFAULT_LISTING_LIMIT);
       } catch (error) {
         console.error('Failed to fetch data:', error);
+        setListings([]);
       } finally {
         setLoading(false);
       }
@@ -223,10 +289,12 @@ const Search = () => {
 
     if (urlParams.toString()) {
       fetchData();
+    } else {
+      setListings([]);
     }
   }, [location.search, searchType]);
 
-  // AI analysis effect
+  // Enhanced AI analysis with better pattern matching
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (sidebarData.searchTerm.length > 2) {
@@ -240,18 +308,22 @@ const Search = () => {
     return () => clearTimeout(timer);
   }, [sidebarData.searchTerm]);
 
-  // Save recent searches
-  const saveRecentSearch = (params) => {
+  // Save recent searches with enhanced data
+  const saveRecentSearch = (params, searchType) => {
     try {
       const searches = JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY)) || [];
+      const searchEntry = { 
+        params, 
+        searchType,
+        timestamp: new Date().toISOString(), 
+        score: Object.keys(params).filter(k => params[k] && k !== 'searchTerm').length 
+      };
+      
       const filtered = searches.filter(
-        item => JSON.stringify(item.params) !== JSON.stringify(params)
+        item => !(JSON.stringify(item.params) === JSON.stringify(params) && item.searchType === searchType)
       );
-      const score = Object.keys(params).filter(k => params[k] && k !== 'searchTerm').length;
-      const newSearches = [
-        { params, timestamp: new Date().toISOString(), score },
-        ...filtered
-      ].slice(0, MAX_RECENT_SEARCHES);
+      
+      const newSearches = [searchEntry, ...filtered].slice(0, MAX_RECENT_SEARCHES);
       localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(newSearches));
       return newSearches;
     } catch (error) {
@@ -270,7 +342,7 @@ const Search = () => {
     }
   }, []);
 
-  // Form handlers
+  // Enhanced form handlers
   const handleChange = (e) => {
     const { id, value, checked, type } = e.target;
     setSidebarData(prev => ({
@@ -279,49 +351,94 @@ const Search = () => {
     }));
   };
 
+  const handleSearchTypeChange = (newType) => {
+    setSearchType(newType);
+    // Reset type filter when changing search categories
+    setSidebarData(prev => ({
+      ...prev,
+      type: 'all',
+      category: 'all'
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const urlParams = new URLSearchParams();
     
-    // Include all non-default values
+    // Include all non-empty, non-default values
     Object.entries(sidebarData).forEach(([key, value]) => {
-      if (value && value !== 'all' && value !== false) {
-        urlParams.set(key, value);
+      if (value !== '' && value !== false && value !== 0 && value !== 'all') {
+        if (Array.isArray(value)) {
+          value.forEach(v => urlParams.append(key, v));
+        } else {
+          urlParams.set(key, value.toString());
+        }
       }
     });
 
-    const updatedSearches = saveRecentSearch(sidebarData);
+    // Add search type to URL
+    urlParams.set('searchType', searchType);
+
+    const updatedSearches = saveRecentSearch(sidebarData, searchType);
     setRecentSearches(updatedSearches);
+    
     navigate(`/search?${urlParams.toString()}`);
   };
 
-  // Fixed: AI analysis simulation with proper regex group handling
+  // Enhanced AI analysis with better search type detection
   const analyzeSearchTerm = async (term) => {
     if (term.length < 3) return null;
     setIsAnalyzing(true);
+    
+    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 800));
     
-    const suggestions = { searchTerm: term, filters: {} };
+    const suggestions = { 
+      searchTerm: term, 
+      filters: {},
+      suggestedSearchType: searchType 
+    };
     let hasSuggestion = false;
 
+    // Enhanced search type detection
     const typePatterns = [
-      { patterns: ['apartment', 'flat', 'studio', 'house'], type: 'properties' },
-      { patterns: ['clean', 'service', 'maintain'], type: 'services' },
-      { patterns: ['helper', 'chef', 'tutor', 'maid'], type: 'helpers' },
-      { patterns: ['event', 'festival', 'concert', 'show'], type: 'events' }
+      { 
+        patterns: ['apartment', 'flat', 'studio', 'house', 'villa', 'property', 'rent', 'sale', 'bedroom'], 
+        type: 'properties',
+        confidence: 0.9
+      },
+      { 
+        patterns: ['clean', 'service', 'maintain', 'plumbing', 'electrical', 'painting', 'repair'], 
+        type: 'services',
+        confidence: 0.8
+      },
+      { 
+        patterns: ['helper', 'chef', 'tutor', 'maid', 'nanny', 'caregiver', 'driver', 'assistant'], 
+        type: 'helpers',
+        confidence: 0.85
+      },
+      { 
+        patterns: ['event', 'festival', 'concert', 'show', 'party', 'meeting', 'conference', 'workshop'], 
+        type: 'events',
+        confidence: 0.9
+      }
     ];
 
-    typePatterns.forEach(({ patterns, type }) => {
+    typePatterns.forEach(({ patterns, type, confidence }) => {
       if (patterns.some(p => term.toLowerCase().includes(p))) {
+        suggestions.suggestedSearchType = type;
         suggestions.filters.type = type;
         hasSuggestion = true;
       }
     });
 
+    // Enhanced location context
     const locationContexts = [
-      { patterns: ['near beach', 'waterfront', 'ocean view'], filters: { view: true } },
-      { patterns: ['city center', 'downtown'], filters: { furnished: true } },
-      { patterns: ['secure estate', 'gated community'], filters: { security: true } }
+      { patterns: ['near beach', 'waterfront', 'ocean view', 'sea view'], filters: { view: true } },
+      { patterns: ['city center', 'downtown', 'cbd'], filters: { location: 'city' } },
+      { patterns: ['secure estate', 'gated community', 'security estate'], filters: { security: true } },
+      { patterns: ['pet friendly', 'pets allowed'], filters: { pets: true } },
+      { patterns: ['furnished', 'fully furnished'], filters: { furnished: true } }
     ];
 
     locationContexts.forEach(({ patterns, filters }) => {
@@ -331,17 +448,22 @@ const Search = () => {
       }
     });
 
-    // Fixed regex handling with proper group indexing
+    // Enhanced number extraction
     const numberExtractors = [
       { 
-        regex: /(\d+)\s*(bed|bedroom|beds|bd)/i, 
+        regex: /(\d+)\s*(?:bed|bedroom|beds|bd|br)/i, 
         groupIndex: 1,
         handler: (num) => { suggestions.filters.bedroomsMin = num; }
       },
       {
-        regex: /(under|below|up to|max)\s*(R|€|£|¥|₹|\$)?\s*(\d+[\d,]*)/i,
-        groupIndex: 3,
+        regex: /(under|below|up to|max|maximum)\s*(?:R|€|£|¥|₹|\$)?\s*(\d+[\d,]*)/i,
+        groupIndex: 2,
         handler: (num) => { suggestions.filters.priceMax = num; }
+      },
+      {
+        regex: /(from|min|minimum)\s*(?:R|€|£|¥|₹|\$)?\s*(\d+[\d,]*)/i,
+        groupIndex: 2,
+        handler: (num) => { suggestions.filters.priceMin = num; }
       }
     ];
 
@@ -357,32 +479,15 @@ const Search = () => {
       }
     });
 
-    // Enhanced search patterns for address, name, and description
-    const addressPatterns = [
-      'street', 'avenue', 'road', 'lane', 'drive', 'close', 'place', 'court',
-      'cape town', 'johannesburg', 'pretoria', 'durban', 'sandton', 'stellenbosch'
-    ];
-    
-    const namePatterns = ['named', 'called', 'titled', 'known as', 'referred to as'];
-    
-    // Extract address and name using regex
-    const addressMatch = term.match(/(?:at|in|near|on)\s+([\w\s]+)/i);
-    if (addressMatch && addressMatch[1]) {
-      suggestions.filters.address = addressMatch[1].trim();
-      hasSuggestion = true;
-    }
-    
-    const nameMatch = term.match(/(?:named|called|titled)\s+([\w\s]+)/i);
-    if (nameMatch && nameMatch[1]) {
-      suggestions.filters.name = nameMatch[1].trim();
-      hasSuggestion = true;
-    }
-    
-    // Description search
-    if (term.length > 20) {
-      suggestions.filters.description = term;
-      hasSuggestion = true;
-    }
+    // Enhanced location extraction
+    const locations = ['cape town', 'johannesburg', 'pretoria', 'durban', 'sandton', 'stellenbosch', 'jhb', 'ct'];
+    locations.forEach(location => {
+      if (term.toLowerCase().includes(location)) {
+        suggestions.filters.address = location;
+        suggestions.filters.location = location;
+        hasSuggestion = true;
+      }
+    });
 
     setIsAnalyzing(false);
     return hasSuggestion ? suggestions : null;
@@ -390,6 +495,7 @@ const Search = () => {
 
   const applyAiSuggestion = () => {
     if (aiSuggestions) {
+      setSearchType(aiSuggestions.suggestedSearchType);
       setSidebarData(prev => ({
         ...prev,
         ...aiSuggestions.filters,
@@ -425,7 +531,11 @@ const Search = () => {
       laundry: false,
       address: '',
       name: '',
-      description: ''
+      description: '',
+      category: 'all',
+      location: '',
+      date: '',
+      availability: 'all'
     });
   };
 
@@ -440,6 +550,20 @@ const Search = () => {
     </div>
   );
 
+  // Get search examples based on current search type
+  const getSearchExamples = () => {
+    switch(searchType) {
+      case 'services':
+        return ['Cleaning service', 'Plumbing repair', 'Moving help', 'Gardening service'];
+      case 'helpers':
+        return ['Math tutor', 'House maid', 'Personal chef', 'Baby sitter'];
+      case 'events':
+        return ['Music concert', 'Food festival', 'Business workshop', 'Art exhibition'];
+      default:
+        return ['2 bed apartment', 'House for sale', 'Office space', 'Beachfront villa'];
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
@@ -449,20 +573,26 @@ const Search = () => {
         </p>
       </div>
 
-      {/* Search type selector with horizontal scrolling */}
+      {/* Enhanced search type selector */}
       <div className="mb-6 overflow-x-auto pb-2 -mx-4 px-4">
         <div className="flex space-x-4 min-w-max">
-          {['properties', 'services', 'helpers', 'events'].map((type) => (
+          {[
+            { key: 'properties', label: 'Properties', icon: <HomeIcon className="w-5 h-5" /> },
+            { key: 'services', label: 'Services', icon: <WrenchIcon className="w-5 h-5" /> },
+            { key: 'helpers', label: 'Helpers', icon: <UserIcon className="w-5 h-5" /> },
+            { key: 'events', label: 'Events', icon: <CalendarIcon className="w-5 h-5" /> }
+          ].map((type) => (
             <button
-              key={type}
-              onClick={() => setSearchType(type)}
-              className={`px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
-                searchType === type
+              key={type.key}
+              onClick={() => handleSearchTypeChange(type.key)}
+              className={`px-6 py-3 rounded-lg transition-all whitespace-nowrap flex items-center gap-2 ${
+                searchType === type.key
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {type.charAt(0).toUpperCase() + type.slice(1)}
+              {type.icon}
+              <span>{type.label}</span>
             </button>
           ))}
         </div>
@@ -483,7 +613,7 @@ const Search = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* AI Suggestions */}
+              {/* Enhanced AI Suggestions */}
               {aiSuggestions && !aiSuggestions.applied && (
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                   <div className="flex items-start gap-3">
@@ -491,7 +621,7 @@ const Search = () => {
                     <div>
                       <h3 className="font-semibold text-blue-800">AI Suggestions</h3>
                       <p className="text-sm text-blue-700 mt-1">
-                        Based on your search, we recommend:
+                        We recommend searching in <strong>{aiSuggestions.suggestedSearchType}</strong>
                       </p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {Object.entries(aiSuggestions.filters).map(([key, value]) => (
@@ -512,12 +642,13 @@ const Search = () => {
                 </div>
               )}
 
-              {/* Search input */}
+              {/* Enhanced search input */}
               <div>
                 <label htmlFor="searchTerm" className="block text-sm font-medium text-gray-700 mb-1">
                   What are you looking for?
                 </label>
                 <div className="relative">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
                     id="searchTerm"
@@ -525,8 +656,8 @@ const Search = () => {
                     onChange={handleChange}
                     onFocus={() => setSearchFocused(true)}
                     onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-                    placeholder="Try '2 bed apartment in Cape Town' or 'Cleaning service'"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder={`Try ${getSearchExamples()[0]}...`}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                   {sidebarData.searchTerm && (
                     <button
@@ -539,11 +670,11 @@ const Search = () => {
                   )}
                 </div>
 
-                {/* Search examples */}
+                {/* Dynamic search examples */}
                 <div className="mt-2">
                   <p className="text-xs text-gray-500 mb-1">Try searching for:</p>
                   <div className="flex flex-wrap gap-2">
-                    {searchExamples.map((example, i) => (
+                    {getSearchExamples().map((example, i) => (
                       <button
                         key={i}
                         type="button"
@@ -575,7 +706,7 @@ const Search = () => {
               {/* Address search */}
               <div>
                 <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                  Address
+                  Location
                 </label>
                 <div className="relative">
                   <input
@@ -583,7 +714,7 @@ const Search = () => {
                     id="address"
                     value={sidebarData.address}
                     onChange={handleChange}
-                    placeholder="Search by address"
+                    placeholder="Search by location"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pl-10"
                   />
                   <MapPinIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -605,20 +736,20 @@ const Search = () => {
                 />
               </div>
 
-              {/* Type dropdown */}
+              {/* Enhanced type dropdown */}
               <div>
                 <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
                   {searchType.charAt(0).toUpperCase() + searchType.slice(1)} Type
                 </label>
                 <Menu as="div" className="relative">
-                  <Menu.Button className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left flex items-center justify-between">
+                  <Menu.Button className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left flex items-center justify-between hover:border-gray-400 transition-colors">
                     <div className="flex items-center gap-3">
                       {getCurrentTypes().find(t => t.value === sidebarData.type)?.icon}
                       <span>{getCurrentTypes().find(t => t.value === sidebarData.type)?.label}</span>
                     </div>
                     <ChevronDownIcon className="w-5 h-5 text-gray-400" />
                   </Menu.Button>
-                  <Menu.Items className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-lg border border-gray-200 py-1">
+                  <Menu.Items className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-lg border border-gray-200 py-1 max-h-60 overflow-auto">
                     {getCurrentTypes().map((type) => (
                       <Menu.Item key={type.value}>
                         {({ active }) => (
@@ -644,28 +775,30 @@ const Search = () => {
                   <div>
                     <label htmlFor="priceMin" className="block text-xs text-gray-500 mb-1">Min</label>
                     <div className="relative">
-                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center">R</span>
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">R</span>
                       <input
                         type="number"
                         id="priceMin"
                         value={sidebarData.priceMin}
                         onChange={handleChange}
-                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg"
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
                         placeholder="0"
+                        min="0"
                       />
                     </div>
                   </div>
                   <div>
                     <label htmlFor="priceMax" className="block text-xs text-gray-500 mb-1">Max</label>
                     <div className="relative">
-                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center">R</span>
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">R</span>
                       <input
                         type="number"
                         id="priceMax"
                         value={sidebarData.priceMax}
                         onChange={handleChange}
-                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg"
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
                         placeholder="Any"
+                        min="0"
                       />
                     </div>
                   </div>
@@ -684,8 +817,9 @@ const Search = () => {
                         id="bedroomsMin"
                         value={sidebarData.bedroomsMin}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
                         placeholder="0"
+                        min="0"
                       />
                     </div>
                     <div>
@@ -695,11 +829,28 @@ const Search = () => {
                         id="bedroomsMax"
                         value={sidebarData.bedroomsMax}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
                         placeholder="Any"
+                        min="0"
                       />
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Date filter for events */}
+              {searchType === 'events' && (
+                <div>
+                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+                    Event Date
+                  </label>
+                  <input
+                    type="date"
+                    id="date"
+                    value={sidebarData.date}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
                 </div>
               )}
 
@@ -707,7 +858,7 @@ const Search = () => {
               {searchType === 'properties' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Amenities</label>
-                  <div className="space-y-4">
+                  <div className="space-y-4 max-h-60 overflow-y-auto p-1">
                     {amenities.map((category) => (
                       <div key={category.category}>
                         <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
@@ -737,17 +888,28 @@ const Search = () => {
               )}
 
               {/* Form actions */}
-              <div className="space-y-3">
+              <div className="space-y-3 pt-4">
                 <button
                   type="submit"
-                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all"
+                  disabled={isAnalyzing}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {isAnalyzing ? 'Analyzing...' : 'Search'}
+                  {isAnalyzing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <MagnifyingGlassIcon className="w-5 h-5" />
+                      Search {searchType}
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="w-full py-2 text-gray-600 hover:text-gray-800 text-sm font-medium"
+                  className="w-full py-2 text-gray-600 hover:text-gray-800 text-sm font-medium hover:bg-gray-50 rounded-lg transition-colors"
                 >
                   Clear all filters
                 </button>
@@ -755,7 +917,7 @@ const Search = () => {
             </form>
           </div>
 
-          {/* Recent searches panel */}
+          {/* Enhanced recent searches panel */}
           {recentSearches.length > 0 && (
             <div className="mt-6 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
               <div className="flex justify-between items-center mb-4">
@@ -774,26 +936,35 @@ const Search = () => {
                 {recentSearches.map((search, i) => (
                   <li
                     key={i}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                     onClick={() => {
+                      setSearchType(search.searchType);
                       setSidebarData(search.params);
                       const urlParams = new URLSearchParams();
                       Object.entries(search.params).forEach(([key, value]) => {
                         if (value) urlParams.set(key, value);
                       });
+                      urlParams.set('searchType', search.searchType);
                       navigate(`/search?${urlParams.toString()}`);
                     }}
                   >
                     <ClockIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {search.params.searchTerm || 'Anywhere'}
-                      </p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded capitalize">
+                          {search.searchType}
+                        </span>
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {search.params.searchTerm || 'Anywhere'}
+                        </p>
+                      </div>
                       <p className="text-xs text-gray-500 truncate">
                         {Object.entries(search.params)
-                          .filter(([k, v]) => k !== 'searchTerm' && v)
+                          .filter(([k, v]) => !['searchTerm', 'searchType'].includes(k) && v)
+                          .slice(0, 2)
                           .map(([k, v]) => `${k}: ${v}`)
                           .join(', ')}
+                        {Object.entries(search.params).filter(([k, v]) => !['searchTerm', 'searchType'].includes(k) && v).length > 2 && '...'}
                       </p>
                     </div>
                   </li>
@@ -812,20 +983,35 @@ const Search = () => {
             </h2>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium hover:bg-gray-50"
             >
               <AdjustmentsHorizontalIcon className="w-5 h-5" />
-              Filters
+              {showFilters ? 'Hide Filters' : 'Show Filters'}
             </button>
           </div>
 
-          {/* Results count */}
-          {!loading && listings.length > 0 && (
-            <div className="mb-6">
-              <p className="text-gray-600">
-                Showing <span className="font-medium">{listings.length}</span> {searchType}
-                {sidebarData.searchTerm && ` matching "${sidebarData.searchTerm}"`}
-              </p>
+          {/* Enhanced results header */}
+          {!loading && (
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <p className="text-gray-600">
+                  {listings.length > 0 ? (
+                    <>
+                      Showing <span className="font-medium">{listings.length}</span> {searchType}
+                      {sidebarData.searchTerm && ` matching "${sidebarData.searchTerm}"`}
+                    </>
+                  ) : listings.length === 0 && location.search ? (
+                    `No ${searchType} found matching your criteria`
+                  ) : (
+                    `Search for ${searchType} using the filters`
+                  )}
+                </p>
+              </div>
+              {listings.length > 0 && (
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <span>Sorted by: {sidebarData.sort}</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -839,7 +1025,7 @@ const Search = () => {
           ) : listings.length > 0 ? (
             <>
               {/* Results grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {listings.map((item) => {
                   switch(item.itemType) {
                     case 'services':
@@ -864,29 +1050,44 @@ const Search = () => {
                       urlParams.set('startIndex', startIndex);
                       navigate(`/search?${urlParams.toString()}`);
                     }}
-                    className="px-6 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 font-medium"
+                    className="px-6 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 font-medium transition-colors"
                   >
-                    Load More
+                    Load More {searchType}
                   </button>
                 </div>
               )}
             </>
           ) : (
-            /* Empty state */
+            /* Enhanced empty state */
             <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
-              <HomeIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MagnifyingGlassIcon className="w-10 h-10 text-gray-400" />
+              </div>
               <h3 className="text-xl font-medium text-gray-900 mb-2">
-                No {searchType} found
+                {location.search ? 'No results found' : `Search for ${searchType}`}
               </h3>
-              <p className="text-gray-600 mb-6">
-                Try adjusting your search filters or search for a different location
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                {location.search 
+                  ? 'Try adjusting your search filters or search for something different'
+                  : `Use the search filters to find ${searchType} that match your criteria`
+                }
               </p>
-              <button
-                onClick={clearFilters}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm"
-              >
-                Clear All Filters
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={clearFilters}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
+                >
+                  Clear All Filters
+                </button>
+                {!location.search && (
+                  <button
+                    onClick={() => setShowFilters(true)}
+                    className="px-6 py-3 bg-white border border-gray-300 hover:bg-gray-50 font-medium rounded-lg shadow-sm transition-colors"
+                  >
+                    Show Filters
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
