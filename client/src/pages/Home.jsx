@@ -1816,7 +1816,7 @@ export default function Home() {
                       </button>
                     </div>
                     <Swiper
-                      slidesPerView={1.3}
+                      slidesPerView={1.8}
                       spaceBetween={16}
                       modules={[Navigation]}
                       className="mySwiper"
@@ -1857,7 +1857,7 @@ export default function Home() {
                       </button>
                     </div>
                     <Swiper
-                      slidesPerView={1.3}
+                      slidesPerView={1.8}
                       spaceBetween={16}
                       modules={[Navigation]}
                       className="mySwiper"
@@ -1898,7 +1898,7 @@ export default function Home() {
                       </button>
                     </div>
                     <Swiper
-                      slidesPerView={1.3}
+                      slidesPerView={1.8}
                       spaceBetween={16}
                       modules={[Navigation]}
                       className="mySwiper"
@@ -1939,7 +1939,7 @@ export default function Home() {
                       </button>
                     </div>
                     <Swiper
-                      slidesPerView={1.3}
+                      slidesPerView={1.8}
                       spaceBetween={16}
                       modules={[Navigation]}
                       className="mySwiper"
