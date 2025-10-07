@@ -333,7 +333,7 @@ export default function PropertyListings() {
               {/* Price */}
               <div className="mt-auto flex justify-between items-center pt-0">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-bold text-gray-900">
+                  <span className="text-sm font-bold text-gray-900">
                     R{listing.regularPrice?.toLocaleString()}
                   </span>
                  
