@@ -571,7 +571,7 @@ export default function HelperPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center py-12 bg-white rounded-xl shadow-sm">
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">Barber not found</h2>
-          <p className="mt-2 text-gray-600">The barber you re looking for doesn t exist or may have been removed.</p>
+          <p className="mt-2 text-gray-600">The barber youre looking for doesnt exist or may have been removed.</p>
         </div>
       </div>
     );
