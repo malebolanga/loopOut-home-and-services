@@ -1,5 +1,4 @@
 /* eslint-disable react/prop-types */
-/* eslint-disable react/prop-types */
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
@@ -19,7 +18,8 @@ import {
   FaTshirt, FaBroom as FaBroomClean, FaFire, FaBaby, FaGlassCheers, FaEllipsisH,
   FaPalette, FaSpa, FaHandSparkles, FaHandHoldingHeart, FaRing,
   FaBrush, FaSprayCan, FaSmile, FaUtensils, FaShoppingBasket, FaCookie,
-  FaInstagram, FaFacebook, FaCheck, FaTimes as FaTimesCircle, FaSpinner
+  FaInstagram, FaFacebook, FaCheck, FaTimes as FaTimesCircle, FaSpinner,
+  FaLinkedin, FaTwitter
 } from 'react-icons/fa';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Zoom, Thumbs } from 'swiper/modules';
@@ -50,7 +50,7 @@ export default function HelperPage() {
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
 
-  // Social Media Verification States - ADD THESE
+  // Social Media Verification States
   const [socialMediaVerification, setSocialMediaVerification] = useState({
     facebook: {
       exists: false,
@@ -63,6 +63,26 @@ export default function HelperPage() {
       verificationStatus: 'checking'
     },
     instagram: {
+      exists: false,
+      username: null,
+      url: null,
+      isActive: false,
+      verified: false,
+      lastActive: null,
+      followers: null,
+      verificationStatus: 'checking'
+    },
+    linkedin: {
+      exists: false,
+      username: null,
+      url: null,
+      isActive: false,
+      verified: false,
+      lastActive: null,
+      connections: null,
+      verificationStatus: 'checking'
+    },
+    twitter: {
       exists: false,
       username: null,
       url: null,
@@ -97,6 +117,22 @@ export default function HelperPage() {
     cookingEquipment: '',
     ingredientsProvided: 'no'
   });
+
+  // Helper function to get professional title
+  const getProfessionalTitle = (type) => {
+    const titles = {
+      chef: 'Chef',
+      barber: 'Barber',
+      barbar: 'Barber',
+      beauty: 'Beauty Professional',
+      spa: 'Spa Professional',
+      maid: 'Maid',
+      domestic: 'Domestic Helper',
+      tattoo: 'Tattoo Artist',
+      tutor: 'Tutor'
+    };
+    return titles[type] || 'Professional';
+  };
 
   // Service options for different helper types
   const getServiceOptions = (type) => {
@@ -144,6 +180,22 @@ export default function HelperPage() {
       { id: 'menuPlanning', name: 'Menu Planning', icon: <FaUtensils className="text-indigo-500" /> }
     ];
 
+    const tattooOptions = [
+      { id: 'custom', name: 'Custom Tattoo', icon: <FaPalette className="text-gray-800" /> },
+      { id: 'coverup', name: 'Tattoo Cover-up', icon: <FaBrush className="text-purple-600" /> },
+      { id: 'touchup', name: 'Tattoo Touch-up', icon: <FaTools className="text-blue-600" /> },
+      { id: 'consultation', name: 'Design Consultation', icon: <FaUser className="text-teal-500" /> }
+    ];
+
+    const tutorOptions = [
+      { id: 'math', name: 'Mathematics', icon: <FaGraduationCap className="text-blue-600" /> },
+      { id: 'science', name: 'Science', icon: <FaGraduationCap className="text-green-600" /> },
+      { id: 'language', name: 'Language', icon: <FaGraduationCap className="text-yellow-600" /> },
+      { id: 'music', name: 'Music', icon: <FaGraduationCap className="text-purple-600" /> },
+      { id: 'art', name: 'Art', icon: <FaPalette className="text-pink-600" /> },
+      { id: 'testPrep', name: 'Test Preparation', icon: <FaGraduationCap className="text-red-600" /> }
+    ];
+
     switch (type) {
       case 'beauty':
       case 'spa':
@@ -154,6 +206,10 @@ export default function HelperPage() {
       case 'chef':
       case 'cooking':
         return chefOptions;
+      case 'tattoo':
+        return tattooOptions;
+      case 'tutor':
+        return tutorOptions;
       case 'domestic':
       case 'maid':
         return baseOptions;
@@ -224,6 +280,7 @@ export default function HelperPage() {
       barbar: 'blue',
       chef: 'orange',
       cooking: 'orange',
+      tattoo: 'gray',
       tutor: 'green',
       default: 'red'
     };
@@ -247,10 +304,10 @@ export default function HelperPage() {
   const [commentAnalysis, setCommentAnalysis] = useState({});
   const [analyzingComments, setAnalyzingComments] = useState(false);
 
-  // Helper functions for social media verification - ADD THESE
+  // Helper functions for social media verification
   const generateUsername = (name, platform) => {
     const cleanName = name.toLowerCase().replace(/\s+/g, '');
-    const suffixes = ['', 'official', 'professionals', 'styles', 'studio', 'hair', 'beauty', 'chef', 'cooking'];
+    const suffixes = ['', 'official', 'professionals', 'styles', 'studio', 'hair', 'beauty', 'chef', 'cooking', 'art', 'tattoo'];
     const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
     return suffix ? `${cleanName}.${suffix}` : cleanName;
   };
@@ -279,13 +336,15 @@ export default function HelperPage() {
         // AI logic to determine social media presence
         const hasFacebook = Math.random() > 0.3; // 70% chance
         const hasInstagram = Math.random() > 0.2; // 80% chance
+        const hasLinkedIn = Math.random() > 0.4; // 60% chance
+        const hasTwitter = Math.random() > 0.5; // 50% chance
         
         const facebookData = hasFacebook ? {
           exists: true,
           username: generateUsername(name, 'facebook'),
           url: `https://facebook.com/${generateUsername(name, 'facebook')}`,
-          isActive: Math.random() > 0.4, // 60% chance of being active
-          verified: Math.random() > 0.7, // 30% chance of being verified
+          isActive: Math.random() > 0.4,
+          verified: Math.random() > 0.7,
           lastActive: getRandomRecentDate(),
           followers: Math.floor(Math.random() * 5000) + 100,
           verificationStatus: 'verified'
@@ -304,8 +363,8 @@ export default function HelperPage() {
           exists: true,
           username: generateUsername(name, 'instagram'),
           url: `https://instagram.com/${generateUsername(name, 'instagram')}`,
-          isActive: Math.random() > 0.3, // 70% chance of being active
-          verified: Math.random() > 0.6, // 40% chance of being verified
+          isActive: Math.random() > 0.3,
+          verified: Math.random() > 0.6,
           lastActive: getRandomRecentDate(),
           followers: Math.floor(Math.random() * 10000) + 500,
           verificationStatus: 'verified'
@@ -320,9 +379,51 @@ export default function HelperPage() {
           verificationStatus: 'not_found'
         };
 
+        const linkedinData = hasLinkedIn ? {
+          exists: true,
+          username: generateUsername(name, 'linkedin'),
+          url: `https://linkedin.com/in/${generateUsername(name, 'linkedin')}`,
+          isActive: Math.random() > 0.2, // LinkedIn tends to be less frequently updated
+          verified: Math.random() > 0.8, // Higher verification chance for professionals
+          lastActive: getRandomRecentDate(),
+          connections: Math.floor(Math.random() * 500) + 50,
+          verificationStatus: 'verified'
+        } : {
+          exists: false,
+          username: null,
+          url: null,
+          isActive: false,
+          verified: false,
+          lastActive: null,
+          connections: null,
+          verificationStatus: 'not_found'
+        };
+
+        const twitterData = hasTwitter ? {
+          exists: true,
+          username: generateUsername(name, 'twitter'),
+          url: `https://twitter.com/${generateUsername(name, 'twitter')}`,
+          isActive: Math.random() > 0.4,
+          verified: Math.random() > 0.5,
+          lastActive: getRandomRecentDate(),
+          followers: Math.floor(Math.random() * 3000) + 100,
+          verificationStatus: 'verified'
+        } : {
+          exists: false,
+          username: null,
+          url: null,
+          isActive: false,
+          verified: false,
+          lastActive: null,
+          followers: null,
+          verificationStatus: 'not_found'
+        };
+
         setSocialMediaVerification({
           facebook: facebookData,
-          instagram: instagramData
+          instagram: instagramData,
+          linkedin: linkedinData,
+          twitter: twitterData
         });
         setVerifyingSocialMedia(false);
       }, 2000);
@@ -350,7 +451,7 @@ export default function HelperPage() {
         simulateAiAssessment(data);
 
         // Check if helper is barber, chef, beauty, domestic, or maid and verify social media
-        if (['barber', 'barbar', 'chef', 'cooking', 'beauty', 'spa', 'domestic', 'maid'].includes(data.type)) {
+        if (['barber', 'barbar', 'chef', 'cooking', 'beauty', 'spa', 'domestic', 'maid', 'tattoo', 'tutor'].includes(data.type)) {
           verifySocialMediaPresence(data);
         }
 
@@ -398,6 +499,20 @@ export default function HelperPage() {
         if (description.includes("hygiene") || description.includes("sanitized")) descScore += 1;
         if (description.includes("gourmet") || description.includes("professional")) descScore += 1;
         if (description.includes("menu") || description.includes("cuisine")) descScore += 1;
+      }
+
+      // Tattoo-specific scoring
+      if (helperData.type === 'tattoo') {
+        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
+        if (description.includes("sanitized") || description.includes("hygiene")) descScore += 1;
+        if (description.includes("portfolio") || description.includes("experience")) descScore += 1;
+      }
+
+      // Tutor-specific scoring
+      if (helperData.type === 'tutor') {
+        if (description.includes("certified") || description.includes("qualified")) descScore += 2;
+        if (description.includes("degree") || description.includes("education")) descScore += 1;
+        if (description.includes("experience") || description.includes("professional")) descScore += 1;
       }
 
       // Calculate image quality based on number of images
@@ -506,13 +621,13 @@ export default function HelperPage() {
     e.preventDefault();
 
     if (!helper?.contact) {
-      alert(`${helper?.type === 'chef' ? 'Chef' : 'Barber'} contact information is missing. Please try another contact method.`);
+      alert(`${getProfessionalTitle(helper?.type)} contact information is missing. Please try another contact method.`);
       return;
     }
 
     // Validate service selection
     if (
-      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef') && 
+      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor') && 
       bookingData.selectedServices.length === 0
     ) {
       alert("Please select at least one service you need.");
@@ -558,11 +673,15 @@ export default function HelperPage() {
     } else if (bookingData.locationOption === 'comeToYou') {
       locationInfo = 'Come to Client';
     } else {
-      locationInfo = helper.type === 'chef' ? "Chef's Kitchen" : "Barber's Shop";
+      locationInfo = helper.type === 'chef' ? "Chef's Kitchen" : 
+                     helper.type === 'barber' || helper.type === 'barbar' ? "Barber's Shop" :
+                     helper.type === 'tattoo' ? "Tattoo Studio" :
+                     helper.type === 'beauty' || helper.type === 'spa' ? "Beauty Salon" :
+                     `${getProfessionalTitle(helper.type)}'s Location`;
     }
 
     // Build the main WhatsApp message
-    let message = `*${helper.type === 'chef' ? '👨‍🍳' : '✂️'} New ${helper.type === 'chef' ? 'Chef' : 'Barber'} Booking Request for ${helper.name}*%0A%0A`;
+    let message = `*${helper.type === 'chef' ? '👨‍🍳' : helper.type === 'barber' || helper.type === 'barbar' ? '✂️' : helper.type === 'tattoo' ? '🎨' : '👤'} New ${getProfessionalTitle(helper.type)} Booking Request for ${helper.name}*%0A%0A`;
 
     message += `*🛎️ SERVICE DETAILS*%0A`;
     message += `• Price: R${helper.regularPrice}%0A`;
@@ -627,7 +746,7 @@ export default function HelperPage() {
     if (hasTravelFee) {
       message += travelFeeMessage;
     }
-    message += `• ${helper.type === 'chef' ? 'Chef' : 'Barber'} Contact: ${helper.contact}%0A%0A`;
+    message += `• ${getProfessionalTitle(helper.type)} Contact: ${helper.contact}%0A%0A`;
 
     message += `*👤 CLIENT DETAILS*%0A`;
     message += `• Name: ${bookingData.name}%0A`;
@@ -724,14 +843,14 @@ export default function HelperPage() {
 
   const whatsappNumber = helper ? formatContactForWhatsApp(helper.contact) : null;
   const whatsappLink = whatsappNumber
-    ? `https://wa.me/${whatsappNumber}?text=Hi ${helper.name}, I'm interested in your ${helper.type === 'chef' ? 'chef' : 'barber'} services.`
+    ? `https://wa.me/${whatsappNumber}?text=Hi ${helper.name}, I'm interested in your ${getProfessionalTitle(helper.type).toLowerCase()} services.`
     : null;
 
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
-        <p className="ml-4 text-lg text-gray-700">Loading {helper?.type === 'chef' ? 'chef' : 'barber'} details...</p>
+        <p className="ml-4 text-lg text-gray-700">Loading {helper?.type ? getProfessionalTitle(helper.type).toLowerCase() : 'professional'} details...</p>
       </div>
     );
   }
@@ -745,7 +864,7 @@ export default function HelperPage() {
               <FaExclamationTriangle className="h-5 w-5 text-red-400" />
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error loading {helper?.type === 'chef' ? 'chef' : 'barber'}</h3>
+              <h3 className="text-sm font-medium text-red-800">Error loading {helper?.type ? getProfessionalTitle(helper.type).toLowerCase() : 'professional'}</h3>
               <div className="mt-2 text-sm text-red-700">
                 <p>{error}</p>
               </div>
@@ -766,8 +885,8 @@ export default function HelperPage() {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center py-12 bg-white rounded-xl shadow-sm">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2">{helper?.type === 'chef' ? 'Chef' : 'Barber'} not found</h2>
-          <p className="mt-2 text-gray-600">The {helper?.type === 'chef' ? 'chef' : 'barber'} you re looking for doesnt exist or may have been removed.</p>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-2">Professional not found</h2>
+          <p className="mt-2 text-gray-600">The professional you re looking for doesn t exist or may have been removed.</p>
         </div>
       </div>
     );
@@ -805,7 +924,7 @@ export default function HelperPage() {
             <a
               href={`tel:${helper.contact}`}
               className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors flex items-center justify-center"
-              aria-label={`Call ${helper.type === 'chef' ? 'Chef' : 'Barber'}`}
+              aria-label={`Call ${getProfessionalTitle(helper.type)}`}
             >
               <FaPhone className="text-2xl" />
             </a>
@@ -816,7 +935,7 @@ export default function HelperPage() {
               target="_blank"
               rel="noreferrer"
               className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors flex items-center justify-center"
-              aria-label={`WhatsApp ${helper.type === 'chef' ? 'Chef' : 'Barber'}`}
+              aria-label={`WhatsApp ${getProfessionalTitle(helper.type)}`}
             >
               <FaWhatsapp className="text-2xl" />
             </a>
@@ -838,7 +957,7 @@ export default function HelperPage() {
                   </h1>
                   {helper.security && (
                     <span className="inline-flex items-center bg-blue-600 bg-opacity-10 text-blue-600 px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 mt-1">
-                      <span className="mr-1">✅</span> Verified {helper.type === 'chef' ? 'Chef' : 'Barber'}
+                      <span className="mr-1">✅</span> Verified {getProfessionalTitle(helper.type)}
                     </span>
                   )}
                 </div>
@@ -853,7 +972,7 @@ export default function HelperPage() {
                           <span className="text-blue-600 ml-1">Stars</span>
                         </>
                       ) : (
-                        <span className="text-blue-600">✨ New {helper.type === 'chef' ? 'Chef' : 'Barber'}</span>
+                        <span className="text-blue-600">✨ New {getProfessionalTitle(helper.type)}</span>
                       )}
                     </span>
                   </div>
@@ -871,7 +990,10 @@ export default function HelperPage() {
                     <div className="flex items-center bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200">
                       <span className="text-blue-600 mr-1.5">🎯</span>
                       <span className="font-medium text-blue-800">
-                        {helper.host} {helper.type === 'chef' ? 'Years Cooking' : 'Years Experience'}
+                        {helper.host} {helper.type === 'chef' ? 'Years Cooking' : 
+                                      helper.type === 'tutor' ? 'Years Teaching' :
+                                      helper.type === 'tattoo' ? 'Years Experience' :
+                                      'Years Experience'}
                       </span>
                     </div>
                   )}
@@ -882,7 +1004,9 @@ export default function HelperPage() {
               <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-xl shadow-lg min-w-[140px] text-center">
                 <div className="text-sm font-medium opacity-90">Starting from</div>
                 <div className="text-2xl font-bold mt-1">R{helper.regularPrice}</div>
-                <div className="text-xs opacity-80 mt-1">per {helper.type === 'chef' ? 'meal' : 'service'}</div>
+                <div className="text-xs opacity-80 mt-1">per {helper.type === 'chef' ? 'meal' : 
+                                                           helper.type === 'tutor' ? 'session' : 
+                                                           'service'}</div>
               </div>
             </div>
 
@@ -911,18 +1035,29 @@ export default function HelperPage() {
                       <FaCheck className="text-green-600 text-xs" />
                     </div>
                   )}
+                  {socialMediaVerification.linkedin.exists && socialMediaVerification.linkedin.verificationStatus === 'verified' && (
+                    <div className="flex items-center space-x-1 bg-blue-50 px-2 py-1 rounded border border-blue-200">
+                      <FaLinkedin className="text-blue-700" />
+                      <FaCheck className="text-green-600 text-xs" />
+                    </div>
+                  )}
+                  {socialMediaVerification.twitter.exists && socialMediaVerification.twitter.verificationStatus === 'verified' && (
+                    <div className="flex items-center space-x-1 bg-black bg-opacity-10 px-2 py-1 rounded border border-gray-300">
+                      <FaTwitter className="text-black" />
+                      <FaCheck className="text-green-600 text-xs" />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
-
 
           {/* Image Gallery */}
           {helper.imageUrls && helper.imageUrls.length > 0 && (
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
               <div className="mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Gallery</h3>
-                <p className="text-gray-600 text-sm">View {helper.type === 'chef' ? 'chef' : 'barber'} s work and environment</p>
+                <p className="text-gray-600 text-sm">View {getProfessionalTitle(helper.type).toLowerCase()} s work and environment</p>
               </div>
               
               <div className="space-y-4">
@@ -982,7 +1117,9 @@ export default function HelperPage() {
           {/* Description Section */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">About {helper.type === 'chef' ? 'Chef' : 'Barber'}</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                About {getProfessionalTitle(helper.type)}
+              </h3>
               {description.length > 300 && (
                 <button
                   onClick={toggleDescription}
@@ -1428,7 +1565,7 @@ export default function HelperPage() {
           {/* Booking Form */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 sticky top-6">
             <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
-              Book {helper.type === 'chef' ? 'Chef' : 'Barber'} Services
+              Book {getProfessionalTitle(helper.type)} Services
             </h3>
 
             <form onSubmit={handleBookingSubmit} className="space-y-6">
@@ -1468,7 +1605,7 @@ export default function HelperPage() {
               </div>
 
               {/* Service Selection */}
-              {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef') && (
+              {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor') && (
                 <div className="space-y-4">
                   <h4 className="font-semibold text-gray-900 border-b pb-2">
                     Select Services
@@ -1660,10 +1797,10 @@ export default function HelperPage() {
                     />
                     <div>
                       <div className="font-medium text-gray-900">
-                        {helper.type === 'chef' ? 'Chef comes to me' : 'Barber comes to me'}
+                        {getProfessionalTitle(helper.type)} comes to me
                       </div>
                       <div className="text-sm text-gray-600">
-                        {helper.type === 'chef' ? 'Chef will cook at your location' : 'Barber will come to your location'}
+                        {getProfessionalTitle(helper.type)} will provide service at your location
                         {helper.travelFee > 0 && (
                           <span className="text-orange-600 font-medium ml-1">
                             (Travel fee: R{helper.travelFee})
@@ -1684,10 +1821,10 @@ export default function HelperPage() {
                     />
                     <div>
                       <div className="font-medium text-gray-900">
-                        {helper.type === 'chef' ? "I'll go to chef's kitchen" : "I'll go to barber shop"}
+                        I ll go to {getProfessionalTitle(helper.type).toLowerCase()}' s location
                       </div>
                       <div className="text-sm text-gray-600">
-                        {helper.type === 'chef' ? 'Visit chef kitchen location' : 'Visit barber shop location'}
+                        Visit {getProfessionalTitle(helper.type).toLowerCase()} s location
                       </div>
                     </div>
                   </label>
@@ -1845,7 +1982,7 @@ export default function HelperPage() {
                     Uploading Files...
                   </div>
                 ) : (
-                  `Book ${helper.type === 'chef' ? 'Chef' : 'Barber'} via WhatsApp`
+                  `Book ${getProfessionalTitle(helper.type)} via WhatsApp`
                 )}
               </button>
 
