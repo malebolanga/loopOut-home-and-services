@@ -767,7 +767,7 @@ export default function HelperPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center py-12 bg-white rounded-xl shadow-sm">
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">{helper?.type === 'chef' ? 'Chef' : 'Barber'} not found</h2>
-          <p className="mt-2 text-gray-600">The {helper?.type === 'chef' ? 'chef' : 'barber'} you're looking for doesn't exist or may have been removed.</p>
+          <p className="mt-2 text-gray-600">The {helper?.type === 'chef' ? 'chef' : 'barber'} you re looking for doesnt exist or may have been removed.</p>
         </div>
       </div>
     );
@@ -922,7 +922,7 @@ export default function HelperPage() {
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
               <div className="mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Gallery</h3>
-                <p className="text-gray-600 text-sm">View {helper.type === 'chef' ? 'chef' : 'barber'}'s work and environment</p>
+                <p className="text-gray-600 text-sm">View {helper.type === 'chef' ? 'chef' : 'barber'} s work and environment</p>
               </div>
               
               <div className="space-y-4">
