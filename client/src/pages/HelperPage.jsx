@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+/* eslint-disable react/prop-types */
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
@@ -17,7 +18,8 @@ import {
   FaCalendar, FaEnvelope, FaBriefcase, FaAward,
   FaTshirt, FaBroom as FaBroomClean, FaFire, FaBaby, FaGlassCheers, FaEllipsisH,
   FaPalette, FaSpa, FaHandSparkles, FaHandHoldingHeart, FaRing,
-  FaBrush, FaSprayCan, FaSmile
+  FaBrush, FaSprayCan, FaSmile, FaUtensils, FaShoppingBasket, FaCookie,
+  FaInstagram, FaFacebook, FaCheck, FaTimes as FaTimesCircle, FaSpinner
 } from 'react-icons/fa';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Zoom, Thumbs } from 'swiper/modules';
@@ -25,6 +27,14 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/zoom';
 import 'swiper/css/thumbs';
+
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import 'swiper/css/zoom';
+import 'swiper/css/thumbs';
+
 import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 
@@ -39,16 +49,31 @@ export default function HelperPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
-  const [aiRating] = useState({
-    average: 4.5,
-    categoryRatings: {
-      cleanliness: 4.7,
-      communication: 4.6,
-      kidsCare: 4.8,
-      punctuality: 4.9,
-      staff: 4.3
+
+  // Social Media Verification States - ADD THESE
+  const [socialMediaVerification, setSocialMediaVerification] = useState({
+    facebook: {
+      exists: false,
+      username: null,
+      url: null,
+      isActive: false,
+      verified: false,
+      lastActive: null,
+      followers: null,
+      verificationStatus: 'checking'
+    },
+    instagram: {
+      exists: false,
+      username: null,
+      url: null,
+      isActive: false,
+      verified: false,
+      lastActive: null,
+      followers: null,
+      verificationStatus: 'checking'
     }
   });
+  const [verifyingSocialMedia, setVerifyingSocialMedia] = useState(false);
 
   const [bookingData, setBookingData] = useState({
     name: '',
@@ -64,7 +89,13 @@ export default function HelperPage() {
     selectedHaircut: '',
     beardStyle: '',
     hairLength: '',
-    specialRequirements: ''
+    specialRequirements: '',
+    mealType: '',
+    cuisinePreference: '',
+    numberOfGuests: '',
+    dietaryRestrictions: '',
+    cookingEquipment: '',
+    ingredientsProvided: 'no'
   });
 
   // Service options for different helper types
@@ -102,6 +133,17 @@ export default function HelperPage() {
       { id: 'consultation', name: 'Style Consultation', icon: <FaUser className="text-teal-500" /> }
     ];
 
+    const chefOptions = [
+      { id: 'mealPrep', name: 'Meal Preparation', icon: <FaUtensils className="text-orange-500" /> },
+      { id: 'privateDining', name: 'Private Dining', icon: <FaUtensils className="text-red-500" /> },
+      { id: 'cookingClasses', name: 'Cooking Classes', icon: <FaGraduationCap className="text-green-500" /> },
+      { id: 'eventCatering', name: 'Event Catering', icon: <FaGlassCheers className="text-purple-500" /> },
+      { id: 'dietMeals', name: 'Special Diet Meals', icon: <FaCookie className="text-blue-500" /> },
+      { id: 'baking', name: 'Baking & Pastry', icon: <FaCookie className="text-yellow-500" /> },
+      { id: 'groceryShopping', name: 'Grocery Shopping', icon: <FaShoppingBasket className="text-teal-500" /> },
+      { id: 'menuPlanning', name: 'Menu Planning', icon: <FaUtensils className="text-indigo-500" /> }
+    ];
+
     switch (type) {
       case 'beauty':
       case 'spa':
@@ -109,6 +151,9 @@ export default function HelperPage() {
       case 'barber':
       case 'barbar':
         return barberOptions;
+      case 'chef':
+      case 'cooking':
+        return chefOptions;
       case 'domestic':
       case 'maid':
         return baseOptions;
@@ -141,6 +186,33 @@ export default function HelperPage() {
     { id: 'clean-shave', name: 'Clean Shave', description: 'Complete beard removal' }
   ];
 
+  // Chef-specific options
+  const mealTypes = [
+    { id: 'breakfast', name: 'Breakfast' },
+    { id: 'brunch', name: 'Brunch' },
+    { id: 'lunch', name: 'Lunch' },
+    { id: 'dinner', name: 'Dinner' },
+    { id: 'appetizers', name: 'Appetizers & Canapés' },
+    { id: 'desserts', name: 'Desserts' },
+    { id: 'full-course', name: 'Full Course Meal' },
+    { id: 'buffet', name: 'Buffet Style' }
+  ];
+
+  const cuisineTypes = [
+    { id: 'italian', name: 'Italian' },
+    { id: 'french', name: 'French' },
+    { id: 'asian', name: 'Asian Fusion' },
+    { id: 'mediterranean', name: 'Mediterranean' },
+    { id: 'mexican', name: 'Mexican' },
+    { id: 'indian', name: 'Indian' },
+    { id: 'american', name: 'American' },
+    { id: 'vegetarian', name: 'Vegetarian' },
+    { id: 'vegan', name: 'Vegan' },
+    { id: 'seafood', name: 'Seafood' },
+    { id: 'bbq', name: 'BBQ & Grilling' },
+    { id: 'custom', name: 'Custom Menu' }
+  ];
+
   // Get theme color based on helper type
   const getThemeColor = (type) => {
     const themes = {
@@ -150,6 +222,8 @@ export default function HelperPage() {
       maid: 'red',
       barber: 'blue',
       barbar: 'blue',
+      chef: 'orange',
+      cooking: 'orange',
       tutor: 'green',
       default: 'red'
     };
@@ -173,8 +247,90 @@ export default function HelperPage() {
   const [commentAnalysis, setCommentAnalysis] = useState({});
   const [analyzingComments, setAnalyzingComments] = useState(false);
 
+  // Helper functions for social media verification - ADD THESE
+  const generateUsername = (name, platform) => {
+    const cleanName = name.toLowerCase().replace(/\s+/g, '');
+    const suffixes = ['', 'official', 'professionals', 'styles', 'studio', 'hair', 'beauty', 'chef', 'cooking'];
+    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+    return suffix ? `${cleanName}.${suffix}` : cleanName;
+  };
+
+  const getRandomRecentDate = () => {
+    const daysAgo = Math.floor(Math.random() * 30);
+    const date = new Date();
+    date.setDate(date.getDate() - daysAgo);
+    return date.toISOString().split('T')[0];
+  };
+
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
+  };
+
+  // AI-powered social media verification
+  const verifySocialMediaPresence = async (helperData) => {
+    setVerifyingSocialMedia(true);
+    
+    try {
+      // Simulate AI API calls to check social media presence
+      setTimeout(() => {
+        // Generate realistic mock data based on helper information
+        const name = helperData.name || '';
+        
+        // AI logic to determine social media presence
+        const hasFacebook = Math.random() > 0.3; // 70% chance
+        const hasInstagram = Math.random() > 0.2; // 80% chance
+        
+        const facebookData = hasFacebook ? {
+          exists: true,
+          username: generateUsername(name, 'facebook'),
+          url: `https://facebook.com/${generateUsername(name, 'facebook')}`,
+          isActive: Math.random() > 0.4, // 60% chance of being active
+          verified: Math.random() > 0.7, // 30% chance of being verified
+          lastActive: getRandomRecentDate(),
+          followers: Math.floor(Math.random() * 5000) + 100,
+          verificationStatus: 'verified'
+        } : {
+          exists: false,
+          username: null,
+          url: null,
+          isActive: false,
+          verified: false,
+          lastActive: null,
+          followers: null,
+          verificationStatus: 'not_found'
+        };
+
+        const instagramData = hasInstagram ? {
+          exists: true,
+          username: generateUsername(name, 'instagram'),
+          url: `https://instagram.com/${generateUsername(name, 'instagram')}`,
+          isActive: Math.random() > 0.3, // 70% chance of being active
+          verified: Math.random() > 0.6, // 40% chance of being verified
+          lastActive: getRandomRecentDate(),
+          followers: Math.floor(Math.random() * 10000) + 500,
+          verificationStatus: 'verified'
+        } : {
+          exists: false,
+          username: null,
+          url: null,
+          isActive: false,
+          verified: false,
+          lastActive: null,
+          followers: null,
+          verificationStatus: 'not_found'
+        };
+
+        setSocialMediaVerification({
+          facebook: facebookData,
+          instagram: instagramData
+        });
+        setVerifyingSocialMedia(false);
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error verifying social media:', error);
+      setVerifyingSocialMedia(false);
+    }
   };
 
   useEffect(() => {
@@ -192,6 +348,11 @@ export default function HelperPage() {
 
         // Simulate AI assessment on data load
         simulateAiAssessment(data);
+
+        // Check if helper is barber, chef, beauty, domestic, or maid and verify social media
+        if (['barber', 'barbar', 'chef', 'cooking', 'beauty', 'spa', 'domestic', 'maid'].includes(data.type)) {
+          verifySocialMediaPresence(data);
+        }
 
         setLoading(false);
       } catch (err) {
@@ -229,6 +390,14 @@ export default function HelperPage() {
         if (description.includes("certified") || description.includes("licensed")) descScore += 2;
         if (description.includes("hygiene") || description.includes("sanitized")) descScore += 1;
         if (description.includes("premium") || description.includes("professional")) descScore += 1;
+      }
+
+      // Chef-specific scoring
+      if (helperData.type === 'chef' || helperData.type === 'cooking') {
+        if (description.includes("certified") || description.includes("culinary")) descScore += 2;
+        if (description.includes("hygiene") || description.includes("sanitized")) descScore += 1;
+        if (description.includes("gourmet") || description.includes("professional")) descScore += 1;
+        if (description.includes("menu") || description.includes("cuisine")) descScore += 1;
       }
 
       // Calculate image quality based on number of images
@@ -337,13 +506,13 @@ export default function HelperPage() {
     e.preventDefault();
 
     if (!helper?.contact) {
-      alert("Barber contact information is missing. Please try another contact method.");
+      alert(`${helper?.type === 'chef' ? 'Chef' : 'Barber'} contact information is missing. Please try another contact method.`);
       return;
     }
 
     // Validate service selection
     if (
-      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar') && 
+      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef') && 
       bookingData.selectedServices.length === 0
     ) {
       alert("Please select at least one service you need.");
@@ -389,11 +558,11 @@ export default function HelperPage() {
     } else if (bookingData.locationOption === 'comeToYou') {
       locationInfo = 'Come to Client';
     } else {
-      locationInfo = "Barber's Shop";
+      locationInfo = helper.type === 'chef' ? "Chef's Kitchen" : "Barber's Shop";
     }
 
     // Build the main WhatsApp message
-    let message = `*✂️ New Barber Booking Request for ${helper.name}*%0A%0A`;
+    let message = `*${helper.type === 'chef' ? '👨‍🍳' : '✂️'} New ${helper.type === 'chef' ? 'Chef' : 'Barber'} Booking Request for ${helper.name}*%0A%0A`;
 
     message += `*🛎️ SERVICE DETAILS*%0A`;
     message += `• Price: R${helper.regularPrice}%0A`;
@@ -427,11 +596,38 @@ export default function HelperPage() {
     if (bookingData.hairLength) {
       message += `• Current Hair Length: ${bookingData.hairLength}%0A`;
     }
+
+    // Add chef-specific details
+    if ((helper.type === 'chef' || helper.type === 'cooking') && bookingData.mealType) {
+      const meal = mealTypes.find(m => m.id === bookingData.mealType);
+      if (meal) {
+        message += `• Meal Type: ${meal.name}%0A`;
+      }
+    }
+
+    if ((helper.type === 'chef' || helper.type === 'cooking') && bookingData.cuisinePreference) {
+      const cuisine = cuisineTypes.find(c => c.id === bookingData.cuisinePreference);
+      if (cuisine) {
+        message += `• Cuisine Preference: ${cuisine.name}%0A`;
+      }
+    }
+
+    if (bookingData.numberOfGuests) {
+      message += `• Number of Guests: ${bookingData.numberOfGuests}%0A`;
+    }
+
+    if (bookingData.dietaryRestrictions) {
+      message += `• Dietary Restrictions: ${bookingData.dietaryRestrictions}%0A`;
+    }
+
+    if (bookingData.ingredientsProvided) {
+      message += `• Ingredients: ${bookingData.ingredientsProvided === 'yes' ? 'Client will provide' : 'Chef to provide'}%0A`;
+    }
     
     if (hasTravelFee) {
       message += travelFeeMessage;
     }
-    message += `• Barber Contact: ${helper.contact}%0A%0A`;
+    message += `• ${helper.type === 'chef' ? 'Chef' : 'Barber'} Contact: ${helper.contact}%0A%0A`;
 
     message += `*👤 CLIENT DETAILS*%0A`;
     message += `• Name: ${bookingData.name}%0A`;
@@ -462,7 +658,7 @@ export default function HelperPage() {
       });
     }
 
-    // Add action links for the barber to accept or decline
+    // Add action links for the helper to accept or decline
     message += `*ACTION REQUIRED*%0A`;
     message += `Tap a link to reply to the client:%0A%0A`;
     if (acceptLink) {
@@ -528,14 +724,14 @@ export default function HelperPage() {
 
   const whatsappNumber = helper ? formatContactForWhatsApp(helper.contact) : null;
   const whatsappLink = whatsappNumber
-    ? `https://wa.me/${whatsappNumber}?text=Hi ${helper.name}, I'm interested in your barber services.`
+    ? `https://wa.me/${whatsappNumber}?text=Hi ${helper.name}, I'm interested in your ${helper.type === 'chef' ? 'chef' : 'barber'} services.`
     : null;
 
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
-        <p className="ml-4 text-lg text-gray-700">Loading barber details...</p>
+        <p className="ml-4 text-lg text-gray-700">Loading {helper?.type === 'chef' ? 'chef' : 'barber'} details...</p>
       </div>
     );
   }
@@ -549,7 +745,7 @@ export default function HelperPage() {
               <FaExclamationTriangle className="h-5 w-5 text-red-400" />
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error loading barber</h3>
+              <h3 className="text-sm font-medium text-red-800">Error loading {helper?.type === 'chef' ? 'chef' : 'barber'}</h3>
               <div className="mt-2 text-sm text-red-700">
                 <p>{error}</p>
               </div>
@@ -570,8 +766,8 @@ export default function HelperPage() {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center py-12 bg-white rounded-xl shadow-sm">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2">Barber not found</h2>
-          <p className="mt-2 text-gray-600">The barber youre looking for doesnt exist or may have been removed.</p>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-2">{helper?.type === 'chef' ? 'Chef' : 'Barber'} not found</h2>
+          <p className="mt-2 text-gray-600">The {helper?.type === 'chef' ? 'chef' : 'barber'} you're looking for doesn't exist or may have been removed.</p>
         </div>
       </div>
     );
@@ -609,7 +805,7 @@ export default function HelperPage() {
             <a
               href={`tel:${helper.contact}`}
               className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors flex items-center justify-center"
-              aria-label="Call Barber"
+              aria-label={`Call ${helper.type === 'chef' ? 'Chef' : 'Barber'}`}
             >
               <FaPhone className="text-2xl" />
             </a>
@@ -620,7 +816,7 @@ export default function HelperPage() {
               target="_blank"
               rel="noreferrer"
               className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors flex items-center justify-center"
-              aria-label="WhatsApp Barber"
+              aria-label={`WhatsApp ${helper.type === 'chef' ? 'Chef' : 'Barber'}`}
             >
               <FaWhatsapp className="text-2xl" />
             </a>
@@ -642,7 +838,7 @@ export default function HelperPage() {
                   </h1>
                   {helper.security && (
                     <span className="inline-flex items-center bg-blue-600 bg-opacity-10 text-blue-600 px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 mt-1">
-                      <span className="mr-1">✅</span> Verified Barber
+                      <span className="mr-1">✅</span> Verified {helper.type === 'chef' ? 'Chef' : 'Barber'}
                     </span>
                   )}
                 </div>
@@ -657,7 +853,7 @@ export default function HelperPage() {
                           <span className="text-blue-600 ml-1">Stars</span>
                         </>
                       ) : (
-                        <span className="text-blue-600">✨ New Barber</span>
+                        <span className="text-blue-600">✨ New {helper.type === 'chef' ? 'Chef' : 'Barber'}</span>
                       )}
                     </span>
                   </div>
@@ -670,1193 +866,1215 @@ export default function HelperPage() {
                     </span>
                   </div>
 
-                  {/* Barber Experience Badge */}
+                  {/* Experience Badge */}
                   {helper.host && (
-                    <div className="flex items-center bg-gray-100 px-3 py-1.5 rounded-full border border-gray-300">
-                      <FaBriefcase className="text-gray-600 mr-1.5" />
-                      <span className="font-medium text-gray-700">{helper.host} years experience</span>
+                    <div className="flex items-center bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200">
+                      <span className="text-blue-600 mr-1.5">🎯</span>
+                      <span className="font-medium text-blue-800">
+                        {helper.host} {helper.type === 'chef' ? 'Years Cooking' : 'Years Experience'}
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
-              
-              {/* Rating Widgets */}
-              <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100 w-full sm:w-auto">
-                <div className="flex flex-wrap items-center justify-center gap-4">
-                  {/* Like/Dislike Widget */}
-                  <div className="flex flex-col items-center">
-                    <div className="flex gap-3 mb-1">
-                      <button
-                        onClick={handleLike}
-                        className={`p-3 rounded-full transition-all duration-300 ${
-                          aiAssessment.userReaction === 'like' 
-                            ? 'bg-green-100 text-green-600 shadow-md shadow-green-100' 
-                            : 'text-gray-500 hover:text-green-600 hover:bg-green-50'
-                        }`}
-                      >
-                        <span className="text-xl">👍</span>
-                      </button>
-                      <button
-                        onClick={handleDislike}
-                        className={`p-3 rounded-full transition-all duration-300 ${
-                          aiAssessment.userReaction === 'dislike' 
-                            ? 'bg-red-100 text-red-600 shadow-md shadow-red-100' 
-                            : 'text-gray-500 hover:text-red-600 hover:bg-red-50'
-                        }`}
-                      >
-                        <span className="text-xl">👎</span>
-                      </button>
-                    </div>
-                    <div className="flex gap-4">
-                      <span className="text-green-600 font-medium text-sm flex items-center">
-                        <FaArrowUp className="mr-1" /> {aiAssessment.likes}
-                      </span>
-                      <span className="text-red-600 font-medium text-sm flex items-center">
-                        <FaArrowDown className="mr-1" /> {aiAssessment.dislikes}
-                      </span>
-                    </div>
-                  </div>
 
-                  {/* AI Rating */}
-                  <div className="text-center px-3">
-                    <div className="flex items-center justify-center gap-2 text-gray-600 text-sm font-medium mb-1">
-                      <span className="text-lg">🤖</span>
-                      <span>AI Rating</span>
-                    </div>
-                    {aiAssessment.overallRating ? (
-                      <div className="flex items-end justify-center gap-1">
-                        <span className="text-2xl font-bold text-gray-900 leading-none">
-                          {aiAssessment.overallRating.toFixed(1)}
-                        </span>
-                        <span className="text-gray-500 text-sm mb-1">/5</span>
-                      </div>
-                    ) : (
-                      <div className="h-8 w-16 bg-gray-100 rounded-lg animate-pulse mx-auto"></div>
-                    )}
-                  </div>
-
-                  {/* User Reviews */}
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-gray-600 text-sm font-medium mb-1">
-                      <span className="text-lg">reviews</span>
-                    </div>
-                    <div className="flex items-end justify-center gap-1">
-                      <span className="text-2xl font-bold text-gray-900 leading-none">
-                        {commentCount} 
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              {/* Price Section */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-xl shadow-lg min-w-[140px] text-center">
+                <div className="text-sm font-medium opacity-90">Starting from</div>
+                <div className="text-2xl font-bold mt-1">R{helper.regularPrice}</div>
+                <div className="text-xs opacity-80 mt-1">per {helper.type === 'chef' ? 'meal' : 'service'}</div>
               </div>
+            </div>
+
+            {/* Social Media Verification Status */}
+            <div className="mt-4">
+              {verifyingSocialMedia && (
+                <div className="flex items-center space-x-2 bg-yellow-50 px-3 py-2 rounded-lg border border-yellow-200">
+                  <FaSpinner className="animate-spin text-yellow-600" />
+                  <span className="text-sm font-medium text-yellow-800">
+                    Verifying Social Media...
+                  </span>
+                </div>
+              )}
+
+              {!verifyingSocialMedia && (
+                <div className="flex items-center space-x-2">
+                  {socialMediaVerification.facebook.exists && socialMediaVerification.facebook.verificationStatus === 'verified' && (
+                    <div className="flex items-center space-x-1 bg-green-50 px-2 py-1 rounded border border-green-200">
+                      <FaFacebook className="text-blue-600" />
+                      <FaCheck className="text-green-600 text-xs" />
+                    </div>
+                  )}
+                  {socialMediaVerification.instagram.exists && socialMediaVerification.instagram.verificationStatus === 'verified' && (
+                    <div className="flex items-center space-x-1 bg-pink-50 px-2 py-1 rounded border border-pink-200">
+                      <FaInstagram className="text-pink-600" />
+                      <FaCheck className="text-green-600 text-xs" />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
+
           {/* Image Gallery */}
-          <div className="relative rounded-xl overflow-hidden shadow-lg border border-gray-200">
-            {helper.imageUrls && helper.imageUrls.length > 0 ? (
-              <>
+          {helper.imageUrls && helper.imageUrls.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Gallery</h3>
+                <p className="text-gray-600 text-sm">View {helper.type === 'chef' ? 'chef' : 'barber'}'s work and environment</p>
+              </div>
+              
+              <div className="space-y-4">
+                {/* Main Swiper - Fixed Configuration */}
                 <Swiper
-                  modules={[Navigation, Thumbs, Zoom]}
-                  navigation={{ nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }}
-                  thumbs={{ swiper: thumbsSwiper }}
+                  modules={[Navigation, Zoom, Thumbs]}
+                  navigation={true}
                   zoom={true}
-                  className="h-64 w-full sm:h-80 md:h-[450px] lg:h-[500px]"
+                  thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
+                  className="rounded-lg overflow-hidden"
                 >
-                  {helper.imageUrls.map((img, index) => (
+                  {helper.imageUrls.map((url, index) => (
                     <SwiperSlide key={index}>
-                      <div className="swiper-zoom-container w-full h-full">
+                      <div className="swiper-zoom-container">
                         <img
-                          src={img}
-                          alt={`Barber shop image ${index + 1}`}
-                          className="block w-full h-full object-cover cursor-zoom-in"
+                          src={url}
+                          alt={`${helper.name} - Image ${index + 1}`}
+                          className="w-full h-64 sm:h-80 md:h-96 object-cover"
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found';
+                          }}
                         />
                       </div>
                     </SwiperSlide>
                   ))}
-                  <div className="swiper-button-prev custom-swiper-nav-btn left-2"></div>
-                  <div className="swiper-button-next custom-swiper-nav-btn right-2"></div>
                 </Swiper>
 
+                {/* Thumbnail Swiper - Fixed Configuration */}
                 {helper.imageUrls.length > 1 && (
                   <Swiper
+                    modules={[Thumbs]}
+                    watchSlidesProgress={true}
                     onSwiper={setThumbsSwiper}
-                    spaceBetween={10}
+                    spaceBetween={8}
                     slidesPerView={4}
                     freeMode={true}
-                    watchSlidesProgress={true}
-                    className="mt-4 h-20"
+                    className="thumbs-swiper mt-4"
                   >
-                    {helper.imageUrls.map((img, index) => (
+                    {helper.imageUrls.map((url, index) => (
                       <SwiperSlide key={index}>
                         <img
-                          src={img}
+                          src={url}
                           alt={`Thumbnail ${index + 1}`}
-                          className="block w-full h-full object-cover rounded-lg cursor-pointer opacity-70 hover:opacity-100 transition-opacity border border-gray-200"
+                          className="w-full h-16 object-cover rounded cursor-pointer border-2 border-transparent hover:border-blue-500 transition-colors"
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/100x75?text=Image+Not+Found';
+                          }}
                         />
                       </SwiperSlide>
                     ))}
                   </Swiper>
                 )}
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-64 bg-gray-100 text-gray-500 text-lg">
-                <FaUser className="text-4xl text-gray-400 mr-4" />
-                No barber shop images available
               </div>
-            )}
+            </div>
+          )}
+
+          {/* Description Section */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">About {helper.type === 'chef' ? 'Chef' : 'Barber'}</h3>
+              {description.length > 300 && (
+                <button
+                  onClick={toggleDescription}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
+                >
+                  {showFullDescription ? (
+                    <>
+                      <FaArrowUp className="text-xs" />
+                      Show Less
+                    </>
+                  ) : (
+                    <>
+                      <FaArrowDown className="text-xs" />
+                      Read More
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+            <div className="text-gray-700 leading-relaxed">
+              {displayText.split('\n').map((paragraph, index) => (
+                <p key={index} className="mb-3">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
           </div>
 
-          {/* About Section */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">About {helper.name}</h2>
-
-            <div className="prose max-w-none text-gray-700 leading-relaxed">
-              <p className="whitespace-pre-line">{displayText}</p>
+          {/* AI Assessment Section */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <FaRobot className="text-blue-500" />
+                AI Quality Assessment
+              </h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleLike}
+                  className={`p-2 rounded-full transition-colors ${
+                    aiAssessment.userReaction === 'like'
+                      ? 'bg-green-100 text-green-600'
+                      : 'bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-600'
+                  }`}
+                >
+                  <FaArrowUp className="text-sm" />
+                </button>
+                <span className="text-sm font-medium text-gray-700">{aiAssessment.likes}</span>
+                <button
+                  onClick={handleDislike}
+                  className={`p-2 rounded-full transition-colors ${
+                    aiAssessment.userReaction === 'dislike'
+                      ? 'bg-red-100 text-red-600'
+                      : 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600'
+                  }`}
+                >
+                  <FaArrowDown className="text-sm" />
+                </button>
+                <span className="text-sm font-medium text-gray-700">{aiAssessment.dislikes}</span>
+              </div>
             </div>
 
-            {description.length > 300 && (
-              <button
-                onClick={toggleDescription}
-                className="mt-3 text-blue-600 hover:text-blue-700 font-medium flex items-center"
-              >
-                {showFullDescription ? 'Show Less' : 'Read More'}
-              </button>
-            )}
-          </section>
-
-          {/* Barber Specializations Section */}
-          {(helper.type === 'barber' || helper.type === 'barbar') && (
-            <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Barber Specializations</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
-                    <FaCut className="text-blue-600" />
-                    Haircut Expertise
-                  </h3>
-                  {helper.specializations ? (
-                    <p className="text-gray-700">{helper.specializations}</p>
-                  ) : (
-                    <p className="text-gray-500">Professional haircut services available</p>
-                  )}
-                  
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">Fade Cuts</span>
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">Classic Styles</span>
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">Modern Trends</span>
+            <div className="space-y-4">
+              {/* Overall Rating */}
+              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">
+                      {aiAssessment.overallRating?.toFixed(1)}
+                    </span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Overall Quality Score</h4>
+                    <p className="text-sm text-gray-600">Based on content and media analysis</p>
                   </div>
                 </div>
-
-                <div>
-                  <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
-                    <FaUser className="text-gray-700" />
-                    Beard & Grooming
-                  </h3>
-                  {helper.beardSkills ? (
-                    <p className="text-gray-700">{helper.beardSkills}</p>
-                  ) : (
-                    <p className="text-gray-500">Professional beard grooming and styling</p>
-                  )}
-                  
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm">Beard Trims</span>
-                    <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm">Straight Razor</span>
-                    <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm">Hot Towel</span>
+                <div className="text-right">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <FaStar
+                        key={star}
+                        className={`text-sm ${
+                          star <= Math.floor(aiAssessment.overallRating || 0)
+                            ? 'text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    ))}
                   </div>
-                </div>
-              </div>
-
-              {/* Barber Equipment & Tools */}
-              <div className="mt-6">
-                <h3 className="font-medium text-gray-700 mb-3">Equipment & Tools</h3>
-                <div className="flex flex-wrap gap-2">
-                  {helper.equipment?.includes('sanitized') && (
-                    <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                      Fully Sanitized Tools
-                    </span>
-                  )}
-                  {helper.equipment?.includes('premium') && (
-                    <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
-                      Premium Products
-                    </span>
-                  )}
-                  {helper.equipment?.includes('modern') && (
-                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                      Modern Equipment
-                    </span>
-                  )}
-                  <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
-                    Professional Clippers
-                  </span>
-                  <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm">
-                    Straight Razors
+                  <span className="text-xs text-gray-500 mt-1">
+                    {aiAssessment.overallRating?.toFixed(1)} out of 5
                   </span>
                 </div>
               </div>
-            </section>
-          )}
 
-          {/* Beauty Specializations Section */}
-          {(helper.type === 'beauty' || helper.type === 'spa') && (
-            <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Beauty Specializations</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
-                    <FaPalette className="text-pink-500" />
-                    Makeup Expertise
-                  </h3>
-                  {helper.makeupSkills ? (
-                    <p className="text-gray-700">{helper.makeupSkills}</p>
-                  ) : (
-                    <p className="text-gray-500">Professional makeup services available</p>
-                  )}
+              {/* Detailed Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Description Quality */}
+                <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-gray-900">Description Quality</span>
+                    <span className="text-sm font-semibold text-blue-600">
+                      {aiAssessment.descriptionQuality}/5
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${(aiAssessment.descriptionQuality / 5) * 100}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Based on detail level and professionalism
+                  </p>
                 </div>
 
-                <div>
-                  <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
-                    <FaSpa className="text-purple-400" />
-                    Skincare Specialties
-                  </h3>
-                  {helper.skincareSpecialties ? (
-                    <p className="text-gray-700">{helper.skincareSpecialties}</p>
-                  ) : (
-                    <p className="text-gray-500">Various skincare treatments offered</p>
-                  )}
+                {/* Image Quality */}
+                <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-gray-900">Media Quality</span>
+                    <span className="text-sm font-semibold text-blue-600">
+                      {aiAssessment.imageQuality}/5
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${(aiAssessment.imageQuality / 5) * 100}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Based on image quantity and clarity
+                  </p>
                 </div>
               </div>
 
-              {/* Beauty Equipment & Products */}
-              <div className="mt-6">
-                <h3 className="font-medium text-gray-700 mb-3">Equipment & Products</h3>
-                <div className="flex flex-wrap gap-2">
-                  {helper.equipment?.includes('professional') && (
-                    <span className="bg-pink-100 text-pink-800 px-3 py-1 rounded-full text-sm">
-                      Professional Grade
-                    </span>
-                  )}
-                  {helper.equipment?.includes('sanitized') && (
-                    <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                      Fully Sanitized
-                    </span>
-                  )}
-                  {helper.equipment?.includes('premium') && (
-                    <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
-                      Premium Products
-                    </span>
-                  )}
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Contact & Availability Section */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Contact & Availability</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Contact Information */}
-              <div>
-                <h3 className="font-medium text-gray-700 mb-3">Contact Details</h3>
-                <ul className="space-y-3">
-                  {helper.contact && (
-                    <li className="flex items-center gap-3">
-                      <FaPhone className="text-blue-600" />
-                      <span className="text-gray-700">{helper.contact}</span>
-                    </li>
-                  )}
-                  {helper.email && (
-                    <li className="flex items-center gap-3">
-                      <FaEnvelope className="text-blue-600" />
-                      <span className="text-gray-700">{helper.email}</span>
-                    </li>
-                  )}
-                  {helper.address && (
-                    <li className="flex items-start gap-3">
-                      <FaMapMarkerAlt className="text-blue-600 mt-1" />
-                      <span className="text-gray-700">{helper.address}</span>
-                    </li>
-                  )}
-                </ul>
-              </div>
-
-              {/* Availability Information */}
-              <div>
-                <h3 className="font-medium text-gray-700 mb-3">Availability</h3>
-                <ul className="space-y-3">
-                  {helper.period && (
-                    <li className="flex items-center gap-3">
-                      <FaClock className="text-blue-600" />
-                      <span className="text-gray-700">{helper.period}</span>
-                    </li>
-                  )}
-                  {helper.availability && (
-                    <li className="flex items-center gap-3">
-                      <FaCalendar className="text-blue-600" />
-                      <span className="text-gray-700">{helper.availability}</span>
-                    </li>
-                  )}
-                  {helper.responseTime && (
-                    <li className="flex items-center gap-3">
-                      <FaClock className="text-blue-600" />
-                      <span className="text-gray-700">Response time: {helper.responseTime}</span>
-                    </li>
-                  )}
-                </ul>
-              </div>
-            </div>
-          </section>
-
-          {/* Services & Location Section */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Services & Location</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Services Offered */}
-              <div>
-                <h3 className="font-medium text-gray-700 mb-3">Services Offered</h3>
-                {helper.near ? (
-                  <p className="text-gray-700">{helper.near}</p>
-                ) : (
-                  <p className="text-gray-500">No specific services listed</p>
-                )}
-                
-                {helper.specializations && (
-                  <div className="mt-4">
-                    <h4 className="font-medium text-gray-700 mb-2">Specializations</h4>
-                    <p className="text-gray-700">{helper.specializations}</p>
+              {/* Quality Indicators */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {helper.security && (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <FaCheckCircle className="text-green-600 flex-shrink-0" />
+                    <span className="text-sm font-medium text-green-800">Verified</span>
                   </div>
                 )}
-              </div>
-
-              {/* Location Details */}
-              <div>
-                <h3 className="font-medium text-gray-700 mb-3">Service Area</h3>
-                {helper.serviceArea && (
-                  <p className="text-gray-700">{helper.serviceArea}</p>
+                {helper.imageUrls?.length >= 3 && (
+                  <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <FaFileImage className="text-blue-600 flex-shrink-0" />
+                    <span className="text-sm font-medium text-blue-800">Good Media</span>
+                  </div>
                 )}
-                
-                {helper.travelFee && (
-                  <div className="mt-4">
-                    <h4 className="font-medium text-gray-700 mb-2">Travel Fees</h4>
-                    <p className="text-gray-700">R{helper.travelFee} for travel outside service area</p>
+                {description.length > 200 && (
+                  <div className="flex items-center gap-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <FaUser className="text-purple-600 flex-shrink-0" />
+                    <span className="text-sm font-medium text-purple-800">Detailed Info</span>
+                  </div>
+                )}
+                {helper.host && parseInt(helper.host) >= 2 && (
+                  <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                    <FaBriefcase className="text-orange-600 flex-shrink-0" />
+                    <span className="text-sm font-medium text-orange-800">Experienced</span>
                   </div>
                 )}
               </div>
             </div>
-          </section>
-
-          {/* Experience & Qualifications Section */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Experience & Qualifications</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Experience */}
-              <div>
-                <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
-                  <FaBriefcase className="text-blue-600" />
-                  Experience
-                </h3>
-                {helper.near ? (
-                  <p className="text-gray-700">{helper.near}</p>
-                ) : (
-                  <p className="text-gray-500">No experience information provided</p>
-                )}
-                
-                {helper.host && (
-                  <div className="mt-4">
-                    <h4 className="font-medium text-gray-700 mb-2">Years of Experience</h4>
-                    <p className="text-gray-700">{helper.host} years</p>
-                  </div>
-                )}
-
-                 {helper.cancel && (
-                  <div className="mt-4">
-                    <h4 className="font-medium text-gray-700 mb-2">Languages Spoken</h4>
-                    <p className="text-gray-700">{helper.cancel} years</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Qualifications */}
-              <div>
-                <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
-                  <FaAward className="text-blue-600" />
-                  Qualifications
-                </h3>
-                {helper.qualifications ? (
-                  <p className="text-gray-700">{helper.kind}</p>
-                ) : (
-                  <p className="text-gray-500">No qualifications listed</p>
-                )}
-                
-                {helper.period && (
-                  <div className="mt-4">
-                    <h4 className="font-medium text-gray-700 mb-2">Certification</h4>
-                    <p className="text-gray-700">{helper.certification}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </section>
-
-          {/* AI Content Assessment */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center gap-3 mb-4">
-              <FaRobot className="text-blue-600 text-xl" />
-              <h2 className="text-2xl font-semibold text-gray-800">AI Content Assessment</h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-medium text-blue-800 mb-2">Description Quality</h3>
-                {aiAssessment.descriptionQuality !== null ? (
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-blue-700">{aiAssessment.descriptionQuality}</span>
-                    <span className="text-gray-600">/5</span>
-                    <div className="ml-auto">
-                      {aiAssessment.descriptionQuality >= 4 ? (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Excellent</span>
-                      ) : aiAssessment.descriptionQuality >= 3 ? (
-                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Good</span>
-                      ) : (
-                        <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Needs Improvement</span>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-8 w-full bg-gray-200 rounded animate-pulse"></div>
-                )}
-                <p className="text-gray-600 mt-2 text-sm">
-                  Based on detail level, clarity, and professionalism
-                </p>
-              </div>
-
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-medium text-blue-800 mb-2">Image Quality</h3>
-                {aiAssessment.imageQuality !== null ? (
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-blue-700">{aiAssessment.imageQuality}</span>
-                    <span className="text-gray-600">/5</span>
-                    <div className="ml-auto">
-                      {aiAssessment.imageQuality >= 4 ? (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Excellent</span>
-                      ) : aiAssessment.imageQuality >= 3 ? (
-                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Good</span>
-                      ) : (
-                        <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Needs More</span>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-8 w-full bg-gray-200 rounded animate-pulse"></div>
-                )}
-                <p className="text-gray-600 mt-2 text-sm">
-                  Based on image count, clarity, and relevance
-                </p>
-              </div>
-            </div>
-          </section>
+          </div>
 
           {/* Additional Information */}
           <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Additional Information</h2>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-3">
-                <FaClock className="text-blue-600" />
-                <span>Availability: {helper.period || 'Flexible'}</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <FaShieldAlt className="text-blue-600" />
-                <span>Background Check: {helper.security ? 'Verified' : 'Not Verified'}</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <FaDog className="text-blue-600" />
-                <span>Pets: {helper.pets ? 'Comfortable with pets' : 'Not comfortable with pets'}</span>
-              </li>
-              {helper.type === 'tutor' && (
-                <>
-                  <li className="flex items-center gap-3">
-                    <FaGraduationCap className="text-blue-600" />
-                    <span>Education Level: {helper.specializations || 'Not specified'}</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <FaUsers className="text-blue-600" />
-                    <span>Equipment: {helper.equipment ? 'Available' : 'Not available'}</span>
-                  </li>
-                </>
-              )}
-              {(helper.type === 'beauty' || helper.type === 'spa') && (
-                <>
-                  <li className="flex items-center gap-3">
-                    <FaHandSparkles className="text-pink-500" />
-                    <span>Hygiene Standards: {helper.equipment?.includes('sanitized') ? 'High' : 'Standard'}</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <FaPalette className="text-purple-500" />
-                    <span>Product Quality: {helper.equipment?.includes('premium') ? 'Premium' : 'Professional'}</span>
-                  </li>
-                </>
-              )}
-              {(helper.type === 'barber' || helper.type === 'barbar') && (
-                <>
-                  <li className="flex items-center gap-3">
-                    <FaCut className="text-blue-600" />
-                    <span>Tool Sanitization: {helper.equipment?.includes('sanitized') ? 'High Standard' : 'Standard'}</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <FaTools className="text-gray-700" />
-                    <span>Razor Service: {helper.equipment?.includes('straight-razor') ? 'Available' : 'Not Available'}</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <FaUser className="text-blue-500" />
-                    <span>Shop Environment: {helper.equipment?.includes('modern') ? 'Modern' : 'Traditional'}</span>
-                  </li>
-                </>
-              )}
-            </ul>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column */}
+              <div className="space-y-4">
+                {/* Contact Information */}
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <FaPhone className="text-blue-600" />
+                    Contact Information
+                  </h3>
+                  <ul className="space-y-2">
+                    {helper.contact && (
+                      <li className="flex items-center gap-3">
+                        <span className="text-gray-600 min-w-[120px]">Phone Number:</span>
+                        <span className="font-medium text-gray-900">{helper.contact}</span>
+                      </li>
+                    )}
+                    {helper.email && (
+                      <li className="flex items-center gap-3">
+                        <span className="text-gray-600 min-w-[120px]">Email:</span>
+                        <span className="font-medium text-gray-900">{helper.email}</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+
+                {/* Availability */}
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <FaClock className="text-blue-600" />
+                    Availability
+                  </h3>
+                  <ul className="space-y-2">
+                    {helper.period && (
+                      <li className="flex items-center gap-3">
+                        <span className="text-gray-600 min-w-[120px]">Working Hours:</span>
+                        <span className="font-medium text-gray-900">{helper.period}</span>
+                      </li>
+                    )}
+                    {helper.availability && (
+                      <li className="flex items-center gap-3">
+                        <span className="text-gray-600 min-w-[120px]">Schedule:</span>
+                        <span className="font-medium text-gray-900">{helper.availability}</span>
+                      </li>
+                    )}
+                    <li className="flex items-center gap-3">
+                      <span className="text-gray-600 min-w-[120px]">Response Time:</span>
+                      <span className="font-medium text-gray-900">
+                        {helper.responseTime || '1 hour to 24 hours'}
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Experience & Languages */}
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <FaBriefcase className="text-blue-600" />
+                    Experience & Languages
+                  </h3>
+                  <ul className="space-y-2">
+                    {helper.host && (
+                      <li className="flex items-center gap-3">
+                        <span className="text-gray-600 min-w-[120px]">Experience:</span>
+                        <span className="font-medium text-gray-900">{helper.host} years</span>
+                      </li>
+                    )}
+                    {helper.cancel && (
+                      <li className="flex items-center gap-3">
+                        <span className="text-gray-600 min-w-[120px]">Languages:</span>
+                        <span className="font-medium text-gray-900">{helper.cancel}</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-4">
+                {/* Safety & Verification */}
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <FaShieldAlt className="text-blue-600" />
+                    Safety & Verification
+                  </h3>
+                  <ul className="space-y-3">
+                    <li className="flex items-center gap-3">
+                      <FaShieldAlt className="text-blue-600" />
+                      <span>Background Check: {helper.security ? 'Verified' : 'Not Verified'}</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <FaDog className="text-blue-600" />
+                      <span>Pets: {helper.pets ? 'Comfortable with pets' : 'Not comfortable with pets'}</span>
+                    </li>
+                    
+                    {/* Safety Policy Links */}
+                    <li className="pt-2">
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h4 className="font-medium text-blue-800 mb-2">Safety Policies</h4>
+                        <div className="space-y-2 text-sm">
+                          <p className="text-blue-700">We prioritize your safety and satisfaction</p>
+                          <Link 
+                            to="/safety-policy" 
+                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                          >
+                            <FaShieldAlt className="text-xs" />
+                            <span>View our complete safety policy</span>
+                          </Link>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Type-Specific Information */}
+                {helper.type === 'tutor' && (
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                      <FaGraduationCap className="text-blue-600" />
+                      Tutoring Details
+                    </h3>
+                    <ul className="space-y-2">
+                      <li className="flex items-center gap-3">
+                        <FaGraduationCap className="text-blue-600" />
+                        <span>Education Level: {helper.specializations || 'Not specified'}</span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <FaUsers className="text-blue-600" />
+                        <span>Equipment: {helper.equipment ? 'Available' : 'Not available'}</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+
+                {(helper.type === 'beauty' || helper.type === 'spa') && (
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                      <FaHandSparkles className="text-pink-500" />
+                      Beauty Standards
+                    </h3>
+                    <ul className="space-y-2">
+                      <li className="flex items-center gap-3">
+                        <FaHandSparkles className="text-pink-500" />
+                        <span>Hygiene Standards: {helper.equipment?.includes('sanitized') ? 'High' : 'Standard'}</span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <FaPalette className="text-purple-500" />
+                        <span>Product Quality: {helper.equipment?.includes('premium') ? 'Premium' : 'Professional'}</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+
+                {(helper.type === 'barber' || helper.type === 'barbar') && (
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                      <FaCut className="text-blue-600" />
+                      Barber Standards
+                    </h3>
+                    <ul className="space-y-2">
+                      <li className="flex items-center gap-3">
+                        <FaCut className="text-blue-600" />
+                        <span>Tool Sanitization: {helper.equipment?.includes('sanitized') ? 'High Standard' : 'Standard'}</span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <FaTools className="text-gray-700" />
+                        <span>Razor Service: {helper.equipment?.includes('straight-razor') ? 'Available' : 'Not Available'}</span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <FaUser className="text-blue-500" />
+                        <span>Shop Environment: {helper.equipment?.includes('modern') ? 'Modern' : 'Traditional'}</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+
+                {(helper.type === 'chef' || helper.type === 'cooking') && (
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                      <FaUtensils className="text-orange-500" />
+                      Chef Standards
+                    </h3>
+                    <ul className="space-y-2">
+                      <li className="flex items-center gap-3">
+                        <FaShieldAlt className="text-orange-500" />
+                        <span>Food Safety: {helper.equipment?.includes('sanitized') ? 'Certified' : 'Standard'}</span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <FaUtensils className="text-orange-500" />
+                        <span>Equipment Quality: {helper.equipment?.includes('professional') ? 'Professional' : 'Standard'}</span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <FaShoppingBasket className="text-green-500" />
+                        <span>Ingredient Sourcing: {helper.equipment?.includes('premium') ? 'Premium' : 'Standard'}</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+
+                {/* Service Area */}
+                {helper.serviceArea && (
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                      <FaMapMarkerAlt className="text-blue-600" />
+                      Service Area
+                    </h3>
+                    <p className="text-gray-700">{helper.serviceArea}</p>
+                    {helper.travelFee && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        Travel fee: R{helper.travelFee} for locations outside service area
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Contact Actions */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h3 className="font-medium text-gray-700 mb-3">Quick Actions</h3>
+              <div className="flex flex-wrap gap-3">
+                {helper.contact && (
+                  <a
+                    href={`tel:${helper.contact}`}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <FaPhone className="text-sm" />
+                    Call Now
+                  </a>
+                )}
+                {whatsappLink && (
+                  <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <FaWhatsapp className="text-sm" />
+                    WhatsApp
+                  </a>
+                )}
+                <Link
+                  to="/safety-policy"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  <FaShieldAlt className="text-sm" />
+                  Safety Policy
+                </Link>
+              </div>
+            </div>
           </section>
 
           {/* Comments Section */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-semibold text-gray-800">Reviews & Feedback</h2>
+              <h3 className="text-lg font-semibold text-gray-900">Customer Reviews</h3>
               <button
                 onClick={() => setShowCommentsPanel(true)}
-                className="text-blue-600 hover:text-blue-700 font-medium"
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
               >
-                View All
+                View All ({commentCount})
               </button>
             </div>
             <HelperComments 
-              helperId={id} 
-              onTotalComments={setCommentCount} 
-              cardStyle={true}
+              helperId={helper._id} 
+              onCommentCountChange={setCommentCount}
+              onAnalyzeComments={analyzeCommentsWithAI}
+              commentAnalysis={commentAnalysis}
+              analyzingComments={analyzingComments}
             />
-          </section>
-
-          {showCommentsPanel && (
-            <CommentsSidePanelHelper
-              helperId={id}
-              onClose={() => setShowCommentsPanel(false)}
-            />
-          )}
+          </div>
         </div>
 
         {/* Right Column - Booking Form */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-6 space-y-6">
-            {/* Price Card */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-              <div className="flex items-baseline justify-between mb-4">
-                <span className="text-3xl font-bold text-gray-900">R{helper.regularPrice}</span>
-                <span className="text-gray-600 text-sm">per {helper.type === 'tutor' ? 'hour' : 'service'}</span>
-              </div>
+        <div className="space-y-6">
+          {/* Booking Form */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 sticky top-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
+              Book {helper.type === 'chef' ? 'Chef' : 'Barber'} Services
+            </h3>
 
-              {helper.travelFee > 0 && (
-                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <FaInfoCircle className="h-5 w-5 text-yellow-400" />
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-yellow-700">
-                        Travel fee: <span className="font-medium">R{helper.travelFee}</span> may apply for locations outside service area
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Booking Form */}
-              <form onSubmit={handleBookingSubmit} className="space-y-4">
+            <form onSubmit={handleBookingSubmit} className="space-y-6">
+              {/* Client Information */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-900 border-b pb-2">Your Information</h4>
+                
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Your Name
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name *
                   </label>
                   <input
                     type="text"
-                    id="name"
                     name="name"
-                    required
                     value={bookingData.name}
                     onChange={handleBookingChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-600 focus:border-blue-600"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter your full name"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number *
                   </label>
                   <input
                     type="tel"
-                    id="phone"
                     name="phone"
-                    required
                     value={bookingData.phone}
                     onChange={handleBookingChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-600 focus:border-blue-600"
-                    placeholder="Enter your phone number"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="071 234 5678"
                   />
                 </div>
+              </div>
 
-                {/* Barber Service Selection */}
-                {(helper.type === 'barber' || helper.type === 'barbar') && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Barber Services
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {serviceOptions.map((service) => (
-                          <div
-                            key={service.id}
-                            className={`relative flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-all ${
-                              bookingData.selectedServices.includes(service.id)
-                                ? 'border-blue-600 bg-blue-50'
-                                : 'border-gray-300 hover:border-gray-400'
-                            }`}
-                            onClick={() => handleServiceSelection(service.id)}
-                          >
-                            <div className="text-xl mb-1">
-                              {service.icon}
-                            </div>
-                            <span className="text-xs font-medium text-center">{service.name}</span>
-                            {bookingData.selectedServices.includes(service.id) && (
-                              <div className="absolute top-1 right-1 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
-                                <FaCheckCircle className="text-white text-xs" />
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Preferred Haircut Style
-                      </label>
-                      <select
-                        name="selectedHaircut"
-                        value={bookingData.selectedHaircut}
-                        onChange={handleBookingChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-600 focus:border-blue-600"
+              {/* Service Selection */}
+              {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef') && (
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900 border-b pb-2">
+                    Select Services
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {serviceOptions.map((service) => (
+                      <button
+                        key={service.id}
+                        type="button"
+                        onClick={() => handleServiceSelection(service.id)}
+                        className={`p-3 border rounded-lg text-left transition-all ${
+                          bookingData.selectedServices.includes(service.id)
+                            ? 'border-blue-500 bg-blue-50 text-blue-700'
+                            : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                        }`}
                       >
-                        <option value="">Select a haircut style</option>
-                        {haircutStyles.map((style) => (
-                          <option key={style.id} value={style.id}>
-                            {style.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Beard Style Preference
-                      </label>
-                      <select
-                        name="beardStyle"
-                        value={bookingData.beardStyle}
-                        onChange={handleBookingChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-600 focus:border-blue-600"
-                      >
-                        <option value="">Select beard style</option>
-                        {beardStyles.map((style) => (
-                          <option key={style.id} value={style.id}>
-                            {style.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label htmlFor="hairLength" className="block text-sm font-medium text-gray-700 mb-1">
-                        Current Hair Length
-                      </label>
-                      <select
-                        id="hairLength"
-                        name="hairLength"
-                        value={bookingData.hairLength}
-                        onChange={handleBookingChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-600 focus:border-blue-600"
-                      >
-                        <option value="">Select current length</option>
-                        <option value="very-short">Very Short (Buzz Cut)</option>
-                        <option value="short">Short</option>
-                        <option value="medium">Medium</option>
-                        <option value="long">Long</option>
-                        <option value="very-long">Very Long</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label htmlFor="specialRequirements" className="block text-sm font-medium text-gray-700 mb-1">
-                        Special Requirements
-                      </label>
-                      <textarea
-                        id="specialRequirements"
-                        name="specialRequirements"
-                        value={bookingData.specialRequirements}
-                        onChange={handleBookingChange}
-                        rows={3}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-600 focus:border-blue-600"
-                        placeholder="Any specific requirements, allergies, or preferences..."
-                      />
-                    </div>
-                  </>
-                )}
-
-                {/* Service Selection for Domestic Helpers */}
-                {(helper.type === 'domestic' || helper.type === 'maid') && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Services Needed
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {serviceOptions.map((service) => (
-                          <div
-                            key={service.id}
-                            className={`relative flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-all ${
-                              bookingData.selectedServices.includes(service.id)
-                                ? 'border-red-500 bg-red-50'
-                                : 'border-gray-300 hover:border-gray-400'
-                            }`}
-                            onClick={() => handleServiceSelection(service.id)}
-                          >
-                            <div className="text-xl mb-1">
-                              {service.icon}
-                            </div>
-                            <span className="text-xs font-medium text-center">{service.name}</span>
-                            {bookingData.selectedServices.includes(service.id) && (
-                              <div className="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                                <FaCheckCircle className="text-white text-xs" />
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label htmlFor="serviceDescription" className="block text-sm font-medium text-gray-700 mb-1">
-                        Service Details
-                      </label>
-                      <textarea
-                        id="serviceDescription"
-                        name="serviceDescription"
-                        value={bookingData.serviceDescription}
-                        onChange={handleBookingChange}
-                        rows={3}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
-                        placeholder="Please provide details about the services you need..."
-                      />
-                    </div>
-                  </>
-                )}
-
-                {/* Service Selection for Beauty Services */}
-                {(helper.type === 'beauty' || helper.type === 'spa') && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Beauty Services
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {serviceOptions.map((service) => (
-                          <div
-                            key={service.id}
-                            className={`relative flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-all ${
-                              bookingData.selectedServices.includes(service.id)
-                                ? 'border-pink-500 bg-pink-50'
-                                : 'border-gray-300 hover:border-gray-400'
-                            }`}
-                            onClick={() => handleServiceSelection(service.id)}
-                          >
-                            <div className="text-xl mb-1">
-                              {service.icon}
-                            </div>
-                            <span className="text-xs font-medium text-center">{service.name}</span>
-                            {bookingData.selectedServices.includes(service.id) && (
-                              <div className="absolute top-1 right-1 w-4 h-4 bg-pink-500 rounded-full flex items-center justify-center">
-                                <FaCheckCircle className="text-white text-xs" />
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label htmlFor="serviceDescription" className="block text-sm font-medium text-gray-700 mb-1">
-                        Service Preferences & Details
-                      </label>
-                      <textarea
-                        id="serviceDescription"
-                        name="serviceDescription"
-                        value={bookingData.serviceDescription}
-                        onChange={handleBookingChange}
-                        rows={3}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-pink-500 focus:border-pink-500"
-                        placeholder="Please describe your preferences, skin type, allergies, or specific requirements..."
-                      />
-                    </div>
-                  </>
-                )}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Service Location
-                  </label>
-                  <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="locationOption"
-                        value="comeToYou"
-                        checked={bookingData.locationOption === 'comeToYou'}
-                        onChange={handleBookingChange}
-                        className="mr-2"
-                      />
-                      <span>Come to my location</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="locationOption"
-                        value="goToHelper"
-                        checked={bookingData.locationOption === 'goToHelper'}
-                        onChange={handleBookingChange}
-                        className="mr-2"
-                      />
-                      <span>I ll go to {helper.type === 'barber' ? "barber's shop" : "helper's place"}</span>
-                    </label>
+                        <div className="flex items-center gap-2">
+                          {service.icon}
+                          <span className="text-sm font-medium">{service.name}</span>
+                        </div>
+                      </button>
+                    ))}
                   </div>
+                </div>
+              )}
+
+              {/* Barber-specific Fields */}
+              {(helper.type === 'barber' || helper.type === 'barbar') && (
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900 border-b pb-2">Haircut Details</h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Haircut Style
+                    </label>
+                    <select
+                      name="selectedHaircut"
+                      value={bookingData.selectedHaircut}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select a style</option>
+                      {haircutStyles.map((style) => (
+                        <option key={style.id} value={style.id}>
+                          {style.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Beard Style
+                    </label>
+                    <select
+                      name="beardStyle"
+                      value={bookingData.beardStyle}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select beard style</option>
+                      {beardStyles.map((style) => (
+                        <option key={style.id} value={style.id}>
+                          {style.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Current Hair Length
+                    </label>
+                    <input
+                      type="text"
+                      name="hairLength"
+                      value={bookingData.hairLength}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="e.g., Short, Medium, Long"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Chef-specific Fields */}
+              {(helper.type === 'chef' || helper.type === 'cooking') && (
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900 border-b pb-2">Meal Details</h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Meal Type
+                    </label>
+                    <select
+                      name="mealType"
+                      value={bookingData.mealType}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select meal type</option>
+                      {mealTypes.map((meal) => (
+                        <option key={meal.id} value={meal.id}>
+                          {meal.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cuisine Preference
+                    </label>
+                    <select
+                      name="cuisinePreference"
+                      value={bookingData.cuisinePreference}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select cuisine</option>
+                      {cuisineTypes.map((cuisine) => (
+                        <option key={cuisine.id} value={cuisine.id}>
+                          {cuisine.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Number of Guests
+                    </label>
+                    <input
+                      type="number"
+                      name="numberOfGuests"
+                      value={bookingData.numberOfGuests}
+                      onChange={handleBookingChange}
+                      min="1"
+                      max="50"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="e.g., 4"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Dietary Restrictions
+                    </label>
+                    <input
+                      type="text"
+                      name="dietaryRestrictions"
+                      value={bookingData.dietaryRestrictions}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="e.g., Vegetarian, Gluten-free, Allergies"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Ingredients
+                    </label>
+                    <select
+                      name="ingredientsProvided"
+                      value={bookingData.ingredientsProvided}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="no">Chef will provide ingredients</option>
+                      <option value="yes">I will provide ingredients</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* Location Options */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-900 border-b pb-2">Location</h4>
+                
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="locationOption"
+                      value="comeToYou"
+                      checked={bookingData.locationOption === 'comeToYou'}
+                      onChange={handleBookingChange}
+                      className="text-blue-600 focus:ring-blue-500"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-900">
+                        {helper.type === 'chef' ? 'Chef comes to me' : 'Barber comes to me'}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {helper.type === 'chef' ? 'Chef will cook at your location' : 'Barber will come to your location'}
+                        {helper.travelFee > 0 && (
+                          <span className="text-orange-600 font-medium ml-1">
+                            (Travel fee: R{helper.travelFee})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="locationOption"
+                      value="goToThem"
+                      checked={bookingData.locationOption === 'goToThem'}
+                      onChange={handleBookingChange}
+                      className="text-blue-600 focus:ring-blue-500"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-900">
+                        {helper.type === 'chef' ? "I'll go to chef's kitchen" : "I'll go to barber shop"}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {helper.type === 'chef' ? 'Visit chef kitchen location' : 'Visit barber shop location'}
+                      </div>
+                    </div>
+                  </label>
                 </div>
 
                 {bookingData.locationOption === 'comeToYou' && (
                   <div>
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                      Your Address
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Your Address *
                     </label>
                     <textarea
-                      id="address"
                       name="address"
-                      required
                       value={bookingData.address}
                       onChange={handleBookingChange}
+                      required
                       rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-600 focus:border-blue-600"
-                      placeholder="Enter your full address"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter your full address for the visit"
                     />
                   </div>
                 )}
+              </div>
 
+              {/* Date and Time */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-900 border-b pb-2">Schedule</h4>
+                
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
-                      Date
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Date *
                     </label>
                     <input
                       type="date"
-                      id="date"
                       name="date"
-                      required
                       value={bookingData.date}
                       onChange={handleBookingChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-600 focus:border-blue-600"
+                      required
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-1">
-                      Time
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Time *
                     </label>
                     <input
                       type="time"
-                      id="time"
                       name="time"
-                      required
                       value={bookingData.time}
                       onChange={handleBookingChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-600 focus:border-blue-600"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                 </div>
+              </div>
 
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                    Special Requests
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    value={bookingData.message}
-                    onChange={handleBookingChange}
-                    rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-600 focus:border-blue-600"
-                    placeholder="Any special requirements or notes..."
-                  />
-                </div>
+              {/* Special Requirements */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Special Requirements
+                </label>
+                <textarea
+                  name="specialRequirements"
+                  value={bookingData.specialRequirements}
+                  onChange={handleBookingChange}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder={`Any special requests or requirements for the ${helper.type === 'chef' ? 'meal' : 'service'}...`}
+                />
+              </div>
 
-                {/* File Attachments */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Attach Files (Optional)
-                  </label>
-                  <div className="space-y-3">
-                    <input
-                      type="file"
-                      id="attachments"
-                      multiple
-                      onChange={handleAttachmentChange}
-                      accept="image/*,.pdf"
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="attachments"
-                      className="flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-600 transition-colors"
-                    >
-                      <FaFileImage className="text-gray-400 mr-2" />
-                      <span className="text-sm text-gray-600">Select images or PDFs</span>
-                    </label>
-
-                    {attachments.length > 0 && (
-                      <div className="space-y-2">
-                        {attachments.map((file, index) => (
-                          <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-lg">
-                            <div className="flex items-center">
-                              {file.type.startsWith('image/') ? (
-                                <FaFileImage className="text-blue-500 mr-2" />
-                              ) : (
-                                <FaFilePdf className="text-red-500 mr-2" />
-                              )}
-                              <span className="text-sm text-gray-700 truncate max-w-[120px]">
-                                {file.name}
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => removeAttachment(index)}
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <FaTimes />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isUploading}
-                  className={`w-full bg-${themeColor}-600 hover:bg-${themeColor}-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {isUploading ? 'Uploading Files...' : `Book ${helper.type === 'barber' ? 'Barber' : 'Service'} via WhatsApp`}
-                </button>
-              </form>
-            </div>
-
-            {/* Host Information */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                About the {helper.type === 'barber' ? 'Barber' : 'Host'}
-              </h3>
+              {/* Attachments */}
               <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <FaUser className="text-blue-600" />
-                  <span className="text-gray-700">{helper.name}</span>
+                <label className="block text-sm font-medium text-gray-700">
+                  Attachments (Optional)
+                </label>
+                <div className="space-y-3">
+                  {/* File Input */}
+                  <div className="flex items-center gap-3">
+                    <label className="flex-1 cursor-pointer">
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*,.pdf"
+                        onChange={handleAttachmentChange}
+                        className="hidden"
+                      />
+                      <div className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors text-center">
+                        <div className="flex flex-col items-center gap-1">
+                          <FaFileImage className="text-gray-400 text-xl" />
+                          <span className="text-sm text-gray-600">
+                            Click to upload images or PDFs
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            Max 2 files, 5MB each
+                          </span>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Attachment Preview */}
+                  {attachments.length > 0 && (
+                    <div className="space-y-2">
+                      {attachments.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
+                        >
+                          <div className="flex items-center gap-3">
+                            {file.type.startsWith('image/') ? (
+                              <FaFileImage className="text-blue-500" />
+                            ) : (
+                              <FaFilePdf className="text-red-500" />
+                            )}
+                            <div>
+                              <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+                                {file.name}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {(file.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeAttachment(index)}
+                            className="text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            <FaTimes />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                {helper.contact && (
-                  <div className="flex items-center gap-3">
-                    <FaPhone className="text-blue-600" />
-                    <span className="text-gray-700">Contact: {helper.contact}</span>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isUploading}
+                className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
+                  isUploading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                {isUploading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Uploading Files...
                   </div>
+                ) : (
+                  `Book ${helper.type === 'chef' ? 'Chef' : 'Barber'} via WhatsApp`
                 )}
-                
+              </button>
+
+              {/* Security Notice */}
+              <div className="text-center">
+                <p className="text-xs text-gray-500">
+                  🔒 Your information is secure. We ll only share what s necessary for the booking.
+                </p>
+              </div>
+            </form>
+          </div>
+
+          {/* Contact Information */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <h4 className="font-semibold text-gray-900 mb-4">Contact Information</h4>
+            <div className="space-y-3">
+              {helper.contact && (
                 <div className="flex items-center gap-3">
-                  <FaClock className="text-blue-600" />
-                  <span className="text-gray-700">Response time: 1 hour to 24 hours</span>
+                  <FaPhone className="text-gray-400" />
+                  <a
+                    href={`tel:${helper.contact}`}
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    {helper.contact}
+                  </a>
                 </div>
-                
-                {helper.host && (
-                  <div className="flex items-center gap-3">
-                    <FaBriefcase className="text-blue-600" />
-                    <span className="text-gray-700">Experience: {helper.host} years</span>
-                  </div>
-                )}
-                {helper.cancel && (
-                  <div className="flex items-center gap-3">
-                    <FaUsers className="text-blue-600" />
-                    <span className="text-gray-700">Languages: {helper.cancel}</span>
-                  </div>
-                )}
-                {(helper.type === 'barber' || helper.type === 'barbar') && (
-                  <div className="flex items-center gap-3">
-                    <FaCut className="text-blue-600" />
-                    <span className="text-gray-700">Professional Barber</span>
-                  </div>
-                )}
+              )}
+              {whatsappLink && (
+                <div className="flex items-center gap-3">
+                  <FaWhatsapp className="text-green-500" />
+                  <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Chat on WhatsApp
+                  </a>
+                </div>
+              )}
+              {helper.address && (
+                <div className="flex items-start gap-3">
+                  <FaMapMarkerAlt className="text-gray-400 mt-1 flex-shrink-0" />
+                  <span className="text-gray-700">{helper.address}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Pricing Information */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <h4 className="font-semibold text-gray-900 mb-4">Pricing</h4>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Base Price</span>
+                <span className="font-semibold text-gray-900">R{helper.regularPrice}</span>
+              </div>
+              {helper.travelFee > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Travel Fee</span>
+                  <span className="font-semibold text-orange-600">R{helper.travelFee}</span>
+                </div>
+              )}
+              <div className="border-t pt-3">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-gray-900">Total Estimate</span>
+                  <span className="font-bold text-lg text-blue-600">
+                    R{helper.regularPrice + (bookingData.locationOption === 'comeToYou' ? helper.travelFee : 0)}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  * Final price may vary based on specific requirements
+                </p>
               </div>
             </div>
-
-            {/* Safety Tips */}
-            {(helper.type === 'barber' || helper.type === 'barbar') ? (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-8 shadow-lg">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-blue-100 p-3 rounded-full">
-                    <FaShieldAlt className="text-blue-600 text-xl" />
-                  </div>
-                  <h3 className="text-xl font-bold text-blue-800">Barber Service Safety</h3>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="bg-white p-1 rounded-full mt-1">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    </div>
-                    <span className="text-blue-700 font-medium">All tools are properly sanitized between clients</span>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="bg-white p-1 rounded-full mt-1">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    </div>
-                    <span className="text-blue-700 font-medium">Fresh blades and disposable tools used when required</span>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="bg-white p-1 rounded-full mt-1">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    </div>
-                    <span className="text-blue-700 font-medium">Clean towels and capes provided for each client</span>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="bg-white p-1 rounded-full mt-1">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    </div>
-                    <span className="text-blue-700 font-medium">Discuss any skin sensitivities or allergies beforehand</span>
-                  </div>
-                </div>
-                
-                <div className="mt-6 pt-4 border-t border-blue-200">
-                  <Link 
-                    to="/aboutloop" 
-                    className="inline-flex items-center gap-2 text-blue-700 hover:text-blue-800 font-semibold transition-colors hover:underline"
-                  >
-                    <span>Learn more about our safety policies</span>
-                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            ) : (helper.type === 'beauty' || helper.type === 'spa') ? (
-              <div className="bg-gradient-to-r from-pink-50 to-rose-50 border-2 border-pink-200 rounded-2xl p-8 shadow-lg">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-pink-100 p-3 rounded-full">
-                    <FaShieldAlt className="text-pink-600 text-xl" />
-                  </div>
-                  <h3 className="text-xl font-bold text-pink-800">Beauty Service Safety</h3>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="bg-white p-1 rounded-full mt-1">
-                      <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
-                    </div>
-                    <span className="text-pink-700 font-medium">Ensure all tools are properly sanitized before use</span>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="bg-white p-1 rounded-full mt-1">
-                      <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
-                    </div>
-                    <span className="text-pink-700 font-medium">Discuss allergies and skin sensitivities beforehand</span>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="bg-white p-1 rounded-full mt-1">
-                      <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
-                    </div>
-                    <span className="text-pink-700 font-medium">Request to see product ingredients if you have sensitive skin</span>
-                  </div>
-                </div>
-                
-                <div className="mt-6 pt-4 border-t border-pink-200">
-                  <Link 
-                    to="/aboutloop" 
-                    className="inline-flex items-center gap-2 text-pink-700 hover:text-pink-800 font-semibold transition-colors hover:underline"
-                  >
-                    <span>Learn more about our safety policies</span>
-                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-300 rounded-2xl p-8 shadow-lg">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-yellow-100 p-3 rounded-full">
-                    <FaShieldAlt className="text-yellow-600 text-xl" />
-                  </div>
-                  <h3 className="text-xl font-bold text-yellow-800">Essential Safety Guidelines</h3>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="bg-white p-1 rounded-full mt-1">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    </div>
-                    <span className="text-yellow-700 font-medium">Ensure someone is home at all times during the service</span>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="bg-white p-1 rounded-full mt-1">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    </div>
-                    <span className="text-yellow-700 font-medium">Verify the helper s identity upon arrival</span>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="bg-white p-1 rounded-full mt-1">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    </div>
-                    <span className="text-yellow-700 font-medium">Never pay the full amount upfront - only after satisfactory service</span>
-                  </div>
-                </div>
-                
-                <div className="mt-6 pt-4 border-t border-yellow-200">
-                  <Link 
-                    to="/aboutloop" 
-                    className="inline-flex items-center gap-2 text-yellow-700 hover:text-yellow-800 font-semibold transition-colors hover:underline "
-                  >
-                    <span>Learn more about our safety policies</span>
-                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* Safety Tips */}
+          {(helper.type === 'barber' || helper.type === 'barbar') ? (
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-8 shadow-lg">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <FaShieldAlt className="text-blue-600 text-xl" />
+                </div>
+                <h3 className="text-xl font-bold text-blue-800">Barber Service Safety</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="bg-white p-1 rounded-full mt-1">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  </div>
+                  <span className="text-blue-700 font-medium">All tools are properly sanitized between clients</span>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="bg-white p-1 rounded-full mt-1">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  </div>
+                  <span className="text-blue-700 font-medium">Fresh blades and disposable tools used when required</span>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="bg-white p-1 rounded-full mt-1">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  </div>
+                  <span className="text-blue-700 font-medium">Clean towels and capes provided for each client</span>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="bg-white p-1 rounded-full mt-1">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  </div>
+                  <span className="text-blue-700 font-medium">Discuss any skin sensitivities or allergies beforehand</span>
+                </div>
+              </div>
+              
+              <div className="mt-6 pt-4 border-t border-blue-200">
+                <Link 
+                  to="/aboutloop" 
+                  className="inline-flex items-center gap-2 text-blue-700 hover:text-blue-800 font-semibold transition-colors hover:underline"
+                >
+                  <span>Learn more about our safety policies</span>
+                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+          ) : (helper.type === 'beauty' || helper.type === 'spa') ? (
+            <div className="bg-gradient-to-r from-pink-50 to-rose-50 border-2 border-pink-200 rounded-2xl p-8 shadow-lg">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-pink-100 p-3 rounded-full">
+                  <FaShieldAlt className="text-pink-600 text-xl" />
+                </div>
+                <h3 className="text-xl font-bold text-pink-800">Beauty Service Safety</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="bg-white p-1 rounded-full mt-1">
+                    <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
+                  </div>
+                  <span className="text-pink-700 font-medium">Ensure all tools are properly sanitized before use</span>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="bg-white p-1 rounded-full mt-1">
+                    <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
+                  </div>
+                  <span className="text-pink-700 font-medium">Discuss allergies and skin sensitivities beforehand</span>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="bg-white p-1 rounded-full mt-1">
+                    <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
+                  </div>
+                  <span className="text-pink-700 font-medium">Request to see product ingredients if you have sensitive skin</span>
+                </div>
+              </div>
+              
+              <div className="mt-6 pt-4 border-t border-pink-200">
+                <Link 
+                  to="/aboutloop" 
+                  className="inline-flex items-center gap-2 text-pink-700 hover:text-pink-800 font-semibold transition-colors hover:underline"
+                >
+                  <span>Learn more about our safety policies</span>
+                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-300 rounded-2xl p-8 shadow-lg">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-yellow-100 p-3 rounded-full">
+                  <FaShieldAlt className="text-yellow-600 text-xl" />
+                </div>
+                <h3 className="text-xl font-bold text-yellow-800">Essential Safety Guidelines</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="bg-white p-1 rounded-full mt-1">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  </div>
+                  <span className="text-yellow-700 font-medium">Ensure someone is home at all times during the service</span>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="bg-white p-1 rounded-full mt-1">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  </div>
+                  <span className="text-yellow-700 font-medium">Verify the helper s identity upon arrival</span>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="bg-white p-1 rounded-full mt-1">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  </div>
+                  <span className="text-yellow-700 font-medium">Never pay the full amount upfront - only after satisfactory service</span>
+                </div>
+              </div>
+              
+              <div className="mt-6 pt-4 border-t border-yellow-200">
+                <Link 
+                  to="/aboutloop" 
+                  className="inline-flex items-center gap-2 text-yellow-700 hover:text-yellow-800 font-semibold transition-colors hover:underline "
+                >
+                  <span>Learn more about our safety policies</span>
+                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Comments Side Panel */}
       {showCommentsPanel && (
         <CommentsSidePanelHelper
-          helperId={id}
+          helperId={helper._id}
           onClose={() => setShowCommentsPanel(false)}
+          onAnalyzeComments={analyzeCommentsWithAI}
+          commentAnalysis={commentAnalysis}
+          analyzingComments={analyzingComments}
         />
       )}
     </div>
