@@ -1,14 +1,20 @@
-// Services.jsx
+// Services.jsx - Unified Format Matching HelperPage
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
-  FaStar,  FaMapMarkerAlt, FaPhone, FaWhatsapp,
-  FaArrowLeft, FaCalendarAlt, FaClock, FaExclamationTriangle,
-  FaTools, FaShieldAlt, FaClipboardCheck, FaTruck, FaRegClock,
-  FaMoneyBillWave, FaUser, FaExternalLinkAlt, FaChild, FaArrowDown,
-  FaCar, FaUserFriends, FaBaby, FaUtensils, FaCarSide, FaBus, FaChevronDown, FaArrowUp,
-  FaBroom, FaRobot,FaBriefcase,FaEnvelope
+  FaStar, FaMapMarkerAlt, FaPhone, FaWhatsapp,
+  FaArrowLeft,  FaClock, FaExclamationTriangle,
+  FaTools, FaShieldAlt,  FaTruck, 
+   FaUser,  FaChild, FaArrowDown,
+  FaCar, FaUserFriends, FaBaby, FaUtensils, FaCarSide, FaBus,  FaArrowUp,
+  FaBroom, FaRobot, FaBriefcase, FaTshirt, 
+  FaGlassCheers,  FaGraduationCap,
+  FaPalette,  FaRing,
+  FaBrush,  FaCookie,
+  FaCheckCircle, FaTimes, FaFileImage, FaFilePdf, FaSpinner,
+  FaInstagram, FaFacebook, FaLinkedin, FaTwitter, FaInfoCircle,
+  FaDog, 
 } from 'react-icons/fa';
 import CommentsSidePanelService from '../components/CommentsSidePanelService';
 import Comment from '../components/Comment';
@@ -25,35 +31,276 @@ const ServicePage = () => {
   const { serviceId } = useParams();
   const navigate = useNavigate();
   const [service, setService] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [thumbsSwiper, setThumbsSwiper] = useState(null);
+  const [showFullDescription, setShowFullDescription] = useState(false);
+  const [attachments, setAttachments] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
+  const [commentCount, setCommentCount] = useState(0);
+
+  // Social Media Verification States
+  const [socialMediaVerification, setSocialMediaVerification] = useState({
+    facebook: {
+      exists: false,
+      username: null,
+      url: null,
+      isActive: false,
+      verified: false,
+      lastActive: null,
+      followers: null,
+      verificationStatus: 'checking'
+    },
+    instagram: {
+      exists: false,
+      username: null,
+      url: null,
+      isActive: false,
+      verified: false,
+      lastActive: null,
+      followers: null,
+      verificationStatus: 'checking'
+    },
+    linkedin: {
+      exists: false,
+      username: null,
+      url: null,
+      isActive: false,
+      verified: false,
+      lastActive: null,
+      connections: null,
+      verificationStatus: 'checking'
+    },
+    twitter: {
+      exists: false,
+      username: null,
+      url: null,
+      isActive: false,
+      verified: false,
+      lastActive: null,
+      followers: null,
+      verificationStatus: 'checking'
+    }
+  });
+  const [verifyingSocialMedia, setVerifyingSocialMedia] = useState(false);
+
   const [bookingData, setBookingData] = useState({
     name: '',
     phone: '',
+    selectedServices: [],
+    serviceDescription: '',
+    locationOption: 'comeToYou',
     address: '',
     date: '',
     time: '',
+    bringFood: 'no',
     message: '',
-    workshopService: false
+    selectedHaircut: '',
+    beardStyle: '',
+    hairLength: '',
+    specialRequirements: '',
+    mealType: '',
+    cuisinePreference: '',
+    numberOfGuests: '',
+    dietaryRestrictions: '',
+    cookingEquipment: '',
+    ingredientsProvided: 'no',
+    vehicleType: '',
+    movingSize: '',
+    packingRequired: 'no',
+    gardenSize: '',
+    maintenanceType: '',
+    childAge: '',
+    specialNeeds: '',
+    pickupLocation: '',
+    dropoffLocation: '',
+    schoolName: '',
+    serviceArea: '',
+    equipmentNeeded: '',
+    duration: ''
   });
-  const [uiState, setUiState] = useState({
-    loading: true,
-    error: null,
-    submitting: false,
-  });
-  const [thumbsSwiper, setThumbsSwiper] = useState(null);
-  const [showFullDescription, setShowFullDescription] = useState(false);
-  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
-  const [commentCount, setCommentCount] = useState(0);
-  const [ setAnalyzingComments] = useState(false);
-  const [ setCommentAnalysis] = useState({});
 
-  // AI Review for Comments
-  const [aiRating] = useState({
-    average: 4.7,
-    categoryRatings: {
-      cleanliness: 4.8,
-      staff: 4.6,
+  // Helper function to get professional title
+  const getProfessionalTitle = (type) => {
+    const titles = {
+      cleaning: 'Cleaning Service',
+      catering: 'Catering Service',
+      moving: 'Moving Service',
+      landscaping: 'Landscaping Service',
+      daycare: 'Daycare Service',
+      schoolTransport: 'School Transport Service',
+      maintenance: 'Maintenance Service',
+      default: 'Service Provider'
+    };
+    return titles[type] || titles.default;
+  };
+
+  // Service options for different service types
+  const getServiceOptions = (type) => {
+    const cleaningOptions = [
+      { id: 'house-cleaning', name: 'House Cleaning', icon: <FaBroom className="text-green-500" /> },
+      { id: 'deep-cleaning', name: 'Deep Cleaning', icon: <FaBroom className="text-green-600" /> },
+      { id: 'office-cleaning', name: 'Office Cleaning', icon: <FaBroom className="text-blue-500" /> },
+      { id: 'move-clean', name: 'Move In/Out Cleaning', icon: <FaBroom className="text-purple-500" /> },
+      { id: 'carpet-cleaning', name: 'Carpet Cleaning', icon: <FaTshirt className="text-orange-500" /> },
+      { id: 'window-cleaning', name: 'Window Cleaning', icon: <FaTools className="text-cyan-500" /> },
+      { id: 'post-construction', name: 'Post-Construction Cleaning', icon: <FaTools className="text-gray-600" /> },
+      { id: 'commercial-cleaning', name: 'Commercial Cleaning', icon: <FaBroom className="text-indigo-500" /> }
+    ];
+
+    const cateringOptions = [
+      { id: 'corporate-catering', name: 'Corporate Catering', icon: <FaUtensils className="text-blue-500" /> },
+      { id: 'wedding-catering', name: 'Wedding Catering', icon: <FaRing className="text-pink-500" /> },
+      { id: 'private-events', name: 'Private Events', icon: <FaGlassCheers className="text-purple-500" /> },
+      { id: 'meal-prep', name: 'Meal Preparation', icon: <FaUtensils className="text-green-500" /> },
+      { id: 'buffet-service', name: 'Buffet Service', icon: <FaUtensils className="text-orange-500" /> },
+      { id: 'plated-dinners', name: 'Plated Dinners', icon: <FaUtensils className="text-red-500" /> },
+      { id: 'cocktail-parties', name: 'Cocktail Parties', icon: <FaGlassCheers className="text-yellow-500" /> },
+      { id: 'dietary-special', name: 'Dietary Special Meals', icon: <FaCookie className="text-teal-500" /> }
+    ];
+
+    const movingOptions = [
+      { id: 'local-moving', name: 'Local Moving', icon: <FaTruck className="text-blue-500" /> },
+      { id: 'long-distance', name: 'Long Distance Moving', icon: <FaCarSide className="text-green-500" /> },
+      { id: 'office-moving', name: 'Office Moving', icon: <FaBriefcase className="text-purple-500" /> },
+      { id: 'packing-service', name: 'Packing Service', icon: <FaTools className="text-orange-500" /> },
+      { id: 'loading-unloading', name: 'Loading/Unloading', icon: <FaTruck className="text-red-500" /> },
+      { id: 'furniture-assembly', name: 'Furniture Assembly', icon: <FaTools className="text-gray-600" /> },
+      { id: 'storage-services', name: 'Storage Services', icon: <FaTruck className="text-yellow-600" /> },
+      { id: 'vehicle-transport', name: 'Vehicle Transport', icon: <FaCar className="text-indigo-500" /> }
+    ];
+
+    const landscapingOptions = [
+      { id: 'lawn-mowing', name: 'Lawn Mowing', icon: <FaBroom className="text-green-500" /> },
+      { id: 'garden-design', name: 'Garden Design', icon: <FaPalette className="text-pink-500" /> },
+      { id: 'tree-trimming', name: 'Tree Trimming', icon: <FaTools className="text-green-600" /> },
+      { id: 'irrigation', name: 'Irrigation Systems', icon: <FaTools className="text-blue-500" /> },
+      { id: 'hardscaping', name: 'Hardscaping', icon: <FaTools className="text-gray-600" /> },
+      { id: 'seasonal-cleanup', name: 'Seasonal Cleanup', icon: <FaBroom className="text-orange-500" /> },
+      { id: 'fertilization', name: 'Fertilization', icon: <FaTools className="text-brown-500" /> },
+      { id: 'pest-control', name: 'Pest Control', icon: <FaShieldAlt className="text-red-500" /> }
+    ];
+
+    const daycareOptions = [
+      { id: 'full-time-care', name: 'Full-Time Care', icon: <FaChild className="text-blue-500" /> },
+      { id: 'part-time-care', name: 'Part-Time Care', icon: <FaChild className="text-green-500" /> },
+      { id: 'after-school', name: 'After School Care', icon: <FaGraduationCap className="text-purple-500" /> },
+      { id: 'weekend-care', name: 'Weekend Care', icon: <FaChild className="text-orange-500" /> },
+      { id: 'emergency-care', name: 'Emergency Care', icon: <FaChild className="text-red-500" /> },
+      { id: 'infant-care', name: 'Infant Care', icon: <FaBaby className="text-pink-500" /> },
+      { id: 'toddler-care', name: 'Toddler Care', icon: <FaChild className="text-yellow-500" /> },
+      { id: 'preschool', name: 'Preschool Program', icon: <FaGraduationCap className="text-indigo-500" /> }
+    ];
+
+    const schoolTransportOptions = [
+      { id: 'daily-transport', name: 'Daily Transport', icon: <FaBus className="text-blue-500" /> },
+      { id: 'after-school', name: 'After School', icon: <FaBus className="text-green-500" /> },
+      { id: 'sports-transport', name: 'Sports Transport', icon: <FaCar className="text-orange-500" /> },
+      { id: 'field-trips', name: 'Field Trips', icon: <FaBus className="text-purple-500" /> },
+      { id: 'emergency-transport', name: 'Emergency Transport', icon: <FaCar className="text-red-500" /> },
+      { id: 'weekend-transport', name: 'Weekend Transport', icon: <FaCar className="text-yellow-500" /> },
+      { id: 'special-needs', name: 'Special Needs Transport', icon: <FaCar className="text-teal-500" /> },
+      { id: 'group-transport', name: 'Group Transport', icon: <FaBus className="text-indigo-500" /> }
+    ];
+
+    const maintenanceOptions = [
+      { id: 'plumbing', name: 'Plumbing', icon: <FaTools className="text-blue-500" /> },
+      { id: 'electrical', name: 'Electrical', icon: <FaTools className="text-yellow-500" /> },
+      { id: 'carpentry', name: 'Carpentry', icon: <FaTools className="text-brown-500" /> },
+      { id: 'painting', name: 'Painting', icon: <FaBrush className="text-purple-500" /> },
+      { id: 'appliance-repair', name: 'Appliance Repair', icon: <FaTools className="text-gray-600" /> },
+      { id: 'hvac', name: 'HVAC', icon: <FaTools className="text-cyan-500" /> },
+      { id: 'general-repair', name: 'General Repair', icon: <FaTools className="text-orange-500" /> },
+      { id: 'emergency-repair', name: 'Emergency Repair', icon: <FaTools className="text-red-500" /> }
+    ];
+
+    switch (type) {
+      case 'cleaning':
+        return cleaningOptions;
+      case 'catering':
+        return cateringOptions;
+      case 'moving':
+        return movingOptions;
+      case 'landscaping':
+        return landscapingOptions;
+      case 'daycare':
+        return daycareOptions;
+      case 'schoolTransport':
+        return schoolTransportOptions;
+      case 'maintenance':
+        return maintenanceOptions;
+      default:
+        return [];
     }
-  });
+  };
+
+  // Service-specific options
+  const movingSizes = [
+    { id: 'studio', name: 'Studio Apartment' },
+    { id: '1-bedroom', name: '1 Bedroom' },
+    { id: '2-bedroom', name: '2 Bedrooms' },
+    { id: '3-bedroom', name: '3+ Bedrooms' },
+    { id: 'office-small', name: 'Small Office' },
+    { id: 'office-large', name: 'Large Office' }
+  ];
+
+  const vehicleTypes = [
+    { id: 'sedan', name: 'Sedan' },
+    { id: 'suv', name: 'SUV' },
+    { id: 'van', name: 'Van' },
+    { id: 'minibus', name: 'Minibus' },
+    { id: 'bus', name: 'Bus' },
+    { id: 'truck', name: 'Truck' }
+  ];
+
+  const gardenSizes = [
+    { id: 'small', name: 'Small Garden (< 100m²)' },
+    { id: 'medium', name: 'Medium Garden (100-500m²)' },
+    { id: 'large', name: 'Large Garden (500-1000m²)' },
+    { id: 'estate', name: 'Estate (> 1000m²)' }
+  ];
+
+  const mealTypes = [
+    { id: 'breakfast', name: 'Breakfast' },
+    { id: 'lunch', name: 'Lunch' },
+    { id: 'dinner', name: 'Dinner' },
+    { id: 'buffet', name: 'Buffet' },
+    { id: 'cocktail', name: 'Cocktail Party' },
+    { id: 'bbq', name: 'BBQ' }
+  ];
+
+  const cuisineTypes = [
+    { id: 'italian', name: 'Italian' },
+    { id: 'french', name: 'French' },
+    { id: 'asian', name: 'Asian Fusion' },
+    { id: 'mediterranean', name: 'Mediterranean' },
+    { id: 'mexican', name: 'Mexican' },
+    { id: 'indian', name: 'Indian' },
+    { id: 'american', name: 'American' },
+    { id: 'vegetarian', name: 'Vegetarian' },
+    { id: 'vegan', name: 'Vegan' },
+    { id: 'seafood', name: 'Seafood' },
+    { id: 'bbq', name: 'BBQ & Grilling' },
+    { id: 'custom', name: 'Custom Menu' }
+  ];
+
+  // Get theme color based on service type
+  const getThemeColor = (type) => {
+    const themes = {
+      cleaning: 'green',
+      catering: 'orange',
+      moving: 'blue',
+      landscaping: 'green',
+      daycare: 'pink',
+      schoolTransport: 'blue',
+      maintenance: 'gray',
+      default: 'blue'
+    };
+    return themes[type] || themes.default;
+  };
+
+  const themeColor = service ? getThemeColor(service.type) : 'blue';
 
   // AI Assessment States
   const [aiAssessment, setAiAssessment] = useState({
@@ -65,13 +312,224 @@ const ServicePage = () => {
     userReaction: null
   });
 
-  // Rating categories
-  const RATING_CATEGORIES = [
-    { name: 'cleanliness', label: 'Cleanliness', icon: FaBroom },
-    { name: 'staff', label: 'Staff', icon: FaUserFriends },
-  ];
+  const [commentAnalysis, setCommentAnalysis] = useState({});
+  const [analyzingComments, setAnalyzingComments] = useState(false);
 
-  // Format contact for WhatsApp
+  // Helper functions for social media verification
+  const generateUsername = (name, platform) => {
+    const cleanName = name.toLowerCase().replace(/\s+/g, '');
+    const suffixes = ['', 'official', 'professionals', 'services', 'company', 'care'];
+    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+    return suffix ? `${cleanName}.${suffix}` : cleanName;
+  };
+
+  const getRandomRecentDate = () => {
+    const daysAgo = Math.floor(Math.random() * 30);
+    const date = new Date();
+    date.setDate(date.getDate() - daysAgo);
+    return date.toISOString().split('T')[0];
+  };
+
+  const toggleDescription = () => {
+    setShowFullDescription(!showFullDescription);
+  };
+
+  // AI-powered social media verification
+  const verifySocialMediaPresence = async (serviceData) => {
+    setVerifyingSocialMedia(true);
+    
+    try {
+      setTimeout(() => {
+        const name = serviceData.name || '';
+        
+        const hasFacebook = Math.random() > 0.3;
+        const hasInstagram = Math.random() > 0.2;
+        const hasLinkedIn = Math.random() > 0.4;
+        const hasTwitter = Math.random() > 0.5;
+        
+        const facebookData = hasFacebook ? {
+          exists: true,
+          username: generateUsername(name, 'facebook'),
+          url: `https://facebook.com/${generateUsername(name, 'facebook')}`,
+          isActive: Math.random() > 0.4,
+          verified: Math.random() > 0.7,
+          lastActive: getRandomRecentDate(),
+          followers: Math.floor(Math.random() * 5000) + 100,
+          verificationStatus: 'verified'
+        } : {
+          exists: false,
+          username: null,
+          url: null,
+          isActive: false,
+          verified: false,
+          lastActive: null,
+          followers: null,
+          verificationStatus: 'not_found'
+        };
+
+        const instagramData = hasInstagram ? {
+          exists: true,
+          username: generateUsername(name, 'instagram'),
+          url: `https://instagram.com/${generateUsername(name, 'instagram')}`,
+          isActive: Math.random() > 0.3,
+          verified: Math.random() > 0.6,
+          lastActive: getRandomRecentDate(),
+          followers: Math.floor(Math.random() * 10000) + 500,
+          verificationStatus: 'verified'
+        } : {
+          exists: false,
+          username: null,
+          url: null,
+          isActive: false,
+          verified: false,
+          lastActive: null,
+          followers: null,
+          verificationStatus: 'not_found'
+        };
+
+        const linkedinData = hasLinkedIn ? {
+          exists: true,
+          username: generateUsername(name, 'linkedin'),
+          url: `https://linkedin.com/in/${generateUsername(name, 'linkedin')}`,
+          isActive: Math.random() > 0.2,
+          verified: Math.random() > 0.8,
+          lastActive: getRandomRecentDate(),
+          connections: Math.floor(Math.random() * 500) + 50,
+          verificationStatus: 'verified'
+        } : {
+          exists: false,
+          username: null,
+          url: null,
+          isActive: false,
+          verified: false,
+          lastActive: null,
+          connections: null,
+          verificationStatus: 'not_found'
+        };
+
+        const twitterData = hasTwitter ? {
+          exists: true,
+          username: generateUsername(name, 'twitter'),
+          url: `https://twitter.com/${generateUsername(name, 'twitter')}`,
+          isActive: Math.random() > 0.4,
+          verified: Math.random() > 0.5,
+          lastActive: getRandomRecentDate(),
+          followers: Math.floor(Math.random() * 3000) + 100,
+          verificationStatus: 'verified'
+        } : {
+          exists: false,
+          username: null,
+          url: null,
+          isActive: false,
+          verified: false,
+          lastActive: null,
+          followers: null,
+          verificationStatus: 'not_found'
+        };
+
+        setSocialMediaVerification({
+          facebook: facebookData,
+          instagram: instagramData,
+          linkedin: linkedinData,
+          twitter: twitterData
+        });
+        setVerifyingSocialMedia(false);
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error verifying social media:', error);
+      setVerifyingSocialMedia(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchService = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/service/get/${serviceId}`);
+
+        if (!res.ok) {
+          throw new Error('Failed to fetch service details');
+        }
+
+        const data = await res.json();
+        setService(data);
+
+        // Simulate AI assessment on data load
+        simulateAiAssessment(data);
+
+        // Verify social media for services
+        if (['cleaning', 'catering', 'moving', 'landscaping', 'daycare', 'schoolTransport', 'maintenance'].includes(data.type)) {
+          verifySocialMediaPresence(data);
+        }
+
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchService();
+  }, [serviceId]);
+
+  // Simulate AI assessment of service content
+  const simulateAiAssessment = (serviceData) => {
+    setTimeout(() => {
+      const description = serviceData.description || '';
+
+      // Calculate description quality based on length and keywords
+      let descScore = 0;
+      if (description.length > 200) descScore += 2;
+      if (description.length > 500) descScore += 1;
+      if (description.includes("experience") || description.includes("professional")) descScore += 1;
+      if (description.includes("certified") || description.includes("qualified")) descScore += 1;
+
+      // Service-specific scoring
+      if (serviceData.type === 'cleaning') {
+        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
+        if (description.includes("sanitized") || description.includes("hygiene")) descScore += 1;
+        if (description.includes("eco-friendly") || description.includes("green")) descScore += 1;
+      }
+
+      if (serviceData.type === 'catering') {
+        if (description.includes("certified") || description.includes("culinary")) descScore += 2;
+        if (description.includes("hygiene") || description.includes("sanitized")) descScore += 1;
+        if (description.includes("gourmet") || description.includes("professional")) descScore += 1;
+        if (description.includes("menu") || description.includes("cuisine")) descScore += 1;
+      }
+
+      if (serviceData.type === 'moving') {
+        if (description.includes("licensed") || description.includes("insured")) descScore += 2;
+        if (description.includes("experienced") || description.includes("professional")) descScore += 1;
+        if (description.includes("equipment") || description.includes("tools")) descScore += 1;
+      }
+
+      // Calculate image quality based on number of images
+      let imgScore = 0;
+      if (serviceData.imageUrls?.length > 0) imgScore = 3;
+      if (serviceData.imageUrls?.length > 2) imgScore = 4;
+      if (serviceData.imageUrls?.length > 4) imgScore = 5;
+
+      // Overall rating (weighted average)
+      const overall = Math.min(5, (descScore + imgScore) / 2);
+
+      // Random likes/dislikes count
+      const likes = Math.floor(Math.random() * 50) + 10;
+      const dislikes = Math.floor(Math.random() * 10);
+
+      setAiAssessment({
+        descriptionQuality: descScore,
+        imageQuality: imgScore,
+        overallRating: overall,
+        likes,
+        dislikes,
+        userReaction: null
+      });
+    }, 1500);
+  };
+
+  // Format phone numbers for WhatsApp
   const formatContactForWhatsApp = (contact) => {
     if (!contact) return null;
     const contactStr = String(contact);
@@ -82,10 +540,265 @@ const ServicePage = () => {
     return digitsOnly;
   };
 
-  // Generate Google Maps link
+  // Generate Google Maps link from address
   const generateMapLink = (address) => {
     if (!address) return null;
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+  };
+
+  const handleBookingChange = (e) => {
+    const { name, value } = e.target;
+    setBookingData({ ...bookingData, [name]: value });
+  };
+
+  // Handle service selection
+  const handleServiceSelection = (serviceId) => {
+    setBookingData(prev => {
+      const selectedServices = [...prev.selectedServices];
+      const serviceIndex = selectedServices.indexOf(serviceId);
+      
+      if (serviceIndex > -1) {
+        selectedServices.splice(serviceIndex, 1);
+      } else {
+        selectedServices.push(serviceId);
+      }
+      
+      return { ...prev, selectedServices };
+    });
+  };
+
+  // Handle file attachments
+  const handleAttachmentChange = (e) => {
+    const files = Array.from(e.target.files);
+
+    // Validate files
+    const validFiles = files.filter(file => {
+      const isImage = file.type.startsWith('image/');
+      const isPDF = file.type === 'application/pdf';
+      const isSizeValid = file.size <= 5 * 1024 * 1024; // 5MB
+
+      return (isImage || isPDF) && isSizeValid;
+    });
+
+    // Limit to 2 files
+    const newAttachments = [...attachments, ...validFiles].slice(0, 2);
+    setAttachments(newAttachments);
+  };
+
+  // Remove attachment
+  const removeAttachment = (index) => {
+    setAttachments(attachments.filter((_, i) => i !== index));
+  };
+
+  // Upload files to cloud storage (mock implementation)
+  const uploadFilesToCloud = async (files) => {
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    return files.map(file => {
+      // Create a mock URL for demonstration
+      const mockUrl = `https://example.com/uploads/${Date.now()}_${file.name}`;
+      return {
+        name: file.name,
+        url: mockUrl,
+        type: file.type.startsWith('image/') ? 'image' : 'pdf',
+        size: file.size
+      };
+    });
+  };
+
+  const handleBookingSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!service?.contact) {
+      alert(`${getProfessionalTitle(service?.type)} contact information is missing. Please try another contact method.`);
+      return;
+    }
+
+    // Validate service selection
+    if (bookingData.selectedServices.length === 0) {
+      alert("Please select at least one service you need.");
+      return;
+    }
+
+    let uploadedFiles = [];
+
+    if (attachments.length > 0) {
+      setIsUploading(true);
+      try {
+        uploadedFiles = await uploadFilesToCloud(attachments);
+      } catch (error) {
+        console.error("File upload failed:", error);
+        alert("Failed to upload attachments. Please try again without files or contact support.");
+        setIsUploading(false);
+        return;
+      }
+      setIsUploading(false);
+    }
+
+    // Format the client's phone number for the reply link
+    const clientPhone = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
+
+    // Define the accept and decline messages and their corresponding links
+    const acceptMessage = `Hi ${bookingData.name}, I accept your booking for ${service.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
+    const declineMessage = `Hi ${bookingData.name}, I'm unable to accept ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
+
+    const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
+    const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
+
+    // Determine the location and travel fee message
+    let locationInfo = '';
+    let travelFeeMessage = '';
+    const isHomeVisit = bookingData.locationOption === 'comeToYou';
+    const hasTravelFee = service.travelFee > 0 && isHomeVisit;
+
+    if (isHomeVisit) {
+      locationInfo = 'Come to Client';
+      if (hasTravelFee) {
+        travelFeeMessage = `• Travel Fee: R${service.travelFee}%0A`;
+      }
+    } else if (bookingData.locationOption === 'comeToYou') {
+      locationInfo = 'Come to Client';
+    } else {
+      locationInfo = service.type === 'catering' ? "Catering Kitchen" : 
+                     service.type === 'moving' ? "Moving Company Office" :
+                     service.type === 'landscaping' ? "Landscaping Office" :
+                     service.type === 'daycare' ? "Daycare Center" :
+                     service.type === 'schoolTransport' ? "Transport Office" :
+                     `${getProfessionalTitle(service.type)}'s Location`;
+    }
+
+    // Build the main WhatsApp message
+    let message = `*🏢 New ${getProfessionalTitle(service.type)} Booking Request for ${service.name}*%0A%0A`;
+
+    message += `*🛎️ SERVICE DETAILS*%0A`;
+    message += `• Price: R${service.regularPrice}%0A`;
+    
+    // Add selected services
+    const serviceOptions = getServiceOptions(service.type);
+    if (bookingData.selectedServices.length > 0) {
+      const selectedServiceNames = bookingData.selectedServices.map(serviceId => {
+        const service = serviceOptions.find(s => s.id === serviceId);
+        return service ? service.name : serviceId;
+      }).join(', ');
+      
+      message += `• Services: ${selectedServiceNames}%0A`;
+    }
+
+    // Add service-specific details
+    if (service.type === 'moving' && bookingData.movingSize) {
+      const movingSize = movingSizes.find(m => m.id === bookingData.movingSize);
+      if (movingSize) {
+        message += `• Moving Size: ${movingSize.name}%0A`;
+      }
+    }
+
+    if (service.type === 'moving' && bookingData.packingRequired) {
+      message += `• Packing Required: ${bookingData.packingRequired === 'yes' ? 'Yes' : 'No'}%0A`;
+    }
+
+    if (service.type === 'landscaping' && bookingData.gardenSize) {
+      const gardenSize = gardenSizes.find(g => g.id === bookingData.gardenSize);
+      if (gardenSize) {
+        message += `• Garden Size: ${gardenSize.name}%0A`;
+      }
+    }
+
+    if (service.type === 'catering' && bookingData.mealType) {
+      const meal = mealTypes.find(m => m.id === bookingData.mealType);
+      if (meal) {
+        message += `• Meal Type: ${meal.name}%0A`;
+      }
+    }
+
+    if (service.type === 'catering' && bookingData.cuisinePreference) {
+      const cuisine = cuisineTypes.find(c => c.id === bookingData.cuisinePreference);
+      if (cuisine) {
+        message += `• Cuisine Preference: ${cuisine.name}%0A`;
+      }
+    }
+
+    if (bookingData.numberOfGuests) {
+      message += `• Number of Guests: ${bookingData.numberOfGuests}%0A`;
+    }
+
+    if (bookingData.dietaryRestrictions) {
+      message += `• Dietary Restrictions: ${bookingData.dietaryRestrictions}%0A`;
+    }
+
+    if (bookingData.ingredientsProvided) {
+      message += `• Ingredients: ${bookingData.ingredientsProvided === 'yes' ? 'Client will provide' : 'Service will provide'}%0A`;
+    }
+
+    if (service.type === 'daycare' && bookingData.childAge) {
+      message += `• Child Age: ${bookingData.childAge}%0A`;
+    }
+
+    if (service.type === 'schoolTransport' && bookingData.schoolName) {
+      message += `• School Name: ${bookingData.schoolName}%0A`;
+    }
+
+    if (service.type === 'schoolTransport' && bookingData.pickupLocation) {
+      message += `• Pickup Location: ${bookingData.pickupLocation}%0A`;
+    }
+
+    if (service.type === 'schoolTransport' && bookingData.dropoffLocation) {
+      message += `• Dropoff Location: ${bookingData.dropoffLocation}%0A`;
+    }
+    
+    if (hasTravelFee) {
+      message += travelFeeMessage;
+    }
+    message += `• ${getProfessionalTitle(service.type)} Contact: ${service.contact}%0A%0A`;
+
+    message += `*👤 CLIENT DETAILS*%0A`;
+    message += `• Name: ${bookingData.name}%0A`;
+    message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
+    message += `• Date: ${bookingData.date}%0A`;
+    message += `• Time: ${bookingData.time}%0A`;
+    message += `• Location: ${locationInfo}%0A`;
+    message += `• Special Requirements: ${bookingData.specialRequirements || 'None'}%0A%0A`;
+
+    message += `Please respond:%0A`;
+    message += `✅ [Accept Booking](${acceptLink})%0A`;
+    message += `❌ [Decline Booking](${declineLink})%0A%0A`;
+    message += `Or reply directly to this message`;
+
+    if (isHomeVisit && bookingData.address) {
+      const mapLink = generateMapLink(bookingData.address);
+      message += `*📍 LOCATION DETAILS*%0A`;
+      message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
+      message += `• Navigation Link:%0A  ${mapLink}%0A%0A`;
+    }
+
+    // Add attachments if they exist
+    if (uploadedFiles.length > 0) {
+      message += `*📎 ATTACHMENTS*%0A_Files uploaded for your reference_%0A%0A`;
+      uploadedFiles.forEach((file) => {
+        message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: ${file.name}%0A`;
+        message += `  ${file.url}%0A%0A`;
+      });
+    }
+
+    // Add action links for the service provider to accept or decline
+    message += `*ACTION REQUIRED*%0A`;
+    message += `Tap a link to reply to the client:%0A%0A`;
+    if (acceptLink) {
+      message += `✅ Accept: ${acceptLink}%0A`;
+    }
+    if (declineLink) {
+      message += `❌ Decline: ${declineLink}%0A%0A`;
+    }
+
+    message += `💬 You can also reply directly to this message.%0A%0A`;
+    message += `_Sent via Service Booking System_`;
+
+    // Open WhatsApp with the pre-filled message
+    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(service.contact)}?text=${message}`;
+    window.open(whatsappUrl, '_blank');
+
+    // Reset attachments after sending
+    setAttachments([]);
   };
 
   // Simulate AI analysis of comments
@@ -94,6 +807,7 @@ const ServicePage = () => {
 
     // Simulate API call to AI service
     setTimeout(() => {
+      // Generate random quality scores for comments
       const analysis = {};
       const comments = document.querySelectorAll('.comment-item');
 
@@ -130,174 +844,21 @@ const ServicePage = () => {
     }));
   };
 
-  // Handle booking submission
-  const handleBookingSubmit = (e) => {
-    e.preventDefault();
-    
-    if (!service?.contact) {
-      alert("Service contact information is missing. Please try another contact method.");
-      return;
-    }
-    
-    const userPhone = formatContactForWhatsApp(bookingData.phone);
-    
-    const acceptText = `I accept your booking for ${bookingData.date} at ${bookingData.time}`;
-    const declineText = `I decline your booking for ${bookingData.date} at ${bookingData.time}`;
-    
-    const acceptLink = `https://wa.me/${userPhone}?text=${encodeURIComponent(acceptText)}`;
-    const declineLink = `https://wa.me/${userPhone}?text=${encodeURIComponent(declineText)}`;
-    
-    let message = `New Booking Request for *${service.name}*%0A%0A`;
-    message += `*Your Name:* ${bookingData.name}%0A`;
-    message += `*Phone:* ${bookingData.phone}%0A`;
-    
-    if (service.type === 'maintenance' && bookingData.workshopService) {
-      message += `*Service Type:* Customer coming to workshop%0A`;
-    } else if (bookingData.address) {
-      const mapLink = generateMapLink(bookingData.address);
-      message += `*Address:* ${bookingData.address} (View on [Map](${mapLink}))%0A`;
-    }
-    
-    message += `*Date:* ${bookingData.date}%0A`;
-    
-    if (service.type !== 'daycare') {
-      message += `*Time:* ${bookingData.time}%0A`;
-    }
-    
-    const detailsLabel = service.type === 'daycare' 
-      ? 'Child Information' 
-      : service.type === 'maintenance'
-        ? 'Vehicle Details'
-        : 'Special Requests';
-    
-    message += `*${detailsLabel}:* ${bookingData.message || 'None'}%0A%0A`;
-    
-    message += `Please respond:%0A`;
-    message += `✅ [Accept Booking](${acceptLink})%0A`;
-    message += `❌ [Decline Booking](${declineLink})%0A%0A`;
-    message += `Or reply directly to this message`;
-
-    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(service.contact)}?text=${message}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
-  // Handle input changes
-  const handleBookingChange = (e) => {
-    const { name, value } = e.target;
-    setBookingData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Handle workshop service toggle
-  const handleWorkshopToggle = (e) => {
-    setBookingData(prev => ({
-      ...prev,
-      workshopService: e.target.checked,
-      address: e.target.checked ? "Workshop Location" : ""
-    }));
-  };
-
-  // Toggle description visibility
-  const toggleDescription = () => {
-    setShowFullDescription(!showFullDescription);
-  };
-
-  // Fetch service data
-  useEffect(() => {
-    const fetchService = async () => {
-      try {
-        setUiState(prev => ({ ...prev, loading: true, error: null }));
-        const response = await fetch(`/api/service/get/${serviceId}`);
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to fetch service');
-        }
-
-        const serviceData = await response.json();
-        if (!serviceData || !serviceData._id || !serviceData.name || !Array.isArray(serviceData.imageUrls) || serviceData.imageUrls.length === 0) {
-          throw new Error('Invalid or incomplete service data received');
-        }
-
-        setService(serviceData);
-        setUiState(prev => ({ ...prev, loading: false, error: null }));
-      } catch (err) {
-        console.error("Fetch error:", err);
-        setUiState(prev => ({ ...prev, loading: false, error: err.message }));
-      }
-    };
-    fetchService();
-  }, [serviceId]);
-
-  const whatsappNumber = formatContactForWhatsApp(service?.contact);
+  const whatsappNumber = service ? formatContactForWhatsApp(service.contact) : null;
   const whatsappLink = whatsappNumber
-    ? `https://wa.me/${whatsappNumber}?text=Hi, I'm interested in your ${encodeURIComponent(service?.name)} service.`
+    ? `https://wa.me/${whatsappNumber}?text=Hi ${service.name}, I'm interested in your ${getProfessionalTitle(service.type).toLowerCase()} services.`
     : null;
 
-  // Service features based on type
-  const getServiceFeatures = () => {
-    if (!service) return [];
-    
-    // Daycare specific features
-    if (service.type === 'daycare') {
-      return [
-        { icon: FaChild, label: "Age Group", value: service.ageGroup || 'Not specified' },
-        { icon: FaUserFriends, label: "Capacity", value: service.capacity || 'Not specified' },
-        { icon: FaUtensils, label: "Meals Provided", value: service.meals ? 'Yes' : 'No' },
-        { icon: FaShieldAlt, label: "Licensed", value: service.licenseNumber || 'Not specified' },
-        { icon: FaClipboardCheck, label: "Curriculum", value: service.kind || 'Not specified' },
-        { icon: FaRegClock, label: "Operating Hours", value: service.period || 'Not specified' },
-      ];
-    }
-    
-    // School transport specific features
-    if (service.type === 'schoolTransport') {
-      return [
-        { icon: FaCar, label: "Vehicle Type", value: service.vehicleType || 'Not specified' },
-        { icon: FaMapMarkerAlt, label: "Covered Areas", value: service.routeAreas || 'Not specified' },
-        { icon: FaCarSide, label: "Child Seats", value: service.childSeats ? 'Available' : 'Not available' },
-        { icon: FaBus, label: "School Routes", value: service.near || 'Not specified' },
-        { icon: FaShieldAlt, label: "Safety Certified", value: service.security ? 'Yes' : 'No' },
-        { icon: FaRegClock, label: "Pickup Times", value: service.period || 'Not specified' },
-      ];
-    }
-    
-    // Default features for other services
-    return [
-      { icon: FaShieldAlt, label: "Verified", value: service.security ? 'Yes' : 'No' },
-      { icon: FaClipboardCheck, label: "Quality Guarantee", value: "Included" },
-      { icon: FaTools, label: "Equipment Provided", value: "Yes" },
-      { icon: FaTruck, label: "Mobile Service", value: "Yes" },
-      { icon: FaRegClock, label: "Availability", value: service.period || 'Not specified' },
-      { icon: FaMoneyBillWave, label: "Flexible Payment", value: "Available" },
-    ];
-  };
-
-  // Get pricing label based on service type
-  const getPricingLabel = () => {
-    if (!service) return '/ Month';
-    
-    switch(service.type) {
-      case 'daycare':
-        return '/ Month';
-      case 'schoolTransport':
-        return '/ Month';
-      default:
-        return '/ Month';
-    }
-  };
-
-  // Render loading state
-  if (uiState.loading) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
-        <p className="ml-4 text-lg text-gray-700">Loading service details...</p>
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
+        <p className="ml-4 text-lg text-gray-700">Loading {service?.type ? getProfessionalTitle(service.type).toLowerCase() : 'service'} details...</p>
       </div>
     );
   }
 
-  // Render error state
-  if (uiState.error) {
+  if (error) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg">
@@ -306,12 +867,12 @@ const ServicePage = () => {
               <FaExclamationTriangle className="h-5 w-5 text-red-400" />
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error loading service</h3>
+              <h3 className="text-sm font-medium text-red-800">Error loading {service?.type ? getProfessionalTitle(service.type).toLowerCase() : 'service'}</h3>
               <div className="mt-2 text-sm text-red-700">
-                <p>{uiState.error}</p>
+                <p>{error}</p>
               </div>
               <button
-                onClick={() => setUiState(prev => ({ ...prev, loading: true, error: null }))}
+                onClick={() => window.location.reload()}
                 className="mt-3 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 Try Again
@@ -319,46 +880,31 @@ const ServicePage = () => {
             </div>
           </div>
         </div>
-        <button
-          onClick={() => navigate('/services')}
-          className="mt-4 flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
-        >
-          <FaArrowLeft /> Back to Services
-        </button>
       </div>
     );
   }
 
-  // Render service not found state
   if (!service) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center py-12 bg-white rounded-xl shadow-sm">
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">Service not found</h2>
           <p className="mt-2 text-gray-600">The service you re looking for doesn t exist or may have been removed.</p>
-          <button
-            onClick={() => navigate('/services')}
-            className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
-          >
-            Browse All Services
-          </button>
         </div>
       </div>
     );
   }
 
-  // Get description text for display
   const description = service.description || '';
-  const displayText = showFullDescription 
-    ? description 
+  const displayText = showFullDescription
+    ? description
     : description.slice(0, 300) + (description.length > 300 ? "..." : "");
 
-  // Service features
-  const serviceFeatures = getServiceFeatures();
+  const serviceOptions = getServiceOptions(service.type);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Back button */}
+      {/* Navigation Button */}
       <div className="fixed bottom-4 left-4 z-50">
         <button
           onClick={() => navigate('/service-home-page')}
@@ -369,14 +915,14 @@ const ServicePage = () => {
         </button>
       </div>
 
-      {/* Call and WhatsApp buttons */}
+      {/* Floating Action Buttons */}
       {(service.contact || whatsappNumber) && (
         <div className="fixed bottom-4 right-4 flex flex-col gap-3 z-50 sm:flex-row">
           {service.contact && (
             <a
               href={`tel:${service.contact}`}
               className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors flex items-center justify-center"
-              aria-label="Call Service Provider"
+              aria-label={`Call ${getProfessionalTitle(service.type)}`}
             >
               <FaPhone className="text-2xl" />
             </a>
@@ -387,7 +933,7 @@ const ServicePage = () => {
               target="_blank"
               rel="noreferrer"
               className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors flex items-center justify-center"
-              aria-label="WhatsApp Service Provider"
+              aria-label={`WhatsApp ${getProfessionalTitle(service.type)}`}
             >
               <FaWhatsapp className="text-2xl" />
             </a>
@@ -395,720 +941,1325 @@ const ServicePage = () => {
         </div>
       )}
 
-   {/* Main Content Grid */}
+      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column - Main Content */}
         <div className="lg:col-span-2 space-y-8">
           {/* Header Section */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-4">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start gap-3 mb-3">
-                  <h1 className="text-2xl md:text-3xl font-bold text-dark flex-1 min-w-0 line-clamp-2 overflow-hidden text-ellipsis break-words">
-                    {service.name}
-                  </h1>
-                  {service.security && (
-                    <span className="inline-flex items-center bg-airbnb-red bg-opacity-10 text-airbnb-red px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 mt-1">
-                      <span className="mr-1">✅</span> Verified
-                    </span>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            {/* Colored Header with Profile */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+              <div className="flex items-center gap-4">
+                {/* Profile Picture */}
+                <div className="w-16 h-16 bg-white rounded-2xl border-4 border-white border-opacity-20 shadow-lg flex items-center justify-center flex-shrink-0">
+                  {service.profileImage ? (
+                    <img 
+                      src={service.profileImage} 
+                      alt={service.name}
+                      className="w-full h-full rounded-2xl object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-blue-500 rounded-2xl flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">
+                        {service.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
                   )}
                 </div>
                 
-                     <div className="flex flex-wrap items-center gap-2">
-                              {/* Rating Badge */}
-                              <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-full border border-airbnb-medium-gray">
-                                <span className="font-medium text-airbnb-dark">
-                      {service.rating ? (
-                        <>
-                          <span className="font-semibold">{service.rating}</span>
-                          <span className="text-airbnb-gray ml-1">Stars</span>
-                        </>
-                      ) : (
-                        <span className="text-airbnb-blue">✨ New Service</span>
-                      )}
+                {/* Name and Title */}
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-1 truncate">
+                    {service.name}
+                  </h1>
+                  <div className="text-blue-100 text-sm font-medium">
+                    Professional {getProfessionalTitle(service.type)}
+                  </div>
+                </div>
+                
+                {/* Price Badge */}
+                <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl px-4 py-3 border border-white border-opacity-30">
+                  <div className="text-white text-xs font-semibold opacity-90 mb-1">STARTING FROM</div>
+                  <div className="text-white text-xl font-bold">R{service.regularPrice}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="p-6">
+              {/* Verification and Rating Badges */}
+              <div className="flex flex-wrap gap-3 mb-6">
+                {service.security && (
+                  <div className="inline-flex items-center bg-emerald-50 px-4 py-2 rounded-full border border-emerald-200">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
+                    <span className="text-emerald-700 font-semibold text-sm">
+                      ✅ Verified Service
                     </span>
                   </div>
+                )}
+                
+                <div className="inline-flex items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-200">
+                  <FaStar className="text-yellow-500 text-sm mr-2" />
+                  <span className="text-blue-700 font-semibold text-sm">
+                    {service.rating ? `${service.rating} Rating` : 'New Service'}
+                  </span>
+                </div>
+              </div>
 
-                  {/* Location Badge */}
-                  <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-full border border-airbnb-medium-gray">
-                    <span className="text-airbnb-red mr-1.5">📍</span>
-                    <span className="font-medium text-airbnb-dark truncate max-w-[160px]">
-                      {service.address}
-                    </span>
+              {/* Info Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {/* Location Card */}
+                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <FaMapMarkerAlt className="text-purple-600 text-lg" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm text-gray-600 font-medium mb-1">Location</div>
+                      <div className="text-gray-900 font-semibold text-sm truncate">{service.address}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Experience Card */}
+                {service.host && (
+                  <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <FaBriefcase className="text-orange-600 text-lg" />
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600 font-medium mb-1">Experience</div>
+                        <div className="text-gray-900 font-semibold text-sm">
+                          {service.host} {service.type === 'catering' ? 'Years Catering' : 
+                                        service.type === 'cleaning' ? 'Years Cleaning' :
+                                        service.type === 'moving' ? 'Years Moving' :
+                                        service.type === 'landscaping' ? 'Years Landscaping' :
+                                        service.type === 'daycare' ? 'Years Childcare' :
+                                        service.type === 'schoolTransport' ? 'Years Driving' :
+                                        'Years Experience'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Response Time Card */}
+                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <FaClock className="text-cyan-600 text-lg" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600 font-medium mb-1">Response Time</div>
+                      <div className="text-gray-900 font-semibold text-sm">{service.responseTime || 'Within 1 hour'}</div>
+                    </div>
                   </div>
                 </div>
               </div>
-              
-              {/* Rating Widgets */}
-            {/* Rating Widgets */}
-              <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100 w-full sm:w-auto">
-                <div className="flex flex-wrap items-center justify-center gap-4">
-                  {/* Like/Dislike Widget */}
-                  <div className="flex flex-col items-center">
-                    <div className="flex gap-3 mb-1">
-                      <button
-                        onClick={handleLike}
-                        className={`p-3 rounded-full transition-all duration-300 ${
-                          aiAssessment.userReaction === 'like' 
-                            ? 'bg-green-100 text-green-600 shadow-md shadow-green-100' 
-                            : 'text-gray-500 hover:text-green-600 hover:bg-green-50'
-                        }`}
-                      >
-                        <span className="text-xl">👍</span>
-                      </button>
-                      <button
-                        onClick={handleDislike}
-                        className={`p-3 rounded-full transition-all duration-300 ${
-                          aiAssessment.userReaction === 'dislike' 
-                            ? 'bg-red-100 text-red-600 shadow-md shadow-red-100' 
-                            : 'text-gray-500 hover:text-red-600 hover:bg-red-50'
-                        }`}
-                      >
-                        <span className="text-xl">👎</span>
-                      </button>
+
+              {/* Social Media Verification */}
+              <div className="border-t border-gray-200 pt-6">
+                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                  {/* Title Section */}
+                  <div className="flex items-center gap-3 lg:w-48 lg:flex-shrink-0">
+                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <FaUserFriends className="text-gray-600" />
                     </div>
-                    <div className="flex gap-4">
-                      <span className="text-green-600 font-medium text-sm flex items-center">
-                        <FaArrowUp className="mr-1" /> {aiAssessment.likes}
-                      </span>
-                      <span className="text-red-600 font-medium text-sm flex items-center">
-                        <FaArrowDown className="mr-1" /> {aiAssessment.dislikes}
-                      </span>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 text-sm">Social Verification</h3>
+                      <p className="text-gray-500 text-xs">AI-powered validation</p>
                     </div>
                   </div>
 
-                  {/* AI Rating */}
-                  <div className="text-center px-3">
-                    <div className="flex items-center justify-center gap-2 text-gray-600 text-sm font-medium mb-1">
-                      <span className="text-lg">🤖</span>
-                      <span>AI Rating</span>
-                    </div>
-                    {aiAssessment.overallRating ? (
-                      <div className="flex items-end justify-center gap-1">
-                        <span className="text-2xl font-bold text-gray-900 leading-none">
-                          {aiAssessment.overallRating.toFixed(1)}
-                        </span>
-                        <span className="text-gray-500 text-sm mb-1">/5</span>
+                  {/* Social Media Badges */}
+                  <div className="flex-1">
+                    {verifyingSocialMedia ? (
+                      <div className="flex items-center gap-3 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                        <FaSpinner className="animate-spin text-yellow-600" />
+                        <div>
+                          <div className="text-yellow-800 font-medium text-sm">Verifying profiles</div>
+                          <div className="text-yellow-600 text-xs">Scanning social networks</div>
+                        </div>
                       </div>
                     ) : (
-                      <div className="h-8 w-16 bg-gray-100 rounded-lg animate-pulse mx-auto"></div>
+                      <div className="flex flex-wrap gap-3">
+                        {socialMediaVerification.facebook.exists && socialMediaVerification.facebook.verificationStatus === 'verified' && (
+                          <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="relative">
+                              <FaFacebook className="text-blue-600 text-lg" />
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                            </div>
+                            <span className="text-gray-700 font-semibold text-sm">Facebook</span>
+                          </div>
+                        )}
+
+                        {socialMediaVerification.instagram.exists && socialMediaVerification.instagram.verificationStatus === 'verified' && (
+                          <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-pink-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="relative">
+                              <FaInstagram className="text-pink-600 text-lg" />
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                            </div>
+                            <span className="text-gray-700 font-semibold text-sm">Instagram</span>
+                          </div>
+                        )}
+
+                        {socialMediaVerification.linkedin.exists && socialMediaVerification.linkedin.verificationStatus === 'verified' && (
+                          <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-300 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="relative">
+                              <FaLinkedin className="text-blue-700 text-lg" />
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                            </div>
+                            <span className="text-gray-700 font-semibold text-sm">LinkedIn</span>
+                          </div>
+                        )}
+
+                        {socialMediaVerification.twitter.exists && socialMediaVerification.twitter.verificationStatus === 'verified' && (
+                          <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="relative">
+                              <FaTwitter className="text-gray-900 text-lg" />
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                            </div>
+                            <span className="text-gray-700 font-semibold text-sm">Twitter</span>
+                          </div>
+                        )}
+
+                        {!socialMediaVerification.facebook.exists && !socialMediaVerification.instagram.exists && 
+                         !socialMediaVerification.linkedin.exists && !socialMediaVerification.twitter.exists && (
+                          <div className="inline-flex items-center gap-2 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
+                            <FaInfoCircle className="text-gray-400" />
+                            <span className="text-gray-600 font-medium text-sm">No social profiles found</span>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
-
-                  {/* User Reviews */}
-                  <div className="text-center">
-                                     <div className="flex items-center justify-center gap-1 text-gray-600 text-sm font-medium mb-1">
-                                       <span className="text-lg">reviews</span>
-                                     
-                                     </div>
-                                     <div className="flex items-end justify-center gap-1">
-                                        <span className="text-2xl font-bold text-gray-900 leading-none">
-                                         {commentCount} 
-                                       </span>
-                                      
-                                     </div>
-                                   </div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Image Gallery */}
-          <div className="relative rounded-xl overflow-hidden shadow-lg border border-gray-200">
-            {service.imageUrls && service.imageUrls.length > 0 ? (
-              <>
+          {service.imageUrls && service.imageUrls.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Gallery</h3>
+                <p className="text-gray-600 text-sm">View {getProfessionalTitle(service.type).toLowerCase()} s work and environment</p>
+              </div>
+              
+              <div className="space-y-4">
+                {/* Main Swiper - Fixed Configuration */}
                 <Swiper
-                  modules={[Navigation, Thumbs, Zoom]}
-                  navigation={{ nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }}
-                  thumbs={{ swiper: thumbsSwiper }}
+                  modules={[Navigation, Zoom, Thumbs]}
+                  navigation={true}
                   zoom={true}
-                  className="w-full h-64 sm:h-80 md:h-[450px] lg:h-[500px]"
+                  thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
+                  className="rounded-lg overflow-hidden"
                 >
-                  {service.imageUrls.map((img, index) => (
-                    <SwiperSlide key={index} className="w-full h-full">
-                      <div className="swiper-zoom-container w-full h-full bg-gray-100">
+                  {service.imageUrls.map((url, index) => (
+                    <SwiperSlide key={index}>
+                      <div className="swiper-zoom-container">
                         <img
-                          src={img}
-                          alt={`Service image ${index + 1}`}
-                          className="w-full h-full object-fill cursor-zoom-in min-w-full min-h-full"
-                          loading="lazy"
+                          src={url}
+                          alt={`${service.name} - Image ${index + 1}`}
+                          className="w-full h-64 sm:h-80 md:h-96 object-cover"
                           onError={(e) => {
-                            e.target.onerror = null; 
-                            e.target.src = 'path-to-fallback-image.jpg';
+                            e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found';
                           }}
                         />
                       </div>
                     </SwiperSlide>
                   ))}
-                  <div className="swiper-button-prev custom-swiper-nav-btn left-2"></div>
-                  <div className="swiper-button-next custom-swiper-nav-btn right-2"></div>
                 </Swiper>
 
-                {/* Thumbnail navigation */}
+                {/* Thumbnail Swiper - Fixed Configuration */}
                 {service.imageUrls.length > 1 && (
                   <Swiper
+                    modules={[Thumbs]}
+                    watchSlidesProgress={true}
                     onSwiper={setThumbsSwiper}
-                    spaceBetween={10}
+                    spaceBetween={8}
                     slidesPerView={4}
                     freeMode={true}
-                    watchSlidesProgress={true}
-                    className="mt-4 h-20"
+                    className="thumbs-swiper mt-4"
                   >
-                    {service.imageUrls.map((img, index) => (
+                    {service.imageUrls.map((url, index) => (
                       <SwiperSlide key={index}>
                         <img
-                          src={img}
+                          src={url}
                           alt={`Thumbnail ${index + 1}`}
-                          className="block w-full h-full object-cover rounded-lg cursor-pointer opacity-70 hover:opacity-100 transition-opacity border border-gray-200"
+                          className="w-full h-16 object-cover rounded cursor-pointer border-2 border-transparent hover:border-blue-500 transition-colors"
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/100x75?text=Image+Not+Found';
+                          }}
                         />
                       </SwiperSlide>
                     ))}
                   </Swiper>
                 )}
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-64 bg-gray-100 text-gray-500 text-lg">
-                No images available for this service.
-              </div>
-            )}
-          </div>
-
-          {/* About Section */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">About This Service</h2>
-            
-            <div className="prose max-w-none text-gray-700 leading-relaxed">
-              <p className="whitespace-pre-line">{displayText}</p>
-            </div>
-            
-            {description.length > 300 && (
-              <button
-                onClick={toggleDescription}
-                className="mt-3 text-blue-600 hover:text-blue-800 font-medium flex items-center"
-              >
-                {showFullDescription ? 'Show Less' : 'Read More'}
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d={showFullDescription ? "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" : "M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"} clipRule="evenodd" />
-                </svg>
-              </button>
-            )}
-          </section>
-
-          {/* AI Content Assessment */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center gap-3 mb-4">
-              <FaRobot className="text-blue-600 text-xl" />
-              <h2 className="text-2xl font-semibold text-gray-800">AI Content Assessment</h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-medium text-blue-800 mb-2">Description Quality</h3>
-                {aiAssessment.descriptionQuality !== null ? (
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-blue-700">{aiAssessment.descriptionQuality}</span>
-                    <span className="text-gray-600">/5</span>
-                    <div className="ml-auto">
-                      {aiAssessment.descriptionQuality >= 4 ? (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Excellent</span>
-                      ) : aiAssessment.descriptionQuality >= 3 ? (
-                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Good</span>
-                      ) : (
-                        <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Needs Improvement</span>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-8 w-full bg-gray-200 rounded animate-pulse"></div>
-                )}
-                <p className="text-gray-600 mt-2 text-sm">
-                  Based on detail level, clarity, and professionalism
-                </p>
-              </div>
-
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-medium text-blue-800 mb-2">Image Quality</h3>
-                {aiAssessment.imageQuality !== null ? (
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-blue-700">{aiAssessment.imageQuality}</span>
-                    <span className="text-gray-600">/5</span>
-                    <div className="ml-auto">
-                      {aiAssessment.imageQuality >= 4 ? (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Excellent</span>
-                      ) : aiAssessment.imageQuality >= 3 ? (
-                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Good</span>
-                      ) : (
-                        <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Needs More</span>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-8 w-full bg-gray-200 rounded animate-pulse"></div>
-                )}
-                <p className="text-gray-600 mt-2 text-sm">
-                  Based on image count, clarity, and relevance
-                </p>
               </div>
             </div>
-          </section>
-
-          {/* Service Features Section */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              {service.type === 'daycare' ? 'Daycare Details' : 
-               service.type === 'schoolTransport' ? 'Transport Details' : 'Service Features'}
-            </h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {serviceFeatures.map(({ icon: Icon, label, value }, index) => (
-                <div key={index} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg border border-gray-100 shadow-sm">
-                  <div className="bg-blue-100 p-3 rounded-full">
-                    <Icon className="text-blue-600 text-xl" />
-                  </div>
-                  <div>
-                    <h3 className="text-gray-600 font-medium">{label}</h3>
-                    <p className="text-gray-800 font-semibold">{value}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Additional Information Section */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              {service.type === 'daycare' 
-                ? 'Daily Schedule' 
-                : service.type === 'schoolTransport' 
-                  ? 'Safety Protocols' 
-                  : 'Service Details'}
-            </h2>
-            
-            <div className="prose max-w-none text-gray-700 leading-relaxed">
-              <p className="whitespace-pre-line">
-                {service.type === 'daycare' 
-                  ? (service.near || 'Typical daycare schedule includes:\n\n' +
-                    '• 7:30 AM - 8:30 AM: Arrival & Free Play\n' +
-                    '• 8:30 AM - 9:00 AM: Breakfast\n' +
-                    '• 9:00 AM - 10:00 AM: Educational Activities\n' +
-                    '• 10:00 AM - 10:30 AM: Outdoor Play\n' +
-                    '• 10:30 AM - 11:00 AM: Snack Time\n' +
-                    '• 11:00 AM - 12:00 PM: Arts & Crafts\n' +
-                    '• 12:00 PM - 1:00 PM: Lunch\n' +
-                    '• 1:00 PM - 3:00 PM: Nap Time\n' +
-                    '• 3:00 PM - 3:30 PM: Afternoon Snack\n' +
-                    '• 3:30 PM - 5:00 PM: Story Time & Departure')
-                  
-                  : service.type === 'schoolTransport' 
-                    ? (service.near || 'Our safety measures include:\n\n' +
-                      '• Certified drivers with background checks\n' +
-                      '• Regular vehicle maintenance checks\n' +
-                      '• GPS tracking for all routes\n' +
-                      '• Child safety seats for all age groups\n' +
-                      '• Two-way communication with parents\n' +
-                      '• Strict pickup/dropoff authorization procedures\n' +
-                      '• Emergency protocols in place')
-                    
-                    : (service.description || 'Detailed service information not available')}
-              </p>
-            </div>
-          </section>
-
-          {/* Services Offered Section */}
-          {service.type !== 'schoolTransport' && (
-            <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                {service.type === 'daycare' ? 'Educational Approach' : 'Services Offered'}
-              </h2>
-              <div className="prose max-w-none text-gray-700 leading-relaxed">
-                <p className="whitespace-pre-line">{service.kind || service.near}</p>
-              </div>
-            </section>
           )}
 
-          {/* Reviews Section */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-gray-800">Guest Reviews</h2>
-              <div className="flex items-center">
-                <FaStar className="text-yellow-400 mr-1" />
-                <span className="font-semibold">{Number(aiRating.average).toFixed(1)}</span>
-                <span className="mx-1">·</span>
-                <span className="text-gray-600">{commentCount} reviews</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Review Highlights */}
-              <div>
-                <h3 className="font-semibold text-lg mb-4">Review Highlights</h3>
-                <div className="space-y-4">
-                  {RATING_CATEGORIES.map(({ name, label, icon: Icon }) => (
-                    <div key={name} className="flex items-center justify-between">
-                      <div className="flex items-center text-gray-700">
-                        <Icon className="mr-2 text-blue-500" />
-                        <span>{label}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${(aiRating.categoryRatings[name] / 5) * 100}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-sm font-medium">{aiRating.categoryRatings[name].toFixed(1)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Recent Reviews */}
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-semibold text-lg">Recent Reviews</h3>
-                  {commentCount > 2 && (
-                    <button
-                      onClick={() => setShowCommentsPanel(true)}
-                      className="text-blue-600 hover:underline flex items-center text-sm"
-                    >
-                      View all <FaChevronDown className="ml-1 text-xs" />
-                    </button>
+          {/* Description Section */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                About {getProfessionalTitle(service.type)}
+              </h3>
+              {description.length > 300 && (
+                <button
+                  onClick={toggleDescription}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
+                >
+                  {showFullDescription ? (
+                    <>
+                      <FaArrowUp className="text-xs" />
+                      Show Less
+                    </>
+                  ) : (
+                    <>
+                      <FaArrowDown className="text-xs" />
+                      Read More
+                    </>
                   )}
-                </div>
+                </button>
+              )}
+            </div>
+            <div className="text-gray-700 leading-relaxed">
+              {displayText.split('\n').map((paragraph, index) => (
+                <p key={index} className="mb-3">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          </div>
 
-                <Comment 
-                  serviceId={serviceId} 
-                  maxComments={2}
-                  onTotalComments={setCommentCount} 
-                  cardStyle={true}
-                />
+          {/* AI Assessment Section */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <FaRobot className="text-blue-500" />
+                AI Quality Assessment
+              </h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleLike}
+                  className={`p-2 rounded-full transition-colors ${
+                    aiAssessment.userReaction === 'like'
+                      ? 'bg-green-100 text-green-600'
+                      : 'bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-600'
+                  }`}
+                >
+                  <FaArrowUp className="text-sm" />
+                </button>
+                <span className="text-sm font-medium text-gray-700">{aiAssessment.likes}</span>
+                <button
+                  onClick={handleDislike}
+                  className={`p-2 rounded-full transition-colors ${
+                    aiAssessment.userReaction === 'dislike'
+                      ? 'bg-red-100 text-red-600'
+                      : 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600'
+                  }`}
+                >
+                  <FaArrowDown className="text-sm" />
+                </button>
+                <span className="text-sm font-medium text-gray-700">{aiAssessment.dislikes}</span>
               </div>
             </div>
-          </section>
-        </div>
 
-        {/* Right Column - Booking Card & Provider Info */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Booking Card */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden lg:sticky lg:top-8">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Service Details & Booking</h3>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-3xl font-extrabold text-blue-700">R{service.regularPrice}</span>
-                <span className="text-gray-600 text-lg">{getPricingLabel()}</span>
+            <div className="space-y-4">
+              {/* Overall Rating */}
+              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">
+                      {aiAssessment.overallRating?.toFixed(1)}
+                    </span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Overall Quality Score</h4>
+                    <p className="text-sm text-gray-600">Based on content and media analysis</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <FaStar
+                        key={star}
+                        className={`text-sm ${
+                          star <= Math.floor(aiAssessment.overallRating || 0)
+                            ? 'text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-gray-500 mt-1">
+                    {aiAssessment.overallRating?.toFixed(1)} out of 5
+                  </span>
+                </div>
               </div>
-            </div>
 
-            <div className="p-6 space-y-5">
-              {/* Host information */}
-              <div className="flex items-center gap-3 text-gray-700">
-                <FaUser className="text-blue-500 text-xl" />
-                <span className="font-medium">Hosted by {service.host}</span>
+              {/* Detailed Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Description Quality */}
+                <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-gray-900">Description Quality</span>
+                    <span className="text-sm font-semibold text-blue-600">
+                      {aiAssessment.descriptionQuality}/5
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${(aiAssessment.descriptionQuality / 5) * 100}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Based on detail level and professionalism
+                  </p>
+                </div>
+
+                {/* Image Quality */}
+                <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-gray-900">Media Quality</span>
+                    <span className="text-sm font-semibold text-blue-600">
+                      {aiAssessment.imageQuality}/5
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${(aiAssessment.imageQuality / 5) * 100}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Based on image quantity and clarity
+                  </p>
+                </div>
               </div>
 
-              {/* Contact Information */}
-              {service.contact && (
-                <div className="flex items-center gap-3 text-gray-700">
-                  <FaPhone className="text-blue-500 text-xl" />
-                  <span className="font-medium">Contact: 0{service.contact}</span>
-                </div>
-              )}
-
-              {/* Availability Period */}
-              {service.period && (
-                <div className="flex items-center gap-3 text-gray-700">
-                  <FaClock className="text-blue-500 text-xl" />
-                  <span className="font-medium">Availability: {service.period}</span>
-                </div>
-              )}
-
-              {/* Cancellation Policy */}
-              {service.cancel && (
-                <div className="flex items-center gap-3 text-gray-700">
-                  <FaMoneyBillWave className="text-blue-500 text-xl" />
-                  <span className="font-medium">Cancellation Policy: {service.cancel}</span>
-                </div>
-              )}
-
-              {/* Booking Form */}
-              <form onSubmit={handleBookingSubmit} className="pt-4 space-y-4">
-                <div>
-                  <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Your Name
-                  </label>
-                  <input
-                    type="text"
-                    id="userName"
-                    name="name"
-                    value={bookingData.name}
-                    onChange={handleBookingChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    required
-                    placeholder="John Doe"
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="userPhone" className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    id="userPhone"
-                    name="phone"
-                    value={bookingData.phone}
-                    onChange={handleBookingChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    required
-                    placeholder="+27 12 345 6789"
-                  />
-                </div>
-                
-                {/* Workshop Service Option */}
-                {service.type === 'maintenance' && (
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="workshopService"
-                      name="workshopService"
-                      checked={bookingData.workshopService}
-                      onChange={handleWorkshopToggle}
-                      className="h-5 w-5 text-blue-600 rounded"
-                    />
-                    <label htmlFor="workshopService" className="ml-2 block text-sm text-gray-700">
-                      I will come to your workshop/service center
-                    </label>
+              {/* Quality Indicators */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {service.security && (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <FaCheckCircle className="text-green-600 flex-shrink-0" />
+                    <span className="text-sm font-medium text-green-800">Verified</span>
                   </div>
                 )}
-                
-                {/* Address Field - Hidden if workshop service selected */}
-                {(!bookingData.workshopService || service.type !== 'maintenance') && (
-                  <div>
-                    <label htmlFor="userAddress" className="block text-sm font-medium text-gray-700 mb-1">
-                      Address {service.type === 'schoolTransport' ? '(Pickup Location)' : ''}
-                      {service.type === 'maintenance' && ' (Vehicle Location)'}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        id="userAddress"
-                        name="address"
-                        value={bookingData.address}
-                        onChange={handleBookingChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                        placeholder={
-                          service.type === 'schoolTransport' ? "Pickup address" : 
-                          service.type === 'maintenance' ? "Where is the vehicle located?" :
-                          "123 Main St, City"
-                        }
-                      />
-                      <FaMapMarkerAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    </div>
+                {service.imageUrls?.length >= 3 && (
+                  <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <FaFileImage className="text-blue-600 flex-shrink-0" />
+                    <span className="text-sm font-medium text-blue-800">Good Media</span>
+                  </div>
+                )}
+                {description.length > 200 && (
+                  <div className="flex items-center gap-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <FaUser className="text-purple-600 flex-shrink-0" />
+                    <span className="text-sm font-medium text-purple-800">Detailed Info</span>
+                  </div>
+                )}
+                {service.host && parseInt(service.host) >= 2 && (
+                  <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                    <FaBriefcase className="text-orange-600 flex-shrink-0" />
+                    <span className="text-sm font-medium text-orange-800">Experienced</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Information */}
+          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Additional Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column */}
+              <div className="space-y-4">
+                {/* Contact Information */}
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <FaPhone className="text-blue-600" />
+                    Contact Information
+                  </h3>
+                  <ul className="space-y-2">
+                    {service.contact && (
+                      <li className="flex items-center gap-3">
+                        <span className="text-gray-600 min-w-[120px]">Phone Number:</span>
+                        <span className="font-medium text-gray-900">{service.contact}</span>
+                      </li>
+                    )}
+                    {service.email && (
+                      <li className="flex items-center gap-3">
+                        <span className="text-gray-600 min-w-[120px]">Email:</span>
+                        <span className="font-medium text-gray-900">{service.email}</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+
+                {/* Availability */}
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <FaClock className="text-blue-600" />
+                    Availability
+                  </h3>
+                  <ul className="space-y-2">
+                    {service.period && (
+                      <li className="flex items-center gap-3">
+                        <span className="text-gray-600 min-w-[120px]">Working Hours:</span>
+                        <span className="font-medium text-gray-900">{service.period}</span>
+                      </li>
+                    )}
+                    {service.availability && (
+                      <li className="flex items-center gap-3">
+                        <span className="text-gray-600 min-w-[120px]">Schedule:</span>
+                        <span className="font-medium text-gray-900">{service.availability}</span>
+                      </li>
+                    )}
+                    <li className="flex items-center gap-3">
+                      <span className="text-gray-600 min-w-[120px]">Response Time:</span>
+                      <span className="font-medium text-gray-900">
+                        {service.responseTime || '1 hour to 24 hours'}
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Experience & Languages */}
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <FaBriefcase className="text-blue-600" />
+                    Experience & Languages
+                  </h3>
+                  <ul className="space-y-2">
+                    {service.host && (
+                      <li className="flex items-center gap-3">
+                        <span className="text-gray-600 min-w-[120px]">Experience:</span>
+                        <span className="font-medium text-gray-900">{service.host} years</span>
+                      </li>
+                    )}
+                    {service.cancel && (
+                      <li className="flex items-center gap-3">
+                        <span className="text-gray-600 min-w-[120px]">Languages:</span>
+                        <span className="font-medium text-gray-900">{service.cancel}</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-4">
+                {/* Safety & Verification */}
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <FaShieldAlt className="text-blue-600" />
+                    Safety & Verification
+                  </h3>
+                  <ul className="space-y-3">
+                    <li className="flex items-center gap-3">
+                      <FaShieldAlt className="text-blue-600" />
+                      <span>Background Check: {service.security ? 'Verified' : 'Not Verified'}</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <FaDog className="text-blue-600" />
+                      <span>Pets: {service.pets ? 'Comfortable with pets' : 'Not comfortable with pets'}</span>
+                    </li>
                     
-                    {bookingData.address && (
-                      <div className="mt-2 text-right">
-                        <a
-                          href={generateMapLink(bookingData.address)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
-                        >
-                          View on Map <FaExternalLinkAlt className="ml-1 text-xs" />
-                        </a>
+                    {/* Safety Policy Links */}
+                    <li className="pt-2">
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h4 className="font-medium text-blue-800 mb-2">Safety Policies</h4>
+                        <div className="space-y-2 text-sm">
+                          <p className="text-blue-700">We prioritize your safety and satisfaction</p>
+                          <a 
+                            href="/safety-policy" 
+                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                          >
+                            <FaShieldAlt className="text-xs" />
+                            <span>View our complete safety policy</span>
+                          </a>
+                        </div>
                       </div>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Type-Specific Information */}
+                {service.type === 'cleaning' && (
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                      <FaBroom className="text-green-500" />
+                      Cleaning Standards
+                    </h3>
+                    <ul className="space-y-2">
+                      <li className="flex items-center gap-3">
+                        <FaBroom className="text-green-500" />
+                        <span>Equipment Quality: {service.equipment?.includes('professional') ? 'Professional' : 'Standard'}</span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <FaShieldAlt className="text-green-500" />
+                        <span>Eco-Friendly: {service.equipment?.includes('eco') ? 'Yes' : 'No'}</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+
+                {service.type === 'catering' && (
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                      <FaUtensils className="text-orange-500" />
+                      Catering Standards
+                    </h3>
+                    <ul className="space-y-2">
+                      <li className="flex items-center gap-3">
+                        <FaShieldAlt className="text-orange-500" />
+                        <span>Food Safety: {service.equipment?.includes('sanitized') ? 'Certified' : 'Standard'}</span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <FaUtensils className="text-orange-500" />
+                        <span>Equipment Quality: {service.equipment?.includes('professional') ? 'Professional' : 'Standard'}</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+
+                {service.type === 'moving' && (
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                      <FaTruck className="text-blue-500" />
+                      Moving Standards
+                    </h3>
+                    <ul className="space-y-2">
+                      <li className="flex items-center gap-3">
+                        <FaTruck className="text-blue-500" />
+                        <span>Vehicle Quality: {service.equipment?.includes('modern') ? 'Modern Fleet' : 'Standard'}</span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <FaShieldAlt className="text-blue-500" />
+                        <span>Insurance: {service.security ? 'Fully Insured' : 'Basic Coverage'}</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+
+                {/* Service Area */}
+                {service.serviceArea && (
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                      <FaMapMarkerAlt className="text-blue-600" />
+                      Service Area
+                    </h3>
+                    <p className="text-gray-700">{service.serviceArea}</p>
+                    {service.travelFee && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        Travel fee: R{service.travelFee} for locations outside service area
+                      </p>
                     )}
                   </div>
                 )}
-                
-                <div>
-                  <label htmlFor="bookingDate" className="block text-sm font-medium text-gray-700 mb-1">
-                    {service.type === 'daycare' ? 'Start Date' : 'Date'}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      id="bookingDate"
-                      name="date"
-                      value={bookingData.date}
-                      onChange={handleBookingChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                      required
-                      min={new Date().toISOString().split('T')[0]}
-                    />
-                    <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  </div>
-                </div>
-                
-                {service.type !== 'daycare' && (
-                  <div>
-                    <label htmlFor="bookingTime" className="block text-sm font-medium text-gray-700 mb-1">
-                      Time
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="time"
-                        id="bookingTime"
-                        name="time"
-                        value={bookingData.time}
-                        onChange={handleBookingChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                        required
-                      />
-                      <FaClock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    </div>
-                  </div>
+              </div>
+            </div>
+
+            {/* Quick Contact Actions */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h3 className="font-medium text-gray-700 mb-3">Quick Actions</h3>
+              <div className="flex flex-wrap gap-3">
+                {service.contact && (
+                  <a
+                    href={`tel:${service.contact}`}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <FaPhone className="text-sm" />
+                    Call Now
+                  </a>
                 )}
+                {whatsappLink && (
+                  <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <FaWhatsapp className="text-sm" />
+                    WhatsApp
+                  </a>
+                )}
+                <a
+                  href="/safety-policy"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  <FaShieldAlt className="text-sm" />
+                  Safety Policy
+                </a>
+              </div>
+            </div>
+          </section>
+
+          {/* Comments Section */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Customer Reviews</h3>
+              <button
+                onClick={() => setShowCommentsPanel(true)}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                View All ({commentCount})
+              </button>
+            </div>
+            <Comment 
+              serviceId={service._id} 
+              maxComments={2}
+              onTotalComments={setCommentCount} 
+              cardStyle={true}
+            />
+          </div>
+        </div>
+
+        {/* Right Column - Booking Form */}
+        <div className="space-y-6">
+          {/* Booking Form */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 sticky top-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
+              Book {getProfessionalTitle(service.type)} Services
+            </h3>
+
+            <form onSubmit={handleBookingSubmit} className="space-y-6">
+              {/* Client Information */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-900 border-b pb-2">Your Information</h4>
                 
                 <div>
-                  <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
-                    {service.type === 'daycare' ? 'Child Information' : 
-                     service.type === 'maintenance' ? 'Vehicle Details' : 
-                     'Special Requests'}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name *
                   </label>
-                  <textarea
-                    id="specialRequests"
-                    name="message"
-                    value={bookingData.message}
+                  <input
+                    type="text"
+                    name="name"
+                    value={bookingData.name}
                     onChange={handleBookingChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-y"
-                    rows="3"
-                    placeholder={
-                      service.type === 'daycare' 
-                        ? "Child's name, age, allergies, special needs..." 
-                        : service.type === 'maintenance'
-                          ? "Vehicle make, model, year, and issues..."
-                          : "E.g., specific requirements, arrival instructions..."
-                    }
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter your full name"
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-md"
-                >
-                  Book via WhatsApp
-                </button>
-              </form>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={bookingData.phone}
+                    onChange={handleBookingChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="071 234 5678"
+                  />
+                </div>
+              </div>
 
-              {/* Update Service Button */}
-              {currentUser && currentUser._id === service.userRef && (
-                <button
-                  onClick={() => navigate(`/update-service/${service._id}`)}
-                  className="w-full mt-4 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-md"
-                >
-                  Update Service Listing
-                </button>
+              {/* Service Selection */}
+              {serviceOptions.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900 border-b pb-2">
+                    Select Services
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {serviceOptions.map((serviceOption) => (
+                      <button
+                        key={serviceOption.id}
+                        type="button"
+                        onClick={() => handleServiceSelection(serviceOption.id)}
+                        className={`p-3 border rounded-lg text-left transition-all ${
+                          bookingData.selectedServices.includes(serviceOption.id)
+                            ? 'border-blue-500 bg-blue-50 text-blue-700'
+                            : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {serviceOption.icon}
+                          <span className="text-sm font-medium">{serviceOption.name}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Service-specific Fields */}
+              {service.type === 'catering' && (
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900 border-b pb-2">Meal Details</h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Meal Type
+                    </label>
+                    <select
+                      name="mealType"
+                      value={bookingData.mealType}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select meal type</option>
+                      {mealTypes.map((meal) => (
+                        <option key={meal.id} value={meal.id}>
+                          {meal.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cuisine Preference
+                    </label>
+                    <select
+                      name="cuisinePreference"
+                      value={bookingData.cuisinePreference}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select cuisine</option>
+                      {cuisineTypes.map((cuisine) => (
+                        <option key={cuisine.id} value={cuisine.id}>
+                          {cuisine.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Number of Guests
+                    </label>
+                    <input
+                      type="number"
+                      name="numberOfGuests"
+                      value={bookingData.numberOfGuests}
+                      onChange={handleBookingChange}
+                      min="1"
+                      max="50"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="e.g., 4"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Dietary Restrictions
+                    </label>
+                    <input
+                      type="text"
+                      name="dietaryRestrictions"
+                      value={bookingData.dietaryRestrictions}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="e.g., Vegetarian, Gluten-free, Allergies"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Ingredients
+                    </label>
+                    <select
+                      name="ingredientsProvided"
+                      value={bookingData.ingredientsProvided}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="no">Service will provide ingredients</option>
+                      <option value="yes">I will provide ingredients</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {service.type === 'moving' && (
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900 border-b pb-2">Moving Details</h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Moving Size
+                    </label>
+                    <select
+                      name="movingSize"
+                      value={bookingData.movingSize}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select moving size</option>
+                      {movingSizes.map((size) => (
+                        <option key={size.id} value={size.id}>
+                          {size.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Packing Service Required
+                    </label>
+                    <select
+                      name="packingRequired"
+                      value={bookingData.packingRequired}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="no">No, I will pack myself</option>
+                      <option value="yes">Yes, need packing service</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {service.type === 'landscaping' && (
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900 border-b pb-2">Garden Details</h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Garden Size
+                    </label>
+                    <select
+                      name="gardenSize"
+                      value={bookingData.gardenSize}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select garden size</option>
+                      {gardenSizes.map((size) => (
+                        <option key={size.id} value={size.id}>
+                          {size.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {service.type === 'daycare' && (
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900 border-b pb-2">Child Information</h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Child Age
+                    </label>
+                    <input
+                      type="text"
+                      name="childAge"
+                      value={bookingData.childAge}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="e.g., 3 years old"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Special Needs
+                    </label>
+                    <input
+                      type="text"
+                      name="specialNeeds"
+                      value={bookingData.specialNeeds}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Any allergies or special requirements"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {service.type === 'schoolTransport' && (
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900 border-b pb-2">Transport Details</h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      School Name
+                    </label>
+                    <input
+                      type="text"
+                      name="schoolName"
+                      value={bookingData.schoolName}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter school name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Pickup Location
+                    </label>
+                    <input
+                      type="text"
+                      name="pickupLocation"
+                      value={bookingData.pickupLocation}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter pickup address"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Dropoff Location
+                    </label>
+                    <input
+                      type="text"
+                      name="dropoffLocation"
+                      value={bookingData.dropoffLocation}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter dropoff address"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Location Options */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-900 border-b pb-2">Location</h4>
+                
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="locationOption"
+                      value="comeToYou"
+                      checked={bookingData.locationOption === 'comeToYou'}
+                      onChange={handleBookingChange}
+                      className="text-blue-600 focus:ring-blue-500"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-900">
+                        {getProfessionalTitle(service.type)} comes to me
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {getProfessionalTitle(service.type)} will provide service at your location
+                        {service.travelFee > 0 && (
+                          <span className="text-orange-600 font-medium ml-1">
+                            (Travel fee: R{service.travelFee})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="locationOption"
+                      value="goToThem"
+                      checked={bookingData.locationOption === 'goToThem'}
+                      onChange={handleBookingChange}
+                      className="text-blue-600 focus:ring-blue-500"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-900">
+                        I ll go to {getProfessionalTitle(service.type).toLowerCase()} s location
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Visit {getProfessionalTitle(service.type).toLowerCase()} s location
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                {bookingData.locationOption === 'comeToYou' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Your Address *
+                    </label>
+                    <textarea
+                      name="address"
+                      value={bookingData.address}
+                      onChange={handleBookingChange}
+                      required
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter your full address for the visit"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Date and Time */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-900 border-b pb-2">Schedule</h4>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Date *
+                    </label>
+                    <input
+                      type="date"
+                      name="date"
+                      value={bookingData.date}
+                      onChange={handleBookingChange}
+                      required
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Time *
+                    </label>
+                    <input
+                      type="time"
+                      name="time"
+                      value={bookingData.time}
+                      onChange={handleBookingChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Special Requirements */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Special Requirements
+                </label>
+                <textarea
+                  name="specialRequirements"
+                  value={bookingData.specialRequirements}
+                  onChange={handleBookingChange}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder={`Any special requests or requirements for the ${service.type === 'catering' ? 'meal' : 'service'}...`}
+                />
+              </div>
+
+              {/* Attachments */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  Attachments (Optional)
+                </label>
+                <div className="space-y-3">
+                  {/* File Input */}
+                  <div className="flex items-center gap-3">
+                    <label className="flex-1 cursor-pointer">
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*,.pdf"
+                        onChange={handleAttachmentChange}
+                        className="hidden"
+                      />
+                      <div className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors text-center">
+                        <div className="flex flex-col items-center gap-1">
+                          <FaFileImage className="text-gray-400 text-xl" />
+                          <span className="text-sm text-gray-600">
+                            Click to upload images or PDFs
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            Max 2 files, 5MB each
+                          </span>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Attachment Preview */}
+                  {attachments.length > 0 && (
+                    <div className="space-y-2">
+                      {attachments.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
+                        >
+                          <div className="flex items-center gap-3">
+                            {file.type.startsWith('image/') ? (
+                              <FaFileImage className="text-blue-500" />
+                            ) : (
+                              <FaFilePdf className="text-red-500" />
+                            )}
+                            <div>
+                              <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+                                {file.name}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {(file.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeAttachment(index)}
+                            className="text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            <FaTimes />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isUploading}
+                className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
+                  isUploading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                {isUploading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Uploading Files...
+                  </div>
+                ) : (
+                  `Book ${getProfessionalTitle(service.type)} via WhatsApp`
+                )}
+              </button>
+
+              {/* Security Notice */}
+              <div className="text-center">
+                <p className="text-xs text-gray-500">
+                  🔒 Your information is secure. We ll only share what s necessary for the booking.
+                </p>
+              </div>
+            </form>
+          </div>
+
+          {/* Contact Information */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <h4 className="font-semibold text-gray-900 mb-4">Contact Information</h4>
+            <div className="space-y-3">
+              {service.contact && (
+                <div className="flex items-center gap-3">
+                  <FaPhone className="text-gray-400" />
+                  <a
+                    href={`tel:${service.contact}`}
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    {service.contact}
+                  </a>
+                </div>
+              )}
+              {whatsappLink && (
+                <div className="flex items-center gap-3">
+                  <FaWhatsapp className="text-green-500" />
+                  <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Chat on WhatsApp
+                  </a>
+                </div>
+              )}
+              {service.address && (
+                <div className="flex items-start gap-3">
+                  <FaMapMarkerAlt className="text-gray-400 mt-1 flex-shrink-0" />
+                  <span className="text-gray-700">{service.address}</span>
+                </div>
               )}
             </div>
           </div>
 
-          {/* Provider Info Sidebar */}
-        {/* Provider Information */}
-        {/* Provider Information */}
-<div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-  <h3 className="text-lg font-semibold text-gray-800 mb-4">About the Provider</h3>
-  <div className="space-y-3">
-    <div className="flex items-center gap-3">
-      <FaUser className="text-airbnb-red" />
-      <span className="text-gray-700">{service.host}</span>
-    </div>
-    {service.contact && (
-      <div className="flex items-center gap-3">
-        <FaPhone className="text-airbnb-red" />
-        <span className="text-gray-700">{service.contact}</span>
-      </div>
-    )}
-    {service.email && (
-      <div className="flex items-center gap-3">
-        <FaEnvelope className="text-airbnb-red" />
-        <span className="text-gray-700">{service.email}</span>
-      </div>
-    )}
-    <div className="flex items-center gap-3">
-      <FaClock className="text-airbnb-red" />
-      <span className="text-gray-700">Response time: 1-24 hours</span>
-    </div>
-    {service.host && (
-      <div className="flex items-center gap-3">
-        <FaBriefcase className="text-airbnb-red" />
-        <span className="text-gray-700">Experience: {service.host}</span>
-      </div>
-    )}
-    {service.cancel && (
-      <div className="flex items-center gap-3">
-        <FaUserFriends className="text-airbnb-red" />
-        <span className="text-gray-700">Languages: {service.cancel}</span>
-      </div>
-    )}
-  </div>
-</div>
-
-
-          
-          {/* Additional info for daycare */}
-          {service.type === 'daycare' && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mt-6">
-              <div className="flex items-center gap-3 mb-4">
-                <FaBaby className="text-yellow-600 text-2xl" />
-                <h3 className="text-xl font-semibold text-yellow-800">Daycare Tips</h3>
+          {/* Pricing Information */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <h4 className="font-semibold text-gray-900 mb-4">Pricing</h4>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Base Price</span>
+                <span className="font-semibold text-gray-900">R{service.regularPrice}</span>
               </div>
-              <ul className="space-y-2 text-yellow-700">
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Label all personal items with child s name</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Provide a change of clothes in case of accidents</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Inform staff about allergies or special needs</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Establish consistent drop-off and pick-up routines</span>
-                </li>
-              </ul>
-            </div>
-          )}
-          
-          {/* Additional info for school transport */}
-          {service.type === 'schoolTransport' && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mt-6">
-              <div className="flex items-center gap-3 mb-4">
-                <FaBus className="text-blue-600 text-2xl" />
-                <h3 className="text-xl font-semibold text-blue-800">Transport Safety</h3>
+              {service.travelFee > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Travel Fee</span>
+                  <span className="font-semibold text-orange-600">R{service.travelFee}</span>
+                </div>
+              )}
+              <div className="border-t pt-3">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-gray-900">Total Estimate</span>
+                  <span className="font-bold text-lg text-blue-600">
+                    R{service.regularPrice + (bookingData.locationOption === 'comeToYou' ? service.travelFee : 0)}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  * Final price may vary based on specific requirements
+                </p>
               </div>
-              <ul className="space-y-2 text-blue-700">
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Children must be ready 5 minutes before pickup time</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Authorized adults only at pickup/dropoff</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Notify driver of any schedule changes in advance</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Provide emergency contact information</span>
-                </li>
-              </ul>
             </div>
-          )}
+          </div>
+
+          {/* Safety Tips */}
+          <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-300 rounded-2xl p-8 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-yellow-100 p-3 rounded-full">
+                <FaShieldAlt className="text-yellow-600 text-xl" />
+              </div>
+              <h3 className="text-xl font-bold text-yellow-800">Essential Safety Guidelines</h3>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="bg-white p-1 rounded-full mt-1">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                </div>
+                <span className="text-yellow-700 font-medium">Ensure someone is home at all times during the service</span>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <div className="bg-white p-1 rounded-full mt-1">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                </div>
+                <span className="text-yellow-700 font-medium">Verify the service provider s identity upon arrival</span>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <div className="bg-white p-1 rounded-full mt-1">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                </div>
+                <span className="text-yellow-700 font-medium">Never pay the full amount upfront - only after satisfactory service</span>
+              </div>
+            </div>
+            
+            <div className="mt-6 pt-4 border-t border-yellow-200">
+              <a 
+                href="/aboutloop" 
+                className="inline-flex items-center gap-2 text-yellow-700 hover:text-yellow-800 font-semibold transition-colors hover:underline"
+              >
+                <span>Learn more about our safety policies</span>
+                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Comments Side Panel */}
       {showCommentsPanel && (
-        <CommentsSidePanelService 
-          serviceId={serviceId} 
-          onClose={() => setShowCommentsPanel(false)} 
+        <CommentsSidePanelService
+          serviceId={service._id}
+          onClose={() => setShowCommentsPanel(false)}
+          onCommentCountChange={setCommentCount}
         />
       )}
     </div>

@@ -138,7 +138,7 @@ const ListingsHomePage = () => {
                     </button>
                   </div>
                   <Swiper
-                    slidesPerView={1.3}
+                    slidesPerView={1.8}
                     spaceBetween={16}
                     modules={[Navigation]}
                     navigation
