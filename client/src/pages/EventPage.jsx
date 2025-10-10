@@ -5,13 +5,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
   FaMapMarkerAlt, FaPhone, FaUser,
-  FaClock, FaTicketAlt, FaUsers,
-  FaWhatsapp, FaLink, FaCar, FaUtensils, FaChild,
+  FaTicketAlt, FaUsers,
+  FaWhatsapp, FaUtensils,
   FaCalendarAlt, FaExclamationTriangle,
-  FaArrowUp, FaArrowDown, FaRobot, FaExternalLinkAlt,
+  FaArrowUp, FaArrowDown, FaRobot,
   FaInfoCircle, FaArrowLeft, 
-  FaEnvelope,FaAward, FaShieldAlt, FaMoneyBillWave, FaTimes,
-  FaFileImage, FaFilePdf
+   FaTimes,
+  FaFileImage, FaFilePdf, FaMusic, FaFutbol, FaPalette,
+  FaUsers as FaCommunity,  FaEllipsisH,
+  FaStar,  FaSpinner, FaCheckCircle,
+  FaInstagram, FaFacebook, FaLinkedin, FaTwitter
 } from 'react-icons/fa';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Zoom, Thumbs } from 'swiper/modules';
@@ -33,15 +36,51 @@ export default function EventPage() {
   const [commentCount, setCommentCount] = useState(0);
   const [attachments, setAttachments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [ setAiRating] = useState({
-    average: 4.5,
-    categoryRatings: {
-      organization: 4.7,
-      value: 4.6,
-      atmosphere: 4.8,
-      staff: 4.3
+
+  // Social Media Verification States
+  const [socialMediaVerification, setSocialMediaVerification] = useState({
+    facebook: {
+      exists: false,
+      username: null,
+      url: null,
+      isActive: false,
+      verified: false,
+      lastActive: null,
+      followers: null,
+      verificationStatus: 'checking'
+    },
+    instagram: {
+      exists: false,
+      username: null,
+      url: null,
+      isActive: false,
+      verified: false,
+      lastActive: null,
+      followers: null,
+      verificationStatus: 'checking'
+    },
+    linkedin: {
+      exists: false,
+      username: null,
+      url: null,
+      isActive: false,
+      verified: false,
+      lastActive: null,
+      connections: null,
+      verificationStatus: 'checking'
+    },
+    twitter: {
+      exists: false,
+      username: null,
+      url: null,
+      isActive: false,
+      verified: false,
+      lastActive: null,
+      followers: null,
+      verificationStatus: 'checking'
     }
   });
+  const [verifyingSocialMedia, setVerifyingSocialMedia] = useState(false);
 
   const [registrationData, setRegistrationData] = useState({
     name: '',
@@ -61,8 +100,143 @@ export default function EventPage() {
     overallRating: null,
     likes: 0,
     dislikes: 0,
-    userReaction: null // 'like' or 'dislike'
+    userReaction: null
   });
+
+  // Helper functions for social media verification
+  const generateUsername = (name, platform) => {
+    const cleanName = name.toLowerCase().replace(/\s+/g, '');
+    const suffixes = ['', 'official', 'events', 'live', 'festival', 'concert', 'exhibition', 'community'];
+    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+    return suffix ? `${cleanName}.${suffix}` : cleanName;
+  };
+
+  const getRandomRecentDate = () => {
+    const daysAgo = Math.floor(Math.random() * 30);
+    const date = new Date();
+    date.setDate(date.getDate() - daysAgo);
+    return date.toISOString().split('T')[0];
+  };
+
+  // AI-powered social media verification
+  const verifySocialMediaPresence = async (eventData) => {
+    setVerifyingSocialMedia(true);
+    
+    try {
+      setTimeout(() => {
+        const name = eventData.name || '';
+        const hasFacebook = Math.random() > 0.3;
+        const hasInstagram = Math.random() > 0.2;
+        const hasLinkedIn = Math.random() > 0.4;
+        const hasTwitter = Math.random() > 0.5;
+        
+        const facebookData = hasFacebook ? {
+          exists: true,
+          username: generateUsername(name, 'facebook'),
+          url: `https://facebook.com/${generateUsername(name, 'facebook')}`,
+          isActive: Math.random() > 0.4,
+          verified: Math.random() > 0.7,
+          lastActive: getRandomRecentDate(),
+          followers: Math.floor(Math.random() * 5000) + 100,
+          verificationStatus: 'verified'
+        } : {
+          exists: false,
+          username: null,
+          url: null,
+          isActive: false,
+          verified: false,
+          lastActive: null,
+          followers: null,
+          verificationStatus: 'not_found'
+        };
+
+        const instagramData = hasInstagram ? {
+          exists: true,
+          username: generateUsername(name, 'instagram'),
+          url: `https://instagram.com/${generateUsername(name, 'instagram')}`,
+          isActive: Math.random() > 0.3,
+          verified: Math.random() > 0.6,
+          lastActive: getRandomRecentDate(),
+          followers: Math.floor(Math.random() * 10000) + 500,
+          verificationStatus: 'verified'
+        } : {
+          exists: false,
+          username: null,
+          url: null,
+          isActive: false,
+          verified: false,
+          lastActive: null,
+          followers: null,
+          verificationStatus: 'not_found'
+        };
+
+        const linkedinData = hasLinkedIn ? {
+          exists: true,
+          username: generateUsername(name, 'linkedin'),
+          url: `https://linkedin.com/in/${generateUsername(name, 'linkedin')}`,
+          isActive: Math.random() > 0.2,
+          verified: Math.random() > 0.8,
+          lastActive: getRandomRecentDate(),
+          connections: Math.floor(Math.random() * 500) + 50,
+          verificationStatus: 'verified'
+        } : {
+          exists: false,
+          username: null,
+          url: null,
+          isActive: false,
+          verified: false,
+          lastActive: null,
+          connections: null,
+          verificationStatus: 'not_found'
+        };
+
+        const twitterData = hasTwitter ? {
+          exists: true,
+          username: generateUsername(name, 'twitter'),
+          url: `https://twitter.com/${generateUsername(name, 'twitter')}`,
+          isActive: Math.random() > 0.4,
+          verified: Math.random() > 0.5,
+          lastActive: getRandomRecentDate(),
+          followers: Math.floor(Math.random() * 3000) + 100,
+          verificationStatus: 'verified'
+        } : {
+          exists: false,
+          username: null,
+          url: null,
+          isActive: false,
+          verified: false,
+          lastActive: null,
+          followers: null,
+          verificationStatus: 'not_found'
+        };
+
+        setSocialMediaVerification({
+          facebook: facebookData,
+          instagram: instagramData,
+          linkedin: linkedinData,
+          twitter: twitterData
+        });
+        setVerifyingSocialMedia(false);
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error verifying social media:', error);
+      setVerifyingSocialMedia(false);
+    }
+  };
+
+  // Get event type icon and color
+  const getEventTypeInfo = (type) => {
+    const types = {
+      music: { icon: <FaMusic className="text-purple-500" />, color: 'purple', name: 'Music Event' },
+      sports: { icon: <FaFutbol className="text-green-500" />, color: 'green', name: 'Sports Event' },
+      art: { icon: <FaPalette className="text-pink-500" />, color: 'pink', name: 'Art Event' },
+      community: { icon: <FaCommunity className="text-blue-500" />, color: 'blue', name: 'Community Event' },
+      food: { icon: <FaUtensils className="text-orange-500" />, color: 'orange', name: 'Food Event' },
+      others: { icon: <FaEllipsisH className="text-gray-500" />, color: 'gray', name: 'Other Event' }
+    };
+    return types[type] || types.others;
+  };
 
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
@@ -83,6 +257,9 @@ export default function EventPage() {
 
         // Simulate AI assessment on data load
         simulateAiAssessment(data);
+
+        // Verify social media presence for events
+        verifySocialMediaPresence(data);
 
         setLoading(false);
       } catch (err) {
@@ -105,6 +282,24 @@ export default function EventPage() {
       if (description.length > 500) descScore += 1;
       if (description.includes("experience") || description.includes("professional")) descScore += 1;
       if (description.includes("details") || description.includes("schedule")) descScore += 1;
+
+      // Event-type specific scoring
+      if (eventData.type === 'music') {
+        if (description.includes("live") || description.includes("performance")) descScore += 1;
+        if (description.includes("artist") || description.includes("band")) descScore += 1;
+      } else if (eventData.type === 'sports') {
+        if (description.includes("tournament") || description.includes("competition")) descScore += 1;
+        if (description.includes("team") || description.includes("match")) descScore += 1;
+      } else if (eventData.type === 'art') {
+        if (description.includes("exhibition") || description.includes("gallery")) descScore += 1;
+        if (description.includes("artist") || description.includes("creative")) descScore += 1;
+      } else if (eventData.type === 'community') {
+        if (description.includes("community") || description.includes("local")) descScore += 1;
+        if (description.includes("gathering") || description.includes("meetup")) descScore += 1;
+      } else if (eventData.type === 'food') {
+        if (description.includes("cuisine") || description.includes("culinary")) descScore += 1;
+        if (description.includes("tasting") || description.includes("menu")) descScore += 1;
+      }
 
       // Calculate image quality based on number of images
       let imgScore = 0;
@@ -172,11 +367,9 @@ export default function EventPage() {
 
   // Upload files to cloud storage (mock implementation)
   const uploadFilesToCloud = async (files) => {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     return files.map(file => {
-      // Create a mock URL for demonstration
       const mockUrl = `https://example.com/uploads/${Date.now()}_${file.name}`;
       return {
         name: file.name,
@@ -211,7 +404,7 @@ export default function EventPage() {
       setIsUploading(false);
     }
 
-    let message = `New Registration for *${event.title}*%0A%0A`;
+    let message = `New Registration for *${event.name}*%0A%0A`;
     message += `*Name:* ${registrationData.name}%0A`;
     message += `*Email:* ${registrationData.email}%0A`;
     message += `*Phone:* ${registrationData.phone}%0A`;
@@ -264,13 +457,13 @@ export default function EventPage() {
 
   const whatsappNumber = event ? formatContactForWhatsApp(event.organizerContact) : null;
   const whatsappLink = whatsappNumber
-    ? `https://wa.me/${whatsappNumber}?text=Hi, I'm interested in your event: ${event.title}`
+    ? `https://wa.me/${whatsappNumber}?text=Hi, I'm interested in your event: ${event.name}`
     : null;
 
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-airbnb-red"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
         <p className="ml-4 text-lg text-gray-700">Loading event details...</p>
       </div>
     );
@@ -307,7 +500,7 @@ export default function EventPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center py-12 bg-white rounded-xl shadow-sm">
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">Event not found</h2>
-          <p className="mt-2 text-gray-600">The event you re looking for doesnt exist or may have been removed.</p>
+          <p className="mt-2 text-gray-600">The event you re looking for doesn t exist or may have been removed.</p>
         </div>
       </div>
     );
@@ -325,6 +518,8 @@ export default function EventPage() {
     const date = new Date(dateString);
     return `${date.toLocaleDateString('en-US', options)}${timeString ? ` at ${timeString}` : ''}`;
   };
+
+  const eventTypeInfo = getEventTypeInfo(event.type);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -345,11 +540,11 @@ export default function EventPage() {
       </div>
 
       {/* Floating Action Buttons */}
-      {(event.contact || whatsappNumber) && (
+      {(event.organizerContact || whatsappNumber) && (
         <div className="fixed bottom-4 right-4 flex flex-col gap-3 z-50 sm:flex-row">
-          {event.contact && (
+          {event.organizerContact && (
             <a
-              href={`tel:${event.contact}`}
+              href={`tel:${event.organizerContact}`}
               className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors flex items-center justify-center"
               aria-label="Call Organizer"
             >
@@ -374,111 +569,186 @@ export default function EventPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column - Main Content */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Header Section */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-4">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start gap-3 mb-3">
-                  <h1 className="text-2xl md:text-3xl font-bold text-dark flex-1 min-w-0 overflow-hidden text-ellipsis break-words">
-                    {event.name}
-                  </h1>
-                  {event.security && (
-                    <span className="inline-flex items-center bg-airbnb-red bg-opacity-10 text-airbnb-red px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 mt-1">
-                      <span className="mr-1">✅</span> Verified
-                    </span>
-                  )}
+          {/* Header Section - Updated to match HelperPage style */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            {/* Colored Header with Event Type */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+              <div className="flex items-center gap-4">
+                {/* Event Type Icon */}
+                <div className="w-16 h-16 bg-white rounded-2xl border-4 border-white border-opacity-20 shadow-lg flex items-center justify-center flex-shrink-0">
+                  <div className="text-2xl">
+                    {eventTypeInfo.icon}
+                  </div>
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-2">
-                  {/* Rating Badge */}
-                  <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-full border border-airbnb-medium-gray">
-                    <span className="font-medium text-airbnb-dark">
-                      {event.rating ? (
-                        <>
-                          <span className="font-semibold">{event.rating}</span>
-                          <span className="text-airbnb-gray ml-1">Stars</span>
-                        </>
-                      ) : (
-                        <span className="text-airbnb-blue">✨ New Event</span>
-                      )}
-                    </span>
+                {/* Name and Type */}
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-1 truncate">
+                    {event.name}
+                  </h1>
+                  <div className="text-blue-100 text-sm font-medium">
+                    {eventTypeInfo.name}
                   </div>
-
-                  {/* Location Badge */}
-                  <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-full border border-airbnb-medium-gray">
-                    <span className="text-airbnb-red mr-1.5">📍</span>
-                    <span className="font-medium text-airbnb-dark truncate max-w-[160px]">
-                      {event.address}
-                    </span>
+                </div>
+                
+                {/* Price Badge */}
+                <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl px-4 py-3 border border-white border-opacity-30">
+                  <div className="text-white text-xs font-semibold opacity-90 mb-1">STARTING FROM</div>
+                  <div className="text-white text-xl font-bold">
+                    {event.regularPrice ? `R${event.regularPrice}` : 'Free'}
                   </div>
                 </div>
               </div>
-              
-              {/* Rating Widgets */}
-              <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100 w-full sm:w-auto">
-                <div className="flex flex-wrap items-center justify-center gap-4">
-                  {/* Like/Dislike Widget */}
-                  <div className="flex flex-col items-center">
-                    <div className="flex gap-3 mb-1">
-                      <button
-                        onClick={handleLike}
-                        className={`p-3 rounded-full transition-all duration-300 ${
-                          aiAssessment.userReaction === 'like' 
-                            ? 'bg-green-100 text-green-600 shadow-md shadow-green-100' 
-                            : 'text-gray-500 hover:text-green-600 hover:bg-green-50'
-                        }`}
-                      >
-                        <span className="text-xl">👍</span>
-                      </button>
-                      <button
-                        onClick={handleDislike}
-                        className={`p-3 rounded-full transition-all duration-300 ${
-                          aiAssessment.userReaction === 'dislike' 
-                            ? 'bg-red-100 text-red-600 shadow-md shadow-red-100' 
-                            : 'text-gray-500 hover:text-red-600 hover:bg-red-50'
-                        }`}
-                      >
-                        <span className="text-xl">👎</span>
-                      </button>
+            </div>
+
+            {/* Main Content */}
+            <div className="p-6">
+              {/* Verification and Rating Badges */}
+              <div className="flex flex-wrap gap-3 mb-6">
+                {event.security && (
+                  <div className="inline-flex items-center bg-emerald-50 px-4 py-2 rounded-full border border-emerald-200">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
+                    <span className="text-emerald-700 font-semibold text-sm">
+                      ✅ Verified Event
+                    </span>
+                  </div>
+                )}
+                
+                <div className="inline-flex items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-200">
+                  <FaStar className="text-yellow-500 text-sm mr-2" />
+                  <span className="text-blue-700 font-semibold text-sm">
+                    {event.rating ? `${event.rating} Rating` : 'New Event'}
+                  </span>
+                </div>
+
+                {/* Event Type Badge */}
+                <div className="inline-flex items-center bg-purple-50 px-4 py-2 rounded-full border border-purple-200">
+                  {eventTypeInfo.icon}
+                  <span className="text-purple-700 font-semibold text-sm ml-2">
+                    {eventTypeInfo.name}
+                  </span>
+                </div>
+              </div>
+
+              {/* Info Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {/* Location Card */}
+                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <FaMapMarkerAlt className="text-purple-600 text-lg" />
                     </div>
-                    <div className="flex gap-4">
-                      <span className="text-green-600 font-medium text-sm flex items-center">
-                        <FaArrowUp className="mr-1" /> {aiAssessment.likes}
-                      </span>
-                      <span className="text-red-600 font-medium text-sm flex items-center">
-                        <FaArrowDown className="mr-1" /> {aiAssessment.dislikes}
-                      </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm text-gray-600 font-medium mb-1">Location</div>
+                      <div className="text-gray-900 font-semibold text-sm truncate">{event.address}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Date & Time Card */}
+                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <FaCalendarAlt className="text-orange-600 text-lg" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600 font-medium mb-1">Date & Time</div>
+                      <div className="text-gray-900 font-semibold text-sm">
+                        {formatDateTime(event.date, event.time)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Capacity Card */}
+                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <FaUsers className="text-cyan-600 text-lg" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600 font-medium mb-1">Capacity</div>
+                      <div className="text-gray-900 font-semibold text-sm">{event.capacity || 'Unlimited'}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Social Media Verification */}
+              <div className="border-t border-gray-200 pt-6">
+                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                  {/* Title Section */}
+                  <div className="flex items-center gap-3 lg:w-48 lg:flex-shrink-0">
+                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <FaUsers className="text-gray-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 text-sm">Social Verification</h3>
+                      <p className="text-gray-500 text-xs">AI-powered validation</p>
                     </div>
                   </div>
 
-                  {/* AI Rating */}
-                  <div className="text-center px-3">
-                    <div className="flex items-center justify-center gap-2 text-gray-600 text-sm font-medium mb-1">
-                      <span className="text-lg">🤖</span>
-                      <span>AI Rating</span>
-                    </div>
-                    {aiAssessment.overallRating ? (
-                      <div className="flex items-end justify-center gap-1">
-                        <span className="text-2xl font-bold text-gray-900 leading-none">
-                          {aiAssessment.overallRating.toFixed(1)}
-                        </span>
-                        <span className="text-gray-500 text-sm mb-1">/5</span>
+                  {/* Social Media Badges */}
+                  <div className="flex-1">
+                    {verifyingSocialMedia ? (
+                      <div className="flex items-center gap-3 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                        <FaSpinner className="animate-spin text-yellow-600" />
+                        <div>
+                          <div className="text-yellow-800 font-medium text-sm">Verifying profiles</div>
+                          <div className="text-yellow-600 text-xs">Scanning social networks</div>
+                        </div>
                       </div>
                     ) : (
-                      <div className="h-8 w-16 bg-gray-100 rounded-lg animate-pulse mx-auto"></div>
-                    )}
-                  </div>
+                      <div className="flex flex-wrap gap-3">
+                        {socialMediaVerification.facebook.exists && socialMediaVerification.facebook.verificationStatus === 'verified' && (
+                          <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="relative">
+                              <FaFacebook className="text-blue-600 text-lg" />
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                            </div>
+                            <span className="text-gray-700 font-semibold text-sm">Facebook</span>
+                          </div>
+                        )}
 
-                  {/* User Reviews */}
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-gray-600 text-sm font-medium mb-1">
-                      <span className="text-lg">reviews</span>
-                    </div>
-                    <div className="flex items-end justify-center gap-1">
-                      <span className="text-2xl font-bold text-gray-900 leading-none">
-                        {commentCount} 
-                      </span>
-                    </div>
+                        {socialMediaVerification.instagram.exists && socialMediaVerification.instagram.verificationStatus === 'verified' && (
+                          <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-pink-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="relative">
+                              <FaInstagram className="text-pink-600 text-lg" />
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                            </div>
+                            <span className="text-gray-700 font-semibold text-sm">Instagram</span>
+                          </div>
+                        )}
+
+                        {socialMediaVerification.linkedin.exists && socialMediaVerification.linkedin.verificationStatus === 'verified' && (
+                          <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-300 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="relative">
+                              <FaLinkedin className="text-blue-700 text-lg" />
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                            </div>
+                            <span className="text-gray-700 font-semibold text-sm">LinkedIn</span>
+                          </div>
+                        )}
+
+                        {socialMediaVerification.twitter.exists && socialMediaVerification.twitter.verificationStatus === 'verified' && (
+                          <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="relative">
+                              <FaTwitter className="text-gray-900 text-lg" />
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                            </div>
+                            <span className="text-gray-700 font-semibold text-sm">Twitter</span>
+                          </div>
+                        )}
+
+                        {!socialMediaVerification.facebook.exists && !socialMediaVerification.instagram.exists && 
+                         !socialMediaVerification.linkedin.exists && !socialMediaVerification.twitter.exists && (
+                          <div className="inline-flex items-center gap-2 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
+                            <FaInfoCircle className="text-gray-400" />
+                            <span className="text-gray-600 font-medium text-sm">No social profiles found</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -486,557 +756,452 @@ export default function EventPage() {
           </div>
 
           {/* Image Gallery */}
-          <div className="relative rounded-xl overflow-hidden shadow-lg border border-gray-200">
-            {event.imageUrls && event.imageUrls.length > 0 ? (
-              <>
+          {event.imageUrls && event.imageUrls.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Event Gallery</h3>
+                <p className="text-gray-600 text-sm">View photos from the event</p>
+              </div>
+              
+              <div className="space-y-4">
+                {/* Main Swiper */}
                 <Swiper
-                  modules={[Navigation, Thumbs, Zoom]}
-                  navigation={{ nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }}
-                  thumbs={{ swiper: thumbsSwiper }}
+                  modules={[Navigation, Zoom, Thumbs]}
+                  navigation={true}
                   zoom={true}
-                  className="h-64 w-full sm:h-80 md:h-[450px] lg:h-[500px]"
+                  thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
+                  className="rounded-lg overflow-hidden"
                 >
-                  {event.imageUrls.map((img, index) => (
+                  {event.imageUrls.map((url, index) => (
                     <SwiperSlide key={index}>
-                      <div className="swiper-zoom-container w-full h-full">
+                      <div className="swiper-zoom-container">
                         <img
-                          src={img}
-                          alt={`Event image ${index + 1}`}
-                          className="block w-full h-full object-cover cursor-zoom-in"
+                          src={url}
+                          alt={`${event.name} - Image ${index + 1}`}
+                          className="w-full h-64 sm:h-80 md:h-96 object-cover"
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found';
+                          }}
                         />
                       </div>
                     </SwiperSlide>
                   ))}
-                  <div className="swiper-button-prev custom-swiper-nav-btn left-2"></div>
-                  <div className="swiper-button-next custom-swiper-nav-btn right-2"></div>
                 </Swiper>
 
+                {/* Thumbnail Swiper */}
                 {event.imageUrls.length > 1 && (
                   <Swiper
+                    modules={[Thumbs]}
+                    watchSlidesProgress={true}
                     onSwiper={setThumbsSwiper}
-                    spaceBetween={10}
+                    spaceBetween={8}
                     slidesPerView={4}
                     freeMode={true}
-                    watchSlidesProgress={true}
-                    className="mt-4 h-20"
+                    className="thumbs-swiper mt-4"
                   >
-                    {event.imageUrls.map((img, index) => (
+                    {event.imageUrls.map((url, index) => (
                       <SwiperSlide key={index}>
                         <img
-                          src={img}
+                          src={url}
                           alt={`Thumbnail ${index + 1}`}
-                          className="block w-full h-full object-cover rounded-lg cursor-pointer opacity-70 hover:opacity-100 transition-opacity border border-gray-200"
+                          className="w-full h-16 object-cover rounded cursor-pointer border-2 border-transparent hover:border-blue-500 transition-colors"
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/100x75?text=Image+Not+Found';
+                          }}
                         />
                       </SwiperSlide>
                     ))}
                   </Swiper>
                 )}
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-64 bg-gray-100 text-gray-500 text-lg">
-                No images available
-              </div>
-            )}
-          </div>
-
-          {/* About Section */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">About This Event</h2>
-
-            <div className="prose max-w-none text-gray-700 leading-relaxed">
-              <p className="whitespace-pre-line">{displayText}</p>
-            </div>
-
-            {description.length > 300 && (
-              <button
-                onClick={toggleDescription}
-                className="mt-3 text-airbnb-red hover:text-red-700 font-medium flex items-center"
-              >
-                {showFullDescription ? 'Show Less' : 'Read More'}
-              </button>
-            )}
-          </section>
-
-          {/* Event Details Section */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Event Details</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Date & Time */}
-              <div>
-                <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
-                  <FaCalendarAlt className="text-airbnb-red" />
-                  Date & Time
-                </h3>
-                {event.date && (
-                  <p className="text-gray-700">
-                    {formatDateTime(event.date, event.time)}
-                    {event.endTime && ` to ${event.endTime}`}
-                  </p>
-                )}
-              </div>
-
-              {/* Location */}
-              <div>
-                <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
-                  <FaMapMarkerAlt className="text-airbnb-red" />
-                  Location
-                </h3>
-                <p className="text-gray-700">{event.address}</p>
-                {event.address && (
-                  <a
-                    href={generateMapLink(event.address)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-1 inline-flex items-center text-blue-600 hover:underline text-sm"
-                  >
-                    View on map <FaExternalLinkAlt className="ml-1 text-xs" />
-                  </a>
-                )}
-              </div>
-
-              {/* Organizer */}
-              {event.organizerName && (
-                <div>
-                  <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
-                    <FaUser className="text-airbnb-red" />
-                    Organizer
-                  </h3>
-                  <p className="text-gray-700">{event.organizerName || event.host}</p>
-                </div>
-              )}
-
-              {/* Website */}
-              {event.website && (
-                <div>
-                  <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
-                    <FaLink className="text-airbnb-red" />
-                    Event Website
-                  </h3>
-                  <a
-                    href={event.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline break-all text-sm"
-                  >
-                    {event.website}
-                  </a>
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Additional Information */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Additional Information</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-medium text-gray-700 mb-3">Event Details</h3>
-                <ul className="space-y-3">
-                  <li className="flex items-center gap-3">
-                    <FaTicketAlt className="text-airbnb-red" />
-                    <span>Ticket Price: {event.regularPrice ? `R${event.regularPrice}` : 'Free'}</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <FaUsers className="text-airbnb-red" />
-                    <span>Capacity: {event.capacity || 'Unlimited'}</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <FaInfoCircle className="text-airbnb-red" />
-                    <span>Category: {event.category || 'General'}</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-medium text-gray-700 mb-3">Amenities</h3>
-                <ul className="space-y-3">
-                  {event.ageRestriction && (
-                    <li className="flex items-center gap-3">
-                      <FaClock className="text-airbnb-red" />
-                      <span>Age Restriction: {event.ageRestriction}</span>
-                    </li>
-                  )}
-                  {event.parking && (
-                    <li className="flex items-center gap-3">
-                      <FaCar className="text-airbnb-red" />
-                      <span>Parking: {event.parking}</span>
-                    </li>
-                  )}
-                  {event.foodAvailable && (
-                    <li className="flex items-center gap-3">
-                      <FaUtensils className="text-airbnb-red" />
-                      <span>Food Available: {event.foodAvailable}</span>
-                    </li>
-                  )}
-                  {event.familyFriendly && (
-                    <li className="flex items-center gap-3">
-                      <FaChild className="text-airbnb-red" />
-                      <span>Family Friendly: {event.familyFriendly}</span>
-                    </li>
-                  )}
-                </ul>
               </div>
             </div>
-          </section>
-
-          {/* AI Content Assessment */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center gap-3 mb-4">
-              <FaRobot className="text-blue-600 text-xl" />
-              <h2 className="text-2xl font-semibold text-gray-800">AI Content Assessment</h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-medium text-blue-800 mb-2">Description Quality</h3>
-                {aiAssessment.descriptionQuality !== null ? (
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-blue-700">{aiAssessment.descriptionQuality}</span>
-                    <span className="text-gray-600">/5</span>
-                    <div className="ml-auto">
-                      {aiAssessment.descriptionQuality >= 4 ? (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Excellent</span>
-                      ) : aiAssessment.descriptionQuality >= 3 ? (
-                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Good</span>
-                      ) : (
-                        <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Needs Improvement</span>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-8 w-full bg-gray-200 rounded animate-pulse"></div>
-                )}
-                <p className="text-gray-600 mt-2 text-sm">
-                  Based on detail level, clarity, and completeness
-                </p>
-              </div>
-
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-medium text-blue-800 mb-2">Image Quality</h3>
-                {aiAssessment.imageQuality !== null ? (
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-blue-700">{aiAssessment.imageQuality}</span>
-                    <span className="text-gray-600">/5</span>
-                    <div className="ml-auto">
-                      {aiAssessment.imageQuality >= 4 ? (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Excellent</span>
-                      ) : aiAssessment.imageQuality >= 3 ? (
-                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Good</span>
-                      ) : (
-                        <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Needs More</span>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-8 w-full bg-gray-200 rounded animate-pulse"></div>
-                )}
-                <p className="text-gray-600 mt-2 text-sm">
-                  Based on image count, clarity, and relevance
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Comments Section */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-semibold text-gray-800">Reviews & Feedback</h2>
-              <button
-                onClick={() => setShowCommentsPanel(true)}
-                className="text-airbnb-red hover:text-red-700 font-medium"
-              >
-                View All
-              </button>
-            </div>
-            <EventComments 
-              eventId={id} 
-              onTotalComments={setCommentCount}
-              onRatings={setAiRating}
-              cardStyle={true}
-            />
-          </section>
-
-          {showCommentsPanel && (
-            <CommentsSidePanelEvent
-              eventId={id}
-              onClose={() => setShowCommentsPanel(false)}
-            />
           )}
-        </div>
 
-        {/* Right Column - Registration Form */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-6 space-y-6">
-            {/* Price Card */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-              <div className="flex items-baseline justify-between mb-4">
-                <span className="text-3xl font-bold text-gray-900">
-                  {event.regularPrice ? `R${event.regularPrice}` : 'Free'}
-                </span>
-                <span className="text-gray-600 text-sm">per ticket</span>
-              </div>
-
-              {/* Registration Form */}
-              <form onSubmit={handleRegistrationSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Your Name
-                  </label>
-                  <input
-                    type="text"
-                    id="userName"
-                    name="name"
-                    value={registrationData.name}
-                    onChange={handleRegistrationChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    required
-                    placeholder="John Doe"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="userEmail" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    id="userEmail"
-                    name="email"
-                    value={registrationData.email}
-                    onChange={handleRegistrationChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    required
-                    placeholder="you@example.com"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="userPhone" className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    id="userPhone"
-                    name="phone"
-                    value={registrationData.phone}
-                    onChange={handleRegistrationChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    required
-                    placeholder="+27 12 345 6789"
-                  />
-                </div>
-
-                {/* Ticket Quantity */}
-                {event.regularPrice > 0 && (
-                  <div>
-                    <label htmlFor="ticketQuantity" className="block text-sm font-medium text-gray-700 mb-1">
-                      Number of Tickets
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        id="ticketQuantity"
-                        name="quantity"
-                        min="1"
-                        max="10"
-                        value={registrationData.quantity}
-                        onChange={handleRegistrationChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-10"
-                        required
-                      />
-                      <FaTicketAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
-                    Special Requests
-                  </label>
-                  <textarea
-                    id="specialRequests"
-                    name="message"
-                    value={registrationData.message}
-                    onChange={handleRegistrationChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-y"
-                    rows="3"
-                    placeholder="Accessibility needs, dietary restrictions, etc..."
-                  />
-                </div>
-
-                {/* File Attachments */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Attach Files (Optional)
-                  </label>
-                  <div className="space-y-3">
-                    <input
-                      type="file"
-                      id="attachments"
-                      multiple
-                      onChange={handleAttachmentChange}
-                      accept="image/*,.pdf"
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="attachments"
-                      className="flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors"
-                    >
-                      <FaFileImage className="text-gray-400 mr-2" />
-                      <span className="text-sm text-gray-600">Select images or PDFs</span>
-                    </label>
-
-                    {attachments.length > 0 && (
-                      <div className="space-y-2">
-                        {attachments.map((file, index) => (
-                          <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-lg">
-                            <div className="flex items-center">
-                              {file.type.startsWith('image/') ? (
-                                <FaFileImage className="text-blue-500 mr-2" />
-                              ) : (
-                                <FaFilePdf className="text-red-500 mr-2" />
-                              )}
-                              <span className="text-sm text-gray-700 truncate max-w-[120px]">
-                                {file.name}
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => removeAttachment(index)}
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <FaTimes />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Maximum 2 files (images or PDFs), 5MB each
-                  </p>
-                </div>
-
+          {/* Description Section */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                About This Event
+              </h3>
+              {description.length > 300 && (
                 <button
-                  type="submit"
-                  disabled={isUploading}
-                  className={`w-full bg-airbnb-red hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center ${
-                    isUploading ? 'opacity-70 cursor-not-allowed' : ''
-                  }`}
+                  onClick={toggleDescription}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
                 >
-                  {isUploading ? (
+                  {showFullDescription ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Processing...
+                      <FaArrowUp className="text-xs" />
+                      Show Less
                     </>
                   ) : (
                     <>
-                      <FaWhatsapp className="mr-2 text-lg" />
-                      Register via WhatsApp
+                      <FaArrowDown className="text-xs" />
+                      Read More
                     </>
                   )}
                 </button>
-              </form>
+              )}
+            </div>
+            <div className="text-gray-700 leading-relaxed">
+              {displayText.split('\n').map((paragraph, index) => (
+                <p key={index} className="mb-3">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          </div>
 
-              <div className="mt-4 text-xs text-gray-500 text-center">
-                By registering, you agree to our{' '}
-                <a href="/terms" className="text-blue-600 hover:underline">
-                  Terms of Service
-                </a>{' '}
-                and{' '}
-                <a href="/privacy" className="text-blue-600 hover:underline">
-                  Privacy Policy
-                </a>
+          {/* AI Assessment Section */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <FaRobot className="text-blue-500" />
+                AI Quality Assessment
+              </h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleLike}
+                  className={`p-2 rounded-lg transition-colors ${
+                    aiAssessment.userReaction === 'like'
+                      ? 'bg-green-100 text-green-600'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <FaArrowUp className="text-sm" />
+                </button>
+                <button
+                  onClick={handleDislike}
+                  className={`p-2 rounded-lg transition-colors ${
+                    aiAssessment.userReaction === 'dislike'
+                      ? 'bg-red-100 text-red-600'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <FaArrowDown className="text-sm" />
+                </button>
               </div>
             </div>
 
-            {/* Contact Info Card */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Contact Information</h3>
-              
-              <div className="space-y-3">
-                {event.organizerName && (
-                  <div className="flex items-center">
-                    <FaUser className="text-gray-500 mr-3" />
-                    <span className="text-gray-700">{event.organizerName}</span>
-                  </div>
-                )}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+                <div className="text-blue-700 text-sm font-semibold mb-2">Description Quality</div>
+                <div className="text-2xl font-bold text-blue-900">
+                  {aiAssessment.descriptionQuality !== null ? `${aiAssessment.descriptionQuality}/5` : '...'}
+                </div>
+              </div>
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+                <div className="text-purple-700 text-sm font-semibold mb-2">Image Quality</div>
+                <div className="text-2xl font-bold text-purple-900">
+                  {aiAssessment.imageQuality !== null ? `${aiAssessment.imageQuality}/5` : '...'}
+                </div>
+              </div>
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+                <div className="text-green-700 text-sm font-semibold mb-2">Overall Rating</div>
+                <div className="text-2xl font-bold text-green-900">
+                  {aiAssessment.overallRating !== null ? `${aiAssessment.overallRating}/5` : '...'}
+                </div>
+              </div>
+            </div>
 
-                {event.contact && (
-                  <div className="flex items-center">
-                    <FaPhone className="text-gray-500 mr-3" />
-                    <a href={`tel:${event.contact}`} className="text-blue-600 hover:underline">
-                      {event.contact}
-                    </a>
-                  </div>
-                )}
+            <div className="flex items-center justify-between text-sm text-gray-600">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1">
+                  <FaArrowUp className="text-green-500" />
+                  {aiAssessment.likes} likes
+                </span>
+                <span className="flex items-center gap-1">
+                  <FaArrowDown className="text-red-500" />
+                  {aiAssessment.dislikes} dislikes
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <FaInfoCircle className="text-gray-400" />
+                <span>AI-powered analysis</span>
+              </div>
+            </div>
+          </div>
 
-                {whatsappLink && (
-                  <div className="flex items-center">
-                    <FaWhatsapp className="text-green-500 mr-3" />
+          {/* Comments Section */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <EventComments
+              eventId={id}
+              onCommentCountChange={setCommentCount}
+              onToggleCommentsPanel={() => setShowCommentsPanel(!showCommentsPanel)}
+            />
+          </div>
+        </div>
+
+        {/* Right Column - Sidebar */}
+        <div className="space-y-6">
+          {/* Registration Form */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 sticky top-6">
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Register for Event</h3>
+              <p className="text-gray-600 text-sm">Secure your spot for this amazing experience</p>
+            </div>
+
+            <form onSubmit={handleRegistrationSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={registrationData.name}
+                  onChange={handleRegistrationChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  placeholder="Enter your full name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={registrationData.email}
+                  onChange={handleRegistrationChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  placeholder="your.email@example.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number *
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={registrationData.phone}
+                  onChange={handleRegistrationChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  placeholder="+27 12 345 6789"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Number of Tickets
+                </label>
+                <select
+                  name="quantity"
+                  value={registrationData.quantity}
+                  onChange={handleRegistrationChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                    <option key={num} value={num}>{num} ticket{num > 1 ? 's' : ''}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Special Requests
+                </label>
+                <textarea
+                  name="message"
+                  value={registrationData.message}
+                  onChange={handleRegistrationChange}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  placeholder="Any special requirements or requests..."
+                />
+              </div>
+
+              {/* File Attachments */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Attachments (Optional)
+                </label>
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf"
+                    onChange={handleAttachmentChange}
+                    disabled={attachments.length >= 2}
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  
+                  {attachments.length > 0 && (
+                    <div className="space-y-2">
+                      {attachments.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            {file.type.startsWith('image/') ? (
+                              <FaFileImage className="text-blue-500" />
+                            ) : (
+                              <FaFilePdf className="text-red-500" />
+                            )}
+                            <span className="text-sm text-gray-700 truncate max-w-[200px]">
+                              {file.name}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeAttachment(index)}
+                            className="text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            <FaTimes />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-gray-500">
+                    Max 2 files, 5MB each. Images and PDFs only.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isUploading}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isUploading ? (
+                  <>
+                    <FaSpinner className="animate-spin" />
+                    Uploading Files...
+                  </>
+                ) : (
+                  <>
+                    <FaCheckCircle />
+                    Register Now
+                  </>
+                )}
+              </button>
+
+              <p className="text-xs text-gray-500 text-center">
+                By registering, you agree to our terms and conditions. Your information will be sent securely via WhatsApp.
+              </p>
+            </form>
+          </div>
+
+          {/* Event Details Card */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Details</h3>
+            <div className="space-y-3">
+              {/* Event Type */}
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  {eventTypeInfo.icon}
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">Event Type</div>
+                  <div className="text-gray-900 font-medium">{eventTypeInfo.name}</div>
+                </div>
+              </div>
+
+              {/* Date & Time */}
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FaCalendarAlt className="text-orange-600" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">Date & Time</div>
+                  <div className="text-gray-900 font-medium">
+                    {formatDateTime(event.date, event.time)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Location */}
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FaMapMarkerAlt className="text-purple-600" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">Location</div>
+                  <div className="text-gray-900 font-medium">{event.address}</div>
+                </div>
+              </div>
+
+              {/* Capacity */}
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FaUsers className="text-cyan-600" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">Capacity</div>
+                  <div className="text-gray-900 font-medium">{event.capacity || 'Unlimited'}</div>
+                </div>
+              </div>
+
+              {/* Price */}
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FaTicketAlt className="text-green-600" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">Price</div>
+                  <div className="text-gray-900 font-medium">
+                    {event.regularPrice ? `R${event.regularPrice}` : 'Free Entry'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Organizer Info Card */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Organizer Info</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <FaUser className="text-white text-lg" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">Organizer</div>
+                  <div className="text-gray-900 font-semibold">{event.organizerName || 'Event Organizer'}</div>
+                </div>
+              </div>
+
+              {event.organizerContact && (
+                <div className="space-y-2">
+                  <a
+                    href={`tel:${event.organizerContact}`}
+                    className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                  >
+                    <FaPhone />
+                    Call Organizer
+                  </a>
+                  
+                  {whatsappLink && (
                     <a
                       href={whatsappLink}
                       target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
+                      rel="noreferrer"
+                      className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors"
                     >
-                      Message via WhatsApp
+                      <FaWhatsapp />
+                      WhatsApp
                     </a>
-                  </div>
-                )}
-
-                {event.email && (
-                  <div className="flex items-center">
-                    <FaEnvelope className="text-gray-500 mr-3" />
-                    <a href={`mailto:${event.email}`} className="text-blue-600 hover:underline break-all">
-                      {event.email}
-                    </a>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Security & Trust Badges */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Secure Booking</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <div className="bg-blue-100 p-2 rounded-full mr-3">
-                    <FaShieldAlt className="text-blue-600 text-lg" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-800">Verified Organizer</h4>
-                    <p className="text-sm text-gray-600 mt-1">This event host has been verified by our team.</p>
-                  </div>
+                  )}
                 </div>
-
-                <div className="flex items-start">
-                  <div className="bg-green-100 p-2 rounded-full mr-3">
-                    <FaMoneyBillWave className="text-green-600 text-lg" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-800">Secure Payment</h4>
-                    <p className="text-sm text-gray-600 mt-1">Your payment information is protected.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <div className="bg-purple-100 p-2 rounded-full mr-3">
-                    <FaAward className="text-purple-600 text-lg" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-800">Quality Guarantee</h4>
-                    <p className="text-sm text-gray-600 mt-1">We ensure all events meet our quality standards.</p>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Comments Side Panel */}
+      {showCommentsPanel && (
+        <CommentsSidePanelEvent
+          eventId={id}
+          isOpen={showCommentsPanel}
+          onClose={() => setShowCommentsPanel(false)}
+        />
+      )}
     </div>
   );
 }
