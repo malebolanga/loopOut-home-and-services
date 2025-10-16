@@ -7,7 +7,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Zoom, Thumbs } from "swiper/modules";
 import { useSelector } from "react-redux";
 import emailjs from "emailjs-com";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+
 import Calendar from "react-calendar";
 import CommentsSidePanel from '../components/CommentsSidePanel';
 
@@ -19,6 +19,7 @@ import {
   MdChat,
   MdLocationOn,
   MdAttachMoney,
+  MdAdsClick,
 } from "react-icons/md";
 import {
   FaStar,
@@ -51,14 +52,14 @@ import {
   FaPaperPlane,
   FaExternalLinkAlt, 
   FaUserFriends, 
-  FaBroom,
   FaFacebook,
   FaTwitter,
   FaInstagram,
   FaLinkedin,
   FaTiktok,
   FaGlobe,
-
+  FaRegStar,
+  FaStarHalfAlt,
 } from "react-icons/fa";
 
 // Styles
@@ -90,12 +91,19 @@ const AMENITIES = [
 ];
 
 const RATING_CATEGORIES = [
-  { name: "Cleanliness", icon: MdCleanHands },
-  { name: "Accuracy", icon: MdOutlineGppGood },
-  { name: "Check-in", icon: MdLogin },
-  { name: "Communication", icon: MdChat },
-  { name: "Location", icon: MdLocationOn },
-  { name: "Value", icon: MdAttachMoney },
+  { name: "Cleanliness", icon: MdCleanHands, key: "cleanliness" },
+  { name: "Accuracy", icon: MdOutlineGppGood, key: "accuracy" },
+  { name: "Check-in", icon: MdLogin, key: "checkin" },
+  { name: "Communication", icon: MdChat, key: "communication" },
+  { name: "Location", icon: MdLocationOn, key: "location" },
+  { name: "Value", icon: MdAttachMoney, key: "value" },
+];
+
+const HOST_RATING_CATEGORIES = [
+  { name: "Cleanliness", icon: MdCleanHands, key: "host_cleanliness" },
+  { name: "Communication", icon: MdChat, key: "host_communication" },
+  { name: "Staff", icon: FaUserFriends, key: "staff" },
+  { name: "Location", icon: MdLocationOn, key: "location_rating" },
 ];
 
 const PROPERTY_TYPES = {
@@ -112,6 +120,14 @@ const SOCIAL_PLATFORMS = [
   { name: 'twitter', icon: FaTwitter, color: 'text-blue-400', baseUrl: 'https://twitter.com/' },
   { name: 'linkedin', icon: FaLinkedin, color: 'text-blue-700', baseUrl: 'https://linkedin.com/in/' },
   { name: 'tiktok', icon: FaTiktok, color: 'text-black', baseUrl: 'https://tiktok.com/@' },
+];
+
+const ADVERTISING_PLATFORMS = [
+  { name: 'Facebook Ads', icon: FaFacebook, color: 'bg-blue-500' },
+  { name: 'Google Ads', icon: FaGlobe, color: 'bg-red-500' },
+  { name: 'Instagram Ads', icon: FaInstagram, color: 'bg-pink-500' },
+  { name: 'Twitter Ads', icon: FaTwitter, color: 'bg-blue-400' },
+  { name: 'TikTok Ads', icon: FaTiktok, color: 'bg-black' },
 ];
 
 export default function Listing() {
@@ -171,6 +187,27 @@ export default function Listing() {
     }, {}),
     verified: false,
     aiComments: [],
+  });
+
+  // NEW: Host Rating State
+  const [hostRatings, setHostRatings] = useState({
+    average: 0,
+    totalRatings: 0,
+    categoryRatings: HOST_RATING_CATEGORIES.reduce((acc, { key }) => {
+      acc[key] = 0;
+      return acc;
+    }, {}),
+    userRating: null, // Store user's current rating
+  });
+
+  // NEW: Advertising State
+  const [advertisingState, setAdvertisingState] = useState({
+    showAdModal: false,
+    selectedPlatforms: [],
+    budget: 100,
+    duration: 7,
+    loading: false,
+    success: false
   });
 
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
@@ -233,6 +270,148 @@ export default function Listing() {
       }
     }
     return times;
+  };
+
+  // NEW: Star Rating Component
+  const StarRating = ({ rating, onRatingChange, readonly = false, size = 'text-lg' }) => {
+    return (
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            onClick={() => !readonly && onRatingChange(star)}
+            disabled={readonly}
+            className={`${size} ${
+              readonly 
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-400 transition-colors'
+            } ${
+              star <= rating ? 'text-yellow-400' : ''
+            } ${!readonly ? 'cursor-pointer' : 'cursor-default'}`}
+          >
+            <FaStar />
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  // NEW: Rate Host Functionality
+  const handleRateHost = async (category, rating) => {
+    if (!currentUser) {
+      navigate('/sign-in');
+      return;
+    }
+
+    if (!listing?.userRef) return;
+
+    const hostId = typeof listing.userRef === 'string'
+      ? listing.userRef
+      : listing.userRef._id;
+
+    if (!hostId) return;
+
+    try {
+      const response = await fetch('/api/host/rate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentUser.access_token}`
+        },
+        body: JSON.stringify({
+          hostId,
+          category,
+          rating,
+          listingId: listing._id
+        })
+      });
+
+      if (response.ok) {
+        const updatedRatings = await response.json();
+        setHostRatings(updatedRatings);
+      } else {
+        throw new Error('Failed to submit rating');
+      }
+    } catch (error) {
+      console.error('Rating submission error:', error);
+      alert('Failed to submit rating. Please try again.');
+    }
+  };
+
+  // NEW: Fetch Host Ratings
+  const fetchHostRatings = async () => {
+    if (!listing?.userRef) return;
+
+    const hostId = typeof listing.userRef === 'string'
+      ? listing.userRef
+      : listing.userRef._id;
+
+    try {
+      const response = await fetch(`/api/host/ratings/${hostId}?listingId=${listingId}`);
+      if (response.ok) {
+        const ratings = await response.json();
+        setHostRatings(ratings);
+      }
+    } catch (error) {
+      console.error('Error fetching host ratings:', error);
+    }
+  };
+
+  // NEW: Advertising Functions
+  const handleAdPlatformToggle = (platform) => {
+    setAdvertisingState(prev => ({
+      ...prev,
+      selectedPlatforms: prev.selectedPlatforms.includes(platform)
+        ? prev.selectedPlatforms.filter(p => p !== platform)
+        : [...prev.selectedPlatforms, platform]
+    }));
+  };
+
+  const handleAdvertiseSubmit = async () => {
+    if (!currentUser) {
+      navigate('/sign-in');
+      return;
+    }
+
+    if (advertisingState.selectedPlatforms.length === 0) {
+      alert('Please select at least one advertising platform');
+      return;
+    }
+
+    setAdvertisingState(prev => ({ ...prev, loading: true }));
+
+    try {
+      const response = await fetch('/api/listings/advertise', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentUser.access_token}`
+        },
+        body: JSON.stringify({
+          listingId: listing._id,
+          platforms: advertisingState.selectedPlatforms,
+          budget: advertisingState.budget,
+          duration: advertisingState.duration
+        })
+      });
+
+      if (response.ok) {
+        setAdvertisingState(prev => ({
+          ...prev,
+          loading: false,
+          success: true,
+          showAdModal: false
+        }));
+        alert('Advertising campaign started successfully!');
+      } else {
+        throw new Error('Failed to start advertising campaign');
+      }
+    } catch (error) {
+      console.error('Advertising error:', error);
+      setAdvertisingState(prev => ({ ...prev, loading: false }));
+      alert('Failed to start advertising campaign. Please try again.');
+    }
   };
 
   // AI-powered social media verification
@@ -430,9 +609,6 @@ export default function Listing() {
     setSpecialRequests('');
   };
 
-  // Map and media state
-  const [mapLocation] = useState({ lat: -26.2041, lng: 28.0473 }); // Johannesburg coordinates
-
   // Host rating states
   const [hostData, setHostData] = useState({
     likeCount: 0,
@@ -484,7 +660,7 @@ export default function Listing() {
   const hostStarRating = Math.min(5, Math.floor(hostData.likeCount / 40));
 
   // Handle host rating
-  const handleRateHost = async (action) => {
+  const handleRateHostLikeDislike = async (action) => {
     if (!currentUser) {
       navigate('/sign-in');
       return;
@@ -637,24 +813,39 @@ export default function Listing() {
     }
   }, [listing]);
 
-  // Fetch comment count
+  // NEW: Fetch host ratings when listing loads
+  useEffect(() => {
+    if (listing) {
+      fetchHostRatings();
+    }
+  }, [listing]);
+
+  // FIXED: Fetch comment count using existing comments endpoint
   useEffect(() => {
     const fetchCommentCount = async () => {
       try {
-        const response = await fetch(`/api/comment/count/${listingId}`);
+        // Use the existing comments endpoint and count the results
+        const response = await fetch(`/api/comment/get/${listingId}`);
         if (response.ok) {
-          const data = await response.json();
-          setCommentCount(data.count);
+          const comments = await response.json();
+          // If comments is an array, use its length, otherwise default to 0
+          setCommentCount(Array.isArray(comments) ? comments.length : 0);
+        } else {
+          // If endpoint fails, use AI rating count as fallback
+          console.log('Comments endpoint not available, using fallback count');
+          setCommentCount(aiRating.totalRatings || 0);
         }
       } catch (error) {
-        console.error('Error fetching comment count:', error);
+        console.error('Error fetching comments:', error);
+        // Fallback to AI rating count
+        setCommentCount(aiRating.totalRatings || 0);
       }
     };
 
     if (listingId) {
       fetchCommentCount();
     }
-  }, [listingId]);
+  }, [listingId, aiRating.totalRatings]);
 
   // Event handlers
   const handleContactChange = (e) => {
@@ -1019,7 +1210,7 @@ export default function Listing() {
                 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => handleRateHost('like')}
+                    onClick={() => handleRateHostLikeDislike('like')}
                     disabled={ratingLoading}
                     className={`flex items-center gap-1 px-3 py-1 rounded-lg transition-colors ${hostData.userAction === 'like' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700 hover:bg-green-50'}`}
                   >
@@ -1028,7 +1219,7 @@ export default function Listing() {
                   </button>
                   
                   <button
-                    onClick={() => handleRateHost('dislike')}
+                    onClick={() => handleRateHostLikeDislike('dislike')}
                     disabled={ratingLoading}
                     className={`flex items-center gap-1 px-3 py-1 rounded-lg transition-colors ${hostData.userAction === 'dislike' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700 hover:bg-red-50'}`}
                   >
@@ -1101,6 +1292,65 @@ export default function Listing() {
                   </button>
                 </div>
               )}
+            </div>
+          </section>
+
+          {/* NEW: Host Rating Section */}
+          <section className="mb-8 section-card">
+            <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
+              <FaUserFriends className="text-blue-600" />
+              Rate the Host & Staff
+            </h2>
+            
+            {/* Overall Host Rating */}
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold">Overall Host Rating</h3>
+                  <p className="text-gray-600 text-sm">
+                    {hostRatings.totalRatings} rating{hostRatings.totalRatings !== 1 ? 's' : ''}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-3xl font-bold text-yellow-600">
+                    {hostRatings.average.toFixed(1)}
+                  </div>
+                  <StarRating 
+                    rating={Math.round(hostRatings.average)} 
+                    readonly={true}
+                    size="text-xl"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Rating Categories */}
+            <div className="space-y-4">
+              {HOST_RATING_CATEGORIES.map(({ name, icon: Icon, key }) => (
+                <div key={key} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Icon className="text-blue-600 text-xl" />
+                    <span className="font-medium">{name}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <StarRating
+                      rating={hostRatings.userRating?.[key] || 0}
+                      onRatingChange={(rating) => handleRateHost(key, rating)}
+                      readonly={false}
+                    />
+                    <span className="text-sm text-gray-600 w-12 text-right">
+                      {hostRatings.categoryRatings[key]?.toFixed(1) || '0.0'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Rating Tips */}
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-700">
+                <strong>Tip:</strong> Your ratings help other guests find great hosts and improve the community experience.
+              </p>
             </div>
           </section>
 
@@ -1716,6 +1966,40 @@ export default function Listing() {
             </section>
           )}
 
+                 {/* Location */}
+                    <section className="mb-8">
+                      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h2 className="text-xl font-semibold mb-4">Location</h2>
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-3 text-gray-700">
+                            <FaMapMarkerAlt className="text-red-500" />
+                            <span>{listing.address}</span>
+                          </div>
+                          <div className="h-64 bg-gray-200 rounded-lg overflow-hidden">
+                            <iframe
+                              src={`https://maps.google.com/maps?q=${encodeURIComponent(listing.address)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                              width="100%"
+                              height="100%"
+                              style={{ border: 0 }}
+                              allowFullScreen=""
+                              loading="lazy"
+                              referrerPolicy="no-referrer-when-downgrade"
+                              title={`Location of ${listing.name}`}
+                            ></iframe>
+                          </div>
+                          <a
+                            href={generateMapLink(listing.address)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                          >
+                            <FaExternalLinkAlt />
+                            Open in Google Maps
+                          </a>
+                        </div>
+                      </div>
+                    </section>
+
           {/* Contact Host Section */}
           <section className="mb-8 section-card">
             <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Contact Host</h2>
@@ -1789,18 +2073,118 @@ export default function Listing() {
 
         {/* Right Column - Map and Reviews */}
         <div className="lg:col-span-1">
-          <section className="mb-8 section-card">
-            <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Location on Map</h2>
-            <div className="h-64 bg-gray-200 rounded-xl overflow-hidden shadow-lg">
-              <LoadScript >
-                <GoogleMap
-                  mapContainerStyle={{ width: '100%', height: '100%' }}
-                  center={mapLocation}
-                  zoom={14}
+          {/* NEW: Advertising Section */}
+          <section className="mb-8">
+            <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <MdAdsClick className="text-purple-600" />
+                Boost This Listing
+              </h2>
+              
+              <div className="space-y-4">
+                <p className="text-gray-600 text-sm">
+                  Get more visibility for your property by advertising on popular platforms.
+                </p>
+                
+                <div className="space-y-3">
+                  {ADVERTISING_PLATFORMS.map((platform) => (
+                    <div
+                      key={platform.name}
+                      className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
+                        advertisingState.selectedPlatforms.includes(platform.name)
+                          ? 'border-purple-500 bg-purple-50'
+                          : 'border-gray-200 hover:border-purple-300'
+                      }`}
+                      onClick={() => handleAdPlatformToggle(platform.name)}
+                    >
+                      <div className={`p-2 rounded-full text-white ${platform.color}`}>
+                        <platform.icon />
+                      </div>
+                      <span className="flex-1 font-medium">{platform.name}</span>
+                      <div className={`w-5 h-5 border-2 rounded ${
+                        advertisingState.selectedPlatforms.includes(platform.name)
+                          ? 'bg-purple-500 border-purple-500'
+                          : 'border-gray-300'
+                      }`}>
+                        {advertisingState.selectedPlatforms.includes(platform.name) && (
+                          <FaCheckCircle className="text-white text-xs" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Budget and Duration */}
+                <div className="space-y-4 pt-4 border-t">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Daily Budget: R{advertisingState.budget}
+                    </label>
+                    <input
+                      type="range"
+                      min="50"
+                      max="1000"
+                      step="50"
+                      value={advertisingState.budget}
+                      onChange={(e) => setAdvertisingState(prev => ({
+                        ...prev,
+                        budget: parseInt(e.target.value)
+                      }))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>R50</span>
+                      <span>R1000</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Duration: {advertisingState.duration} days
+                    </label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="30"
+                      value={advertisingState.duration}
+                      onChange={(e) => setAdvertisingState(prev => ({
+                        ...prev,
+                        duration: parseInt(e.target.value)
+                      }))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>1 day</span>
+                      <span>30 days</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cost Estimate */}
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between text-sm">
+                    <span>Estimated total:</span>
+                    <span className="font-semibold">
+                      R{(advertisingState.budget * advertisingState.duration).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleAdvertiseSubmit}
+                  disabled={advertisingState.loading || advertisingState.selectedPlatforms.length === 0}
+                  className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white py-3 px-4 rounded-md font-medium transition-colors flex items-center justify-center gap-2"
                 >
-                  <Marker position={mapLocation} />
-                </GoogleMap>
-              </LoadScript>
+                  {advertisingState.loading ? (
+                    <>
+                      <FaSpinner className="animate-spin" />
+                      Starting Campaign...
+                    </>
+                  ) : (
+                    'Start Advertising Campaign'
+                  )}
+                </button>
+              </div>
             </div>
           </section>
 
@@ -1825,34 +2209,6 @@ export default function Listing() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                {/* Airbnb-style stats summary */}
-                <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-                  <h3 className="font-semibold text-lg mb-3">Review Highlights</h3>
-                  <div className="space-y-3">
-                    {Object.entries(aiRating.categoryRatings).map(([category, rating]) => (
-                      <div key={category} className="flex items-center justify-between">
-                        <div className="flex items-center text-gray-700">
-                          {category === 'cleanliness' ? (
-                            <FaBroom className="mr-2 text-blue-500" />
-                          ) : (
-                            <FaUserFriends className="mr-2 text-blue-500" />
-                          )}
-                          <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
-                            <div
-                              className="bg-blue-600 h-2 rounded-full"
-                              style={{ width: `${(rating / 5) * 100}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm font-medium text-gray-700">{rating}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Recent Reviews Card */}
                 <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
                   <div className="flex justify-between items-center mb-4">

@@ -1629,25 +1629,21 @@ export default function Home() {
                   </div>
 
                   {/* Description - Shorter */}
-                  <p className="text-gray-500 text-xs leading-relaxed mb-1 line-clamp-1 min-h-[1rem]">
+                  <p className="text-gray-500 text-xs leading-relaxed mb-0 line-clamp-1 min-h-[1rem]">
                     {item.address?.substring(0, 80) || 'No description available'}
                   </p>
 
                   {/* Price - Smaller */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-base font-semibold text-gray-900">
+                      <span className="text-base text-xs font-semibold text-gray-900">
                         {formatPrice(item.priceNumber || item.regularPrice || 0)}
                       </span>
                       {item.type === 'rent' && (
                         <span className="text-gray-600 text-xs ml-1">month</span>
                       )}
                     </div>
-                    <div className="text-gray-400 hover:text-gray-600 transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    </div>
+                
                   </div>
                 </div>
               </Link>
