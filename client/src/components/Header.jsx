@@ -144,7 +144,7 @@ export default function Header() {
       setIsLoadingNotifications(true);
       const res = await fetch('/api/notifications', {
         headers: {
-          'Authorization': `Bearer ${currentUser.token}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
       
@@ -160,146 +160,251 @@ export default function Header() {
     }
   };
 
-  // Mark notifications as read
-  const markAsRead = async (notificationId = null) => {
-    if (!currentUser) return;
-    
-    try {
-      const res = await fetch('/api/notifications/read', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentUser.token}`
-        },
-        body: JSON.stringify({ notificationId })
-      });
-      
-      if (res.ok) {
-        // Update local state
-        if (notificationId) {
-          setNotifications(prev => prev.map(n => 
-            n._id === notificationId ? { ...n, read: true } : n
-          ));
-          setUnreadCount(prev => Math.max(0, prev - 1));
-        } else {
-          // Mark all as read
-          setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-          setUnreadCount(0);
-        }
-      }
-    } catch (error) {
-      console.error('Error marking notifications as read:', error);
-    }
-  };
-
-  // Set up WebSocket connection for real-time notifications
-  useEffect(() => {
-    if (!currentUser) return;
-
-    // Fetch initial notifications
-    fetchNotifications();
-
-    // Set up WebSocket connection (simulated with setInterval for demo)
-    const wsInterval = setInterval(() => {
-      // Simulate receiving new notifications
-      const shouldReceiveNotification = Math.random() > 0.8; // 20% chance
-      if (shouldReceiveNotification) {
-        const newNotification = {
-          _id: Date.now().toString(),
-          type: 'new_post',
-          message: 'New listing available in your area!',
-          data: {
-            postId: '123',
-            location: 'Your City',
-            title: 'Amazing Beach House'
-          },
-          read: false,
-          createdAt: new Date().toISOString()
-        };
-        
-        setNotifications(prev => [newNotification, ...prev]);
-        setUnreadCount(prev => prev + 1);
-      }
-    }, 30000); // Check every 30 seconds
-
-    return () => clearInterval(wsInterval);
-  }, [currentUser]);
-
-  // Function to handle user sign-out
+  // Handle sign out
   const handleSignOut = async () => {
     try {
       dispatch(signOutUserStart());
-      const res = await fetch("/api/auth/signout");
-      if (!res.ok) throw new Error('Sign out failed');
-      dispatch(signOutUserSuccess());
+      const res = await fetch('/api/auth/signout');
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(signOutUserFailure(data.message));
+        return;
+      }
+      dispatch(signOutUserSuccess(data));
+      navigate('/sign-in');
     } catch (error) {
       dispatch(signOutUserFailure(error.message));
     }
   };
 
-  // Function to perform a search and navigate to the results page
-  const performSearch = (term, type = activeType) => {
-    if (!term.trim()) return;
+  // Handle search submission
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!searchTerm.trim()) return;
 
-    // Create a new entry for the search history
-    const newEntry = { term: term.trim(), type, timestamp: Date.now() };
-    const updatedHistory = [
-      newEntry,
-      // Filter out any previous identical search to avoid duplicates
-      ...searchHistory.filter(item =>
-        !(item.term.toLowerCase() === term.trim().toLowerCase() && item.type === type)
-      )
-    ].slice(0, 10); // Keep only the 10 most recent searches
+    // Add to search history
+    const newSearch = {
+      term: searchTerm,
+      type: activeType,
+      timestamp: new Date().toISOString()
+    };
 
-    setSearchHistory(updatedHistory);
+    setSearchHistory(prev => {
+      const filtered = prev.filter(item => 
+        !(item.term === searchTerm && item.type === activeType)
+      );
+      return [newSearch, ...filtered].slice(0, 10);
+    });
 
-    // Navigate to the search page with the query parameters
-    navigate(`/search?searchTerm=${encodeURIComponent(term.trim())}&type=${type}`);
-    setSearchTerm('');
+    // Navigate to search results page
+    navigate(`/search?q=${encodeURIComponent(searchTerm)}&type=${activeType}`);
     setShowMobileSearchBar(false);
     setShowSuggestions(false);
   };
 
-  // Handler for submitting the search form
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    performSearch(searchTerm);
-  };
-
-  // Handler for clicking a search suggestion
+  // Handle clicking on a search suggestion
   const handleSuggestionClick = (suggestion) => {
-    performSearch(suggestion);
-  };
-
-  // Handler to clear the entire search history
-  const handleClearHistory = () => {
-    setSearchHistory([]);
-  };
-
-  // Handler to clear the current search input
-  const handleClearSearch = () => {
-    setSearchTerm('');
-    setShowSuggestions(true);
-  };
-
-  // Format notification time
-  const formatTime = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    setSearchTerm(suggestion);
+    setShowSuggestions(false);
     
-    if (diffInMinutes < 1) return 'Just now';
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
-    return `${Math.floor(diffInMinutes / 1440)}d ago`;
+    // Navigate to search results
+    navigate(`/search?q=${encodeURIComponent(suggestion)}&type=${activeType}`);
+    setShowMobileSearchBar(false);
   };
+
+  // Clear search history
+  const clearSearchHistory = () => {
+    setSearchHistory([]);
+    localStorage.removeItem('searchHistory');
+  };
+
+  // Toggle notification menu and fetch notifications when opened
+  const toggleNotificationMenu = () => {
+    if (!notificationMenu) {
+      fetchNotifications();
+    }
+    setNotificationMenu(!notificationMenu);
+  };
+
+  // Mark notifications as read
+  const markAsRead = async (notificationId = null) => {
+    try {
+      const res = await fetch('/api/notifications/read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ notificationId })
+      });
+
+      if (res.ok) {
+        fetchNotifications(); // Refresh notifications
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  // Handle notification click
+  const handleNotificationClick = (notification) => {
+    markAsRead(notification._id);
+    if (notification.link) {
+      navigate(notification.link);
+    }
+    setNotificationMenu(false);
+  };
+
+  // Search type options
+  const searchTypes = [
+    { key: 'all', label: 'All', icon: '🔍' },
+    { key: 'listings', label: 'Listings', icon: '🏠' },
+    { key: 'services', label: 'Services', icon: '🛠️' },
+    { key: 'helpers', label: 'Helpers', icon: '👥' },
+    { key: 'events', label: 'Events', icon: '🎪' }
+  ];
 
   return (
-    <header className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? '' : 'bg-transparent'}`}>
-      <div className="container mx-auto px-4 sm:px-6 py-3 max-w-7xl">
-        <div className="flex justify-between items-center">
-          {/* Logo Section */}
-<Link 
+    <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      isScrolled 
+        ? 'bg-white/95 backdrop-blur-lg shadow-lg border-b border-gray-200' 
+        : 'bg-gradient-to-b from-white/95 to-white/80 backdrop-blur-lg'
+    }`}>
+      {/* Mobile Search Overlay */}
+      {showMobileSearchBar && (
+        <div className="fixed inset-0 bg-white z-50 md:hidden">
+          <div ref={mobileSearchRef} className="p-4">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <button 
+                onClick={() => setShowMobileSearchBar(false)}
+                className="p-2 rounded-full hover:bg-gray-100"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+              <h3 className="text-lg font-semibold">Search</h3>
+              <div className="w-9"></div> {/* Spacer for balance */}
+            </div>
+
+            {/* Search Types */}
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+              {searchTypes.map((type) => (
+                <button
+                  key={type.key}
+                  onClick={() => setActiveType(type.key)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                    activeType === type.key
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <span>{type.icon}</span>
+                  {type.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Search Input */}
+            <form onSubmit={handleSearch} className="relative mb-4">
+              <input
+                type="text"
+                placeholder={`Search ${searchTypes.find(t => t.key === activeType)?.label?.toLowerCase() || 'everything'}...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-4 pl-12 rounded-2xl border border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition-all bg-white shadow-sm"
+                autoFocus
+              />
+              <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            </form>
+
+            {/* Search Suggestions */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-4">
+                <div className="p-3 border-b border-gray-100 flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">Suggestions</span>
+                  {searchHistory.length > 0 && (
+                    <button
+                      onClick={clearSearchHistory}
+                      className="text-xs text-pink-600 hover:text-pink-700 font-medium"
+                    >
+                      Clear history
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-60 overflow-y-auto">
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
+                    >
+                      <FiClock className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-700">{suggestion}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Searches */}
+            {searchHistory.length > 0 && !showSuggestions && (
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                <div className="p-3 border-b border-gray-100 flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">Recent searches</span>
+                  <button
+                    onClick={clearSearchHistory}
+                    className="text-xs text-pink-600 hover:text-pink-700 font-medium"
+                  >
+                    Clear all
+                  </button>
+                </div>
+                <div className="max-h-60 overflow-y-auto">
+                  {searchHistory.slice(0, 5).map((item, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(item.term)}
+                      className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
+                    >
+                      <FiClock className="w-4 h-4 text-gray-400" />
+                      <div className="flex-1">
+                        <div className="text-gray-700">{item.term}</div>
+                        <div className="text-xs text-gray-400 capitalize">{item.type}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Quick Actions */}
+            <div className="mt-6">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Quick actions</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  onClick={() => navigate('/plan-trip')}
+                  className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 text-blue-700 hover:shadow-md transition-all text-left"
+                >
+                  <FiMap className="w-5 h-5 mb-2" />
+                  <div className="text-sm font-medium">Plan Trip</div>
+                </button>
+                <button 
+                  onClick={() => navigate('/ai-assistant')}
+                  className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 text-purple-700 hover:shadow-md transition-all text-left"
+                >
+                  <FaBrain className="w-5 h-5 mb-2" />
+                  <div className="text-sm font-medium">AI Assistant</div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Header */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+        <Link 
   to="/" 
   className="inline-flex items-center hover:scale-105 transition-transform"
 >
@@ -362,103 +467,108 @@ export default function Header() {
   </span>
 </Link>
 
+          {/* Desktop Search Bar - Hidden on mobile */}
+          <div className="hidden md:flex flex-1 max-w-2xl mx-8">
+            <div className="relative w-full">
+              {/* Search Types */}
+              <div className="flex gap-1 mb-2">
+                {searchTypes.map((type) => (
+                  <button
+                    key={type.key}
+                    onClick={() => setActiveType(type.key)}
+                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                      activeType === type.key
+                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    <span className="text-xs">{type.icon}</span>
+                    {type.label}
+                  </button>
+                ))}
+              </div>
 
-          {/* Central Search Bar (Desktop) */}
-          <div className="hidden md:flex flex-grow justify-center px-4">
-            <form onSubmit={handleSearchSubmit} className="relative w-full max-w-md">
-              <input
-                type="text"
-                placeholder="Where to?"
-                className="w-full pl-5 pr-12 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-sm"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors">
-                <FiSearch className="w-5 h-5" />
-              </button>
-            </form>
+              {/* Search Input */}
+              <form onSubmit={handleSearch} className="relative">
+                <input
+                  type="text"
+                  placeholder={`Search ${searchTypes.find(t => t.key === activeType)?.label?.toLowerCase() || 'everything'}...`}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onFocus={() => setShowSuggestions(true)}
+                  className="w-full p-3 pl-12 rounded-2xl border border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition-all bg-white shadow-sm hover:shadow-md"
+                />
+                <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                
+                {/* Search Suggestions */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden z-50">
+                    <div className="max-h-80 overflow-y-auto">
+                      {suggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
+                        >
+                          <FiClock className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-700">{suggestion}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </form>
+            </div>
           </div>
 
-          {/* Main Navigation */}
-          <nav className="flex items-center gap-2 sm:gap-4">
-            {/* Mobile Search Icon */}
-            <button
-              onClick={() => {
-                setShowMobileSearchBar(true);
-                setShowSuggestions(true);
-              }}
+          {/* Right Side Actions */}
+          <div className="flex items-center space-x-4">
+            {/* Mobile Search Button */}
+            <button 
+              onClick={() => setShowMobileSearchBar(true)}
               className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors"
-              title="Search"
             >
-              <FiSearch className="w-6 h-6 text-gray-600 hover:text-rose-600" />
+              <FiSearch className="w-5 h-5 text-gray-600" />
             </button>
 
-            {/* "Become a Host" */}
+            {/* Create Listing Button - Hidden on mobile (shown in footer) */}
             <Link
-              to="/host"
-              className="hidden sm:flex items-center px-4 py-2 rounded-full text-sm font-medium text-white bg-rose-500 hover:bg-rose-600 transition-colors shadow-md"
+              to={currentUser ? `/${currentUser._id}/create-listing` : "/login-required"}
+              className="hidden md:flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-full hover:shadow-lg transition-all font-medium"
             >
-              <span>Become a Host</span>
+              <span>Create</span>
             </Link>
 
-            {/* Plan Trip Link */}
+            {/* Messages */}
             <Link
-              to="/plan-trip"
-              className="hidden md:flex items-center gap-1 px-3 py-2 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-              title="Plan a Trip"
+              to={currentUser ? "/messages" : "/login-required"}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors relative"
             >
-              <FiMap className="text-rose-600" />
-              <span>Plan Trip</span>
+              <FiMessageSquare className="w-5 h-5 text-gray-600" />
             </Link>
 
-            {/* AI Finder Link */}
-            <Link
-              to="/help-center"
-              className="hidden lg:flex items-center gap-1 px-3 py-2 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-              title="AI Help Center"
-            >
-              <FaBrain className="text-rose-600" />
-              <span>Help Center</span>
-            </Link>
-
-            {/* Message Icon */}
-            <button
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors hidden md:block"
-              title="Messages"
-            >
-              <FiMessageSquare className="w-5 h-5 text-gray-600 hover:text-rose-600" />
-            </button>
-
-            {/* Notification Icon with Badge */}
+            {/* Notifications */}
             <div className="relative" ref={notificationRef}>
               <button
-                onClick={() => {
-                  setNotificationMenu(!notificationMenu);
-                  if (!notificationMenu && unreadCount > 0) {
-                    markAsRead(); // Mark all as read when opening
-                  }
-                }}
+                onClick={toggleNotificationMenu}
                 className="p-2 rounded-full hover:bg-gray-100 transition-colors relative"
-                title="Notifications"
               >
-                <FiBell className="w-5 h-5 text-gray-600 hover:text-rose-600" />
+                <FiBell className="w-5 h-5 text-gray-600" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                 )}
               </button>
 
-              {/* Notification Dropdown - Fixed for small screens */}
+              {/* Notification Dropdown */}
               {notificationMenu && (
-                <div className="absolute right-0 mt-2 w-80 max-w-[90vw] bg-white rounded-xl shadow-lg border border-gray-200 max-h-96 overflow-y-auto z-50">
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden z-50">
                   <div className="p-4 border-b border-gray-100">
                     <div className="flex justify-between items-center">
                       <h3 className="font-semibold text-gray-900">Notifications</h3>
                       {unreadCount > 0 && (
                         <button
                           onClick={() => markAsRead()}
-                          className="text-sm text-rose-500 hover:text-rose-700"
+                          className="text-sm text-pink-600 hover:text-pink-700 font-medium"
                         >
                           Mark all as read
                         </button>
@@ -466,387 +576,134 @@ export default function Header() {
                     </div>
                   </div>
 
-                  <div className="p-2">
+                  <div className="max-h-96 overflow-y-auto">
                     {isLoadingNotifications ? (
-                      <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500 mx-auto"></div>
-                        <p className="text-gray-500 mt-2">Loading notifications...</p>
+                      <div className="p-8 text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600 mx-auto"></div>
                       </div>
-                    ) : notifications.length === 0 ? (
-                      <div className="text-center py-8">
-                        <FiBell className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                        <p className="text-gray-500">No notifications yet</p>
-                      </div>
-                    ) : (
+                    ) : notifications.length > 0 ? (
                       notifications.map((notification) => (
-                        <div
+                        <button
                           key={notification._id}
-                          className={`p-3 rounded-lg mb-1 cursor-pointer transition-colors ${
-                            notification.read 
-                              ? 'bg-white hover:bg-gray-50' 
-                              : 'bg-blue-50 hover:bg-blue-100'
+                          onClick={() => handleNotificationClick(notification)}
+                          className={`w-full text-left p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors ${
+                            !notification.read ? 'bg-blue-50' : ''
                           }`}
-                          onClick={() => {
-                            // Handle notification click based on type
-                            if (notification.type === 'new_post' && notification.data?.postId) {
-                              navigate(`/listing/${notification.data.postId}`);
-                            }
-                            if (!notification.read) {
-                              markAsRead(notification._id);
-                            }
-                          }}
                         >
                           <div className="flex items-start gap-3">
                             <div className={`p-2 rounded-full ${
-                              notification.read ? 'bg-gray-100' : 'bg-rose-100'
+                              notification.type === 'message' ? 'bg-blue-100 text-blue-600' :
+                              notification.type === 'booking' ? 'bg-green-100 text-green-600' :
+                              'bg-gray-100 text-gray-600'
                             }`}>
-                              {notification.type === 'new_post' && (
-                                <FiMap className="w-4 h-4 text-rose-500" />
-                              )}
+                              {notification.type === 'message' && <FiMessageSquare className="w-4 h-4" />}
+                              {notification.type === 'booking' && <FiMap className="w-4 h-4" />}
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className={`text-sm font-medium truncate ${
-                                notification.read ? 'text-gray-700' : 'text-gray-900'
-                              }`}>
-                                {notification.message}
-                              </p>
-                              {notification.data?.title && (
-                                <p className="text-xs text-gray-500 mt-1 truncate">
-                                  {notification.data.title}
-                                </p>
-                              )}
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-700">{notification.message}</p>
                               <p className="text-xs text-gray-400 mt-1">
-                                {formatTime(notification.createdAt)}
+                                {new Date(notification.createdAt).toLocaleDateString()}
                               </p>
                             </div>
+                            {!notification.read && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            )}
                           </div>
-                        </div>
+                        </button>
                       ))
+                    ) : (
+                      <div className="p-8 text-center">
+                        <FiBell className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                        <p className="text-gray-500 text-sm">No notifications yet</p>
+                      </div>
                     )}
                   </div>
+                </div>
+              )}
+            </div>
 
-                  {notifications.length > 0 && (
-                    <div className="p-3 border-t border-gray-100">
+            {/* User Menu */}
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setDropdownMenu(!dropdownMenu)}
+                className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm">
+                  {currentUser ? currentUser.username?.charAt(0)?.toUpperCase() : 'U'}
+                </div>
+              </button>
+
+              {dropdownMenu && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden z-50">
+                  {currentUser ? (
+                    <>
+                      <div className="p-4 border-b border-gray-100">
+                        <p className="font-semibold text-gray-900">{currentUser.username}</p>
+                        <p className="text-sm text-gray-500">{currentUser.email}</p>
+                      </div>
+                      <div className="p-2">
+                        <Link
+                          to="/dashboard"
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
+                        >
+                          Dashboard
+                        </Link>
+                        <Link
+                          to="/profile"
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
+                        >
+                          Profile
+                        </Link>
+                        <Link
+                          to="/wishlist"
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
+                        >
+                          Wishlist
+                        </Link>
+                        <Link
+                          to="/trips"
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
+                        >
+                          My Trips
+                        </Link>
+                        <Link
+                          to="/listings"
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
+                        >
+                          My Listings
+                        </Link>
+                      </div>
+                      <div className="p-2 border-t border-gray-100">
+                        <button
+                          onClick={handleSignOut}
+                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
+                        >
+                          Sign out
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="p-2">
                       <Link
-                        to="/notifications"
-                        className="block text-center text-sm text-rose-500 hover:text-rose-700 font-medium"
+                        to="/sign-in"
+                        className="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
                       >
-                        View all notifications
+                        Sign in
+                      </Link>
+                      <Link
+                        to="/sign-up"
+                        className="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
+                      >
+                        Sign up
                       </Link>
                     </div>
                   )}
                 </div>
               )}
             </div>
-
-            {/* User Menu Dropdown */}
-            <div className="relative" ref={menuRef}>
-              <button
-                onClick={() => setDropdownMenu(!dropdownMenu)}
-                className="flex items-center gap-2 p-1 rounded-full border border-gray-200 hover:shadow-md transition-all pl-3"
-                aria-label="User menu"
-              >
-                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-
-                {currentUser && (
-                  <img
-                    key={currentUser.updatedAt || Date.now()}
-                    className="w-8 h-8 rounded-full object-cover"
-                    src={currentUser.avatar || 'https://via.placeholder.com/40'}
-                    alt="Profile"
-                  />
-                )}
-
-                {!currentUser && (
-                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-500 text-lg">👤</span>
-                  </div>
-                )}
-              </button>
-
-              {/* Dropdown Menu Content - Fixed for small screens */}
-              {dropdownMenu && (
-                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-xl shadow-lg border border-gray-200 max-h-96 overflow-y-auto z-50">
-                  {!currentUser ? (
-                    <>
-                      <div className="py-1">
-                        <Link
-                          to="/sign-in"
-                          className="flex items-center px-4 py-3 text-gray-800 font-medium hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="mr-3 text-lg">🔑</span>
-                          Sign In
-                        </Link>
-                       <Link
-  to={`/${currentUser?._id}/create-listing`}
-  className="flex items-center px-4 py-3 text-rose-600 font-medium hover:bg-gray-50 transition-colors"
->
-  <span className="mr-3 text-lg">➕</span>
-  <span>Create Listing</span>
-</Link>
-                      </div>
-                      <div className="py-1">
-                        <Link
-                          to={`/${currentUser?._id}/create-listing`}
-                          className="sm:hidden flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <span>Create listing</span>
-                        </Link>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="px-4 py-3">
-                        <p className="text-sm font-medium text-gray-900">Welcome back</p>
-                        <p className="text-sm text-gray-500 truncate">{currentUser.email}</p>
-                      </div>
-
-                      <div className="py-1">
-                       <Link
-  to="/profile"
-  className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
->
-  <span className="mr-3 text-lg">🚶</span>
-  <span>Profile</span>
-</Link>
-
-                        <Link
-                          to="/helper-home-page"
-                          className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="mr-3 text-lg">👷</span>
-                          <span>Helpers</span>
-                        </Link>
-                        <Link
-                          to="/event-home-page"
-                          className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="mr-3 text-lg">🎉</span>
-                          <span>Events</span>
-                        </Link>
-                        <Link
-                          to="/listing-home-page"
-                          className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="mr-3 text-lg">🏡</span>
-                          <span>Properties</span>
-                        </Link>
-                        <Link
-                          to="/service-home-page"
-                          className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="mr-3 text-lg">🛎️</span>
-                          <span>Services</span>
-                        </Link>
-                      </div>
-
-                      <div className="py-1 hidden md:block">
-                        <Link
-                          to={`/${currentUser?._id}/WishList`}
-                          className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="mr-3 text-lg">❤️🔥</span>
-                          <span>Wishlist</span>
-                        </Link>
-                        <Link
-                          to="/trips"
-                          className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="mr-3 text-lg">✈️</span>
-                          <span>My Trips</span>
-                        </Link>
-                        <Link
-                          to="/List"
-                          className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="mr-3 text-lg">📋</span>
-                          <span>My Listings</span>
-                        </Link>
-                       <Link
-  to={`/${currentUser?._id}/create-listing`}
-  className="flex items-center px-4 py-3 text-rose-600 font-medium hover:bg-gray-50 transition-colors"
->
-  <span className="mr-3 text-lg">➕</span>
-  <span>Create Listing</span>
-</Link>
-                      </div>
-                      <div className="py-1">
-                        <Link
-                          to="/users"
-                          className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="mr-3 text-lg">👥</span>
-                          <span>All Users</span>
-                        </Link>
-                        <Link
-                          to="/help-center"
-                          className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="mr-3 text-lg">🤖</span>
-                          <span>AI Help Center</span>
-                        </Link>
-
-                    
-                      </div>
-
-                      <div className="py-1">
-                        <button
-                          onClick={handleSignOut}
-                          className="flex items-center w-full px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="mr-3 text-lg">🚪</span>
-                          <span>Sign Out</span>
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          </nav>
-        </div>
-      </div>
-
-      {/* Enhanced Mobile Search Bar */}
-      {showMobileSearchBar && (
-        <div
-          className="absolute top-full left-0 w-full bg-white backdrop-blur-md shadow-lg md:hidden animate-fadeIn z-50"
-          ref={mobileSearchRef}
-        >
-          <div className="p-4">
-            {/* Search Input */}
-            <div className="relative mb-3">
-              <form onSubmit={handleSearchSubmit}>
-                <input
-                  type="text"
-                  placeholder={`Search ${activeType}...`}
-                  className="w-full pl-5 pr-12 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-sm"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  autoFocus
-                  onFocus={() => setShowSuggestions(true)}
-                />
-
-                {/* Clear button */}
-                {searchTerm && (
-                  <button
-                    type="button"
-                    className="absolute right-14 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                    onClick={handleClearSearch}
-                  >
-                    <FiX className="w-5 h-5" />
-                  </button>
-                )}
-
-                {/* Search button */}
-                <button
-                  type="submit"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors"
-                >
-                  <FiSearch className="w-5 h-5" />
-                </button>
-              </form>
-            </div>
-
-            {/* Search Type Tabs */}
-            <div className="flex overflow-x-auto gap-2 pb-3 hide-scrollbar">
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'listings', label: 'Listings' },
-                { id: 'services', label: 'Services' },
-                { id: 'helpers', label: 'Helpers' },
-                { id: 'events', label: 'Events' }
-              ].map((type) => (
-                <button
-                  key={type.id}
-                  className={`flex-shrink-0 px-4 py-2 text-sm rounded-full whitespace-nowrap transition-all ${activeType === type.id
-                    ? 'bg-rose-500 text-white shadow-sm'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  onClick={() => {
-                    setActiveType(type.id);
-                    setShowSuggestions(true);
-                  }}
-                >
-                  {type.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Suggestions Section */}
-            {showSuggestions && (
-              <div className="pt-2 border-t border-gray-100">
-                {/* Search History */}
-                {searchHistory.length > 0 && searchTerm === '' && (
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-medium text-gray-900 flex items-center">
-                        <FiClock className="mr-2 text-gray-500" />
-                        Recent Searches
-                      </h3>
-                      <button
-                        onClick={handleClearHistory}
-                        className="text-sm text-rose-500 hover:text-rose-700"
-                      >
-                        Clear all
-                      </button>
-                    </div>
-
-                    <div className="space-y-2">
-                      {searchHistory
-                        .filter(item => activeType === 'all' || item.type === activeType)
-                        .slice(0, 3)
-                        .map((item, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
-                            onClick={() => handleSuggestionClick(item.term)}
-                          >
-                            <div className="flex items-center">
-                              <FiClock className="text-gray-400 mr-3 flex-shrink-0" />
-                              <span className="font-medium">{item.term}</span>
-                              <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full capitalize">
-                                {item.type}
-                              </span>
-                            </div>
-                            <FiSearch className="text-gray-400 group-hover:text-rose-500" />
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                )}
-
-
-                {/* Suggestions */}
-                {suggestions.length > 0 && (
-                  <div>
-                    <h3 className="font-medium text-gray-900 mb-2">
-                      {searchTerm ? 'Suggestions' : 'Popular Searches'}
-                    </h3>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      {suggestions.map((suggestion, index) => (
-                        <div
-                          key={index}
-                          className="p-3 bg-gray-50 hover:bg-rose-50 rounded-lg cursor-pointer border border-gray-100 transition-colors"
-                          onClick={() => handleSuggestionClick(suggestion)}
-                        >
-                          <div className="flex items-center">
-                            <FiSearch className="text-gray-400 mr-2 flex-shrink-0" />
-                            <span className="font-medium truncate">{suggestion}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
-      )}
-    </header>
+      </div>
+    </div>
   );
 }
