@@ -12,7 +12,7 @@ import Search from "./pages/Search";
 import Message from "./pages/Message";
 
 // Dashboard Page
-import Dashboard from "./pages/Dashboard";
+import DashBoard from "./pages/DashBoard";
 
 // Listing Related Pages
 import CreateListing from "./pages/CreateListing";
@@ -99,7 +99,7 @@ export default function App() {
         <Route path="/message" element={<Message />} />
         
         {/* Dashboard Route */}
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard" element={<DashBoard />} />
         
         {/* Listing Routes */}
         <Route path="/list" element={<List />} />
