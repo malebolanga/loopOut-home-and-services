@@ -1371,6 +1371,597 @@ export default function HelperPage() {
             </div>
           </div>
 
+          {/* Host Rating Categories Section */}
+          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <h2 className="text-xl md:text-2xl font-semibold mb-6 text-gray-800 flex items-center gap-2">
+              <FaUserFriends className="text-blue-600" />
+              Rate the {getProfessionalTitle(helper.type)} & Service
+            </h2>
+            
+            {/* Overall Rating Summary */}
+            <div className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-center sm:text-left">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-1">Overall Service Rating</h3>
+                  <p className="text-gray-600 text-sm">
+                    Based on customer feedback and experience
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-blue-600">
+                      {helper.rating?.toFixed(1) || '5.0'}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg ${
+                            star <= Math.floor(helper.rating || 5)
+                              ? 'text-yellow-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Rating Categories Grid - Dynamic based on helper type */}
+            <div className="space-y-3">
+              {/* Maid/Domestic Helper Categories */}
+              {(helper.type === 'maid' || helper.type === 'domestic') && (
+                <>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">👕</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Laundry & Ironing</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Quality of laundry and ironing service</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">🏠</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">House Cleaning</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Thoroughness and attention to detail</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">👨‍🍳</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Cooking Quality</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Taste and presentation of meals</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">👶</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Baby Sitting</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Care and attention to children</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">🌳</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Yard Cleaning</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Garden and outdoor maintenance</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">💬</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Communication</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Clarity and responsiveness</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Barber Categories */}
+              {(helper.type === 'barber' || helper.type === 'barbar') && (
+                <>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">✂️</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Equipment Quality</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Tools and equipment condition</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">🧼</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Salon Cleanliness</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Cleanliness of the workspace</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">💬</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Communication</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Understanding your style needs</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">🛁</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Towel Cleanliness</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Freshness of towels and linens</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">⏰</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Time Keeping</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Punctuality and efficiency</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">💇</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Haircut Quality</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Precision and style execution</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Beauty/Spa Categories */}
+              {(helper.type === 'beauty' || helper.type === 'spa') && (
+                <>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">💬</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Communication</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Understanding your beauty needs</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">🔧</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Equipment Quality</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Tools and product quality</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">⏰</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Time Keeping</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Punctuality and appointment management</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">✨</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Salon Cleanliness</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Clean and hygienic environment</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">💆</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Service Quality</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Overall service experience</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Chef Categories */}
+              {(helper.type === 'chef' || helper.type === 'cooking') && (
+                <>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">👨‍🍳</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Cooking Skills</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Culinary expertise and technique</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">🧼</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Kitchen Cleanliness</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Clean and organized workspace</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">⏰</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Time Management</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Punctuality and meal timing</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Default Categories for other types */}
+              {!['maid', 'domestic', 'barber', 'barbar', 'beauty', 'spa', 'chef', 'cooking'].includes(helper.type) && (
+                <>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">💼</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Professionalism</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Overall professional conduct</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">💬</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Communication</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Clarity and responsiveness</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">⏰</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Punctuality</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Time management and reliability</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Rating Guidelines */}
+            <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-5 h-5 bg-amber-100 rounded-full flex items-center justify-center mt-0.5">
+                  <svg className="w-3 h-3 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-medium text-amber-800 text-sm mb-1">Rating Guidelines</h4>
+                  <p className="text-amber-700 text-xs leading-relaxed">
+                    Your honest ratings help other customers find great service providers and maintain quality standards. 
+                    Rate based on your actual experience with the service quality, communication, and professionalism.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Additional Information */}
           <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Additional Information</h2>

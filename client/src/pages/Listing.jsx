@@ -58,8 +58,7 @@ import {
   FaLinkedin,
   FaTiktok,
   FaGlobe,
-  FaRegStar,
-  FaStarHalfAlt,
+ 
 } from "react-icons/fa";
 
 // Styles
@@ -1296,77 +1295,95 @@ export default function Listing() {
           </section>
 
           {/* NEW: Host Rating Section */}
-          <section className="mb-8 section-card">
-            <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
-              <FaUserFriends className="text-blue-600" />
-              Rate the Host & Staff
-            </h2>
-            
-            {/* Overall Host Rating */}
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold">Overall Host Rating</h3>
-                  <p className="text-gray-600 text-sm">
-                    {hostRatings.totalRatings} rating{hostRatings.totalRatings !== 1 ? 's' : ''}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-yellow-600">
-                    {hostRatings.average.toFixed(1)}
-                  </div>
-                  <StarRating 
-                    rating={Math.round(hostRatings.average)} 
-                    readonly={true}
-                    size="text-xl"
-                  />
-                </div>
-              </div>
-            </div>
+{/* Host Rating Categories */}
+<section className="mb-8 section-card">
+  <h2 className="text-xl md:text-2xl font-semibold mb-6 text-gray-800 flex items-center gap-2">
+    <FaUserFriends className="text-blue-600" />
+    Rate the Host & Staff
+  </h2>
+  
+  {/* Overall Host Rating Summary */}
+  <div className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="text-center sm:text-left">
+        <h3 className="text-lg font-semibold text-gray-800 mb-1">Overall Host Rating</h3>
+        <p className="text-gray-600 text-sm">
+          Based on {hostRatings.totalRatings} rating{hostRatings.totalRatings !== 1 ? 's' : ''}
+        </p>
+      </div>
+      <div className="flex items-center gap-4">
+        <div className="text-center">
+          <div className="text-3xl font-bold text-blue-600">
+            {hostRatings.average.toFixed(1)}
+          </div>
+          <StarRating 
+            rating={Math.round(hostRatings.average)} 
+            readonly={true}
+            size="text-lg"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
 
-            {/* Rating Categories */}
-            <div className="space-y-4">
-              {HOST_RATING_CATEGORIES.map(({ name, icon: Icon, key }) => (
-                <div key={key} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Icon className="text-blue-600 text-xl" />
-                    <span className="font-medium">{name}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <StarRating
-                      rating={hostRatings.userRating?.[key] || 0}
-                      onRatingChange={(rating) => handleRateHost(key, rating)}
-                      readonly={false}
-                    />
-                    <span className="text-sm text-gray-600 w-12 text-right">
-                      {hostRatings.categoryRatings[key]?.toFixed(1) || '0.0'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+  {/* Rating Categories Grid */}
+  <div className="space-y-3">
+    {HOST_RATING_CATEGORIES.map(({ name, icon: Icon, key }) => (
+      <div 
+        key={key} 
+        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200"
+      >
+        {/* Category Info */}
+        <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+          <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+            <Icon className="text-blue-600 text-lg" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-semibold text-gray-800 text-sm sm:text-base">{name}</h3>
+            <p className="text-gray-500 text-xs sm:text-sm">
+              Rate your experience
+            </p>
+          </div>
+        </div>
 
-            {/* Rating Tips */}
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-700">
-                <strong>Tip:</strong> Your ratings help other guests find great hosts and improve the community experience.
-              </p>
-            </div>
-          </section>
+        {/* Rating Controls */}
+        <div className="flex items-center justify-between sm:justify-end gap-4 sm:w-auto">
+          <div className="flex-shrink-0">
+            <StarRating
+              rating={hostRatings.userRating?.[key] || 0}
+              onRatingChange={(rating) => handleRateHost(key, rating)}
+              readonly={false}
+              size="text-base sm:text-lg"
+            />
+          </div>
+          <div className="w-12 text-right">
+            <span className="text-sm font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded-md min-w-[40px] inline-block text-center">
+              {hostRatings.categoryRatings[key]?.toFixed(1) || '0.0'}
+            </span>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
 
-          <section className="mb-6 section-card">
-            <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Amenities</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-              {AMENITIES.map(({ icon: Icon, label, key }) => (
-                listing[key] && (
-                  <div key={key} className="flex items-center gap-3 p-2 md:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                    <Icon className="text-gray-600 text-lg md:text-xl" />
-                    <span className="text-sm md:text-base text-gray-700">{label}</span>
-                  </div>
-                )
-              ))}
-            </div>
-          </section>
+  {/* Rating Guidelines */}
+  <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+    <div className="flex items-start gap-3">
+      <div className="flex-shrink-0 w-5 h-5 bg-amber-100 rounded-full flex items-center justify-center mt-0.5">
+        <svg className="w-3 h-3 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+        </svg>
+      </div>
+      <div>
+        <h4 className="font-medium text-amber-800 text-sm mb-1">Rating Guidelines</h4>
+        <p className="text-amber-700 text-xs leading-relaxed">
+          Your honest ratings help other guests find great hosts and maintain community standards. 
+          Rate based on your actual experience with cleanliness, communication, staff service, and location accuracy.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
 
           <section className="mb-8 section-card">
             <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">About this space</h2>
