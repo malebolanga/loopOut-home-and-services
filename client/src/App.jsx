@@ -11,6 +11,9 @@ import Profile from "./pages/Profile";
 import Search from "./pages/Search";
 import Message from "./pages/Message";
 
+// Dashboard Page
+import Dashboard from "./pages/Dashboard";
+
 // Listing Related Pages
 import CreateListing from "./pages/CreateListing";
 import UpdateListing from "./pages/UpdateListing";
@@ -74,13 +77,12 @@ import TermsOfService from './components/TermsOfService';
 import LoginRequiredPage from './components/LoginRequiredPage';
 
 // User Features
-
 import Wishlist from './pages/WishList';
 import Events from './pages/Events';
 import Private from "./pages/Private";
 
-// ADD THIS IMPORT FOR THE NEW COMPONENT
-import TripSearch from './pages/TripSearch';  // Make sure this path is correct
+// Trip Components
+import TripSearch from './pages/TripSearch';
 import TripDetail from './pages/TripDetail';
 import Trips from './pages/Trips';
 
@@ -96,6 +98,9 @@ export default function App() {
         <Route path="/search" element={<Search />} />
         <Route path="/message" element={<Message />} />
         
+        {/* Dashboard Route */}
+        <Route path="/dashboard" element={<Dashboard />} />
+        
         {/* Listing Routes */}
         <Route path="/list" element={<List />} />
         <Route path="/listings/:type" element={<ListingsPage />} />
@@ -104,16 +109,16 @@ export default function App() {
         <Route path="/helper-list" element={<HelperList />} />
         <Route path="/commercial" element={<Commercial />} />
         <Route path="/overnight" element={<OverNight />} />
-        <Route path="/overnight" element={<OverNight />} />
         <Route path="/listing/:listingId" element={<Listing />} />
         <Route path="/helper-home-page" element={<HelpersHomePage />} />
         <Route path="/event-home-page" element={<EventsHomePage />} />
         <Route path="/listing-home-page" element={<ListingsHomePage />} />
-         <Route path="/service-home-page" element={<ServicesHomePage />} />
-        {/* Trip Routes - ADDED NEW SECTION */}
+        <Route path="/service-home-page" element={<ServicesHomePage />} />
+        
+        {/* Trip Routes */}
         <Route path="/trips" element={<Trips />} />
         <Route path="/trip/:id" element={<TripDetail />} />
-        <Route path="/plan-trip" element={<TripSearch />} />  {/* New trip search route */}
+        <Route path="/plan-trip" element={<TripSearch />} />
         
         {/* Service Routes */}
         <Route path="/helper/:id" element={<HelperPage />} />
