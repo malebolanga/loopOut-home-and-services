@@ -77,14 +77,14 @@ export const getHostRatings = async(req, res) => {
     try {
         const { hostId } = req.params;
         const { listingId } = req.query;
-        const userId = req.user ?
+        const userId = req.user ? .id;
 
-            if (!hostId) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Host ID is required'
-                });
-            }
+        if (!hostId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Host ID is required'
+            });
+        }
 
         const ratingStats = await calculateHostRatingStats(hostId, listingId, userId);
 

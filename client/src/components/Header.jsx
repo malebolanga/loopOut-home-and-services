@@ -267,7 +267,7 @@ export default function Header() {
   return (
     <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       isScrolled 
-        ? 'bg-white/95 backdrop-blur-lg shadow-lg border-b border-gray-200' 
+        ? 'bg-white/95 backdrop-blur-lg  border-gray-200' 
         : 'bg-gradient-to-b from-white/95 to-white/80 backdrop-blur-lg'
     }`}>
       {/* Mobile Search Overlay */}
