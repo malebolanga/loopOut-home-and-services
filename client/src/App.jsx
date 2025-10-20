@@ -59,6 +59,8 @@ import PaymentMethod from './pages/PaymentMethod';
 import Sale from "./pages/Sale";
 
 // Help & Resources
+import SafetyHelper from "./components/SafetyHelper";
+import SafetyServices from "./components/SafetyServices";
 import Newsroom from "./components/Newsroom";
 import HowItWorks from './components/HowItWorks';
 import Investors from './components/Investors';
@@ -141,6 +143,8 @@ export default function App() {
         <Route path="/help-center" element={<AIHelpCenter />} />
         
         {/* Informational Routes */}
+        <Route path="/safetyservices" element={<SafetyServices />} />
+        <Route path="/safetyhelper" element={<SafetyHelper />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/become" element={<Become />} />

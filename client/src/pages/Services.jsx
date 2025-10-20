@@ -2241,7 +2241,7 @@ const ServicePage = () => {
             
             <div className="mt-6 pt-4 border-t border-yellow-200">
               <a 
-                href="/aboutloop" 
+                href="/safetyservices" 
                 className="inline-flex items-center gap-2 text-yellow-700 hover:text-yellow-800 font-semibold transition-colors hover:underline"
               >
                 <span>Learn more about our safety policies</span>

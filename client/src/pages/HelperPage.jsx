@@ -2066,7 +2066,7 @@ export default function HelperPage() {
                         <div className="space-y-2 text-sm">
                           <p className="text-blue-700">We prioritize your safety and satisfaction</p>
                           <Link 
-                            to="/safety-policy" 
+                            to="/safetyhelper" 
                             className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium transition-colors"
                           >
                             <FaShieldAlt className="text-xs" />
@@ -2206,7 +2206,7 @@ export default function HelperPage() {
                   </a>
                 )}
                 <Link
-                  to="/safety-policy"
+                  to="/safetyhelper"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                 >
                   <FaShieldAlt className="text-sm" />
