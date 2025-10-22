@@ -6,6 +6,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Zoom, Thumbs } from "swiper/modules";
 import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import emailjs from "emailjs-com";
 
 import Calendar from "react-calendar";
@@ -1612,6 +1613,31 @@ export default function Listing() {
                 </div>
               </div>
             </div>
+
+
+                        {/* Quick Contact Actions */}
+                        <div className="mt-6 pt-6 border-t border-gray-200">
+                          <h3 className="font-medium text-gray-700 mb-3">Quick Actions</h3>
+                          <div className="flex flex-wrap gap-3">
+                            {listing.contact && (
+                              <a
+                                href={`tel:${listing.contact}`}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                              >
+                                <FaPhone className="text-sm" />
+                                Call Now
+                              </a>
+                            )}
+                        
+                            <Link
+                              to="/propertysafety"
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                            >
+                              <FaShieldAlt className="text-sm" />
+                              Safety Policy
+                            </Link>
+                          </div>
+                        </div>
           </section>
 
           {/* Office Booking Section */}

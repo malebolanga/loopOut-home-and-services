@@ -73,6 +73,11 @@ export default function CreateListing() {
   // New fields for school transport
   vehicleType: "",
   routeAreas: "",
+  // ID Verification fields
+  idVerified: false,
+  idNumber: "",
+  idDocument: "",
+  idType: "sa_id",
 });
 
   const [helperForm, setHelperForm] = useState({
@@ -97,7 +102,12 @@ export default function CreateListing() {
     equipment: '',
     travelFee: '',
     bookingNotice: '',
-    additionalPricing: ''
+    additionalPricing: '',
+    // ID Verification fields
+    idVerified: false,
+    idNumber: "",
+    idDocument: "",
+    idType: "sa_id",
   });
 
   const [eventForm, setEventForm] = useState({
@@ -139,62 +149,78 @@ export default function CreateListing() {
   const [paymentRequired, setPaymentRequired] = useState(false);
 
   // Check post limit on component mount
- // Check post limit on component mount
-useEffect(() => {
-  setLoading(true);
-  const timer = setTimeout(() => {
-    const fetchPostCount = async () => {
-      if (!currentUser) {
-        setLoading(false);
-        return;
-      }
+  useEffect(() => {
+    setLoading(true);
+    const timer = setTimeout(() => {
+      const fetchPostCount = async () => {
+        if (!currentUser) {
+          setLoading(false);
+          return;
+        }
 
-      try {
-        // Use the correct API endpoint based on your environment
-        const apiUrl = import.meta.env.VITE_API_BASE_URL || '';
-        const res = await fetch(`${apiUrl}/api/user/post-count`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ userId: currentUser._id }),
-        });
+        try {
+          // Use the correct API endpoint based on your environment
+          const apiUrl = import.meta.env.VITE_API_BASE_URL || '';
+          const res = await fetch(`${apiUrl}/api/user/post-count`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId: currentUser._id }),
+          });
 
-        if (!res.ok) {
-          if (res.status === 404) {
-            // If endpoint doesn't exist, assume no limit
+          if (!res.ok) {
+            if (res.status === 404) {
+              // If endpoint doesn't exist, assume no limit
+              setPostLimitReached(false);
+              setPaymentRequired(false);
+              return;
+            }
+            throw new Error(`Error: ${res.status}`);
+          }
+
+          const data = await res.json();
+
+          // Assuming your API returns { count: number, limit: number }
+          if (data.count >= (data.limit || 3)) {
+            setPostLimitReached(true);
+            setPaymentRequired(true);
+          } else {
             setPostLimitReached(false);
             setPaymentRequired(false);
-            return;
           }
-          throw new Error(`Error: ${res.status}`);
-        }
-
-        const data = await res.json();
-
-        // Assuming your API returns { count: number, limit: number }
-        if (data.count >= (data.limit || 3)) {
-          setPostLimitReached(true);
-          setPaymentRequired(true);
-        } else {
+        } catch (err) {
+          console.error("Failed to fetch post count:", err);
+          // Default to no limits if there's an error
           setPostLimitReached(false);
           setPaymentRequired(false);
+        } finally {
+          setLoading(false);
         }
-      } catch (err) {
-        console.error("Failed to fetch post count:", err);
-        // Default to no limits if there's an error
-        setPostLimitReached(false);
-        setPaymentRequired(false);
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
 
-    fetchPostCount();
-  }, 800);
+      fetchPostCount();
+    }, 800);
 
-  return () => clearTimeout(timer);
-}, [currentUser]);
+    return () => clearTimeout(timer);
+  }, [currentUser]);
+
+  // South African ID validation function
+  const validateSAID = (idNumber) => {
+    // Basic 13-digit check
+    if (!/^\d{13}$/.test(idNumber)) return false;
+
+    // Check if it's a valid date (first 6 digits: YYMMDD)
+    const year = parseInt(idNumber.substring(0, 2));
+    const month = parseInt(idNumber.substring(2, 4));
+    const day = parseInt(idNumber.substring(4, 6));
+    
+    if (month < 1 || month > 12) return false;
+    if (day < 1 || day > 31) return false;
+    
+    // Basic checks passed
+    return true;
+  };
 
   // Image compression function
   const compressImage = async (file) => {
@@ -259,13 +285,16 @@ useEffect(() => {
   // Store image function
   const storeImage = async (file) => {
     return new Promise((resolve, reject) => {
-      if (!file.type.match('image.*')) {
-        reject(new Error('Only image files are allowed'));
+      // Allow images and PDFs for ID documents
+      if (!file.type.match(/image.*|application\/pdf/)) {
+        reject(new Error('Only image and PDF files are allowed'));
         return;
       }
 
-      if (file.size > 2 * 1024 * 1024) {
-        reject(new Error('Image size must be less than 2MB'));
+      // Increase size limit for ID documents if needed
+      const maxSize = file.type.match(/image.*/) ? 2 * 1024 * 1024 : 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        reject(new Error(`File size must be less than ${maxSize / 1024 / 1024}MB`));
         return;
       }
 
@@ -283,7 +312,7 @@ useEffect(() => {
         },
         (error) => {
           console.error("Upload error:", error);
-          let errorMessage = "Image upload failed";
+          let errorMessage = "File upload failed";
 
           switch (error.code) {
             case 'storage/unauthorized':
@@ -305,7 +334,7 @@ useEffect(() => {
             resolve(downloadURL);
           } catch (error) {
             console.error("Error getting download URL:", error);
-            reject(new Error("Failed to get image URL"));
+            reject(new Error("Failed to get file URL"));
           }
         }
       );
@@ -527,44 +556,43 @@ useEffect(() => {
   };
 
   // Handle service form change
-// Handle service form change
-const handleServiceChange = (e) => {
-  const { id, value, type, checked } = e.target;
+  const handleServiceChange = (e) => {
+    const { name, value, type, checked } = e.target;
 
-  const serviceTypes = [
-    "cleaning", 
-    "maintenance", 
-    "moving", 
-    "landscaping", 
-    "catering", 
-    "other",
-    "daycare",        
-    "schoolTransport"
-  ];
+    const serviceTypes = [
+      "cleaning", 
+      "maintenance", 
+      "moving", 
+      "landscaping", 
+      "catering", 
+      "other",
+      "daycare",        
+      "schoolTransport"
+    ];
 
-  if (serviceTypes.includes(id)) {
-    return setServiceForm({ ...serviceForm, type: id });
-  }
-
-  if (type === "checkbox") {
-    setServiceForm({ ...serviceForm, [id]: checked });
-  } else {
-    setServiceForm({ ...serviceForm, [id]: value });
-  }
-};
-
-   // Handle helper form change - UPDATED TO INCLUDE BARBER TYPE
-  const handleHelperChange = (e) => {
-    const { id, value, type, checked } = e.target;
-
-    if (id === "domestic" || id === "errand" || id === "tutor" || id === "chef" || id === "beauty" || id === "tattoo" || id === "barber") {
-      return setHelperForm({ ...helperForm, type: id });
+    if (serviceTypes.includes(name)) {
+      return setServiceForm({ ...serviceForm, type: name });
     }
 
     if (type === "checkbox") {
-      setHelperForm({ ...helperForm, [id]: checked });
+      setServiceForm({ ...serviceForm, [name]: checked });
     } else {
-      setHelperForm({ ...helperForm, [id]: value });
+      setServiceForm({ ...serviceForm, [name]: value });
+    }
+  };
+
+  // Handle helper form change
+  const handleHelperChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
+    if (name === "domestic" || name === "errand" || name === "tutor" || name === "chef" || name === "beauty" || name === "tattoo" || name === "barber") {
+      return setHelperForm({ ...helperForm, type: name });
+    }
+
+    if (type === "checkbox") {
+      setHelperForm({ ...helperForm, [name]: checked });
+    } else {
+      setHelperForm({ ...helperForm, [name]: value });
     }
   };
 
@@ -624,11 +652,18 @@ const handleServiceChange = (e) => {
     }
   };
 
-
-
   // Handle service form submit
   const handleServiceSubmit = async (e) => {
     e.preventDefault();
+
+    // ID Verification Check
+    if (!serviceForm.idNumber || !serviceForm.idDocument) {
+      return setError("ID verification is required for service listings");
+    }
+
+    if (serviceForm.idType === "sa_id" && !validateSAID(serviceForm.idNumber)) {
+      return setError("Please enter a valid 13-digit South African ID number");
+    }
 
     if (serviceForm.imageUrls.length < 1) {
       return setError("You must upload at least one image");
@@ -647,16 +682,18 @@ const handleServiceChange = (e) => {
         body: JSON.stringify({
           ...serviceForm,
           creator: currentUser._id,
-          offer: false // or set based on your form logic
+          offer: false,
+          idVerified: false // Set to false initially, admin will verify
         }),
       });
-      const data = await res.json();
 
-      if (data.success === false) {
-        setError(data.message);
-      } else {
-        navigate(`/service/${data._id}`);
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || "Failed to create service listing");
       }
+
+      const data = await res.json();
+      navigate(`/service/${data._id}`);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -664,48 +701,53 @@ const handleServiceChange = (e) => {
     }
   };
 
-
-
   // Handle helper form submit
-// Update the handleHelperSubmit function
-const handleHelperSubmit = async (e) => {
-  e.preventDefault();
+  const handleHelperSubmit = async (e) => {
+    e.preventDefault();
 
-  if (helperForm.imageUrls.length < 1) {
-    return setError("You must upload at least one image");
-  }
-
-  setLoading(true);
-  setError(null);
-
-  try {
-    const res = await fetch("/api/helper/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem('access_token')}`
-      },
-      body: JSON.stringify({
-        ...helperForm,
-        userRef: currentUser._id
-      }),
-    });
-
-    // Check if response is OK before parsing JSON
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(errorText || "Failed to create helper listing");
+    // ID Verification Check
+    if (!helperForm.idNumber || !helperForm.idDocument) {
+      return setError("ID verification is required for helper listings");
     }
 
-    const data = await res.json();
-    navigate(`/helper/${data._id}`);
-  } catch (err) {
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+    if (helperForm.idType === "sa_id" && !validateSAID(helperForm.idNumber)) {
+      return setError("Please enter a valid 13-digit South African ID number");
+    }
 
+    if (helperForm.imageUrls.length < 1) {
+      return setError("You must upload at least one image");
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/helper/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify({
+          ...helperForm,
+          userRef: currentUser._id,
+          idVerified: false // Set to false initially, admin will verify
+        }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || "Failed to create helper listing");
+      }
+
+      const data = await res.json();
+      navigate(`/helper/${data._id}`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEventSubmit = async (e) => {
     e.preventDefault();
@@ -805,6 +847,214 @@ const handleHelperSubmit = async (e) => {
     return cardNumberValid && expiryValid && cvvValid && nameValid;
   };
 
+  // ID Verification Section Component
+  const IDVerificationSection = ({ formType, formData, onChange, onIDUpload }) => {
+    const [idFile, setIdFile] = useState(null);
+    const [idUploading, setIdUploading] = useState(false);
+
+    const handleIDUpload = async () => {
+      if (!idFile) {
+        setError("Please select an ID document to upload");
+        return;
+      }
+
+      setIdUploading(true);
+      try {
+        // Check file type and size
+        if (!idFile.type.match(/image.*|application\/pdf/) || idFile.size > 5 * 1024 * 1024) {
+          throw new Error("Please upload a JPG, PNG, or PDF file under 5MB");
+        }
+
+        const downloadURL = await storeImage(idFile);
+        onIDUpload(downloadURL);
+        setIdFile(null);
+        setError(null);
+      } catch (error) {
+        console.error("ID upload failed:", error);
+        setError(error.message || "Failed to upload ID document");
+      } finally {
+        setIdUploading(false);
+      }
+    };
+
+    const validateIDNumber = (idNumber) => {
+      if (formData.idType === "sa_id") {
+        return validateSAID(idNumber);
+      }
+      // For other ID types, basic length check
+      return idNumber.length >= 5;
+    };
+
+    const getIDPlaceholder = () => {
+      switch (formData.idType) {
+        case "sa_id":
+          return "Enter 13-digit SA ID number";
+        case "passport":
+          return "Enter passport number";
+        case "drivers_license":
+          return "Enter driver's license number";
+        default:
+          return "Enter ID number";
+      }
+    };
+
+    return (
+      <div className="bg-white p-6 rounded-xl shadow-sm border-2 border-yellow-200">
+        <h3 className="text-lg font-semibold text-yellow-700 mb-4 flex items-center gap-2">
+          🔐 ID Verification Required
+        </h3>
+        
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* ID Type Selection */}
+          <div className="space-y-2">
+            <label className="font-medium text-gray-700">ID Type *</label>
+            <select
+              name="idType"
+              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+              onChange={onChange}
+              value={formData.idType}
+            >
+              <option value="sa_id">South African ID</option>
+              <option value="passport">Passport</option>
+              <option value="drivers_license">Driver's License</option>
+            </select>
+          </div>
+
+          {/* ID Number */}
+          <div className="space-y-2">
+            <label className="font-medium text-gray-700">ID Number *</label>
+            <input
+              type="text"
+              name="idNumber"
+              className={`w-full p-3 border rounded-lg focus:ring-yellow-500 focus:border-yellow-500 ${
+                formData.idNumber && !validateIDNumber(formData.idNumber) 
+                  ? 'border-red-500 bg-red-50' 
+                  : formData.idNumber && validateIDNumber(formData.idNumber)
+                  ? 'border-green-500 bg-green-50'
+                  : 'border-gray-200'
+              }`}
+              placeholder={getIDPlaceholder()}
+              onChange={onChange}
+              value={formData.idNumber}
+              maxLength={formData.idType === "sa_id" ? 13 : 20}
+            />
+            {formData.idNumber && !validateIDNumber(formData.idNumber) && (
+              <p className="text-red-500 text-sm">
+                {formData.idType === "sa_id" 
+                  ? "Please enter a valid 13-digit South African ID number" 
+                  : "Please enter a valid ID number"}
+              </p>
+            )}
+            {formData.idNumber && validateIDNumber(formData.idNumber) && (
+              <p className="text-green-500 text-sm">✓ Valid ID number format</p>
+            )}
+          </div>
+
+          {/* ID Document Upload */}
+          <div className="md:col-span-2 space-y-4">
+            <label className="font-medium text-gray-700">Upload ID Document *</label>
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                accept="image/*,.pdf"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    // Validate file type
+                    if (!file.type.match(/image.*|application\/pdf/)) {
+                      setError("Please upload only JPG, PNG, or PDF files");
+                      return;
+                    }
+                    // Validate file size (5MB max)
+                    if (file.size > 5 * 1024 * 1024) {
+                      setError("File size must be less than 5MB");
+                      return;
+                    }
+                    setIdFile(file);
+                    setError(null);
+                  }
+                }}
+                className="hidden"
+                id={`idDocument-${formType}`}
+              />
+              <label
+                htmlFor={`idDocument-${formType}`}
+                className={`flex-1 p-6 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                  idFile 
+                    ? 'border-yellow-400 bg-yellow-50' 
+                    : 'border-gray-300 hover:border-yellow-400'
+                }`}
+              >
+                <span className="text-2xl mb-2">📄</span>
+                <span className="text-gray-600 text-center">
+                  {idFile ? `Selected: ${idFile.name}` : "Click to upload ID document"}
+                </span>
+                <span className="text-sm text-gray-500 mt-1">JPG, PNG or PDF (Max 5MB)</span>
+              </label>
+              <button
+                type="button"
+                onClick={handleIDUpload}
+                disabled={!idFile || idUploading}
+                className="h-full px-6 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {idUploading ? "Uploading..." : "Upload"}
+              </button>
+            </div>
+
+            {/* ID Document Preview */}
+            {formData.idDocument && (
+              <div className="mt-4 p-4 border border-green-200 bg-green-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-green-600 text-xl">✅</span>
+                    <div>
+                      <p className="font-medium text-green-800">ID Document Uploaded Successfully</p>
+                      <p className="text-sm text-green-600">
+                        Your ID will be verified manually. This may take 24-48 hours.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onIDUpload("");
+                      setError(null);
+                    }}
+                    className="text-red-500 hover:text-red-700 p-1"
+                  >
+                    Remove
+                  </button>
+                </div>
+                
+                {/* Preview for images */}
+                {formData.idDocument.match(/\.(jpg|jpeg|png|gif)$/i) && (
+                  <div className="mt-3 max-w-xs">
+                    <img 
+                      src={formData.idDocument} 
+                      alt="ID Document Preview" 
+                      className="w-full h-auto rounded border"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Verification Info */}
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-700">
+            <strong>Why we need ID verification:</strong> This helps ensure trust and safety for all users. 
+            Your ID information is encrypted and stored securely. Listings without verified ID may have limited visibility.
+          </p>
+        </div>
+      </div>
+    );
+  };
+
   // Loading state
   if (loading && !showPromotionPopup) {
     return (
@@ -862,1026 +1112,1040 @@ const handleHelperSubmit = async (e) => {
       )}
 
       {/* Tab Navigation */}
-  <div className="max-w-3xl mx-auto mt-0 mb-8 p-6 bg-white rounded-xl shadow-md">
-  {/* Guidance heading with subtle animation */}
-  <h2 className="text-xl font-semibold text-center text-gray-800 mb-6 transition-all duration-300">
-    {activeTab === 'stays' ? 'List your property for sale or rent' : 
-     activeTab === 'experiences' ? 'Offer your professional services' : 
-     activeTab === 'online' ? 'Register as a personal helper' : 
-     'Create a local event or happening'}
-  </h2>
-  
-  <div className="overflow-hidden">
-    <div className="relative">
-      {/* 3D Animated indicator bar with gradient */}
-      <div 
-        className={`absolute bottom-0 h-1.5 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] ${
-          activeTab === 'stays' ? 'left-[0%] w-[25%]' :
-          activeTab === 'experiences' ? 'left-[25%] w-[25%]' :
-          activeTab === 'online' ? 'left-[50%] w-[25%]' :
-          'left-[75%] w-[25%]'
-        }`}
-        style={{
-          boxShadow: '0 2px 12px rgba(236, 72, 153, 0.4)',
-          transform: 'translateZ(0)'
-        }}
-      />
-      
-      <nav className="flex bg-gray-50 rounded-lg p-1.5">
-        {[
-          { id: 'stays', emoji: '🏠', label: 'Properties' },
-          { id: 'experiences', emoji: '🛎️', label: 'Services' },
-          { id: 'online', emoji: '👷', label: 'Helpers' },
-          { id: 'events', emoji: '🎪', label: 'Events' }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`relative flex-1 py-5 text-center transition-all duration-300 rounded-lg ${
-              activeTab === tab.id 
-                ? 'bg-white shadow-lg' 
-                : 'hover:bg-gray-100'
-            }`}
-            style={{
-              transformStyle: 'preserve-3d'
-            }}
-          >
-            <div className="flex flex-col items-center">
-              <span 
-                className={`text-4xl mb-3 font-bold transition-all duration-500 ${
-                  activeTab === tab.id 
-                    ? 'text-rose-600' 
-                    : 'text-gray-500'
-                }`}
-                style={{
-                  transform: activeTab === tab.id 
-                    ? 'scale(1.3) translateY(-4px) translateZ(12px)' 
-                    : 'scale(1) translateZ(0)',
-                  filter: activeTab === tab.id 
-                    ? 'drop-shadow(0 6px 12px rgba(236, 72, 153, 0.3))' 
-                    : 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
-                  textShadow: activeTab === tab.id
-                    ? '2px 2px 4px rgba(0,0,0,0.2), -1px -1px 0 rgba(255,255,255,0.3)'
-                    : '1px 1px 2px rgba(0,0,0,0.1)',
-                  transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1)',
-                  willChange: 'transform, filter'
-                }}
-              >
-                {tab.emoji}
-              </span>
-              <span className={`text-sm font-medium transition-colors ${
-                activeTab === tab.id 
-                  ? 'text-rose-700 font-semibold' 
-                  : 'text-gray-600'
-              }`}>
-                {tab.label}
-              </span>
-            </div>
+      <div className="max-w-3xl mx-auto mt-0 mb-8 p-6 bg-white rounded-xl shadow-md">
+        <h2 className="text-xl font-semibold text-center text-gray-800 mb-6 transition-all duration-300">
+          {activeTab === 'stays' ? 'List your property for sale or rent' : 
+           activeTab === 'experiences' ? 'Offer your professional services' : 
+           activeTab === 'online' ? 'Register as a personal helper' : 
+           'Create a local event or happening'}
+        </h2>
+        
+        <div className="overflow-hidden">
+          <div className="relative">
+            <div 
+              className={`absolute bottom-0 h-1.5 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] ${
+                activeTab === 'stays' ? 'left-[0%] w-[25%]' :
+                activeTab === 'experiences' ? 'left-[25%] w-[25%]' :
+                activeTab === 'online' ? 'left-[50%] w-[25%]' :
+                'left-[75%] w-[25%]'
+              }`}
+              style={{
+                boxShadow: '0 2px 12px rgba(236, 72, 153, 0.4)',
+                transform: 'translateZ(0)'
+              }}
+            />
             
-            {/* 3D depth effect for active tab */}
-            {activeTab === tab.id && (
-              <div 
-                className="absolute inset-0 rounded-lg pointer-events-none"
-                style={{
-                  border: '2px solid rgba(236, 72, 153, 0.15)',
-                  transform: 'translateZ(8px)',
-                  zIndex: -1
-                }}
-              />
-            )}
-          </button>
-        ))}
-      </nav>
-    </div>
-  </div>
-</div>
-
-      {/* Property Form */}
-      {/* Property Form */}
-{activeTab === 'stays' && (
-  <form onSubmit={handlePropertySubmit} className="space-y-8">
-    {/* Property Type Selection */}
-    <div className="p-6 bg-white rounded-xl shadow-sm">
-      <h2 className="text-xl font-semibold text-gray-800 mb-6">Select Property Type</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {[
-          { id: "rent", label: "Room/Home Rent", emoji: "🏠" },
-          { id: "over", label: "Guest House", emoji: "🛌" },
-          { id: "office", label: "Accomodation Per Hour", emoji: "🕒" },
-          { id: "land", label: "Land", emoji: "🌳" },
-          { id: "sale", label: "For Sale", emoji: "💰" },
-        ].map((type) => (
-          <button
-            key={type.id}
-            type="button"
-            onClick={() => setPropertyForm({ ...propertyForm, type: type.id })}
-            className={`p-4 border-2 rounded-lg flex flex-col items-center transition-all ${propertyForm.type === type.id
-                ? "border-airbnb-red bg-red-50"
-                : "border-gray-200 hover:border-airbnb-red/50"
-              }`}
-          >
-            <span className="text-2xl mb-2">{type.emoji}</span>
-            <span className="font-medium text-gray-700">{type.label}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-
-    {/* Basic Information */}
-    <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
-      <h2 className="text-xl font-semibold">Basic Information</h2>
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="space-y-1">
-          <label className="font-medium text-gray-700">Property Name</label>
-          <input
-            type="text"
-            id="name"
-            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-            placeholder="Cozy Mountain Cabin"
-            onChange={handlePropertyChange}
-            value={propertyForm.name}
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="font-medium text-gray-700">Address</label>
-          <input
-            type="text"
-            id="address"
-            className="w-full p-3 border border-gray-200 rounded-lg"
-            placeholder="Enter full address"
-            onChange={handlePropertyChange}
-            value={propertyForm.address}
-          />
-        </div>
-
-        <div className="md:col-span-2 space-y-1">
-          <label className="font-medium text-gray-700">Description</label>
-          <textarea
-            id="description"
-            className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
-            placeholder="Describe your property..."
-            onChange={handlePropertyChange}
-            value={propertyForm.description}
-          />
-        </div>
-
-        <div className="md:col-span-2 space-y-1">
-          <label className="font-medium text-gray-700">Mention nearby points of interest</label>
-          <textarea
-            id="near"
-            className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
-            placeholder="Mention nearby points of interest"
-            onChange={handlePropertyChange}
-            value={propertyForm.near}
-          />
-        </div>
-
-        <div className="md:col-span-2 space-y-1">
-          <label className="font-medium text-gray-700">Enter any rules or regulations for the property</label>
-          <textarea
-            id="rules"
-            className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
-            placeholder="Enter any rules or regulations for the property"
-            onChange={handlePropertyChange}
-            value={propertyForm.rules}
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="font-medium text-gray-700">Contact Details</label>
-          <input
-            type="number"
-            id="contact"
-            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-            placeholder="Contact Details"
-            onChange={handlePropertyChange}
-            value={propertyForm.contact}
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="font-medium text-gray-700">Name of Host/Seller</label>
-          <input
-            type="text"
-            id="host"
-            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-            placeholder="Contact Details"
-            onChange={handlePropertyChange}
-            value={propertyForm.host}
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="font-medium text-gray-700">Type (e.g., House or Room)</label>
-          <input
-            type="text"
-            id="kind"
-            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-            placeholder="Type (e.g., House or Room)"
-            onChange={handlePropertyChange}
-            value={propertyForm.kind}
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="font-medium text-gray-700">Available from which date</label>
-          <input
-            type="text"
-            id="period"
-            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-            placeholder="Available from which date"
-            onChange={handlePropertyChange}
-            value={propertyForm.period}
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="font-medium text-gray-700">Cancellation Policy</label>
-          <input
-            type="text"
-            id="cancel"
-            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-            placeholder="Cancellation Policy"
-            onChange={handlePropertyChange}
-            value={propertyForm.cancel}
-          />
-        </div>
-      </div>
-    </div>
-
-    {/* Media Upload */}
-    <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
-      <h2 className="text-xl font-semibold">Add Photos & Video</h2>
-
-      {/* Image Upload */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <input
-            type="file"
-            id="images"
-            accept="image/*"
-            multiple
-            onChange={handleFileChange}
-            className="hidden"
-            disabled={uploading}
-          />
-          <label
-            htmlFor="images"
-            className={`flex-1 p-8 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${uploading ? 'border-gray-200 bg-gray-50' : 'border-gray-300 hover:border-airbnb-red'
-              }`}
-          >
-            <span className="text-3xl mb-2">📸</span>
-            <span className="text-gray-600">Drag photos or click to upload</span>
-            <span className="text-sm text-gray-500">Up to 10 photos (2MB max each)</span>
-          </label>
-          <button
-            type="button"
-            onClick={() => handleImageSubmit('property')}
-            className="h-full px-6 bg-airbnb-red text-black rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-            disabled={uploading || files.length === 0}
-          >
-            {uploading ? "Uploading..." : "Upload"}
-          </button>
-        </div>
-
-        {imageUploadError && (
-          <p className="text-red-500 text-sm">{imageUploadError}</p>
-        )}
-
-        {/* Image Previews */}
-        {propertyForm.imageUrls.length > 0 && (
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {propertyForm.imageUrls.map((url, index) => (
-              <div key={url} className="relative aspect-square">
-                <img
-                  src={url}
-                  alt="listing"
-                  className="w-full h-full object-cover rounded-lg"
-                  onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/300x300?text=Image+Not+Available';
+            <nav className="flex bg-gray-50 rounded-lg p-1.5">
+              {[
+                { id: 'stays', emoji: '🏠', label: 'Properties' },
+                { id: 'experiences', emoji: '🛎️', label: 'Services' },
+                { id: 'online', emoji: '👷', label: 'Helpers' },
+                { id: 'events', emoji: '🎪', label: 'Events' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative flex-1 py-5 text-center transition-all duration-300 rounded-lg ${
+                    activeTab === tab.id 
+                      ? 'bg-white shadow-lg' 
+                      : 'hover:bg-gray-100'
+                  }`}
+                  style={{
+                    transformStyle: 'preserve-3d'
                   }}
+                >
+                  <div className="flex flex-col items-center">
+                    <span 
+                      className={`text-4xl mb-3 font-bold transition-all duration-500 ${
+                        activeTab === tab.id 
+                          ? 'text-rose-600' 
+                          : 'text-gray-500'
+                      }`}
+                      style={{
+                        transform: activeTab === tab.id 
+                          ? 'scale(1.3) translateY(-4px) translateZ(12px)' 
+                          : 'scale(1) translateZ(0)',
+                        filter: activeTab === tab.id 
+                          ? 'drop-shadow(0 6px 12px rgba(236, 72, 153, 0.3))' 
+                          : 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
+                        textShadow: activeTab === tab.id
+                          ? '2px 2px 4px rgba(0,0,0,0.2), -1px -1px 0 rgba(255,255,255,0.3)'
+                          : '1px 1px 2px rgba(0,0,0,0.1)',
+                        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1)',
+                        willChange: 'transform, filter'
+                      }}
+                    >
+                      {tab.emoji}
+                    </span>
+                    <span className={`text-sm font-medium transition-colors ${
+                      activeTab === tab.id 
+                        ? 'text-rose-700 font-semibold' 
+                        : 'text-gray-600'
+                    }`}>
+                      {tab.label}
+                    </span>
+                  </div>
+                  
+                  {/* 3D depth effect for active tab */}
+                  {activeTab === tab.id && (
+                    <div 
+                      className="absolute inset-0 rounded-lg pointer-events-none"
+                      style={{
+                        border: '2px solid rgba(236, 72, 153, 0.15)',
+                        transform: 'translateZ(8px)',
+                        zIndex: -1
+                      }}
+                    />
+                  )}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      {/* Property Form */}
+      {activeTab === 'stays' && (
+        <form onSubmit={handlePropertySubmit} className="space-y-8">
+          {/* Property Type Selection */}
+          <div className="p-6 bg-white rounded-xl shadow-sm">
+            <h2 className="text-xl font-semibold text-gray-800 mb-6">Select Property Type</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {[
+                { id: "rent", label: "Room/Home Rent", emoji: "🏠" },
+                { id: "over", label: "Guest House", emoji: "🛌" },
+                { id: "office", label: "Accomodation Per Hour", emoji: "🕒" },
+                { id: "land", label: "Land", emoji: "🌳" },
+                { id: "sale", label: "For Sale", emoji: "💰" },
+              ].map((type) => (
+                <button
+                  key={type.id}
+                  type="button"
+                  onClick={() => setPropertyForm({ ...propertyForm, type: type.id })}
+                  className={`p-4 border-2 rounded-lg flex flex-col items-center transition-all ${propertyForm.type === type.id
+                      ? "border-airbnb-red bg-red-50"
+                      : "border-gray-200 hover:border-airbnb-red/50"
+                    }`}
+                >
+                  <span className="text-2xl mb-2">{type.emoji}</span>
+                  <span className="font-medium text-gray-700">{type.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Basic Information */}
+          <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
+            <h2 className="text-xl font-semibold">Basic Information</h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <label className="font-medium text-gray-700">Property Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                  placeholder="Cozy Mountain Cabin"
+                  onChange={handlePropertyChange}
+                  value={propertyForm.name}
                 />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-medium text-gray-700">Address</label>
+                <input
+                  type="text"
+                  id="address"
+                  className="w-full p-3 border border-gray-200 rounded-lg"
+                  placeholder="Enter full address"
+                  onChange={handlePropertyChange}
+                  value={propertyForm.address}
+                />
+              </div>
+
+              <div className="md:col-span-2 space-y-1">
+                <label className="font-medium text-gray-700">Description</label>
+                <textarea
+                  id="description"
+                  className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
+                  placeholder="Describe your property..."
+                  onChange={handlePropertyChange}
+                  value={propertyForm.description}
+                />
+              </div>
+
+              <div className="md:col-span-2 space-y-1">
+                <label className="font-medium text-gray-700">Mention nearby points of interest</label>
+                <textarea
+                  id="near"
+                  className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
+                  placeholder="Mention nearby points of interest"
+                  onChange={handlePropertyChange}
+                  value={propertyForm.near}
+                />
+              </div>
+
+              <div className="md:col-span-2 space-y-1">
+                <label className="font-medium text-gray-700">Enter any rules or regulations for the property</label>
+                <textarea
+                  id="rules"
+                  className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
+                  placeholder="Enter any rules or regulations for the property"
+                  onChange={handlePropertyChange}
+                  value={propertyForm.rules}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-medium text-gray-700">Contact Details</label>
+                <input
+                  type="number"
+                  id="contact"
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                  placeholder="Contact Details"
+                  onChange={handlePropertyChange}
+                  value={propertyForm.contact}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-medium text-gray-700">Name of Host/Seller</label>
+                <input
+                  type="text"
+                  id="host"
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                  placeholder="Contact Details"
+                  onChange={handlePropertyChange}
+                  value={propertyForm.host}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-medium text-gray-700">Type (e.g., House or Room)</label>
+                <input
+                  type="text"
+                  id="kind"
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                  placeholder="Type (e.g., House or Room)"
+                  onChange={handlePropertyChange}
+                  value={propertyForm.kind}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-medium text-gray-700">Available from which date</label>
+                <input
+                  type="text"
+                  id="period"
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                  placeholder="Available from which date"
+                  onChange={handlePropertyChange}
+                  value={propertyForm.period}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-medium text-gray-700">Cancellation Policy</label>
+                <input
+                  type="text"
+                  id="cancel"
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                  placeholder="Cancellation Policy"
+                  onChange={handlePropertyChange}
+                  value={propertyForm.cancel}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Media Upload */}
+          <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
+            <h2 className="text-xl font-semibold">Add Photos & Video</h2>
+
+            {/* Image Upload */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <input
+                  type="file"
+                  id="images"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileChange}
+                  className="hidden"
+                  disabled={uploading}
+                />
+                <label
+                  htmlFor="images"
+                  className={`flex-1 p-8 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${uploading ? 'border-gray-200 bg-gray-50' : 'border-gray-300 hover:border-airbnb-red'
+                    }`}
+                >
+                  <span className="text-3xl mb-2">📸</span>
+                  <span className="text-gray-600">Drag photos or click to upload</span>
+                  <span className="text-sm text-gray-500">Up to 10 photos (2MB max each)</span>
+                </label>
                 <button
                   type="button"
-                  onClick={() => handleRemoveImage(index, 'property')}
-                  className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"
-                  disabled={uploading}
+                  onClick={() => handleImageSubmit('property')}
+                  className="h-full px-6 bg-airbnb-red text-black rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                  disabled={uploading || files.length === 0}
                 >
-                  ❌
+                  {uploading ? "Uploading..." : "Upload"}
                 </button>
               </div>
-            ))}
+
+              {imageUploadError && (
+                <p className="text-red-500 text-sm">{imageUploadError}</p>
+              )}
+
+              {/* Image Previews */}
+              {propertyForm.imageUrls.length > 0 && (
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {propertyForm.imageUrls.map((url, index) => (
+                    <div key={url} className="relative aspect-square">
+                      <img
+                        src={url}
+                        alt="listing"
+                        className="w-full h-full object-cover rounded-lg"
+                        onError={(e) => {
+                          e.target.src = 'https://via.placeholder.com/300x300?text=Image+Not+Available';
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index, 'property')}
+                        className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"
+                        disabled={uploading}
+                      >
+                        ❌
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Video Upload */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <input
+                  type="file"
+                  id="video"
+                  accept="video/*"
+                  onChange={(e) => setVideoFile(e.target.files[0])}
+                  className="hidden"
+                  disabled={uploading}
+                />
+                <label
+                  htmlFor="video"
+                  className={`flex-1 p-8 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${uploading ? 'border-gray-200 bg-gray-50' : 'border-gray-300 hover:border-airbnb-red'
+                    }`}
+                >
+                  <span className="text-3xl mb-2">🎥</span>
+                  <span className="text-gray-600">Upload a property video</span>
+                  <span className="text-sm text-gray-500">Max 50MB</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleVideoUpload}
+                  className="h-full px-6 bg-airbnb-red  text-black rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                  disabled={uploading || !videoFile}
+                >
+                  {uploading ? "Uploading..." : "Upload"}
+                </button>
+              </div>
+
+              {videoUploadError && (
+                <p className="text-red-500 text-sm">{videoUploadError}</p>
+              )}
+
+              {/* Video Preview */}
+              {propertyForm.videoUrl && (
+                <div className="relative rounded-lg overflow-hidden">
+                  <video controls className="w-full">
+                    <source src={propertyForm.videoUrl} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                  <button
+                    type="button"
+                    onClick={() => setPropertyForm({ ...propertyForm, videoUrl: "" })}
+                    className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"
+                    disabled={uploading}
+                  >
+                    ❌
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        )}
-      </div>
 
-      {/* Video Upload */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <input
-            type="file"
-            id="video"
-            accept="video/*"
-            onChange={(e) => setVideoFile(e.target.files[0])}
-            className="hidden"
-            disabled={uploading}
-          />
-          <label
-            htmlFor="video"
-            className={`flex-1 p-8 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${uploading ? 'border-gray-200 bg-gray-50' : 'border-gray-300 hover:border-airbnb-red'
-              }`}
-          >
-            <span className="text-3xl mb-2">🎥</span>
-            <span className="text-gray-600">Upload a property video</span>
-            <span className="text-sm text-gray-500">Max 50MB</span>
-          </label>
-          <button
-            type="button"
-            onClick={handleVideoUpload}
-            className="h-full px-6 bg-airbnb-red  text-black rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-            disabled={uploading || !videoFile}
-          >
-            {uploading ? "Uploading..." : "Upload"}
-          </button>
-        </div>
+          {/* Amenities */}
+          <div className="bg-white p-6 rounded-xl shadow-sm">
+            <h2 className="text-xl font-semibold mb-6">Amenities</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {[
+                { id: "wifi", label: "WiFi", emoji: "📶" },
+                { id: "kitchen", label: "Kitchen", emoji: "🍳" },
+                { id: "parking", label: "Parking", emoji: "🅿️" },
+                { id: "pool", label: "Pool", emoji: "🏊‍♂️" },
+                { id: "tv", label: "TV", emoji: "📺" },
+                { id: "bedrooms", label: "Bedrooms", emoji: "🛏️" },
+                { id: "bathrooms", label: "Baths", emoji: "🚿" },
+                { id: "stove", label: "Stovetop", emoji: "🔥" },
+                { id: "storage", label: "Wardrobe", emoji: "👔" },
+                { id: "security", label: "Security", emoji: "🔒" },
+                { id: "furnished", label: "Furnished", emoji: "🪑" },
+                { id: "hot", label: "Hot Shower", emoji: "🚿" },
+                { id: "pets", label: "Pets Allowed", emoji: "🐾" },
+                { id: "prepaid", label: "Electricity Pripaid", emoji: "⚡" },
+                { id: "fridge", label: "Refrigerator", emoji: "❄️" },
+                { id: "share", label: "House Share", emoji: "👥" },
+                { id: "breakfast", label: "Breakfast", emoji: "🍳" },
+                { id: "party", label: "Non-Party", emoji: "🔇" },
+              ].map((amenity) => (
+                <label
+                  key={amenity.id}
+                  className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer ${propertyForm[amenity.id] ? "border-airbnb-red bg-red-50" : "border-gray-200"
+                    }`}
+                >
+                  <input
+                    type="checkbox"
+                    id={amenity.id}
+                    checked={propertyForm[amenity.id]}
+                    onChange={handlePropertyChange}
+                    className="hidden"
+                  />
+                  <span className="text-xl">{amenity.emoji}</span>
+                  <span className="font-medium">{amenity.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
 
-        {videoUploadError && (
-          <p className="text-red-500 text-sm">{videoUploadError}</p>
-        )}
+          {/* Property Details */}
+          <div className="bg-white p-6 rounded-xl shadow-sm">
+            <h2 className="text-xl font-semibold mb-6">Property Details</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Square Meters for Land/Office or Bedrooms for other types */}
+              <div className="space-y-2">
+                <label htmlFor="bedrooms" className="flex items-center gap-2 text-gray-700 font-medium">
+                  {propertyForm.type === "land" || propertyForm.type === "office" ? (
+                    <>
+                      <span>📏</span>
+                      Square Meters
+                    </>
+                  ) : (
+                    <>
+                      <span>🛏️</span>
+                      Bedrooms
+                    </>
+                  )}
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    id="bedrooms"
+                    min={propertyForm.type === "land" || propertyForm.type === "" ? 0 : 1}
+                    max={propertyForm.type === "land" || propertyForm.type === "office" ? 1000000 : 10000}
+                    required
+                    className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                    onChange={handlePropertyChange}
+                    value={propertyForm.bedrooms}
+                  />
+                  {propertyForm.type === "land" || propertyForm.type === "" ? (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                      sqm
+                    </span>
+                  ) : null}
+                </div>
+              </div>
 
-        {/* Video Preview */}
-        {propertyForm.videoUrl && (
-          <div className="relative rounded-lg overflow-hidden">
-            <video controls className="w-full">
-              <source src={propertyForm.videoUrl} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
+              {/* Hide bathrooms for land/office */}
+              {propertyForm.type !== "land" && propertyForm.type !== "" && (
+                <div className="space-y-2">
+                  <label htmlFor="bathrooms" className="flex items-center gap-2 text-gray-700 font-medium">
+                    <span>🚿</span>
+                    Bathrooms
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      id="bathrooms"
+                      min="0"
+                      max="10"
+                      required
+                      className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                      onChange={handlePropertyChange}
+                      value={propertyForm.bathrooms}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Price Field */}
+              <div className="space-y-2">
+                <label htmlFor="regularPrice" className="flex items-center gap-2 text-gray-700 font-medium">
+                  <span>💰</span>
+                  Price
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    id="regularPrice"
+                    min="50"
+                    max="10000000"
+                    required
+                    className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                    onChange={handlePropertyChange}
+                    value={propertyForm.regularPrice}
+                  />
+                  {propertyForm.type === "rent" && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                      / month
+                    </span>
+                  )}
+                  {propertyForm.type === "over" && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                      / night
+                    </span>
+                  )}
+                    {propertyForm.type === "office" && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                      / per hour
+                    </span>
+                  )}
+                  {(propertyForm.type === "land" || propertyForm.type === "" || propertyForm.type === "sale") && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                      total
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Offer Checkbox */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="offer"
+                  checked={propertyForm.offer}
+                  onChange={handlePropertyChange}
+                  className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
+                />
+                <label htmlFor="offer" className="font-medium text-gray-700">
+                  Offer Discount
+                </label>
+              </div>
+
+              {/* Discount Price */}
+              {propertyForm.offer && (
+                <div className="space-y-2">
+                  <label htmlFor="discountPrice" className="flex items-center gap-2 text-gray-700 font-medium">
+                    <span>🤑</span>
+                    Discounted Price
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      id="discountPrice"
+                      min="0"
+                      max="10000000"
+                      required
+                      className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                      onChange={handlePropertyChange}
+                      value={propertyForm.discountPrice}
+                    />
+                    {propertyForm.type === "rent" && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                        / month
+                      </span>
+                    )}
+                    {propertyForm.type === "over" && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                        / night
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Submit Section */}
+          <div className="bg-white p-6 rounded-xl shadow-sm">
             <button
-              type="button"
-              onClick={() => setPropertyForm({ ...propertyForm, videoUrl: "" })}
-              className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"
-              disabled={uploading}
+              type="submit"
+              disabled={loading}
+                className="w-full bg-white text-airbnb-red border border-airbnb-red font-semibold rounded-lg hover:bg-gray-100 transition-colors py-4 disabled:opacity-70"
             >
-              ❌
+              {loading ? "Creating Listing..." : "Publish Property Listing"}
             </button>
+            {error && <p className="mt-3 text-red-600 text-sm">{error}</p>}
           </div>
-        )}
-      </div>
-    </div>
-
-    {/* Amenities */}
-    <div className="bg-white p-6 rounded-xl shadow-sm">
-      <h2 className="text-xl font-semibold mb-6">Amenities</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {[
-          { id: "wifi", label: "WiFi", emoji: "📶" },
-          { id: "kitchen", label: "Kitchen", emoji: "🍳" },
-          { id: "parking", label: "Parking", emoji: "🅿️" },
-          { id: "pool", label: "Pool", emoji: "🏊‍♂️" },
-          { id: "tv", label: "TV", emoji: "📺" },
-          { id: "bedrooms", label: "Bedrooms", emoji: "🛏️" },
-          { id: "bathrooms", label: "Baths", emoji: "🚿" },
-          { id: "stove", label: "Stovetop", emoji: "🔥" },
-          { id: "storage", label: "Wardrobe", emoji: "👔" },
-          { id: "security", label: "Security", emoji: "🔒" },
-          { id: "furnished", label: "Furnished", emoji: "🪑" },
-          { id: "hot", label: "Hot Shower", emoji: "🚿" },
-          { id: "pets", label: "Pets Allowed", emoji: "🐾" },
-          { id: "prepaid", label: "Electricity Pripaid", emoji: "⚡" },
-          { id: "fridge", label: "Refrigerator", emoji: "❄️" },
-          { id: "share", label: "House Share", emoji: "👥" },
-          { id: "breakfast", label: "Breakfast", emoji: "🍳" },
-          { id: "party", label: "Non-Party", emoji: "🔇" },
-        ].map((amenity) => (
-          <label
-            key={amenity.id}
-            className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer ${propertyForm[amenity.id] ? "border-airbnb-red bg-red-50" : "border-gray-200"
-              }`}
-          >
-            <input
-              type="checkbox"
-              id={amenity.id}
-              checked={propertyForm[amenity.id]}
-              onChange={handlePropertyChange}
-              className="hidden"
-            />
-            <span className="text-xl">{amenity.emoji}</span>
-            <span className="font-medium">{amenity.label}</span>
-          </label>
-        ))}
-      </div>
-    </div>
-
-    {/* Property Details */}
-    {/* Property Details Section */}
-    <div className="bg-white p-6 rounded-xl shadow-sm">
-      <h2 className="text-xl font-semibold mb-6">Property Details</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Square Meters for Land/Office or Bedrooms for other types */}
-        <div className="space-y-2">
-          <label htmlFor="bedrooms" className="flex items-center gap-2 text-gray-700 font-medium">
-            {propertyForm.type === "land" || propertyForm.type === "office" ? (
-              <>
-                <span>📏</span>
-                Square Meters
-              </>
-            ) : (
-              <>
-                <span>🛏️</span>
-                Bedrooms
-              </>
-            )}
-          </label>
-          <div className="relative">
-            <input
-              type="number"
-              id="bedrooms"
-              min={propertyForm.type === "land" || propertyForm.type === "" ? 0 : 1}
-              max={propertyForm.type === "land" || propertyForm.type === "office" ? 1000000 : 10000}
-              required
-              className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-              onChange={handlePropertyChange}
-              value={propertyForm.bedrooms}
-            />
-            {propertyForm.type === "land" || propertyForm.type === "" ? (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                sqm
-              </span>
-            ) : null}
-          </div>
-        </div>
-
-        {/* Hide bathrooms for land/office */}
-        {propertyForm.type !== "land" && propertyForm.type !== "" && (
-          <div className="space-y-2">
-            <label htmlFor="bathrooms" className="flex items-center gap-2 text-gray-700 font-medium">
-              <span>🚿</span>
-              Bathrooms
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                id="bathrooms"
-                min="0"
-                max="10"
-                required
-                className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                onChange={handlePropertyChange}
-                value={propertyForm.bathrooms}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Price Field */}
-        <div className="space-y-2">
-          <label htmlFor="regularPrice" className="flex items-center gap-2 text-gray-700 font-medium">
-            <span>💰</span>
-            Price
-          </label>
-          <div className="relative">
-            <input
-              type="number"
-              id="regularPrice"
-              min="50"
-              max="10000000"
-              required
-              className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-              onChange={handlePropertyChange}
-              value={propertyForm.regularPrice}
-            />
-            {propertyForm.type === "rent" && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                / month
-              </span>
-            )}
-            {propertyForm.type === "over" && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                / night
-              </span>
-            )}
-              {propertyForm.type === "office" && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                / per hour
-              </span>
-            )}
-            {(propertyForm.type === "land" || propertyForm.type === "" || propertyForm.type === "sale") && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                total
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Offer Checkbox */}
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            id="offer"
-            checked={propertyForm.offer}
-            onChange={handlePropertyChange}
-            className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
-          />
-          <label htmlFor="offer" className="font-medium text-gray-700">
-            Offer Discount
-          </label>
-        </div>
-
-        {/* Discount Price */}
-        {propertyForm.offer && (
-          <div className="space-y-2">
-            <label htmlFor="discountPrice" className="flex items-center gap-2 text-gray-700 font-medium">
-              <span>🤑</span>
-              Discounted Price
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                id="discountPrice"
-                min="0"
-                max="10000000"
-                required
-                className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                onChange={handlePropertyChange}
-                value={propertyForm.discountPrice}
-              />
-              {propertyForm.type === "rent" && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                  / month
-                </span>
-              )}
-              {propertyForm.type === "over" && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                  / night
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-
-    {/* Submit Section */}
-    <div className="bg-white p-6 rounded-xl shadow-sm">
-      <button
-        type="submit"
-        disabled={loading}
-          className="w-full bg-white text-airbnb-red border border-airbnb-red font-semibold rounded-lg hover:bg-gray-100 transition-colors py-4 disabled:opacity-70"
-      >
-        {loading ? "Creating Listing..." : "Publish Property Listing"}
-      </button>
-      {error && <p className="mt-3 text-red-600 text-sm">{error}</p>}
-    </div>
-  </form>
-)}
+        </form>
+      )}
 
       {/* Service Form */}
       {activeTab === 'experiences' && (
-  <form onSubmit={handleServiceSubmit} className="space-y-8">
-    {/* Service Type Selection */}
-    <div className="p-6 bg-white rounded-xl shadow-sm">
-      <h2 className="text-xl font-semibold text-gray-800 mb-6">Select Service Type</h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { id: "cleaning", label: "Cleaning", emoji: "🧹" },
-          { id: "maintenance", label: "Maintenance", emoji: "🔧" },
-          { id: "moving", label: "Moving", emoji: "🚚" },
-          { id: "landscaping", label: "Landscaping", emoji: "🌿" },
-          { id: "catering", label: "Catering", emoji: "🍽️" },
-          { id: "other", label: "Other", emoji: "✨" },
-          { id: "daycare", label: "Day Care / Pre-school", emoji: "👶" },
-          { id: "schoolTransport", label: "School Transport", emoji: "🚌" }
-        ].map((type) => (
-          <button
-            key={type.id}
-            type="button"
-            onClick={() => setServiceForm({ ...serviceForm, type: type.id })}
-            className={`p-4 border-2 rounded-xl flex flex-col items-center transition-all ${
-              serviceForm.type === type.id
-                ? "border-airbnb-red bg-red-50"
-                : "border-gray-200 hover:border-airbnb-red/30"
-            }`}
-          >
-            <span className="text-2xl mb-2">{type.emoji}</span>
-            <span className="font-medium text-gray-700">{type.label}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-
-    {/* Service Information */}
-    <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
-      <h2 className="text-xl font-semibold">Service Information</h2>
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="space-y-1">
-          <label className="font-medium text-gray-700">Service Name</label>
-          <input
-            type="text"
-            id="name"
-            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-            placeholder={
-              serviceForm.type === "daycare" 
-                ? "Little Explorers Daycare" 
-                : serviceForm.type === "schoolTransport" 
-                ? "SafeRide School Transport"
-                : "Professional Cleaning Service"
-            }
-            onChange={handleServiceChange}
-            value={serviceForm.name}
-            required
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="font-medium text-gray-700">Service Area</label>
-          <input
-            type="text"
-            id="address"
-            className="w-full p-3 border border-gray-200 rounded-lg"
-            placeholder="Areas you serve"
-            onChange={handleServiceChange}
-            value={serviceForm.address}
-            required
-          />
-        </div>
-
-        <div className="md:col-span-2 space-y-1">
-          <label className="font-medium text-gray-700">Service Description</label>
-          <textarea
-            id="description"
-            className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
-            placeholder={
-              serviceForm.type === "daycare" 
-                ? "Describe your daycare program, activities, educational approach..." 
-                : serviceForm.type === "schoolTransport" 
-                ? "Describe your transport service, safety measures, vehicle details..."
-                : "Describe your service in detail..."
-            }
-            onChange={handleServiceChange}
-            value={serviceForm.description}
-            required
-          />
-        </div>
-
-        <div className="md:col-span-2 space-y-1">
-          <label className="font-medium text-gray-700">Experience & Qualifications</label>
-          <textarea
-            id="near"
-            className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
-            placeholder={
-              serviceForm.type === "daycare" 
-                ? "Your experience with childcare, relevant certifications, training..." 
-                : serviceForm.type === "schoolTransport" 
-                ? "Driving experience, safety certifications, background checks..."
-                : "Describe your experience and qualifications"
-            }
-            onChange={handleServiceChange}
-            value={serviceForm.near}
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="font-medium text-gray-700">Contact Number</label>
-          <input
-            type="tel"
-            id="contact"
-            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-            placeholder="Contact Details"
-            onChange={handleServiceChange}
-            value={serviceForm.contact}
-            required
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="font-medium text-gray-700">Service Provider Name</label>
-          <input
-            type="text"
-            id="host"
-            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-            placeholder={
-              serviceForm.type === "daycare" 
-                ? "Daycare center name" 
-                : "Your name or company name"
-            }
-            onChange={handleServiceChange}
-            value={serviceForm.host}
-            required
-          />
-        </div>
-        
-        {/* Daycare-specific fields */}
-        {serviceForm.type === "daycare" && (
-          <>
-            <div className="space-y-1">
-              <label className="font-medium text-gray-700">Age Group</label>
-              <input
-                type="text"
-                id="ageGroup"
-                className="w-full p-3 border border-gray-200 rounded-lg"
-                placeholder="e.g., 6 months - 5 years"
-                onChange={handleServiceChange}
-                value={serviceForm.ageGroup}
-              />
+        <form onSubmit={handleServiceSubmit} className="space-y-8">
+          {/* Service Type Selection */}
+          <div className="p-6 bg-white rounded-xl shadow-sm">
+            <h2 className="text-xl font-semibold text-gray-800 mb-6">Select Service Type</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { id: "cleaning", label: "Cleaning", emoji: "🧹" },
+                { id: "maintenance", label: "Maintenance", emoji: "🔧" },
+                { id: "moving", label: "Moving", emoji: "🚚" },
+                { id: "landscaping", label: "Landscaping", emoji: "🌿" },
+                { id: "catering", label: "Catering", emoji: "🍽️" },
+                { id: "other", label: "Other", emoji: "✨" },
+                { id: "daycare", label: "Day Care / Pre-school", emoji: "👶" },
+                { id: "schoolTransport", label: "School Transport", emoji: "🚌" }
+              ].map((type) => (
+                <button
+                  key={type.id}
+                  type="button"
+                  onClick={() => setServiceForm({ ...serviceForm, type: type.id })}
+                  className={`p-4 border-2 rounded-xl flex flex-col items-center transition-all ${
+                    serviceForm.type === type.id
+                      ? "border-airbnb-red bg-red-50"
+                      : "border-gray-200 hover:border-airbnb-red/30"
+                  }`}
+                >
+                  <span className="text-2xl mb-2">{type.emoji}</span>
+                  <span className="font-medium text-gray-700">{type.label}</span>
+                </button>
+              ))}
             </div>
-            <div className="space-y-1">
-              <label className="font-medium text-gray-700">License Number</label>
-              <input
-                type="text"
-                id="licenseNumber"
-                className="w-full p-3 border border-gray-200 rounded-lg"
-                placeholder="Your daycare license number"
-                onChange={handleServiceChange}
-                value={serviceForm.licenseNumber}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="font-medium text-gray-700">Capacity</label>
-              <input
-                type="text"
-                id="capacity"
-                className="w-full p-3 border border-gray-200 rounded-lg"
-                placeholder="Number of children you can accommodate"
-                onChange={handleServiceChange}
-                value={serviceForm.capacity}
-              />
-            </div>
-          </>
-        )}
-        
-        {/* School Transport-specific fields */}
-        {serviceForm.type === "schoolTransport" && (
-          <>
-            <div className="space-y-1">
-              <label className="font-medium text-gray-700">Vehicle Type</label>
-              <input
-                type="text"
-                id="vehicleType"
-                className="w-full p-3 border border-gray-200 rounded-lg"
-                placeholder="e.g., Minivan, School Bus, SUV"
-                onChange={handleServiceChange}
-                value={serviceForm.vehicleType}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="font-medium text-gray-700">Route Areas</label>
-              <input
-                type="text"
-                id="routeAreas"
-                className="w-full p-3 border border-gray-200 rounded-lg"
-                placeholder="Neighborhoods or schools served"
-                onChange={handleServiceChange}
-                value={serviceForm.routeAreas}
-              />
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+          </div>
 
-    {/* Media Upload for Services */}
-    <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
-      <h2 className="text-xl font-semibold">Add Photos</h2>
-      <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <input
-            type="file"
-            id="images"
-            accept="image/*"
-            multiple
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          <label
-            htmlFor="images"
-            className="flex-1 p-8 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-airbnb-red transition-colors"
-          >
-            <span className="text-3xl mb-2">📸</span>
-            <span className="text-gray-600">Drag photos or click to upload</span>
-            <span className="text-sm text-gray-500">Up to 10 photos</span>
-          </label>
-          <button
-            type="button"
-            onClick={() => handleImageSubmit('service')}
-            className="h-full px-6 bg-airbnb-red text-black rounded-lg hover:bg-red-700 transition-colors"
-            disabled={uploading}
-          >
-            {uploading ? "Uploading..." : "Upload"}
-          </button>
-        </div>
-
-        {imageUploadError && (
-          <p className="text-red-500 text-sm">{imageUploadError}</p>
-        )}
-
-        {serviceForm.imageUrls.length > 0 && (
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {serviceForm.imageUrls.map((url, index) => (
-              <div key={url} className="relative aspect-square">
-                <img
-                  src={url}
-                  alt=""
-                  className="w-full h-full object-cover rounded-lg"
+          {/* Service Information */}
+          <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
+            <h2 className="text-xl font-semibold">Service Information</h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <label className="font-medium text-gray-700">Service Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                  placeholder={
+                    serviceForm.type === "daycare" 
+                      ? "Little Explorers Daycare" 
+                      : serviceForm.type === "schoolTransport" 
+                      ? "SafeRide School Transport"
+                      : "Professional Cleaning Service"
+                  }
+                  onChange={handleServiceChange}
+                  value={serviceForm.name}
+                  required
                 />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-medium text-gray-700">Service Area</label>
+                <input
+                  type="text"
+                  name="address"
+                  className="w-full p-3 border border-gray-200 rounded-lg"
+                  placeholder="Areas you serve"
+                  onChange={handleServiceChange}
+                  value={serviceForm.address}
+                  required
+                />
+              </div>
+
+              <div className="md:col-span-2 space-y-1">
+                <label className="font-medium text-gray-700">Service Description</label>
+                <textarea
+                  name="description"
+                  className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
+                  placeholder={
+                    serviceForm.type === "daycare" 
+                      ? "Describe your daycare program, activities, educational approach..." 
+                      : serviceForm.type === "schoolTransport" 
+                      ? "Describe your transport service, safety measures, vehicle details..."
+                      : "Describe your service in detail..."
+                  }
+                  onChange={handleServiceChange}
+                  value={serviceForm.description}
+                  required
+                />
+              </div>
+
+              <div className="md:col-span-2 space-y-1">
+                <label className="font-medium text-gray-700">Experience & Qualifications</label>
+                <textarea
+                  name="near"
+                  className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
+                  placeholder={
+                    serviceForm.type === "daycare" 
+                      ? "Your experience with childcare, relevant certifications, training..." 
+                      : serviceForm.type === "schoolTransport" 
+                      ? "Driving experience, safety certifications, background checks..."
+                      : "Describe your experience and qualifications"
+                  }
+                  onChange={handleServiceChange}
+                  value={serviceForm.near}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-medium text-gray-700">Contact Number</label>
+                <input
+                  type="tel"
+                  name="contact"
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                  placeholder="Contact Details"
+                  onChange={handleServiceChange}
+                  value={serviceForm.contact}
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-medium text-gray-700">Service Provider Name</label>
+                <input
+                  type="text"
+                  name="host"
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                  placeholder={
+                    serviceForm.type === "daycare" 
+                      ? "Daycare center name" 
+                      : "Your name or company name"
+                  }
+                  onChange={handleServiceChange}
+                  value={serviceForm.host}
+                  required
+                />
+              </div>
+              
+              {/* Daycare-specific fields */}
+              {serviceForm.type === "daycare" && (
+                <>
+                  <div className="space-y-1">
+                    <label className="font-medium text-gray-700">Age Group</label>
+                    <input
+                      type="text"
+                      name="ageGroup"
+                      className="w-full p-3 border border-gray-200 rounded-lg"
+                      placeholder="e.g., 6 months - 5 years"
+                      onChange={handleServiceChange}
+                      value={serviceForm.ageGroup}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-medium text-gray-700">License Number</label>
+                    <input
+                      type="text"
+                      name="licenseNumber"
+                      className="w-full p-3 border border-gray-200 rounded-lg"
+                      placeholder="Your daycare license number"
+                      onChange={handleServiceChange}
+                      value={serviceForm.licenseNumber}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-medium text-gray-700">Capacity</label>
+                    <input
+                      type="text"
+                      name="capacity"
+                      className="w-full p-3 border border-gray-200 rounded-lg"
+                      placeholder="Number of children you can accommodate"
+                      onChange={handleServiceChange}
+                      value={serviceForm.capacity}
+                    />
+                  </div>
+                </>
+              )}
+              
+              {/* School Transport-specific fields */}
+              {serviceForm.type === "schoolTransport" && (
+                <>
+                  <div className="space-y-1">
+                    <label className="font-medium text-gray-700">Vehicle Type</label>
+                    <input
+                      type="text"
+                      name="vehicleType"
+                      className="w-full p-3 border border-gray-200 rounded-lg"
+                      placeholder="e.g., Minivan, School Bus, SUV"
+                      onChange={handleServiceChange}
+                      value={serviceForm.vehicleType}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-medium text-gray-700">Route Areas</label>
+                    <input
+                      type="text"
+                      name="routeAreas"
+                      className="w-full p-3 border border-gray-200 rounded-lg"
+                      placeholder="Neighborhoods or schools served"
+                      onChange={handleServiceChange}
+                      value={serviceForm.routeAreas}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* ID Verification Section for Services */}
+          <IDVerificationSection
+            formType="service"
+            formData={serviceForm}
+            onChange={(e) => {
+              if (e.target.name === "idType") {
+                // Reset ID number when type changes
+                setServiceForm({ 
+                  ...serviceForm, 
+                  idType: e.target.value,
+                  idNumber: "" 
+                });
+              } else {
+                setServiceForm({ ...serviceForm, [e.target.name]: e.target.value });
+              }
+            }}
+            onIDUpload={(url) => setServiceForm({ ...serviceForm, idDocument: url })}
+          />
+
+          {/* Media Upload for Services */}
+          <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
+            <h2 className="text-xl font-semibold">Add Photos</h2>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <input
+                  type="file"
+                  id="images"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="images"
+                  className="flex-1 p-8 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-airbnb-red transition-colors"
+                >
+                  <span className="text-3xl mb-2">📸</span>
+                  <span className="text-gray-600">Drag photos or click to upload</span>
+                  <span className="text-sm text-gray-500">Up to 10 photos</span>
+                </label>
                 <button
                   type="button"
-                  onClick={() => handleRemoveImage(index, 'service')}
-                  className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"
+                  onClick={() => handleImageSubmit('service')}
+                  className="h-full px-6 bg-airbnb-red text-black rounded-lg hover:bg-red-700 transition-colors"
+                  disabled={uploading}
                 >
-                  ❌
+                  {uploading ? "Uploading..." : "Upload"}
                 </button>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
 
-    {/* Service Details */}
-    <div className="bg-white p-6 rounded-xl shadow-sm">
-      <h2 className="text-xl font-semibold mb-6">Service Details</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label htmlFor="regularPrice" className="flex items-center gap-2 text-gray-700 font-medium">
-            <span>💰</span>
-            {serviceForm.type === "daycare" ? "Daily Rate" : "Hourly Rate"}
-          </label>
-          <div className="relative">
-            <input
-              type="number"
-              id="regularPrice"
-              min="50"
-              max="100000"
-              required
-              className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-              onChange={handleServiceChange}
-              value={serviceForm.regularPrice}
-            />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-              {serviceForm.type === "daycare" ? "/ month" : "/ day"}
-            </span>
-          </div>
-        </div>
+              {imageUploadError && (
+                <p className="text-red-500 text-sm">{imageUploadError}</p>
+              )}
 
-        <div className="space-y-2">
-          <label htmlFor="kind" className="flex items-center gap-2 text-gray-700 font-medium">
-            <span>👥</span>
-            Service Category
-          </label>
-          <textarea
-            type="text"
-            id="kind"
-            className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-            placeholder={
-              serviceForm.type === "daycare" 
-                ? "e.g., Montessori, Play-based, Bilingual" 
-                : "e.g., Residential, Commercial"
-            }
-            onChange={handleServiceChange}
-            value={serviceForm.kind}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="period" className="flex items-center gap-2 text-gray-700 font-medium">
-            <span>⏰</span>
-            Availability
-          </label>
-          <input
-            type="text"
-            id="period"
-            className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-            placeholder={
-              serviceForm.type === "daycare" 
-                ? "e.g., Mon-Fri 7:30am-6:00pm" 
-                : "e.g., Weekdays 9am-5pm"
-            }
-            onChange={handleServiceChange}
-            value={serviceForm.period}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="cancel" className="flex items-center gap-2 text-gray-700 font-medium">
-            <span>🚫</span>
-            Cancellation Policy
-          </label>
-          <input
-            type="text"
-            id="cancel"
-            className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-            placeholder="Your cancellation policy"
-            onChange={handleServiceChange}
-            value={serviceForm.cancel}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 text-gray-700 font-medium">
-            <span>🔒</span>
-            Background Check
-          </label>
-          <div className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              id="security"
-              checked={serviceForm.security}
-              onChange={handleServiceChange}
-              className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
-            />
-            <label htmlFor="security" className="font-medium text-gray-700">
-              Verified background check
-            </label>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 text-gray-700 font-medium">
-            <span>🐾</span>
-            {serviceForm.type === "daycare" ? "Special Needs Experience" : "Pet Friendly"}
-          </label>
-          <div className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              id="pets"
-              checked={serviceForm.pets}
-              onChange={handleServiceChange}
-              className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
-            />
-            <label htmlFor="pets" className="font-medium text-gray-700">
-              {serviceForm.type === "daycare" 
-                ? "Experience with special needs children" 
-                : "Comfortable with pets"}
-            </label>
-          </div>
-        </div>
-
-        {/* Additional checkbox for daycare */}
-        {serviceForm.type === "daycare" && (
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-gray-700 font-medium">
-              <span>🍽️</span>
-              Meal Service
-            </label>
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="meals"
-                checked={serviceForm.meals}
-                onChange={handleServiceChange}
-                className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
-              />
-              <label htmlFor="meals" className="font-medium text-gray-700">
-                Provide meals and snacks
-              </label>
+              {serviceForm.imageUrls.length > 0 && (
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {serviceForm.imageUrls.map((url, index) => (
+                    <div key={url} className="relative aspect-square">
+                      <img
+                        src={url}
+                        alt=""
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index, 'service')}
+                        className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"
+                      >
+                        ❌
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        )}
 
-        {/* Additional checkbox for school transport */}
-        {serviceForm.type === "schoolTransport" && (
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-gray-700 font-medium">
-              <span>👶</span>
-              Child Seats
-            </label>
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="childSeats"
-                checked={serviceForm.childSeats}
-                onChange={handleServiceChange}
-                className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
-              />
-              <label htmlFor="childSeats" className="font-medium text-gray-700">
-                Provide child safety seats
-              </label>
+          {/* Service Details */}
+          <div className="bg-white p-6 rounded-xl shadow-sm">
+            <h2 className="text-xl font-semibold mb-6">Service Details</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label htmlFor="regularPrice" className="flex items-center gap-2 text-gray-700 font-medium">
+                  <span>💰</span>
+                  {serviceForm.type === "daycare" ? "Daily Rate" : "Hourly Rate"}
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    name="regularPrice"
+                    min="50"
+                    max="100000"
+                    required
+                    className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                    onChange={handleServiceChange}
+                    value={serviceForm.regularPrice}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                    {serviceForm.type === "daycare" ? "/ month" : "/ day"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="kind" className="flex items-center gap-2 text-gray-700 font-medium">
+                  <span>👥</span>
+                  Service Category
+                </label>
+                <textarea
+                  type="text"
+                  name="kind"
+                  className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                  placeholder={
+                    serviceForm.type === "daycare" 
+                      ? "e.g., Montessori, Play-based, Bilingual" 
+                      : "e.g., Residential, Commercial"
+                  }
+                  onChange={handleServiceChange}
+                  value={serviceForm.kind}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="period" className="flex items-center gap-2 text-gray-700 font-medium">
+                  <span>⏰</span>
+                  Availability
+                </label>
+                <input
+                  type="text"
+                  name="period"
+                  className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                  placeholder={
+                    serviceForm.type === "daycare" 
+                      ? "e.g., Mon-Fri 7:30am-6:00pm" 
+                      : "e.g., Weekdays 9am-5pm"
+                  }
+                  onChange={handleServiceChange}
+                  value={serviceForm.period}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="cancel" className="flex items-center gap-2 text-gray-700 font-medium">
+                  <span>🚫</span>
+                  Cancellation Policy
+                </label>
+                <input
+                  type="text"
+                  name="cancel"
+                  className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                  placeholder="Your cancellation policy"
+                  onChange={handleServiceChange}
+                  value={serviceForm.cancel}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-gray-700 font-medium">
+                  <span>🔒</span>
+                  Background Check
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    name="security"
+                    checked={serviceForm.security}
+                    onChange={handleServiceChange}
+                    className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
+                  />
+                  <label htmlFor="security" className="font-medium text-gray-700">
+                    Verified background check
+                  </label>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-gray-700 font-medium">
+                  <span>🐾</span>
+                  {serviceForm.type === "daycare" ? "Special Needs Experience" : "Pet Friendly"}
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    name="pets"
+                    checked={serviceForm.pets}
+                    onChange={handleServiceChange}
+                    className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
+                  />
+                  <label htmlFor="pets" className="font-medium text-gray-700">
+                    {serviceForm.type === "daycare" 
+                      ? "Experience with special needs children" 
+                      : "Comfortable with pets"}
+                  </label>
+                </div>
+              </div>
+
+              {/* Additional checkbox for daycare */}
+              {serviceForm.type === "daycare" && (
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-gray-700 font-medium">
+                    <span>🍽️</span>
+                    Meal Service
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      name="meals"
+                      checked={serviceForm.meals}
+                      onChange={handleServiceChange}
+                      className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
+                    />
+                    <label htmlFor="meals" className="font-medium text-gray-700">
+                      Provide meals and snacks
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* Additional checkbox for school transport */}
+              {serviceForm.type === "schoolTransport" && (
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-gray-700 font-medium">
+                    <span>👶</span>
+                    Child Seats
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      name="childSeats"
+                      checked={serviceForm.childSeats}
+                      onChange={handleServiceChange}
+                      className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
+                    />
+                    <label htmlFor="childSeats" className="font-medium text-gray-700">
+                      Provide child safety seats
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
-      </div>
-    </div>
 
-    {/* Submit Section */}
-    <div className="bg-white p-6 rounded-xl shadow-sm">
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-white text-airbnb-red border border-airbnb-red font-semibold rounded-lg hover:bg-gray-100 transition-colors py-4 disabled:opacity-70"
-      >
-        {loading ? "Creating Listing..." : "Publish Service"}
-      </button>
-      {error && <p className="mt-3 text-red-600 text-sm">{error}</p>}
-    </div>
-  </form>
-)}
+          {/* Submit Section */}
+          <div className="bg-white p-6 rounded-xl shadow-sm">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-white text-airbnb-red border border-airbnb-red font-semibold rounded-lg hover:bg-gray-100 transition-colors py-4 disabled:opacity-70"
+            >
+              {loading ? "Creating Listing..." : "Publish Service"}
+            </button>
+            {error && <p className="mt-3 text-red-600 text-sm">{error}</p>}
+          </div>
+        </form>
+      )}
+
       {/* Helper Form */}
-     {/* Helper Form */}
-  {/* Helper Form */}
       {activeTab === 'online' && (
         <form onSubmit={handleHelperSubmit} className="space-y-8">
-          {/* Helper Type Selection - UPDATED WITH BARBER */}
+          {/* Helper Type Selection */}
           <div className="p-6 bg-white rounded-xl shadow-sm">
             <h2 className="text-xl font-semibold text-gray-800 mb-6">Select Helper Type</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -1911,7 +2175,7 @@ const handleHelperSubmit = async (e) => {
             </div>
           </div>
 
-          {/* Helper Information - UPDATED FOR BARBER */}
+          {/* Helper Information */}
           <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
             <h2 className="text-xl font-semibold">Helper Information</h2>
             <div className="grid md:grid-cols-2 gap-6">
@@ -1922,7 +2186,7 @@ const handleHelperSubmit = async (e) => {
                 </label>
                 <input
                   type="text"
-                  id="name"
+                  name="name"
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
                   placeholder={
                     helperForm.type === "tutor" ? "John Smith" : 
@@ -1938,7 +2202,7 @@ const handleHelperSubmit = async (e) => {
                 <label className="font-medium text-gray-700">Service Area</label>
                 <input
                   type="text"
-                  id="address"
+                  name="address"
                   className="w-full p-3 border border-gray-200 rounded-lg"
                   placeholder="Areas you serve"
                   onChange={handleHelperChange}
@@ -1956,7 +2220,7 @@ const handleHelperSubmit = async (e) => {
                       : "Service Description"}
                 </label>
                 <textarea
-                  id="description"
+                  name="description"
                   className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
                   placeholder={
                     helperForm.type === "domestic" ? "Describe your cleaning methods and experience..." :
@@ -1979,7 +2243,7 @@ const handleHelperSubmit = async (e) => {
                       : "Specific Services Offered"}
                 </label>
                 <textarea
-                  id="near"
+                  name="near"
                   className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
                   placeholder={
                     helperForm.type === "domestic" ? "E.g., Deep cleaning, laundry, ironing" :
@@ -1996,7 +2260,7 @@ const handleHelperSubmit = async (e) => {
                 <label className="font-medium text-gray-700">Contact Number</label>
                 <input
                   type="tel"
-                  id="contact"
+                  name="contact"
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
                   placeholder="Phone number"
                   onChange={handleHelperChange}
@@ -2012,7 +2276,7 @@ const handleHelperSubmit = async (e) => {
                 </label>
                 <input
                   type="text"
-                  id="host"
+                  name="host"
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
                   placeholder={
                     helperForm.type === "tutor" ? "5 years teaching experience" :
@@ -2031,7 +2295,7 @@ const handleHelperSubmit = async (e) => {
                     <label className="font-medium text-gray-700">Education Level</label>
                     <input
                       type="text"
-                      id="kind"
+                      name="kind"
                       className="w-full p-3 border border-gray-200 rounded-lg"
                       placeholder="E.g., Bachelor's Degree in Education"
                       onChange={handleHelperChange}
@@ -2042,7 +2306,7 @@ const handleHelperSubmit = async (e) => {
                     <label className="font-medium text-gray-700">Age Group</label>
                     <input
                       type="text"
-                      id="period"
+                      name="period"
                       className="w-full p-3 border border-gray-200 rounded-lg"
                       placeholder="E.g., Primary school, High school"
                       onChange={handleHelperChange}
@@ -2058,7 +2322,7 @@ const handleHelperSubmit = async (e) => {
                     <label className="font-medium text-gray-700">Availability</label>
                     <input
                       type="text"
-                      id="period"
+                      name="period"
                       className="w-full p-3 border border-gray-200 rounded-lg"
                       placeholder="E.g., Weekdays 8am-5pm"
                       onChange={handleHelperChange}
@@ -2069,7 +2333,7 @@ const handleHelperSubmit = async (e) => {
                     <label className="font-medium text-gray-700">Languages Spoken</label>
                     <input
                       type="text"
-                      id="cancel"
+                      name="cancel"
                       className="w-full p-3 border border-gray-200 rounded-lg"
                       placeholder="E.g., English, Afrikaans"
                       onChange={handleHelperChange}
@@ -2086,7 +2350,7 @@ const handleHelperSubmit = async (e) => {
                     <label className="font-medium text-gray-700">Specializations</label>
                     <input
                       type="text"
-                      id="specializations"
+                      name="specializations"
                       className="w-full p-3 border border-gray-200 rounded-lg"
                       placeholder="E.g., Fades, classic cuts, beard designs"
                       onChange={handleHelperChange}
@@ -2097,7 +2361,7 @@ const handleHelperSubmit = async (e) => {
                     <label className="font-medium text-gray-700">Equipment</label>
                     <input
                       type="text"
-                      id="equipment"
+                      name="equipment"
                       className="w-full p-3 border border-gray-200 rounded-lg"
                       placeholder="E.g., Bring own tools, sanitized equipment"
                       onChange={handleHelperChange}
@@ -2109,7 +2373,26 @@ const handleHelperSubmit = async (e) => {
             </div>
           </div>
 
-          {/* Media Upload - UPDATED FOR BARBER */}
+          {/* ID Verification Section for Helpers */}
+          <IDVerificationSection
+            formType="helper"
+            formData={helperForm}
+            onChange={(e) => {
+              if (e.target.name === "idType") {
+                // Reset ID number when type changes
+                setHelperForm({ 
+                  ...helperForm, 
+                  idType: e.target.value,
+                  idNumber: "" 
+                });
+              } else {
+                setHelperForm({ ...helperForm, [e.target.name]: e.target.value });
+              }
+            }}
+            onIDUpload={(url) => setHelperForm({ ...helperForm, idDocument: url })}
+          />
+
+          {/* Media Upload */}
           <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
             <h2 className="text-xl font-semibold">
               {helperForm.type === "tutor"
@@ -2175,7 +2458,7 @@ const handleHelperSubmit = async (e) => {
             </div>
           </div>
 
-          {/* Pricing & Details - UPDATED FOR BARBER */}
+          {/* Pricing & Details */}
           <div className="bg-white p-6 rounded-xl shadow-sm">
             <h2 className="text-xl font-semibold mb-6">Pricing & Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2191,7 +2474,7 @@ const handleHelperSubmit = async (e) => {
                 <div className="relative">
                   <input
                     type="number"
-                    id="regularPrice"
+                    name="regularPrice"
                     min="50"
                     max="100000"
                     required
@@ -2211,7 +2494,7 @@ const handleHelperSubmit = async (e) => {
                       Additional Services Pricing (Optional)
                     </label>
                     <textarea
-                      id="additionalPricing"
+                      name="additionalPricing"
                       className="w-full p-3 border border-gray-200 rounded-lg text-sm"
                       placeholder="E.g., Beard trim: R80, Kids cut: R100, Haircut + Beard: R200"
                       onChange={handleHelperChange}
@@ -2228,7 +2511,7 @@ const handleHelperSubmit = async (e) => {
                     Teaching Format
                   </label>
                   <select
-                    id="bathrooms"
+                    name="bathrooms"
                     className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
                     onChange={(e) => setHelperForm({ ...helperForm, bathrooms: e.target.value })}
                     value={helperForm.bathrooms}
@@ -2249,7 +2532,7 @@ const handleHelperSubmit = async (e) => {
                   <div className="relative">
                     <input
                       type="number"
-                      id="bedrooms"
+                      name="bedrooms"
                       min="1"
                       max="24"
                       className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
@@ -2274,7 +2557,7 @@ const handleHelperSubmit = async (e) => {
                     <div className="relative">
                       <input
                         type="number"
-                        id="travelFee"
+                        name="travelFee"
                         min="0"
                         max="500"
                         className="w-full p-3 pl-10 border border-gray-200 rounded-lg"
@@ -2282,7 +2565,7 @@ const handleHelperSubmit = async (e) => {
                         onChange={handleHelperChange}
                         value={helperForm.travelFee}
                       />
-                      <span className="absolute right-3 top-1/2 -translate-Y-1/2 text-gray-500">R</span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">R</span>
                     </div>
                   </div>
 
@@ -2292,7 +2575,7 @@ const handleHelperSubmit = async (e) => {
                       Booking Notice
                     </label>
                     <select
-                      id="bookingNotice"
+                      name="bookingNotice"
                       className="w-full p-3 pl-10 border border-gray-200 rounded-lg"
                       onChange={handleHelperChange}
                       value={helperForm.bookingNotice}
@@ -2315,7 +2598,7 @@ const handleHelperSubmit = async (e) => {
                 <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
-                    id="security"
+                    name="security"
                     checked={helperForm.security}
                     onChange={handleHelperChange}
                     className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
@@ -2335,7 +2618,7 @@ const handleHelperSubmit = async (e) => {
                   <div className="flex items-center gap-3">
                     <input
                       type="checkbox"
-                      id="pets"
+                      name="pets"
                       checked={helperForm.pets}
                       onChange={handleHelperChange}
                       className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
@@ -2362,8 +2645,6 @@ const handleHelperSubmit = async (e) => {
           </div>
         </form>
       )}
-
-
 
       {/* Event Form */}
       {activeTab === 'events' && (
@@ -2502,7 +2783,6 @@ const handleHelperSubmit = async (e) => {
           </div>
         </form>
       )}
-
 
       {/* Important Message */}
       <div className="mt-6 p-4 border bg-white rounded-lg">

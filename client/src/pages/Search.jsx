@@ -197,7 +197,7 @@ const Search = () => {
     }
   ];
 
-  // Initialize search from URL parameters
+  // Initialize search from URL parameters - UPDATED FOR HEADER INTEGRATION
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const initialData = { ...sidebarData };
@@ -220,6 +220,20 @@ const Search = () => {
       }
     });
 
+    // Handle header search parameters
+    const q = urlParams.get('q');
+    if (q) {
+      initialData.searchTerm = q;
+      // If specific field search from header, populate those fields too
+      const name = urlParams.get('name');
+      const address = urlParams.get('address');
+      const description = urlParams.get('description');
+      
+      if (name) initialData.name = name;
+      if (address) initialData.address = address;
+      if (description) initialData.description = description;
+    }
+
     setSidebarData(initialData);
   }, [location.search]);
 
@@ -229,7 +243,7 @@ const Search = () => {
     setSearchType(newSearchType);
   }, [location.search]);
 
-  // Enhanced fetch function with better error handling
+  // Enhanced fetch function with better error handling and header search integration
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const fetchData = async () => {
@@ -246,6 +260,13 @@ const Search = () => {
 
         // Add searchType to parameters
         cleanParams.set('searchType', searchType);
+        
+        // Handle header search parameters
+        const q = urlParams.get('q');
+        if (q) {
+          // If it's a general search from header, search across multiple fields
+          cleanParams.set('searchTerm', q);
+        }
         
         let endpoint = '';
         switch(searchType) {

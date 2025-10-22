@@ -11,7 +11,10 @@ import {
   FiBell,
   FiMap,
   FiClock,
-  FiX
+  FiX,
+  FiHome,
+  FiUser,
+  FiFileText
 } from "react-icons/fi";
 import { FaBrain } from "react-icons/fa";
 
@@ -103,24 +106,20 @@ export default function Header() {
     // Define generic suggestions for different categories
     const genericSuggestions = [];
     const types = {
-      listings: ['Beach house', 'Mountain cabin', 'Downtown loft', 'Luxury villa', 'Cozy apartment'],
-      services: ['Cleaning service', 'Plumbing', 'Electrician', 'Catering', 'Landscaping'],
-      helpers: ['Moving help', 'Event staff', 'Personal assistant', 'Tutor', 'Handyman'],
-      events: ['Music festival', 'Tech conference', 'Food fair', 'Art exhibition', 'Charity gala']
+      name: ['Beach house', 'Mountain cabin', 'Downtown loft', 'Luxury villa', 'Cozy apartment'],
+      address: ['New York', 'Los Angeles', 'Miami Beach', 'Chicago downtown', 'San Francisco'],
+      description: ['Ocean view', 'Swimming pool', 'Pet friendly', 'Free parking', 'Garden']
     };
 
     // Populate generic suggestions based on the active search type
-    if (activeType === 'all' || activeType === 'listings') {
-      genericSuggestions.push(...types.listings);
+    if (activeType === 'all' || activeType === 'name') {
+      genericSuggestions.push(...types.name);
     }
-    if (activeType === 'all' || activeType === 'services') {
-      genericSuggestions.push(...types.services);
+    if (activeType === 'all' || activeType === 'address') {
+      genericSuggestions.push(...types.address);
     }
-    if (activeType === 'all' || activeType === 'helpers') {
-      genericSuggestions.push(...types.helpers);
-    }
-    if (activeType === 'all' || activeType === 'events') {
-      genericSuggestions.push(...types.events);
+    if (activeType === 'all' || activeType === 'description') {
+      genericSuggestions.push(...types.description);
     }
 
     // Combine matched history and generic suggestions,
@@ -196,8 +195,32 @@ export default function Header() {
       return [newSearch, ...filtered].slice(0, 10);
     });
 
-    // Navigate to search results page
-    navigate(`/search?q=${encodeURIComponent(searchTerm)}&type=${activeType}`);
+    // Map header search types to search page types
+    const searchTypeMap = {
+      'all': 'properties',
+      'name': 'properties',
+      'address': 'properties', 
+      'description': 'properties'
+    };
+
+    const searchPageType = searchTypeMap[activeType] || 'properties';
+
+    // Navigate to search results page with search parameters
+    const searchParams = new URLSearchParams({
+      q: searchTerm,
+      searchType: searchPageType
+    });
+
+    // Add specific field search based on active type
+    if (activeType === 'name') {
+      searchParams.set('name', searchTerm);
+    } else if (activeType === 'address') {
+      searchParams.set('address', searchTerm);
+    } else if (activeType === 'description') {
+      searchParams.set('description', searchTerm);
+    }
+
+    navigate(`/search?${searchParams.toString()}`);
     setShowMobileSearchBar(false);
     setShowSuggestions(false);
   };
@@ -207,8 +230,46 @@ export default function Header() {
     setSearchTerm(suggestion);
     setShowSuggestions(false);
     
+    // Add to search history when clicking suggestion
+    const newSearch = {
+      term: suggestion,
+      type: activeType,
+      timestamp: new Date().toISOString()
+    };
+
+    setSearchHistory(prev => {
+      const filtered = prev.filter(item => 
+        !(item.term === suggestion && item.type === activeType)
+      );
+      return [newSearch, ...filtered].slice(0, 10);
+    });
+
+    // Map header search types to search page types
+    const searchTypeMap = {
+      'all': 'properties',
+      'name': 'properties',
+      'address': 'properties',
+      'description': 'properties'
+    };
+
+    const searchPageType = searchTypeMap[activeType] || 'properties';
+
     // Navigate to search results
-    navigate(`/search?q=${encodeURIComponent(suggestion)}&type=${activeType}`);
+    const searchParams = new URLSearchParams({
+      q: suggestion,
+      searchType: searchPageType
+    });
+
+    // Add specific field search based on active type
+    if (activeType === 'name') {
+      searchParams.set('name', suggestion);
+    } else if (activeType === 'address') {
+      searchParams.set('address', suggestion);
+    } else if (activeType === 'description') {
+      searchParams.set('description', suggestion);
+    }
+
+    navigate(`/search?${searchParams.toString()}`);
     setShowMobileSearchBar(false);
   };
 
@@ -255,19 +316,18 @@ export default function Header() {
     setNotificationMenu(false);
   };
 
-  // Search type options
+  // Search type options - Updated for name, address, description
   const searchTypes = [
     { key: 'all', label: 'All', icon: '🔍' },
-    { key: 'listings', label: 'Listings', icon: '🏠' },
-    { key: 'services', label: 'Services', icon: '🛠️' },
-    { key: 'helpers', label: 'Helpers', icon: '👥' },
-    { key: 'events', label: 'Events', icon: '🎪' }
+    { key: 'name', label: 'Name', icon: <FiUser className="w-4 h-4" /> },
+    { key: 'address', label: 'Address', icon: <FiHome className="w-4 h-4" /> },
+    { key: 'description', label: 'Description', icon: <FiFileText className="w-4 h-4" /> }
   ];
 
   return (
     <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       isScrolled 
-        ? 'bg-white/95 backdrop-blur-lg  border-gray-200' 
+        ? 'bg-white/95 backdrop-blur-lg border-b border-gray-200' 
         : 'bg-gradient-to-b from-white/95 to-white/80 backdrop-blur-lg'
     }`}>
       {/* Mobile Search Overlay */}
@@ -314,7 +374,7 @@ export default function Header() {
                 className="w-full p-4 pl-12 rounded-2xl border border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition-all bg-white shadow-sm"
                 autoFocus
               />
-              <FiSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             </form>
 
             {/* Search Suggestions */}
@@ -404,68 +464,67 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-        <Link 
-  to="/" 
-  className="inline-flex items-center hover:scale-105 transition-transform"
->
-  <span className="text-2xl font-bold inline-flex items-center">
-    {/* l + logo + p */}
-    <span
-      className={`font-extrabold text-xl inline-flex items-center  ${
-        isScrolled
-          ? "text-[#1877F2] bg-w"
-          : "text-gray-900 dark:text-white"
-      }`}
-    >
-      <span className="inline-flex items-center font-extrabold mr-[-8px]">l</span>
-      <span className="relative w-11 h-11 inline-flex items-center justify-center mr-[-2px]">
-        <svg
-          viewBox="0 0 100 100"
-          className={`w-full h-full relative top-[1px] mr-[-8px] ${
-            isScrolled ? "text-[#1877F2]" : "text-[#1877F2]"
-          }`}
-        >
-          <path
-            fill="currentColor"
-            d="M30,50 C30,30 50,30 50,50 C50,70 70,70 70,50 C70,30 50,30 50,50"
-            stroke="currentColor"
-            strokeWidth="9"
-        
-          />
-          <circle cx="30" cy="50" r="8" fill="currentColor" />
-          <circle cx="70" cy="50" r="8" fill="currentColor" />
-        </svg>
-      </span>
-      <span className="inline-flex items-center mr-[-4px]">p</span>
-    </span>
+          <Link 
+            to="/" 
+            className="inline-flex items-center hover:scale-105 transition-transform"
+          >
+            <span className="text-2xl font-bold inline-flex items-center">
+              {/* l + logo + p */}
+              <span
+                className={`font-extrabold text-xl inline-flex items-center  ${
+                  isScrolled
+                    ? "text-[#1877F2] bg-w"
+                    : "text-gray-900 dark:text-white"
+                }`}
+              >
+                <span className="inline-flex items-center font-extrabold mr-[-8px]">l</span>
+                <span className="relative w-11 h-11 inline-flex items-center justify-center mr-[-2px]">
+                  <svg
+                    viewBox="0 0 100 100"
+                    className={`w-full h-full relative top-[1px] mr-[-8px] ${
+                      isScrolled ? "text-[#1877F2]" : "text-[#1877F2]"
+                    }`}
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M30,50 C30,30 50,30 50,50 C50,70 70,70 70,50 C70,30 50,30 50,50"
+                      stroke="currentColor"
+                      strokeWidth="9"
+                    />
+                    <circle cx="30" cy="50" r="8" fill="currentColor" />
+                    <circle cx="70" cy="50" r="8" fill="currentColor" />
+                  </svg>
+                </span>
+                <span className="inline-flex items-center mr-[-4px]">p</span>
+              </span>
 
-    {/* Magnifier icon */}
-    <svg
-      className={`w-6 h-6 relative top-[1px] ml-[-1px] ${
-        isScrolled ? "text-rose-600" : "text-rose-600 dark:text-rose-400"
-      }`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M3 3l5.2 5.2m0 0a8.5 8.5 0 1012 12 8.5 8.5 0 00-12-12z"
-      />
-    </svg>
+              {/* Magnifier icon */}
+              <svg
+                className={`w-6 h-6 relative top-[1px] ml-[-1px] ${
+                  isScrolled ? "text-rose-600" : "text-rose-600 dark:text-rose-400"
+                }`}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 3l5.2 5.2m0 0a8.5 8.5 0 1012 12 8.5 8.5 0 00-12-12z"
+                />
+              </svg>
 
-    {/* ut */}
-    <span
-      className={`ml-[-1px] font-black text-xl ${
-        isScrolled ? "text-rose-600" : "text-rose-600 dark:text-rose-400"
-      }`}
-    >
-      <strong className="font-extrabold">ut</strong>
-    </span>
-  </span>
-</Link>
+              {/* ut */}
+              <span
+                className={`ml-[-1px] font-black text-xl ${
+                  isScrolled ? "text-rose-600" : "text-rose-600 dark:text-rose-400"
+                }`}
+              >
+                <strong className="font-extrabold">ut</strong>
+              </span>
+            </span>
+          </Link>
 
           {/* Desktop Search Bar - Hidden on mobile */}
           <div className="hidden md:flex flex-1 max-w-2xl mx-8">
@@ -503,6 +562,17 @@ export default function Header() {
                 {/* Search Suggestions */}
                 {showSuggestions && suggestions.length > 0 && (
                   <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden z-50">
+                    <div className="p-3 border-b border-gray-100 flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-700">Suggestions</span>
+                      {searchHistory.length > 0 && (
+                        <button
+                          onClick={clearSearchHistory}
+                          className="text-xs text-pink-600 hover:text-pink-700 font-medium"
+                        >
+                          Clear history
+                        </button>
+                      )}
+                    </div>
                     <div className="max-h-80 overflow-y-auto">
                       {suggestions.map((suggestion, index) => (
                         <button
