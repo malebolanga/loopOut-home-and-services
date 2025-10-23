@@ -126,23 +126,52 @@ export default function Profile() {
   const [cameraActive, setCameraActive] = useState(false);
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [modelLoadingError, setModelLoadingError] = useState(null);
   const faceImageRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Load Face API Models
+  // Load Face API Models with better error handling
   useEffect(() => {
     const loadModels = async () => {
       try {
         console.log('Loading face recognition models...');
+        setModelLoadingError(null);
+        
+        // Check if models are accessible
+        const modelPaths = [
+          '/models/face_landmark_68_model-weights_manifest.json',
+          '/models/face_recognition_model-weights_manifest.json',
+          '/models/ssd_mobilenetv1_model-weights_manifest.json'
+        ];
+
+        // Test if models are accessible
+        for (const path of modelPaths) {
+          const response = await fetch(path);
+          if (!response.ok) {
+            throw new Error(`Model not found: ${path}`);
+          }
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            throw new Error(`Invalid model format for: ${path}. Expected JSON.`);
+          }
+        }
+
+        // Load models
         await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
         await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
         await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
+        
         setModelsLoaded(true);
         console.log('Face API models loaded successfully');
       } catch (error) {
         console.error('Error loading face models:', error);
-        setFaceUploadError('Failed to load face recognition system. Please refresh the page.');
+        setModelLoadingError(
+          error.message.includes('Model not found') || error.message.includes('Invalid model format') 
+            ? 'Face recognition models not found. Please ensure models are placed in public/models/ directory.'
+            : `Failed to load face recognition system: ${error.message}`
+        );
+        setModelsLoaded(false);
       }
     };
 
@@ -240,6 +269,12 @@ export default function Profile() {
       return;
     }
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setFaceUploadError("Please select a valid image file.");
+      return;
+    }
+
     setIsProcessing(true);
     setFaceUploadError(false);
     const storage = getStorage(app);
@@ -328,6 +363,7 @@ export default function Profile() {
             setIsProcessing(false);
           }
         } catch (detectionError) {
+          console.error('Face detection error:', detectionError);
           setFaceUploadError("Face detection failed. Please try with a different image.");
           setIsProcessing(false);
         }
@@ -708,6 +744,18 @@ export default function Profile() {
                 Face Recognition Profile
               </h3>
               
+              {/* Model Loading Error */}
+              {modelLoadingError && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <p className="text-yellow-700 text-sm">
+                    {modelLoadingError}
+                  </p>
+                  <p className="text-yellow-600 text-xs mt-2">
+                    Please download the face-api.js models and place them in the public/models/ directory.
+                  </p>
+                </div>
+              )}
+              
               <div className="space-y-4">
                 {!faceData ? (
                   <div className="text-center">
@@ -715,10 +763,19 @@ export default function Profile() {
                       Add your face profile for quick identification across listings, services, and events
                     </p>
                     
+                    {!modelsLoaded && !modelLoadingError && (
+                      <div className="mb-4">
+                        <p className="text-blue-600 text-sm">Loading face recognition system...</p>
+                        <div className="h-2 bg-blue-200 rounded-full overflow-hidden mt-2">
+                          <div className="h-full bg-blue-500 rounded-full animate-pulse"></div>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="flex gap-4 justify-center flex-wrap">
                       <button
                         onClick={() => setShowFaceUpload(true)}
-                        disabled={isProcessing}
+                        disabled={isProcessing || !modelsLoaded}
                         className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 disabled:bg-blue-400 disabled:cursor-not-allowed"
                       >
                         <Upload className="w-4 h-4" />
@@ -727,7 +784,7 @@ export default function Profile() {
                       
                       <button
                         onClick={startCamera}
-                        disabled={isProcessing}
+                        disabled={isProcessing || !modelsLoaded}
                         className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center gap-2 disabled:bg-green-400 disabled:cursor-not-allowed"
                       >
                         <Camera className="w-4 h-4" />
@@ -735,8 +792,8 @@ export default function Profile() {
                       </button>
                     </div>
 
-                    {!modelsLoaded && (
-                      <p className="text-yellow-600 text-sm mt-3">
+                    {!modelsLoaded && !modelLoadingError && (
+                      <p className="text-blue-600 text-sm mt-3">
                         Loading face recognition system...
                       </p>
                     )}
@@ -907,35 +964,70 @@ export default function Profile() {
                 value={formData.location || currentUser?.location || ''} 
                 handleChange={handleChange} 
               />
+              <InputField 
+                label="Phone Number" 
+                type="tel" 
+                id="phone" 
+                value={formData.phone || currentUser?.phone || ''} 
+                handleChange={handleChange} 
+              />
+              <InputField 
+                label="Bio" 
+                type="textarea" 
+                id="bio" 
+                value={formData.bio || currentUser?.bio || ''} 
+                handleChange={handleChange} 
+              />
+              <InputField 
+                label="Occupation" 
+                type="text" 
+                id="occupation" 
+                value={formData.occupation || currentUser?.occupation || ''} 
+                handleChange={handleChange} 
+              />
+              <InputField 
+                label="Interests" 
+                type="text" 
+                id="interests" 
+                value={formData.interests || currentUser?.interests || ''} 
+                handleChange={handleChange} 
+              />
+              <InputField 
+                label="Website" 
+                type="url" 
+                id="website" 
+                value={formData.website || currentUser?.website || ''} 
+                handleChange={handleChange} 
+              />
+              <InputField 
+                label="Social Media Links" 
+                type="text" 
+                id="socialMedia" 
+                value={formData.socialMedia || currentUser?.socialMedia || ''} 
+                handleChange={handleChange} 
+              />
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-red-600 text-white py-3 px-6 rounded-lg font-semibold text-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Updating...
-                  </span>
-                ) : (
-                  "Update Profile"
-                )}
-              </button>
-              {updateSuccess && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <p className="text-green-700 text-center">Profile updated successfully!</p>
-                </div>
-              )}
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-red-700 text-center">{error}</p>
-                </div>
-              )}
+              <div className="flex justify-end pt-6">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-red-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  {loading ? "Updating..." : "Update Profile"}
+                </button>
+              </div>
             </form>
+
+            {updateSuccess && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+                <p className="text-green-700 text-center">Profile updated successfully!</p>
+              </div>
+            )}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+                <p className="text-red-700 text-center">{error}</p>
+              </div>
+            )}
           </>
         )}
 
