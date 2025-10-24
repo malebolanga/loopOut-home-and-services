@@ -1106,7 +1106,7 @@ export default function Home() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.name)}
                 className={`
-                  group relative flex flex-col items-center justify-center
+                   relative flex flex-col items-center justify-center
                   px-6 py-4 rounded-2xl transition-all duration-500
                   ${activeTab === tab.name
                     ? `bg-gradient-to-r ${tab.gradient} text-white shadow-2xl scale-105`
@@ -1407,12 +1407,12 @@ export default function Home() {
                 </Swiper>
 
                 {/* Enhanced Navigation Buttons */}
-                <button className="recommendations-swiper-button-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-gray-700 hover:text-purple-600 hover:border-purple-500 transition-all duration-300 group">
+                <button className="recommendations-swiper-button-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-gray-700 hover:text-purple-600 hover:border-purple-500 transition-all duration-300">
                   <svg className="w-6 h-6 transform group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                <button className="recommendations-swiper-button-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-gray-700 hover:text-purple-600 hover:border-purple-500 transition-all duration-300 group">
+                <button className="recommendations-swiper-button-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-gray-700 hover:text-purple-600 hover:border-purple-500 transition-all duration-300">
                   <svg className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -1475,7 +1475,7 @@ export default function Home() {
               <div className="flex justify-center mt-12">
                 <button
                   onClick={() => setVisibleListings(prev => prev + LOAD_MORE_COUNT)}
-                  className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-bold shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-105 flex items-center group"
+                  className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-bold shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-105 flex items-center "
                 >
                   <span>Load More</span>
                   <svg className="w-5 h-5 ml-2 transform group-hover:translate-y-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
