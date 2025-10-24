@@ -284,7 +284,7 @@ const ServiceCategoriesSlide = ({ type, onSelectCategory }) => {
           <SwiperSlide key={key} className="flex justify-center">
             <button
               onClick={() => onSelectCategory(key)}
-              className="flex flex-col items-center justify-center w-28 sm:w-32 focus:outline-none group transform transition-all duration-500 hover:scale-110"
+              className="flex flex-col items-center justify-center w-28 sm:w-32 focus:outline-none  transform transition-all duration-500 hover:scale-110"
             >
               <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-4 border-white shadow-2xl group-hover:shadow-3xl transition-all duration-500 flex items-center justify-center relative bg-gradient-to-br from-white to-gray-50">
                 {categoryImages[key] ? (
@@ -1356,7 +1356,7 @@ export default function Home() {
                             )}
                             
                             {/* Enhanced Overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                             
                             {/* Enhanced Badges */}
                             <div className="absolute top-3 left-3">
