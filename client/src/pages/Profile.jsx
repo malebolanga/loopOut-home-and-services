@@ -38,7 +38,7 @@ import MyListing from "./MyListing";
 
 // Import face-api.js components
 import * as faceapi from 'face-api.js';
-import { Camera, Upload, CheckCircle, X } from 'lucide-react';
+import { Camera, CheckCircle, X } from 'lucide-react';
 
 // Reusable InputField Component
 const InputField = ({ label, id, type = "text", value, handleChange, helperText, placeholder }) => (
@@ -122,42 +122,20 @@ export default function Profile() {
   const [faceUploadError, setFaceUploadError] = useState(false);
   const [faceData, setFaceData] = useState(null);
   const [isFaceVerified, setIsFaceVerified] = useState(false);
-  const [showFaceUpload, setShowFaceUpload] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [modelLoadingError, setModelLoadingError] = useState(null);
-  const faceImageRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Load Face API Models with better error handling
+  // Load Face API Models
   useEffect(() => {
     const loadModels = async () => {
       try {
         console.log('Loading face recognition models...');
         setModelLoadingError(null);
         
-        // Check if models are accessible
-        const modelPaths = [
-          '/models/face_landmark_68_model-weights_manifest.json',
-          '/models/face_recognition_model-weights_manifest.json',
-          '/models/ssd_mobilenetv1_model-weights_manifest.json'
-        ];
-
-        // Test if models are accessible
-        for (const path of modelPaths) {
-          const response = await fetch(path);
-          if (!response.ok) {
-            throw new Error(`Model not found: ${path}`);
-          }
-          const contentType = response.headers.get('content-type');
-          if (!contentType || !contentType.includes('application/json')) {
-            throw new Error(`Invalid model format for: ${path}. Expected JSON.`);
-          }
-        }
-
-        // Load models
         await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
         await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
         await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
@@ -166,11 +144,7 @@ export default function Profile() {
         console.log('Face API models loaded successfully');
       } catch (error) {
         console.error('Error loading face models:', error);
-        setModelLoadingError(
-          error.message.includes('Model not found') || error.message.includes('Invalid model format') 
-            ? 'Face recognition models not found. Please ensure models are placed in public/models/ directory.'
-            : `Failed to load face recognition system: ${error.message}`
-        );
+        setModelLoadingError('Failed to load face recognition system. Please refresh the page.');
         setModelsLoaded(false);
       }
     };
@@ -256,129 +230,7 @@ export default function Profile() {
     setSecuritySettings(prev => ({ ...prev, [field]: !prev[field] }));
   };
 
-  // Face Recognition Functions
-  const handleFaceImageUpload = (file) => {
-    if (!modelsLoaded) {
-      setFaceUploadError("Face recognition system is still loading. Please wait...");
-      return;
-    }
-
-    // Validate file size (2MB max)
-    if (file.size > 2 * 1024 * 1024) {
-      setFaceUploadError("File size too large. Please select an image under 2MB.");
-      return;
-    }
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setFaceUploadError("Please select a valid image file.");
-      return;
-    }
-
-    setIsProcessing(true);
-    setFaceUploadError(false);
-    const storage = getStorage(app);
-    const fileName = `face_${new Date().getTime()}_${file.name}`;
-    const storageRef = ref(storage, fileName);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setFaceUploadPerc(Math.round(progress));
-      },
-      (error) => {
-        setFaceUploadError("Upload failed: " + error.message);
-        setIsProcessing(false);
-      },
-      async () => {
-        try {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          await processFaceDetection(downloadURL);
-        } catch (error) {
-          setFaceUploadError("Processing failed: " + error.message);
-          setIsProcessing(false);
-        }
-      }
-    );
-  };
-
-  const processFaceDetection = async (imageUrl) => {
-    if (!modelsLoaded) {
-      setFaceUploadError("Face recognition system is not ready");
-      setIsProcessing(false);
-      return;
-    }
-
-    try {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = imageUrl;
-      
-      img.onload = async () => {
-        try {
-          // Detect face with landmarks and descriptor
-          const detection = await faceapi
-            .detectSingleFace(img)
-            .withFaceLandmarks()
-            .withFaceDescriptor();
-
-          if (detection) {
-            const faceDescriptor = Array.from(detection.descriptor);
-            
-            const newFaceData = {
-              imageUrl: imageUrl,
-              descriptor: faceDescriptor,
-              detectedAt: new Date().toISOString()
-            };
-            
-            setFaceData(newFaceData);
-            setIsFaceVerified(true);
-            setIsProcessing(false);
-
-            // Save to user profile
-            const res = await fetch(`/api/user/update/${currentUser._id}`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ 
-                faceData: {
-                  ...newFaceData,
-                  verified: true
-                }
-              }),
-            });
-
-            const data = await res.json();
-            if (data.success === false) {
-              setFaceUploadError("Failed to save face data: " + data.message);
-              return;
-            }
-
-            dispatch(updateUserSuccess(data));
-            setUpdateSuccess(true);
-            setTimeout(() => setUpdateSuccess(false), 3000);
-          } else {
-            setFaceUploadError("No face detected in the image. Please upload a clear front-facing photo.");
-            setIsProcessing(false);
-          }
-        } catch (detectionError) {
-          console.error('Face detection error:', detectionError);
-          setFaceUploadError("Face detection failed. Please try with a different image.");
-          setIsProcessing(false);
-        }
-      };
-
-      img.onerror = () => {
-        setFaceUploadError("Failed to load image for processing");
-        setIsProcessing(false);
-      };
-    } catch (error) {
-      setFaceUploadError("Processing error: " + error.message);
-      setIsProcessing(false);
-    }
-  };
-
+  // Camera Functions
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -395,30 +247,172 @@ export default function Profile() {
       }
     } catch (error) {
       console.error("Camera error:", error);
-      setFaceUploadError("Camera access denied. Please allow camera permissions in your browser settings.");
+      setFaceUploadError("Camera access denied. Please allow camera permissions and ensure you're using HTTPS.");
     }
   };
 
   const captureFace = async () => {
-    if (videoRef.current && canvasRef.current) {
+    if (!videoRef.current || !canvasRef.current) {
+      setFaceUploadError("Camera not ready. Please try again.");
+      return;
+    }
+
+    setIsProcessing(true);
+    setFaceUploadError(false);
+
+    try {
       const context = canvasRef.current.getContext('2d');
       context.drawImage(videoRef.current, 0, 0, 640, 480);
       
       canvasRef.current.toBlob(async (blob) => {
-        const file = new File([blob], `face_capture_${Date.now()}.jpg`, { 
-          type: 'image/jpeg' 
+        if (!blob) {
+          setFaceUploadError("Failed to capture image. Please try again.");
+          setIsProcessing(false);
+          return;
+        }
+
+        const file = new File([blob], `verification_${Date.now()}.jpg`, { 
+          type: 'image/jpeg',
+          lastModified: Date.now()
         });
-        await handleFaceImageUpload(file);
+        
+        await processCameraCapture(file);
+      }, 'image/jpeg', 0.9);
+    } catch (error) {
+      console.error("Capture error:", error);
+      setFaceUploadError("Failed to capture image. Please try again.");
+      setIsProcessing(false);
+    }
+  };
+
+  const processCameraCapture = async (file) => {
+    if (!modelsLoaded) {
+      setFaceUploadError("Verification system is not ready");
+      setIsProcessing(false);
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      setFaceUploadError(false);
+
+      // Upload to Firebase Storage
+      const storage = getStorage(app);
+      const fileName = `verification_${currentUser._id}_${new Date().getTime()}.jpg`;
+      const storageRef = ref(storage, fileName);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setFaceUploadPerc(Math.round(progress));
+        },
+        (error) => {
+          console.error("Upload error:", error);
+          setFaceUploadError("Upload failed: " + error.message);
+          setIsProcessing(false);
+          stopCamera();
+        },
+        async () => {
+          try {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            await verifyFaceWithImage(downloadURL);
+          } catch (error) {
+            console.error("Download URL error:", error);
+            setFaceUploadError("Processing failed: " + error.message);
+            setIsProcessing(false);
+            stopCamera();
+          }
+        }
+      );
+    } catch (error) {
+      console.error("Process capture error:", error);
+      setFaceUploadError("Processing failed: " + error.message);
+      setIsProcessing(false);
+      stopCamera();
+    }
+  };
+
+  const verifyFaceWithImage = async (imageUrl) => {
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = imageUrl;
+      
+      img.onload = async () => {
+        try {
+          // Detect face with landmarks
+          const detection = await faceapi
+            .detectSingleFace(img)
+            .withFaceLandmarks()
+            .withFaceDescriptor();
+
+          if (detection) {
+            const faceDescriptor = Array.from(detection.descriptor);
+            
+            const newFaceData = {
+              imageUrl: imageUrl,
+              descriptor: faceDescriptor,
+              verified: true,
+              detectedAt: new Date().toISOString(),
+              method: 'camera'
+            };
+            
+            // Save to user profile
+            const res = await fetch(`/api/user/update/${currentUser._id}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ 
+                faceData: newFaceData
+              }),
+            });
+
+            const data = await res.json();
+            if (data.success === false) {
+              setFaceUploadError("Failed to save verification: " + data.message);
+              setIsProcessing(false);
+              stopCamera();
+              return;
+            }
+
+            setFaceData(newFaceData);
+            setIsFaceVerified(true);
+            dispatch(updateUserSuccess(data));
+            setUpdateSuccess(true);
+            setTimeout(() => setUpdateSuccess(false), 3000);
+          } else {
+            setFaceUploadError("No face detected. Please ensure your face is clearly visible in the frame.");
+          }
+        } catch (detectionError) {
+          console.error('Face detection error:', detectionError);
+          setFaceUploadError("Face detection failed. Please try again with better lighting.");
+        }
+        
+        setIsProcessing(false);
         stopCamera();
-      }, 'image/jpeg', 0.8);
+      };
+
+      img.onerror = () => {
+        setFaceUploadError("Failed to process image. Please try again.");
+        setIsProcessing(false);
+        stopCamera();
+      };
+    } catch (error) {
+      console.error("Verification error:", error);
+      setFaceUploadError("Verification failed: " + error.message);
+      setIsProcessing(false);
+      stopCamera();
     }
   };
 
   const stopCamera = () => {
     if (videoRef.current && videoRef.current.srcObject) {
-      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-      setCameraActive(false);
+      const tracks = videoRef.current.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
     }
+    setCameraActive(false);
   };
 
   const removeFaceData = async () => {
@@ -433,7 +427,7 @@ export default function Profile() {
 
       const data = await res.json();
       if (data.success === false) {
-        setFaceUploadError("Failed to remove face data: " + data.message);
+        setFaceUploadError("Failed to remove verification: " + data.message);
         return;
       }
 
@@ -444,7 +438,7 @@ export default function Profile() {
       setTimeout(() => setUpdateSuccess(false), 3000);
     } catch (error) {
       console.error("Error removing face data:", error);
-      setFaceUploadError("Failed to remove face data");
+      setFaceUploadError("Failed to remove verification");
     }
   };
 
@@ -737,21 +731,18 @@ export default function Profile() {
           <>
             <h2 className="text-3xl font-bold text-slate-800 mb-8 border-b pb-4">Personal Information</h2>
             
-            {/* Face Recognition Section */}
+            {/* Tinder-Style Face Verification */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg shadow-sm border border-blue-200 mb-6">
               <h3 className="text-xl font-semibold mb-4 text-blue-800 flex items-center gap-2">
                 <Camera className="w-5 h-5" />
-                Face Recognition Profile
+                Identity Verification
               </h3>
               
-              {/* Model Loading Error */}
+              {/* Model Loading Status */}
               {modelLoadingError && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <p className="text-yellow-700 text-sm">
                     {modelLoadingError}
-                  </p>
-                  <p className="text-yellow-600 text-xs mt-2">
-                    Please download the face-api.js models and place them in the public/models/ directory.
                   </p>
                 </div>
               )}
@@ -760,41 +751,33 @@ export default function Profile() {
                 {!faceData ? (
                   <div className="text-center">
                     <p className="text-gray-700 mb-4">
-                      Add your face profile for quick identification across listings, services, and events
+                      Verify your identity using your camera - just like Tinder verification
+                    </p>
+                    <p className="text-sm text-gray-600 mb-6">
+                      This helps build trust with other users and enhances your profile credibility
                     </p>
                     
                     {!modelsLoaded && !modelLoadingError && (
                       <div className="mb-4">
-                        <p className="text-blue-600 text-sm">Loading face recognition system...</p>
+                        <p className="text-blue-600 text-sm">Loading verification system...</p>
                         <div className="h-2 bg-blue-200 rounded-full overflow-hidden mt-2">
                           <div className="h-full bg-blue-500 rounded-full animate-pulse"></div>
                         </div>
                       </div>
                     )}
                     
-                    <div className="flex gap-4 justify-center flex-wrap">
-                      <button
-                        onClick={() => setShowFaceUpload(true)}
-                        disabled={isProcessing || !modelsLoaded}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 disabled:bg-blue-400 disabled:cursor-not-allowed"
-                      >
-                        <Upload className="w-4 h-4" />
-                        {isProcessing ? 'Processing...' : 'Upload Photo'}
-                      </button>
-                      
-                      <button
-                        onClick={startCamera}
-                        disabled={isProcessing || !modelsLoaded}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center gap-2 disabled:bg-green-400 disabled:cursor-not-allowed"
-                      >
-                        <Camera className="w-4 h-4" />
-                        Use Camera
-                      </button>
-                    </div>
+                    <button
+                      onClick={startCamera}
+                      disabled={isProcessing || !modelsLoaded}
+                      className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center gap-2 mx-auto disabled:bg-red-400 disabled:cursor-not-allowed"
+                    >
+                      <Camera className="w-5 h-5" />
+                      Start Verification
+                    </button>
 
                     {!modelsLoaded && !modelLoadingError && (
                       <p className="text-blue-600 text-sm mt-3">
-                        Loading face recognition system...
+                        Preparing camera verification...
                       </p>
                     )}
                   </div>
@@ -804,7 +787,7 @@ export default function Profile() {
                       <div className="relative">
                         <img
                           src={faceData.imageUrl}
-                          alt="Face profile"
+                          alt="Verified profile"
                           className="w-24 h-24 rounded-full object-cover border-4 border-green-500 shadow-lg"
                         />
                         <div className="absolute -top-2 -right-2 bg-green-500 rounded-full p-1">
@@ -813,10 +796,10 @@ export default function Profile() {
                       </div>
                       <div className="text-left">
                         <p className="text-green-700 font-semibold flex items-center gap-2 text-lg">
-                          Face Profile Verified
+                          Identity Verified
                         </p>
                         <p className="text-sm text-gray-600 mt-1">
-                          Your face profile is active and will be used for identification across the platform
+                          Your profile is now verified with a photo
                         </p>
                         <p className="text-xs text-gray-500 mt-2">
                           Verified on: {new Date(faceData.detectedAt).toLocaleDateString()}
@@ -825,18 +808,18 @@ export default function Profile() {
                     </div>
                     <div className="flex gap-4 justify-center">
                       <button
-                        onClick={() => setShowFaceUpload(true)}
+                        onClick={startCamera}
                         className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
                       >
-                        <Upload className="w-4 h-4" />
-                        Update Face Profile
+                        <Camera className="w-4 h-4" />
+                        Re-verify
                       </button>
                       <button
                         onClick={removeFaceData}
                         className="text-red-600 hover:text-red-800 font-medium flex items-center gap-1"
                       >
                         <X className="w-4 h-4" />
-                        Remove Face Data
+                        Remove Verification
                       </button>
                     </div>
                   </div>
@@ -844,70 +827,47 @@ export default function Profile() {
                 
                 {/* Camera Interface */}
                 {cameraActive && (
-                  <div className="bg-black p-4 rounded-lg">
-                    <div className="relative">
+                  <div className="bg-black p-6 rounded-lg">
+                    <div className="relative mx-auto max-w-md">
                       <video
                         ref={videoRef}
                         autoPlay
                         playsInline
                         muted
-                        className="w-full rounded-lg"
+                        className="w-full rounded-lg border-2 border-white"
                       />
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-48 h-48 border-2 border-white rounded-lg opacity-60"></div>
+                      </div>
                       <canvas ref={canvasRef} className="hidden" width="640" height="480" />
-                      <div className="flex gap-4 justify-center mt-4">
+                    </div>
+                    
+                    <div className="flex flex-col items-center mt-6 space-y-4">
+                      <p className="text-white text-center text-sm mb-4">
+                        Position your face in the frame and ensure good lighting
+                      </p>
+                      
+                      <div className="flex gap-4">
                         <button
                           onClick={captureFace}
-                          className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium"
+                          disabled={isProcessing}
+                          className="bg-red-600 text-white px-8 py-3 rounded-full hover:bg-red-700 transition-colors font-medium flex items-center gap-2 disabled:bg-red-400"
                         >
-                          Capture Photo
+                          {isProcessing ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <Camera className="w-5 h-5" />
+                              Capture & Verify
+                            </>
+                          )}
                         </button>
                         <button
                           onClick={stopCamera}
-                          className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors font-medium"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                    <p className="text-white text-sm text-center mt-2">
-                      Position your face in the center and ensure good lighting
-                    </p>
-                  </div>
-                )}
-                
-                {/* File Upload Interface */}
-                {showFaceUpload && !cameraActive && (
-                  <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 bg-white">
-                    <input
-                      type="file"
-                      hidden
-                      ref={faceImageRef}
-                      accept="image/*"
-                      onChange={(e) => {
-                        if (e.target.files[0]) {
-                          handleFaceImageUpload(e.target.files[0]);
-                          setShowFaceUpload(false);
-                        }
-                      }}
-                    />
-                    <div className="text-center">
-                      <Upload className="w-12 h-12 text-blue-400 mx-auto mb-4" />
-                      <p className="text-gray-700 mb-2 font-medium">
-                        Upload a clear front-facing photo
-                      </p>
-                      <p className="text-sm text-gray-500 mb-4">
-                        Make sure your face is clearly visible with good lighting
-                      </p>
-                      <div className="flex gap-4 justify-center">
-                        <button
-                          onClick={() => faceImageRef.current.click()}
-                          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                        >
-                          Choose File
-                        </button>
-                        <button
-                          onClick={() => setShowFaceUpload(false)}
-                          className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+                          className="bg-gray-600 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition-colors font-medium"
                         >
                           Cancel
                         </button>
@@ -918,9 +878,9 @@ export default function Profile() {
                 
                 {/* Upload Progress */}
                 {(faceUploadPerc > 0 && faceUploadPerc < 100) || isProcessing ? (
-                  <div className="w-full mx-auto">
+                  <div className="w-full mx-auto max-w-md">
                     <div className="flex justify-between text-sm text-slate-700 mb-1">
-                      <span>{isProcessing ? 'Processing face...' : 'Uploading...'}</span>
+                      <span>{isProcessing ? 'Processing verification...' : 'Uploading...'}</span>
                       <span>{faceUploadPerc}%</span>
                     </div>
                     <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -1031,6 +991,7 @@ export default function Profile() {
           </>
         )}
 
+        {/* Rest of the sections remain the same */}
         {activeSection === "login" && (
           <>
             <h2 className="text-3xl font-bold text-slate-800 mb-8 border-b pb-4">Login & Security</h2>

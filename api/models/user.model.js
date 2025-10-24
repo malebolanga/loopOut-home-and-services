@@ -23,6 +23,30 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "",
     },
+    bio: {
+        type: String,
+        default: "",
+    },
+    occupation: {
+        type: String,
+        default: "",
+    },
+    interests: {
+        type: String,
+        default: "",
+    },
+    website: {
+        type: String,
+        default: "",
+    },
+    socialMedia: {
+        type: String,
+        default: "",
+    },
+    phone: {
+        type: String,
+        default: "",
+    },
     favorites: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Listing'
@@ -45,7 +69,8 @@ const userSchema = new mongoose.Schema({
         imageUrl: String,
         descriptor: [Number],
         verified: { type: Boolean, default: false },
-        detectedAt: Date
+        detectedAt: Date,
+        method: { type: String, enum: ['camera', 'upload'], default: 'camera' }
     },
 
     // Add host rating fields
