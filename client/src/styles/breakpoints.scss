@@ -1,190 +1,239 @@
-$breakpoints: (
-    "sm": 480px,
-    "mm": 580px,
-    "md": 720px,
-    "ml": 820px,
-    "lg": 1000px,
-    "xl": 1120px
-);
-
+$breakpoints: ( "sm": 480px, "mm": 580px, "md": 720px, "ml": 820px, "lg": 1000px, "xl": 1120px);
 @mixin sm {
     @media (max-width: map-get($breakpoints, "sm")) {
         @content;
     }
-};
+}
 
+;
 @mixin mm {
     @media (max-width: map-get($breakpoints, "mm")) {
         @content;
     }
-};
+}
 
+;
 @mixin md {
     @media (max-width: map-get($breakpoints, "md")) {
         @content;
     }
-};
+}
 
+;
 @mixin ml {
     @media (max-width: map-get($breakpoints, "ml")) {
         @content;
     }
-};
+}
 
+;
 @mixin lg {
     @media (max-width: map-get($breakpoints, "lg")) {
         @content;
     }
-};
+}
 
+;
 @mixin xl {
     @media (max-width: map-get($breakpoints, "xl")) {
         @content;
     }
-};
+}
+
+;
 .list {
     padding: 0 100px 120px;
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
     gap: 25px;
-  
     @include xl {
-      padding: 0 20px 120px;
+        padding: 0 20px 120px;
     }
-  }
-  .tabs ul {
+}
+
+.tabs ul {
     display: flex;
     border-bottom: 2px solid #ccc;
-  }
-  
-  .tab {
+}
+
+.tab {
     margin-right: 20px;
-  }
-  
-  .tab-btn {
+}
+
+.tab-btn {
     background: none;
     border: none;
     padding: 10px 20px;
     cursor: pointer;
     font-size: 1rem;
     color: #333;
-  }
-  
-  .tab-btn:hover {
+}
+
+.tab-btn:hover {
     color: #007BFF;
-  }
-  
-  .active .tab-btn {
+}
+
+.active .tab-btn {
     font-weight: bold;
     border-bottom: 2px solid #007BFF;
-  }
+}
 
-  @keyframes loupeOut {
+@keyframes loupeOut {
     0% {
-      transform: scale(1);
-      opacity: 1;
+        transform: scale(1);
+        opacity: 1;
     }
     50% {
-      transform: scale(0.9);
-      opacity: 0.8;
+        transform: scale(0.9);
+        opacity: 0.8;
     }
     100% {
-      transform: scale(1);
-      opacity: 1;
+        transform: scale(1);
+        opacity: 1;
     }
-  }
-  
-  .loupe-out {
+}
+
+.loupe-out {
     animation: loupeOut 2s ease-in-out infinite;
-  }
+}
 
+.bg-rainbow {
+    background: linear-gradient(90deg, rgba(255, 0, 0, 0.1) 0%, rgba(255, 165, 0, 0.1) 20%, rgba(255, 255, 0, 0.1) 40%, rgba(0, 128, 0, 0.1) 60%, rgba(0, 0, 255, 0.1) 80%, rgba(128, 0, 128, 0.1) 100%);
+}
 
-  .bg-rainbow {
-    background: linear-gradient(90deg, 
-      rgba(255,0,0,0.1) 0%, 
-      rgba(255,165,0,0.1) 20%,
-      rgba(255,255,0,0.1) 40%,
-      rgba(0,128,0,0.1) 60%,
-      rgba(0,0,255,0.1) 80%,
-      rgba(128,0,128,0.1) 100%
-    );
-  }
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
 
-  @keyframes rotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-  
-  @keyframes dash {
+@keyframes dash {
     0% {
-      stroke-dashoffset: 100;
+        stroke-dashoffset: 100;
     }
     100% {
-      stroke-dashoffset: 0;
+        stroke-dashoffset: 0;
     }
-  }
-  
-  .animate-rotate {
+}
+
+.animate-rotate {
     animation: rotate 3s linear infinite;
-  }
-  
-  .animate-dash {
+}
+
+.animate-dash {
     animation: dash 2s ease-in-out infinite;
-  }
-
-  @keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes progress {
-  0% { width: 0%; }
-  70% { width: 70%; }
-  100% { width: 70%; }
-}
-
-.animate-spin-slow {
-  animation: spin-slow 3s linear infinite;
-}
-
-.animate-progress {
-  animation: progress 1.5s ease-out forwards;
 }
 
 @keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes progress {
-  0% { width: 0%; }
-  70% { width: 70%; }
-  100% { width: 70%; }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+    0% {
+        width: 0%;
+    }
+    70% {
+        width: 70%;
+    }
+    100% {
+        width: 70%;
+    }
 }
 
 .animate-spin-slow {
-  animation: spin-slow 3s linear infinite;
+    animation: spin-slow 3s linear infinite;
 }
 
 .animate-progress {
-  animation: progress 1.5s ease-out forwards;
+    animation: progress 1.5s ease-out forwards;
+}
+
+@keyframes spin-slow {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes progress {
+    0% {
+        width: 0%;
+    }
+    70% {
+        width: 70%;
+    }
+    100% {
+        width: 70%;
+    }
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.animate-spin-slow {
+    animation: spin-slow 3s linear infinite;
+}
+
+.animate-progress {
+    animation: progress 1.5s ease-out forwards;
 }
 
 .animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 // Navbar.scss
 @keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.hide-scrollbar {
+    scrollbar-width: none;
+    /* Firefox */
+    &::-webkit-scrollbar {
+        display: none;
+        /* Chrome, Safari, Opera */
+    }
+}@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes fadeInDown {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-30px);
   }
   to {
     opacity: 1;
@@ -192,13 +241,33 @@ $breakpoints: (
   }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.hide-scrollbar {
-  scrollbar-width: none; /* Firefox */
-  &::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
-  }
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 1s ease-out;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 1s ease-out;
 }

@@ -11,7 +11,6 @@ import "../styles/breakpoints.scss";
 import {
   FaHeart,
   FaStar,
-
   FaSpinner,
   FaMagic,
   FaTimes,
@@ -23,9 +22,10 @@ import {
   FaAngleDown,
   FaMapMarkerAlt,
   FaCalendarAlt,
-
   FaFire,
-
+  FaBrain,
+  FaRocket,
+  FaGem,
 } from "react-icons/fa";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -53,43 +53,40 @@ const RELEVANCE_WEIGHTS = {
 const TRENDING_THRESHOLD = 5;
 const FRESHNESS_THRESHOLD = 7; // days
 const POPULARITY_BOOST = 0.15;
-const INITIAL_LOAD_COUNT = 20; // Show 20 cards initially
+const INITIAL_LOAD_COUNT = 20;
 const LOAD_MORE_COUNT = 8;
 const API_RETRY_LIMIT = 3;
-const API_RETRY_DELAY = 1000; // ms
+const API_RETRY_DELAY = 1000;
 
-// API URLs - Use Vite environment variables
+// API URLs
 const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 const OPENAI_KEY = import.meta.env.VITE_OPENAI_KEY || "";
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || "";
 
-// Property and Service types for consistent display
+// Property and Service types
 const PROPERTY_TYPES = {
-  rent: { icon: "🔑", label: " Rent" },               // Key emoji
-  sale: { icon: "🏷️", label: "Sale" },               // Price tag emoji
-
-  over: { icon: "🏬", label: "Guest-House " },         // Department store emoji
-  office: { icon: "🕒", label: "Hourly-Room" },           // Office building emoji
-  land: { icon: "🌳", label: "Land" },               // Rock/land emoji
+  rent: { icon: "🔑", label: "Rent" },
+  sale: { icon: "🏷️", label: "Sale" },
+  over: { icon: "🏬", label: "Guest-House" },
+  office: { icon: "🕒", label: "Hourly-Room" },
+  land: { icon: "🌳", label: "Land" },
 };
-
 
 const SERVICE_TYPES = {
-  cleaning: { icon: "🧹", label: "Cleaning" },              // Broom emoji
-  maintenance: { icon: "🛠️", label: "Maintenance" },        // Hammer and wrench emoji
-  moving: { icon: "🚚", label: "Moving" },                  // Moving truck emoji
-  landscaping: { icon: "🌿", label: "Landscaping" },         // Herb/plant emoji
-  catering: { icon: "🍽️", label: "Catering" },             // Fork and knife with plate emoji
-  other: { icon: "❓", label: "Other" },                    // Question mark emoji
-  daycare: { icon: "👶", label: "DayCare" },                // Baby emoji
-  schoolTransport: { icon: "🚌", label: "School" }          // School bus emoji
+  cleaning: { icon: "🧹", label: "Cleaning" },
+  maintenance: { icon: "🛠️", label: "Maintenance" },
+  moving: { icon: "🚚", label: "Moving" },
+  landscaping: { icon: "🌿", label: "Landscaping" },
+  catering: { icon: "🍽️", label: "Catering" },
+  other: { icon: "❓", label: "Other" },
+  daycare: { icon: "👶", label: "DayCare" },
+  schoolTransport: { icon: "🚌", label: "School" }
 };
 
-// Updated helper types with Chef category
 const HELPER_TYPES = {
-  domestic: { icon: "👔", label: "General Help" },          // Tie emoji
-  errand: { icon: "🛍️", label: "Errand Runner" },          // Shopping bag emoji
-  tutor: { icon: "📚", label: "Tutor" },                   // Books emoji
+  domestic: { icon: "👔", label: "General Help" },
+  errand: { icon: "🛍️", label: "Errand Runner" },
+  tutor: { icon: "📚", label: "Tutor" },
   chef: { icon: "👩‍🍳", label: "Chef" },
   maid: { icon: "🧹", label: "Maid" },
   beauty: { icon: "💄", label: "Beauty" },
@@ -98,12 +95,12 @@ const HELPER_TYPES = {
 };
 
 const LOCAL_EVENT_TYPES = {
-  music: { icon: "🎵", label: "Music" },                 // Musical note
-  sports: { icon: "⚽", label: "Sports" },                // Soccer ball
-  art: { icon: "🎨", label: "Art & Culture" },            // Artist palette
-  community: { icon: "👥", label: "Community" },          // Group of people
-  food: { icon: "🍽️", label: "Food & Drink" },           // Fork and knife with plate
-  other: { icon: "❓", label: "Other Events" },           // Question mark
+  music: { icon: "🎵", label: "Music" },
+  sports: { icon: "⚽", label: "Sports" },
+  art: { icon: "🎨", label: "Art & Culture" },
+  community: { icon: "👥", label: "Community" },
+  food: { icon: "🍽️", label: "Food & Drink" },
+  other: { icon: "❓", label: "Other Events" },
 };
 
 // Images for the new side slide categories
@@ -120,7 +117,6 @@ const SERVICE_IMAGES = {
     "https://media.istockphoto.com/id/1437253304/photo/professional-goods-move-service-use-truck-carry-personal-belongings-door-to-door-transport.jpg?s=2048x2048&w=is&k=20&c=8z3I2_UkqshGKkc98B1ZJCX_Horw8a4-5p5qCE79vig=",
   other:
     "https://images.unsplash.com/photo-1640323240640-ee731d18dcb1?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  // New service type images
   daycare:
     "https://images.unsplash.com/photo-1600041161228-519e6dd27f1b?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   schoolTransport:
@@ -189,83 +185,130 @@ const fetchWithRetry = async (url, options = {}, retries = API_RETRY_LIMIT) => {
   }
 };
 
+/**
+ * Formats a number as a South African Rand currency string.
+ */
+const formatPrice = (price) =>
+  new Intl.NumberFormat("en-ZA", {
+    style: "currency",
+    currency: "ZAR",
+    maximumFractionDigits: 0,
+  }).format(price);
 
-const handleViewAllRecommendations = async () => {
-  try {
-    // Check if geolocation is available
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser');
-      return;
-    }
+/**
+ * Enhanced ErrorMessage Component
+ */
+const ErrorMessage = ({ message, onRetry }) => (
+  <div className="bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 p-6 rounded-2xl mb-6 shadow-lg">
+    <div className="flex items-center">
+      <div className="flex-shrink-0">
+        <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center">
+          <FaExclamationTriangle className="text-white text-xl" />
+        </div>
+      </div>
+      <div className="ml-4">
+        <p className="text-red-800 font-semibold text-lg">{message}</p>
+        {onRetry && (
+          <button
+            onClick={onRetry}
+            className="mt-3 px-6 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105 font-medium focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+          >
+            Try Again
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+);
 
-    // Get current position
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        
-        // Show loading state
-        setLoading(true);
-        
-        try {
-          // Call your API to get recommendations based on GPS location
-          const response = await fetch('/api/recommendations/nearby', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              latitude,
-              longitude,
-              radius: 50, // 50km radius
-              type: activeTab // current active tab type
-            })
-          });
+/** 
+ * Enhanced ServiceCategoriesSlide Component
+ */
+const ServiceCategoriesSlide = ({ type, onSelectCategory }) => {
+  const categories =
+    type === "services"
+      ? SERVICE_TYPES
+      : type === "helpers"
+        ? HELPER_TYPES
+        : type === "events"
+          ? LOCAL_EVENT_TYPES
+          : {};
+  const categoryImages =
+    type === "services"
+      ? SERVICE_IMAGES
+      : type === "helpers"
+        ? HELPER_IMAGES
+        : type === "events"
+          ? EVENT_IMAGES
+          : {};
 
-          if (response.ok) {
-            const nearbyRecommendations = await response.json();
-            
-            // Navigate to recommendations page with location-based data
-            navigate('/recommendations', {
-              state: {
-                recommendations: nearbyRecommendations,
-                userLocation: { latitude, longitude },
-                title: 'Recommended Near You'
-              }
-            });
-          } else {
-            throw new Error('Failed to fetch recommendations');
-          }
-        } catch (error) {
-          console.error('Error fetching location-based recommendations:', error);
-          alert('Unable to get recommendations for your location');
-        } finally {
-          setLoading(false);
-        }
-      },
-      (error) => {
-        console.error('Error getting location:', error);
-        alert('Unable to access your location. Please enable location services.');
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
-      }
-    );
-  } catch (error) {
-    console.error('Error in handleViewAllRecommendations:', error);
-  }
-};
+  const title =
+    type === "services"
+      ? "Explore Services"
+      : type === "helpers"
+        ? "Find Personal Helpers"
+        : "Discover Local Events";
 
-// Additional handler for individual card clicks
-const handleCardClick = (item) => {
-  navigate(`/listing/${item._id}`, { state: { item } });
-};
-
-// Handler for favorite clicks
-const handleFavoriteClick = (item) => {
-  // Add your favorite logic here
-  console.log('Favorite clicked for:', item.name);
+  return (
+    <div className="mb-12">
+      <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-8 text-center bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+        {title}
+      </h2>
+      <Swiper
+        slidesPerView={3}
+        spaceBetween={20}
+        navigation={false}
+        pagination={{ clickable: true }}
+        modules={[Pagination]}
+        className="mySwiper !pb-10"
+        breakpoints={{
+          640: {
+            slidesPerView: 4,
+            spaceBetween: 25,
+          },
+          768: {
+            slidesPerView: 5,
+            spaceBetween: 30,
+          },
+          1024: {
+            slidesPerView: 6,
+            spaceBetween: 35,
+          },
+          1280: {
+            slidesPerView: 7,
+            spaceBetween: 40,
+          },
+        }}
+      >
+        {Object.entries(categories).map(([key, { label, icon }]) => (
+          <SwiperSlide key={key} className="flex justify-center">
+            <button
+              onClick={() => onSelectCategory(key)}
+              className="flex flex-col items-center justify-center w-28 sm:w-32 focus:outline-none group transform transition-all duration-500 hover:scale-110"
+            >
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-4 border-white shadow-2xl group-hover:shadow-3xl transition-all duration-500 flex items-center justify-center relative bg-gradient-to-br from-white to-gray-50">
+                {categoryImages[key] ? (
+                  <img
+                    src={categoryImages[key]}
+                    alt={label}
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                  />
+                ) : (
+                  <span className="text-4xl text-gray-600 group-hover:text-purple-600 transition-colors duration-300">
+                    {icon}
+                  </span>
+                )}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                  <p className="text-white text-xs font-semibold text-center">{label}</p>
+                </div>
+              </div>
+            </button>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+    </div>
+  );
 };
 
 /**
@@ -418,179 +461,8 @@ class PropertySearchAI {
   }
 }
 
-/**
- * Formats a number as a South African Rand currency string.
- */
-const formatPrice = (price) =>
-  new Intl.NumberFormat("en-ZA", {
-    style: "currency",
-    currency: "ZAR",
-    maximumFractionDigits: 0,
-  }).format(price);
-
-/**
- * ErrorMessage Component: Displays a styled error message with an optional retry button.
- */
-const ErrorMessage = ({ message, onRetry }) => (
-  <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md mb-6">
-    <div className="flex items-center">
-      <FaExclamationTriangle className="text-red-500 mr-3 text-xl" />
-      <div>
-        <p className="text-red-800 font-semibold">{message}</p>
-        {onRetry && (
-          <button
-            onClick={onRetry}
-            className="mt-3 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-          >
-            Try Again
-          </button>
-        )}
-      </div>
-    </div>
-  </div>
-);
-
 /** 
- * ServiceCategoriesSlide Component: Displays a horizontal slider for service or helper categories.
- */
-const ServiceCategoriesSlide = ({ type, onSelectCategory }) => {
-  const categories =
-    type === "services"
-      ? SERVICE_TYPES
-      : type === "helpers"
-        ? HELPER_TYPES
-        : type === "events"
-          ? LOCAL_EVENT_TYPES
-          : {};
-  const categoryImages =
-    type === "services"
-      ? SERVICE_IMAGES
-      : type === "helpers"
-        ? HELPER_IMAGES
-        : type === "events"
-          ? EVENT_IMAGES
-          : {};
-
-  const title =
-    type === "services"
-      ? "Explore Services"
-      : type === "helpers"
-        ? "Find Personal Helpers"
-        : "Discover Local Events";
-
-  return (
-    <div className="mb-8">
-      <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 text-center">
-        {title}
-      </h2>
-      <Swiper
-        slidesPerView={3}
-        spaceBetween={10}
-        navigation={false}
-        pagination={{ clickable: true }}
-        modules={[Pagination]}
-        className="mySwiper !pb-8"
-        breakpoints={{
-          640: {
-            slidesPerView: 4,
-            spaceBetween: 15,
-          },
-          768: {
-            slidesPerView: 5,
-            spaceBetween: 20,
-          },
-          1024: {
-            slidesPerView: 6,
-            spaceBetween: 25,
-          },
-          1280: {
-            slidesPerView: 7,
-            spaceBetween: 25,
-          },
-        }}
-      >
-        {Object.entries(categories).map(([key, { label, icon }]) => (
-          <SwiperSlide key={key} className="flex justify-center">
-            <button
-              onClick={() => onSelectCategory(key)}
-              className="flex flex-col items-center justify-center w-24 sm:w-28 focus:outline-none group"
-            >
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-gray-300 group-hover:border-blue-500 transition-colors duration-200 flex items-center justify-center relative">
-                {categoryImages[key] ? (
-                  <img
-                    src={categoryImages[key]}
-                    alt={label}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-4xl text-gray-600 group-hover:text-blue-600 transition-colors duration-200">
-                    {icon}
-                  </span>
-                )}
-                <div className="absolute inset-0 rounded-full group-hover:bg-black/10 transition-colors"></div>
-              </div>
-              <p className="text-xs sm:text-sm font-medium text-gray-700 mt-2 text-center group-hover:text-blue-600 transition-colors duration-200 line-clamp-2">
-                {label}
-              </p>
-            </button>
-          </SwiperSlide>
-        ))}
-      </Swiper>
-    </div>
-  );
-};
-
-// TabButton component for 3D icon effect
-const TabButton = ({ activeTab, tabName, onClick, Icon, rotation, id }) => {
-  return (
-    <button
-      onClick={() => onClick(tabName)}
-      className={`tab-button relative flex flex-col items-center ${activeTab === tabName ? 'active' : ''
-        }`}
-    >
-      {typeof Icon === 'string' ? (
-        <span
-          className={`
-        text-3xl md:text-4xl mb-1 transition-all duration-300
-        ${activeTab === tabName ?
-              'transform scale-125 z-10' :
-              'hover:scale-110'
-            }
-      `}
-          id={id}
-          aria-label={tabName}
-          style={{
-            textShadow: activeTab === tabName ?
-              '0 2px 4px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.05)' : 'none',
-            filter: activeTab === tabName ?
-              'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' : 'none',
-            transform: activeTab === tabName ?
-              `rotate(${rotation}deg) scale(1.25) translateZ(10px)` :
-              'none',
-            transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-            willChange: 'transform, filter',
-            backfaceVisibility: 'hidden',
-            perspective: '1000px',
-          }}
-        >
-          {Icon}
-        </span>
-      ) : (
-        <Icon
-          className={`text-xl md:text-2xl ${activeTab === tabName ? `rotate-${rotation}` : ''}`}
-          id={id}
-        />
-      )}
-      <div
-        className={`absolute bottom-0 h-1 w-full bg-blue-600 transition-all duration-300 ease-out ${activeTab === tabName ? "scale-x-100" : "scale-x-0"
-          }`}
-      ></div>
-    </button>
-  );
-};
-
-/** 
- * Home Component: Main page for displaying listings, search, and filtering.
+ * Enhanced Home Component
  */
 export default function Home() {
   const navigate = useNavigate();
@@ -622,15 +494,30 @@ export default function Home() {
   const [interactionCounts, setInteractionCounts] = useState({});
   const [trendingItems, setTrendingItems] = useState([]);
 
-  // Rotation states for 3D effect
-  const [propertiesRotation, setPropertiesRotation] = useState({ x: 0, y: 0 });
-  const [servicesRotation, setServicesRotation] = useState({ x: 0, y: 0 });
-  const [helperRotation, setHelperRotation] = useState({ x: 0, y: 0 });
-  const [eventsRotation, setEventsRotation] = useState({ x: 0, y: 0 });
-  const [allRotation, setAllRotation] = useState({ x: 0, y: 0 });
-  const containerRef = useRef(null);
+  // Enhanced tab configuration with AI icons
+  const tabs = [
+    { id: "all", name: "all", icon: "🌐", label: "", gradient: "from-purple-500 to-pink-500" },
+    { id: "properties", name: "properties", icon: "🏠", label: "", gradient: "from-blue-500 to-cyan-500" },
+    { id: "services", name: "services", icon: "🛎️", label: "", gradient: "from-green-500 to-emerald-500" },
+    { id: "helper", name: "helper", icon: "👷", label: " ", gradient: "from-orange-500 to-red-500" },
+    { id: "events", name: "events", icon: "🎪", label: "", gradient: "from-indigo-500 to-purple-500" }
+  ];
 
-  const { ref: scrollRef, inView } = useInView({ threshold: 0.1 });
+  // Enhanced hero images with AI-themed visuals
+  const heroImages = useMemo(() => [
+    "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
+    "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
+    "https://images.unsplash.com/photo-1518709268805-4e9042af2176?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
+    "https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
+  ], []);
+
+  // Cities for placeholder rotation
+  const cities = [
+    "Polokwane", "Mokopane", "Seshego", "Pretoria", "Tembisa", "Soweto", 
+    "Bakenburg", "Springs", "Ivory Park", "Benoni", "Mmamelodi", "Cape Town", 
+    "Kempton Park", "Randburg", "Durban", "Makweng", "Phomolong", "Davetony", 
+    "Mafikeng", "Nelsprit", "Secunda"
+  ];
 
   const [rotatingPlaceholder, setRotatingPlaceholder] = useState('');
   const [displayedCities, setDisplayedCities] = useState([]);
@@ -638,16 +525,6 @@ export default function Home() {
   const placeholderIndex = useRef(0);
   const charIndex = useRef(0);
   const isDeleting = useRef(false);
-
-  useEffect(() => {
-    startPlaceholderRotation();
-    return () => clearInterval(rotationInterval.current);
-  }, []);
-  // Fixed hook order - all hooks declared before conditional return
-  useEffect(() => {
-    document.body.classList.add("home-page");
-    return () => document.body.classList.remove("home-page");
-  }, []);
 
   // Function to increment interaction count
   const incrementInteraction = (id) => {
@@ -666,7 +543,7 @@ export default function Home() {
     });
   };
 
-  // Updated handleItemNavigation function
+  // Handle item navigation
   const handleItemNavigation = useCallback((item) => {
     incrementInteraction(item._id);
 
@@ -681,103 +558,56 @@ export default function Home() {
     }
   }, [navigate]);
 
-  // Mouse tracking for 3D effect
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!containerRef.current) return;
+  // Handle favorite clicks
+  const handleFavoriteClick = (item) => {
+    console.log('Favorite clicked for:', item.name);
+  };
 
-      const container = containerRef.current;
-      const rect = container.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-
-      const relX = (e.clientX - centerX) / (rect.width / 2);
-      const relY = (e.clientY - centerY) / (rect.height / 2);
-
-      const calculateRotation = (elementId, sensitivity) => {
-        const element = document.getElementById(elementId);
-        if (!element) return { x: 0, y: 0 };
-
-        const elementRect = element.getBoundingClientRect();
-        const elementCenterX = elementRect.left + elementRect.width / 2;
-        const elementCenterY = elementRect.top + elementRect.height / 2;
-
-
-
-        return {
-
-        };
-      };
-
-      setPropertiesRotation(calculateRotation('properties-icon', 8));
-      setServicesRotation(calculateRotation('services-icon', 8));
-      setHelperRotation(calculateRotation('helper-icon', 8));
-      setEventsRotation(calculateRotation('events-icon', 8));
-      setAllRotation(calculateRotation('all-icon', 8));
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
-  const debouncedSearch = useCallback(
-    debounce((query) => {
-      setSearchQuery(query);
-    }, 300),
-    []
-  );
-
-
-
-  const fetchSearchSuggestions = useCallback(
-    async (query) => {
-      if (!query.trim()) {
-        setSearchSuggestions([]);
+  // Handle view all recommendations
+  const handleViewAllRecommendations = async () => {
+    try {
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser');
         return;
       }
 
-      try {
-        const suggestions = await searchAI.generateSearchSuggestions(query);
-        setSearchSuggestions(suggestions.slice(0, 5));
-      } catch (error) {
-        console.error("Error fetching search suggestions:", error);
-        setSearchSuggestions([]);
-      }
-    },
-    [searchAI]
-  );
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          setIsLoading(true);
+          
+          try {
+            // Simulate API call - replace with actual endpoint
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const mockRecommendations = allListings
+              .filter(item => item.latitude && item.longitude)
+              .slice(0, 10);
+            
+            navigate('/recommendations', {
+              state: {
+                recommendations: mockRecommendations,
+                userLocation: { latitude, longitude },
+                title: 'Recommended Near You'
+              }
+            });
+          } catch (error) {
+            console.error('Error fetching location-based recommendations:', error);
+            alert('Unable to get recommendations for your location');
+          } finally {
+            setIsLoading(false);
+          }
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          alert('Unable to access your location. Please enable location services.');
+        }
+      );
+    } catch (error) {
+      console.error('Error in handleViewAllRecommendations:', error);
+    }
+  };
 
-
-
-
-
-  // Add this near the top of your component, before the startPlaceholderRotation function
-  const cities = [
-    "Polokwane",
-    "Mokopane",
-    "Seshego",
-    "Pretoria",
-    "Tembisa",
-    "Soweto",
-    "Bakenburg",
-    "Springs",
-    "Ivory Park",
-    "Benoni",
-    "Mmamelodi",
-    "Cape Town",
-    "Kempton Park",
-    "Randburg",
-    "Durban",
-     "Makweng",
-      "Phomolong",
-       "Davetony",
-        "Mafikeng",
-         "Nelsprit",
-          "Secunda",
-
-    // Add more cities as needed
-  ];
-
+  // Placeholder rotation function
   const startPlaceholderRotation = () => {
     rotationInterval.current = setInterval(() => {
       const currentCity = cities[placeholderIndex.current];
@@ -794,9 +624,10 @@ export default function Home() {
           placeholderIndex.current = (placeholderIndex.current + 1) % cities.length;
         }
       }
-    }, 220); // Adjust speed as needed
+    }, 220);
   };
 
+  // Handle search input
   const handleSearchInput = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
@@ -815,43 +646,201 @@ export default function Home() {
     }
   };
 
+  // Handle search submit
   const handleSearchSubmit = (city = searchQuery) => {
-    // Your search submit logic here
     console.log("Searching for:", city);
+    if (city.trim()) {
+      setRecentSearches(prev => {
+        const newSearches = [city, ...prev.filter(s => s !== city)].slice(0, 5);
+        return newSearches;
+      });
+    }
   };
 
+  // Fetch listings function
+  const fetchListings = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
 
+    try {
+      const fetchWithFallback = async (url) => {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return await res.json();
+        } catch (err) {
+          console.error(`Error fetching ${url}:`, err);
+          return [];
+        }
+      };
 
-  const heroImages = useMemo(() => {
-    const fallbackImages = [
-      "https://media.istockphoto.com/id/2170147704/photo/high-angle-view-of-townscape-against-sky.jpg?s=2048x2048&w=is&k=20&c=nGGTw_gsp48zl09VvGO51ULcDpX7RpY72cw4Emtdr0=",
-      "https://media.istockphoto.com/id/2194248291/photo/wild-coast-south-africa-quaint-villages-with-colorful-rondavel-huts.jpg?s=2048x2048&w=is&k=20&c=Lv0B0ES7W2sxdbox9tSwUJj2ihkuZE6tTy82-b1WS64=",
-      "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?auto=format&fit=crop&q=80&w=2940&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&q=80&w=2940&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&q=80&w=2940&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=2940&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=2940&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=2940&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80&w=2940&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    ];
+      const [properties, services, helpers, events] = await Promise.all([
+        fetchWithFallback('/api/listing/get?limit=100'),
+        fetchWithFallback('/api/service/get?limit=100'),
+        fetchWithFallback('/api/helper/get?limit=100'),
+        fetchWithFallback('/api/event/get?limit=100'),
+      ]);
 
-    if (!allListings || allListings.length === 0) {
-      return fallbackImages.sort(() => 0.5 - Math.random()).slice(0, 6);
+      const combinedListings = [
+        ...(Array.isArray(properties) ? properties : []),
+        ...(Array.isArray(services) ? services : []),
+        ...(Array.isArray(helpers) ? helpers : []),
+        ...(Array.isArray(events) ? events : []),
+      ];
+
+      const processedListings = combinedListings.map((item) => ({
+        ...item,
+        priceNumber: item.price || item.regularPrice || 0,
+        price: formatPrice(item.price || item.regularPrice || 0),
+        latitude: item.latitude || 0,
+        longitude: item.longitude || 0,
+        viewCount: parseInt(localStorage.getItem(`views-${item._id}`)) || 0,
+      }));
+
+      setAllListings(processedListings);
+      setSearchAI(new PropertySearchAI(processedListings));
+      generateRecommendations(processedListings);
+    } catch (err) {
+      console.error("Error fetching listings:", err);
+      setError("Failed to load listings. Some features might be limited.");
+    } finally {
+      setIsLoading(false);
+      setIsInitialLoading(false);
     }
+  }, []);
 
-    const listingImages = allListings
-      .flatMap((listing) => listing.imageUrls)
-      .filter(Boolean);
+  // Generate recommendations
+  const generateRecommendations = useCallback((listings) => {
+    const userPreferences = {
+      preferredTypes: JSON.parse(localStorage.getItem("preferredTypes")) || [],
+      priceRange: JSON.parse(localStorage.getItem("preferredPriceRange")) || [0, 1000000],
+      locations: JSON.parse(localStorage.getItem("viewedLocations")) || [],
+    };
 
-    if (listingImages.length < 6) {
-      const combined = [...new Set([...listingImages, ...fallbackImages])];
-      return combined.sort(() => 0.5 - Math.random()).slice(0, 6);
+    const recommendations = {
+      properties: [],
+      services: [],
+      helper: [],
+      events: [],
+      all: []
+    };
+
+    listings.forEach(listing => {
+      if (Object.keys(PROPERTY_TYPES).includes(listing.type)) {
+        recommendations.properties.push(listing);
+      } else if (Object.keys(SERVICE_TYPES).includes(listing.type)) {
+        recommendations.services.push(listing);
+      } else if (Object.keys(HELPER_TYPES).includes(listing.type)) {
+        recommendations.helper.push(listing);
+      } else if (Object.keys(LOCAL_EVENT_TYPES).includes(listing.type)) {
+        recommendations.events.push(listing);
+      }
+    });
+
+    Object.keys(recommendations).forEach(category => {
+      if (category !== "all") {
+        recommendations[category] = recommendations[category]
+          .filter(item => {
+            const typeMatch = userPreferences.preferredTypes.length === 0 ||
+              userPreferences.preferredTypes.includes(item.type);
+            const priceMatch = item.priceNumber >= userPreferences.priceRange[0] &&
+              item.priceNumber <= userPreferences.priceRange[1];
+            return typeMatch && priceMatch;
+          })
+          .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
+          .slice(0, 8);
+      }
+    });
+
+    recommendations.all = [
+      ...recommendations.properties.slice(0, 2),
+      ...recommendations.services.slice(0, 2),
+      ...recommendations.helper.slice(0, 2),
+      ...recommendations.events.slice(0, 2)
+    ].sort(() => 0.5 - Math.random());
+
+    setRecommendations(recommendations);
+  }, []);
+
+  // Enhance listing description
+  const enhanceListingDescription = async (description) => {
+    if (!description || description.length < 20) return description;
+
+    try {
+      const response = await fetchWithRetry(
+        `${API_BASE_URL}/enhance-description`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${OPENAI_KEY}`
+          },
+          body: JSON.stringify({ description: description.substring(0, 1000) }),
+        }
+      );
+
+      return response.enhancedDescription || description;
+    } catch (error) {
+      console.error("Description enhancement failed:", error);
+      return description;
     }
+  };
 
-    const shuffled = listingImages.sort(() => 0.5 - Math.random());
-    return [...new Set(shuffled)].slice(0, 6);
-  }, [allListings]);
+  // Enhance all descriptions function
+  const enhanceAllDescriptions = async () => {
+    if (!allListings.length || isEnhancing) return;
 
+    setIsEnhancing(true);
+    try {
+      const enhanced = [];
+      const nonEnhanced = [];
+
+      allListings.forEach(listing => {
+        if (listing.isDescriptionEnhanced) {
+          enhanced.push(listing);
+        } else {
+          nonEnhanced.push(listing);
+        }
+      });
+
+      let enhancedNonEnhanced = nonEnhanced;
+      if (nonEnhanced.length > 0) {
+        enhancedNonEnhanced = await Promise.all(
+          nonEnhanced.map(async (listing) => {
+            const enhancedDescription = await enhanceListingDescription(listing.description);
+            return {
+              ...listing,
+              description: enhancedDescription,
+              isDescriptionEnhanced: true,
+            };
+          })
+        );
+      }
+
+      setAllListings([...enhanced, ...enhancedNonEnhanced]);
+
+    } catch (err) {
+      console.error("Failed to enhance descriptions:", err);
+      setError("Failed to enhance descriptions. Please try again later.");
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  // Handle category selections
+  const handleSelectServiceCategory = useCallback((category) => {
+    setServiceType(category);
+  }, []);
+
+  const handleSelectHelperCategory = useCallback((category) => {
+    setHelperType(category);
+  }, []);
+
+  const handleSelectEventCategory = useCallback((category) => {
+    setEventType(category);
+  }, []);
+
+  // Filtered listings
   const filteredListingsFull = useMemo(() => {
     if (!allListings?.length) return [];
 
@@ -910,6 +899,7 @@ export default function Home() {
     activeTab,
   ]);
 
+  // Categorized listings for "all" tab
   const categorizedListings = useMemo(() => {
     const categories = {
       properties: [],
@@ -935,6 +925,24 @@ export default function Home() {
     return categories;
   }, [activeTab, filteredListingsFull]);
 
+  // Current listings based on active tab
+  const currentListings = useMemo(() => {
+    return activeTab === "all" ? filteredListingsFull : filteredListingsFull;
+  }, [activeTab, filteredListingsFull]);
+
+  // Effects
+  useEffect(() => {
+    startPlaceholderRotation();
+    return () => clearInterval(rotationInterval.current);
+  }, []);
+
+  useEffect(() => {
+    document.body.classList.add("home-page");
+    return () => document.body.classList.remove("home-page");
+  }, []);
+
+  const { ref: scrollRef, inView } = useInView({ threshold: 0.1 });
+
   useEffect(() => {
     if (inView && !isLoading && filteredListingsFull?.length > visibleListings) {
       const debouncedLoad = debounce(() => {
@@ -958,225 +966,11 @@ export default function Home() {
     activeTab,
   ]);
 
-  const fetchListings = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const fetchWithFallback = async (url) => {
-        try {
-          const res = await fetch(url);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return await res.json();
-        } catch (err) {
-          console.error(`Error fetching ${url}:`, err);
-          return [];
-        }
-      };
-
-      const [properties, services, helpers, events] = await Promise.all([
-        fetchWithFallback('/api/listing/get?limit=100'),
-        fetchWithFallback('/api/service/get?limit=100'),
-        fetchWithFallback('/api/helper/get?limit=100'),
-        fetchWithFallback('/api/event/get?limit=100'),
-      ]);
-
-      const combinedListings = [
-        ...(Array.isArray(properties) ? properties : []),
-        ...(Array.isArray(services) ? services : []),
-        ...(Array.isArray(helpers) ? helpers : []),
-        ...(Array.isArray(events) ? events : []),
-      ];
-
-      const processedListings = combinedListings.map((item) => ({
-        ...item,
-        priceNumber: item.price || item.regularPrice || 0,
-        price: formatPrice(item.price || item.regularPrice || 0),
-        latitude: item.latitude || 0,
-        longitude: item.longitude || 0,
-        viewCount: parseInt(localStorage.getItem(`views-${item._id}`)) || 0,
-      }));
-
-      setAllListings(processedListings);
-      setSearchAI(new PropertySearchAI(processedListings));
-      generateRecommendations(processedListings);
-    } catch (err) {
-      console.error("Error fetching listings:", err);
-      setError("Failed to load listings. Some features might be limited.");
-    } finally {
-      setIsLoading(false);
-      setIsInitialLoading(false);
-    }
-  }, []);
-
-  const generateRecommendations = useCallback((listings) => {
-    const userPreferences = {
-      preferredTypes: JSON.parse(localStorage.getItem("preferredTypes")) || [],
-      priceRange: JSON.parse(localStorage.getItem("preferredPriceRange")) || [0, 1000000],
-      locations: JSON.parse(localStorage.getItem("viewedLocations")) || [],
-    };
-
-    const recommendations = {
-      properties: [],
-      services: [],
-      helper: [],
-      events: [],
-      all: []
-    };
-
-    listings.forEach(listing => {
-      if (Object.keys(PROPERTY_TYPES).includes(listing.type)) {
-        recommendations.properties.push(listing);
-      } else if (Object.keys(SERVICE_TYPES).includes(listing.type)) {
-        recommendations.services.push(listing);
-      } else if (Object.keys(HELPER_TYPES).includes(listing.type)) {
-        recommendations.helper.push(listing);
-      } else if (Object.keys(LOCAL_EVENT_TYPES).includes(listing.type)) {
-        recommendations.events.push(listing);
-      }
-    });
-
-    Object.keys(recommendations).forEach(category => {
-      if (category !== "all") {
-        recommendations[category] = recommendations[category]
-          .filter(item => {
-            const typeMatch = userPreferences.preferredTypes.length === 0 ||
-              userPreferences.preferredTypes.includes(item.type);
-            const priceMatch = item.priceNumber >= userPreferences.priceRange[0] &&
-              item.priceNumber <= userPreferences.priceRange[1];
-            return typeMatch && priceMatch;
-          })
-          .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
-          .slice(0, 8);
-      }
-    });
-
-    recommendations.all = [
-      ...recommendations.properties.slice(0, 2),
-      ...recommendations.services.slice(0, 2),
-      ...recommendations.helper.slice(0, 2),
-      ...recommendations.events.slice(0, 2)
-    ].sort(() => 0.5 - Math.random());
-
-    setRecommendations(recommendations);
-  }, []);
-
-  const enhanceListingDescription = async (description) => {
-    if (!description || description.length < 20) return description;
-
-    try {
-      const response = await fetchWithRetry(
-        `${API_BASE_URL}/enhance-description`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${OPENAI_KEY}`
-          },
-          body: JSON.stringify({ description: description.substring(0, 1000) }),
-        }
-      );
-
-      return response.enhancedDescription || description;
-    } catch (error) {
-      console.error("Description enhancement failed:", error);
-      return description;
-    }
-  };
-
-  const handleLocationDetection = useCallback(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          try {
-            const response = await fetch(
-              `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${MAPBOX_TOKEN}`
-            );
-            const data = await response.json();
-            setUserLocation({
-              lat: latitude,
-              lng: longitude,
-              address: data.features[0]?.place_name || "Current Location",
-            });
-          } catch (err) {
-            console.error("Error fetching location details:", err);
-            setError("Location details unavailable. Please try again.");
-          }
-        },
-        (err) => {
-          console.error("Geolocation error:", err);
-          setError(
-            "Location access denied or failed. Please enable location services."
-          );
-        }
-      );
-    } else {
-      setError("Geolocation is not supported by your browser.");
-    }
-  }, []);
-
-  const enhanceAllDescriptions = async () => {
-    if (!allListings.length || isEnhancing) return;
-
-    setIsEnhancing(true);
-    try {
-      const enhanced = [];
-      const nonEnhanced = [];
-
-      allListings.forEach(listing => {
-        if (listing.isDescriptionEnhanced) {
-          enhanced.push(listing);
-        } else {
-          nonEnhanced.push(listing);
-        }
-      });
-
-      let enhancedNonEnhanced = nonEnhanced;
-      if (nonEnhanced.length > 0) {
-        enhancedNonEnhanced = await Promise.all(
-          nonEnhanced.map(async (listing) => {
-            const enhancedDescription = await enhanceListingDescription(listing.description);
-            return {
-              ...listing,
-              description: enhancedDescription,
-              isDescriptionEnhanced: true,
-            };
-          })
-        );
-      }
-
-      setAllListings([...enhanced, ...enhancedNonEnhanced]);
-
-    } catch (err) {
-      console.error("Failed to enhance descriptions:", err);
-      setError("Failed to enhance descriptions. Please try again later.");
-    } finally {
-      setIsEnhancing(false);
-    }
-  };
-
-  const handleSelectServiceCategory = useCallback((category) => {
-    setServiceType(category);
-  }, []);
-
-  const handleSelectHelperCategory = useCallback((category) => {
-    setHelperType(category);
-  }, []);
-
-  const handleSelectEventCategory = useCallback((category) => {
-    setEventType(category);
-  }, []);
-
   useEffect(() => {
     fetchListings();
   }, [fetchListings]);
 
-  // Conditional return must be AFTER all hooks
-  if (isInitialLoading) {
-    return <LoadingSpinner message="Loading listings..." />;
-  }
-
+  // Determine current types and selected type
   let currentTypes = {};
   if (activeTab === "properties") {
     currentTypes = PROPERTY_TYPES;
@@ -1188,851 +982,532 @@ export default function Home() {
     currentTypes = LOCAL_EVENT_TYPES;
   }
 
-  // Define emoji mappings for each category
-  const PROPERTY_EMOJIS = {
-    all: "🏠",
-    // Add other property types here with their emojis
-  };
-
-  const SERVICE_EMOJIS = {
-    all: "🔧",
-    // Add other service types here with their emojis
-  };
-
-  const HELPER_EMOJIS = {
-    all: "👷",
-    // Add other helper types here with their emojis
-  };
-
-  const EVENT_EMOJIS = {
-    all: "🎪",
-    // Add other event types here with their emojis
-  };
-
   let currentSelectedType = { label: "Select Type", icon: null };
 
   if (activeTab === "properties") {
     currentSelectedType = propertyType === "all"
       ? { label: "Property Type", icon: "🏠" }
       : PROPERTY_TYPES[propertyType]
-        ? { ...PROPERTY_TYPES[propertyType], icon: PROPERTY_EMOJIS[propertyType] || "🏠" }
+        ? { ...PROPERTY_TYPES[propertyType], icon: PROPERTY_TYPES[propertyType].icon }
         : { label: "Property Type", icon: "🏠" };
   } else if (activeTab === "services") {
     currentSelectedType = serviceType === "all"
       ? { label: "Service Type", icon: "🛎️" }
       : SERVICE_TYPES[serviceType]
-        ? { ...SERVICE_TYPES[serviceType], icon: SERVICE_EMOJIS[serviceType] || "🔧" }
+        ? { ...SERVICE_TYPES[serviceType], icon: SERVICE_TYPES[serviceType].icon }
         : { label: "Service Type", icon: "🛎️" };
   } else if (activeTab === "helper") {
     currentSelectedType = helperType === "all"
       ? { label: "Helper Type", icon: "👷" }
       : HELPER_TYPES[helperType]
-        ? { ...HELPER_TYPES[helperType], icon: HELPER_EMOJIS[helperType] || "👷" }
+        ? { ...HELPER_TYPES[helperType], icon: HELPER_TYPES[helperType].icon }
         : { label: "Helper Type", icon: "👷" };
   } else if (activeTab === "events") {
     currentSelectedType = eventType === "all"
       ? { label: "Event Type", icon: "🎪" }
       : LOCAL_EVENT_TYPES[eventType]
-        ? { ...LOCAL_EVENT_TYPES[eventType], icon: EVENT_EMOJIS[eventType] || "🎪" }
+        ? { ...LOCAL_EVENT_TYPES[eventType], icon: LOCAL_EVENT_TYPES[eventType].icon }
         : { label: "Event Type", icon: "🎪" };
   }
 
+  if (isInitialLoading) {
+    return <LoadingSpinner message="Loading listings..." />;
+  }
+
   return (
-    <div className="min-h-screen relative font-sans">
-      {/* Hero Section */}
-      <div className="relative h-[560px] md:h-[650px] overflow-hidden rounded-b-3xl shadow-xl">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20 z-10 flex flex-col items-center justify-center p-4 text-center">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 relative font-sans overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-40 left-40 w-80 h-80 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+      </div>
+
+      {/* Enhanced Hero Section */}
+      <div className="relative h-[600px] md:h-[700px] overflow-hidden rounded-b-3xl shadow-2xl">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent z-10 flex flex-col items-center justify-center p-4 text-center">
           <div className="max-w-6xl mx-auto text-white">
-            <h1 className="text-3xl md:text-6xl font-extrabold mb-4 animate-fade-in-down drop-shadow-lg">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-400 to-red-600">
-                {activeTab === "all"
-                  ? "Discover Everything Nearby"
-                  : activeTab === "properties"
-                    ? "Find Your Dream Property"
-                    : activeTab === "services"
-                      ? "Discover Quality Services"
-                      : activeTab === "events"
-                        ? "Explore Local Events"
-                        : "Find Trusted Personal Helpers"}
+            {/* AI Badge */}
+            <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full mb-8 shadow-2xl">
+              <FaBrain className="text-white text-xl mr-3" />
+              <span className="text-sm font-semibold">AI-POWERED DISCOVERY</span>
+            </div>
+
+            <h1 className="text-4xl md:text-7xl font-black mb-6 animate-fade-in-down">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600 drop-shadow-2xl">
+                {activeTab === "all" && ""}
+                {activeTab === "properties" && "Properties"}
+                {activeTab === "services" && "AI Services"}
+                {activeTab === "helper" && "Smart Helpers"}
+                {activeTab === "events" && "Live Events"}
               </span>
             </h1>
-            <p className="text-lg md:text-2xl mb-8 opacity-90 animate-fade-in-up drop-shadow-md">
-              {activeTab === "all"
-                ? "Properties • Services • Helpers • Events"
-                : activeTab === "properties"
-                  ? "Smart recommendations • Enhanced listings • Intelligent search"
-                  : activeTab === "services"
-                    ? "Professional services • Verified providers • Easy booking"
-                    : activeTab === "events"
-                      ? "Live music • Community gatherings • Sporting events"
-                      : "Trusted helpers • Verified backgrounds • Easy scheduling"}
+            
+            <p className="text-xl md:text-3xl mb-8 opacity-90 font-light animate-fade-in-up">
+              {activeTab === "all" && "Intelligent recommendations • Real-time insights • Personalized results"}
+              {activeTab === "properties" && "AI-curated listings • Smart pricing • Virtual tours"}
+              {activeTab === "services" && "Verified providers • Instant booking • Quality guaranteed"}
+              {activeTab === "helper" && "Background checked • Rated & reviewed • Available now"}
+              {activeTab === "events" && "Local happenings • Live updates • Easy booking"}
             </p>
+
+            {/* Enhanced AI Button */}
             <button
               onClick={enhanceAllDescriptions}
               disabled={isEnhancing}
-              className="flex items-center justify-center mx-auto px-6 py-3 bg-rose-600 rounded-full text-white font-semibold text-lg shadow-lg hover:bg-rose-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl text-white font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden"
             >
-              <FaMagic className="mr-3 text-xl" />
-              {isEnhancing ? (
-                <>
-                  <FaSpinner className="animate-spin mr-2" /> Enhancing...
-                </>
-              ) : (
-                "Enhance Listings with AI"
-              )}
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="relative flex items-center">
+                {isEnhancing ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-3 text-xl" />
+                    AI Processing...
+                  </>
+                ) : (
+                  <>
+                    <FaGem className="mr-3 text-xl" />
+                    Enhance with AI Magic
+                  </>
+                )}
+              </div>
             </button>
           </div>
         </div>
-        <Fade arrows={false} indicators={false} duration={4000} transitionDuration={800}>
+        
+        <Fade arrows={false} indicators={false} duration={5000} transitionDuration={1000}>
           {heroImages.map((image, index) => (
             <div
               key={index}
-              className="h-[560px] md:h-[650px] bg-cover bg-center"
+              className="h-[600px] md:h-[700px] bg-cover bg-center transform hover:scale-105 transition-transform duration-10000"
               style={{ backgroundImage: `url(${image})` }}
             />
           ))}
         </Fade>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-0">
+      <div className="max-w-7xl mx-auto px-4 py-0 relative z-10">
         {error && <ErrorMessage message={error} onRetry={fetchListings} />}
 
-        {/* Tab Navigation with 3D effect */}
-
-        {/* Tab Navigation with 3D effect */}
-<div
-  ref={containerRef}
-  className="rounded-3xl shadow-xl p-3 sm:p-6 transform -translate-y-20 relative z-20 
-             bg-gray-50/90 backdrop-blur-md border border-gray-100"
->
-  {/* Responsive Tab Bar */}
-  <div className="w-full">
-    <div className="flex flex-nowrap sm:flex-wrap justify-between sm:justify-center gap-1 sm:gap-4 max-w-full sm:max-w-5xl mx-auto">
-      {[
-        { id: "all", name: "all", icon: "🌎", label: "All" },
-        { id: "properties", name: "properties", icon: "🏠", label: "Properties" },
-        { id: "services", name: "services", icon: "🛎️", label: "Services" },
-        { id: "helper", name: "helper", icon: "👷", label: "Helpers" },
-        { id: "events", name: "events", icon: "📅", label: "Events" }
-      ].map((tab) => (
-        <button
-          key={tab.id}
-          onClick={() => setActiveTab(tab.name)}
-          className={`
-            flex flex-col items-center justify-center flex-1
-            px-1 py-2 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl
-            transition-all duration-300 ease-in-out
-            ${
-              activeTab === tab.name
-                ? "text-red-600 bg-red-50 shadow-sm scale-105"
-                : "text-gray-700 hover:bg-gray-100"
-            }
-          `}
-        >
-          <div
-            className={`
-              ${
-                tab.name === "all"
-                  ? allRotation
-                  : tab.name === "properties"
-                  ? propertiesRotation
-                  : tab.name === "services"
-                  ? servicesRotation
-                  : tab.name === "helper"
-                  ? helperRotation
-                  : eventsRotation
-              }
-              text-3xl sm:text-2xl   /* bigger on small, normal on desktop */
-              flex items-center justify-center
-              transition-transform duration-300
-            `}
-          >
-            <span className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)] hover:drop-shadow-[0_2px_2px_rgba(0,0,0,0.35)] transition-all duration-200">
-              {tab.icon}
-            </span>
+        {/* Enhanced Tab Navigation */}
+        <div className="rounded-3xl shadow-2xl p-6 transform -translate-y-24 relative z-20 bg-white/90 backdrop-blur-xl border border-white/20">
+          {/* AI Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full mb-4">
+              <FaRocket className="text-purple-600 mr-2" />
+              <span className="text-sm font-semibold text-gray-700">SMART CATEGORIES</span>
+            </div>
           </div>
-          <span className="mt-1 text-[10px] sm:text-sm font-medium capitalize truncate max-w-[60px] sm:max-w-[100px]">
-            {tab.label}
-          </span>
-        </button>
-      ))}
-    </div>
-  </div>
 
+          {/* Enhanced Tabs */}
+          <div className="flex flex-wrap justify-center gap-3 max-w-5xl mx-auto">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.name)}
+                className={`
+                  group relative flex flex-col items-center justify-center
+                  px-6 py-4 rounded-2xl transition-all duration-500
+                  ${activeTab === tab.name
+                    ? `bg-gradient-to-r ${tab.gradient} text-white shadow-2xl scale-105`
+                    : "bg-white/80 text-gray-700 hover:bg-white hover:shadow-xl"
+                  }
+                `}
+              >
+                {/* Animated Background */}
+                <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${tab.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+                
+                <div className="relative">
+                  <span className="text-3xl mb-2 drop-shadow-sm">
+                    {tab.icon}
+                  </span>
+                  <span className="text-sm font-semibold capitalize whitespace-nowrap">
+                    {tab.label}
+                  </span>
+                </div>
 
+                {/* Active Indicator */}
+                {activeTab === tab.name && (
+                  <div className="absolute -bottom-2 w-12 h-1 bg-white rounded-full shadow-lg"></div>
+                )}
+              </button>
+            ))}
+          </div>
 
-
-
-
-
-
-
-
-
-
-
-
-          {/* Improved Search and Filter Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-            {/* Search Input */}
+          {/* Enhanced Search and Filter Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end mt-8">
+            {/* Enhanced Search Input */}
             <div className="relative col-span-1 md:col-span-2 lg:col-span-2">
-              <label htmlFor="search-input" className="sr-only">Search by keyword, location...</label>
-              <input
-                id="search-input"
-                type="text"
-                placeholder={rotatingPlaceholder || "Search by keyword, location..."}
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 shadow-sm text-gray-800 placeholder-gray-400"
-                onChange={handleSearchInput}
-                value={searchQuery}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSearchSubmit();
-                }}
-              />
-              <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
+              <div className="relative">
+                <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl z-10" />
+                <input
+                  type="text"
+                  placeholder={rotatingPlaceholder || "Ask AI to find anything..."}
+                  className="w-full pl-12 pr-4 py-4 bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 shadow-lg text-gray-800 placeholder-gray-400 font-medium"
+                  onChange={handleSearchInput}
+                  value={searchQuery}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSearchSubmit();
+                  }}
+                />
+                {/* AI Search Badge */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="flex items-center px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full">
+                    <FaBrain className="text-white text-xs mr-1" />
+                    <span className="text-white text-xs font-bold">AI</span>
+                  </div>
+                </div>
+              </div>
 
               {displayedCities.length > 0 && (
-                <ul className="absolute z-30 border border-gray-200 w-full rounded-b-lg shadow-lg mt-1 max-h-60 overflow-y-auto bg-gray-50 bg-opacity-90 backdrop-blur-sm">
+                <ul className="absolute z-30 border-2 border-gray-200 w-full rounded-2xl shadow-2xl mt-2 max-h-60 overflow-y-auto bg-white/95 backdrop-blur-xl">
                   {displayedCities.map((city, index) => (
                     <li
                       key={index}
-                      className="px-4 py-2 cursor-pointer hover:bg-gray-100 text-gray-800 flex items-center"
+                      className="px-6 py-4 cursor-pointer hover:bg-purple-50 text-gray-800 flex items-center border-b border-gray-100 last:border-b-0"
                       onClick={() => {
                         setSearchQuery(city);
                         handleSearchSubmit(city);
                         setDisplayedCities([]);
                       }}
                     >
-                      <FaMapMarkerAlt className="text-gray-400 mr-2" />
-                      {city}
+                      <FaMapMarkerAlt className="text-purple-500 mr-3" />
+                      <div>
+                        <div className="font-semibold">{city}</div>
+                        <div className="text-sm text-gray-500">Search in {city}</div>
+                      </div>
                     </li>
                   ))}
                 </ul>
               )}
             </div>
 
-            {/* Price Range */}
+            {/* Enhanced Price Range */}
             <div className="w-full">
-              <label htmlFor="price-range" className="block text-sm font-medium text-gray-700 mb-1">
-                Max Price: {formatPrice(priceRange)}
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                💰 Max Price: <span className="text-purple-600 font-bold">{formatPrice(priceRange)}</span>
               </label>
-              <input
-                id="price-range"
-                type="range"
-                min="10"
-                max="10000000"
-                step="50000"
-                value={priceRange}
-                onChange={(e) => setPriceRange(Number(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-              />
+              <div className="relative">
+                <input
+                  type="range"
+                  min="10"
+                  max="10000000"
+                  step="50000"
+                  value={priceRange}
+                  onChange={(e) => setPriceRange(Number(e.target.value))}
+                  className="w-full h-3 bg-gradient-to-r from-gray-200 to-gray-300 rounded-2xl appearance-none cursor-pointer shadow-inner"
+                />
+                <div 
+                  className="absolute top-0 left-0 h-3 bg-gradient-to-r from-green-400 to-blue-500 rounded-2xl pointer-events-none"
+                  style={{ width: `${(priceRange / 10000000) * 100}%` }}
+                ></div>
+              </div>
             </div>
 
-            {/* Type Dropdown (hidden for "all" tab) */}
-            {activeTab !== "all" && (
-              <div className="relative w-full">
-                <label htmlFor="type-dropdown" className="sr-only">Select Type</label>
-                <button
-                  id="type-dropdown"
-                  onClick={() => setIsTypeOpen(!isTypeOpen)}
-                  className="w-full flex items-center justify-between px-5 py-3 bg-gray-100 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-200 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                >
-                  <span className="flex items-center">
-                    {currentSelectedType.icon && (
-                      <span className="mr-2 text-xl">
-                        {currentSelectedType.icon}
-                      </span>
-                    )}
-                    {currentSelectedType.label}
-                  </span>
-                  <FaAngleDown
-                    className={`ml-2 transform transition-transform ${isTypeOpen ? "rotate-180" : "rotate-0"
-                      }`}
-                  />
-                </button>
-                {isTypeOpen && (
-                  <div className="absolute z-30 w-full border border-gray-200 rounded-lg shadow-lg mt-2 bg-gray-50 bg-opacity-90 backdrop-blur-sm max-h-60 overflow-y-auto">
-                    <ul className="py-1">
-                      <li
-                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-800 flex items-center"
-                        onClick={() => {
-                          if (activeTab === "properties") setPropertyType("all");
-                          else if (activeTab === "services") setServiceType("all");
-                          else if (activeTab === "helper") setHelperType("all");
-                          else if (activeTab === "events") setEventType("all");
-                          setIsTypeOpen(false);
-                        }}
-                      >
-                        <span className="mr-2 text-xl">
-                          {activeTab === "properties" ? <FaHome /> : activeTab === "services" ? <FaTools /> : activeTab === "helper" ? <FaUserAlt /> : <FaCalendarAlt />}
-                        </span>
-                        All{" "}
-                        {activeTab === "properties"
-                          ? "Properties"
-                          : activeTab === "services"
-                            ? "Services"
-                            : activeTab === "helper"
-                              ? "Helpers"
-                              : "Events"}
-                      </li>
-                      {Object.entries(currentTypes).map(([key, { label, icon }]) => (
-                        <li
-                          key={key}
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-800 flex items-center"
-                          onClick={() => {
-                            if (activeTab === "properties") setPropertyType(key);
-                            else if (activeTab === "services") setServiceType(key);
-                            else if (activeTab === "helper") setHelperType(key);
-                            else if (activeTab === "events") setEventType(key);
-                            setIsTypeOpen(false);
-                          }}
-                        >
-                          <span className="mr-2 text-xl">{icon}</span>
-                          {label}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+            {/* Enhanced Type Dropdown */}
+         {activeTab !== "all" && (
+  <div className="relative w-full">
+    <button
+      onClick={() => setIsTypeOpen(!isTypeOpen)}
+      className="w-full flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl text-gray-700 font-semibold hover:bg-white hover:border-purple-500 transition-all duration-300 shadow-lg focus:ring-4 focus:ring-purple-500/20"
+    >
+      <span className="flex items-center">
+        <span className="mr-3 text-2xl">{currentSelectedType.icon}</span>
+        {currentSelectedType.label}
+      </span>
+      <FaAngleDown className={`ml-2 transform transition-transform duration-300 ${isTypeOpen ? "rotate-180" : "rotate-0"}`} />
+    </button>
+    
+    {isTypeOpen && (
+      <div className="absolute z-30 w-full border-2 border-gray-200 rounded-2xl shadow-2xl mt-3 bg-white/95 backdrop-blur-xl max-h-80 overflow-y-auto">
+        <ul className="py-3">
+          <li
+            className="px-6 py-4 hover:bg-purple-50 cursor-pointer text-gray-700 flex items-center border-b border-gray-100"
+            onClick={() => {
+              if (activeTab === "properties") setPropertyType("all");
+              else if (activeTab === "services") setServiceType("all");
+              else if (activeTab === "helper") setHelperType("all");
+              else if (activeTab === "events") setEventType("all");
+              setIsTypeOpen(false);
+            }}
+          >
+            <span className="mr-4 text-2xl">
+              {activeTab === "properties" ? "🏠" : activeTab === "services" ? "🛎️" : activeTab === "helper" ? "👷" : "🎪"}
+            </span>
+            <div>
+              <div className="font-semibold">All {activeTab}</div>
+              <div className="text-sm text-gray-500">Browse everything</div>
+            </div>
+          </li>
+          {Object.entries(currentTypes).map(([key, { label, icon }]) => (
+            <li
+              key={key}
+              className="px-6 py-4 hover:bg-purple-50 cursor-pointer text-gray-700 flex items-center border-b border-gray-100 last:border-b-0"
+              onClick={() => {
+                if (activeTab === "properties") setPropertyType(key);
+                else if (activeTab === "services") setServiceType(key);
+                else if (activeTab === "helper") setHelperType(key);
+                else if (activeTab === "events") setEventType(key);
+                setIsTypeOpen(false);
+              }}
+            >
+              <span className="mr-4 text-2xl">{icon}</span>
+              <div>
+                <div className="font-semibold">{label}</div>
+                <div className="text-sm text-gray-500">Explore {label.toLowerCase()}</div>
               </div>
-            )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </div>
+)}
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-0 sm:px-0 lg:px-0 ">
-          {error && <ErrorMessage message={error} onRetry={fetchListings} />}
-
-          {/* AI Recommendations Section for all tabs */}
-          {/* AI Recommendations Section for all tabs */}
-          {/* AI Recommendations Section for all tabs */}
-{recommendations[activeTab]?.length > 0 && (
-  <div className="mt-0 mb-10 relative">
-    {/* Header */}
-    <div className="flex items-center justify-between mb-5 px-2">
-      <div className="flex items-center">
-        <div className="w-6 h-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mr-2">
-          <FaMagic className="text-white text-xs" />
-        </div>
-        <h2 className="text-xl font-semibold text-gray-900">
-          Recommended for you
-        </h2>
-      </div>
-      <button 
-        onClick={handleViewAllRecommendations}
-        className="text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors flex items-center"
-      >
-        View all
-        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-        </svg>
-      </button>
-    </div>
-
-    {/* Swiper Container */}
-    <div className="relative px-0">
-      <Swiper
-        slidesPerView={2.4}
-        spaceBetween={12}
-        navigation={{
-          nextEl: '.recommendations-swiper-button-next',
-          prevEl: '.recommendations-swiper-button-prev',
-        }}
-        modules={[Navigation]}
-        className="recommendations-swiper"
-        breakpoints={{
-          480: { slidesPerView: 2.3 },
-          640: { slidesPerView: 2.8 },
-          768: { slidesPerView: 3.3 },
-          1024: { slidesPerView: 4.3 },
-          1280: { slidesPerView: 5.3 },
-          1536: { slidesPerView: 6.3 },
-        }}
-      >
-        {recommendations[activeTab].map((item) => {
-          // Determine the route based on item type
-          const getItemRoute = (item) => {
-            switch (item.type) {
-              case 'helper':
-                return `/helper/${item._id}`;
-              case 'event':
-                return `/event/${item._id}`;
-              case 'service':
-                return `/service/${item._id}`;
-              case 'rent':
-              case 'sale':
-                return `/listing/${item._id}`;
-              default:
-                return `/listing/${item._id}`; // fallback
-            }
-          };
-
-          const itemRoute = getItemRoute(item);
-
-          return (
-            <SwiperSlide key={item._id}>
-              <Link 
-                to={itemRoute}
-                className="block bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-md transition-all duration-300 hover:border-gray-300 cursor-pointer transform hover:-translate-y-0.5"
-              >
-                {/* Image Section - Smaller */}
-                <div className="relative pb-[70%] overflow-hidden">
-                  {item.imageUrls?.[0] ? (
-                    <img
-                      src={item.imageUrls[0]}
-                      alt={item.name}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-400 hover:scale-105"
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=300&h=210&fit=crop';
-                      }}
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <FaHome className="text-gray-400 text-lg" />
-                    </div>
-                  )}
-                  
-                  {/* Favorite Button - Smaller */}
-                  <button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleFavoriteClick(item);
-                    }}
-                    className="absolute top-2 right-2 w-6 h-6 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:bg-white hover:shadow-md transition-all duration-200"
-                  >
-                    <FaHeart className="text-gray-600 hover:text-red-500 text-xs" />
-                  </button>
-
-                  {/* Type Badge - Smaller */}
-                  {item.type && (
-                    <div className="absolute top-2 left-2">
-                      <span className="px-1.5 py-0.5 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-medium rounded">
-                        {PROPERTY_TYPES[item.type]?.label ||
-                         SERVICE_TYPES[item.type]?.label ||
-                         HELPER_TYPES[item.type]?.label ||
-                         LOCAL_EVENT_TYPES[item.type]?.label}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Content Section - Compact */}
-                <div className="p-3">
-                  {/* Title and Rating */}
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="font-medium text-gray-900 text-sm leading-tight flex-1 pr-2 line-clamp-1">
-                      {item.name}
-                    </h3>
-                    <div className="flex items-center space-x-1 flex-shrink-0">
-                      <FaStar className="text-black text-xs" />
-                      <span className="font-medium text-xs text-gray-900">5.0</span>
-                    </div>
-                  </div>
-
-                  {/* Description - Shorter */}
-                  <p className="text-gray-500 text-xs leading-relaxed mb-0 line-clamp-1 min-h-[1rem]">
-                    {item.address?.substring(0, 80) || 'No description available'}
-                  </p>
-
-                  {/* Price - Smaller */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-base text-xs font-semibold text-gray-900">
-                        {formatPrice(item.priceNumber || item.regularPrice || 0)}
-                      </span>
-                      {item.type === 'rent' && (
-                        <span className="text-gray-600 text-xs ml-1">month</span>
-                      )}
-                    </div>
+        <div className="max-w-7xl mx-auto px-0 sm:px-0 lg:px-0 -translate-y-16">
+          {/* Enhanced AI Recommendations Section */}
+          {recommendations[activeTab]?.length > 0 && (
+            <div className="mt-0 mb-16 relative">
+              <div className="flex items-center justify-between mb-8 px-2">
+                <div className="flex items-center">
                 
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      AI Recommendations
+                    </h2>
+                    <p className="text-gray-600 text-sm">Personalized just for you</p>
                   </div>
                 </div>
-              </Link>
-            </SwiperSlide>
-          );
-        })}
-      </Swiper>
-
-      {/* Navigation Buttons - Smaller */}
-      <div className="recommendations-swiper-button-prev absolute left-1 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-md border border-gray-200 cursor-pointer opacity-0 group-hover:opacity-100 transition-all duration-300 hover:shadow-lg hover:scale-105">
-        <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-      </div>
-      <div className="recommendations-swiper-button-next absolute right-1 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-md border border-gray-200 cursor-pointer opacity-0 group-hover:opacity-100 transition-all duration-300 hover:shadow-lg hover:scale-105">
-        <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </div>
-    </div>
-  </div>
-)}
-          
-          
-          
-          
-          
-          {/* Trending Section */}
-          {trendingItems.length > 0 && (
-            <div className="mt-0 mb-0">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 text-center flex items-center justify-center">
-                <FaFire className="mr-2 text-orange-600" />
-                Trending Now
-              </h2>
-              <Swiper
-                slidesPerView={1.6}
-                spaceBetween={14}
-                pagination={{ clickable: true }}
-                modules={[Navigation, Pagination]}
-                className="mySwiper !pb-8"
-                breakpoints={{
-                  640: { slidesPerView: 3, spaceBetween: 20 },
-                  768: { slidesPerView: 4, spaceBetween: 24 },
-                  1024: { slidesPerView: 5, spaceBetween: 28 },
-                }}
-              >
-                {trendingItems.map((item) => {
-                  if (Object.keys(PROPERTY_TYPES).includes(item.type)) {
-                    return (
-                      <SwiperSlide key={item._id} className="!h-auto bg-slate-150 rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden">
-                        <ListingItem
-                          listing={item}
-                          onClick={() => handleItemNavigation(item)}
-                          compactMode={true}
-                        />
-                      </SwiperSlide>
-                    );
-                  } else if (Object.keys(SERVICE_TYPES).includes(item.type)) {
-                    return (
-                      <SwiperSlide key={item._id} className="!h-auto bg-slate-150 rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden">
-                        <ServiceItem
-                          service={item}
-                          onClick={() => handleItemNavigation(item)}
-                          compactMode={true}
-                        />
-                      </SwiperSlide>
-                    );
-                  } else if (Object.keys(HELPER_TYPES).includes(item.type)) {
-                    return (
-                      <SwiperSlide key={item._id} className="!h-auto bg-slate-150 rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden">
-                        <HelperItem
-                          helper={item}
-                          onClick={() => handleItemNavigation(item)}
-                          compactMode={true}
-                        />
-                      </SwiperSlide>
-                    );
-                  } else if (Object.keys(LOCAL_EVENT_TYPES).includes(item.type)) {
-                    return (
-                      <SwiperSlide key={item._id} className="!h-auto bg-slate-150 rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden">
-                        <EventItem
-                          event={{
-                            ...item,
-                            address: item.location || "",
-                            dateTime: item.date || new Date(),
-                            regularPrice: item.priceNumber || 0
-                          }}
-                          onClick={() => handleItemNavigation(item)}
-                          compactMode={true}
-                        />
-                      </SwiperSlide>
-                    );
-                  }
-                  return null;
-                })}
-              </Swiper>
-            </div>
-          )}
-
-          {/* Recent Searches Section */}
-          {recentSearches.length > 0 && (
-            <div className="mt-8 mb-12">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">
-                Your Recent Searches
-              </h2>
-              <div className="flex flex-wrap gap-3 justify-center">
-                {recentSearches.map((search, index) => (
-                  <span
-                    key={index}
-                    onClick={() => {
-                      setSearchQuery(search);
-                      handleSearchSubmit(search);
-                    }}
-                    className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full cursor-pointer hover:bg-blue-200 transition-colors text-sm flex items-center"
-                  >
-                    {search}
-                    <FaTimes
-                      className="ml-2 text-blue-600 hover:text-blue-900"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setRecentSearches((prev) =>
-                          prev.filter((_, i) => i !== index)
-                        );
-                      }}
-                    />
-                  </span>
-                ))}
+                <button 
+                  onClick={handleViewAllRecommendations}
+                  className="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
+                >
+                  View all
+                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </button>
               </div>
-            </div>
-          )}
 
-          {/* All Listings Display */}
-          {/* All Listings Display */}
-          {/* All Listings Display */}
-          <div className="mt-0">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">
-              {activeTab === "all" && ""}
-              {activeTab === "properties" && ""}
-              {activeTab === "services" && " "}
-              {activeTab === "helper" && ""}
-              {activeTab === "events" && ""}
-            </h2>
+              {/* Enhanced Swiper */}
+              <div className="relative px-2">
+                <Swiper
+                  slidesPerView={1.8}
+                  spaceBetween={20}
+                  navigation={{
+                    nextEl: '.recommendations-swiper-button-next',
+                    prevEl: '.recommendations-swiper-button-prev',
+                  }}
+                  modules={[Navigation]}
+                  className="recommendations-swiper"
+                  breakpoints={{
+                    480: { slidesPerView: 2.3 },
+                    640: { slidesPerView: 2.8 },
+                    768: { slidesPerView: 3.3 },
+                    1024: { slidesPerView: 4.3 },
+                    1280: { slidesPerView: 5.3 },
+                    1536: { slidesPerView: 6.3 },
+                  }}
+                >
+                  {recommendations[activeTab].map((item) => {
+                    const getItemRoute = (item) => {
+                      switch (item.type) {
+                        case 'helper':
+                          return `/helper/${item._id}`;
+                        case 'event':
+                          return `/event/${item._id}`;
+                        case 'service':
+                          return `/service/${item._id}`;
+                        case 'rent':
+                        case 'sale':
+                          return `/listing/${item._id}`;
+                        default:
+                          return `/listing/${item._id}`;
+                      }
+                    };
 
-            {filteredListingsFull.length === 0 && !isLoading && (
-              <p className="text-center text-gray-600 text-lg">
-                No {activeTab === "all" ? "listings" : activeTab === "properties" ? "properties" : activeTab === "services" ? "services" : activeTab === "helper" ? "helpers" : "events"} found for your criteria.
-              </p>
-            )}
+                    const itemRoute = getItemRoute(item);
 
-            {/* Special layout for "All" tab with separate sections */}
-            {activeTab === "all" && categorizedListings && (
-              <div>
-                {/* Properties Section */}
-                {categorizedListings.properties.length > 0 && (
-                  <div className="mb-16">
-                    <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-md md:text-2xl font-bold text-gray-800 flex items-center">
-                        <FaHome className="mr-2 text-blue-600" />
-                        Properties for You
-                      </h3>
-                      <button
-                        onClick={() => setActiveTab("properties")}
-                        className="text-blue-600 hover:underline font-medium"
-                      >
-                        View All
-                      </button>
-                    </div>
-                    <Swiper
-                      slidesPerView={1.8}
-                      spaceBetween={16}
-                      modules={[Navigation]}
-                      className="mySwiper"
-                      breakpoints={{
-                        640: { slidesPerView: 2.3, spaceBetween: 20 },
-                        768: { slidesPerView: 3.3, spaceBetween: 24 },
-                        1024: { slidesPerView: 4.3, spaceBetween: 28 },
-                        1280: { slidesPerView: 5.3, spaceBetween: 32 },
-                      }}
-                    >
-                      {categorizedListings.properties
-                        .slice(0, 20)
-                        .map((item) => (
-                          <SwiperSlide key={item._id} className="!h-auto">
-                            <ListingItem
-                              listing={item}
-                              onClick={() => handleItemNavigation(item)}
-                            />
-                          </SwiperSlide>
-                        ))}
-                    </Swiper>
-                  </div>
-                )}
+                    return (
+                      <SwiperSlide key={item._id}>
+                        <Link 
+                          to={itemRoute}
+                          className="block bg-white rounded-2xl overflow-hidden border-2 border-gray-100 hover:border-purple-500 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer "
+                        >
+                          {/* Enhanced Image Section */}
+                          <div className="relative pb-[75%] overflow-hidden">
+                            {item.imageUrls?.[0] ? (
+                              <img
+                                src={item.imageUrls[0]}
+                                alt={item.name}
+                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                onError={(e) => {
+                                  e.target.src = 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=300&h=210&fit=crop';
+                                }}
+                              />
+                            ) : (
+                              <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                <div className="text-4xl text-gray-400">
+                                  {PROPERTY_TYPES[item.type]?.icon || SERVICE_TYPES[item.type]?.icon || HELPER_TYPES[item.type]?.icon || LOCAL_EVENT_TYPES[item.type]?.icon}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Enhanced Overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            
+                            {/* Enhanced Badges */}
+                            <div className="absolute top-3 left-3">
+                          
+                            </div>
+                            
+                            <div className="absolute bottom-3 left-3">
+                              <span className="px-3 py-1 bg-black/70 text-white text-xs font-semibold rounded-full backdrop-blur-sm">
+                                {formatPrice(item.priceNumber)}
+                              </span>
+                            </div>
 
-                {/* Services Section */}
-                {categorizedListings.services.length > 0 && (
-                  <div className="mb-16">
-                    <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-md md:text-2xl font-bold text-gray-800 flex items-center">
-                        <FaTools className="mr-2 text-green-600" />
-                        Recommended Services
-                      </h3>
-                      <button
-                        onClick={() => setActiveTab("services")}
-                        className="text-blue-600 hover:underline font-medium"
-                      >
-                        View All
-                      </button>
-                    </div>
-                    <Swiper
-                      slidesPerView={1.8}
-                      spaceBetween={16}
-                      modules={[Navigation]}
-                      className="mySwiper"
-                      breakpoints={{
-                        640: { slidesPerView: 2.3, spaceBetween: 20 },
-                        768: { slidesPerView: 3.3, spaceBetween: 24 },
-                        1024: { slidesPerView: 4.3, spaceBetween: 28 },
-                        1280: { slidesPerView: 5.3, spaceBetween: 32 },
-                      }}
-                    >
-                      {categorizedListings.services
-                        .slice(0, 20)
-                        .map((item) => (
-                          <SwiperSlide key={item._id} className="!h-auto">
-                            <ServiceItem
-                              service={item}
-                              onClick={() => handleItemNavigation(item)}
-                            />
-                          </SwiperSlide>
-                        ))}
-                    </Swiper>
-                  </div>
-                )}
-
-                {/* Helpers Section */}
-                {categorizedListings.helper.length > 0 && (
-                  <div className="mb-16">
-                    <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-md md:text-2xl font-bold text-gray-800 flex items-center">
-                        <FaUserAlt className="mr-2 text-purple-600" />
-                        Trusted Helpers Nearby
-                      </h3>
-                      <button
-                        onClick={() => setActiveTab("helper")}
-                        className="text-blue-600 hover:underline font-medium"
-                      >
-                        View All
-                      </button>
-                    </div>
-                    <Swiper
-                      slidesPerView={1.8}
-                      spaceBetween={16}
-                      modules={[Navigation]}
-                      className="mySwiper"
-                      breakpoints={{
-                        640: { slidesPerView: 2.3, spaceBetween: 20 },
-                        768: { slidesPerView: 3.3, spaceBetween: 24 },
-                        1024: { slidesPerView: 4.3, spaceBetween: 28 },
-                        1280: { slidesPerView: 5.3, spaceBetween: 32 },
-                      }}
-                    >
-                      {categorizedListings.helper
-                        .slice(0, 20)
-                        .map((item) => (
-                          <SwiperSlide key={item._id} className="!h-auto">
-                            <HelperItem
-                              helper={item}
-                              onClick={() => handleItemNavigation(item)}
-                            />
-                          </SwiperSlide>
-                        ))}
-                    </Swiper>
-                  </div>
-                )}
-
-                {/* Events Section */}
-                {categorizedListings.events.length > 0 && (
-                  <div className="mb-16">
-                    <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-md md:text-2xl font-bold text-gray-800 flex items-center">
-                        <FaCalendarAlt className="mr-2 text-red-600" />
-                        Local Events Happening Soon
-                      </h3>
-                      <button
-                        onClick={() => setActiveTab("events")}
-                        className="text-blue-600 hover:underline font-medium"
-                      >
-                        View All
-                      </button>
-                    </div>
-                    <Swiper
-                      slidesPerView={1.8}
-                      spaceBetween={16}
-                      modules={[Navigation]}
-                      className="mySwiper"
-                      breakpoints={{
-                        640: { slidesPerView: 2.3, spaceBetween: 20 },
-                        768: { slidesPerView: 3.3, spaceBetween: 24 },
-                        1024: { slidesPerView: 4.3, spaceBetween: 28 },
-                        1280: { slidesPerView: 5.3, spaceBetween: 32 },
-                      }}
-                    >
-                      {categorizedListings.events
-                        .slice(0, 20)
-                        .map((item) => (
-                          <SwiperSlide key={item._id} className="!h-auto">
-                            <EventItem
-                              event={{
-                                ...item,
-                                address: item.location || "",
-                                dateTime: item.date || new Date(),
-                                regularPrice: item.priceNumber || 0
+                            {/* Favorite Button */}
+                            <button 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleFavoriteClick(item);
                               }}
-                              onClick={() => handleItemNavigation(item)}
-                            />
-                          </SwiperSlide>
-                        ))}
-                    </Swiper>
-                  </div>
-                )}
-              </div>
-            )}
+                              className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+                            >
+                              <FaHeart className="text-gray-600 hover:text-red-500 text-sm transition-colors duration-300" />
+                            </button>
+                          </div>
 
-            {/* Grid layout for other tabs */}
-            {activeTab !== "all" && (
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {filteredListingsFull
-                  .slice(0, visibleListings)
-                  .map((item) => {
-                    if (activeTab === "services") {
-                      return (
-                        <ServiceItem
-                          key={item._id}
-                          service={item}
-                          onClick={() => handleItemNavigation(item)}
-                        />
-                      );
-                    } else if (activeTab === "helper") {
-                      return (
-                        <HelperItem
-                          key={item._id}
-                          helper={item}
-                          onClick={() => handleItemNavigation(item)}
-                        />
-                      );
-                    } else if (activeTab === "events") {
-                      return (
-                        <EventItem
-                          key={item._id}
-                          event={item}
-                          onClick={() => handleItemNavigation(item)}
-                        />
-                      );
-                    } else {
-                      return (
-                        <ListingItem
-                          key={item._id}
-                          listing={item}
-                          onClick={() => handleItemNavigation(item)}
-                        />
-                      );
-                    }
+                          {/* Enhanced Content Section */}
+                          <div className="p-4">
+                            <h3 className="font-bold text-gray-900 text-sm mb-2 line-clamp-1 group-hover:text-purple-600 transition-colors duration-300">
+                              {item.name}
+                            </h3>
+                      
+                            
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center text-gray-500 text-xs">
+                                <FaMapMarkerAlt className="mr-1" />
+                                <span className="line-clamp-1">{item.address}</span>
+                              </div>
+                              <div className="flex items-center text-yellow-500 text-xs">
+                                <FaStar className="mr-1" />
+                                <span>5.0</span>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      </SwiperSlide>
+                    );
                   })}
+                </Swiper>
+
+                {/* Enhanced Navigation Buttons */}
+                <button className="recommendations-swiper-button-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-gray-700 hover:text-purple-600 hover:border-purple-500 transition-all duration-300 group">
+                  <svg className="w-6 h-6 transform group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button className="recommendations-swiper-button-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-gray-700 hover:text-purple-600 hover:border-purple-500 transition-all duration-300 group">
+                  <svg className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Category Slides */}
+          {activeTab === "services" && (
+            <ServiceCategoriesSlide type="services" onSelectCategory={handleSelectServiceCategory} />
+          )}
+          {activeTab === "helper" && (
+            <ServiceCategoriesSlide type="helpers" onSelectCategory={handleSelectHelperCategory} />
+          )}
+          {activeTab === "events" && (
+            <ServiceCategoriesSlide type="events" onSelectCategory={handleSelectEventCategory} />
+          )}
+
+          {/* Enhanced Main Content Area */}
+          <div className="mt-8">
+            {/* Enhanced Results Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {currentListings.slice(0, visibleListings).map((listing) => (
+                <div key={listing._id} className="">
+                  {activeTab === "properties" && (
+                    <ListingItem 
+                      listing={listing} 
+                      onClick={() => handleItemNavigation(listing)}
+                      className="transform transition-all duration-500 hover:scale-105" 
+                    />
+                  )}
+                  {activeTab === "services" && (
+                    <ServiceItem 
+                      service={listing} 
+                      onClick={() => handleItemNavigation(listing)}
+                      className="transform transition-all duration-500 hover:scale-105" 
+                    />
+                  )}
+                  {activeTab === "helper" && (
+                    <HelperItem 
+                      helper={listing} 
+                      onClick={() => handleItemNavigation(listing)}
+                      className="transform transition-all duration-500 hover:scale-105" 
+                    />
+                  )}
+                  {activeTab === "events" && (
+                    <EventItem 
+                      event={listing} 
+                      onClick={() => handleItemNavigation(listing)}
+                      className="transform transition-all duration-500 hover:scale-105" 
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Enhanced Load More Button */}
+            {visibleListings < currentListings.length && (
+              <div className="flex justify-center mt-12">
+                <button
+                  onClick={() => setVisibleListings(prev => prev + LOAD_MORE_COUNT)}
+                  className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-bold shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-105 flex items-center group"
+                >
+                  <span>Load More</span>
+                  <svg className="w-5 h-5 ml-2 transform group-hover:translate-y-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                </button>
               </div>
             )}
 
-            {isLoading && (
-              <div className="flex justify-center py-6">
-                <LoadingSpinner message="Loading more..." />
-              </div>
-            )}
-
-            {activeTab !== "all" && filteredListingsFull.length > visibleListings && !isLoading && (
-              <div
-                className="flex justify-center mt-8 cursor-pointer"
-                ref={scrollRef}
-                onClick={() => setVisibleListings((prev) => prev + LOAD_MORE_COUNT)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    setVisibleListings((prev) => prev + LOAD_MORE_COUNT);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-                aria-label="Load more items"
-              >
-                <span className="text-7xl font-bold text-red-400 hover:text-blue-500 transition-colors transform hover:scale-110 duration-300">
-                  ....
-                </span>
+            {/* Enhanced Empty State */}
+            {currentListings.length === 0 && !isLoading && (
+              <div className="text-center py-16">
+                <div className="w-32 h-32 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FaSearch className="text-gray-400 text-4xl" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-700 mb-3">No results found</h3>
+                <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                  Try adjusting your search criteria or explore different categories to find what you re looking for.
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setPriceRange(1000000);
+                    setPropertyType("all");
+                    setServiceType("all");
+                    setHelperType("all");
+                    setEventType("all");
+                  }}
+                  className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+                >
+                  Reset Filters
+                </button>
               </div>
             )}
           </div>
