@@ -902,9 +902,9 @@ export default function Home() {
   // Categorized listings for "all" tab
   const categorizedListings = useMemo(() => {
     const categories = {
+      helper: [],
       properties: [],
       services: [],
-      helper: [],
       events: [],
     };
 
@@ -1027,12 +1027,6 @@ export default function Home() {
       <div className="relative h-[600px] md:h-[700px] overflow-hidden rounded-b-3xl shadow-2xl">
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent z-10 flex flex-col items-center justify-center p-4 text-center">
           <div className="max-w-6xl mx-auto text-white">
-            {/* AI Badge */}
-            <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full mb-8 shadow-2xl">
-              <FaBrain className="text-white text-xl mr-3" />
-              <span className="text-sm font-semibold">AI-POWERED DISCOVERY</span>
-            </div>
-
             <h1 className="text-4xl md:text-7xl font-black mb-6 animate-fade-in-down">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600 drop-shadow-2xl">
                 {activeTab === "all" && ""}
@@ -1139,7 +1133,6 @@ export default function Home() {
             {/* Enhanced Search Input */}
             <div className="relative col-span-1 md:col-span-2 lg:col-span-2">
               <div className="relative">
-                <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl z-10" />
                 <input
                   type="text"
                   placeholder={rotatingPlaceholder || "Ask AI to find anything..."}
@@ -1272,7 +1265,6 @@ export default function Home() {
             <div className="mt-0 mb-16 relative">
               <div className="flex items-center justify-between mb-8 px-2">
                 <div className="flex items-center">
-                
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">
                       AI Recommendations
@@ -1432,85 +1424,364 @@ export default function Home() {
             <ServiceCategoriesSlide type="events" onSelectCategory={handleSelectEventCategory} />
           )}
 
-          {/* Enhanced Main Content Area */}
-          <div className="mt-8">
-            {/* Enhanced Results Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {currentListings.slice(0, visibleListings).map((listing) => (
-                <div key={listing._id} className="">
-                  {activeTab === "properties" && (
-                    <ListingItem 
-                      listing={listing} 
-                      onClick={() => handleItemNavigation(listing)}
-                      className="transform transition-all duration-500 hover:scale-105" 
-                    />
-                  )}
-                  {activeTab === "services" && (
-                    <ServiceItem 
-                      service={listing} 
-                      onClick={() => handleItemNavigation(listing)}
-                      className="transform transition-all duration-500 hover:scale-105" 
-                    />
-                  )}
-                  {activeTab === "helper" && (
-                    <HelperItem 
-                      helper={listing} 
-                      onClick={() => handleItemNavigation(listing)}
-                      className="transform transition-all duration-500 hover:scale-105" 
-                    />
-                  )}
-                  {activeTab === "events" && (
-                    <EventItem 
-                      event={listing} 
-                      onClick={() => handleItemNavigation(listing)}
-                      className="transform transition-all duration-500 hover:scale-105" 
-                    />
-                  )}
+          {/* Enhanced Main Content Area for ALL Tab */}
+          {activeTab === "all" && (
+            <div className="mt-8 space-y-16">
+              {/* Helper Section - First Row */}
+              {categorizedListings.helper.length > 0 && (
+                <div className="mb-16">
+                  <div className="flex items-center justify-between mb-8 px-2">
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mr-4">
+                        <span className="text-2xl text-white">👷</span>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-900">Personal Helpers</h2>
+                        <p className="text-gray-600 text-sm">Find trusted helpers for your needs</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setActiveTab("helper")}
+                      className="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
+                    >
+                      View all
+                      <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="relative px-2">
+                    <Swiper
+                      slidesPerView={1.8}
+                      spaceBetween={20}
+                      navigation={{
+                        nextEl: '.helper-swiper-button-next',
+                        prevEl: '.helper-swiper-button-prev',
+                      }}
+                      modules={[Navigation]}
+                      className="helper-swiper"
+                      breakpoints={{
+                        480: { slidesPerView: 2.3 },
+                        640: { slidesPerView: 2.8 },
+                        768: { slidesPerView: 3.3 },
+                        1024: { slidesPerView: 4.3 },
+                        1280: { slidesPerView: 5.3 },
+                        1536: { slidesPerView: 6.3 },
+                      }}
+                    >
+                      {categorizedListings.helper.slice(0, 8).map((item) => (
+                        <SwiperSlide key={item._id}>
+                          <HelperItem 
+                            helper={item} 
+                            onClick={() => handleItemNavigation(item)}
+                            className="transform transition-all duration-500 hover:scale-105" 
+                          />
+                        </SwiperSlide>
+                      ))}
+                    </Swiper>
+
+                    <button className="helper-swiper-button-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-gray-700 hover:text-purple-600 hover:border-purple-500 transition-all duration-300">
+                      <svg className="w-6 h-6 transform group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <button className="helper-swiper-button-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-gray-700 hover:text-purple-600 hover:border-purple-500 transition-all duration-300">
+                      <svg className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-              ))}
+              )}
+
+              {/* Properties Section - Second Row */}
+              {categorizedListings.properties.length > 0 && (
+                <div className="mb-16">
+                  <div className="flex items-center justify-between mb-8 px-2">
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mr-4">
+                        <span className="text-2xl text-white">🏠</span>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-900">Properties</h2>
+                        <p className="text-gray-600 text-sm">Find your perfect home or investment</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setActiveTab("properties")}
+                      className="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
+                    >
+                      View all
+                      <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="relative px-2">
+                    <Swiper
+                      slidesPerView={1.8}
+                      spaceBetween={20}
+                      navigation={{
+                        nextEl: '.properties-swiper-button-next',
+                        prevEl: '.properties-swiper-button-prev',
+                      }}
+                      modules={[Navigation]}
+                      className="properties-swiper"
+                      breakpoints={{
+                        480: { slidesPerView: 2.3 },
+                        640: { slidesPerView: 2.8 },
+                        768: { slidesPerView: 3.3 },
+                        1024: { slidesPerView: 4.3 },
+                        1280: { slidesPerView: 5.3 },
+                        1536: { slidesPerView: 6.3 },
+                      }}
+                    >
+                      {categorizedListings.properties.slice(0, 8).map((item) => (
+                        <SwiperSlide key={item._id}>
+                          <ListingItem 
+                            listing={item} 
+                            onClick={() => handleItemNavigation(item)}
+                            className="transform transition-all duration-500 hover:scale-105" 
+                          />
+                        </SwiperSlide>
+                      ))}
+                    </Swiper>
+
+                    <button className="properties-swiper-button-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-gray-700 hover:text-purple-600 hover:border-purple-500 transition-all duration-300">
+                      <svg className="w-6 h-6 transform group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <button className="properties-swiper-button-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-gray-700 hover:text-purple-600 hover:border-purple-500 transition-all duration-300">
+                      <svg className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Services Section - Third Row */}
+              {categorizedListings.services.length > 0 && (
+                <div className="mb-16">
+                  <div className="flex items-center justify-between mb-8 px-2">
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mr-4">
+                        <span className="text-2xl text-white">🛎️</span>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-900">Services</h2>
+                        <p className="text-gray-600 text-sm">Professional services for your needs</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setActiveTab("services")}
+                      className="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
+                    >
+                      View all
+                      <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="relative px-2">
+                    <Swiper
+                      slidesPerView={1.8}
+                      spaceBetween={20}
+                      navigation={{
+                        nextEl: '.services-swiper-button-next',
+                        prevEl: '.services-swiper-button-prev',
+                      }}
+                      modules={[Navigation]}
+                      className="services-swiper"
+                      breakpoints={{
+                        480: { slidesPerView: 2.3 },
+                        640: { slidesPerView: 2.8 },
+                        768: { slidesPerView: 3.3 },
+                        1024: { slidesPerView: 4.3 },
+                        1280: { slidesPerView: 5.3 },
+                        1536: { slidesPerView: 6.3 },
+                      }}
+                    >
+                      {categorizedListings.services.slice(0, 8).map((item) => (
+                        <SwiperSlide key={item._id}>
+                          <ServiceItem 
+                            service={item} 
+                            onClick={() => handleItemNavigation(item)}
+                            className="transform transition-all duration-500 hover:scale-105" 
+                          />
+                        </SwiperSlide>
+                      ))}
+                    </Swiper>
+
+                    <button className="services-swiper-button-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-gray-700 hover:text-purple-600 hover:border-purple-500 transition-all duration-300">
+                      <svg className="w-6 h-6 transform group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <button className="services-swiper-button-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-gray-700 hover:text-purple-600 hover:border-purple-500 transition-all duration-300">
+                      <svg className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Events Section - Fourth Row */}
+              {categorizedListings.events.length > 0 && (
+                <div className="mb-16">
+                  <div className="flex items-center justify-between mb-8 px-2">
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mr-4">
+                        <span className="text-2xl text-white">🎪</span>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-900">Events</h2>
+                        <p className="text-gray-600 text-sm">Discover local happenings and activities</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setActiveTab("events")}
+                      className="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
+                    >
+                      View all
+                      <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="relative px-2">
+                    <Swiper
+                      slidesPerView={1.8}
+                      spaceBetween={20}
+                      navigation={{
+                        nextEl: '.events-swiper-button-next',
+                        prevEl: '.events-swiper-button-prev',
+                      }}
+                      modules={[Navigation]}
+                      className="events-swiper"
+                      breakpoints={{
+                        480: { slidesPerView: 2.3 },
+                        640: { slidesPerView: 2.8 },
+                        768: { slidesPerView: 3.3 },
+                        1024: { slidesPerView: 4.3 },
+                        1280: { slidesPerView: 5.3 },
+                        1536: { slidesPerView: 6.3 },
+                      }}
+                    >
+                      {categorizedListings.events.slice(0, 8).map((item) => (
+                        <SwiperSlide key={item._id}>
+                          <EventItem 
+                            event={item} 
+                            onClick={() => handleItemNavigation(item)}
+                            className="transform transition-all duration-500 hover:scale-105" 
+                          />
+                        </SwiperSlide>
+                      ))}
+                    </Swiper>
+
+                    <button className="events-swiper-button-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-gray-700 hover:text-purple-600 hover:border-purple-500 transition-all duration-300">
+                      <svg className="w-6 h-6 transform group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <button className="events-swiper-button-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-gray-700 hover:text-purple-600 hover:border-purple-500 transition-all duration-300">
+                      <svg className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
+          )}
 
-            {/* Enhanced Load More Button */}
-            {visibleListings < currentListings.length && (
-              <div className="flex justify-center mt-12">
-                <button
-                  onClick={() => setVisibleListings(prev => prev + LOAD_MORE_COUNT)}
-                  className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-bold shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-105 flex items-center "
-                >
-                  <span>Load More</span>
-                  <svg className="w-5 h-5 ml-2 transform group-hover:translate-y-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                  </svg>
-                </button>
+          {/* Enhanced Main Content Area for Other Tabs */}
+          {activeTab !== "all" && (
+            <div className="mt-8">
+              {/* Enhanced Results Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {currentListings.slice(0, visibleListings).map((listing) => (
+                  <div key={listing._id} className="">
+                    {activeTab === "properties" && (
+                      <ListingItem 
+                        listing={listing} 
+                        onClick={() => handleItemNavigation(listing)}
+                        className="transform transition-all duration-500 hover:scale-105" 
+                      />
+                    )}
+                    {activeTab === "services" && (
+                      <ServiceItem 
+                        service={listing} 
+                        onClick={() => handleItemNavigation(listing)}
+                        className="transform transition-all duration-500 hover:scale-105" 
+                      />
+                    )}
+                    {activeTab === "helper" && (
+                      <HelperItem 
+                        helper={listing} 
+                        onClick={() => handleItemNavigation(listing)}
+                        className="transform transition-all duration-500 hover:scale-105" 
+                      />
+                    )}
+                    {activeTab === "events" && (
+                      <EventItem 
+                        event={listing} 
+                        onClick={() => handleItemNavigation(listing)}
+                        className="transform transition-all duration-500 hover:scale-105" 
+                      />
+                    )}
+                  </div>
+                ))}
               </div>
-            )}
 
-            {/* Enhanced Empty State */}
-            {currentListings.length === 0 && !isLoading && (
-              <div className="text-center py-16">
-                <div className="w-32 h-32 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FaSearch className="text-gray-400 text-4xl" />
+              {/* Enhanced Load More Button */}
+              {visibleListings < currentListings.length && (
+                <div className="flex justify-center mt-12">
+                  <button
+                    onClick={() => setVisibleListings(prev => prev + LOAD_MORE_COUNT)}
+                    className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-bold shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-105 flex items-center "
+                  >
+                    <span>Load More</span>
+                    <svg className="w-5 h-5 ml-2 transform group-hover:translate-y-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7-7V3" />
+                    </svg>
+                  </button>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-700 mb-3">No results found</h3>
-                <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                  Try adjusting your search criteria or explore different categories to find what you re looking for.
-                </p>
-                <button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setPriceRange(1000000);
-                    setPropertyType("all");
-                    setServiceType("all");
-                    setHelperType("all");
-                    setEventType("all");
-                  }}
-                  className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
-                >
-                  Reset Filters
-                </button>
-              </div>
-            )}
-          </div>
+              )}
+
+              {/* Enhanced Empty State */}
+              {currentListings.length === 0 && !isLoading && (
+                <div className="text-center py-16">
+                  <div className="w-32 h-32 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <FaSearch className="text-gray-400 text-4xl" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-700 mb-3">No results found</h3>
+                  <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                    Try adjusting your search criteria or explore different categories to find what you re looking for.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSearchQuery("");
+                      setPriceRange(1000000);
+                      setPropertyType("all");
+                      setServiceType("all");
+                      setHelperType("all");
+                      setEventType("all");
+                    }}
+                    className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+                  >
+                    Reset Filters
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
