@@ -557,7 +557,7 @@ const handleServiceChange = (e) => {
   const handleHelperChange = (e) => {
     const { id, value, type, checked } = e.target;
 
-    if (id === "domestic" || id === "errand" || id === "tutor" || id === "chef" || id === "beauty" || id === "tattoo" || id === "barber") {
+    if (id === "domestic" || id === "errand" || id === "tutor" || id === "chef" || id === "beauty" || id === "tattoo" || id === "barber" || id === "photography" ) {
       return setHelperForm({ ...helperForm, type: id });
     }
 
