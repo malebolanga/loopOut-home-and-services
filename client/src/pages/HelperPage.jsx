@@ -948,190 +948,187 @@ export default function HelperPage() {
         {/* Left Column - Main Content */}
         <div className="lg:col-span-2 space-y-8">
           {/* Header Section */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-  {/* Colored Header with Profile */}
-  <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-    <div className="flex items-center gap-4">
-      {/* Profile Picture */}
-      <div className="w-16 h-16 bg-white rounded-2xl border-4 border-white border-opacity-20 shadow-lg flex items-center justify-center flex-shrink-0">
-        {helper.profileImage ? (
-          <img 
-            src={helper.profileImage} 
-            alt={helper.name}
-            className="w-full h-full rounded-2xl object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-blue-500 rounded-2xl flex items-center justify-center">
-            <span className="text-white font-bold text-lg">
-              {helper.name.charAt(0).toUpperCase()}
-            </span>
+{/* Header Section */}
+<div className="bg-white rounded-xl shadow-sm border p-6">
+  <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
+    <img
+      src={helper.imageUrls?.[0] || '/api/placeholder/120/120'}
+      alt={helper.name}
+      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+    />
+    <div className="flex-1">
+      <div className="flex flex-col md:flex-row md:items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">{helper.name}</h1>
+          <p className="text-gray-600">{getProfessionalTitle(helper.type)}</p>
+        </div>
+        <div className="flex items-center space-x-2 mt-2 md:mt-0">
+          <div className="flex items-center space-x-1 text-yellow-400">
+            <FaStar />
+            <span className="text-gray-700 font-medium">{helper.rating || '4.5'}</span>
+          </div>
+          <span className="text-gray-400">•</span>
+          <span className="text-gray-600">{helper.reviewCount || '25'} reviews</span>
+        </div>
+      </div>
+      
+      <div className="mt-4 flex flex-wrap gap-2">
+        <div className="flex items-center space-x-1 text-gray-600">
+          <FaMapMarkerAlt className="text-red-500" />
+          <span>{helper.address || 'Location not specified'}</span>
+        </div>
+        {helper.contact && (
+          <div className="flex items-center space-x-1 text-gray-600">
+            <FaPhone className="text-green-500" />
+            <span>{helper.contact}</span>
           </div>
         )}
       </div>
-      
-      {/* Name and Title */}
-      <div className="flex-1 min-w-0">
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-1 truncate">
-          {helper.name}
-        </h1>
-        <div className="text-blue-100 text-sm font-medium">
-          Professional {getProfessionalTitle(helper.type)}
-        </div>
-      </div>
-      
-      {/* Price Badge */}
-      <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl px-4 py-3 border border-white border-opacity-30">
-        <div className="text-white text-xs font-semibold opacity-90 mb-1">STARTING FROM</div>
-        <div className="text-white text-xl font-bold">R{helper.regularPrice}</div>
-      </div>
-    </div>
-  </div>
 
-  {/* Main Content */}
-  <div className="p-6">
-    {/* Verification and Rating Badges */}
-    <div className="flex flex-wrap gap-3 mb-6">
-      {helper.security && (
-        <div className="inline-flex items-center bg-emerald-50 px-4 py-2 rounded-full border border-emerald-200">
-          <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
-          <span className="text-emerald-700 font-semibold text-sm">
-            ✅ Verified Professional
+      {/* Verification and Rating Badges - Moved inside the new header */}
+      <div className="flex flex-wrap gap-3 mt-4">
+        {helper.security && (
+          <div className="inline-flex items-center bg-emerald-50 px-4 py-2 rounded-full border border-emerald-200">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
+            <span className="text-emerald-700 font-semibold text-sm">
+              ✅ Verified Professional
+            </span>
+          </div>
+        )}
+        
+        <div className="inline-flex items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-200">
+          <FaStar className="text-yellow-500 text-sm mr-2" />
+          <span className="text-blue-700 font-semibold text-sm">
+            {helper.rating ? `${helper.rating} Rating` : 'New Professional'}
           </span>
         </div>
-      )}
-      
-      <div className="inline-flex items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-200">
-        <FaStar className="text-yellow-500 text-sm mr-2" />
-        <span className="text-blue-700 font-semibold text-sm">
-          {helper.rating ? `${helper.rating} Rating` : 'New Professional'}
-        </span>
-      </div>
-    </div>
-
-    {/* Info Cards Grid */}
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      {/* Location Card */}
-      <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-            <FaMapMarkerAlt className="text-purple-600 text-lg" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-sm text-gray-600 font-medium mb-1">Location</div>
-            <div className="text-gray-900 font-semibold text-sm truncate">{helper.address}</div>
-          </div>
-        </div>
       </div>
 
-      {/* Experience Card */}
-      {helper.host && (
+      {/* Info Cards Grid - Moved inside the new header */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        {/* Location Card */}
         <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <FaBriefcase className="text-orange-600 text-lg" />
+            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <FaMapMarkerAlt className="text-purple-600 text-lg" />
             </div>
-            <div>
-              <div className="text-sm text-gray-600 font-medium mb-1">Experience</div>
-              <div className="text-gray-900 font-semibold text-sm">
-                {helper.host} {helper.type === 'chef' ? 'Years Cooking' : 
-                              helper.type === 'tutor' ? 'Years Teaching' :
-                              helper.type === 'tattoo' ? 'Years Experience' :
-                              'Years Experience'}
-              </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm text-gray-600 font-medium mb-1">Location</div>
+              <div className="text-gray-900 font-semibold text-sm truncate">{helper.address}</div>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Response Time Card */}
-      <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
-            <FaClock className="text-cyan-600 text-lg" />
+        {/* Experience Card */}
+        {helper.host && (
+          <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <FaBriefcase className="text-orange-600 text-lg" />
+              </div>
+              <div>
+                <div className="text-sm text-gray-600 font-medium mb-1">Experience</div>
+                <div className="text-gray-900 font-semibold text-sm">
+                  {helper.host} {helper.type === 'chef' ? 'Years Cooking' : 
+                                helper.type === 'tutor' ? 'Years Teaching' :
+                                helper.type === 'tattoo' ? 'Years Experience' :
+                                'Years Experience'}
+                </div>
+              </div>
+            </div>
           </div>
-          <div>
-            <div className="text-sm text-gray-600 font-medium mb-1">Response Time</div>
-            <div className="text-gray-900 font-semibold text-sm">{helper.responseTime || 'Within 1 hour'}</div>
+        )}
+
+        {/* Response Time Card */}
+        <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <FaClock className="text-cyan-600 text-lg" />
+            </div>
+            <div>
+              <div className="text-sm text-gray-600 font-medium mb-1">Response Time</div>
+              <div className="text-gray-900 font-semibold text-sm">{helper.responseTime || 'Within 1 hour'}</div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    {/* Social Media Verification */}
-    <div className="border-t border-gray-200 pt-6">
-      <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-        {/* Title Section */}
-        <div className="flex items-center gap-3 lg:w-48 lg:flex-shrink-0">
-          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-            <FaUserFriends className="text-gray-600" />
+      {/* Social Media Verification - Moved inside the new header */}
+      <div className="border-t border-gray-200 pt-6 mt-6">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+          {/* Title Section */}
+          <div className="flex items-center gap-3 lg:w-48 lg:flex-shrink-0">
+            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+              <FaUserFriends className="text-gray-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 text-sm">Social Verification</h3>
+              <p className="text-gray-500 text-xs">AI-powered validation</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-semibold text-gray-900 text-sm">Social Verification</h3>
-            <p className="text-gray-500 text-xs">AI-powered validation</p>
-          </div>
-        </div>
 
-        {/* Social Media Badges */}
-        <div className="flex-1">
-          {verifyingSocialMedia ? (
-            <div className="flex items-center gap-3 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-              <FaSpinner className="animate-spin text-yellow-600" />
-              <div>
-                <div className="text-yellow-800 font-medium text-sm">Verifying profiles</div>
-                <div className="text-yellow-600 text-xs">Scanning social networks</div>
+          {/* Social Media Badges */}
+          <div className="flex-1">
+            {verifyingSocialMedia ? (
+              <div className="flex items-center gap-3 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                <FaSpinner className="animate-spin text-yellow-600" />
+                <div>
+                  <div className="text-yellow-800 font-medium text-sm">Verifying profiles</div>
+                  <div className="text-yellow-600 text-xs">Scanning social networks</div>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-3">
-              {socialMediaVerification.facebook.exists && socialMediaVerification.facebook.verificationStatus === 'verified' && (
-                <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="relative">
-                    <FaFacebook className="text-blue-600 text-lg" />
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            ) : (
+              <div className="flex flex-wrap gap-3">
+                {socialMediaVerification.facebook.exists && socialMediaVerification.facebook.verificationStatus === 'verified' && (
+                  <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="relative">
+                      <FaFacebook className="text-blue-600 text-lg" />
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                    </div>
+                    <span className="text-gray-700 font-semibold text-sm">Facebook</span>
                   </div>
-                  <span className="text-gray-700 font-semibold text-sm">Facebook</span>
-                </div>
-              )}
+                )}
 
-              {socialMediaVerification.instagram.exists && socialMediaVerification.instagram.verificationStatus === 'verified' && (
-                <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-pink-200 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="relative">
-                    <FaInstagram className="text-pink-600 text-lg" />
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                {socialMediaVerification.instagram.exists && socialMediaVerification.instagram.verificationStatus === 'verified' && (
+                  <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-pink-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="relative">
+                      <FaInstagram className="text-pink-600 text-lg" />
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                    </div>
+                    <span className="text-gray-700 font-semibold text-sm">Instagram</span>
                   </div>
-                  <span className="text-gray-700 font-semibold text-sm">Instagram</span>
-                </div>
-              )}
+                )}
 
-              {socialMediaVerification.linkedin.exists && socialMediaVerification.linkedin.verificationStatus === 'verified' && (
-                <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-300 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="relative">
-                    <FaLinkedin className="text-blue-700 text-lg" />
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                {socialMediaVerification.linkedin.exists && socialMediaVerification.linkedin.verificationStatus === 'verified' && (
+                  <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-300 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="relative">
+                      <FaLinkedin className="text-blue-700 text-lg" />
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                    </div>
+                    <span className="text-gray-700 font-semibold text-sm">LinkedIn</span>
                   </div>
-                  <span className="text-gray-700 font-semibold text-sm">LinkedIn</span>
-                </div>
-              )}
+                )}
 
-              {socialMediaVerification.twitter.exists && socialMediaVerification.twitter.verificationStatus === 'verified' && (
-                <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="relative">
-                    <FaTwitter className="text-gray-900 text-lg" />
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                {socialMediaVerification.twitter.exists && socialMediaVerification.twitter.verificationStatus === 'verified' && (
+                  <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="relative">
+                      <FaTwitter className="text-gray-900 text-lg" />
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                    </div>
+                    <span className="text-gray-700 font-semibold text-sm">Twitter</span>
                   </div>
-                  <span className="text-gray-700 font-semibold text-sm">Twitter</span>
-                </div>
-              )}
+                )}
 
-              {!socialMediaVerification.facebook.exists && !socialMediaVerification.instagram.exists && 
-               !socialMediaVerification.linkedin.exists && !socialMediaVerification.twitter.exists && (
-                <div className="inline-flex items-center gap-2 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
-                  <FaInfoCircle className="text-gray-400" />
-                  <span className="text-gray-600 font-medium text-sm">No social profiles found</span>
-                </div>
-              )}
-            </div>
-          )}
+                {!socialMediaVerification.facebook.exists && !socialMediaVerification.instagram.exists && 
+                 !socialMediaVerification.linkedin.exists && !socialMediaVerification.twitter.exists && (
+                  <div className="inline-flex items-center gap-2 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
+                    <FaInfoCircle className="text-gray-400" />
+                    <span className="text-gray-600 font-medium text-sm">No social profiles found</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
