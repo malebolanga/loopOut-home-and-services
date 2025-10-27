@@ -49,15 +49,17 @@ const formatPrice = (price) => {
 };
 
 // Updated helper type names with beauty
+// Updated helper type names with beauty and photographer
 const getHelperTypeName = (type) => {
   switch (type) {
     case 'domestic': return 'Maid';
     case 'tutor': return 'Tutor';
     case 'chef': return 'Chef';
     case 'handyman': return 'Handyman';
-    case 'tottoo': return 'Tattoo Artist';
+    case 'tattoo': return 'Tattoo Artist';
     case 'beauty': return 'Beauty';
     case 'barber': return 'Barber';
+    case 'photography': return 'Photographer';
     default: return 'Helper';
   }
 };

@@ -19,7 +19,7 @@ import {
   FaPalette, FaSpa, FaHandSparkles, FaHandHoldingHeart, FaRing,
   FaBrush, FaSprayCan, FaSmile, FaUtensils, FaShoppingBasket, FaCookie,
   FaInstagram, FaFacebook, FaCheck, FaTimes as FaTimesCircle, FaSpinner,
-  FaLinkedin, FaTwitter
+  FaLinkedin, FaTwitter, FaCamera, FaHome
 } from 'react-icons/fa';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Zoom, Thumbs } from 'swiper/modules';
@@ -115,7 +115,13 @@ export default function HelperPage() {
     numberOfGuests: '',
     dietaryRestrictions: '',
     cookingEquipment: '',
-    ingredientsProvided: 'no'
+    ingredientsProvided: 'no',
+    // Photography-specific fields
+    photographyType: '',
+    sessionDuration: '',
+    numberOfPeople: '',
+    photographyRequirements: '',
+    deliveryFormat: ''
   });
 
   // Helper function to get professional title
@@ -129,7 +135,8 @@ export default function HelperPage() {
       maid: 'Maid',
       domestic: 'Domestic Helper',
       tattoo: 'Tattoo Artist',
-      tutor: 'Tutor'
+      tutor: 'Tutor',
+      photography: 'Photographer'
     };
     return titles[type] || 'Professional';
   };
@@ -196,6 +203,17 @@ export default function HelperPage() {
       { id: 'testPrep', name: 'Test Preparation', icon: <FaGraduationCap className="text-red-600" /> }
     ];
 
+    const photographyOptions = [
+      { id: 'portrait', name: 'Portrait Photography', icon: <FaUser className="text-blue-500" /> },
+      { id: 'event', name: 'Event Photography', icon: <FaGlassCheers className="text-purple-500" /> },
+      { id: 'product', name: 'Product Photography', icon: <FaShoppingBasket className="text-green-500" /> },
+      { id: 'wedding', name: 'Wedding Photography', icon: <FaRing className="text-pink-500" /> },
+      { id: 'family', name: 'Family Photography', icon: <FaUserFriends className="text-orange-500" /> },
+      { id: 'commercial', name: 'Commercial Photography', icon: <FaBriefcase className="text-indigo-500" /> },
+      { id: 'realestate', name: 'Real Estate Photography', icon: <FaHome className="text-yellow-600" /> },
+      { id: 'landscape', name: 'Landscape Photography', icon: <FaMapMarkerAlt className="text-teal-500" /> }
+    ];
+
     switch (type) {
       case 'beauty':
       case 'spa':
@@ -210,6 +228,8 @@ export default function HelperPage() {
         return tattooOptions;
       case 'tutor':
         return tutorOptions;
+      case 'photography':
+        return photographyOptions;
       case 'domestic':
       case 'maid':
         return baseOptions;
@@ -282,6 +302,7 @@ export default function HelperPage() {
       cooking: 'orange',
       tattoo: 'gray',
       tutor: 'green',
+      photography: 'purple',
       default: 'red'
     };
     return themes[type] || themes.default;
@@ -307,7 +328,7 @@ export default function HelperPage() {
   // Helper functions for social media verification
   const generateUsername = (name, platform) => {
     const cleanName = name.toLowerCase().replace(/\s+/g, '');
-    const suffixes = ['', 'official', 'professionals', 'styles', 'studio', 'hair', 'beauty', 'chef', 'cooking', 'art', 'tattoo'];
+    const suffixes = ['', 'official', 'professionals', 'styles', 'studio', 'hair', 'beauty', 'chef', 'cooking', 'art', 'tattoo', 'photography'];
     const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
     return suffix ? `${cleanName}.${suffix}` : cleanName;
   };
@@ -451,7 +472,7 @@ export default function HelperPage() {
         simulateAiAssessment(data);
 
         // Check if helper is barber, chef, beauty, domestic, or maid and verify social media
-        if (['barber', 'barbar', 'chef', 'cooking', 'beauty', 'spa', 'domestic', 'maid', 'tattoo', 'tutor'].includes(data.type)) {
+        if (['barber', 'barbar', 'chef', 'cooking', 'beauty', 'spa', 'domestic', 'maid', 'tattoo', 'tutor', 'photography'].includes(data.type)) {
           verifySocialMediaPresence(data);
         }
 
@@ -513,6 +534,14 @@ export default function HelperPage() {
         if (description.includes("certified") || description.includes("qualified")) descScore += 2;
         if (description.includes("degree") || description.includes("education")) descScore += 1;
         if (description.includes("experience") || description.includes("professional")) descScore += 1;
+      }
+
+      // Photography-specific scoring
+      if (helperData.type === 'photography') {
+        if (description.includes("certified") || description.includes("professional")) descScore += 2;
+        if (description.includes("equipment") || description.includes("camera")) descScore += 1;
+        if (description.includes("portfolio") || description.includes("experience")) descScore += 1;
+        if (description.includes("editing") || description.includes("retouching")) descScore += 1;
       }
 
       // Calculate image quality based on number of images
@@ -627,7 +656,7 @@ export default function HelperPage() {
 
     // Validate service selection
     if (
-      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor') && 
+      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography') && 
       bookingData.selectedServices.length === 0
     ) {
       alert("Please select at least one service you need.");
@@ -675,13 +704,14 @@ export default function HelperPage() {
     } else {
       locationInfo = helper.type === 'chef' ? "Chef's Kitchen" : 
                      helper.type === 'barber' || helper.type === 'barbar' ? "Barber's Shop" :
-                     helper.type === 'tattoo' ? "Tattoo Studio" :
+                     helper.type === 'tattoo' ? "PhotoShop Studio" :
                      helper.type === 'beauty' || helper.type === 'spa' ? "Beauty Salon" :
+                     helper.type === 'photography' ? "Photography Studio" :
                      `${getProfessionalTitle(helper.type)}'s Location`;
     }
 
     // Build the main WhatsApp message
-    let message = `*${helper.type === 'chef' ? '👨‍🍳' : helper.type === 'barber' || helper.type === 'barbar' ? '✂️' : helper.type === 'tattoo' ? '🎨' : '👤'} New ${getProfessionalTitle(helper.type)} Booking Request for ${helper.name}*%0A%0A`;
+    let message = `*${helper.type === 'chef' ? '👨‍🍳' : helper.type === 'barber' || helper.type === 'barbar' ? '✂️' : helper.type === 'tattoo' ? '🎨' : helper.type === 'photography' ? '📷' : '👤'} New ${getProfessionalTitle(helper.type)} Booking Request for ${helper.name}*%0A%0A`;
 
     message += `*🛎️ SERVICE DETAILS*%0A`;
     message += `• Price: R${helper.regularPrice}%0A`;
@@ -742,6 +772,23 @@ export default function HelperPage() {
     if (bookingData.ingredientsProvided) {
       message += `• Ingredients: ${bookingData.ingredientsProvided === 'yes' ? 'Client will provide' : 'Chef to provide'}%0A`;
     }
+
+    // Add photography-specific details
+    if ((helper.type === 'photography') && bookingData.photographyType) {
+      message += `• Photography Type: ${bookingData.photographyType}%0A`;
+    }
+
+    if ((helper.type === 'photography') && bookingData.sessionDuration) {
+      message += `• Session Duration: ${bookingData.sessionDuration} hours%0A`;
+    }
+
+    if ((helper.type === 'photography') && bookingData.numberOfPeople) {
+      message += `• Number of People: ${bookingData.numberOfPeople}%0A`;
+    }
+
+    if ((helper.type === 'photography') && bookingData.deliveryFormat) {
+      message += `• Delivery Format: ${bookingData.deliveryFormat}%0A`;
+    }
     
     if (hasTravelFee) {
       message += travelFeeMessage;
@@ -754,7 +801,13 @@ export default function HelperPage() {
     message += `• Date: ${bookingData.date}%0A`;
     message += `• Time: ${bookingData.time}%0A`;
     message += `• Location: ${locationInfo}%0A`;
-    message += `• Special Requirements: ${bookingData.specialRequirements || 'None'}%0A%0A`;
+    message += `• Special Requirements: ${bookingData.specialRequirements || 'None'}%0A`;
+    
+    if (bookingData.photographyRequirements) {
+      message += `• Photography Requirements: ${bookingData.photographyRequirements}%0A`;
+    }
+    
+    message += `%0A`;
 
     message += `Please respond:%0A`;
     message += `✅ [Accept Booking](${acceptLink})%0A`;
@@ -948,192 +1001,181 @@ export default function HelperPage() {
         {/* Left Column - Main Content */}
         <div className="lg:col-span-2 space-y-8">
           {/* Header Section */}
-{/* Header Section */}
-<div className="bg-white rounded-xl shadow-sm border p-6">
-  <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
-    <img
-      src={helper.imageUrls?.[0] || '/api/placeholder/120/120'}
-      alt={helper.name}
-      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-    />
-    <div className="flex-1">
-      <div className="flex flex-col md:flex-row md:items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{helper.name}</h1>
-          <p className="text-gray-600">{getProfessionalTitle(helper.type)}</p>
-        </div>
-        <div className="flex items-center space-x-2 mt-2 md:mt-0">
-          <div className="flex items-center space-x-1 text-yellow-400">
-            <FaStar />
-            <span className="text-gray-700 font-medium">{helper.rating || '4.5'}</span>
-          </div>
-          <span className="text-gray-400">•</span>
-          <span className="text-gray-600">{helper.reviewCount || '25'} reviews</span>
-        </div>
-      </div>
-      
-      <div className="mt-4 flex flex-wrap gap-2">
-        <div className="flex items-center space-x-1 text-gray-600">
-          <FaMapMarkerAlt className="text-red-500" />
-          <span>{helper.address || 'Location not specified'}</span>
-        </div>
-        {helper.contact && (
-          <div className="flex items-center space-x-1 text-gray-600">
-            <FaPhone className="text-green-500" />
-            <span>{helper.contact}</span>
-          </div>
-        )}
-      </div>
+          <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
+              <img
+                src={helper.imageUrls?.[0] || '/api/placeholder/120/120'}
+                alt={helper.name}
+                className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+              />
+              <div className="flex-1">
+                <div className="flex flex-col md:flex-row md:items-center justify-between">
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">{helper.name}</h1>
+                    <p className="text-gray-600">{getProfessionalTitle(helper.type)}</p>
+                  </div>
+                  <div className="flex items-center space-x-2 mt-2 md:mt-0">
+                    <div className="flex items-center space-x-1 text-yellow-400">
+                      <FaStar />
+                      <span className="text-gray-700 font-medium">{helper.rating || '4.5'}</span>
+                    </div>
+                    <span className="text-gray-400">•</span>
+                    <span className="text-gray-600">{helper.reviewCount || '25'} reviews</span>
+                  </div>
+                </div>
+                
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="flex items-center space-x-1 text-gray-600">
+                    <FaMapMarkerAlt className="text-red-500" />
+                    <span>{helper.address || 'Location not specified'}</span>
+                  </div>
+                  {helper.contact && (
+                    <div className="flex items-center space-x-1 text-gray-600">
+                      <FaPhone className="text-green-500" />
+                      <span>{helper.contact}</span>
+                    </div>
+                  )}
+                </div>
 
-      {/* Verification and Rating Badges - Moved inside the new header */}
-      <div className="flex flex-wrap gap-3 mt-4">
-        {helper.security && (
-          <div className="inline-flex items-center bg-emerald-50 px-4 py-2 rounded-full border border-emerald-200">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
-            <span className="text-emerald-700 font-semibold text-sm">
-              ✅ Verified Professional
-            </span>
-          </div>
-        )}
-        
-        <div className="inline-flex items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-200">
-          <FaStar className="text-yellow-500 text-sm mr-2" />
-          <span className="text-blue-700 font-semibold text-sm">
-            {helper.rating ? `${helper.rating} Rating` : 'New Professional'}
-          </span>
-        </div>
-      </div>
+                {/* Verification and Rating Badges - Moved inside the new header */}
+                <div className="flex flex-wrap gap-3 mt-4">
+                  {helper.security && (
+                    <div className="inline-flex items-center bg-emerald-50 px-4 py-2 rounded-full border border-emerald-200">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
+                      <span className="text-emerald-700 font-semibold text-sm">
+                        ✅ Verified Professional
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="inline-flex items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-200">
+                    <FaStar className="text-yellow-500 text-sm mr-2" />
+                    <span className="text-blue-700 font-semibold text-sm">
+                      {helper.rating ? `${helper.rating} Rating` : 'New Professional'}
+                    </span>
+                  </div>
+                </div>
 
-      {/* Info Cards Grid - Moved inside the new header */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-        {/* Location Card */}
-        <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <FaMapMarkerAlt className="text-purple-600 text-lg" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm text-gray-600 font-medium mb-1">Location</div>
-              <div className="text-gray-900 font-semibold text-sm truncate">{helper.address}</div>
-            </div>
-          </div>
-        </div>
+                {/* Info Cards Grid - Moved inside the new header */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                  {/* Location Card */}
 
-        {/* Experience Card */}
-        {helper.host && (
-          <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <FaBriefcase className="text-orange-600 text-lg" />
-              </div>
-              <div>
-                <div className="text-sm text-gray-600 font-medium mb-1">Experience</div>
-                <div className="text-gray-900 font-semibold text-sm">
-                  {helper.host} {helper.type === 'chef' ? 'Years Cooking' : 
-                                helper.type === 'tutor' ? 'Years Teaching' :
-                                helper.type === 'tattoo' ? 'Years Experience' :
-                                'Years Experience'}
+                  {/* Experience Card */}
+                  {helper.host && (
+                    <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <FaBriefcase className="text-orange-600 text-lg" />
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600 font-medium mb-1">Experience</div>
+                          <div className="text-gray-900 font-semibold text-sm">
+                            {helper.host} {helper.type === 'chef' ? 'Years Cooking' : 
+                                          helper.type === 'tutor' ? 'Years Teaching' :
+                                          helper.type === 'tattoo' ? 'Years Experience' :
+                                          helper.type === 'photography' ? 'Years Photography' :
+                                          'Years Experience'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Response Time Card */}
+                  <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <FaClock className="text-cyan-600 text-lg" />
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600 font-medium mb-1">Response Time</div>
+                        <div className="text-gray-900 font-semibold text-sm">{helper.responseTime || 'Within 1 hour'}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Social Media Verification - Moved inside the new header */}
+                <div className="border-t border-gray-200 pt-6 mt-6">
+                  <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                    {/* Title Section */}
+                    <div className="flex items-center gap-3 lg:w-48 lg:flex-shrink-0">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <FaUserFriends className="text-gray-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 text-sm">Social Verification</h3>
+                        <p className="text-gray-500 text-xs">AI-powered validation</p>
+                      </div>
+                    </div>
+
+                    {/* Social Media Badges */}
+                    <div className="flex-1">
+                      {verifyingSocialMedia ? (
+                        <div className="flex items-center gap-3 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                          <FaSpinner className="animate-spin text-yellow-600" />
+                          <div>
+                            <div className="text-yellow-800 font-medium text-sm">Verifying profiles</div>
+                            <div className="text-yellow-600 text-xs">Scanning social networks</div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-3">
+                          {socialMediaVerification.facebook.exists && socialMediaVerification.facebook.verificationStatus === 'verified' && (
+                            <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+                              <div className="relative">
+                                <FaFacebook className="text-blue-600 text-lg" />
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                              </div>
+                              <span className="text-gray-700 font-semibold text-sm">Facebook</span>
+                            </div>
+                          )}
+
+                          {socialMediaVerification.instagram.exists && socialMediaVerification.instagram.verificationStatus === 'verified' && (
+                            <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-pink-200 shadow-sm hover:shadow-md transition-shadow">
+                              <div className="relative">
+                                <FaInstagram className="text-pink-600 text-lg" />
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                              </div>
+                              <span className="text-gray-700 font-semibold text-sm">Instagram</span>
+                            </div>
+                          )}
+
+                          {socialMediaVerification.linkedin.exists && socialMediaVerification.linkedin.verificationStatus === 'verified' && (
+                            <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-300 shadow-sm hover:shadow-md transition-shadow">
+                              <div className="relative">
+                                <FaLinkedin className="text-blue-700 text-lg" />
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                              </div>
+                              <span className="text-gray-700 font-semibold text-sm">LinkedIn</span>
+                            </div>
+                          )}
+
+                          {socialMediaVerification.twitter.exists && socialMediaVerification.twitter.verificationStatus === 'verified' && (
+                            <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-shadow">
+                              <div className="relative">
+                                <FaTwitter className="text-gray-900 text-lg" />
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                              </div>
+                              <span className="text-gray-700 font-semibold text-sm">Twitter</span>
+                            </div>
+                          )}
+
+                          {!socialMediaVerification.facebook.exists && !socialMediaVerification.instagram.exists && 
+                          !socialMediaVerification.linkedin.exists && !socialMediaVerification.twitter.exists && (
+                            <div className="inline-flex items-center gap-2 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
+                              <FaInfoCircle className="text-gray-400" />
+                              <span className="text-gray-600 font-medium text-sm">No social profiles found</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        )}
-
-        {/* Response Time Card */}
-        <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <FaClock className="text-cyan-600 text-lg" />
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 font-medium mb-1">Response Time</div>
-              <div className="text-gray-900 font-semibold text-sm">{helper.responseTime || 'Within 1 hour'}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Social Media Verification - Moved inside the new header */}
-      <div className="border-t border-gray-200 pt-6 mt-6">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-          {/* Title Section */}
-          <div className="flex items-center gap-3 lg:w-48 lg:flex-shrink-0">
-            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-              <FaUserFriends className="text-gray-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 text-sm">Social Verification</h3>
-              <p className="text-gray-500 text-xs">AI-powered validation</p>
-            </div>
-          </div>
-
-          {/* Social Media Badges */}
-          <div className="flex-1">
-            {verifyingSocialMedia ? (
-              <div className="flex items-center gap-3 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                <FaSpinner className="animate-spin text-yellow-600" />
-                <div>
-                  <div className="text-yellow-800 font-medium text-sm">Verifying profiles</div>
-                  <div className="text-yellow-600 text-xs">Scanning social networks</div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-3">
-                {socialMediaVerification.facebook.exists && socialMediaVerification.facebook.verificationStatus === 'verified' && (
-                  <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="relative">
-                      <FaFacebook className="text-blue-600 text-lg" />
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                    </div>
-                    <span className="text-gray-700 font-semibold text-sm">Facebook</span>
-                  </div>
-                )}
-
-                {socialMediaVerification.instagram.exists && socialMediaVerification.instagram.verificationStatus === 'verified' && (
-                  <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-pink-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="relative">
-                      <FaInstagram className="text-pink-600 text-lg" />
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                    </div>
-                    <span className="text-gray-700 font-semibold text-sm">Instagram</span>
-                  </div>
-                )}
-
-                {socialMediaVerification.linkedin.exists && socialMediaVerification.linkedin.verificationStatus === 'verified' && (
-                  <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-300 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="relative">
-                      <FaLinkedin className="text-blue-700 text-lg" />
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                    </div>
-                    <span className="text-gray-700 font-semibold text-sm">LinkedIn</span>
-                  </div>
-                )}
-
-                {socialMediaVerification.twitter.exists && socialMediaVerification.twitter.verificationStatus === 'verified' && (
-                  <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="relative">
-                      <FaTwitter className="text-gray-900 text-lg" />
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                    </div>
-                    <span className="text-gray-700 font-semibold text-sm">Twitter</span>
-                  </div>
-                )}
-
-                {!socialMediaVerification.facebook.exists && !socialMediaVerification.instagram.exists && 
-                 !socialMediaVerification.linkedin.exists && !socialMediaVerification.twitter.exists && (
-                  <div className="inline-flex items-center gap-2 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
-                    <FaInfoCircle className="text-gray-400" />
-                    <span className="text-gray-600 font-medium text-sm">No social profiles found</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
           {/* Image Gallery */}
           {helper.imageUrls && helper.imageUrls.length > 0 && (
@@ -1844,7 +1886,7 @@ export default function HelperPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                  <div className="flex flex-col sm:flexRow sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
                     <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
                       <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
                         <span className="text-lg">⏰</span>
@@ -1868,8 +1910,123 @@ export default function HelperPage() {
                 </>
               )}
 
+              {/* Photography Categories */}
+              {(helper.type === 'photography') && (
+                <>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">📸</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Photo Quality</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Image clarity and composition</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">💬</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Communication</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Understanding your vision</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">⏰</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Punctuality</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">On-time arrival and efficiency</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">🎨</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Editing Quality</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Photo editing and retouching</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">💡</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Creativity</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Creative ideas and poses</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
               {/* Default Categories for other types */}
-              {!['maid', 'domestic', 'barber', 'barbar', 'beauty', 'spa', 'chef', 'cooking'].includes(helper.type) && (
+              {!['maid', 'domestic', 'barber', 'barbar', 'beauty', 'spa', 'chef', 'cooking', 'photography'].includes(helper.type) && (
                 <>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
                     <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
@@ -2160,6 +2317,29 @@ export default function HelperPage() {
                   </div>
                 )}
 
+                {(helper.type === 'photography') && (
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                      <FaCamera className="text-purple-600" />
+                      Photography Standards
+                    </h3>
+                    <ul className="space-y-2">
+                      <li className="flex items-center gap-3">
+                        <FaCamera className="text-purple-600" />
+                        <span>Equipment Quality: {helper.equipment?.includes('professional') ? 'Professional' : 'Standard'}</span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <FaFileImage className="text-purple-600" />
+                        <span>Editing Software: {helper.equipment?.includes('premium') ? 'Premium' : 'Standard'}</span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <FaClock className="text-purple-600" />
+                        <span>Delivery Time: {helper.equipment?.includes('fast') ? 'Fast' : 'Standard'}</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+
                 {/* Service Area */}
                 {helper.serviceArea && (
                   <div>
@@ -2279,7 +2459,7 @@ export default function HelperPage() {
               </div>
 
               {/* Service Selection */}
-              {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor') && (
+              {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography') && (
                 <div className="space-y-4">
                   <h4 className="font-semibold text-gray-900 border-b pb-2">
                     Select Services
@@ -2455,6 +2635,103 @@ export default function HelperPage() {
                 </div>
               )}
 
+              {/* Photography-specific Fields */}
+              {(helper.type === 'photography') && (
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900 border-b pb-2">Photography Details</h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Photography Type
+                    </label>
+                    <select
+                      name="photographyType"
+                      value={bookingData.photographyType}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select photography type</option>
+                      <option value="portrait">Portrait Session</option>
+                      <option value="event">Event Coverage</option>
+                      <option value="wedding">Wedding Photography</option>
+                      <option value="product">Product Photography</option>
+                      <option value="family">Family Session</option>
+                      <option value="commercial">Commercial Shoot</option>
+                      <option value="realestate">Real Estate</option>
+                      <option value="landscape">Landscape</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Session Duration
+                    </label>
+                    <select
+                      name="sessionDuration"
+                      value={bookingData.sessionDuration}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select duration</option>
+                      <option value="1">1 hour</option>
+                      <option value="2">2 hours</option>
+                      <option value="3">3 hours</option>
+                      <option value="4">4 hours</option>
+                      <option value="6">6 hours</option>
+                      <option value="8">Full day (8 hours)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Number of People
+                    </label>
+                    <input
+                      type="number"
+                      name="numberOfPeople"
+                      value={bookingData.numberOfPeople}
+                      onChange={handleBookingChange}
+                      min="1"
+                      max="50"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="e.g., 4"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Special Requirements
+                    </label>
+                    <textarea
+                      name="photographyRequirements"
+                      value={bookingData.photographyRequirements}
+                      onChange={handleBookingChange}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="e.g., Specific poses, locations, props, editing style..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Photo Delivery Format
+                    </label>
+                    <select
+                      name="deliveryFormat"
+                      value={bookingData.deliveryFormat}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select delivery format</option>
+                      <option value="digital">Digital files only</option>
+                      <option value="prints">Prints included</option>
+                      <option value="both">Digital + Prints</option>
+                      <option value="album">Photo album</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
               {/* Location Options */}
               <div className="space-y-4">
                 <h4 className="font-semibold text-gray-900 border-b pb-2">Location</h4>
@@ -2569,7 +2846,7 @@ export default function HelperPage() {
                   onChange={handleBookingChange}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder={`Any special requests or requirements for the ${helper.type === 'chef' ? 'meal' : 'service'}...`}
+                  placeholder={`Any special requests or requirements for the ${helper.type === 'chef' ? 'meal' : helper.type === 'photography' ? 'photoshoot' : 'service'}...`}
                 />
               </div>
 
@@ -2822,6 +3099,57 @@ export default function HelperPage() {
                 <Link 
                   to="/aboutloop" 
                   className="inline-flex items-center gap-2 text-pink-700 hover:text-pink-800 font-semibold transition-colors hover:underline"
+                >
+                  <span>Learn more about our safety policies</span>
+                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+          ) : (helper.type === 'photography') ? (
+            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-2xl p-8 shadow-lg">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-purple-100 p-3 rounded-full">
+                  <FaShieldAlt className="text-purple-600 text-xl" />
+                </div>
+                <h3 className="text-xl font-bold text-purple-800">Photography Service Safety</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="bg-white p-1 rounded-full mt-1">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  </div>
+                  <span className="text-purple-700 font-medium">Discuss photo usage rights and privacy preferences upfront</span>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="bg-white p-1 rounded-full mt-1">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  </div>
+                  <span className="text-purple-700 font-medium">Meet in public locations for initial consultations</span>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="bg-white p-1 rounded-full mt-1">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  </div>
+                  <span className="text-purple-700 font-medium">Review portfolio and previous work before booking</span>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="bg-white p-1 rounded-full mt-1">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  </div>
+                  <span className="text-purple-700 font-medium">Agree on delivery timeline and editing style in advance</span>
+                </div>
+              </div>
+              
+              <div className="mt-6 pt-4 border-t border-purple-200">
+                <Link 
+                  to="/aboutloop" 
+                  className="inline-flex items-center gap-2 text-purple-700 hover:text-purple-800 font-semibold transition-colors hover:underline"
                 >
                   <span>Learn more about our safety policies</span>
                   <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">

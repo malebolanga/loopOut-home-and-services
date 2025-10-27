@@ -92,7 +92,8 @@ const HELPER_TYPES = {
   beauty: { icon: "💄", label: "Beauty" },
   barber: { icon: "💈", label: "Barber" },
   tattoo: { icon: "🖋️", label: "Tattoo Artist" },
-};
+  photography: { icon: "📷", label: "Photographer" },
+}
 
 const LOCAL_EVENT_TYPES = {
   music: { icon: "🎵", label: "Music" },

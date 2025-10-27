@@ -1879,489 +1879,589 @@ const handleHelperSubmit = async (e) => {
       {/* Helper Form */}
      {/* Helper Form */}
   {/* Helper Form */}
-      {activeTab === 'online' && (
-        <form onSubmit={handleHelperSubmit} className="space-y-8">
-          {/* Helper Type Selection - UPDATED WITH BARBER */}
-          <div className="p-6 bg-white rounded-xl shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Select Helper Type</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {[
-                { id: "domestic", label: " Helper", emoji: "🧹", description: "Cleaning, laundry, household chores" },
-                { id: "errand", label: "Errand Runner", emoji: "🏃", description: "Grocery shopping, deliveries, tasks" },
-                { id: "tutor", label: "Private Tutor", emoji: "📚", description: "Academic tutoring, skill teaching" },
-                { id: "chef", label: "Private Chef", emoji: "👨‍🍳", description: "Meal preparation, cooking classes" },
-                { id: "beauty", label: "Beauty Specialist", emoji: "💅", description: "Hair, nails, makeup services" },
-                { id: "tattoo", label: "Tattoo Artist", emoji: "🖌️", description: "Tattoo design and application" },
-                { id: "barber", label: "Barber", emoji: "✂️", description: "Haircuts, beard trims, grooming at home" },
-              ].map((type) => (
+ {activeTab === 'online' && (
+  <form onSubmit={handleHelperSubmit} className="space-y-8">
+    {/* Helper Type Selection - UPDATED WITH BARBER */}
+    <div className="p-6 bg-white rounded-xl shadow-sm">
+      <h2 className="text-xl font-semibold text-gray-800 mb-6">Select Helper Type</h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {[
+          { id: "domestic", label: " Helper", emoji: "🧹", description: "Cleaning, laundry, household chores" },
+          { id: "errand", label: "Errand Runner", emoji: "🏃", description: "Grocery shopping, deliveries, tasks" },
+          { id: "tutor", label: "Private Tutor", emoji: "📚", description: "Academic tutoring, skill teaching" },
+          { id: "chef", label: "Private Chef", emoji: "👨‍🍳", description: "Meal preparation, cooking classes" },
+          { id: "beauty", label: "Beauty Specialist", emoji: "💅", description: "Hair, nails, makeup services" },
+          { id: "tattoo", label: "Tattoo Artist", emoji: "🖌️", description: "Tattoo design and application" },
+          { id: "barber", label: "Barber", emoji: "✂️", description: "Haircuts, beard trims, grooming at home" },
+          { id: "photography", label: "Photographer", emoji: "📷", description: "Portrait, event, product photography" },
+        ].map((type) => (
+          <button
+            key={type.id}
+            type="button"
+            onClick={() => setHelperForm({ ...helperForm, type: type.id })}
+            className={`p-4 border-2 rounded-xl flex flex-col items-center text-center transition-all ${helperForm.type === type.id
+                ? "border-airbnb-red bg-red-50"
+                : "border-gray-200 hover:border-airbnb-red/30"
+              }`}
+          >
+            <span className="text-2xl mb-2">{type.emoji}</span>
+            <span className="font-medium text-gray-700">{type.label}</span>
+            <span className="text-xs text-gray-500 mt-1">{type.description}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* Helper Information - UPDATED FOR BARBER & PHOTOGRAPHY */}
+    <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
+      <h2 className="text-xl font-semibold">Helper Information</h2>
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-1">
+          <label className="font-medium text-gray-700">
+            {helperForm.type === "tutor" ? "Tutor Name" : 
+             helperForm.type === "barber" ? "Barber Name" :
+             helperForm.type === "photography" ? "Photographer Name" : "Helper Name"}
+          </label>
+          <input
+            type="text"
+            id="name"
+            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+            placeholder={
+              helperForm.type === "tutor" ? "John Smith" : 
+              helperForm.type === "barber" ? "Your professional name" :
+              helperForm.type === "photography" ? "Your photography business name" : "Helper Name"
+            }
+            onChange={handleHelperChange}
+            value={helperForm.name}
+            required
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="font-medium text-gray-700">Service Area</label>
+          <input
+            type="text"
+            id="address"
+            className="w-full p-3 border border-gray-200 rounded-lg"
+            placeholder="Areas you serve"
+            onChange={handleHelperChange}
+            value={helperForm.address}
+            required
+          />
+        </div>
+
+        <div className="md:col-span-2 space-y-1">
+          <label className="font-medium text-gray-700">
+            {helperForm.type === "tutor"
+              ? "Qualifications & Teaching Approach"
+              : helperForm.type === "barber" 
+                ? "Barber Experience & Specialties"
+                : helperForm.type === "photography"
+                  ? "Photography Style & Experience"
+                  : "Service Description"}
+          </label>
+          <textarea
+            id="description"
+            className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
+            placeholder={
+              helperForm.type === "domestic" ? "Describe your cleaning methods and experience..." :
+              helperForm.type === "errand" ? "Describe the types of errands you can run..." :
+              helperForm.type === "barber" ? "Describe your barber experience, specialties, and approach..." :
+              helperForm.type === "photography" ? "Describe your photography style, experience, and approach..." :
+              "Describe your teaching qualifications and methods..."
+            }
+            onChange={handleHelperChange}
+            value={helperForm.description}
+            required
+          />
+        </div>
+
+        <div className="md:col-span-2 space-y-1">
+          <label className="font-medium text-gray-700">
+            {helperForm.type === "tutor"
+              ? "Subjects/Skills You Teach"
+              : helperForm.type === "barber"
+                ? "Services Offered"
+                : helperForm.type === "photography"
+                  ? "Photography Services Offered"
+                  : "Specific Services Offered"}
+          </label>
+          <textarea
+            id="near"
+            className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
+            placeholder={
+              helperForm.type === "domestic" ? "E.g., Deep cleaning, laundry, ironing" :
+              helperForm.type === "errand" ? "E.g., Grocery shopping, pharmacy runs" :
+              helperForm.type === "barber" ? "E.g., Men's haircuts, beard trims, straight razor shaves, kids cuts" :
+              helperForm.type === "photography" ? "E.g., Portrait sessions, event photography, product photography, headshots" :
+              "E.g., Mathematics, English, Science"
+            }
+            onChange={handleHelperChange}
+            value={helperForm.near}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="font-medium text-gray-700">Contact Number</label>
+          <input
+            type="tel"
+            id="contact"
+            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+            placeholder="Phone number"
+            onChange={handleHelperChange}
+            value={helperForm.contact}
+            required
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="font-medium text-gray-700">
+            {helperForm.type === "tutor" ? "Years of Experience" : 
+             helperForm.type === "barber" ? "Barber Experience" :
+             helperForm.type === "photography" ? "Photography Experience" : "Experience"}
+          </label>
+          <input
+            type="text"
+            id="host"
+            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+            placeholder={
+              helperForm.type === "tutor" ? "5 years teaching experience" :
+              helperForm.type === "barber" ? "3 years as professional barber" :
+              helperForm.type === "photography" ? "4 years professional photography" :
+              "3 years as domestic helper"
+            }
+            onChange={handleHelperChange}
+            value={helperForm.host}
+            required
+          />
+        </div>
+
+        {helperForm.type === "tutor" && (
+          <>
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700">Education Level</label>
+              <input
+                type="text"
+                id="kind"
+                className="w-full p-3 border border-gray-200 rounded-lg"
+                placeholder="E.g., Bachelor's Degree in Education"
+                onChange={handleHelperChange}
+                value={helperForm.kind}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700">Age Group</label>
+              <input
+                type="text"
+                id="period"
+                className="w-full p-3 border border-gray-200 rounded-lg"
+                placeholder="E.g., Primary school, High school"
+                onChange={handleHelperChange}
+                value={helperForm.period}
+              />
+            </div>
+          </>
+        )}
+
+        {(helperForm.type !== "tutor" && helperForm.type !== "barber" && helperForm.type !== "photography") && (
+          <>
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700">Availability</label>
+              <input
+                type="text"
+                id="period"
+                className="w-full p-3 border border-gray-200 rounded-lg"
+                placeholder="E.g., Weekdays 8am-5pm"
+                onChange={handleHelperChange}
+                value={helperForm.period}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700">Languages Spoken</label>
+              <input
+                type="text"
+                id="cancel"
+                className="w-full p-3 border border-gray-200 rounded-lg"
+                placeholder="E.g., English, Afrikaans"
+                onChange={handleHelperChange}
+                value={helperForm.cancel}
+              />
+            </div>
+          </>
+        )}
+
+        {/* Barber-specific fields */}
+        {helperForm.type === "barber" && (
+          <>
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700">Specializations</label>
+              <input
+                type="text"
+                id="specializations"
+                className="w-full p-3 border border-gray-200 rounded-lg"
+                placeholder="E.g., Fades, classic cuts, beard designs"
+                onChange={handleHelperChange}
+                value={helperForm.specializations}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700">Equipment</label>
+              <input
+                type="text"
+                id="equipment"
+                className="w-full p-3 border border-gray-200 rounded-lg"
+                placeholder="E.g., Bring own tools, sanitized equipment"
+                onChange={handleHelperChange}
+                value={helperForm.equipment}
+              />
+            </div>
+          </>
+        )}
+
+        {/* Photography-specific fields */}
+        {helperForm.type === "photography" && (
+          <>
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700">Photography Style</label>
+              <input
+                type="text"
+                id="style"
+                className="w-full p-3 border border-gray-200 rounded-lg"
+                placeholder="E.g., Portrait, candid, studio, outdoor"
+                onChange={handleHelperChange}
+                value={helperForm.style}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700">Equipment</label>
+              <input
+                type="text"
+                id="equipment"
+                className="w-full p-3 border border-gray-200 rounded-lg"
+                placeholder="E.g., Professional DSLR, lighting, backup equipment"
+                onChange={handleHelperChange}
+                value={helperForm.equipment}
+              />
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+
+    {/* Media Upload - UPDATED FOR BARBER & PHOTOGRAPHY */}
+    <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
+      <h2 className="text-xl font-semibold">
+        {helperForm.type === "tutor"
+          ? "Add Photos (Certificates, Teaching Materials)"
+          : helperForm.type === "barber"
+            ? "Add Photos of Your Work (Haircuts, Styles)"
+            : helperForm.type === "photography"
+              ? "Add Your Photography Portfolio"
+              : "Add Photos of Your Work"}
+      </h2>
+
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <input
+            type="file"
+            id="images"
+            accept="image/*"
+            multiple
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <label
+            htmlFor="images"
+            className="flex-1 p-8 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-airbnb-red transition-colors"
+          >
+            <span className="text-3xl mb-2">📸</span>
+            <span className="text-gray-600">Drag photos or click to upload</span>
+            <span className="text-sm text-gray-500">Up to 10 photos</span>
+          </label>
+          <button
+            type="button"
+            onClick={() => handleImageSubmit('helper')}
+            className="h-full px-6 bg-airbnb-red text-black rounded-lg hover:bg-red-700 transition-colors"
+            disabled={uploading}
+          >
+            {uploading ? "Uploading..." : "Upload"}
+          </button>
+        </div>
+
+        {imageUploadError && (
+          <p className="text-red-500 text-sm">{imageUploadError}</p>
+        )}
+
+        {/* Image Previews */}
+        {helperForm.imageUrls.length > 0 && (
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {helperForm.imageUrls.map((url, index) => (
+              <div key={url} className="relative aspect-square">
+                <img
+                  src={url}
+                  alt=""
+                  className="w-full h-full object-cover rounded-lg"
+                />
                 <button
-                  key={type.id}
                   type="button"
-                  onClick={() => setHelperForm({ ...helperForm, type: type.id })}
-                  className={`p-4 border-2 rounded-xl flex flex-col items-center text-center transition-all ${helperForm.type === type.id
-                      ? "border-airbnb-red bg-red-50"
-                      : "border-gray-200 hover:border-airbnb-red/30"
-                    }`}
+                  onClick={() => handleRemoveImage(index, 'helper')}
+                  className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"
                 >
-                  <span className="text-2xl mb-2">{type.emoji}</span>
-                  <span className="font-medium text-gray-700">{type.label}</span>
-                  <span className="text-xs text-gray-500 mt-1">{type.description}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Helper Information - UPDATED FOR BARBER */}
-          <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
-            <h2 className="text-xl font-semibold">Helper Information</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-1">
-                <label className="font-medium text-gray-700">
-                  {helperForm.type === "tutor" ? "Tutor Name" : 
-                   helperForm.type === "barber" ? "Barber Name" : "Helper Name"}
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                  placeholder={
-                    helperForm.type === "tutor" ? "John Smith" : 
-                    helperForm.type === "barber" ? "Your professional name" : "Helper Name"
-                  }
-                  onChange={handleHelperChange}
-                  value={helperForm.name}
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-medium text-gray-700">Service Area</label>
-                <input
-                  type="text"
-                  id="address"
-                  className="w-full p-3 border border-gray-200 rounded-lg"
-                  placeholder="Areas you serve"
-                  onChange={handleHelperChange}
-                  value={helperForm.address}
-                  required
-                />
-              </div>
-
-              <div className="md:col-span-2 space-y-1">
-                <label className="font-medium text-gray-700">
-                  {helperForm.type === "tutor"
-                    ? "Qualifications & Teaching Approach"
-                    : helperForm.type === "barber" 
-                      ? "Barber Experience & Specialties" 
-                      : "Service Description"}
-                </label>
-                <textarea
-                  id="description"
-                  className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
-                  placeholder={
-                    helperForm.type === "domestic" ? "Describe your cleaning methods and experience..." :
-                    helperForm.type === "errand" ? "Describe the types of errands you can run..." :
-                    helperForm.type === "barber" ? "Describe your barber experience, specialties, and approach..." :
-                    "Describe your teaching qualifications and methods..."
-                  }
-                  onChange={handleHelperChange}
-                  value={helperForm.description}
-                  required
-                />
-              </div>
-
-              <div className="md:col-span-2 space-y-1">
-                <label className="font-medium text-gray-700">
-                  {helperForm.type === "tutor"
-                    ? "Subjects/Skills You Teach"
-                    : helperForm.type === "barber"
-                      ? "Services Offered"
-                      : "Specific Services Offered"}
-                </label>
-                <textarea
-                  id="near"
-                  className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
-                  placeholder={
-                    helperForm.type === "domestic" ? "E.g., Deep cleaning, laundry, ironing" :
-                    helperForm.type === "errand" ? "E.g., Grocery shopping, pharmacy runs" :
-                    helperForm.type === "barber" ? "E.g., Men's haircuts, beard trims, straight razor shaves, kids cuts" :
-                    "E.g., Mathematics, English, Science"
-                  }
-                  onChange={handleHelperChange}
-                  value={helperForm.near}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-medium text-gray-700">Contact Number</label>
-                <input
-                  type="tel"
-                  id="contact"
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                  placeholder="Phone number"
-                  onChange={handleHelperChange}
-                  value={helperForm.contact}
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-medium text-gray-700">
-                  {helperForm.type === "tutor" ? "Years of Experience" : 
-                   helperForm.type === "barber" ? "Barber Experience" : "Experience"}
-                </label>
-                <input
-                  type="text"
-                  id="host"
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                  placeholder={
-                    helperForm.type === "tutor" ? "5 years teaching experience" :
-                    helperForm.type === "barber" ? "3 years as professional barber" :
-                    "3 years as domestic helper"
-                  }
-                  onChange={handleHelperChange}
-                  value={helperForm.host}
-                  required
-                />
-              </div>
-
-              {helperForm.type === "tutor" && (
-                <>
-                  <div className="space-y-1">
-                    <label className="font-medium text-gray-700">Education Level</label>
-                    <input
-                      type="text"
-                      id="kind"
-                      className="w-full p-3 border border-gray-200 rounded-lg"
-                      placeholder="E.g., Bachelor's Degree in Education"
-                      onChange={handleHelperChange}
-                      value={helperForm.kind}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="font-medium text-gray-700">Age Group</label>
-                    <input
-                      type="text"
-                      id="period"
-                      className="w-full p-3 border border-gray-200 rounded-lg"
-                      placeholder="E.g., Primary school, High school"
-                      onChange={handleHelperChange}
-                      value={helperForm.period}
-                    />
-                  </div>
-                </>
-              )}
-
-              {(helperForm.type !== "tutor" && helperForm.type !== "barber") && (
-                <>
-                  <div className="space-y-1">
-                    <label className="font-medium text-gray-700">Availability</label>
-                    <input
-                      type="text"
-                      id="period"
-                      className="w-full p-3 border border-gray-200 rounded-lg"
-                      placeholder="E.g., Weekdays 8am-5pm"
-                      onChange={handleHelperChange}
-                      value={helperForm.period}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="font-medium text-gray-700">Languages Spoken</label>
-                    <input
-                      type="text"
-                      id="cancel"
-                      className="w-full p-3 border border-gray-200 rounded-lg"
-                      placeholder="E.g., English, Afrikaans"
-                      onChange={handleHelperChange}
-                      value={helperForm.cancel}
-                    />
-                  </div>
-                </>
-              )}
-
-              {/* Barber-specific fields */}
-              {helperForm.type === "barber" && (
-                <>
-                  <div className="space-y-1">
-                    <label className="font-medium text-gray-700">Specializations</label>
-                    <input
-                      type="text"
-                      id="specializations"
-                      className="w-full p-3 border border-gray-200 rounded-lg"
-                      placeholder="E.g., Fades, classic cuts, beard designs"
-                      onChange={handleHelperChange}
-                      value={helperForm.specializations}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="font-medium text-gray-700">Equipment</label>
-                    <input
-                      type="text"
-                      id="equipment"
-                      className="w-full p-3 border border-gray-200 rounded-lg"
-                      placeholder="E.g., Bring own tools, sanitized equipment"
-                      onChange={handleHelperChange}
-                      value={helperForm.equipment}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Media Upload - UPDATED FOR BARBER */}
-          <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
-            <h2 className="text-xl font-semibold">
-              {helperForm.type === "tutor"
-                ? "Add Photos (Certificates, Teaching Materials)"
-                : helperForm.type === "barber"
-                  ? "Add Photos of Your Work (Haircuts, Styles)"
-                  : "Add Photos of Your Work"}
-            </h2>
-
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <input
-                  type="file"
-                  id="images"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="images"
-                  className="flex-1 p-8 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-airbnb-red transition-colors"
-                >
-                  <span className="text-3xl mb-2">📸</span>
-                  <span className="text-gray-600">Drag photos or click to upload</span>
-                  <span className="text-sm text-gray-500">Up to 10 photos</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => handleImageSubmit('helper')}
-                  className="h-full px-6 bg-airbnb-red text-black rounded-lg hover:bg-red-700 transition-colors"
-                  disabled={uploading}
-                >
-                  {uploading ? "Uploading..." : "Upload"}
+                  ❌
                 </button>
               </div>
-
-              {imageUploadError && (
-                <p className="text-red-500 text-sm">{imageUploadError}</p>
-              )}
-
-              {/* Image Previews */}
-              {helperForm.imageUrls.length > 0 && (
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {helperForm.imageUrls.map((url, index) => (
-                    <div key={url} className="relative aspect-square">
-                      <img
-                        src={url}
-                        alt=""
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(index, 'helper')}
-                        className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"
-                      >
-                        ❌
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            ))}
           </div>
+        )}
+      </div>
+    </div>
 
-          {/* Pricing & Details - UPDATED FOR BARBER */}
-          <div className="bg-white p-6 rounded-xl shadow-sm">
-            <h2 className="text-xl font-semibold mb-6">Pricing & Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label htmlFor="regularPrice" className="flex items-center gap-2 text-gray-700 font-medium">
-                  <span>💰</span>
-                  {helperForm.type === "tutor"
-                    ? "Hourly Rate"
-                    : helperForm.type === "barber"
-                      ? "Service Rates"
-                      : "Service Rate"}
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    id="regularPrice"
-                    min="50"
-                    max="100000"
-                    required
-                    className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                    onChange={handleHelperChange}
-                    value={helperForm.regularPrice}
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                    / {helperForm.type === "tutor" ? "hour" : "service"}
-                  </span>
-                </div>
-                
-                {/* Additional pricing field for Barber */}
-                {helperForm.type === "barber" && (
-                  <div className="mt-4">
-                    <label htmlFor="additionalPricing" className="block text-sm font-medium text-gray-700 mb-1">
-                      Additional Services Pricing (Optional)
-                    </label>
-                    <textarea
-                      id="additionalPricing"
-                      className="w-full p-3 border border-gray-200 rounded-lg text-sm"
-                      placeholder="E.g., Beard trim: R80, Kids cut: R100, Haircut + Beard: R200"
-                      onChange={handleHelperChange}
-                      value={helperForm.additionalPricing}
-                    />
-                  </div>
-                )}
-              </div>
-
-              {helperForm.type === "tutor" && (
-                <div className="space-y-2">
-                  <label htmlFor="bathrooms" className="flex items-center gap-2 text-gray-700 font-medium">
-                    <span>👥</span>
-                    Teaching Format
-                  </label>
-                  <select
-                    id="bathrooms"
-                    className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                    onChange={(e) => setHelperForm({ ...helperForm, bathrooms: e.target.value })}
-                    value={helperForm.bathrooms}
-                  >
-                    <option value="1">In-person</option>
-                    <option value="2">Online</option>
-                    <option value="3">Both</option>
-                  </select>
-                </div>
-              )}
-
-              {helperForm.type === "domestic" && (
-                <div className="space-y-2">
-                  <label htmlFor="bedrooms" className="flex items-center gap-2 text-gray-700 font-medium">
-                    <span>⏰</span>
-                    Minimum Hours
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      id="bedrooms"
-                      min="1"
-                      max="24"
-                      className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                      onChange={handleHelperChange}
-                      value={helperForm.bedrooms}
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                      hours
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Barber-specific details */}
-              {helperForm.type === "barber" && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label htmlFor="travelFee" className="flex items-center gap-2 text-gray-700 font-medium">
-                      <span>🚗</span>
-                      Travel Fee
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        id="travelFee"
-                        min="0"
-                        max="500"
-                        className="w-full p-3 pl-10 border border-gray-200 rounded-lg"
-                        placeholder="Optional"
-                        onChange={handleHelperChange}
-                        value={helperForm.travelFee}
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-Y-1/2 text-gray-500">R</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-gray-700 font-medium">
-                      <span>📅</span>
-                      Booking Notice
-                    </label>
-                    <select
-                      id="bookingNotice"
-                      className="w-full p-3 pl-10 border border-gray-200 rounded-lg"
-                      onChange={handleHelperChange}
-                      value={helperForm.bookingNotice}
-                    >
-                      <option value="">Select notice period</option>
-                      <option value="1">Same day</option>
-                      <option value="24">24 hours</option>
-                      <option value="48">48 hours</option>
-                      <option value="72">72 hours</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-gray-700 font-medium">
-                  <span>🔒</span>
-                  Background Check
-                </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="security"
-                    checked={helperForm.security}
-                    onChange={handleHelperChange}
-                    className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
-                  />
-                  <label htmlFor="security" className="font-medium text-gray-700">
-                    Verified background check
-                  </label>
-                </div>
-              </div>
-
-              {helperForm.type !== "tutor" && (
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-gray-700 font-medium">
-                    <span>🐾</span>
-                    Pet Friendly
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id="pets"
-                      checked={helperForm.pets}
-                      onChange={handleHelperChange}
-                      className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
-                    />
-                    <label htmlFor="pets" className="font-medium text-gray-700">
-                      Comfortable with pets
-                    </label>
-                  </div>
-                </div>
-              )}
-            </div>
+    {/* Pricing & Details - UPDATED FOR BARBER & PHOTOGRAPHY */}
+    <div className="bg-white p-6 rounded-xl shadow-sm">
+      <h2 className="text-xl font-semibold mb-6">Pricing & Details</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label htmlFor="regularPrice" className="flex items-center gap-2 text-gray-700 font-medium">
+            <span>💰</span>
+            {helperForm.type === "tutor"
+              ? "Hourly Rate"
+              : helperForm.type === "barber"
+                ? "Service Rates"
+                : helperForm.type === "photography"
+                  ? "Session Rates"
+                  : "Service Rate"}
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              id="regularPrice"
+              min="50"
+              max="100000"
+              required
+              className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+              onChange={handleHelperChange}
+              value={helperForm.regularPrice}
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+              / {helperForm.type === "tutor" ? "hour" : 
+                 helperForm.type === "photography" ? "session" : "service"}
+            </span>
           </div>
+          
+          {/* Additional pricing field for Barber */}
+          {helperForm.type === "barber" && (
+            <div className="mt-4">
+              <label htmlFor="additionalPricing" className="block text-sm font-medium text-gray-700 mb-1">
+                Additional Services Pricing (Optional)
+              </label>
+              <textarea
+                id="additionalPricing"
+                className="w-full p-3 border border-gray-200 rounded-lg text-sm"
+                placeholder="E.g., Beard trim: R80, Kids cut: R100, Haircut + Beard: R200"
+                onChange={handleHelperChange}
+                value={helperForm.additionalPricing}
+              />
+            </div>
+          )}
 
-          {/* Submit Section */}
-          <div className="bg-white p-6 rounded-xl shadow-sm">
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-white text-airbnb-red border border-airbnb-red font-semibold rounded-lg hover:bg-gray-100 transition-colors py-4 disabled:opacity-70"
+          {/* Additional pricing field for Photography */}
+          {helperForm.type === "photography" && (
+            <div className="mt-4">
+              <label htmlFor="additionalPricing" className="block text-sm font-medium text-gray-700 mb-1">
+                Package Pricing (Optional)
+              </label>
+              <textarea
+                id="additionalPricing"
+                className="w-full p-3 border border-gray-200 rounded-lg text-sm"
+                placeholder="E.g., 1-hour portrait: R500, 2-hour event: R1000, Full wedding: R5000"
+                onChange={handleHelperChange}
+                value={helperForm.additionalPricing}
+              />
+            </div>
+          )}
+        </div>
+
+        {helperForm.type === "tutor" && (
+          <div className="space-y-2">
+            <label htmlFor="bathrooms" className="flex items-center gap-2 text-gray-700 font-medium">
+              <span>👥</span>
+              Teaching Format
+            </label>
+            <select
+              id="bathrooms"
+              className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+              onChange={(e) => setHelperForm({ ...helperForm, bathrooms: e.target.value })}
+              value={helperForm.bathrooms}
             >
-              {loading ? "Creating Listing..." : "Publish Helper Profile"}
-            </button>
-            {error && <p className="mt-3 text-red-600 text-sm">{error}</p>}
+              <option value="1">In-person</option>
+              <option value="2">Online</option>
+              <option value="3">Both</option>
+            </select>
           </div>
-        </form>
-      )}
+        )}
+
+        {helperForm.type === "domestic" && (
+          <div className="space-y-2">
+            <label htmlFor="bedrooms" className="flex items-center gap-2 text-gray-700 font-medium">
+              <span>⏰</span>
+              Minimum Hours
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                id="bedrooms"
+                min="1"
+                max="24"
+                className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                onChange={handleHelperChange}
+                value={helperForm.bedrooms}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                hours
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Barber-specific details */}
+        {helperForm.type === "barber" && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="travelFee" className="flex items-center gap-2 text-gray-700 font-medium">
+                <span>🚗</span>
+                Travel Fee
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  id="travelFee"
+                  min="0"
+                  max="500"
+                  className="w-full p-3 pl-10 border border-gray-200 rounded-lg"
+                  placeholder="Optional"
+                  onChange={handleHelperChange}
+                  value={helperForm.travelFee}
+                />
+                <span className="absolute right-3 top-1/2 -translate-Y-1/2 text-gray-500">R</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-gray-700 font-medium">
+                <span>📅</span>
+                Booking Notice
+              </label>
+              <select
+                id="bookingNotice"
+                className="w-full p-3 pl-10 border border-gray-200 rounded-lg"
+                onChange={handleHelperChange}
+                value={helperForm.bookingNotice}
+              >
+                <option value="">Select notice period</option>
+                <option value="1">Same day</option>
+                <option value="24">24 hours</option>
+                <option value="48">48 hours</option>
+                <option value="72">72 hours</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* Photography-specific details */}
+        {helperForm.type === "photography" && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="sessionDuration" className="flex items-center gap-2 text-gray-700 font-medium">
+                <span>⏱️</span>
+                Session Duration
+              </label>
+              <select
+                id="sessionDuration"
+                className="w-full p-3 pl-10 border border-gray-200 rounded-lg"
+                onChange={handleHelperChange}
+                value={helperForm.sessionDuration}
+              >
+                <option value="">Select duration</option>
+                <option value="30">30 minutes</option>
+                <option value="60">1 hour</option>
+                <option value="90">1.5 hours</option>
+                <option value="120">2 hours</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-gray-700 font-medium">
+                <span>🖼️</span>
+                Photo Delivery
+              </label>
+              <input
+                type="text"
+                id="photoDelivery"
+                className="w-full p-3 pl-10 border border-gray-200 rounded-lg"
+                placeholder="E.g., 5-7 days, digital download"
+                onChange={handleHelperChange}
+                value={helperForm.photoDelivery}
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-gray-700 font-medium">
+            <span>🔒</span>
+            Background Check
+          </label>
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="security"
+              checked={helperForm.security}
+              onChange={handleHelperChange}
+              className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
+            />
+            <label htmlFor="security" className="font-medium text-gray-700">
+              Verified background check
+            </label>
+          </div>
+        </div>
+
+        {helperForm.type !== "tutor" && (
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-gray-700 font-medium">
+              <span>🐾</span>
+              Pet Friendly
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="pets"
+                checked={helperForm.pets}
+                onChange={handleHelperChange}
+                className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
+              />
+              <label htmlFor="pets" className="font-medium text-gray-700">
+                Comfortable with pets
+              </label>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* Submit Section */}
+    <div className="bg-white p-6 rounded-xl shadow-sm">
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-white text-airbnb-red border border-airbnb-red font-semibold rounded-lg hover:bg-gray-100 transition-colors py-4 disabled:opacity-70"
+      >
+        {loading ? "Creating Listing..." : "Publish Helper Profile"}
+      </button>
+      {error && <p className="mt-3 text-red-600 text-sm">{error}</p>}
+    </div>
+  </form>
+)}
 
 
 
