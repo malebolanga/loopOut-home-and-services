@@ -49,6 +49,7 @@ export default function HelperPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
+  const [showBookingBelt, setShowBookingBelt] = useState(false);
 
   // Social Media Verification States
   const [socialMediaVerification, setSocialMediaVerification] = useState({
@@ -486,6 +487,17 @@ export default function HelperPage() {
     fetchHelper();
   }, [id]);
 
+  // Scroll detection for booking belt
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollThreshold = 300;
+      setShowBookingBelt(window.scrollY > scrollThreshold);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Simulate AI assessment of helper content
   const simulateAiAssessment = (helperData) => {
     // Simulate processing delay
@@ -644,6 +656,74 @@ export default function HelperPage() {
         size: file.size
       };
     });
+  };
+
+  // Quick WhatsApp booking function
+  const handleQuickBooking = () => {
+    if (!helper?.contact) {
+      alert(`${getProfessionalTitle(helper?.type)} contact information is missing.`);
+      return;
+    }
+
+    // Basic validation
+    if (!bookingData.name || !bookingData.phone) {
+      alert("Please fill in your name and phone number first.");
+      return;
+    }
+
+    const clientPhone = formatContactForWhatsApp(bookingData.phone);
+    const acceptMessage = `Hi ${bookingData.name}, I accept your booking for ${helper.name}. See you then!`;
+    const declineMessage = `Hi ${bookingData.name}, I'm unable to accept this booking. Can we try another time?`;
+
+    const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
+    const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
+
+    let message = `*📅 Quick Booking Request for ${helper.name}*%0A%0A`;
+    message += `*👤 Client Details*%0A`;
+    message += `• Name: ${bookingData.name}%0A`;
+    message += `• Phone: ${bookingData.phone}%0A`;
+    
+    if (bookingData.date) {
+      message += `• Date: ${bookingData.date}%0A`;
+    }
+    if (bookingData.time) {
+      message += `• Time: ${bookingData.time}%0A`;
+    }
+    
+    message += `%0A`;
+    message += `*💼 Service Details*%0A`;
+    message += `• Service: ${getProfessionalTitle(helper.type)}%0A`;
+    message += `• Price: R${helper.regularPrice}%0A`;
+    
+    if (bookingData.selectedServices.length > 0) {
+      const serviceOptions = getServiceOptions(helper.type);
+      const selectedServiceNames = bookingData.selectedServices.map(serviceId => {
+        const service = serviceOptions.find(s => s.id === serviceId);
+        return service ? service.name : serviceId;
+      }).join(', ');
+      message += `• Services: ${selectedServiceNames}%0A`;
+    }
+
+    if (bookingData.specialRequirements) {
+      message += `• Special Requirements: ${bookingData.specialRequirements}%0A`;
+    }
+    
+    message += `%0A`;
+    message += `Please respond:%0A`;
+    
+    if (acceptLink) {
+      message += `✅ [Accept Booking](${acceptLink})%0A`;
+    }
+    if (declineLink) {
+      message += `❌ [Decline Booking](${declineLink})%0A`;
+    }
+    
+    message += `%0A`;
+    message += `Or reply directly to this message%0A%0A`;
+    message += `_Sent via loopOut Quick Booking_`;
+
+    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const handleBookingSubmit = async (e) => {
@@ -953,7 +1033,13 @@ export default function HelperPage() {
   const serviceOptions = getServiceOptions(helper.type);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 helper-page">
+      <style jsx>{`
+        footer {
+          display: none !important;
+        }
+      `}</style>
+
       {/* Navigation Button */}
       <div className="fixed bottom-4 left-4 z-50">
         <button
@@ -2417,7 +2503,7 @@ export default function HelperPage() {
         {/* Right Column - Booking Form */}
         <div className="space-y-6">
           {/* Booking Form */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 sticky top-6">
+          <div id="booking-form" className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 sticky top-6">
             <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
               Book {getProfessionalTitle(helper.type)} Services
             </h3>
@@ -3203,6 +3289,68 @@ export default function HelperPage() {
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Bottom Booking Belt */}
+      <div className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 transition-transform duration-300 ${
+        showBookingBelt ? 'translate-y-0' : 'translate-y-full'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Service Info */}
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              <img
+                src={helper?.imageUrls?.[0] || '/api/placeholder/50/50'}
+                alt={helper?.name}
+                className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+              />
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-gray-900 truncate">{helper?.name}</h3>
+                <p className="text-sm text-gray-600 truncate">{getProfessionalTitle(helper?.type)}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-1">
+                    <FaStar className="text-yellow-400 text-sm" />
+                    <span className="text-sm font-medium text-gray-700">{helper?.rating || '4.5'}</span>
+                  </div>
+                  <span className="text-gray-300">•</span>
+                  <span className="text-sm text-gray-600">R{helper?.regularPrice}</span>
+                  {helper?.travelFee > 0 && (
+                    <>
+                      <span className="text-gray-300">•</span>
+                      <span className="text-sm text-orange-600">+R{helper.travelFee} travel</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {/* Quick Info Button */}
+              <button
+                onClick={() => {
+                  document.getElementById('booking-form')?.scrollIntoView({ 
+                    behavior: 'smooth' 
+                  });
+                }}
+                className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                <FaInfoCircle className="text-gray-500" />
+                <span className="hidden sm:inline">More Info</span>
+              </button>
+
+              {/* WhatsApp Booking Button */}
+              <button
+                onClick={handleQuickBooking}
+                disabled={!helper?.contact}
+                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FaWhatsapp className="text-xl" />
+                <span className="font-semibold">Book via WhatsApp</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
