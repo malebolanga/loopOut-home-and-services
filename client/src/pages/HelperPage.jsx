@@ -1033,54 +1033,33 @@ export default function HelperPage() {
   const serviceOptions = getServiceOptions(helper.type);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 helper-page">
-      <style jsx>{`
-        footer {
-          display: none !important;
-        }
-      `}</style>
+ <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 helper-page overflow-x-hidden">
+  <style jsx>{`
+    footer {
+      display: none !important;
+    }
+    .helper-page {
+      overflow-x: hidden;
+    }
+  `}</style>
 
-      {/* Navigation Button */}
-      <div className="fixed bottom-4 left-4 z-50">
-        <button
-          onClick={() => {
-            const routeMap = {
-              default: '/helper-home-page'
-            };
-            navigate(routeMap[helper?.type?.toLowerCase()] || routeMap.default);
-          }}
-          className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
-          title="Go back to listings"
-        >
-          <FaArrowLeft className="text-xl" />
-        </button>
-      </div>
+  {/* Navigation Button */}
+  <div className="fixed bottom-4 left-3 z-50">
+    <button
+      onClick={() => {
+        const routeMap = {
+          default: '/helper-home-page'
+        };
+        navigate(routeMap[helper?.type?.toLowerCase()] || routeMap.default);
+      }}
+      className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+      title="Go back to listings"
+    >
+      <FaArrowLeft className="text-lg" />
+    </button>
+  </div>
 
-      {/* Floating Action Buttons */}
-      {(helper.contact || whatsappNumber) && (
-        <div className="fixed bottom-4 right-4 flex flex-col gap-3 z-50 sm:flex-row">
-          {helper.contact && (
-            <a
-              href={`tel:${helper.contact}`}
-              className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors flex items-center justify-center"
-              aria-label={`Call ${getProfessionalTitle(helper.type)}`}
-            >
-              <FaPhone className="text-2xl" />
-            </a>
-          )}
-          {whatsappLink && (
-            <a
-              href={whatsappLink}
-              target="_blank"
-              rel="noreferrer"
-              className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors flex items-center justify-center"
-              aria-label={`WhatsApp ${getProfessionalTitle(helper.type)}`}
-            >
-              <FaWhatsapp className="text-2xl" />
-            </a>
-          )}
-        </div>
-      )}
+
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -2200,6 +2179,7 @@ export default function HelperPage() {
                 </div>
               </div>
             </div>
+            
           </section>
 
           {/* Additional Information */}
@@ -3032,263 +3012,8 @@ export default function HelperPage() {
             </form>
           </div>
 
-          {/* Contact Information */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h4 className="font-semibold text-gray-900 mb-4">Contact Information</h4>
-            <div className="space-y-3">
-              {helper.contact && (
-                <div className="flex items-center gap-3">
-                  <FaPhone className="text-gray-400" />
-                  <a
-                    href={`tel:${helper.contact}`}
-                    className="text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    {helper.contact}
-                  </a>
-                </div>
-              )}
-              {whatsappLink && (
-                <div className="flex items-center gap-3">
-                  <FaWhatsapp className="text-green-500" />
-                  <a
-                    href={whatsappLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    Chat on WhatsApp
-                  </a>
-                </div>
-              )}
-              {helper.address && (
-                <div className="flex items-start gap-3">
-                  <FaMapMarkerAlt className="text-gray-400 mt-1 flex-shrink-0" />
-                  <span className="text-gray-700">{helper.address}</span>
-                </div>
-              )}
-            </div>
-          </div>
 
-          {/* Pricing Information */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h4 className="font-semibold text-gray-900 mb-4">Pricing</h4>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Base Price</span>
-                <span className="font-semibold text-gray-900">R{helper.regularPrice}</span>
-              </div>
-              {helper.travelFee > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Travel Fee</span>
-                  <span className="font-semibold text-orange-600">R{helper.travelFee}</span>
-                </div>
-              )}
-              <div className="border-t pt-3">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-gray-900">Total Estimate</span>
-                  <span className="font-bold text-lg text-blue-600">
-                    R{helper.regularPrice + (bookingData.locationOption === 'comeToYou' ? helper.travelFee : 0)}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  * Final price may vary based on specific requirements
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Safety Tips */}
-          {(helper.type === 'barber' || helper.type === 'barbar') ? (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-8 shadow-lg">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FaShieldAlt className="text-blue-600 text-xl" />
-                </div>
-                <h3 className="text-xl font-bold text-blue-800">Barber Service Safety</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="bg-white p-1 rounded-full mt-1">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  </div>
-                  <span className="text-blue-700 font-medium">All tools are properly sanitized between clients</span>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="bg-white p-1 rounded-full mt-1">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  </div>
-                  <span className="text-blue-700 font-medium">Fresh blades and disposable tools used when required</span>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="bg-white p-1 rounded-full mt-1">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  </div>
-                  <span className="text-blue-700 font-medium">Clean towels and capes provided for each client</span>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="bg-white p-1 rounded-full mt-1">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  </div>
-                  <span className="text-blue-700 font-medium">Discuss any skin sensitivities or allergies beforehand</span>
-                </div>
-              </div>
-              
-              <div className="mt-6 pt-4 border-t border-blue-200">
-                <Link 
-                  to="/aboutloop" 
-                  className="inline-flex items-center gap-2 text-blue-700 hover:text-blue-800 font-semibold transition-colors hover:underline"
-                >
-                  <span>Learn more about our safety policies</span>
-                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              </div>
-            </div>
-          ) : (helper.type === 'beauty' || helper.type === 'spa') ? (
-            <div className="bg-gradient-to-r from-pink-50 to-rose-50 border-2 border-pink-200 rounded-2xl p-8 shadow-lg">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="bg-pink-100 p-3 rounded-full">
-                  <FaShieldAlt className="text-pink-600 text-xl" />
-                </div>
-                <h3 className="text-xl font-bold text-pink-800">Beauty Service Safety</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="bg-white p-1 rounded-full mt-1">
-                    <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
-                  </div>
-                  <span className="text-pink-700 font-medium">Ensure all tools are properly sanitized before use</span>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="bg-white p-1 rounded-full mt-1">
-                    <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
-                  </div>
-                  <span className="text-pink-700 font-medium">Discuss allergies and skin sensitivities beforehand</span>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="bg-white p-1 rounded-full mt-1">
-                    <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
-                  </div>
-                  <span className="text-pink-700 font-medium">Request to see product ingredients if you have sensitive skin</span>
-                </div>
-              </div>
-              
-              <div className="mt-6 pt-4 border-t border-pink-200">
-                <Link 
-                  to="/aboutloop" 
-                  className="inline-flex items-center gap-2 text-pink-700 hover:text-pink-800 font-semibold transition-colors hover:underline"
-                >
-                  <span>Learn more about our safety policies</span>
-                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              </div>
-            </div>
-          ) : (helper.type === 'photography') ? (
-            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-2xl p-8 shadow-lg">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="bg-purple-100 p-3 rounded-full">
-                  <FaShieldAlt className="text-purple-600 text-xl" />
-                </div>
-                <h3 className="text-xl font-bold text-purple-800">Photography Service Safety</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="bg-white p-1 rounded-full mt-1">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  </div>
-                  <span className="text-purple-700 font-medium">Discuss photo usage rights and privacy preferences upfront</span>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="bg-white p-1 rounded-full mt-1">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  </div>
-                  <span className="text-purple-700 font-medium">Meet in public locations for initial consultations</span>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="bg-white p-1 rounded-full mt-1">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  </div>
-                  <span className="text-purple-700 font-medium">Review portfolio and previous work before booking</span>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="bg-white p-1 rounded-full mt-1">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  </div>
-                  <span className="text-purple-700 font-medium">Agree on delivery timeline and editing style in advance</span>
-                </div>
-              </div>
-              
-              <div className="mt-6 pt-4 border-t border-purple-200">
-                <Link 
-                  to="/aboutloop" 
-                  className="inline-flex items-center gap-2 text-purple-700 hover:text-purple-800 font-semibold transition-colors hover:underline"
-                >
-                  <span>Learn more about our safety policies</span>
-                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-300 rounded-2xl p-8 shadow-lg">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="bg-yellow-100 p-3 rounded-full">
-                  <FaShieldAlt className="text-yellow-600 text-xl" />
-                </div>
-                <h3 className="text-xl font-bold text-yellow-800">Essential Safety Guidelines</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="bg-white p-1 rounded-full mt-1">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                  </div>
-                  <span className="text-yellow-700 font-medium">Ensure someone is home at all times during the service</span>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="bg-white p-1 rounded-full mt-1">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                  </div>
-                  <span className="text-yellow-700 font-medium">Verify the helper s identity upon arrival</span>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="bg-white p-1 rounded-full mt-1">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                  </div>
-                  <span className="text-yellow-700 font-medium">Never pay the full amount upfront - only after satisfactory service</span>
-                </div>
-              </div>
-              
-              <div className="mt-6 pt-4 border-t border-yellow-200">
-                <Link 
-                  to="/aboutloop" 
-                  className="inline-flex items-center gap-2 text-yellow-700 hover:text-yellow-800 font-semibold transition-colors hover:underline "
-                >
-                  <span>Learn more about our safety policies</span>
-                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              </div>
-            </div>
-          )}
+    
         </div>
       </div>
 
