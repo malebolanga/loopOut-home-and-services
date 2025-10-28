@@ -51,6 +51,18 @@ export default function HelperPage() {
   const [commentCount, setCommentCount] = useState(0);
   const [showBookingBelt, setShowBookingBelt] = useState(false);
 
+  // Enhanced Location States
+  const [locationData, setLocationData] = useState({
+    latitude: null,
+    longitude: null,
+    formattedAddress: '',
+    placeId: '',
+    city: '',
+    province: '',
+    postalCode: '',
+    country: 'South Africa'
+  });
+
   // Social Media Verification States
   const [socialMediaVerification, setSocialMediaVerification] = useState({
     facebook: {
@@ -326,6 +338,159 @@ export default function HelperPage() {
   const [commentAnalysis, setCommentAnalysis] = useState({});
   const [analyzingComments, setAnalyzingComments] = useState(false);
 
+  // ==================== ENHANCED LOCATION FUNCTIONS ====================
+
+  // Location type classification
+  const locationTypes = {
+    COME_TO_CLIENT: 'comeToYou',
+    PROVIDER_LOCATION: 'goToThem',
+    NEUTRAL_VENUE: 'neutralVenue'
+  };
+
+  // Enhanced location validation and formatting
+  const validateAndFormatAddress = (address) => {
+    if (!address) {
+      throw new Error('Please provide a complete address');
+    }
+
+    // Basic validation for required components
+    const addressStr = address.trim();
+    if (addressStr.length < 10) {
+      throw new Error('Please provide a more detailed address');
+    }
+
+    // Check for basic address components
+    const hasStreet = /\d+\s+[A-Za-z\s]+/.test(addressStr);
+    const hasCity = /[A-Za-z]{2,}/.test(addressStr);
+    
+    if (!hasStreet || !hasCity) {
+      throw new Error('Please include street number, street name, and city');
+    }
+
+    return addressStr;
+  };
+
+  // Generate comprehensive map links
+  const generateMapLink = (address, providerType = '') => {
+    if (!address) return '#';
+    
+    const encodedAddress = encodeURIComponent(address);
+    const baseMaps = {
+      google: `https://maps.google.com/?q=${encodedAddress}`,
+      apple: `https://maps.apple.com/?q=${encodedAddress}`,
+      waze: `https://waze.com/ul?q=${encodedAddress}`,
+      mapsApp: `https://maps.app.goo.gl/?q=${encodedAddress}`
+    };
+    
+    return baseMaps.google; // Default to Google Maps
+  };
+
+  // Enhanced location handler
+  const handleLocationInfo = (bookingData, provider) => {
+    const locationInfo = {
+      type: bookingData.locationOption,
+      displayName: '',
+      address: '',
+      instructions: '',
+      travelFee: 0,
+      mapLink: '',
+      coordinates: null
+    };
+
+    switch (bookingData.locationOption) {
+      case locationTypes.COME_TO_CLIENT:
+        locationInfo.displayName = 'Client Address';
+        locationInfo.address = bookingData.address;
+        locationInfo.travelFee = provider.travelFee || 0;
+        locationInfo.instructions = bookingData.specialInstructions || '';
+        locationInfo.mapLink = generateMapLink(bookingData.address);
+        break;
+      
+      case locationTypes.PROVIDER_LOCATION:
+        locationInfo.displayName = getProviderLocationName(provider.type);
+        locationInfo.address = provider.businessAddress || provider.address || 'Address not specified';
+        locationInfo.instructions = provider.locationInstructions || '';
+        locationInfo.mapLink = generateMapLink(locationInfo.address, provider.type);
+        break;
+      
+      default:
+        locationInfo.displayName = `${getProfessionalTitle(provider.type)}'s Location`;
+        locationInfo.address = provider.address || 'Address not specified';
+        locationInfo.mapLink = generateMapLink(locationInfo.address, provider.type);
+    }
+
+    return locationInfo;
+  };
+
+  // Get provider-specific location names
+  const getProviderLocationName = (serviceType) => {
+    const locationNames = {
+      chef: "Chef's Kitchen",
+      barber: "Barber Shop", 
+      barbar: "Barber Shop",
+      tattoo: "Tattoo Studio",
+      beauty: "Beauty Salon",
+      spa: "Spa Center",
+      photography: "Photography Studio",
+      massage: "Massage Studio",
+      tutor: "Tutoring Center",
+      default: "Professional's Location"
+    };
+    
+    return locationNames[serviceType] || locationNames.default;
+  };
+
+  // Service-specific location requirements
+  const getLocationRequirements = (serviceType) => {
+    const requirements = {
+      chef: {
+        comeToYou: ['kitchenAccess', 'cookingEquipment', 'diningSpace'],
+        providerLocation: ['menuOptions', 'seatingCapacity']
+      },
+      photography: {
+        comeToYou: ['shootingSpace', 'naturalLight', 'powerOutlets'],
+        providerLocation: ['studioSize', 'backdropOptions', 'lightingEquipment']
+      },
+      barber: {
+        comeToYou: ['chairSpace', 'powerSource', 'mirrorAccess'],
+        providerLocation: ['stationSetup', 'sanitationStandards']
+      },
+      beauty: {
+        comeToYou: ['cleanSpace', 'powerSource', 'mirrorAccess'],
+        providerLocation: ['sanitationStandards', 'productQuality']
+      }
+    };
+    
+    return requirements[serviceType] || {};
+  };
+
+  // Enhanced location-specific messaging
+  const getLocationSpecificMessage = (bookingData, provider) => {
+    const locationInfo = handleLocationInfo(bookingData, provider);
+    
+    let locationMessage = `📍 *Location Details:*%0A`;
+    locationMessage += `• Type: ${locationInfo.displayName}%0A`;
+    
+    if (locationInfo.address) {
+      locationMessage += `• Address: ${locationInfo.address}%0A`;
+      if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
+        locationMessage += `• Navigation: ${locationInfo.mapLink}%0A`;
+      }
+    }
+    
+    if (locationInfo.instructions) {
+      locationMessage += `• Instructions: ${locationInfo.instructions}%0A`;
+    }
+    
+    if (locationInfo.travelFee > 0) {
+      locationMessage += `• Travel Fee: R${locationInfo.travelFee}%0A`;
+    }
+    
+    return locationMessage;
+  };
+
+  // ==================== END ENHANCED LOCATION FUNCTIONS ====================
+
   // Helper functions for social media verification
   const generateUsername = (name, platform) => {
     const cleanName = name.toLowerCase().replace(/\s+/g, '');
@@ -591,12 +756,6 @@ export default function HelperPage() {
     return digitsOnly;
   };
 
-  // Generate Google Maps link from address
-  const generateMapLink = (address) => {
-    if (!address) return null;
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-  };
-
   const handleBookingChange = (e) => {
     const { name, value } = e.target;
     setBookingData({ ...bookingData, [name]: value });
@@ -726,11 +885,29 @@ export default function HelperPage() {
     window.open(whatsappUrl, '_blank');
   };
 
+  // ==================== ENHANCED BOOKING SUBMIT FUNCTION ====================
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
 
     if (!helper?.contact) {
       alert(`${getProfessionalTitle(helper?.type)} contact information is missing. Please try another contact method.`);
+      return;
+    }
+
+    // Enhanced location validation
+    if (bookingData.locationOption === 'comeToYou' && !bookingData.address) {
+      alert("Please provide your address for home service.");
+      return;
+    }
+
+    try {
+      // Validate and format address
+      if (bookingData.locationOption === 'comeToYou') {
+        const formattedAddress = validateAndFormatAddress(bookingData.address);
+        setBookingData(prev => ({ ...prev, address: formattedAddress }));
+      }
+    } catch (error) {
+      alert(error.message);
       return;
     }
 
@@ -768,29 +945,11 @@ export default function HelperPage() {
     const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
     const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
 
-    // Determine the location and travel fee message
-    let locationInfo = '';
-    let travelFeeMessage = '';
-    const isHomeVisit = bookingData.locationOption === 'comeToYou';
-    const hasTravelFee = helper.travelFee > 0 && isHomeVisit;
+    // Enhanced location handling
+    const locationInfo = handleLocationInfo(bookingData, helper);
+    const locationMessage = getLocationSpecificMessage(bookingData, helper);
 
-    if (isHomeVisit) {
-      locationInfo = 'Come to Client';
-      if (hasTravelFee) {
-        travelFeeMessage = `• Travel Fee: R${helper.travelFee}%0A`;
-      }
-    } else if (bookingData.locationOption === 'comeToYou') {
-      locationInfo = 'Come to Client';
-    } else {
-      locationInfo = helper.type === 'chef' ? "Chef's Kitchen" : 
-                     helper.type === 'barber' || helper.type === 'barbar' ? "Barber's Shop" :
-                     helper.type === 'tattoo' ? "PhotoShop Studio" :
-                     helper.type === 'beauty' || helper.type === 'spa' ? "Beauty Salon" :
-                     helper.type === 'photography' ? "Photography Studio" :
-                     `${getProfessionalTitle(helper.type)}'s Location`;
-    }
-
-    // Build the main WhatsApp message
+    // Build the main WhatsApp message with enhanced location details
     let message = `*${helper.type === 'chef' ? '👨‍🍳' : helper.type === 'barber' || helper.type === 'barbar' ? '✂️' : helper.type === 'tattoo' ? '🎨' : helper.type === 'photography' ? '📷' : '👤'} New ${getProfessionalTitle(helper.type)} Booking Request for ${helper.name}*%0A%0A`;
 
     message += `*🛎️ SERVICE DETAILS*%0A`;
@@ -870,8 +1029,8 @@ export default function HelperPage() {
       message += `• Delivery Format: ${bookingData.deliveryFormat}%0A`;
     }
     
-    if (hasTravelFee) {
-      message += travelFeeMessage;
+    if (locationInfo.travelFee > 0) {
+      message += `• Travel Fee: R${locationInfo.travelFee}%0A`;
     }
     message += `• ${getProfessionalTitle(helper.type)} Contact: ${helper.contact}%0A%0A`;
 
@@ -880,7 +1039,10 @@ export default function HelperPage() {
     message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
     message += `• Date: ${bookingData.date}%0A`;
     message += `• Time: ${bookingData.time}%0A`;
-    message += `• Location: ${locationInfo}%0A`;
+    
+    // Enhanced location section
+    message += locationMessage;
+    
     message += `• Special Requirements: ${bookingData.specialRequirements || 'None'}%0A`;
     
     if (bookingData.photographyRequirements) {
@@ -889,16 +1051,35 @@ export default function HelperPage() {
     
     message += `%0A`;
 
-    message += `Please respond:%0A`;
-    message += `✅ [Accept Booking](${acceptLink})%0A`;
-    message += `❌ [Decline Booking](${declineLink})%0A%0A`;
-    message += `Or reply directly to this message`;
-
-    if (isHomeVisit && bookingData.address) {
-      const mapLink = generateMapLink(bookingData.address);
+    // Enhanced location instructions for home visits
+    if (bookingData.locationOption === 'comeToYou' && bookingData.address) {
       message += `*📍 LOCATION DETAILS*%0A`;
       message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
-      message += `• Navigation Link:%0A  ${mapLink}%0A%0A`;
+      if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
+        message += `• Navigation Link:%0A  ${locationInfo.mapLink}%0A`;
+      }
+      
+      // Add service-specific location requirements
+      const requirements = getLocationRequirements(helper.type);
+      if (requirements.comeToYou && requirements.comeToYou.length > 0) {
+        message += `• Location Requirements:%0A`;
+        requirements.comeToYou.forEach(req => {
+          const reqText = {
+            kitchenAccess: '✓ Kitchen access required',
+            cookingEquipment: '✓ Basic cooking equipment needed',
+            diningSpace: '✓ Dining area required',
+            shootingSpace: '✓ Adequate shooting space needed',
+            naturalLight: '✓ Natural light preferred',
+            powerOutlets: '✓ Power outlets required',
+            chairSpace: '✓ Chair and workspace needed',
+            powerSource: '✓ Power source required',
+            mirrorAccess: '✓ Mirror access needed',
+            cleanSpace: '✓ Clean, well-lit workspace required'
+          }[req] || `✓ ${req}`;
+          message += `  ${reqText}%0A`;
+        });
+      }
+      message += `%0A`;
     }
 
     // Add attachments if they exist
@@ -930,6 +1111,7 @@ export default function HelperPage() {
     // Reset attachments after sending
     setAttachments([]);
   };
+  // ==================== END ENHANCED BOOKING SUBMIT FUNCTION ====================
 
   // Simulate AI analysis of comments
   const analyzeCommentsWithAI = () => {
@@ -1033,33 +1215,31 @@ export default function HelperPage() {
   const serviceOptions = getServiceOptions(helper.type);
 
   return (
- <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 helper-page overflow-x-hidden">
-  <style jsx>{`
-    footer {
-      display: none !important;
-    }
-    .helper-page {
-      overflow-x: hidden;
-    }
-  `}</style>
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 helper-page overflow-x-hidden">
+      <style jsx>{`
+        footer {
+          display: none !important;
+        }
+        .helper-page {
+          overflow-x: hidden;
+        }
+      `}</style>
 
-  {/* Navigation Button */}
-  <div className="fixed bottom-4 left-3 z-50">
-    <button
-      onClick={() => {
-        const routeMap = {
-          default: '/helper-home-page'
-        };
-        navigate(routeMap[helper?.type?.toLowerCase()] || routeMap.default);
-      }}
-      className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
-      title="Go back to listings"
-    >
-      <FaArrowLeft className="text-lg" />
-    </button>
-  </div>
-
-
+      {/* Navigation Button */}
+      <div className="fixed bottom-4 left-3 z-50">
+        <button
+          onClick={() => {
+            const routeMap = {
+              default: '/helper-home-page'
+            };
+            navigate(routeMap[helper?.type?.toLowerCase()] || routeMap.default);
+          }}
+          className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+          title="Go back to listings"
+        >
+          <FaArrowLeft className="text-lg" />
+        </button>
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -1093,6 +1273,16 @@ export default function HelperPage() {
                   <div className="flex items-center space-x-1 text-gray-600">
                     <FaMapMarkerAlt className="text-red-500" />
                     <span>{helper.address || 'Location not specified'}</span>
+                    {helper.address && (
+                      <a 
+                        href={generateMapLink(helper.address, helper.type)} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-sm ml-2"
+                      >
+                        (View on Map)
+                      </a>
+                    )}
                   </div>
                   {helper.contact && (
                     <div className="flex items-center space-x-1 text-gray-600">
@@ -1119,11 +1309,44 @@ export default function HelperPage() {
                       {helper.rating ? `${helper.rating} Rating` : 'New Professional'}
                     </span>
                   </div>
+
+                  {/* Enhanced Location Badge */}
+                  {helper.address && (
+                    <div className="inline-flex items-center bg-purple-50 px-4 py-2 rounded-full border border-purple-200">
+                      <FaMapMarkerAlt className="text-purple-600 text-sm mr-2" />
+                      <span className="text-purple-700 font-semibold text-sm">
+                        Location Verified
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Info Cards Grid - Moved inside the new header */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                   {/* Location Card */}
+                  {helper.address && (
+                    <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-4 border border-blue-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <FaMapMarkerAlt className="text-blue-600 text-lg" />
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600 font-medium mb-1">Service Area</div>
+                          <div className="text-gray-900 font-semibold text-sm truncate">
+                            {helper.serviceArea || 'Local Area'}
+                          </div>
+                          <a 
+                            href={generateMapLink(helper.address, helper.type)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-xs mt-1 inline-block"
+                          >
+                            View on Map →
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Experience Card */}
                   {helper.host && (
@@ -2798,7 +3021,7 @@ export default function HelperPage() {
                 </div>
               )}
 
-              {/* Location Options */}
+              {/* Enhanced Location Options */}
               <div className="space-y-4">
                 <h4 className="font-semibold text-gray-900 border-b pb-2">Location</h4>
                 
@@ -2848,19 +3071,93 @@ export default function HelperPage() {
                 </div>
 
                 {bookingData.locationOption === 'comeToYou' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Your Address *
-                    </label>
-                    <textarea
-                      name="address"
-                      value={bookingData.address}
-                      onChange={handleBookingChange}
-                      required
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Enter your full address for the visit"
-                    />
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Your Address *
+                      </label>
+                      <textarea
+                        name="address"
+                        value={bookingData.address}
+                        onChange={handleBookingChange}
+                        required
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter your full address including street number, street name, city, and postal code"
+                      />
+                    </div>
+                    
+                    {/* Enhanced Address Validation Message */}
+                    {bookingData.address && bookingData.address.length > 0 && (
+                      <div className={`text-xs p-2 rounded ${
+                        bookingData.address.length < 10 
+                          ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                          : 'bg-green-50 text-green-700 border border-green-200'
+                      }`}>
+                        {bookingData.address.length < 10 
+                          ? '⚠️ Please provide a more detailed address for accurate service delivery'
+                          : '✓ Address looks good! Make sure to include apartment/unit number if applicable.'
+                        }
+                      </div>
+                    )}
+
+                    {/* Service-specific Location Requirements */}
+                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                      <h5 className="font-medium text-blue-800 text-sm mb-2">
+                        📍 Location Requirements for {getProfessionalTitle(helper.type)}
+                      </h5>
+                      <ul className="text-xs text-blue-700 space-y-1">
+                        {helper.type === 'chef' && (
+                          <>
+                            <li>• Kitchen access with basic cooking equipment</li>
+                            <li>• Dining area for meal service</li>
+                            <li>• Power outlets for appliances</li>
+                          </>
+                        )}
+                        {helper.type === 'barber' && (
+                          <>
+                            <li>• Well-lit workspace with chair</li>
+                            <li>• Power source for clippers</li>
+                            <li>• Mirror access for styling</li>
+                          </>
+                        )}
+                        {helper.type === 'photography' && (
+                          <>
+                            <li>• Adequate shooting space</li>
+                            <li>• Natural light preferred</li>
+                            <li>• Power outlets for equipment</li>
+                          </>
+                        )}
+                        {helper.type === 'beauty' && (
+                          <>
+                            <li>• Clean, well-lit workspace</li>
+                            <li>• Power source for tools</li>
+                            <li>• Mirror access</li>
+                          </>
+                        )}
+                        {!['chef', 'barber', 'photography', 'beauty'].includes(helper.type) && (
+                          <li>• Clean, accessible workspace with power outlets</li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {bookingData.locationOption === 'goToThem' && helper.address && (
+                  <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                    <h5 className="font-medium text-green-800 text-sm mb-1">
+                      📍 {getProfessionalTitle(helper.type)} Location
+                    </h5>
+                    <p className="text-sm text-green-700 mb-2">{helper.address}</p>
+                    <a 
+                      href={generateMapLink(helper.address, helper.type)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-green-600 hover:text-green-800 text-sm font-medium inline-flex items-center gap-1"
+                    >
+                      <FaMapMarkerAlt className="text-xs" />
+                      View on Map
+                    </a>
                   </div>
                 )}
               </div>
@@ -3011,9 +3308,6 @@ export default function HelperPage() {
               </div>
             </form>
           </div>
-
-
-    
         </div>
       </div>
 
