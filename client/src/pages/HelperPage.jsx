@@ -3312,66 +3312,83 @@ export default function HelperPage() {
       </div>
 
       {/* Bottom Booking Belt */}
-      <div className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 transition-transform duration-300 ${
-        showBookingBelt ? 'translate-y-0' : 'translate-y-full'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            {/* Service Info */}
-            <div className="flex items-center gap-4 flex-1 min-w-0">
-              <img
-                src={helper?.imageUrls?.[0] || '/api/placeholder/50/50'}
-                alt={helper?.name}
-                className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-              />
-              <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-gray-900 truncate">{helper?.name}</h3>
-                <p className="text-sm text-gray-600 truncate">{getProfessionalTitle(helper?.type)}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="flex items-center gap-1">
-                    <FaStar className="text-yellow-400 text-sm" />
-                    <span className="text-sm font-medium text-gray-700">{helper?.rating || '4.5'}</span>
-                  </div>
-                  <span className="text-gray-300">•</span>
-                  <span className="text-sm text-gray-600">R{helper?.regularPrice}</span>
-                  {helper?.travelFee > 0 && (
-                    <>
-                      <span className="text-gray-300">•</span>
-                      <span className="text-sm text-orange-600">+R{helper.travelFee} travel</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              {/* Quick Info Button */}
-              <button
-                onClick={() => {
-                  document.getElementById('booking-form')?.scrollIntoView({ 
-                    behavior: 'smooth' 
-                  });
-                }}
-                className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                <FaInfoCircle className="text-gray-500" />
-                <span className="hidden sm:inline">More Info</span>
-              </button>
 
-              {/* WhatsApp Booking Button */}
-              <button
-                onClick={handleQuickBooking}
-                disabled={!helper?.contact}
-                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <FaWhatsapp className="text-xl" />
-                <span className="font-semibold">Book via WhatsApp</span>
-              </button>
+<div className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 transition-transform duration-300 ${
+  showBookingBelt ? 'translate-y-0' : 'translate-y-full'
+}`}>
+  <div className="max-w-7xl mx-auto px-4 py-3">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+      {/* Service Info */}
+      <div className="flex items-center gap-4 flex-1 min-w-0">
+        <img
+          src={helper?.imageUrls?.[0] || '/api/placeholder/50/50'}
+          alt={helper?.name}
+          className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+        />
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold text-gray-900 truncate">{helper?.name}</h3>
+          <p className="text-sm text-gray-600 truncate">{getProfessionalTitle(helper?.type)}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-1">
+              <FaStar className="text-yellow-400 text-sm" />
+              <span className="text-sm font-medium text-gray-700">{helper?.rating || '4.5'}</span>
             </div>
+            <span className="text-gray-300">•</span>
+            <span className="text-sm text-gray-600">R{helper?.regularPrice}</span>
+            {helper?.travelFee > 0 && (
+              <>
+                <span className="text-gray-300">•</span>
+                <span className="text-sm text-orange-600">+R{helper.travelFee} travel</span>
+              </>
+            )}
           </div>
         </div>
       </div>
+
+      <div className="fixed bottom-4 left-3 z-50">
+  <button
+    onClick={() => {
+      const routeMap = {
+        default: '/helper-home-page'
+      };
+      navigate(routeMap[helper?.type?.toLowerCase()] || routeMap.default);
+    }}
+    className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+    title="Go back to listings"
+  >
+    <FaArrowLeft className="text-lg" />
+  </button>
+</div>
+
+      {/* Action Buttons */}
+      <div className="flex items-center gap-3 flex-shrink-0">
+        {/* Quick Info Button */}
+        <button
+          onClick={() => {
+            document.getElementById('booking-form')?.scrollIntoView({ 
+              behavior: 'smooth' 
+            });
+          }}
+          className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+        >
+          <FaInfoCircle className="text-gray-500" />
+          <span className="hidden sm:inline">More Info</span>
+        </button>
+
+        {/* WhatsApp Booking Button */}
+        <button
+          onClick={handleQuickBooking}
+          disabled={!helper?.contact}
+          className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <FaWhatsapp className="text-xl" />
+          <span className="font-semibold">Book via WhatsApp</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* Comments Side Panel */}
       {showCommentsPanel && (
