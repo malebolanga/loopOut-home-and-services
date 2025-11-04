@@ -440,30 +440,6 @@ export default function HelperPage() {
     return locationNames[serviceType] || locationNames.default;
   };
 
-  // Service-specific location requirements
-  const getLocationRequirements = (serviceType) => {
-    const requirements = {
-      chef: {
-        comeToYou: ['kitchenAccess', 'cookingEquipment', 'diningSpace'],
-        providerLocation: ['menuOptions', 'seatingCapacity']
-      },
-      photography: {
-        comeToYou: ['shootingSpace', 'naturalLight', 'powerOutlets'],
-        providerLocation: ['studioSize', 'backdropOptions', 'lightingEquipment']
-      },
-      barber: {
-        comeToYou: ['chairSpace', 'powerSource', 'mirrorAccess'],
-        providerLocation: ['stationSetup', 'sanitationStandards']
-      },
-      beauty: {
-        comeToYou: ['cleanSpace', 'powerSource', 'mirrorAccess'],
-        providerLocation: ['sanitationStandards', 'productQuality']
-      }
-    };
-    
-    return requirements[serviceType] || {};
-  };
-
   // Enhanced location-specific messaging
   const getLocationSpecificMessage = (bookingData, provider) => {
     const locationInfo = handleLocationInfo(bookingData, provider);
@@ -819,7 +795,63 @@ export default function HelperPage() {
 
 // ================================ BOOKING START HERE================
 
-// Quick WhatsApp booking function - UPDATED WITH LOCATION
+// Enhanced helper function to get location requirements
+const getLocationRequirements = (serviceType) => {
+  const requirements = {
+    chef: {
+      comeToYou: [
+        'kitchenAccess',
+        'cookingEquipment', 
+        'diningSpace',
+        'powerOutlets'
+      ],
+      goToThem: [
+        'professionalKitchen',
+        'diningFacilities'
+      ]
+    },
+    barber: {
+      comeToYou: [
+        'workspace',
+        'powerSource',
+        'mirrorAccess'
+      ],
+      goToThem: [
+        'professionalSetup',
+        'sanitation'
+      ]
+    },
+    photography: {
+      comeToYou: [
+        'shootingSpace',
+        'naturalLight',
+        'powerOutlets'
+      ],
+      goToThem: [
+        'studioSpace',
+        'lightingEquipment'
+      ]
+    },
+    beauty: {
+      comeToYou: [
+        'cleanSpace',
+        'powerSource', 
+        'mirrorAccess'
+      ],
+      goToThem: [
+        'sanitizedStation',
+        'professionalTools'
+      ]
+    }
+  };
+
+  return requirements[serviceType] || {
+    comeToYou: ['cleanWorkspace', 'powerOutlets'],
+    goToThem: ['professionalEnvironment']
+  };
+};
+
+// Enhanced WhatsApp booking function with all form data
 const handleQuickBooking = () => {
   if (!helper?.contact) {
     alert(`${getProfessionalTitle(helper?.type)} contact information is missing.`);
@@ -869,17 +901,85 @@ const handleQuickBooking = () => {
   message += `• Service: ${getProfessionalTitle(helper.type)}%0A`;
   message += `• Price: R${helper.regularPrice}%0A`;
   
+  // Enhanced service selection details
   if (bookingData.selectedServices.length > 0) {
     const serviceOptions = getServiceOptions(helper.type);
     const selectedServiceNames = bookingData.selectedServices.map(serviceId => {
       const service = serviceOptions.find(s => s.id === serviceId);
       return service ? service.name : serviceId;
     }).join(', ');
-    message += `• Services: ${selectedServiceNames}%0A`;
+    message += `• Selected Services: ${selectedServiceNames}%0A`;
+  }
+
+  // Add barber-specific details to quick booking
+  if ((helper.type === 'barber' || helper.type === 'barbar') && bookingData.selectedHaircut) {
+    const haircut = haircutStyles.find(h => h.id === bookingData.selectedHaircut);
+    if (haircut) {
+      message += `• Haircut Style: ${haircut.name}%0A`;
+    }
+  }
+
+  if ((helper.type === 'barber' || helper.type === 'barbar') && bookingData.beardStyle) {
+    const beard = beardStyles.find(b => b.id === bookingData.beardStyle);
+    if (beard) {
+      message += `• Beard Style: ${beard.name}%0A`;
+    }
+  }
+
+  if (bookingData.hairLength) {
+    message += `• Current Hair Length: ${bookingData.hairLength}%0A`;
+  }
+
+  // Add chef-specific details to quick booking
+  if ((helper.type === 'chef' || helper.type === 'cooking') && bookingData.mealType) {
+    const meal = mealTypes.find(m => m.id === bookingData.mealType);
+    if (meal) {
+      message += `• Meal Type: ${meal.name}%0A`;
+    }
+  }
+
+  if ((helper.type === 'chef' || helper.type === 'cooking') && bookingData.cuisinePreference) {
+    const cuisine = cuisineTypes.find(c => c.id === bookingData.cuisinePreference);
+    if (cuisine) {
+      message += `• Cuisine Preference: ${cuisine.name}%0A`;
+    }
+  }
+
+  if (bookingData.numberOfGuests) {
+    message += `• Number of Guests: ${bookingData.numberOfGuests}%0A`;
+  }
+
+  if (bookingData.dietaryRestrictions) {
+    message += `• Dietary Restrictions: ${bookingData.dietaryRestrictions}%0A`;
+  }
+
+  if (bookingData.ingredientsProvided) {
+    message += `• Ingredients: ${bookingData.ingredientsProvided === 'yes' ? 'Client will provide' : 'Chef to provide'}%0A`;
+  }
+
+  // Add photography-specific details to quick booking
+  if ((helper.type === 'photography') && bookingData.photographyType) {
+    message += `• Photography Type: ${bookingData.photographyType}%0A`;
+  }
+
+  if ((helper.type === 'photography') && bookingData.sessionDuration) {
+    message += `• Session Duration: ${bookingData.sessionDuration} hours%0A`;
+  }
+
+  if ((helper.type === 'photography') && bookingData.numberOfPeople) {
+    message += `• Number of People: ${bookingData.numberOfPeople}%0A`;
+  }
+
+  if ((helper.type === 'photography') && bookingData.deliveryFormat) {
+    message += `• Delivery Format: ${bookingData.deliveryFormat}%0A`;
   }
 
   if (bookingData.specialRequirements) {
     message += `• Special Requirements: ${bookingData.specialRequirements}%0A`;
+  }
+
+  if (bookingData.photographyRequirements) {
+    message += `• Photography Requirements: ${bookingData.photographyRequirements}%0A`;
   }
   
   // Enhanced location details for quick booking
@@ -887,6 +987,28 @@ const handleQuickBooking = () => {
     message += `%0A*📍 LOCATION FOR SERVICE*%0A`;
     message += `• Service at Client's Location%0A`;
     message += `• Address: ${bookingData.address}%0A`;
+    
+    // Add location requirements based on service type
+    message += `• Location Requirements:%0A`;
+    if (helper.type === 'chef') {
+      message += `  ✓ Kitchen access with basic cooking equipment%0A`;
+      message += `  ✓ Dining area for meal service%0A`;
+      message += `  ✓ Power outlets for appliances%0A`;
+    } else if (helper.type === 'barber' || helper.type === 'barbar') {
+      message += `  ✓ Well-lit workspace with chair%0A`;
+      message += `  ✓ Power source for clippers%0A`;
+      message += `  ✓ Mirror access for styling%0A`;
+    } else if (helper.type === 'photography') {
+      message += `  ✓ Adequate shooting space%0A`;
+      message += `  ✓ Natural light preferred%0A`;
+      message += `  ✓ Power outlets for equipment%0A`;
+    } else if (helper.type === 'beauty') {
+      message += `  ✓ Clean, well-lit workspace%0A`;
+      message += `  ✓ Power source for tools%0A`;
+      message += `  ✓ Mirror access%0A`;
+    } else {
+      message += `  ✓ Clean, accessible workspace with power outlets%0A`;
+    }
     
     if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
       message += `• Map: ${locationInfo.mapLink}%0A`;
@@ -1172,8 +1294,8 @@ const handleBookingSubmit = async (e) => {
   setAttachments([]);
 };
 
-
   // ==================== END ENHANCED BOOKING SUBMIT FUNCTION ====================
+
 
   // Simulate AI analysis of comments
   const analyzeCommentsWithAI = () => {
@@ -2006,7 +2128,7 @@ const handleBookingSubmit = async (e) => {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                  <div className="flex flex-col sm:flexRow sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
                     <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
                       <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
                         <span className="text-lg">🛁</span>
