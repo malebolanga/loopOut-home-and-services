@@ -817,300 +817,362 @@ export default function HelperPage() {
     });
   };
 
-  // Quick WhatsApp booking function
-  const handleQuickBooking = () => {
-    if (!helper?.contact) {
-      alert(`${getProfessionalTitle(helper?.type)} contact information is missing.`);
-      return;
-    }
+// ================================ BOOKING START HERE================
 
-    // Basic validation
-    if (!bookingData.name || !bookingData.phone) {
-      alert("Please fill in your name and phone number first.");
-      return;
-    }
+// Quick WhatsApp booking function - UPDATED WITH LOCATION
+const handleQuickBooking = () => {
+  if (!helper?.contact) {
+    alert(`${getProfessionalTitle(helper?.type)} contact information is missing.`);
+    return;
+  }
 
-    const clientPhone = formatContactForWhatsApp(bookingData.phone);
-    const acceptMessage = `Hi ${bookingData.name}, I accept your booking for ${helper.name}. See you then!`;
-    const declineMessage = `Hi ${bookingData.name}, I'm unable to accept this booking. Can we try another time?`;
+  // Basic validation
+  if (!bookingData.name || !bookingData.phone) {
+    alert("Please fill in your name and phone number first.");
+    return;
+  }
 
-    const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
-    const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
+  // Enhanced location validation for quick booking
+  if (bookingData.locationOption === 'comeToYou' && !bookingData.address) {
+    alert("Please provide your address for home service in the booking form.");
+    return;
+  }
 
-    let message = `*📅 Quick Booking Request for ${helper.name}*%0A%0A`;
-    message += `*👤 Client Details*%0A`;
-    message += `• Name: ${bookingData.name}%0A`;
-    message += `• Phone: ${bookingData.phone}%0A`;
-    
-    if (bookingData.date) {
-      message += `• Date: ${bookingData.date}%0A`;
-    }
-    if (bookingData.time) {
-      message += `• Time: ${bookingData.time}%0A`;
-    }
-    
-    message += `%0A`;
-    message += `*💼 Service Details*%0A`;
-    message += `• Service: ${getProfessionalTitle(helper.type)}%0A`;
-    message += `• Price: R${helper.regularPrice}%0A`;
-    
-    if (bookingData.selectedServices.length > 0) {
-      const serviceOptions = getServiceOptions(helper.type);
-      const selectedServiceNames = bookingData.selectedServices.map(serviceId => {
-        const service = serviceOptions.find(s => s.id === serviceId);
-        return service ? service.name : serviceId;
-      }).join(', ');
-      message += `• Services: ${selectedServiceNames}%0A`;
-    }
+  const clientPhone = formatContactForWhatsApp(bookingData.phone);
+  const acceptMessage = `Hi ${bookingData.name}, I accept your booking for ${helper.name}. See you then!`;
+  const declineMessage = `Hi ${bookingData.name}, I'm unable to accept this booking. Can we try another time?`;
 
-    if (bookingData.specialRequirements) {
-      message += `• Special Requirements: ${bookingData.specialRequirements}%0A`;
-    }
-    
-    message += `%0A`;
-    message += `Please respond:%0A`;
-    
-    if (acceptLink) {
-      message += `✅ [Accept Booking](${acceptLink})%0A`;
-    }
-    if (declineLink) {
-      message += `❌ [Decline Booking](${declineLink})%0A`;
-    }
-    
-    message += `%0A`;
-    message += `Or reply directly to this message%0A%0A`;
-    message += `_Sent via loopOut Quick Booking_`;
+  const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
+  const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
 
-    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
-    window.open(whatsappUrl, '_blank');
-  };
+  // Enhanced location handling for quick booking
+  const locationInfo = handleLocationInfo(bookingData, helper);
+  const locationMessage = getLocationSpecificMessage(bookingData, helper);
 
-  // ==================== ENHANCED BOOKING SUBMIT FUNCTION ====================
-  const handleBookingSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!helper?.contact) {
-      alert(`${getProfessionalTitle(helper?.type)} contact information is missing. Please try another contact method.`);
-      return;
-    }
-
-    // Enhanced location validation
-    if (bookingData.locationOption === 'comeToYou' && !bookingData.address) {
-      alert("Please provide your address for home service.");
-      return;
-    }
-
-    try {
-      // Validate and format address
-      if (bookingData.locationOption === 'comeToYou') {
-        const formattedAddress = validateAndFormatAddress(bookingData.address);
-        setBookingData(prev => ({ ...prev, address: formattedAddress }));
-      }
-    } catch (error) {
-      alert(error.message);
-      return;
-    }
-
-    // Validate service selection
-    if (
-      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography') && 
-      bookingData.selectedServices.length === 0
-    ) {
-      alert("Please select at least one service you need.");
-      return;
-    }
-
-    let uploadedFiles = [];
-
-    if (attachments.length > 0) {
-      setIsUploading(true);
-      try {
-        uploadedFiles = await uploadFilesToCloud(attachments);
-      } catch (error) {
-        console.error("File upload failed:", error);
-        alert("Failed to upload attachments. Please try again without files or contact support.");
-        setIsUploading(false);
-        return;
-      }
-      setIsUploading(false);
-    }
-
-    // Format the client's phone number for the reply link
-    const clientPhone = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
-
-    // Define the accept and decline messages and their corresponding links
-    const acceptMessage = `Hi ${bookingData.name}, I accept your booking for ${helper.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
-    const declineMessage = `Hi ${bookingData.name}, I'm unable to accept ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
-
-    const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
-    const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
-
-    // Enhanced location handling
-    const locationInfo = handleLocationInfo(bookingData, helper);
-    const locationMessage = getLocationSpecificMessage(bookingData, helper);
-
-    // Build the main WhatsApp message with enhanced location details
-    let message = `*${helper.type === 'chef' ? '👨‍🍳' : helper.type === 'barber' || helper.type === 'barbar' ? '✂️' : helper.type === 'tattoo' ? '🎨' : helper.type === 'photography' ? '📷' : '👤'} New ${getProfessionalTitle(helper.type)} Booking Request for ${helper.name}*%0A%0A`;
-
-    message += `*🛎️ SERVICE DETAILS*%0A`;
-    message += `• Price: R${helper.regularPrice}%0A`;
-    
-    // Add selected services
+  let message = `*📅 Quick Booking Request for ${helper.name}*%0A%0A`;
+  message += `*👤 Client Details*%0A`;
+  message += `• Name: ${bookingData.name}%0A`;
+  message += `• Phone: ${bookingData.phone}%0A`;
+  
+  if (bookingData.date) {
+    message += `• Date: ${bookingData.date}%0A`;
+  }
+  if (bookingData.time) {
+    message += `• Time: ${bookingData.time}%0A`;
+  }
+  
+  // Add location details to quick booking
+  message += locationMessage;
+  
+  message += `%0A`;
+  message += `*💼 Service Details*%0A`;
+  message += `• Service: ${getProfessionalTitle(helper.type)}%0A`;
+  message += `• Price: R${helper.regularPrice}%0A`;
+  
+  if (bookingData.selectedServices.length > 0) {
     const serviceOptions = getServiceOptions(helper.type);
-    if (bookingData.selectedServices.length > 0) {
-      const selectedServiceNames = bookingData.selectedServices.map(serviceId => {
-        const service = serviceOptions.find(s => s.id === serviceId);
-        return service ? service.name : serviceId;
-      }).join(', ');
-      
-      message += `• Services: ${selectedServiceNames}%0A`;
-    }
+    const selectedServiceNames = bookingData.selectedServices.map(serviceId => {
+      const service = serviceOptions.find(s => s.id === serviceId);
+      return service ? service.name : serviceId;
+    }).join(', ');
+    message += `• Services: ${selectedServiceNames}%0A`;
+  }
 
-    // Add barber-specific details
-    if ((helper.type === 'barber' || helper.type === 'barbar') && bookingData.selectedHaircut) {
-      const haircut = haircutStyles.find(h => h.id === bookingData.selectedHaircut);
-      if (haircut) {
-        message += `• Haircut Style: ${haircut.name}%0A`;
-      }
-    }
-
-    if ((helper.type === 'barber' || helper.type === 'barbar') && bookingData.beardStyle) {
-      const beard = beardStyles.find(b => b.id === bookingData.beardStyle);
-      if (beard) {
-        message += `• Beard Style: ${beard.name}%0A`;
-      }
-    }
-
-    if (bookingData.hairLength) {
-      message += `• Current Hair Length: ${bookingData.hairLength}%0A`;
-    }
-
-    // Add chef-specific details
-    if ((helper.type === 'chef' || helper.type === 'cooking') && bookingData.mealType) {
-      const meal = mealTypes.find(m => m.id === bookingData.mealType);
-      if (meal) {
-        message += `• Meal Type: ${meal.name}%0A`;
-      }
-    }
-
-    if ((helper.type === 'chef' || helper.type === 'cooking') && bookingData.cuisinePreference) {
-      const cuisine = cuisineTypes.find(c => c.id === bookingData.cuisinePreference);
-      if (cuisine) {
-        message += `• Cuisine Preference: ${cuisine.name}%0A`;
-      }
-    }
-
-    if (bookingData.numberOfGuests) {
-      message += `• Number of Guests: ${bookingData.numberOfGuests}%0A`;
-    }
-
-    if (bookingData.dietaryRestrictions) {
-      message += `• Dietary Restrictions: ${bookingData.dietaryRestrictions}%0A`;
-    }
-
-    if (bookingData.ingredientsProvided) {
-      message += `• Ingredients: ${bookingData.ingredientsProvided === 'yes' ? 'Client will provide' : 'Chef to provide'}%0A`;
-    }
-
-    // Add photography-specific details
-    if ((helper.type === 'photography') && bookingData.photographyType) {
-      message += `• Photography Type: ${bookingData.photographyType}%0A`;
-    }
-
-    if ((helper.type === 'photography') && bookingData.sessionDuration) {
-      message += `• Session Duration: ${bookingData.sessionDuration} hours%0A`;
-    }
-
-    if ((helper.type === 'photography') && bookingData.numberOfPeople) {
-      message += `• Number of People: ${bookingData.numberOfPeople}%0A`;
-    }
-
-    if ((helper.type === 'photography') && bookingData.deliveryFormat) {
-      message += `• Delivery Format: ${bookingData.deliveryFormat}%0A`;
+  if (bookingData.specialRequirements) {
+    message += `• Special Requirements: ${bookingData.specialRequirements}%0A`;
+  }
+  
+  // Enhanced location details for quick booking
+  if (bookingData.locationOption === 'comeToYou' && bookingData.address) {
+    message += `%0A*📍 LOCATION FOR SERVICE*%0A`;
+    message += `• Service at Client's Location%0A`;
+    message += `• Address: ${bookingData.address}%0A`;
+    
+    if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
+      message += `• Map: ${locationInfo.mapLink}%0A`;
     }
     
     if (locationInfo.travelFee > 0) {
       message += `• Travel Fee: R${locationInfo.travelFee}%0A`;
     }
-    message += `• ${getProfessionalTitle(helper.type)} Contact: ${helper.contact}%0A%0A`;
+  } else if (bookingData.locationOption === 'goToThem' && helper.address) {
+    message += `%0A*📍 SERVICE LOCATION*%0A`;
+    message += `• Service at ${getProfessionalTitle(helper.type)}'s Location%0A`;
+    message += `• Address: ${helper.address}%0A`;
+    
+    if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
+      message += `• Map: ${locationInfo.mapLink}%0A`;
+    }
+  }
+  
+  message += `%0A`;
+  message += `Please respond:%0A`;
+  
+  if (acceptLink) {
+    message += `✅ [Accept Booking](${acceptLink})%0A`;
+  }
+  if (declineLink) {
+    message += `❌ [Decline Booking](${declineLink})%0A`;
+  }
+  
+  message += `%0A`;
+  message += `Or reply directly to this message%0A%0A`;
+  message += `_Sent via loopOut Quick Booking_`;
 
-    message += `*👤 CLIENT DETAILS*%0A`;
-    message += `• Name: ${bookingData.name}%0A`;
-    message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
-    message += `• Date: ${bookingData.date}%0A`;
-    message += `• Time: ${bookingData.time}%0A`;
+  const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
+  window.open(whatsappUrl, '_blank');
+};
+
+// ==================== ENHANCED BOOKING SUBMIT FUNCTION ====================
+const handleBookingSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!helper?.contact) {
+    alert(`${getProfessionalTitle(helper?.type)} contact information is missing. Please try another contact method.`);
+    return;
+  }
+
+  // Enhanced location validation
+  if (bookingData.locationOption === 'comeToYou' && !bookingData.address) {
+    alert("Please provide your address for home service.");
+    return;
+  }
+
+  try {
+    // Validate and format address
+    if (bookingData.locationOption === 'comeToYou') {
+      const formattedAddress = validateAndFormatAddress(bookingData.address);
+      setBookingData(prev => ({ ...prev, address: formattedAddress }));
+    }
+  } catch (error) {
+    alert(error.message);
+    return;
+  }
+
+  // Validate service selection
+  if (
+    (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography') && 
+    bookingData.selectedServices.length === 0
+  ) {
+    alert("Please select at least one service you need.");
+    return;
+  }
+
+  let uploadedFiles = [];
+
+  if (attachments.length > 0) {
+    setIsUploading(true);
+    try {
+      uploadedFiles = await uploadFilesToCloud(attachments);
+    } catch (error) {
+      console.error("File upload failed:", error);
+      alert("Failed to upload attachments. Please try again without files or contact support.");
+      setIsUploading(false);
+      return;
+    }
+    setIsUploading(false);
+  }
+
+  // Format the client's phone number for the reply link
+  const clientPhone = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
+
+  // Define the accept and decline messages and their corresponding links
+  const acceptMessage = `Hi ${bookingData.name}, I accept your booking for ${helper.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
+  const declineMessage = `Hi ${bookingData.name}, I'm unable to accept ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
+
+  const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
+  const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
+
+  // Enhanced location handling
+  const locationInfo = handleLocationInfo(bookingData, helper);
+  const locationMessage = getLocationSpecificMessage(bookingData, helper);
+
+  // Build the main WhatsApp message with enhanced location details
+  let message = `*${helper.type === 'chef' ? '👨‍🍳' : helper.type === 'barber' || helper.type === 'barbar' ? '✂️' : helper.type === 'tattoo' ? '🎨' : helper.type === 'photography' ? '📷' : '👤'} New ${getProfessionalTitle(helper.type)} Booking Request for ${helper.name}*%0A%0A`;
+
+  message += `*🛎️ SERVICE DETAILS*%0A`;
+  message += `• Price: R${helper.regularPrice}%0A`;
+  
+  // Add selected services
+  const serviceOptions = getServiceOptions(helper.type);
+  if (bookingData.selectedServices.length > 0) {
+    const selectedServiceNames = bookingData.selectedServices.map(serviceId => {
+      const service = serviceOptions.find(s => s.id === serviceId);
+      return service ? service.name : serviceId;
+    }).join(', ');
     
-    // Enhanced location section
-    message += locationMessage;
+    message += `• Services: ${selectedServiceNames}%0A`;
+  }
+
+  // Add barber-specific details
+  if ((helper.type === 'barber' || helper.type === 'barbar') && bookingData.selectedHaircut) {
+    const haircut = haircutStyles.find(h => h.id === bookingData.selectedHaircut);
+    if (haircut) {
+      message += `• Haircut Style: ${haircut.name}%0A`;
+    }
+  }
+
+  if ((helper.type === 'barber' || helper.type === 'barbar') && bookingData.beardStyle) {
+    const beard = beardStyles.find(b => b.id === bookingData.beardStyle);
+    if (beard) {
+      message += `• Beard Style: ${beard.name}%0A`;
+    }
+  }
+
+  if (bookingData.hairLength) {
+    message += `• Current Hair Length: ${bookingData.hairLength}%0A`;
+  }
+
+  // Add chef-specific details
+  if ((helper.type === 'chef' || helper.type === 'cooking') && bookingData.mealType) {
+    const meal = mealTypes.find(m => m.id === bookingData.mealType);
+    if (meal) {
+      message += `• Meal Type: ${meal.name}%0A`;
+    }
+  }
+
+  if ((helper.type === 'chef' || helper.type === 'cooking') && bookingData.cuisinePreference) {
+    const cuisine = cuisineTypes.find(c => c.id === bookingData.cuisinePreference);
+    if (cuisine) {
+      message += `• Cuisine Preference: ${cuisine.name}%0A`;
+    }
+  }
+
+  if (bookingData.numberOfGuests) {
+    message += `• Number of Guests: ${bookingData.numberOfGuests}%0A`;
+  }
+
+  if (bookingData.dietaryRestrictions) {
+    message += `• Dietary Restrictions: ${bookingData.dietaryRestrictions}%0A`;
+  }
+
+  if (bookingData.ingredientsProvided) {
+    message += `• Ingredients: ${bookingData.ingredientsProvided === 'yes' ? 'Client will provide' : 'Chef to provide'}%0A`;
+  }
+
+  // Add photography-specific details
+  if ((helper.type === 'photography') && bookingData.photographyType) {
+    message += `• Photography Type: ${bookingData.photographyType}%0A`;
+  }
+
+  if ((helper.type === 'photography') && bookingData.sessionDuration) {
+    message += `• Session Duration: ${bookingData.sessionDuration} hours%0A`;
+  }
+
+  if ((helper.type === 'photography') && bookingData.numberOfPeople) {
+    message += `• Number of People: ${bookingData.numberOfPeople}%0A`;
+  }
+
+  if ((helper.type === 'photography') && bookingData.deliveryFormat) {
+    message += `• Delivery Format: ${bookingData.deliveryFormat}%0A`;
+  }
+  
+  if (locationInfo.travelFee > 0) {
+    message += `• Travel Fee: R${locationInfo.travelFee}%0A`;
+  }
+  message += `• ${getProfessionalTitle(helper.type)} Contact: ${helper.contact}%0A%0A`;
+
+  message += `*👤 CLIENT DETAILS*%0A`;
+  message += `• Name: ${bookingData.name}%0A`;
+  message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
+  message += `• Date: ${bookingData.date}%0A`;
+  message += `• Time: ${bookingData.time}%0A`;
+  
+  // Enhanced location section
+  message += locationMessage;
+  
+  message += `• Special Requirements: ${bookingData.specialRequirements || 'None'}%0A`;
+  
+  if (bookingData.photographyRequirements) {
+    message += `• Photography Requirements: ${bookingData.photographyRequirements}%0A`;
+  }
+  
+  message += `%0A`;
+
+  // Enhanced location instructions for home visits
+  if (bookingData.locationOption === 'comeToYou' && bookingData.address) {
+    message += `*📍 LOCATION DETAILS*%0A`;
+    message += `• Service Type: Home Service (${getProfessionalTitle(helper.type)} comes to you)%0A`;
+    message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
     
-    message += `• Special Requirements: ${bookingData.specialRequirements || 'None'}%0A`;
+    if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
+      message += `• Navigation Link:%0A  ${locationInfo.mapLink}%0A`;
+    }
     
-    if (bookingData.photographyRequirements) {
-      message += `• Photography Requirements: ${bookingData.photographyRequirements}%0A`;
+    // Add service-specific location requirements
+    const requirements = getLocationRequirements(helper.type);
+    if (requirements.comeToYou && requirements.comeToYou.length > 0) {
+      message += `• Location Requirements:%0A`;
+      requirements.comeToYou.forEach(req => {
+        const reqText = {
+          kitchenAccess: '✓ Kitchen access required',
+          cookingEquipment: '✓ Basic cooking equipment needed',
+          diningSpace: '✓ Dining area required',
+          shootingSpace: '✓ Adequate shooting space needed',
+          naturalLight: '✓ Natural light preferred',
+          powerOutlets: '✓ Power outlets required',
+          chairSpace: '✓ Chair and workspace needed',
+          powerSource: '✓ Power source required',
+          mirrorAccess: '✓ Mirror access needed',
+          cleanSpace: '✓ Clean, well-lit workspace required'
+        }[req] || `✓ ${req}`;
+        message += `  ${reqText}%0A`;
+      });
+    }
+    
+    if (locationInfo.instructions) {
+      message += `• Additional Instructions: ${locationInfo.instructions}%0A`;
     }
     
     message += `%0A`;
-
-    // Enhanced location instructions for home visits
-    if (bookingData.locationOption === 'comeToYou' && bookingData.address) {
-      message += `*📍 LOCATION DETAILS*%0A`;
-      message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
-      if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
-        message += `• Navigation Link:%0A  ${locationInfo.mapLink}%0A`;
-      }
-      
-      // Add service-specific location requirements
-      const requirements = getLocationRequirements(helper.type);
-      if (requirements.comeToYou && requirements.comeToYou.length > 0) {
-        message += `• Location Requirements:%0A`;
-        requirements.comeToYou.forEach(req => {
-          const reqText = {
-            kitchenAccess: '✓ Kitchen access required',
-            cookingEquipment: '✓ Basic cooking equipment needed',
-            diningSpace: '✓ Dining area required',
-            shootingSpace: '✓ Adequate shooting space needed',
-            naturalLight: '✓ Natural light preferred',
-            powerOutlets: '✓ Power outlets required',
-            chairSpace: '✓ Chair and workspace needed',
-            powerSource: '✓ Power source required',
-            mirrorAccess: '✓ Mirror access needed',
-            cleanSpace: '✓ Clean, well-lit workspace required'
-          }[req] || `✓ ${req}`;
-          message += `  ${reqText}%0A`;
-        });
-      }
-      message += `%0A`;
+  } else if (bookingData.locationOption === 'goToThem' && helper.address) {
+    message += `*📍 SERVICE LOCATION*%0A`;
+    message += `• Service Type: At ${getProfessionalTitle(helper.type)}'s Location%0A`;
+    message += `• Business Name: ${getProviderLocationName(helper.type)}%0A`;
+    message += `• Address: ${helper.address}%0A`;
+    
+    if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
+      message += `• Navigation Link: ${locationInfo.mapLink}%0A`;
     }
-
-    // Add attachments if they exist
-    if (uploadedFiles.length > 0) {
-      message += `*📎 ATTACHMENTS*%0A_Files uploaded for your reference_%0A%0A`;
-      uploadedFiles.forEach((file) => {
-        message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: ${file.name}%0A`;
-        message += `  ${file.url}%0A%0A`;
-      });
+    
+    if (locationInfo.instructions) {
+      message += `• Location Instructions: ${locationInfo.instructions}%0A`;
     }
+    
+    message += `%0A`;
+  }
 
-    // Add action links for the helper to accept or decline
-    message += `*ACTION REQUIRED*%0A`;
-    message += `Tap a link to reply to the client:%0A%0A`;
-    if (acceptLink) {
-      message += `✅ Accept: ${acceptLink}%0A`;
-    }
-    if (declineLink) {
-      message += `❌ Decline: ${declineLink}%0A%0A`;
-    }
+  // Add attachments if they exist
+  if (uploadedFiles.length > 0) {
+    message += `*📎 ATTACHMENTS*%0A_Files uploaded for your reference_%0A%0A`;
+    uploadedFiles.forEach((file) => {
+      message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: ${file.name}%0A`;
+      message += `  ${file.url}%0A%0A`;
+    });
+  }
 
-    message += `💬 You can also reply directly to this message.%0A%0A`;
-    message += `_Sent via loopOut Booking System_`;
+  // Add action links for the helper to accept or decline
+  message += `*ACTION REQUIRED*%0A`;
+  message += `Tap a link to reply to the client:%0A%0A`;
+  if (acceptLink) {
+    message += `✅ Accept: ${acceptLink}%0A`;
+  }
+  if (declineLink) {
+    message += `❌ Decline: ${declineLink}%0A%0A`;
+  }
 
-    // Open WhatsApp with the pre-filled message
-    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
-    window.open(whatsappUrl, '_blank');
+  message += `💬 You can also reply directly to this message.%0A%0A`;
+  message += `_Sent via loopOut Booking System_`;
 
-    // Reset attachments after sending
-    setAttachments([]);
-  };
+  // Open WhatsApp with the pre-filled message
+  const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
+  window.open(whatsappUrl, '_blank');
+
+  // Reset attachments after sending
+  setAttachments([]);
+};
+
+
   // ==================== END ENHANCED BOOKING SUBMIT FUNCTION ====================
 
   // Simulate AI analysis of comments

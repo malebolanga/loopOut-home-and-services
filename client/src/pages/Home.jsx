@@ -26,6 +26,7 @@ import {
   FaBrain,
   FaRocket,
   FaGem,
+  FaHistory,
 } from "react-icons/fa";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -494,6 +495,7 @@ export default function Home() {
   const [recentSearches, setRecentSearches] = useState([]);
   const [interactionCounts, setInteractionCounts] = useState({});
   const [trendingItems, setTrendingItems] = useState([]);
+  const [recentlyViewed, setRecentlyViewed] = useState([]);
 
   // Enhanced tab configuration with AI icons
   const tabs = [
@@ -547,6 +549,25 @@ export default function Home() {
   // Handle item navigation
   const handleItemNavigation = useCallback((item) => {
     incrementInteraction(item._id);
+
+    // Save to recently viewed
+    try {
+      const viewedItems = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+      
+      // Remove if already exists (to avoid duplicates)
+      const filteredItems = viewedItems.filter(viewedItem => viewedItem._id !== item._id);
+      
+      // Add to beginning and limit to 10 items
+      const updatedItems = [item, ...filteredItems].slice(0, 10);
+      
+      localStorage.setItem('recentlyViewed', JSON.stringify(updatedItems));
+      setRecentlyViewed(updatedItems);
+      
+      // Trigger storage event for other components
+      window.dispatchEvent(new Event('storage'));
+    } catch (error) {
+      console.error('Error saving to recently viewed:', error);
+    }
 
     if (Object.keys(PROPERTY_TYPES).includes(item.type)) {
       navigate(`/listing/${item._id}`);
@@ -607,6 +628,33 @@ export default function Home() {
       console.error('Error in handleViewAllRecommendations:', error);
     }
   };
+
+  // Load recently viewed items
+  useEffect(() => {
+    const loadRecentlyViewed = () => {
+      try {
+        const viewedItems = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+        // Filter out any invalid items and limit to last 10
+        const validItems = viewedItems
+          .filter(item => item && item._id && item.name)
+          .slice(0, 10);
+        setRecentlyViewed(validItems);
+      } catch (error) {
+        console.error('Error loading recently viewed:', error);
+        setRecentlyViewed([]);
+      }
+    };
+
+    loadRecentlyViewed();
+    
+    // Listen for storage changes to update in real-time
+    const handleStorageChange = () => {
+      loadRecentlyViewed();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Placeholder rotation function
   const startPlaceholderRotation = () => {
@@ -1784,6 +1832,122 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        {/* Recently Viewed Section */}
+        {recentlyViewed.length > 0 && (
+          <div className="max-w-8xl mx-auto px-1 py-0 mt-4">
+            <div className=" rounded-1xl shadow-1xl p-4 border border-gray-100">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mr-4">
+                    <FaHistory className="text-white text-xl" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Recently Viewed</h2>
+                    <p className="text-gray-600 text-sm">Your browsing history</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => {
+                    localStorage.removeItem('recentlyViewed');
+                    setRecentlyViewed([]);
+                  }}
+                  className="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
+                >
+                  Clear History
+                </button>
+              </div>
+
+              <div className="relative">
+                <Swiper
+                  slidesPerView={1.8}
+                  spaceBetween={20}
+                  navigation={{
+                    nextEl: '.recently-viewed-swiper-button-next',
+                    prevEl: '.recently-viewed-swiper-button-prev',
+                  }}
+                  modules={[Navigation]}
+                  className="recently-viewed-swiper"
+                  breakpoints={{
+                    480: { slidesPerView: 2.3 },
+                    640: { slidesPerView: 2.8 },
+                    768: { slidesPerView: 3.3 },
+                    1024: { slidesPerView: 4.3 },
+                    1280: { slidesPerView: 5.3 },
+                    1536: { slidesPerView: 6.3 },
+                  }}
+                >
+                  {recentlyViewed.map((item) => {
+                    const getItemComponent = (item) => {
+                      if (Object.keys(PROPERTY_TYPES).includes(item.type)) {
+                        return (
+                          <ListingItem 
+                            listing={item} 
+                            onClick={() => handleItemNavigation(item)}
+                            className="transform transition-all duration-500 hover:scale-105" 
+                          />
+                        );
+                      } else if (Object.keys(SERVICE_TYPES).includes(item.type)) {
+                        return (
+                          <ServiceItem 
+                            service={item} 
+                            onClick={() => handleItemNavigation(item)}
+                            className="transform transition-all duration-500 hover:scale-105" 
+                          />
+                        );
+                      } else if (Object.keys(HELPER_TYPES).includes(item.type)) {
+                        return (
+                          <HelperItem 
+                            helper={item} 
+                            onClick={() => handleItemNavigation(item)}
+                            className="transform transition-all duration-500 hover:scale-105" 
+                          />
+                        );
+                      } else if (Object.keys(LOCAL_EVENT_TYPES).includes(item.type)) {
+                        return (
+                          <EventItem 
+                            event={item} 
+                            onClick={() => handleItemNavigation(item)}
+                            className="transform transition-all duration-500 hover:scale-105" 
+                          />
+                        );
+                      }
+                      return null;
+                    };
+
+                    return (
+                      <SwiperSlide key={item._id}>
+                        {getItemComponent(item)}
+                      </SwiperSlide>
+                    );
+                  })}
+                </Swiper>
+
+                {/* Navigation Buttons */}
+                <button className="recently-viewed-swiper-button-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-gray-700 hover:text-purple-600 hover:border-purple-500 transition-all duration-300">
+                  <svg className="w-6 h-6 transform group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button className="recently-viewed-swiper-button-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-gray-700 hover:text-purple-600 hover:border-purple-500 transition-all duration-300">
+                  <svg className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              {recentlyViewed.length === 0 && (
+                <div className="text-center py-12">
+                  <div className="w-24 h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FaHistory className="text-gray-400 text-2xl" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">No Recent Views</h3>
+                  <p className="text-gray-500 text-sm">Items you view will appear here</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
