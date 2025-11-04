@@ -1375,7 +1375,7 @@ export default function Home() {
                       <SwiperSlide key={item._id}>
                         <Link 
                           to={itemRoute}
-                          className="block bg-white rounded-2xl overflow-hidden border-2 border-gray-100 hover:border-purple-500 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer "
+                          className="block  rounded-2xl overflow-hidden border-2 border-gray-100 hover:border-purple-500 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer "
                         >
                           {/* Enhanced Image Section */}
                           <div className="relative pb-[75%] overflow-hidden">
