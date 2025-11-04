@@ -1375,7 +1375,7 @@ export default function Home() {
                       <SwiperSlide key={item._id}>
                         <Link 
                           to={itemRoute}
-                          className="block  rounded-2xl overflow-hidden border-2 border-gray-100 hover:border-purple-500 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer "
+                          className="block  rounded-2xl overflow-hidden border-0 border-gray-100 hover:border-purple-500 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer "
                         >
                           {/* Enhanced Image Section */}
                           <div className="relative pb-[75%] overflow-hidden">
@@ -1383,7 +1383,7 @@ export default function Home() {
                               <img
                                 src={item.imageUrls[0]}
                                 alt={item.name}
-                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                className="absolute inset-0 w-full h-full rounded-2xl object-cover  transition-transform duration-700 group-hover:scale-110"
                                 onError={(e) => {
                                   e.target.src = 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=300&h=210&fit=crop';
                                 }}
