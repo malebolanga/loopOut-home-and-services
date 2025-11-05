@@ -1485,7 +1485,7 @@ export default function Home() {
                         <span className="text-2xl text-white">👷</span>
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Personal Helpers</h2>
+                        <h2 className="text-2xl font-bold text-gray-900">Helpers</h2>
                         <p className="text-gray-600 text-sm">Find trusted helpers for your needs</p>
                       </div>
                     </div>
@@ -1843,7 +1843,7 @@ export default function Home() {
                     <FaHistory className="text-white text-xl" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Recently Viewed</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">Viewed</h2>
                     <p className="text-gray-600 text-sm">Your browsing history</p>
                   </div>
                 </div>
