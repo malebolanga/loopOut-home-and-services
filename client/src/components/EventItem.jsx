@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { Link } from "react-router-dom";
-import { MdLocationOn, MdCalendarToday } from "react-icons/md";
+import { MdCalendarToday } from "react-icons/md";
 import { FaHeart, FaRegHeart, FaStar } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -363,12 +363,7 @@ function EventItem({ event, className = "", compactMode = false }) {
               </span>
             </p>
 
-            <p className="text-gray-600 text-xs flex items-center">
-              <MdLocationOn className="text-rose-600 mr-1 min-w-fit text-xs" />
-              <span className="truncate hover:text-gray-800 transition-colors">
-                {event.address || 'Location not available'}
-              </span>
-            </p>
+        
 
             <div className="flex items-center justify-between pt-0 mt-auto">
               <div className="flex items-center gap-1 text-sm font-bold text-gray-900">

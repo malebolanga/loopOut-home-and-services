@@ -1135,12 +1135,7 @@ export default function Home() {
         {/* Enhanced Tab Navigation */}
         <div className="rounded-3xl shadow-2xl p-6 transform -translate-y-24 relative z-20 bg-white/90 backdrop-blur-xl border border-white/20">
           {/* AI Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full mb-4">
-              <FaRocket className="text-purple-600 mr-2" />
-              <span className="text-sm font-semibold text-gray-700">SMART CATEGORIES</span>
-            </div>
-          </div>
+        
 
           {/* Enhanced Tabs */}
           <div className="flex flex-wrap justify-center gap-3 max-w-5xl mx-auto">

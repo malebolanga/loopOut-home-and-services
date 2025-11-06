@@ -426,22 +426,7 @@ function HelperItem({ helper, className = "", compactMode = false }) {
               </span>
             </p>
 
-            {/* Host information */}
-            <div className="flex items-center justify-between pt-0">
-              <div className="flex items-center space-x-3 text-gray-700 text-xs">
-                <div className="flex items-center gap-1">
-
-                  <span>
-                    {helper.host
-                      ? helper.host.length > 20
-                        ? `${helper.host.substring(0, 20)}...`
-                        : helper.host
-                      : 'Provider'
-                    }
-                  </span>
-                </div>
-              </div>
-            </div>
+        
 
             {/* Price at the bottom */}
             <div className="mt-0 flex items-center gap-1 text-sm font-bold text-gray-900">
