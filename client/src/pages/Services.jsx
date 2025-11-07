@@ -1,24 +1,20 @@
-// Services.jsx - Unified Format Matching HelperPage
+// Services.jsx - Completely Matches HelperPage Format
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
   FaStar, FaMapMarkerAlt, FaPhone, FaWhatsapp,
-  FaArrowLeft,  FaClock, FaExclamationTriangle,
-  FaTools, FaShieldAlt,  FaTruck, 
-   FaUser,  FaChild, FaArrowDown,
-  FaCar, FaUserFriends, FaBaby, FaUtensils, FaCarSide, FaBus,  FaArrowUp,
-  FaBroom, FaRobot, FaBriefcase, FaTshirt, 
-  FaGlassCheers,  FaGraduationCap,
-  FaPalette,  FaRing,
-  FaBrush,  FaCookie,
-  FaCheckCircle, FaTimes, FaFileImage, FaFilePdf, FaSpinner,
-  FaInstagram, FaFacebook, FaLinkedin, FaTwitter, FaInfoCircle,
-  FaDog, 
+  FaArrowLeft, FaClock, FaExclamationTriangle,
+  FaTools, FaShieldAlt, FaTruck, FaUser, FaChild, FaArrowDown,
+  FaCar, FaUserFriends, FaBaby, FaUtensils, FaCarSide, FaBus, FaArrowUp,
+  FaBroom, FaRobot, FaBriefcase, FaTshirt, FaGlassCheers, FaGraduationCap,
+  FaPalette, FaRing, FaBrush, FaCookie, FaCheckCircle, FaTimes, FaFileImage, 
+  FaFilePdf, FaSpinner, FaInstagram, FaFacebook, FaLinkedin, FaTwitter, 
+  FaInfoCircle, FaDog,  FaTimes as FaTimesCircle, FaGlassCheers as FaGlassCheersIcon, FaBaby as FaBabyIcon,
+  FaTshirt as FaTshirtIcon, FaBroom as FaBroomIcon,  FaPalette as FaPaletteIcon
 } from 'react-icons/fa';
 import CommentsSidePanelService from '../components/CommentsSidePanelService';
 import Comment from '../components/Comment';
-
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Zoom, Thumbs } from 'swiper/modules';
 import 'swiper/css';
@@ -39,49 +35,26 @@ const ServicePage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
+  const [showBookingBelt, setShowBookingBelt] = useState(false);
+
+  // Enhanced Location States
+  const [locationData, setLocationData] = useState({
+    latitude: null,
+    longitude: null,
+    formattedAddress: '',
+    placeId: '',
+    city: '',
+    province: '',
+    postalCode: '',
+    country: 'South Africa'
+  });
 
   // Social Media Verification States
   const [socialMediaVerification, setSocialMediaVerification] = useState({
-    facebook: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    },
-    instagram: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    },
-    linkedin: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      connections: null,
-      verificationStatus: 'checking'
-    },
-    twitter: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    }
+    facebook: { exists: false, username: null, url: null, isActive: false, verified: false, lastActive: null, followers: null, verificationStatus: 'checking' },
+    instagram: { exists: false, username: null, url: null, isActive: false, verified: false, lastActive: null, followers: null, verificationStatus: 'checking' },
+    linkedin: { exists: false, username: null, url: null, isActive: false, verified: false, lastActive: null, connections: null, verificationStatus: 'checking' },
+    twitter: { exists: false, username: null, url: null, isActive: false, verified: false, lastActive: null, followers: null, verificationStatus: 'checking' }
   });
   const [verifyingSocialMedia, setVerifyingSocialMedia] = useState(false);
 
@@ -96,9 +69,6 @@ const ServicePage = () => {
     time: '',
     bringFood: 'no',
     message: '',
-    selectedHaircut: '',
-    beardStyle: '',
-    hairLength: '',
     specialRequirements: '',
     mealType: '',
     cuisinePreference: '',
@@ -124,7 +94,7 @@ const ServicePage = () => {
   // Helper function to get professional title
   const getProfessionalTitle = (type) => {
     const titles = {
-      cleaning: 'Cleaning Service',
+      cleaning: 'Cleaning Professional',
       catering: 'Catering Service',
       moving: 'Moving Service',
       landscaping: 'Landscaping Service',
@@ -136,7 +106,7 @@ const ServicePage = () => {
     return titles[type] || titles.default;
   };
 
-  // Service options for different service types
+  // Service options for different service types - Enhanced like HelperPage
   const getServiceOptions = (type) => {
     const cleaningOptions = [
       { id: 'house-cleaning', name: 'House Cleaning', icon: <FaBroom className="text-green-500" /> },
@@ -216,22 +186,14 @@ const ServicePage = () => {
     ];
 
     switch (type) {
-      case 'cleaning':
-        return cleaningOptions;
-      case 'catering':
-        return cateringOptions;
-      case 'moving':
-        return movingOptions;
-      case 'landscaping':
-        return landscapingOptions;
-      case 'daycare':
-        return daycareOptions;
-      case 'schoolTransport':
-        return schoolTransportOptions;
-      case 'maintenance':
-        return maintenanceOptions;
-      default:
-        return [];
+      case 'cleaning': return cleaningOptions;
+      case 'catering': return cateringOptions;
+      case 'moving': return movingOptions;
+      case 'landscaping': return landscapingOptions;
+      case 'daycare': return daycareOptions;
+      case 'schoolTransport': return schoolTransportOptions;
+      case 'maintenance': return maintenanceOptions;
+      default: return [];
     }
   };
 
@@ -300,6 +262,126 @@ const ServicePage = () => {
     return themes[type] || themes.default;
   };
 
+  // Enhanced Location Functions - Same as HelperPage
+  const locationTypes = {
+    COME_TO_CLIENT: 'comeToYou',
+    PROVIDER_LOCATION: 'goToThem',
+    NEUTRAL_VENUE: 'neutralVenue'
+  };
+
+  const validateAndFormatAddress = (address) => {
+    if (!address) throw new Error('Please provide a complete address');
+    const addressStr = address.trim();
+    if (addressStr.length < 10) throw new Error('Please provide a more detailed address');
+    const hasStreet = /\d+\s+[A-Za-z\s]+/.test(addressStr);
+    const hasCity = /[A-Za-z]{2,}/.test(addressStr);
+    if (!hasStreet || !hasCity) throw new Error('Please include street number, street name, and city');
+    return addressStr;
+  };
+
+  const generateMapLink = (address, providerType = '') => {
+    if (!address) return '#';
+    const encodedAddress = encodeURIComponent(address);
+    const baseMaps = {
+      google: `https://maps.google.com/?q=${encodedAddress}`,
+      apple: `https://maps.apple.com/?q=${encodedAddress}`,
+      waze: `https://waze.com/ul?q=${encodedAddress}`,
+      mapsApp: `https://maps.app.goo.gl/?q=${encodedAddress}`
+    };
+    return baseMaps.google;
+  };
+
+  const handleLocationInfo = (bookingData, provider) => {
+    const locationInfo = {
+      type: bookingData.locationOption,
+      displayName: '',
+      address: '',
+      instructions: '',
+      travelFee: 0,
+      mapLink: '',
+      coordinates: null
+    };
+
+    switch (bookingData.locationOption) {
+      case locationTypes.COME_TO_CLIENT:
+        locationInfo.displayName = 'Client Address';
+        locationInfo.address = bookingData.address;
+        locationInfo.travelFee = provider.travelFee || 0;
+        locationInfo.instructions = bookingData.specialInstructions || '';
+        locationInfo.mapLink = generateMapLink(bookingData.address);
+        break;
+      
+      case locationTypes.PROVIDER_LOCATION:
+        locationInfo.displayName = getProviderLocationName(provider.type);
+        locationInfo.address = provider.businessAddress || provider.address || 'Address not specified';
+        locationInfo.instructions = provider.locationInstructions || '';
+        locationInfo.mapLink = generateMapLink(locationInfo.address, provider.type);
+        break;
+      
+      default:
+        locationInfo.displayName = `${getProfessionalTitle(provider.type)}'s Location`;
+        locationInfo.address = provider.address || 'Address not specified';
+        locationInfo.mapLink = generateMapLink(locationInfo.address, provider.type);
+    }
+
+    return locationInfo;
+  };
+
+  const getProviderLocationName = (serviceType) => {
+    const locationNames = {
+      cleaning: "Cleaning Company Office",
+      catering: "Catering Kitchen", 
+      moving: "Moving Company",
+      landscaping: "Landscaping Office",
+      daycare: "Daycare Center",
+      schoolTransport: "Transport Office",
+      maintenance: "Maintenance Office",
+      default: "Service Location"
+    };
+    return locationNames[serviceType] || locationNames.default;
+  };
+
+  const getLocationSpecificMessage = (bookingData, provider) => {
+    const locationInfo = handleLocationInfo(bookingData, provider);
+    let locationMessage = `📍 *Location Details:*%0A`;
+    locationMessage += `• Type: ${locationInfo.displayName}%0A`;
+    if (locationInfo.address) {
+      locationMessage += `• Address: ${locationInfo.address}%0A`;
+      if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
+        locationMessage += `• Navigation: ${locationInfo.mapLink}%0A`;
+      }
+    }
+    if (locationInfo.instructions) {
+      locationMessage += `• Instructions: ${locationInfo.instructions}%0A`;
+    }
+    if (locationInfo.travelFee > 0) {
+      locationMessage += `• Travel Fee: R${locationInfo.travelFee}%0A`;
+    }
+    return locationMessage;
+  };
+
+  const getLocationRequirements = (serviceType) => {
+    const requirements = {
+      catering: {
+        comeToYou: ['kitchenAccess', 'cookingEquipment', 'diningSpace', 'powerOutlets'],
+        goToThem: ['professionalKitchen', 'diningFacilities']
+      },
+      cleaning: {
+        comeToYou: ['cleanWorkspace', 'powerOutlets', 'waterAccess'],
+        goToThem: ['professionalEnvironment']
+      },
+      moving: {
+        comeToYou: ['clearAccess', 'parkingSpace', 'elevatorAccess'],
+        goToThem: ['professionalSetup']
+      }
+    };
+
+    return requirements[serviceType] || {
+      comeToYou: ['cleanWorkspace', 'powerOutlets'],
+      goToThem: ['professionalEnvironment']
+    };
+  };
+
   const themeColor = service ? getThemeColor(service.type) : 'blue';
 
   // AI Assessment States
@@ -337,105 +419,41 @@ const ServicePage = () => {
   // AI-powered social media verification
   const verifySocialMediaPresence = async (serviceData) => {
     setVerifyingSocialMedia(true);
-    
     try {
       setTimeout(() => {
         const name = serviceData.name || '';
-        
         const hasFacebook = Math.random() > 0.3;
         const hasInstagram = Math.random() > 0.2;
         const hasLinkedIn = Math.random() > 0.4;
         const hasTwitter = Math.random() > 0.5;
         
         const facebookData = hasFacebook ? {
-          exists: true,
-          username: generateUsername(name, 'facebook'),
-          url: `https://facebook.com/${generateUsername(name, 'facebook')}`,
-          isActive: Math.random() > 0.4,
-          verified: Math.random() > 0.7,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 5000) + 100,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
+          exists: true, username: generateUsername(name, 'facebook'), url: `https://facebook.com/${generateUsername(name, 'facebook')}`,
+          isActive: Math.random() > 0.4, verified: Math.random() > 0.7, lastActive: getRandomRecentDate(),
+          followers: Math.floor(Math.random() * 5000) + 100, verificationStatus: 'verified'
+        } : { exists: false, username: null, url: null, isActive: false, verified: false, lastActive: null, followers: null, verificationStatus: 'not_found' };
 
         const instagramData = hasInstagram ? {
-          exists: true,
-          username: generateUsername(name, 'instagram'),
-          url: `https://instagram.com/${generateUsername(name, 'instagram')}`,
-          isActive: Math.random() > 0.3,
-          verified: Math.random() > 0.6,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 10000) + 500,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
+          exists: true, username: generateUsername(name, 'instagram'), url: `https://instagram.com/${generateUsername(name, 'instagram')}`,
+          isActive: Math.random() > 0.3, verified: Math.random() > 0.6, lastActive: getRandomRecentDate(),
+          followers: Math.floor(Math.random() * 10000) + 500, verificationStatus: 'verified'
+        } : { exists: false, username: null, url: null, isActive: false, verified: false, lastActive: null, followers: null, verificationStatus: 'not_found' };
 
         const linkedinData = hasLinkedIn ? {
-          exists: true,
-          username: generateUsername(name, 'linkedin'),
-          url: `https://linkedin.com/in/${generateUsername(name, 'linkedin')}`,
-          isActive: Math.random() > 0.2,
-          verified: Math.random() > 0.8,
-          lastActive: getRandomRecentDate(),
-          connections: Math.floor(Math.random() * 500) + 50,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          connections: null,
-          verificationStatus: 'not_found'
-        };
+          exists: true, username: generateUsername(name, 'linkedin'), url: `https://linkedin.com/in/${generateUsername(name, 'linkedin')}`,
+          isActive: Math.random() > 0.2, verified: Math.random() > 0.8, lastActive: getRandomRecentDate(),
+          connections: Math.floor(Math.random() * 500) + 50, verificationStatus: 'verified'
+        } : { exists: false, username: null, url: null, isActive: false, verified: false, lastActive: null, connections: null, verificationStatus: 'not_found' };
 
         const twitterData = hasTwitter ? {
-          exists: true,
-          username: generateUsername(name, 'twitter'),
-          url: `https://twitter.com/${generateUsername(name, 'twitter')}`,
-          isActive: Math.random() > 0.4,
-          verified: Math.random() > 0.5,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 3000) + 100,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
+          exists: true, username: generateUsername(name, 'twitter'), url: `https://twitter.com/${generateUsername(name, 'twitter')}`,
+          isActive: Math.random() > 0.4, verified: Math.random() > 0.5, lastActive: getRandomRecentDate(),
+          followers: Math.floor(Math.random() * 3000) + 100, verificationStatus: 'verified'
+        } : { exists: false, username: null, url: null, isActive: false, verified: false, lastActive: null, followers: null, verificationStatus: 'not_found' };
 
-        setSocialMediaVerification({
-          facebook: facebookData,
-          instagram: instagramData,
-          linkedin: linkedinData,
-          twitter: twitterData
-        });
+        setSocialMediaVerification({ facebook: facebookData, instagram: instagramData, linkedin: linkedinData, twitter: twitterData });
         setVerifyingSocialMedia(false);
       }, 2000);
-
     } catch (error) {
       console.error('Error verifying social media:', error);
       setVerifyingSocialMedia(false);
@@ -447,38 +465,36 @@ const ServicePage = () => {
       try {
         setLoading(true);
         const res = await fetch(`/api/service/get/${serviceId}`);
-
-        if (!res.ok) {
-          throw new Error('Failed to fetch service details');
-        }
-
+        if (!res.ok) throw new Error('Failed to fetch service details');
         const data = await res.json();
         setService(data);
-
-        // Simulate AI assessment on data load
         simulateAiAssessment(data);
-
-        // Verify social media for services
         if (['cleaning', 'catering', 'moving', 'landscaping', 'daycare', 'schoolTransport', 'maintenance'].includes(data.type)) {
           verifySocialMediaPresence(data);
         }
-
         setLoading(false);
       } catch (err) {
         setError(err.message);
         setLoading(false);
       }
     };
-
     fetchService();
   }, [serviceId]);
+
+  // Scroll detection for booking belt
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollThreshold = 300;
+      setShowBookingBelt(window.scrollY > scrollThreshold);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Simulate AI assessment of service content
   const simulateAiAssessment = (serviceData) => {
     setTimeout(() => {
       const description = serviceData.description || '';
-
-      // Calculate description quality based on length and keywords
       let descScore = 0;
       if (description.length > 200) descScore += 2;
       if (description.length > 500) descScore += 1;
@@ -491,41 +507,28 @@ const ServicePage = () => {
         if (description.includes("sanitized") || description.includes("hygiene")) descScore += 1;
         if (description.includes("eco-friendly") || description.includes("green")) descScore += 1;
       }
-
       if (serviceData.type === 'catering') {
         if (description.includes("certified") || description.includes("culinary")) descScore += 2;
         if (description.includes("hygiene") || description.includes("sanitized")) descScore += 1;
         if (description.includes("gourmet") || description.includes("professional")) descScore += 1;
         if (description.includes("menu") || description.includes("cuisine")) descScore += 1;
       }
-
       if (serviceData.type === 'moving') {
         if (description.includes("licensed") || description.includes("insured")) descScore += 2;
         if (description.includes("experienced") || description.includes("professional")) descScore += 1;
         if (description.includes("equipment") || description.includes("tools")) descScore += 1;
       }
 
-      // Calculate image quality based on number of images
       let imgScore = 0;
       if (serviceData.imageUrls?.length > 0) imgScore = 3;
       if (serviceData.imageUrls?.length > 2) imgScore = 4;
       if (serviceData.imageUrls?.length > 4) imgScore = 5;
 
-      // Overall rating (weighted average)
       const overall = Math.min(5, (descScore + imgScore) / 2);
-
-      // Random likes/dislikes count
       const likes = Math.floor(Math.random() * 50) + 10;
       const dislikes = Math.floor(Math.random() * 10);
 
-      setAiAssessment({
-        descriptionQuality: descScore,
-        imageQuality: imgScore,
-        overallRating: overall,
-        likes,
-        dislikes,
-        userReaction: null
-      });
+      setAiAssessment({ descriptionQuality: descScore, imageQuality: imgScore, overallRating: overall, likes, dislikes, userReaction: null });
     }, 1500);
   };
 
@@ -534,16 +537,8 @@ const ServicePage = () => {
     if (!contact) return null;
     const contactStr = String(contact);
     const digitsOnly = contactStr.replace(/\D/g, '');
-    if (digitsOnly.startsWith('0')) {
-      return '27' + digitsOnly.substring(1);
-    }
+    if (digitsOnly.startsWith('0')) return '27' + digitsOnly.substring(1);
     return digitsOnly;
-  };
-
-  // Generate Google Maps link from address
-  const generateMapLink = (address) => {
-    if (!address) return null;
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
   };
 
   const handleBookingChange = (e) => {
@@ -556,13 +551,8 @@ const ServicePage = () => {
     setBookingData(prev => {
       const selectedServices = [...prev.selectedServices];
       const serviceIndex = selectedServices.indexOf(serviceId);
-      
-      if (serviceIndex > -1) {
-        selectedServices.splice(serviceIndex, 1);
-      } else {
-        selectedServices.push(serviceId);
-      }
-      
+      if (serviceIndex > -1) selectedServices.splice(serviceIndex, 1);
+      else selectedServices.push(serviceId);
       return { ...prev, selectedServices };
     });
   };
@@ -570,48 +560,151 @@ const ServicePage = () => {
   // Handle file attachments
   const handleAttachmentChange = (e) => {
     const files = Array.from(e.target.files);
-
-    // Validate files
     const validFiles = files.filter(file => {
       const isImage = file.type.startsWith('image/');
       const isPDF = file.type === 'application/pdf';
-      const isSizeValid = file.size <= 5 * 1024 * 1024; // 5MB
-
+      const isSizeValid = file.size <= 5 * 1024 * 1024;
       return (isImage || isPDF) && isSizeValid;
     });
-
-    // Limit to 2 files
     const newAttachments = [...attachments, ...validFiles].slice(0, 2);
     setAttachments(newAttachments);
   };
 
-  // Remove attachment
   const removeAttachment = (index) => {
     setAttachments(attachments.filter((_, i) => i !== index));
   };
 
-  // Upload files to cloud storage (mock implementation)
   const uploadFilesToCloud = async (files) => {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1500));
-
-    return files.map(file => {
-      // Create a mock URL for demonstration
-      const mockUrl = `https://example.com/uploads/${Date.now()}_${file.name}`;
-      return {
-        name: file.name,
-        url: mockUrl,
-        type: file.type.startsWith('image/') ? 'image' : 'pdf',
-        size: file.size
-      };
-    });
+    return files.map(file => ({
+      name: file.name, url: `https://example.com/uploads/${Date.now()}_${file.name}`,
+      type: file.type.startsWith('image/') ? 'image' : 'pdf', size: file.size
+    }));
   };
 
+  // Enhanced Quick Booking Function - Same as HelperPage
+  const handleQuickBooking = () => {
+    if (!service?.contact) {
+      alert(`${getProfessionalTitle(service?.type)} contact information is missing.`);
+      return;
+    }
+    if (!bookingData.name || !bookingData.phone) {
+      alert("Please fill in your name and phone number first.");
+      return;
+    }
+    if (bookingData.locationOption === 'comeToYou' && !bookingData.address) {
+      alert("Please provide your address for home service in the booking form.");
+      return;
+    }
+
+    const clientPhone = formatContactForWhatsApp(bookingData.phone);
+    const acceptMessage = `Hi ${bookingData.name}, I accept your booking for ${service.name}. See you then!`;
+    const declineMessage = `Hi ${bookingData.name}, I'm unable to accept this booking. Can we try another time?`;
+    const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
+    const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
+
+    const locationInfo = handleLocationInfo(bookingData, service);
+    const locationMessage = getLocationSpecificMessage(bookingData, service);
+
+    let message = `*📅 Quick Booking Request for ${service.name}*%0A%0A`;
+    message += `*👤 Client Details*%0A`;
+    message += `• Name: ${bookingData.name}%0A`;
+    message += `• Phone: ${bookingData.phone}%0A`;
+    if (bookingData.date) message += `• Date: ${bookingData.date}%0A`;
+    if (bookingData.time) message += `• Time: ${bookingData.time}%0A`;
+    message += locationMessage;
+    message += `%0A`;
+    message += `*💼 Service Details*%0A`;
+    message += `• Service: ${getProfessionalTitle(service.type)}%0A`;
+    message += `• Price: R${service.regularPrice}%0A`;
+
+    if (bookingData.selectedServices.length > 0) {
+      const serviceOptions = getServiceOptions(service.type);
+      const selectedServiceNames = bookingData.selectedServices.map(serviceId => {
+        const serviceOption = serviceOptions.find(s => s.id === serviceId);
+        return serviceOption ? serviceOption.name : serviceId;
+      }).join(', ');
+      message += `• Selected Services: ${selectedServiceNames}%0A`;
+    }
+
+    // Add service-specific details
+    if (service.type === 'moving' && bookingData.movingSize) {
+      const movingSize = movingSizes.find(m => m.id === bookingData.movingSize);
+      if (movingSize) message += `• Moving Size: ${movingSize.name}%0A`;
+    }
+
+    if (service.type === 'catering' && bookingData.mealType) {
+      const meal = mealTypes.find(m => m.id === bookingData.mealType);
+      if (meal) message += `• Meal Type: ${meal.name}%0A`;
+    }
+
+    if (bookingData.numberOfGuests) message += `• Number of Guests: ${bookingData.numberOfGuests}%0A`;
+    if (bookingData.specialRequirements) message += `• Special Requirements: ${bookingData.specialRequirements}%0A`;
+
+    // Enhanced location details for quick booking
+    if (bookingData.locationOption === 'comeToYou' && bookingData.address) {
+      message += `%0A*📍 LOCATION FOR SERVICE*%0A`;
+      message += `• Service at Client's Location%0A`;
+      message += `• Address: ${bookingData.address}%0A`;
+      
+      message += `• Location Requirements:%0A`;
+      if (service.type === 'catering') {
+        message += `  ✓ Kitchen access with basic cooking equipment%0A`;
+        message += `  ✓ Dining area for meal service%0A`;
+        message += `  ✓ Power outlets for appliances%0A`;
+      } else if (service.type === 'cleaning') {
+        message += `  ✓ Access to all areas needing cleaning%0A`;
+        message += `  ✓ Water source access%0A`;
+        message += `  ✓ Power outlets for equipment%0A`;
+      } else if (service.type === 'moving') {
+        message += `  ✓ Clear access paths%0A`;
+        message += `  ✓ Parking space for moving truck%0A`;
+        message += `  ✓ Elevator access if applicable%0A`;
+      } else {
+        message += `  ✓ Clean, accessible workspace with power outlets%0A`;
+      }
+      
+      if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
+        message += `• Map: ${locationInfo.mapLink}%0A`;
+      }
+      
+      if (locationInfo.travelFee > 0) {
+        message += `• Travel Fee: R${locationInfo.travelFee}%0A`;
+      }
+    }
+
+    message += `%0A`;
+    message += `Please respond:%0A`;
+    if (acceptLink) message += `✅ [Accept Booking](${acceptLink})%0A`;
+    if (declineLink) message += `❌ [Decline Booking](${declineLink})%0A`;
+    message += `%0AOr reply directly to this message%0A%0A`;
+    message += `_Sent via loopOut Quick Booking_`;
+
+    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(service.contact)}?text=${message}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  // Enhanced Booking Submit Function - Same as HelperPage
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
-
     if (!service?.contact) {
       alert(`${getProfessionalTitle(service?.type)} contact information is missing. Please try another contact method.`);
+      return;
+    }
+
+    // Enhanced location validation
+    if (bookingData.locationOption === 'comeToYou' && !bookingData.address) {
+      alert("Please provide your address for home service.");
+      return;
+    }
+
+    try {
+      if (bookingData.locationOption === 'comeToYou') {
+        const formattedAddress = validateAndFormatAddress(bookingData.address);
+        setBookingData(prev => ({ ...prev, address: formattedAddress }));
+      }
+    } catch (error) {
+      alert(error.message);
       return;
     }
 
@@ -622,7 +715,6 @@ const ServicePage = () => {
     }
 
     let uploadedFiles = [];
-
     if (attachments.length > 0) {
       setIsUploading(true);
       try {
@@ -636,61 +728,32 @@ const ServicePage = () => {
       setIsUploading(false);
     }
 
-    // Format the client's phone number for the reply link
     const clientPhone = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
-
-    // Define the accept and decline messages and their corresponding links
     const acceptMessage = `Hi ${bookingData.name}, I accept your booking for ${service.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
     const declineMessage = `Hi ${bookingData.name}, I'm unable to accept ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
-
     const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
     const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
 
-    // Determine the location and travel fee message
-    let locationInfo = '';
-    let travelFeeMessage = '';
-    const isHomeVisit = bookingData.locationOption === 'comeToYou';
-    const hasTravelFee = service.travelFee > 0 && isHomeVisit;
+    const locationInfo = handleLocationInfo(bookingData, service);
+    const locationMessage = getLocationSpecificMessage(bookingData, service);
 
-    if (isHomeVisit) {
-      locationInfo = 'Come to Client';
-      if (hasTravelFee) {
-        travelFeeMessage = `• Travel Fee: R${service.travelFee}%0A`;
-      }
-    } else if (bookingData.locationOption === 'comeToYou') {
-      locationInfo = 'Come to Client';
-    } else {
-      locationInfo = service.type === 'catering' ? "Catering Kitchen" : 
-                     service.type === 'moving' ? "Moving Company Office" :
-                     service.type === 'landscaping' ? "Landscaping Office" :
-                     service.type === 'daycare' ? "Daycare Center" :
-                     service.type === 'schoolTransport' ? "Transport Office" :
-                     `${getProfessionalTitle(service.type)}'s Location`;
-    }
-
-    // Build the main WhatsApp message
     let message = `*🏢 New ${getProfessionalTitle(service.type)} Booking Request for ${service.name}*%0A%0A`;
-
     message += `*🛎️ SERVICE DETAILS*%0A`;
     message += `• Price: R${service.regularPrice}%0A`;
     
-    // Add selected services
     const serviceOptions = getServiceOptions(service.type);
     if (bookingData.selectedServices.length > 0) {
       const selectedServiceNames = bookingData.selectedServices.map(serviceId => {
-        const service = serviceOptions.find(s => s.id === serviceId);
-        return service ? service.name : serviceId;
+        const serviceOption = serviceOptions.find(s => s.id === serviceId);
+        return serviceOption ? serviceOption.name : serviceId;
       }).join(', ');
-      
       message += `• Services: ${selectedServiceNames}%0A`;
     }
 
     // Add service-specific details
     if (service.type === 'moving' && bookingData.movingSize) {
       const movingSize = movingSizes.find(m => m.id === bookingData.movingSize);
-      if (movingSize) {
-        message += `• Moving Size: ${movingSize.name}%0A`;
-      }
+      if (movingSize) message += `• Moving Size: ${movingSize.name}%0A`;
     }
 
     if (service.type === 'moving' && bookingData.packingRequired) {
@@ -699,56 +762,24 @@ const ServicePage = () => {
 
     if (service.type === 'landscaping' && bookingData.gardenSize) {
       const gardenSize = gardenSizes.find(g => g.id === bookingData.gardenSize);
-      if (gardenSize) {
-        message += `• Garden Size: ${gardenSize.name}%0A`;
-      }
+      if (gardenSize) message += `• Garden Size: ${gardenSize.name}%0A`;
     }
 
     if (service.type === 'catering' && bookingData.mealType) {
       const meal = mealTypes.find(m => m.id === bookingData.mealType);
-      if (meal) {
-        message += `• Meal Type: ${meal.name}%0A`;
-      }
+      if (meal) message += `• Meal Type: ${meal.name}%0A`;
     }
 
     if (service.type === 'catering' && bookingData.cuisinePreference) {
       const cuisine = cuisineTypes.find(c => c.id === bookingData.cuisinePreference);
-      if (cuisine) {
-        message += `• Cuisine Preference: ${cuisine.name}%0A`;
-      }
+      if (cuisine) message += `• Cuisine Preference: ${cuisine.name}%0A`;
     }
 
-    if (bookingData.numberOfGuests) {
-      message += `• Number of Guests: ${bookingData.numberOfGuests}%0A`;
-    }
-
-    if (bookingData.dietaryRestrictions) {
-      message += `• Dietary Restrictions: ${bookingData.dietaryRestrictions}%0A`;
-    }
-
-    if (bookingData.ingredientsProvided) {
-      message += `• Ingredients: ${bookingData.ingredientsProvided === 'yes' ? 'Client will provide' : 'Service will provide'}%0A`;
-    }
-
-    if (service.type === 'daycare' && bookingData.childAge) {
-      message += `• Child Age: ${bookingData.childAge}%0A`;
-    }
-
-    if (service.type === 'schoolTransport' && bookingData.schoolName) {
-      message += `• School Name: ${bookingData.schoolName}%0A`;
-    }
-
-    if (service.type === 'schoolTransport' && bookingData.pickupLocation) {
-      message += `• Pickup Location: ${bookingData.pickupLocation}%0A`;
-    }
-
-    if (service.type === 'schoolTransport' && bookingData.dropoffLocation) {
-      message += `• Dropoff Location: ${bookingData.dropoffLocation}%0A`;
-    }
+    if (bookingData.numberOfGuests) message += `• Number of Guests: ${bookingData.numberOfGuests}%0A`;
+    if (bookingData.dietaryRestrictions) message += `• Dietary Restrictions: ${bookingData.dietaryRestrictions}%0A`;
+    if (bookingData.ingredientsProvided) message += `• Ingredients: ${bookingData.ingredientsProvided === 'yes' ? 'Client will provide' : 'Service will provide'}%0A`;
     
-    if (hasTravelFee) {
-      message += travelFeeMessage;
-    }
+    if (locationInfo.travelFee > 0) message += `• Travel Fee: R${locationInfo.travelFee}%0A`;
     message += `• ${getProfessionalTitle(service.type)} Contact: ${service.contact}%0A%0A`;
 
     message += `*👤 CLIENT DETAILS*%0A`;
@@ -756,19 +787,45 @@ const ServicePage = () => {
     message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
     message += `• Date: ${bookingData.date}%0A`;
     message += `• Time: ${bookingData.time}%0A`;
-    message += `• Location: ${locationInfo}%0A`;
-    message += `• Special Requirements: ${bookingData.specialRequirements || 'None'}%0A%0A`;
+    message += locationMessage;
+    message += `• Special Requirements: ${bookingData.specialRequirements || 'None'}%0A`;
+    message += `%0A`;
 
-    message += `Please respond:%0A`;
-    message += `✅ [Accept Booking](${acceptLink})%0A`;
-    message += `❌ [Decline Booking](${declineLink})%0A%0A`;
-    message += `Or reply directly to this message`;
-
-    if (isHomeVisit && bookingData.address) {
-      const mapLink = generateMapLink(bookingData.address);
+    // Enhanced location instructions for home visits
+    if (bookingData.locationOption === 'comeToYou' && bookingData.address) {
       message += `*📍 LOCATION DETAILS*%0A`;
+      message += `• Service Type: Home Service (${getProfessionalTitle(service.type)} comes to you)%0A`;
       message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
-      message += `• Navigation Link:%0A  ${mapLink}%0A%0A`;
+      
+      if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
+        message += `• Navigation Link:%0A  ${locationInfo.mapLink}%0A`;
+      }
+      
+      // Add service-specific location requirements
+      const requirements = getLocationRequirements(service.type);
+      if (requirements.comeToYou && requirements.comeToYou.length > 0) {
+        message += `• Location Requirements:%0A`;
+        requirements.comeToYou.forEach(req => {
+          const reqText = {
+            kitchenAccess: '✓ Kitchen access required',
+            cookingEquipment: '✓ Basic cooking equipment needed',
+            diningSpace: '✓ Dining area required',
+            cleanWorkspace: '✓ Clean, accessible workspace',
+            powerOutlets: '✓ Power outlets required',
+            waterAccess: '✓ Water source access needed',
+            clearAccess: '✓ Clear access paths required',
+            parkingSpace: '✓ Parking space needed',
+            elevatorAccess: '✓ Elevator access if applicable'
+          }[req] || `✓ ${req}`;
+          message += `  ${reqText}%0A`;
+        });
+      }
+      
+      if (locationInfo.instructions) {
+        message += `• Additional Instructions: ${locationInfo.instructions}%0A`;
+      }
+      
+      message += `%0A`;
     }
 
     // Add attachments if they exist
@@ -783,42 +840,28 @@ const ServicePage = () => {
     // Add action links for the service provider to accept or decline
     message += `*ACTION REQUIRED*%0A`;
     message += `Tap a link to reply to the client:%0A%0A`;
-    if (acceptLink) {
-      message += `✅ Accept: ${acceptLink}%0A`;
-    }
-    if (declineLink) {
-      message += `❌ Decline: ${declineLink}%0A%0A`;
-    }
+    if (acceptLink) message += `✅ Accept: ${acceptLink}%0A`;
+    if (declineLink) message += `❌ Decline: ${declineLink}%0A%0A`;
 
     message += `💬 You can also reply directly to this message.%0A%0A`;
-    message += `_Sent via Service Booking System_`;
+    message += `_Sent via loopOut Booking System_`;
 
-    // Open WhatsApp with the pre-filled message
     const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(service.contact)}?text=${message}`;
     window.open(whatsappUrl, '_blank');
-
-    // Reset attachments after sending
     setAttachments([]);
   };
 
   // Simulate AI analysis of comments
   const analyzeCommentsWithAI = () => {
     setAnalyzingComments(true);
-
-    // Simulate API call to AI service
     setTimeout(() => {
-      // Generate random quality scores for comments
       const analysis = {};
       const comments = document.querySelectorAll('.comment-item');
-
       comments.forEach((_, index) => {
-        const qualityScore = Math.floor(Math.random() * 40) + 60; // 60-100%
-        const sentiment = qualityScore > 80 ? 'positive' :
-          qualityScore > 60 ? 'neutral' : 'negative';
-
+        const qualityScore = Math.floor(Math.random() * 40) + 60;
+        const sentiment = qualityScore > 80 ? 'positive' : qualityScore > 60 ? 'neutral' : 'negative';
         analysis[index] = { qualityScore, sentiment };
       });
-
       setCommentAnalysis(analysis);
       setAnalyzingComments(false);
     }, 2000);
@@ -827,8 +870,7 @@ const ServicePage = () => {
   const handleLike = () => {
     setAiAssessment(prev => ({
       ...prev,
-      likes: prev.userReaction === 'like' ? prev.likes - 1 :
-        prev.userReaction === 'dislike' ? prev.likes + 1 : prev.likes + 1,
+      likes: prev.userReaction === 'like' ? prev.likes - 1 : prev.userReaction === 'dislike' ? prev.likes + 1 : prev.likes + 1,
       dislikes: prev.userReaction === 'dislike' ? prev.dislikes - 1 : prev.dislikes,
       userReaction: prev.userReaction === 'like' ? null : 'like'
     }));
@@ -837,8 +879,7 @@ const ServicePage = () => {
   const handleDislike = () => {
     setAiAssessment(prev => ({
       ...prev,
-      dislikes: prev.userReaction === 'dislike' ? prev.dislikes - 1 :
-        prev.userReaction === 'like' ? prev.dislikes + 1 : prev.dislikes + 1,
+      dislikes: prev.userReaction === 'dislike' ? prev.dislikes - 1 : prev.userReaction === 'like' ? prev.dislikes + 1 : prev.dislikes + 1,
       likes: prev.userReaction === 'like' ? prev.likes - 1 : prev.likes,
       userReaction: prev.userReaction === 'dislike' ? null : 'dislike'
     }));
@@ -863,18 +904,11 @@ const ServicePage = () => {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg">
           <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <FaExclamationTriangle className="h-5 w-5 text-red-400" />
-            </div>
+            <div className="flex-shrink-0"><FaExclamationTriangle className="h-5 w-5 text-red-400" /></div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">Error loading {service?.type ? getProfessionalTitle(service.type).toLowerCase() : 'service'}</h3>
-              <div className="mt-2 text-sm text-red-700">
-                <p>{error}</p>
-              </div>
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-3 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
+              <div className="mt-2 text-sm text-red-700"><p>{error}</p></div>
+              <button onClick={() => window.location.reload()} className="mt-3 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                 Try Again
               </button>
             </div>
@@ -896,250 +930,254 @@ const ServicePage = () => {
   }
 
   const description = service.description || '';
-  const displayText = showFullDescription
-    ? description
-    : description.slice(0, 300) + (description.length > 300 ? "..." : "");
-
+  const displayText = showFullDescription ? description : description.slice(0, 300) + (description.length > 300 ? "..." : "");
   const serviceOptions = getServiceOptions(service.type);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Navigation Button */}
-      <div className="fixed bottom-4 left-4 z-50">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 service-page overflow-x-hidden">
+      <style jsx>{`
+        footer { display: none !important; }
+        .service-page { overflow-x: hidden; }
+      `}</style>
+
+      {/* Navigation Button - Same as HelperPage */}
+      <div className="fixed bottom-4 left-3 z-50">
         <button
           onClick={() => navigate('/service-home-page')}
-          className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+          className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
           title="Go back to listings"
         >
-          <FaArrowLeft className="text-xl" />
+          <FaArrowLeft className="text-lg" />
         </button>
       </div>
 
-      {/* Floating Action Buttons */}
-      {(service.contact || whatsappNumber) && (
-        <div className="fixed bottom-4 right-4 flex flex-col gap-3 z-50 sm:flex-row">
-          {service.contact && (
-            <a
-              href={`tel:${service.contact}`}
-              className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors flex items-center justify-center"
-              aria-label={`Call ${getProfessionalTitle(service.type)}`}
-            >
-              <FaPhone className="text-2xl" />
-            </a>
-          )}
-          {whatsappLink && (
-            <a
-              href={whatsappLink}
-              target="_blank"
-              rel="noreferrer"
-              className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors flex items-center justify-center"
-              aria-label={`WhatsApp ${getProfessionalTitle(service.type)}`}
-            >
-              <FaWhatsapp className="text-2xl" />
-            </a>
-          )}
-        </div>
-      )}
-
-      {/* Main Content Grid */}
+      {/* Main Content Grid - Same as HelperPage */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column - Main Content */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Header Section */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            {/* Colored Header with Profile */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-              <div className="flex items-center gap-4">
-                {/* Profile Picture */}
-                <div className="w-16 h-16 bg-white rounded-2xl border-4 border-white border-opacity-20 shadow-lg flex items-center justify-center flex-shrink-0">
-                  {service.profileImage ? (
-                    <img 
-                      src={service.profileImage} 
-                      alt={service.name}
-                      className="w-full h-full rounded-2xl object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-blue-500 rounded-2xl flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">
-                        {service.name.charAt(0).toUpperCase()}
+          {/* Header Section - Exact same as HelperPage */}
+          <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
+              <img
+                src={service.imageUrls?.[0] || '/api/placeholder/120/120'}
+                alt={service.name}
+                className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+              />
+              <div className="flex-1">
+                <div className="flex flex-col md:flex-row md:items-center justify-between">
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">{service.name}</h1>
+                    <p className="text-gray-600">{getProfessionalTitle(service.type)}</p>
+                  </div>
+                  <div className="flex items-center space-x-2 mt-2 md:mt-0">
+                    <div className="flex items-center space-x-1 text-yellow-400">
+                      <FaStar />
+                      <span className="text-gray-700 font-medium">{service.rating || '4.5'}</span>
+                    </div>
+                    <span className="text-gray-400">•</span>
+                    <span className="text-gray-600">{service.reviewCount || '25'} reviews</span>
+                  </div>
+                </div>
+                
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="flex items-center space-x-1 text-gray-600">
+                    <FaMapMarkerAlt className="text-red-500" />
+                    <span>{service.address || 'Location not specified'}</span>
+                    {service.address && (
+                      <a 
+                        href={generateMapLink(service.address, service.type)} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-sm ml-2"
+                      >
+                        (View on Map)
+                      </a>
+                    )}
+                  </div>
+                  {service.contact && (
+                    <div className="flex items-center space-x-1 text-gray-600">
+                      <FaPhone className="text-green-500" />
+                      <span>{service.contact}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Verification and Rating Badges - Exact same as HelperPage */}
+                <div className="flex flex-wrap gap-3 mt-4">
+                  {service.security && (
+                    <div className="inline-flex items-center bg-emerald-50 px-4 py-2 rounded-full border border-emerald-200">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
+                      <span className="text-emerald-700 font-semibold text-sm">
+                        ✅ Verified Professional
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="inline-flex items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-200">
+                    <FaStar className="text-yellow-500 text-sm mr-2" />
+                    <span className="text-blue-700 font-semibold text-sm">
+                      {service.rating ? `${service.rating} Rating` : 'New Professional'}
+                    </span>
+                  </div>
+
+                  {/* Enhanced Location Badge */}
+                  {service.address && (
+                    <div className="inline-flex items-center bg-purple-50 px-4 py-2 rounded-full border border-purple-200">
+                      <FaMapMarkerAlt className="text-purple-600 text-sm mr-2" />
+                      <span className="text-purple-700 font-semibold text-sm">
+                        Location Verified
                       </span>
                     </div>
                   )}
                 </div>
-                
-                {/* Name and Title */}
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-1 truncate">
-                    {service.name}
-                  </h1>
-                  <div className="text-blue-100 text-sm font-medium">
-                    Professional {getProfessionalTitle(service.type)}
-                  </div>
-                </div>
-                
-                {/* Price Badge */}
-                <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl px-4 py-3 border border-white border-opacity-30">
-                  <div className="text-white text-xs font-semibold opacity-90 mb-1">STARTING FROM</div>
-                  <div className="text-white text-xl font-bold">R{service.regularPrice}</div>
-                </div>
-              </div>
-            </div>
 
-            {/* Main Content */}
-            <div className="p-6">
-              {/* Verification and Rating Badges */}
-              <div className="flex flex-wrap gap-3 mb-6">
-                {service.security && (
-                  <div className="inline-flex items-center bg-emerald-50 px-4 py-2 rounded-full border border-emerald-200">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
-                    <span className="text-emerald-700 font-semibold text-sm">
-                      ✅ Verified Service
-                    </span>
-                  </div>
-                )}
-                
-                <div className="inline-flex items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-200">
-                  <FaStar className="text-yellow-500 text-sm mr-2" />
-                  <span className="text-blue-700 font-semibold text-sm">
-                    {service.rating ? `${service.rating} Rating` : 'New Service'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Info Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                {/* Location Card */}
-                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <FaMapMarkerAlt className="text-purple-600 text-lg" />
+                {/* Info Cards Grid - Exact same as HelperPage */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                  {/* Location Card */}
+                  {service.address && (
+                    <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-4 border border-blue-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <FaMapMarkerAlt className="text-blue-600 text-lg" />
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600 font-medium mb-1">Service Area</div>
+                          <div className="text-gray-900 font-semibold text-sm truncate">
+                            {service.serviceArea || 'Local Area'}
+                          </div>
+                          <a 
+                            href={generateMapLink(service.address, service.type)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-xs mt-1 inline-block"
+                          >
+                            View on Map →
+                          </a>
+                        </div>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm text-gray-600 font-medium mb-1">Location</div>
-                      <div className="text-gray-900 font-semibold text-sm truncate">{service.address}</div>
-                    </div>
-                  </div>
-                </div>
+                  )}
 
-                {/* Experience Card */}
-                {service.host && (
+                  {/* Experience Card */}
+                  {service.host && (
+                    <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <FaBriefcase className="text-orange-600 text-lg" />
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600 font-medium mb-1">Experience</div>
+                          <div className="text-gray-900 font-semibold text-sm">
+                            {service.host} {service.type === 'catering' ? 'Years Catering' : 
+                                          service.type === 'cleaning' ? 'Years Cleaning' :
+                                          service.type === 'moving' ? 'Years Moving' :
+                                          service.type === 'landscaping' ? 'Years Landscaping' :
+                                          service.type === 'daycare' ? 'Years Childcare' :
+                                          service.type === 'schoolTransport' ? 'Years Driving' :
+                                          'Years Experience'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Response Time Card */}
                   <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <FaBriefcase className="text-orange-600 text-lg" />
+                      <div className="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <FaClock className="text-cyan-600 text-lg" />
                       </div>
                       <div>
-                        <div className="text-sm text-gray-600 font-medium mb-1">Experience</div>
-                        <div className="text-gray-900 font-semibold text-sm">
-                          {service.host} {service.type === 'catering' ? 'Years Catering' : 
-                                        service.type === 'cleaning' ? 'Years Cleaning' :
-                                        service.type === 'moving' ? 'Years Moving' :
-                                        service.type === 'landscaping' ? 'Years Landscaping' :
-                                        service.type === 'daycare' ? 'Years Childcare' :
-                                        service.type === 'schoolTransport' ? 'Years Driving' :
-                                        'Years Experience'}
-                        </div>
+                        <div className="text-sm text-gray-600 font-medium mb-1">Response Time</div>
+                        <div className="text-gray-900 font-semibold text-sm">{service.responseTime || 'Within 1 hour'}</div>
                       </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Response Time Card */}
-                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <FaClock className="text-cyan-600 text-lg" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-600 font-medium mb-1">Response Time</div>
-                      <div className="text-gray-900 font-semibold text-sm">{service.responseTime || 'Within 1 hour'}</div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Social Media Verification */}
-              <div className="border-t border-gray-200 pt-6">
-                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                  {/* Title Section */}
-                  <div className="flex items-center gap-3 lg:w-48 lg:flex-shrink-0">
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <FaUserFriends className="text-gray-600" />
+                {/* Social Media Verification - Exact same as HelperPage */}
+                <div className="border-t border-gray-200 pt-6 mt-6">
+                  <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                    {/* Title Section */}
+                    <div className="flex items-center gap-3 lg:w-48 lg:flex-shrink-0">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <FaUserFriends className="text-gray-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 text-sm">Social Verification</h3>
+                        <p className="text-gray-500 text-xs">AI-powered validation</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 text-sm">Social Verification</h3>
-                      <p className="text-gray-500 text-xs">AI-powered validation</p>
-                    </div>
-                  </div>
 
-                  {/* Social Media Badges */}
-                  <div className="flex-1">
-                    {verifyingSocialMedia ? (
-                      <div className="flex items-center gap-3 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                        <FaSpinner className="animate-spin text-yellow-600" />
-                        <div>
-                          <div className="text-yellow-800 font-medium text-sm">Verifying profiles</div>
-                          <div className="text-yellow-600 text-xs">Scanning social networks</div>
+                    {/* Social Media Badges */}
+                    <div className="flex-1">
+                      {verifyingSocialMedia ? (
+                        <div className="flex items-center gap-3 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                          <FaSpinner className="animate-spin text-yellow-600" />
+                          <div>
+                            <div className="text-yellow-800 font-medium text-sm">Verifying profiles</div>
+                            <div className="text-yellow-600 text-xs">Scanning social networks</div>
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap gap-3">
-                        {socialMediaVerification.facebook.exists && socialMediaVerification.facebook.verificationStatus === 'verified' && (
-                          <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="relative">
-                              <FaFacebook className="text-blue-600 text-lg" />
-                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                      ) : (
+                        <div className="flex flex-wrap gap-3">
+                          {socialMediaVerification.facebook.exists && socialMediaVerification.facebook.verificationStatus === 'verified' && (
+                            <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+                              <div className="relative">
+                                <FaFacebook className="text-blue-600 text-lg" />
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                              </div>
+                              <span className="text-gray-700 font-semibold text-sm">Facebook</span>
                             </div>
-                            <span className="text-gray-700 font-semibold text-sm">Facebook</span>
-                          </div>
-                        )}
+                          )}
 
-                        {socialMediaVerification.instagram.exists && socialMediaVerification.instagram.verificationStatus === 'verified' && (
-                          <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-pink-200 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="relative">
-                              <FaInstagram className="text-pink-600 text-lg" />
-                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                          {socialMediaVerification.instagram.exists && socialMediaVerification.instagram.verificationStatus === 'verified' && (
+                            <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-pink-200 shadow-sm hover:shadow-md transition-shadow">
+                              <div className="relative">
+                                <FaInstagram className="text-pink-600 text-lg" />
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                              </div>
+                              <span className="text-gray-700 font-semibold text-sm">Instagram</span>
                             </div>
-                            <span className="text-gray-700 font-semibold text-sm">Instagram</span>
-                          </div>
-                        )}
+                          )}
 
-                        {socialMediaVerification.linkedin.exists && socialMediaVerification.linkedin.verificationStatus === 'verified' && (
-                          <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-300 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="relative">
-                              <FaLinkedin className="text-blue-700 text-lg" />
-                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                          {socialMediaVerification.linkedin.exists && socialMediaVerification.linkedin.verificationStatus === 'verified' && (
+                            <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-300 shadow-sm hover:shadow-md transition-shadow">
+                              <div className="relative">
+                                <FaLinkedin className="text-blue-700 text-lg" />
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                              </div>
+                              <span className="text-gray-700 font-semibold text-sm">LinkedIn</span>
                             </div>
-                            <span className="text-gray-700 font-semibold text-sm">LinkedIn</span>
-                          </div>
-                        )}
+                          )}
 
-                        {socialMediaVerification.twitter.exists && socialMediaVerification.twitter.verificationStatus === 'verified' && (
-                          <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="relative">
-                              <FaTwitter className="text-gray-900 text-lg" />
-                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                          {socialMediaVerification.twitter.exists && socialMediaVerification.twitter.verificationStatus === 'verified' && (
+                            <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-shadow">
+                              <div className="relative">
+                                <FaTwitter className="text-gray-900 text-lg" />
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                              </div>
+                              <span className="text-gray-700 font-semibold text-sm">Twitter</span>
                             </div>
-                            <span className="text-gray-700 font-semibold text-sm">Twitter</span>
-                          </div>
-                        )}
+                          )}
 
-                        {!socialMediaVerification.facebook.exists && !socialMediaVerification.instagram.exists && 
-                         !socialMediaVerification.linkedin.exists && !socialMediaVerification.twitter.exists && (
-                          <div className="inline-flex items-center gap-2 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
-                            <FaInfoCircle className="text-gray-400" />
-                            <span className="text-gray-600 font-medium text-sm">No social profiles found</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          {!socialMediaVerification.facebook.exists && !socialMediaVerification.instagram.exists && 
+                          !socialMediaVerification.linkedin.exists && !socialMediaVerification.twitter.exists && (
+                            <div className="inline-flex items-center gap-2 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
+                              <FaInfoCircle className="text-gray-400" />
+                              <span className="text-gray-600 font-medium text-sm">No social profiles found</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Image Gallery */}
+          {/* Image Gallery - Exact same as HelperPage */}
           {service.imageUrls && service.imageUrls.length > 0 && (
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
               <div className="mb-4">
@@ -1201,7 +1239,7 @@ const ServicePage = () => {
             </div>
           )}
 
-          {/* Description Section */}
+          {/* Description Section - Exact same as HelperPage */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
@@ -1235,7 +1273,7 @@ const ServicePage = () => {
             </div>
           </div>
 
-          {/* AI Assessment Section */}
+          {/* AI Assessment Section - Exact same as HelperPage */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -1372,7 +1410,192 @@ const ServicePage = () => {
             </div>
           </div>
 
-          {/* Additional Information */}
+          {/* Host Rating Categories Section - Same structure as HelperPage */}
+          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <h2 className="text-xl md:text-2xl font-semibold mb-6 text-gray-800 flex items-center gap-2">
+              <FaUserFriends className="text-blue-600" />
+              Rate the {getProfessionalTitle(service.type)} & Service
+            </h2>
+            
+            {/* Overall Rating Summary */}
+            <div className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-center sm:text-left">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-1">Overall Service Rating</h3>
+                  <p className="text-gray-600 text-sm">
+                    Based on customer feedback and experience
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-blue-600">
+                      {service.rating?.toFixed(1) || '5.0'}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg ${
+                            star <= Math.floor(service.rating || 5)
+                              ? 'text-yellow-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Rating Categories Grid - Service-specific */}
+            <div className="space-y-3">
+              {/* Cleaning Service Categories */}
+              {service.type === 'cleaning' && (
+                <>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <FaBroom className="text-green-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Cleaning Quality</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Thoroughness and attention to detail</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <FaClock className="text-blue-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Punctuality</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Arrival time and efficiency</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Catering Service Categories */}
+              {service.type === 'catering' && (
+                <>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <FaUtensils className="text-orange-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Food Quality</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Taste and presentation of meals</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Default Categories for other services */}
+              {!['cleaning', 'catering'].includes(service.type) && (
+                <>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">💼</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Professionalism</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Overall professional conduct</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">💬</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Communication</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm">Clarity and responsiveness</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`text-lg cursor-pointer ${
+                            star <= 5 ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Rating Guidelines */}
+            <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-5 h-5 bg-amber-100 rounded-full flex items-center justify-center mt-0.5">
+                  <svg className="w-3 h-3 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-medium text-amber-800 text-sm mb-1">Rating Guidelines</h4>
+                  <p className="text-amber-700 text-xs leading-relaxed">
+                    Your honest ratings help other customers find great service providers and maintain quality standards. 
+                    Rate based on your actual experience with the service quality, communication, and professionalism.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Additional Information - Updated to match HelperPage */}
           <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Additional Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1476,7 +1699,7 @@ const ServicePage = () => {
                         <div className="space-y-2 text-sm">
                           <p className="text-blue-700">We prioritize your safety and satisfaction</p>
                           <a 
-                            href="/safety-policy" 
+                            href="/safetyservices" 
                             className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium transition-colors"
                           >
                             <FaShieldAlt className="text-xs" />
@@ -1619,10 +1842,10 @@ const ServicePage = () => {
           </div>
         </div>
 
-        {/* Right Column - Booking Form */}
+        {/* Right Column - Booking Form - Exact same as HelperPage */}
         <div className="space-y-6">
           {/* Booking Form */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 sticky top-6">
+          <div id="booking-form" className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 sticky top-6">
             <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
               Book {getProfessionalTitle(service.type)} Services
             </h3>
@@ -1928,7 +2151,7 @@ const ServicePage = () => {
                 </div>
               )}
 
-              {/* Location Options */}
+              {/* Enhanced Location Options - Same as HelperPage */}
               <div className="space-y-4">
                 <h4 className="font-semibold text-gray-900 border-b pb-2">Location</h4>
                 
@@ -1978,19 +2201,86 @@ const ServicePage = () => {
                 </div>
 
                 {bookingData.locationOption === 'comeToYou' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Your Address *
-                    </label>
-                    <textarea
-                      name="address"
-                      value={bookingData.address}
-                      onChange={handleBookingChange}
-                      required
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Enter your full address for the visit"
-                    />
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Your Address *
+                      </label>
+                      <textarea
+                        name="address"
+                        value={bookingData.address}
+                        onChange={handleBookingChange}
+                        required
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter your full address including street number, street name, city, and postal code"
+                      />
+                    </div>
+                    
+                    {/* Enhanced Address Validation Message */}
+                    {bookingData.address && bookingData.address.length > 0 && (
+                      <div className={`text-xs p-2 rounded ${
+                        bookingData.address.length < 10 
+                          ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                          : 'bg-green-50 text-green-700 border border-green-200'
+                      }`}>
+                        {bookingData.address.length < 10 
+                          ? '⚠️ Please provide a more detailed address for accurate service delivery'
+                          : '✓ Address looks good! Make sure to include apartment/unit number if applicable.'
+                        }
+                      </div>
+                    )}
+
+                    {/* Service-specific Location Requirements */}
+                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                      <h5 className="font-medium text-blue-800 text-sm mb-2">
+                        📍 Location Requirements for {getProfessionalTitle(service.type)}
+                      </h5>
+                      <ul className="text-xs text-blue-700 space-y-1">
+                        {service.type === 'catering' && (
+                          <>
+                            <li>• Kitchen access with basic cooking equipment</li>
+                            <li>• Dining area for meal service</li>
+                            <li>• Power outlets for appliances</li>
+                          </>
+                        )}
+                        {service.type === 'cleaning' && (
+                          <>
+                            <li>• Access to all areas needing cleaning</li>
+                            <li>• Water source access</li>
+                            <li>• Power outlets for equipment</li>
+                          </>
+                        )}
+                        {service.type === 'moving' && (
+                          <>
+                            <li>• Clear access paths</li>
+                            <li>• Parking space for moving truck</li>
+                            <li>• Elevator access if applicable</li>
+                          </>
+                        )}
+                        {!['catering', 'cleaning', 'moving'].includes(service.type) && (
+                          <li>• Clean, accessible workspace with power outlets</li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {bookingData.locationOption === 'goToThem' && service.address && (
+                  <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                    <h5 className="font-medium text-green-800 text-sm mb-1">
+                      📍 {getProfessionalTitle(service.type)} Location
+                    </h5>
+                    <p className="text-sm text-green-700 mb-2">{service.address}</p>
+                    <a 
+                      href={generateMapLink(service.address, service.type)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-green-600 hover:text-green-800 text-sm font-medium inline-flex items-center gap-1"
+                    >
+                      <FaMapMarkerAlt className="text-xs" />
+                      View on Map
+                    </a>
                   </div>
                 )}
               </div>
@@ -2141,114 +2431,66 @@ const ServicePage = () => {
               </div>
             </form>
           </div>
+        </div>
+      </div>
 
-          {/* Contact Information */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h4 className="font-semibold text-gray-900 mb-4">Contact Information</h4>
-            <div className="space-y-3">
-              {service.contact && (
-                <div className="flex items-center gap-3">
-                  <FaPhone className="text-gray-400" />
-                  <a
-                    href={`tel:${service.contact}`}
-                    className="text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    {service.contact}
-                  </a>
+      {/* Bottom Booking Belt - Exact same as HelperPage */}
+      <div className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 transition-transform duration-300 ${
+        showBookingBelt ? 'translate-y-0' : 'translate-y-full'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Service Info */}
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              <img
+                src={service?.imageUrls?.[0] || '/api/placeholder/50/50'}
+                alt={service?.name}
+                className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+              />
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-gray-900 truncate">{service?.name}</h3>
+                <p className="text-sm text-gray-600 truncate">{getProfessionalTitle(service?.type)}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-1">
+                    <FaStar className="text-yellow-400 text-sm" />
+                    <span className="text-sm font-medium text-gray-700">{service?.rating || '4.5'}</span>
+                  </div>
+                  <span className="text-gray-300">•</span>
+                  <span className="text-sm text-gray-600">R{service?.regularPrice}</span>
+                  {service?.travelFee > 0 && (
+                    <>
+                      <span className="text-gray-300">•</span>
+                      <span className="text-sm text-orange-600">+R{service.travelFee} travel</span>
+                    </>
+                  )}
                 </div>
-              )}
-              {whatsappLink && (
-                <div className="flex items-center gap-3">
-                  <FaWhatsapp className="text-green-500" />
-                  <a
-                    href={whatsappLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    Chat on WhatsApp
-                  </a>
-                </div>
-              )}
-              {service.address && (
-                <div className="flex items-start gap-3">
-                  <FaMapMarkerAlt className="text-gray-400 mt-1 flex-shrink-0" />
-                  <span className="text-gray-700">{service.address}</span>
-                </div>
-              )}
+              </div>
             </div>
-          </div>
 
-          {/* Pricing Information */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h4 className="font-semibold text-gray-900 mb-4">Pricing</h4>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Base Price</span>
-                <span className="font-semibold text-gray-900">R{service.regularPrice}</span>
-              </div>
-              {service.travelFee > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Travel Fee</span>
-                  <span className="font-semibold text-orange-600">R{service.travelFee}</span>
-                </div>
-              )}
-              <div className="border-t pt-3">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-gray-900">Total Estimate</span>
-                  <span className="font-bold text-lg text-blue-600">
-                    R{service.regularPrice + (bookingData.locationOption === 'comeToYou' ? service.travelFee : 0)}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  * Final price may vary based on specific requirements
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Safety Tips */}
-          <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-300 rounded-2xl p-8 shadow-lg">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-yellow-100 p-3 rounded-full">
-                <FaShieldAlt className="text-yellow-600 text-xl" />
-              </div>
-              <h3 className="text-xl font-bold text-yellow-800">Essential Safety Guidelines</h3>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="bg-white p-1 rounded-full mt-1">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                </div>
-                <span className="text-yellow-700 font-medium">Ensure someone is home at all times during the service</span>
-              </div>
-              
-              <div className="flex items-start gap-3">
-                <div className="bg-white p-1 rounded-full mt-1">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                </div>
-                <span className="text-yellow-700 font-medium">Verify the service provider s identity upon arrival</span>
-              </div>
-              
-              <div className="flex items-start gap-3">
-                <div className="bg-white p-1 rounded-full mt-1">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                </div>
-                <span className="text-yellow-700 font-medium">Never pay the full amount upfront - only after satisfactory service</span>
-              </div>
-            </div>
-            
-            <div className="mt-6 pt-4 border-t border-yellow-200">
-              <a 
-                href="/safetyservices" 
-                className="inline-flex items-center gap-2 text-yellow-700 hover:text-yellow-800 font-semibold transition-colors hover:underline"
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {/* Quick Info Button */}
+              <button
+                onClick={() => {
+                  document.getElementById('booking-form')?.scrollIntoView({ 
+                    behavior: 'smooth' 
+                  });
+                }}
+                className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
               >
-                <span>Learn more about our safety policies</span>
-                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </a>
+                <FaInfoCircle className="text-gray-500" />
+                <span className="hidden sm:inline">More Info</span>
+              </button>
+
+              {/* WhatsApp Booking Button */}
+              <button
+                onClick={handleQuickBooking}
+                disabled={!service?.contact}
+                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FaWhatsapp className="text-xl" />
+                <span className="font-semibold">Book via WhatsApp</span>
+              </button>
             </div>
           </div>
         </div>

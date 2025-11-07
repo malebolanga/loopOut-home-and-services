@@ -136,7 +136,9 @@ export default function Listing() {
   const navigate = useNavigate();
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
-
+const [numberOfGuests, setNumberOfGuests] = useState(1);
+const [extraBed, setExtraBed] = useState('no');
+const [ironRequest, setIronRequest] = useState(false);
   // State declarations
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isTablet, setIsTablet] = useState(window.innerWidth >= 768 && window.innerWidth <= 1024);
@@ -493,70 +495,77 @@ export default function Listing() {
   };
 
   // Handle overnight WhatsApp booking
-  const handleOvernightWhatsAppBooking = () => {
-    if (!listing) return;
-    
-    // Calculate prices
-    const roomTotal = listing.regularPrice * nights;
-    const breakfastTotal = mealPlan === 'breakfast' ? breakfastPrice * nights : 0;
-    const totalPrice = roomTotal + breakfastTotal;
+const handleOvernightWhatsAppBooking = () => {
+  if (!listing) return;
+  
+  // Calculate prices
+  const roomTotal = listing.regularPrice * nights;
+  const breakfastTotal = mealPlan === 'breakfast' ? breakfastPrice * nights : 0;
+  const totalPrice = roomTotal + breakfastTotal;
 
-    // Format prices
-    const formatPrice = (price) =>
-      price.toLocaleString('en-ZA', { minimumFractionDigits: 2 });
+  // Format prices
+  const formatPrice = (price) =>
+    price.toLocaleString('en-ZA', { minimumFractionDigits: 2 });
 
-    // Robust WhatsApp number formatting
-    let num = String(listing?.contact || '27123456789').replace(/\D/g, '');
-    let whatsappNumber;
+  // Robust WhatsApp number formatting
+  let num = String(listing?.contact || '27123456789').replace(/\D/g, '');
+  let whatsappNumber;
 
-    if (num.startsWith('27') && num.length === 11) {
-      // Already valid international format
-      whatsappNumber = num;
-    } else {
-      // Convert to 10-digit local format
-      if (!num.startsWith('0')) num = '0' + num;
-      // Ensure exactly 10 digits
-      if (num.length > 10) num = num.substring(num.length - 10);
-      if (num.length < 10) num = num.padEnd(10, '0');
-      // Convert to international format
-      whatsappNumber = num.replace(/^0/, '27');
-    }
+  if (num.startsWith('27') && num.length === 11) {
+    // Already valid international format
+    whatsappNumber = num;
+  } else {
+    // Convert to 10-digit local format
+    if (!num.startsWith('0')) num = '0' + num;
+    // Ensure exactly 10 digits
+    if (num.length > 10) num = num.substring(num.length - 10);
+    if (num.length < 10) num = num.padEnd(10, '0');
+    // Convert to international format
+    whatsappNumber = num.replace(/^0/, '27');
+  }
 
-    const message = encodeURIComponent(
-      `🏨 *NEW BOOKING REQUEST* 🏨\n\n` +
-      `*PROPERTY DETAILS*\n` +
-      `🏠 ${listing.name}\n` +
-      `📍 Location: ${listing.address || 'Not specified'}\n\n` +
-      `📅 *DATES*\n` +
-      `• Check-in: ${dateRange[0].toDateString()}\n` +
-      `• Check-out: ${dateRange[1].toDateString()}\n` +
-      `• ${nights} Night${nights > 1 ? 's' : ''}\n\n` +
-      `💰 *PRICE BREAKDOWN*\n` +
-      `• Room Rate: R${formatPrice(listing.regularPrice)}/night\n` +
-      `  → ${nights} night${nights > 1 ? 's' : ''}: R${formatPrice(roomTotal)}\n` +
-      `${mealPlan === 'breakfast' ?
-        `• Breakfast: R${formatPrice(breakfastPrice)}/night\n` +
-        `  → ${nights} night${nights > 1 ? 's' : ''}: R${formatPrice(breakfastTotal)}\n` : ''}` +
-      `*TOTAL: R${formatPrice(totalPrice)}*\n\n` +
-      `👤 *GUEST INFORMATION*\n` +
-      `• Full Name: ${guestName}\n` +
-      `• Contact: ${guestContact}\n` +
-      `• Special Requests: ${specialRequests || 'None'}\n\n` +
-      `📋 *HOST ACTIONS*\n` +
-      `Please reply with:\n` +
-      `✅ \`ACCEPT\` - Confirm this booking\n` +
-      `❌ \`DECLINE\` - Reject this request\n` +
-      `💬 \`MESSAGE\` - Contact guest for details\n\n` +
-      `_Sent from ${window.location.hostname}_`
-    );
+  const message = encodeURIComponent(
+    `🏨 *NEW BOOKING REQUEST* 🏨\n\n` +
+    `*PROPERTY DETAILS*\n` +
+    `🏠 ${listing.name}\n` +
+    `📍 Location: ${listing.address || 'Not specified'}\n\n` +
+    `📅 *DATES*\n` +
+    `• Check-in: ${dateRange[0].toDateString()}\n` +
+    `• Check-out: ${dateRange[1].toDateString()}\n` +
+    `• ${nights} Night${nights > 1 ? 's' : ''}\n\n` +
+    `👥 *GUEST DETAILS*\n` +
+    `• Number of Guests: ${numberOfGuests}\n` +
+    `• Extra Bed for Kids: ${extraBed === 'yes' ? 'Yes' : 'No'}\n` +
+    `• Iron & Ironing Board: ${ironRequest ? 'Yes' : 'No'}\n\n` +
+    `💰 *PRICE BREAKDOWN*\n` +
+    `• Room Rate: R${formatPrice(listing.regularPrice)}/night\n` +
+    `  → ${nights} night${nights > 1 ? 's' : ''}: R${formatPrice(roomTotal)}\n` +
+    `${mealPlan === 'breakfast' ?
+      `• Breakfast: R${formatPrice(breakfastPrice)}/night\n` +
+      `  → ${nights} night${nights > 1 ? 's' : ''}: R${formatPrice(breakfastTotal)}\n` : ''}` +
+    `*TOTAL: R${formatPrice(totalPrice)}*\n\n` +
+    `👤 *GUEST INFORMATION*\n` +
+    `• Full Name: ${guestName}\n` +
+    `• Contact: ${guestContact}\n` +
+    `• Special Requests: ${specialRequests || 'None'}\n\n` +
+    `📋 *HOST ACTIONS*\n` +
+    `Please reply with:\n` +
+    `✅ \`ACCEPT\` - Confirm this booking\n` +
+    `❌ \`DECLINE\` - Reject this request\n` +
+    `💬 \`MESSAGE\` - Contact guest for details\n\n` +
+    `_Sent from ${window.location.hostname}_`
+  );
 
-    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
+  window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
 
-    // Reset form
-    setGuestName('');
-    setGuestContact('');
-    setSpecialRequests('');
-  };
+  // Reset form
+  setGuestName('');
+  setGuestContact('');
+  setSpecialRequests('');
+  setNumberOfGuests(1);
+  setExtraBed('no');
+  setIronRequest(false);
+};
 
   const handleOfficeWhatsAppBooking = () => {
     if (!listing) return;
@@ -1818,196 +1827,251 @@ export default function Listing() {
           )}
 
           {/* Overnight Stay Booking Section */}
-          {listing.type === 'over' && (
-            <section className="mb-8 section-card">
-              <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Availability & Booking</h2>
+        {listing.type === 'over' && (
+  <section className="mb-8 section-card">
+    <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Availability & Booking</h2>
 
-              <div className="flex flex-col lg:flex-row gap-6">
-                {/* Calendar Section - 40% width on large screens */}
-                <div className="w-full lg:w-2/5">
-                  <div className="sticky top-4">
-                    <Calendar
-                      onChange={setDateRange}
-                      value={dateRange}
-                      selectRange={true}
-                      minDate={new Date()}
-                      className="rounded-xl shadow-lg w-full"
+    <div className="flex flex-col lg:flex-row gap-6">
+      {/* Calendar Section - 40% width on large screens */}
+      <div className="w-full lg:w-2/5">
+        <div className="sticky top-4">
+          <Calendar
+            onChange={setDateRange}
+            value={dateRange}
+            selectRange={true}
+            minDate={new Date()}
+            className="rounded-xl shadow-lg w-full"
+          />
+        </div>
+      </div>
+
+      {/* Booking Summary Section - 60% width on large screens */}
+      <div className="w-full lg:w-3/5">
+        <div className="">
+          <h3 className="text-lg font-semibold text-blue-800 mb-4">Booking Summary</h3>
+
+          {dateRange[0] && dateRange[1] ? (
+            <div className="space-y-4">
+              {/* Selected Dates */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
+                  <h4 className="font-medium text-gray-700 mb-2">Check-in</h4>
+                  <p className="font-medium text-lg">{dateRange[0].toDateString()}</p>
+                </div>
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
+                  <h4 className="font-medium text-gray-700 mb-2">Check-out</h4>
+                  <p className="font-medium text-lg">{dateRange[1].toDateString()}</p>
+                </div>
+                <div className="bg-white p-4 rounded-lg border border-gray-200 md:col-span-2">
+                  <h4 className="font-medium text-gray-700 mb-2">Total Nights</h4>
+                  <p className="font-medium text-lg">{nights} night{nights > 1 ? 's' : ''}</p>
+                </div>
+              </div>
+
+              {/* Guest Information */}
+              <div className="bg-white p-4 rounded-lg border border-gray-200">
+                <h4 className="font-medium text-gray-700 mb-3">Guest Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="guestName" className="block text-sm font-medium text-gray-700 mb-1">
+                      Full Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="guestName"
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="As it appears on ID"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="guestContact" className="block text-sm font-medium text-gray-700 mb-1">
+                      WhatsApp Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      id="guestContact"
+                      value={guestContact}
+                      onChange={(e) => setGuestContact(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="+27 82 123 4567"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="numberOfGuests" className="block text-sm font-medium text-gray-700 mb-1">
+                      Number of Guests <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="numberOfGuests"
+                      value={numberOfGuests}
+                      onChange={(e) => setNumberOfGuests(parseInt(e.target.value))}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      <option value={1}>1 Guest</option>
+                      <option value={2}>2 Guests</option>
+                      <option value={3}>3 Guests</option>
+                      <option value={4}>4 Guests</option>
+                      <option value={5}>5 Guests</option>
+                      <option value={6}>6+ Guests</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="extraBed" className="block text-sm font-medium text-gray-700 mb-1">
+                      Extra Bed for Kids
+                    </label>
+                    <select
+                      id="extraBed"
+                      value={extraBed}
+                      onChange={(e) => setExtraBed(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="no">Not Needed</option>
+                      <option value="yes">Yes, Please</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Additional Requests
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="ironRequest"
+                          checked={ironRequest}
+                          onChange={(e) => setIronRequest(e.target.checked)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="ironRequest" className="ml-2 text-sm text-gray-700">
+                          Iron & Ironing Board Needed
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
+                      Special Requests
+                    </label>
+                    <textarea
+                      id="specialRequests"
+                      value={specialRequests}
+                      onChange={(e) => setSpecialRequests(e.target.value)}
+                      rows={3}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Dietary restrictions, accessibility needs, etc."
                     />
                   </div>
                 </div>
+              </div>
 
-                {/* Booking Summary Section - 60% width on large screens */}
-                <div className="w-full lg:w-3/5">
-                  <div className="">
-                    <h3 className="text-lg font-semibold text-blue-800 mb-4">Booking Summary</h3>
-
-                    {dateRange[0] && dateRange[1] ? (
-                      <div className="space-y-4">
-                        {/* Selected Dates */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 className="font-medium text-gray-700 mb-2">Check-in</h4>
-                            <p className="font-medium text-lg">{dateRange[0].toDateString()}</p>
-                          </div>
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 className="font-medium text-gray-700 mb-2">Check-out</h4>
-                            <p className="font-medium text-lg">{dateRange[1].toDateString()}</p>
-                          </div>
-                          <div className="bg-white p-4 rounded-lg border border-gray-200 md:col-span-2">
-                            <h4 className="font-medium text-gray-700 mb-2">Total Nights</h4>
-                            <p className="font-medium text-lg">{nights} night{nights > 1 ? 's' : ''}</p>
-                          </div>
-                        </div>
-
-                        {/* Meal Options */}
-                        <div className="bg-white p-4 rounded-lg border border-gray-200">
-                          <h4 className="font-medium text-gray-700 mb-3">Meal Options</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div
-                              className={`p-4 border rounded-lg cursor-pointer transition-colors ${mealPlan === 'breakfast' ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:bg-gray-50'}`}
-                              onClick={() => setMealPlan('breakfast')}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${mealPlan === 'breakfast' ? 'bg-green-500 border-green-500' : 'border-gray-400'}`}>
-                                  {mealPlan === 'breakfast' && (
-                                    <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                  )}
-                                </div>
-                                <div>
-                                  <p className="font-medium">Breakfast Included</p>
-                                  <p className="text-sm text-gray-600 mt-1">+ R{breakfastPrice.toLocaleString('en-ZA')}/night</p>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div
-                              className={`p-4 border rounded-lg cursor-pointer transition-colors ${mealPlan === 'none' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'}`}
-                              onClick={() => setMealPlan('none')}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${mealPlan === 'none' ? 'bg-blue-500 border-blue-500' : 'border-gray-400'}`}>
-                                  {mealPlan === 'none' && (
-                                    <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                  )}
-                                </div>
-                                <div>
-                                  <p className="font-medium">Room Only</p>
-                                  <p className="text-sm text-gray-600 mt-1">No meals included</p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Price Summary */}
-                        <div className="bg-white p-4 rounded-lg border border-gray-200">
-                          <h4 className="font-medium text-gray-700 mb-3">Price Summary</h4>
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Room Rate ({nights} nights)</span>
-                              <span className="font-medium">R{(listing.regularPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
-                            </div>
-
-                            {mealPlan === 'breakfast' && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Breakfast ({nights} nights)</span>
-                                <span className="font-medium">R{(breakfastPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
-                              </div>
-                            )}
-
-                            <div className="pt-3 mt-2 border-t border-gray-200 font-semibold flex justify-between text-lg">
-                              <span>Total Amount</span>
-                              <span className="text-blue-600 font-bold">
-                                R{(listing.regularPrice * nights + (mealPlan === 'breakfast' ? breakfastPrice * nights : 0)).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Guest Information */}
-                        <div className="bg-white p-4 rounded-lg border border-gray-200">
-                          <h4 className="font-medium text-gray-700 mb-3">Your Information</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label htmlFor="guestName" className="block text-sm font-medium text-gray-700 mb-1">
-                                Full Name <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="text"
-                                id="guestName"
-                                value={guestName}
-                                onChange={(e) => setGuestName(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="As it appears on ID"
-                                required
-                              />
-                            </div>
-
-                            <div>
-                              <label htmlFor="guestContact" className="block text-sm font-medium text-gray-700 mb-1">
-                                WhatsApp Number <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="tel"
-                                id="guestContact"
-                                value={guestContact}
-                                onChange={(e) => setGuestContact(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="+27 82 123 4567"
-                                required
-                              />
-                            </div>
-
-                            <div className="md:col-span-2">
-                              <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
-                                Special Requests
-                              </label>
-                              <textarea
-                                id="specialRequests"
-                                value={specialRequests}
-                                onChange={(e) => setSpecialRequests(e.target.value)}
-                                rows={3}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Dietary restrictions, accessibility needs, etc."
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* WhatsApp Booking Button */}
-                        <div className="pt-2">
-                          <div className="mb-3 text-center text-sm text-gray-600">
-                            <p>You ll complete your booking via WhatsApp</p>
-                          </div>
-                          <button
-                            className="w-full bg-green-500 text-white py-2.5 px-4 rounded-md hover:bg-green-600 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-md hover:shadow-sm"
-                            onClick={handleOvernightWhatsAppBooking}
-                            disabled={!guestName || !guestContact}
-                          >
-                            <FaWhatsapp className="text-base" />
-                            Submit Booking Request
-                          </button>
-                        </div>
+              {/* Meal Options */}
+              <div className="bg-white p-4 rounded-lg border border-gray-200">
+                <h4 className="font-medium text-gray-700 mb-3">Meal Options</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div
+                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${mealPlan === 'breakfast' ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:bg-gray-50'}`}
+                    onClick={() => setMealPlan('breakfast')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${mealPlan === 'breakfast' ? 'bg-green-500 border-green-500' : 'border-gray-400'}`}>
+                        {mealPlan === 'breakfast' && (
+                          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
                       </div>
-                    ) : (
-                      <div className="text-center py-6">
-                        <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <p className="text-gray-600 mt-3 text-lg">
-                          Please select check-in and check-out dates to see pricing and book
-                        </p>
+                      <div>
+                        <p className="font-medium">Breakfast Included</p>
+                        <p className="text-sm text-gray-600 mt-1">+ R{breakfastPrice.toLocaleString('en-ZA')}/night</p>
                       </div>
-                    )}
+                    </div>
+                  </div>
+
+                  <div
+                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${mealPlan === 'none' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'}`}
+                    onClick={() => setMealPlan('none')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${mealPlan === 'none' ? 'bg-blue-500 border-blue-500' : 'border-gray-400'}`}>
+                        {mealPlan === 'none' && (
+                          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium">Room Only</p>
+                        <p className="text-sm text-gray-600 mt-1">No meals included</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </section>
+
+              {/* Price Summary */}
+              <div className="bg-white p-4 rounded-lg border border-gray-200">
+                <h4 className="font-medium text-gray-700 mb-3">Price Summary</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Room Rate ({nights} nights)</span>
+                    <span className="font-medium">R{(listing.regularPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
+                  </div>
+
+                  {mealPlan === 'breakfast' && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Breakfast ({nights} nights)</span>
+                      <span className="font-medium">R{(breakfastPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  )}
+
+                  <div className="pt-3 mt-2 border-t border-gray-200 font-semibold flex justify-between text-lg">
+                    <span>Total Amount</span>
+                    <span className="text-blue-600 font-bold">
+                      R{(listing.regularPrice * nights + (mealPlan === 'breakfast' ? breakfastPrice * nights : 0)).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* WhatsApp Booking Button */}
+              <div className="pt-2">
+                <div className="mb-3 text-center text-sm text-gray-600">
+                  <p>You ll complete your booking via WhatsApp</p>
+                </div>
+                <button
+                  className="w-full bg-green-500 text-white py-2.5 px-4 rounded-md hover:bg-green-600 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-md hover:shadow-sm"
+                  onClick={handleOvernightWhatsAppBooking}
+                  disabled={!guestName || !guestContact || !numberOfGuests}
+                >
+                  <FaWhatsapp className="text-base" />
+                  Submit Booking Request
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-6">
+              <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p className="text-gray-600 mt-3 text-lg">
+                Please select check-in and check-out dates to see pricing and book
+              </p>
+            </div>
           )}
+        </div>
+      </div>
+    </div>
+  </section>
+)}
 
                  {/* Location */}
                     <section className="mb-8">
