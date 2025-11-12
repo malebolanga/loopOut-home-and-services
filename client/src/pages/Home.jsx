@@ -94,6 +94,7 @@ const HELPER_TYPES = {
   barber: { icon: "💈", label: "Barber" },
   tattoo: { icon: "🖋️", label: "Tattoo Artist" },
   photography: { icon: "📷", label: "Photographer" },
+  baker: { icon: "🍰", label: "Baker" },
 }
 
 const LOCAL_EVENT_TYPES = {
@@ -1310,7 +1311,7 @@ export default function Home() {
               <div className="flex items-center justify-between mb-8 px-2">
                 <div className="flex items-center">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">
+                    <h2 className="text-1xl font-bold text-gray-900">
                       AI Recommendations
                     </h2>
                     <p className="text-gray-600 text-sm">Personalized just for you</p>
@@ -1318,7 +1319,7 @@ export default function Home() {
                 </div>
                 <button 
                   onClick={handleViewAllRecommendations}
-                  className="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
+                  className="px-2 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
                 >
                   View all
                   <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1480,13 +1481,13 @@ export default function Home() {
                         <span className="text-2xl text-white">👷</span>
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Helpers</h2>
+                        <h2 className="text-1xl font-bold text-gray-900">Helpers</h2>
                         <p className="text-gray-600 text-sm">Find trusted helpers for your needs</p>
                       </div>
                     </div>
                     <button 
                       onClick={() => setActiveTab("helper")}
-                      className="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
+                      className="px-2 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
                     >
                       View all
                       <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1548,13 +1549,13 @@ export default function Home() {
                         <span className="text-2xl text-white">🏠</span>
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Properties</h2>
+                        <h2 className="text-1xl font-bold text-gray-900">Properties</h2>
                         <p className="text-gray-600 text-sm">Find your perfect home or investment</p>
                       </div>
                     </div>
                     <button 
                       onClick={() => setActiveTab("properties")}
-                      className="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
+                      className="px-2 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
                     >
                       View all
                       <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1616,13 +1617,13 @@ export default function Home() {
                         <span className="text-2xl text-white">🛎️</span>
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Services</h2>
+                        <h2 className="text-1xl font-bold text-gray-900">Services</h2>
                         <p className="text-gray-600 text-sm">Professional services for your needs</p>
                       </div>
                     </div>
                     <button 
                       onClick={() => setActiveTab("services")}
-                      className="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
+                      className="px-2 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
                     >
                       View all
                       <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1684,13 +1685,13 @@ export default function Home() {
                         <span className="text-2xl text-white">🎪</span>
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Events</h2>
+                        <h2 className="text-1xl font-bold text-gray-900">Events</h2>
                         <p className="text-gray-600 text-sm">Discover local happenings and activities</p>
                       </div>
                     </div>
                     <button 
                       onClick={() => setActiveTab("events")}
-                      className="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
+                      className="px-2 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
                     >
                       View all
                       <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1830,15 +1831,15 @@ export default function Home() {
 
         {/* Recently Viewed Section */}
         {recentlyViewed.length > 0 && (
-          <div className="max-w-8xl mx-auto px-1 py-0 mt-4">
-            <div className=" rounded-1xl shadow-1xl p-4 border border-gray-100">
-              <div className="flex items-center justify-between mb-8">
+          <div className="max-w-8xl mx-auto px-1 py-0 mt-2">
+            <div className=" rounded-2xl p-0 ">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mr-4">
                     <FaHistory className="text-white text-xl" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Viewed</h2>
+                    <h2 className="text-1xl font-bold text-gray-900">Viewed</h2>
                     <p className="text-gray-600 text-sm">Your browsing history</p>
                   </div>
                 </div>
@@ -1847,15 +1848,15 @@ export default function Home() {
                     localStorage.removeItem('recentlyViewed');
                     setRecentlyViewed([]);
                   }}
-                  className="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
+                  className="px-2 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
                 >
-                  Clear History
+                  Clear 
                 </button>
               </div>
 
               <div className="relative">
                 <Swiper
-                  slidesPerView={1.8}
+                  slidesPerView={1.9}
                   spaceBetween={20}
                   navigation={{
                     nextEl: '.recently-viewed-swiper-button-next',

@@ -852,6 +852,7 @@ const getLocationRequirements = (serviceType) => {
 };
 
 // Enhanced WhatsApp booking function with all form data
+
 const handleQuickBooking = () => {
   if (!helper?.contact) {
     alert(`${getProfessionalTitle(helper?.type)} contact information is missing.`);
@@ -974,6 +975,19 @@ const handleQuickBooking = () => {
     message += `• Delivery Format: ${bookingData.deliveryFormat}%0A`;
   }
 
+  // Add baker-specific details to quick booking
+  if ((helper.type === 'baker') && bookingData.bakeryItems && bookingData.bakeryItems.length > 0) {
+    message += `• Bakery Items: ${bookingData.bakeryItems.join(', ')}%0A`;
+  }
+
+  if ((helper.type === 'baker') && bookingData.containerSize) {
+    message += `• Container Size: ${bookingData.containerSize}%0A`;
+  }
+
+  if ((helper.type === 'baker') && bookingData.packagingOption) {
+    message += `• Packaging: ${bookingData.packagingOption}%0A`;
+  }
+
   if (bookingData.specialRequirements) {
     message += `• Special Requirements: ${bookingData.specialRequirements}%0A`;
   }
@@ -1006,6 +1020,10 @@ const handleQuickBooking = () => {
       message += `  ✓ Clean, well-lit workspace%0A`;
       message += `  ✓ Power source for tools%0A`;
       message += `  ✓ Mirror access%0A`;
+    } else if (helper.type === 'baker') {
+      message += `  ✓ Clean kitchen workspace%0A`;
+      message += `  ✓ Power outlets for baking equipment%0A`;
+      message += `  ✓ Adequate counter space%0A`;
     } else {
       message += `  ✓ Clean, accessible workspace with power outlets%0A`;
     }
@@ -1110,7 +1128,7 @@ const handleBookingSubmit = async (e) => {
   const locationMessage = getLocationSpecificMessage(bookingData, helper);
 
   // Build the main WhatsApp message with enhanced location details
-  let message = `*${helper.type === 'chef' ? '👨‍🍳' : helper.type === 'barber' || helper.type === 'barbar' ? '✂️' : helper.type === 'tattoo' ? '🎨' : helper.type === 'photography' ? '📷' : '👤'} New ${getProfessionalTitle(helper.type)} Booking Request for ${helper.name}*%0A%0A`;
+  let message = `*${helper.type === 'chef' ? '👨‍🍳' : helper.type === 'barber' || helper.type === 'barbar' ? '✂️' : helper.type === 'tattoo' ? '🎨' : helper.type === 'photography' ? '📷' : helper.type === 'baker' ? '🍰' : '👤'} New ${getProfessionalTitle(helper.type)} Booking Request for ${helper.name}*%0A%0A`;
 
   message += `*🛎️ SERVICE DETAILS*%0A`;
   message += `• Price: R${helper.regularPrice}%0A`;
@@ -1188,6 +1206,19 @@ const handleBookingSubmit = async (e) => {
   if ((helper.type === 'photography') && bookingData.deliveryFormat) {
     message += `• Delivery Format: ${bookingData.deliveryFormat}%0A`;
   }
+
+  // Add baker-specific details
+  if ((helper.type === 'baker') && bookingData.bakeryItems && bookingData.bakeryItems.length > 0) {
+    message += `• Bakery Items: ${bookingData.bakeryItems.join(', ')}%0A`;
+  }
+
+  if ((helper.type === 'baker') && bookingData.containerSize) {
+    message += `• Container Size: ${bookingData.containerSize}%0A`;
+  }
+
+  if ((helper.type === 'baker') && bookingData.packagingOption) {
+    message += `• Packaging: ${bookingData.packagingOption}%0A`;
+  }
   
   if (locationInfo.travelFee > 0) {
     message += `• Travel Fee: R${locationInfo.travelFee}%0A`;
@@ -1236,7 +1267,9 @@ const handleBookingSubmit = async (e) => {
           chairSpace: '✓ Chair and workspace needed',
           powerSource: '✓ Power source required',
           mirrorAccess: '✓ Mirror access needed',
-          cleanSpace: '✓ Clean, well-lit workspace required'
+          cleanSpace: '✓ Clean, well-lit workspace required',
+          bakingEquipment: '✓ Power outlets for baking equipment',
+          counterSpace: '✓ Adequate counter space needed'
         }[req] || `✓ ${req}`;
         message += `  ${reqText}%0A`;
       });
@@ -1293,8 +1326,7 @@ const handleBookingSubmit = async (e) => {
   // Reset attachments after sending
   setAttachments([]);
 };
-
-  // ==================== END ENHANCED BOOKING SUBMIT FUNCTION ====================
+// ==================== END ENHANCED BOOKING SUBMIT FUNCTION ====================
 
 
   // Simulate AI analysis of comments
@@ -2888,612 +2920,694 @@ const handleBookingSubmit = async (e) => {
         </div>
 
         {/* Right Column - Booking Form */}
+
         <div className="space-y-6">
-          {/* Booking Form */}
-          <div id="booking-form" className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 sticky top-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
-              Book {getProfessionalTitle(helper.type)} Services
-            </h3>
+  {/* Booking Form */}
+  <div id="booking-form" className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 sticky top-6">
+    <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
+      Book {getProfessionalTitle(helper.type)} Services
+    </h3>
 
-            <form onSubmit={handleBookingSubmit} className="space-y-6">
-              {/* Client Information */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-gray-900 border-b pb-2">Your Information</h4>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={bookingData.name}
-                    onChange={handleBookingChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter your full name"
-                  />
-                </div>
+    <form onSubmit={handleBookingSubmit} className="space-y-6">
+      {/* Client Information */}
+      <div className="space-y-4">
+        <h4 className="font-semibold text-gray-900 border-b pb-2">Your Information</h4>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Full Name *
+          </label>
+          <input
+            type="text"
+            name="name"
+            value={bookingData.name}
+            onChange={handleBookingChange}
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Enter your full name"
+          />
+        </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number *
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={bookingData.phone}
-                    onChange={handleBookingChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="071 234 5678"
-                  />
-                </div>
-              </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Phone Number *
+          </label>
+          <input
+            type="tel"
+            name="phone"
+            value={bookingData.phone}
+            onChange={handleBookingChange}
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="071 234 5678"
+          />
+        </div>
+      </div>
 
-              {/* Service Selection */}
-              {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography') && (
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900 border-b pb-2">
-                    Select Services
-                  </h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    {serviceOptions.map((service) => (
-                      <button
-                        key={service.id}
-                        type="button"
-                        onClick={() => handleServiceSelection(service.id)}
-                        className={`p-3 border rounded-lg text-left transition-all ${
-                          bookingData.selectedServices.includes(service.id)
-                            ? 'border-blue-500 bg-blue-50 text-blue-700'
-                            : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          {service.icon}
-                          <span className="text-sm font-medium">{service.name}</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Barber-specific Fields */}
-              {(helper.type === 'barber' || helper.type === 'barbar') && (
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900 border-b pb-2">Haircut Details</h4>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Haircut Style
-                    </label>
-                    <select
-                      name="selectedHaircut"
-                      value={bookingData.selectedHaircut}
-                      onChange={handleBookingChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Select a style</option>
-                      {haircutStyles.map((style) => (
-                        <option key={style.id} value={style.id}>
-                          {style.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Beard Style
-                    </label>
-                    <select
-                      name="beardStyle"
-                      value={bookingData.beardStyle}
-                      onChange={handleBookingChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Select beard style</option>
-                      {beardStyles.map((style) => (
-                        <option key={style.id} value={style.id}>
-                          {style.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Current Hair Length
-                    </label>
-                    <input
-                      type="text"
-                      name="hairLength"
-                      value={bookingData.hairLength}
-                      onChange={handleBookingChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="e.g., Short, Medium, Long"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Chef-specific Fields */}
-              {(helper.type === 'chef' || helper.type === 'cooking') && (
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900 border-b pb-2">Meal Details</h4>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Meal Type
-                    </label>
-                    <select
-                      name="mealType"
-                      value={bookingData.mealType}
-                      onChange={handleBookingChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Select meal type</option>
-                      {mealTypes.map((meal) => (
-                        <option key={meal.id} value={meal.id}>
-                          {meal.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Cuisine Preference
-                    </label>
-                    <select
-                      name="cuisinePreference"
-                      value={bookingData.cuisinePreference}
-                      onChange={handleBookingChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Select cuisine</option>
-                      {cuisineTypes.map((cuisine) => (
-                        <option key={cuisine.id} value={cuisine.id}>
-                          {cuisine.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Number of Guests
-                    </label>
-                    <input
-                      type="number"
-                      name="numberOfGuests"
-                      value={bookingData.numberOfGuests}
-                      onChange={handleBookingChange}
-                      min="1"
-                      max="50"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="e.g., 4"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Dietary Restrictions
-                    </label>
-                    <input
-                      type="text"
-                      name="dietaryRestrictions"
-                      value={bookingData.dietaryRestrictions}
-                      onChange={handleBookingChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="e.g., Vegetarian, Gluten-free, Allergies"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Ingredients
-                    </label>
-                    <select
-                      name="ingredientsProvided"
-                      value={bookingData.ingredientsProvided}
-                      onChange={handleBookingChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="no">Chef will provide ingredients</option>
-                      <option value="yes">I will provide ingredients</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* Photography-specific Fields */}
-              {(helper.type === 'photography') && (
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900 border-b pb-2">Photography Details</h4>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Photography Type
-                    </label>
-                    <select
-                      name="photographyType"
-                      value={bookingData.photographyType}
-                      onChange={handleBookingChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Select photography type</option>
-                      <option value="portrait">Portrait Session</option>
-                      <option value="event">Event Coverage</option>
-                      <option value="wedding">Wedding Photography</option>
-                      <option value="product">Product Photography</option>
-                      <option value="family">Family Session</option>
-                      <option value="commercial">Commercial Shoot</option>
-                      <option value="realestate">Real Estate</option>
-                      <option value="landscape">Landscape</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Session Duration
-                    </label>
-                    <select
-                      name="sessionDuration"
-                      value={bookingData.sessionDuration}
-                      onChange={handleBookingChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Select duration</option>
-                      <option value="1">1 hour</option>
-                      <option value="2">2 hours</option>
-                      <option value="3">3 hours</option>
-                      <option value="4">4 hours</option>
-                      <option value="6">6 hours</option>
-                      <option value="8">Full day (8 hours)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Number of People
-                    </label>
-                    <input
-                      type="number"
-                      name="numberOfPeople"
-                      value={bookingData.numberOfPeople}
-                      onChange={handleBookingChange}
-                      min="1"
-                      max="50"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="e.g., 4"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Special Requirements
-                    </label>
-                    <textarea
-                      name="photographyRequirements"
-                      value={bookingData.photographyRequirements}
-                      onChange={handleBookingChange}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="e.g., Specific poses, locations, props, editing style..."
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Photo Delivery Format
-                    </label>
-                    <select
-                      name="deliveryFormat"
-                      value={bookingData.deliveryFormat}
-                      onChange={handleBookingChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Select delivery format</option>
-                      <option value="digital">Digital files only</option>
-                      <option value="prints">Prints included</option>
-                      <option value="both">Digital + Prints</option>
-                      <option value="album">Photo album</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* Enhanced Location Options */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-gray-900 border-b pb-2">Location</h4>
-                
-                <div className="space-y-3">
-                  <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="locationOption"
-                      value="comeToYou"
-                      checked={bookingData.locationOption === 'comeToYou'}
-                      onChange={handleBookingChange}
-                      className="text-blue-600 focus:ring-blue-500"
-                    />
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {getProfessionalTitle(helper.type)} comes to me
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {getProfessionalTitle(helper.type)} will provide service at your location
-                        {helper.travelFee > 0 && (
-                          <span className="text-orange-600 font-medium ml-1">
-                            (Travel fee: R{helper.travelFee})
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </label>
-
-                  <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="locationOption"
-                      value="goToThem"
-                      checked={bookingData.locationOption === 'goToThem'}
-                      onChange={handleBookingChange}
-                      className="text-blue-600 focus:ring-blue-500"
-                    />
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        I ll go to {getProfessionalTitle(helper.type).toLowerCase()} s location
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        Visit {getProfessionalTitle(helper.type).toLowerCase()} s location
-                      </div>
-                    </div>
-                  </label>
-                </div>
-
-                {bookingData.locationOption === 'comeToYou' && (
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Your Address *
-                      </label>
-                      <textarea
-                        name="address"
-                        value={bookingData.address}
-                        onChange={handleBookingChange}
-                        required
-                        rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Enter your full address including street number, street name, city, and postal code"
-                      />
-                    </div>
-                    
-                    {/* Enhanced Address Validation Message */}
-                    {bookingData.address && bookingData.address.length > 0 && (
-                      <div className={`text-xs p-2 rounded ${
-                        bookingData.address.length < 10 
-                          ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-                          : 'bg-green-50 text-green-700 border border-green-200'
-                      }`}>
-                        {bookingData.address.length < 10 
-                          ? '⚠️ Please provide a more detailed address for accurate service delivery'
-                          : '✓ Address looks good! Make sure to include apartment/unit number if applicable.'
-                        }
-                      </div>
-                    )}
-
-                    {/* Service-specific Location Requirements */}
-                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                      <h5 className="font-medium text-blue-800 text-sm mb-2">
-                        📍 Location Requirements for {getProfessionalTitle(helper.type)}
-                      </h5>
-                      <ul className="text-xs text-blue-700 space-y-1">
-                        {helper.type === 'chef' && (
-                          <>
-                            <li>• Kitchen access with basic cooking equipment</li>
-                            <li>• Dining area for meal service</li>
-                            <li>• Power outlets for appliances</li>
-                          </>
-                        )}
-                        {helper.type === 'barber' && (
-                          <>
-                            <li>• Well-lit workspace with chair</li>
-                            <li>• Power source for clippers</li>
-                            <li>• Mirror access for styling</li>
-                          </>
-                        )}
-                        {helper.type === 'photography' && (
-                          <>
-                            <li>• Adequate shooting space</li>
-                            <li>• Natural light preferred</li>
-                            <li>• Power outlets for equipment</li>
-                          </>
-                        )}
-                        {helper.type === 'beauty' && (
-                          <>
-                            <li>• Clean, well-lit workspace</li>
-                            <li>• Power source for tools</li>
-                            <li>• Mirror access</li>
-                          </>
-                        )}
-                        {!['chef', 'barber', 'photography', 'beauty'].includes(helper.type) && (
-                          <li>• Clean, accessible workspace with power outlets</li>
-                        )}
-                      </ul>
-                    </div>
-                  </div>
-                )}
-
-                {bookingData.locationOption === 'goToThem' && helper.address && (
-                  <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                    <h5 className="font-medium text-green-800 text-sm mb-1">
-                      📍 {getProfessionalTitle(helper.type)} Location
-                    </h5>
-                    <p className="text-sm text-green-700 mb-2">{helper.address}</p>
-                    <a 
-                      href={generateMapLink(helper.address, helper.type)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-green-600 hover:text-green-800 text-sm font-medium inline-flex items-center gap-1"
-                    >
-                      <FaMapMarkerAlt className="text-xs" />
-                      View on Map
-                    </a>
-                  </div>
-                )}
-              </div>
-
-              {/* Date and Time */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-gray-900 border-b pb-2">Schedule</h4>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Date *
-                    </label>
-                    <input
-                      type="date"
-                      name="date"
-                      value={bookingData.date}
-                      onChange={handleBookingChange}
-                      required
-                      min={new Date().toISOString().split('T')[0]}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Time *
-                    </label>
-                    <input
-                      type="time"
-                      name="time"
-                      value={bookingData.time}
-                      onChange={handleBookingChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Special Requirements */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Special Requirements
-                </label>
-                <textarea
-                  name="specialRequirements"
-                  value={bookingData.specialRequirements}
-                  onChange={handleBookingChange}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder={`Any special requests or requirements for the ${helper.type === 'chef' ? 'meal' : helper.type === 'photography' ? 'photoshoot' : 'service'}...`}
-                />
-              </div>
-
-              {/* Attachments */}
-              <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-700">
-                  Attachments (Optional)
-                </label>
-                <div className="space-y-3">
-                  {/* File Input */}
-                  <div className="flex items-center gap-3">
-                    <label className="flex-1 cursor-pointer">
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*,.pdf"
-                        onChange={handleAttachmentChange}
-                        className="hidden"
-                      />
-                      <div className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <FaFileImage className="text-gray-400 text-xl" />
-                          <span className="text-sm text-gray-600">
-                            Click to upload images or PDFs
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            Max 2 files, 5MB each
-                          </span>
-                        </div>
-                      </div>
-                    </label>
-                  </div>
-
-                  {/* Attachment Preview */}
-                  {attachments.length > 0 && (
-                    <div className="space-y-2">
-                      {attachments.map((file, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
-                        >
-                          <div className="flex items-center gap-3">
-                            {file.type.startsWith('image/') ? (
-                              <FaFileImage className="text-blue-500" />
-                            ) : (
-                              <FaFilePdf className="text-red-500" />
-                            )}
-                            <div>
-                              <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
-                                {file.name}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {(file.size / 1024 / 1024).toFixed(2)} MB
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeAttachment(index)}
-                            className="text-gray-400 hover:text-red-500 transition-colors"
-                          >
-                            <FaTimes />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Submit Button */}
+      {/* Service Selection */}
+      {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography') && (
+        <div className="space-y-4">
+          <h4 className="font-semibold text-gray-900 border-b pb-2">
+            Select Services
+          </h4>
+          <div className="grid grid-cols-2 gap-3">
+            {serviceOptions.map((service) => (
               <button
-                type="submit"
-                disabled={isUploading}
-                className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
-                  isUploading
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700'
+                key={service.id}
+                type="button"
+                onClick={() => handleServiceSelection(service.id)}
+                className={`p-3 border rounded-lg text-left transition-all ${
+                  bookingData.selectedServices.includes(service.id)
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                 }`}
               >
-                {isUploading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Uploading Files...
-                  </div>
-                ) : (
-                  `Book ${getProfessionalTitle(helper.type)} via WhatsApp`
-                )}
+                <div className="flex items-center gap-2">
+                  {service.icon}
+                  <span className="text-sm font-medium">{service.name}</span>
+                </div>
               </button>
+            ))}
+          </div>
+        </div>
+      )}
 
-              {/* Security Notice */}
-              <div className="text-center">
-                <p className="text-xs text-gray-500">
-                  🔒 Your information is secure. We ll only share what s necessary for the booking.
-                </p>
+      {/* Barber-specific Fields */}
+      {(helper.type === 'barber' || helper.type === 'barbar') && (
+        <div className="space-y-4">
+          <h4 className="font-semibold text-gray-900 border-b pb-2">Haircut Details</h4>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Haircut Style
+            </label>
+            <select
+              name="selectedHaircut"
+              value={bookingData.selectedHaircut}
+              onChange={handleBookingChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select a style</option>
+              {haircutStyles.map((style) => (
+                <option key={style.id} value={style.id}>
+                  {style.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Beard Style
+            </label>
+            <select
+              name="beardStyle"
+              value={bookingData.beardStyle}
+              onChange={handleBookingChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select beard style</option>
+              {beardStyles.map((style) => (
+                <option key={style.id} value={style.id}>
+                  {style.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Current Hair Length
+            </label>
+            <input
+              type="text"
+              name="hairLength"
+              value={bookingData.hairLength}
+              onChange={handleBookingChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="e.g., Short, Medium, Long"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Chef-specific Fields */}
+      {(helper.type === 'chef' || helper.type === 'cooking') && (
+        <div className="space-y-4">
+          <h4 className="font-semibold text-gray-900 border-b pb-2">Meal Details</h4>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Meal Type
+            </label>
+            <select
+              name="mealType"
+              value={bookingData.mealType}
+              onChange={handleBookingChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select meal type</option>
+              {mealTypes.map((meal) => (
+                <option key={meal.id} value={meal.id}>
+                  {meal.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cuisine Preference
+            </label>
+            <select
+              name="cuisinePreference"
+              value={bookingData.cuisinePreference}
+              onChange={handleBookingChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select cuisine</option>
+              {cuisineTypes.map((cuisine) => (
+                <option key={cuisine.id} value={cuisine.id}>
+                  {cuisine.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Number of Guests
+            </label>
+            <input
+              type="number"
+              name="numberOfGuests"
+              value={bookingData.numberOfGuests}
+              onChange={handleBookingChange}
+              min="1"
+              max="50"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="e.g., 4"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Dietary Restrictions
+            </label>
+            <input
+              type="text"
+              name="dietaryRestrictions"
+              value={bookingData.dietaryRestrictions}
+              onChange={handleBookingChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="e.g., Vegetarian, Gluten-free, Allergies"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Ingredients
+            </label>
+            <select
+              name="ingredientsProvided"
+              value={bookingData.ingredientsProvided}
+              onChange={handleBookingChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="no">Chef will provide ingredients</option>
+              <option value="yes">I will provide ingredients</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Photography-specific Fields */}
+      {(helper.type === 'photography') && (
+        <div className="space-y-4">
+          <h4 className="font-semibold text-gray-900 border-b pb-2">Photography Details</h4>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Photography Type
+            </label>
+            <select
+              name="photographyType"
+              value={bookingData.photographyType}
+              onChange={handleBookingChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select photography type</option>
+              <option value="portrait">Portrait Session</option>
+              <option value="event">Event Coverage</option>
+              <option value="wedding">Wedding Photography</option>
+              <option value="product">Product Photography</option>
+              <option value="family">Family Session</option>
+              <option value="commercial">Commercial Shoot</option>
+              <option value="realestate">Real Estate</option>
+              <option value="landscape">Landscape</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Session Duration
+            </label>
+            <select
+              name="sessionDuration"
+              value={bookingData.sessionDuration}
+              onChange={handleBookingChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select duration</option>
+              <option value="1">1 hour</option>
+              <option value="2">2 hours</option>
+              <option value="3">3 hours</option>
+              <option value="4">4 hours</option>
+              <option value="6">6 hours</option>
+              <option value="8">Full day (8 hours)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Number of People
+            </label>
+            <input
+              type="number"
+              name="numberOfPeople"
+              value={bookingData.numberOfPeople}
+              onChange={handleBookingChange}
+              min="1"
+              max="50"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="e.g., 4"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Special Requirements
+            </label>
+            <textarea
+              name="photographyRequirements"
+              value={bookingData.photographyRequirements}
+              onChange={handleBookingChange}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="e.g., Specific poses, locations, props, editing style..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Photo Delivery Format
+            </label>
+            <select
+              name="deliveryFormat"
+              value={bookingData.deliveryFormat}
+              onChange={handleBookingChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select delivery format</option>
+              <option value="digital">Digital files only</option>
+              <option value="prints">Prints included</option>
+              <option value="both">Digital + Prints</option>
+              <option value="album">Photo album</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Baker-specific Fields */}
+      {(helper.type === 'baker') && (
+        <div className="space-y-4">
+          <h4 className="font-semibold text-gray-900 border-b pb-2">Bakery Items</h4>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Select Bakery Items
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {['scones', 'butter delights', 'biscuits', 'cake', 'jam tarts', 'ginger', 'romans', 'snowballs'].map((item) => (
+                <label key={item} className="flex items-center gap-2 p-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    name="bakeryItems"
+                    value={item}
+                    checked={bookingData.bakeryItems?.includes(item) || false}
+                    onChange={(e) => {
+                      const selectedItems = bookingData.bakeryItems || [];
+                      if (e.target.checked) {
+                        setBookingData(prev => ({
+                          ...prev,
+                          bakeryItems: [...selectedItems, item]
+                        }));
+                      } else {
+                        setBookingData(prev => ({
+                          ...prev,
+                          bakeryItems: selectedItems.filter(i => i !== item)
+                        }));
+                      }
+                    }}
+                    className="text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700 capitalize">{item}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Container Size
+            </label>
+            <select
+              name="containerSize"
+              value={bookingData.containerSize}
+              onChange={handleBookingChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select container size</option>
+              <option value="5 liter">5 Liter</option>
+              <option value="10 liter">10 Liter</option>
+              <option value="20 liter">20 Liter</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Packaging Option
+            </label>
+            <select
+              name="packagingOption"
+              value={bookingData.packagingOption}
+              onChange={handleBookingChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select packaging</option>
+              <option value="10 liter R20">10 Liter - R20</option>
+              <option value="20 liter R60">20 Liter - R60</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Enhanced Location Options */}
+      <div className="space-y-4">
+        <h4 className="font-semibold text-gray-900 border-b pb-2">Location</h4>
+        
+        <div className="space-y-3">
+          <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+            <input
+              type="radio"
+              name="locationOption"
+              value="comeToYou"
+              checked={bookingData.locationOption === 'comeToYou'}
+              onChange={handleBookingChange}
+              className="text-blue-600 focus:ring-blue-500"
+            />
+            <div>
+              <div className="font-medium text-gray-900">
+                {getProfessionalTitle(helper.type)} comes to me
               </div>
-            </form>
+              <div className="text-sm text-gray-600">
+                {getProfessionalTitle(helper.type)} will provide service at your location
+                {helper.travelFee > 0 && (
+                  <span className="text-orange-600 font-medium ml-1">
+                    (Travel fee: R{helper.travelFee})
+                  </span>
+                )}
+              </div>
+            </div>
+          </label>
+
+          <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+            <input
+              type="radio"
+              name="locationOption"
+              value="goToThem"
+              checked={bookingData.locationOption === 'goToThem'}
+              onChange={handleBookingChange}
+              className="text-blue-600 focus:ring-blue-500"
+            />
+            <div>
+              <div className="font-medium text-gray-900">
+                I ll go to {getProfessionalTitle(helper.type).toLowerCase()} s location
+              </div>
+              <div className="text-sm text-gray-600">
+                Visit {getProfessionalTitle(helper.type).toLowerCase()} s location
+              </div>
+            </div>
+          </label>
+        </div>
+
+        {bookingData.locationOption === 'comeToYou' && (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Your Address *
+              </label>
+              <textarea
+                name="address"
+                value={bookingData.address}
+                onChange={handleBookingChange}
+                required
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter your full address including street number, street name, city, and postal code"
+              />
+            </div>
+            
+            {/* Enhanced Address Validation Message */}
+            {bookingData.address && bookingData.address.length > 0 && (
+              <div className={`text-xs p-2 rounded ${
+                bookingData.address.length < 10 
+                  ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                  : 'bg-green-50 text-green-700 border border-green-200'
+              }`}>
+                {bookingData.address.length < 10 
+                  ? '⚠️ Please provide a more detailed address for accurate service delivery'
+                  : '✓ Address looks good! Make sure to include apartment/unit number if applicable.'
+                }
+              </div>
+            )}
+
+            {/* Service-specific Location Requirements */}
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <h5 className="font-medium text-blue-800 text-sm mb-2">
+                📍 Location Requirements for {getProfessionalTitle(helper.type)}
+              </h5>
+              <ul className="text-xs text-blue-700 space-y-1">
+                {helper.type === 'chef' && (
+                  <>
+                    <li>• Kitchen access with basic cooking equipment</li>
+                    <li>• Dining area for meal service</li>
+                    <li>• Power outlets for appliances</li>
+                  </>
+                )}
+                {helper.type === 'barber' && (
+                  <>
+                    <li>• Well-lit workspace with chair</li>
+                    <li>• Power source for clippers</li>
+                    <li>• Mirror access for styling</li>
+                  </>
+                )}
+                {helper.type === 'photography' && (
+                  <>
+                    <li>• Adequate shooting space</li>
+                    <li>• Natural light preferred</li>
+                    <li>• Power outlets for equipment</li>
+                  </>
+                )}
+                {helper.type === 'beauty' && (
+                  <>
+                    <li>• Clean, well-lit workspace</li>
+                    <li>• Power source for tools</li>
+                    <li>• Mirror access</li>
+                  </>
+                )}
+                {helper.type === 'baker' && (
+                  <>
+                    <li>• Clean kitchen workspace</li>
+                    <li>• Power outlets for baking equipment</li>
+                    <li>• Adequate counter space</li>
+                  </>
+                )}
+                {!['chef', 'barber', 'photography', 'beauty', 'baker'].includes(helper.type) && (
+                  <li>• Clean, accessible workspace with power outlets</li>
+                )}
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {bookingData.locationOption === 'goToThem' && helper.address && (
+          <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+            <h5 className="font-medium text-green-800 text-sm mb-1">
+              📍 {getProfessionalTitle(helper.type)} Location
+            </h5>
+            <p className="text-sm text-green-700 mb-2">{helper.address}</p>
+            <a 
+              href={generateMapLink(helper.address, helper.type)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-green-600 hover:text-green-800 text-sm font-medium inline-flex items-center gap-1"
+            >
+              <FaMapMarkerAlt className="text-xs" />
+              View on Map
+            </a>
+          </div>
+        )}
+      </div>
+
+      {/* Date and Time */}
+      <div className="space-y-4">
+        <h4 className="font-semibold text-gray-900 border-b pb-2">Schedule</h4>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Date *
+            </label>
+            <input
+              type="date"
+              name="date"
+              value={bookingData.date}
+              onChange={handleBookingChange}
+              required
+              min={new Date().toISOString().split('T')[0]}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Time *
+            </label>
+            <input
+              type="time"
+              name="time"
+              value={bookingData.time}
+              onChange={handleBookingChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
         </div>
       </div>
+
+      {/* Special Requirements */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Special Requirements
+        </label>
+        <textarea
+          name="specialRequirements"
+          value={bookingData.specialRequirements}
+          onChange={handleBookingChange}
+          rows={3}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder={`Any special requests or requirements for the ${helper.type === 'chef' ? 'meal' : helper.type === 'photography' ? 'photoshoot' : helper.type === 'baker' ? 'bakery items' : 'service'}...`}
+        />
+      </div>
+
+      {/* Attachments */}
+      <div className="space-y-3">
+        <label className="block text-sm font-medium text-gray-700">
+          Attachments (Optional)
+        </label>
+        <div className="space-y-3">
+          {/* File Input */}
+          <div className="flex items-center gap-3">
+            <label className="flex-1 cursor-pointer">
+              <input
+                type="file"
+                multiple
+                accept="image/*,.pdf"
+                onChange={handleAttachmentChange}
+                className="hidden"
+              />
+              <div className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors text-center">
+                <div className="flex flex-col items-center gap-1">
+                  <FaFileImage className="text-gray-400 text-xl" />
+                  <span className="text-sm text-gray-600">
+                    Click to upload images or PDFs
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Max 2 files, 5MB each
+                  </span>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          {/* Attachment Preview */}
+          {attachments.length > 0 && (
+            <div className="space-y-2">
+              {attachments.map((file, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
+                >
+                  <div className="flex items-center gap-3">
+                    {file.type.startsWith('image/') ? (
+                      <FaFileImage className="text-blue-500" />
+                    ) : (
+                      <FaFilePdf className="text-red-500" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+                        {file.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeAttachment(index)}
+                    className="text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Submit Button */}
+      <button
+        type="submit"
+        disabled={isUploading}
+        className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
+          isUploading
+            ? 'bg-gray-400 cursor-not-allowed'
+            : 'bg-blue-600 hover:bg-blue-700'
+        }`}
+      >
+        {isUploading ? (
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            Uploading Files...
+          </div>
+        ) : (
+          `Book ${getProfessionalTitle(helper.type)} via WhatsApp`
+        )}
+      </button>
+
+      {/* Security Notice */}
+      <div className="text-center">
+        <p className="text-xs text-gray-500">
+          🔒 Your information is secure. We ll only share what s necessary for the booking.
+        </p>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
 
       {/* Bottom Booking Belt */}
 

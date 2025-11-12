@@ -28,7 +28,7 @@ const helperSchema = new mongoose.Schema({
     type: {
         type: String,
         required: true,
-        enum: ['domestic', 'errand', 'tutor', 'chef', 'beauty', 'tattoo', 'barber', 'photography'],
+        enum: ['domestic', 'errand', 'tutor', 'chef', 'beauty', 'tattoo', 'barber', 'photography', 'baker'],
     },
     regularPrice: {
         type: Number,
@@ -74,6 +74,30 @@ const helperSchema = new mongoose.Schema({
     },
     additionalPricing: {
         type: String,
+    },
+    // New fields for photography
+    style: {
+        type: String,
+    },
+    sessionDuration: {
+        type: String,
+    },
+    photoDelivery: {
+        type: String,
+    },
+    // New fields for baker
+    specialties: {
+        type: String,
+    },
+    dietaryOptions: {
+        type: String,
+    },
+    orderNotice: {
+        type: String,
+    },
+    delivery: {
+        type: Boolean,
+        default: false,
     },
     imageUrls: {
         type: Array,

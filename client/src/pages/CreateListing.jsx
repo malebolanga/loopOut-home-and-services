@@ -75,30 +75,39 @@ export default function CreateListing() {
   routeAreas: "",
 });
 
-  const [helperForm, setHelperForm] = useState({
-    imageUrls: [],
-    name: "",
-    description: "",
-    near: "",
-    address: "",
-    contact: "",
-    host: "",
-    type: "domestic",
-    regularPrice: 50,
-    kind: "",
-    period: "",
-    cancel: "",
-    security: false,
-    pets: false,
-    bedrooms: 1, // Reused for minimum hours
-    bathrooms: 1, // Reused for teaching format
-    // New fields for barber
-    specializations: '',
-    equipment: '',
-    travelFee: '',
-    bookingNotice: '',
-    additionalPricing: ''
-  });
+const [helperForm, setHelperForm] = useState({
+  imageUrls: [],
+  name: "",
+  description: "",
+  near: "",
+  address: "",
+  contact: "",
+  host: "",
+  type: "domestic",
+  regularPrice: 50,
+  kind: "",
+  period: "",
+  cancel: "",
+  security: false,
+  pets: false,
+  bedrooms: 1, // Reused for minimum hours
+  bathrooms: 1, // Reused for teaching format
+  // New fields for barber
+  specializations: '',
+  equipment: '',
+  travelFee: '',
+  bookingNotice: '',
+  additionalPricing: '',
+  // New fields for photography
+  style: '',
+  sessionDuration: '',
+  photoDelivery: '',
+  // New fields for baker
+  specialties: '',
+  dietaryOptions: '',
+  orderNotice: '',
+  delivery: false
+});
 
   const [eventForm, setEventForm] = useState({
     imageUrls: [],
@@ -557,7 +566,7 @@ const handleServiceChange = (e) => {
   const handleHelperChange = (e) => {
     const { id, value, type, checked } = e.target;
 
-    if (id === "domestic" || id === "errand" || id === "tutor" || id === "chef" || id === "beauty" || id === "tattoo" || id === "barber" || id === "photography" ) {
+    if (id === "domestic" || id === "errand" || id === "tutor" || id === "chef" || id === "beauty" || id === "tattoo" || id === "barber" || id === "photography" || id === "baker" ) {
       return setHelperForm({ ...helperForm, type: id });
     }
 
@@ -887,72 +896,52 @@ const handleHelperSubmit = async (e) => {
         }}
       />
       
-      <nav className="flex bg-gray-50 rounded-lg p-1.5">
-        {[
-          { id: 'stays', emoji: '🏠', label: 'Properties' },
-          { id: 'experiences', emoji: '🛎️', label: 'Services' },
-          { id: 'online', emoji: '👷', label: 'Helpers' },
-          { id: 'events', emoji: '🎪', label: 'Events' }
-           
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`relative flex-1 py-5 text-center transition-all duration-300 rounded-lg ${
-              activeTab === tab.id 
-                ? 'bg-white shadow-lg' 
-                : 'hover:bg-gray-100'
+<nav className="flex bg-gray-50 rounded-lg p-1.5">
+  {[
+    { id: 'stays', icon: '🏠', label: 'Properties' },
+    { id: 'experiences', icon: '🛎️', label: 'Services' },
+    { id: 'online', icon: '👷', label: 'Helpers' },
+    { id: 'events', icon: '🎪', label: 'Events' }
+  ].map((tab) => {
+    const isActive = activeTab === tab.id;
+    
+    return (
+      <button
+        key={tab.id}
+        onClick={() => setActiveTab(tab.id)}
+        className={`relative flex-1 py-4 text-center transition-all duration-200 rounded-lg ${
+          isActive 
+            ? 'bg-white shadow-md' 
+            : 'hover:bg-gray-100'
+        }`}
+      >
+        <div className="flex flex-col items-center space-y-2">
+          <span 
+            className={`text-2xl transition-all duration-300 ${
+              isActive 
+                ? 'text-rose-600 scale-110' 
+                : 'text-gray-500'
             }`}
-            style={{
-              transformStyle: 'preserve-3d'
-            }}
           >
-            <div className="flex flex-col items-center">
-              <span 
-                className={`text-4xl mb-3 font-bold transition-all duration-500 ${
-                  activeTab === tab.id 
-                    ? 'text-rose-600' 
-                    : 'text-gray-500'
-                }`}
-                style={{
-                  transform: activeTab === tab.id 
-                    ? 'scale(1.3) translateY(-4px) translateZ(12px)' 
-                    : 'scale(1) translateZ(0)',
-                  filter: activeTab === tab.id 
-                    ? 'drop-shadow(0 6px 12px rgba(236, 72, 153, 0.3))' 
-                    : 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
-                  textShadow: activeTab === tab.id
-                    ? '2px 2px 4px rgba(0,0,0,0.2), -1px -1px 0 rgba(255,255,255,0.3)'
-                    : '1px 1px 2px rgba(0,0,0,0.1)',
-                  transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1)',
-                  willChange: 'transform, filter'
-                }}
-              >
-                {tab.emoji}
-              </span>
-              <span className={`text-sm font-medium transition-colors ${
-                activeTab === tab.id 
-                  ? 'text-rose-700 font-semibold' 
-                  : 'text-gray-600'
-              }`}>
-                {tab.label}
-              </span>
-            </div>
-            
-            {/* 3D depth effect for active tab */}
-            {activeTab === tab.id && (
-              <div 
-                className="absolute inset-0 rounded-lg pointer-events-none"
-                style={{
-                  border: '2px solid rgba(236, 72, 153, 0.15)',
-                  transform: 'translateZ(8px)',
-                  zIndex: -1
-                }}
-              />
-            )}
-          </button>
-        ))}
-      </nav>
+            {tab.icon}
+          </span>
+          <span className={`text-sm font-medium transition-colors ${
+            isActive 
+              ? 'text-rose-700 font-semibold' 
+              : 'text-gray-600'
+          }`}>
+            {tab.label}
+          </span>
+        </div>
+        
+        {/* Active state indicator */}
+        {isActive && (
+          <div className="absolute inset-0 rounded-lg border-2 border-rose-100 pointer-events-none" />
+        )}
+      </button>
+    );
+  })}
+</nav>
     </div>
   </div>
 </div>
@@ -1880,9 +1869,9 @@ const handleHelperSubmit = async (e) => {
       {/* Helper Form */}
      {/* Helper Form */}
   {/* Helper Form */}
- {activeTab === 'online' && (
+{activeTab === 'online' && (
   <form onSubmit={handleHelperSubmit} className="space-y-8">
-    {/* Helper Type Selection - UPDATED WITH BARBER */}
+    {/* Helper Type Selection */}
     <div className="p-6 bg-white rounded-xl shadow-sm">
       <h2 className="text-xl font-semibold text-gray-800 mb-6">Select Helper Type</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -1895,15 +1884,17 @@ const handleHelperSubmit = async (e) => {
           { id: "tattoo", label: "Tattoo Artist", emoji: "🖌️", description: "Tattoo design and application" },
           { id: "barber", label: "Barber", emoji: "✂️", description: "Haircuts, beard trims, grooming at home" },
           { id: "photography", label: "Photographer", emoji: "📷", description: "Portrait, event, product photography" },
+          { id: "baker", label: "Baker", emoji: "🍰", description: "Custom cakes, pastries, baked goods at home" },
         ].map((type) => (
           <button
             key={type.id}
             type="button"
-            onClick={() => setHelperForm({ ...helperForm, type: type.id })}
-            className={`p-4 border-2 rounded-xl flex flex-col items-center text-center transition-all ${helperForm.type === type.id
+            onClick={() => setHelperForm(prev => ({ ...prev, type: type.id }))}
+            className={`p-4 border-2 rounded-xl flex flex-col items-center text-center transition-all ${
+              helperForm.type === type.id
                 ? "border-airbnb-red bg-red-50"
                 : "border-gray-200 hover:border-airbnb-red/30"
-              }`}
+            }`}
           >
             <span className="text-2xl mb-2">{type.emoji}</span>
             <span className="font-medium text-gray-700">{type.label}</span>
@@ -1913,7 +1904,7 @@ const handleHelperSubmit = async (e) => {
       </div>
     </div>
 
-    {/* Helper Information - UPDATED FOR BARBER & PHOTOGRAPHY */}
+    {/* Helper Information */}
     <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
       <h2 className="text-xl font-semibold">Helper Information</h2>
       <div className="grid md:grid-cols-2 gap-6">
@@ -1921,19 +1912,21 @@ const handleHelperSubmit = async (e) => {
           <label className="font-medium text-gray-700">
             {helperForm.type === "tutor" ? "Tutor Name" : 
              helperForm.type === "barber" ? "Barber Name" :
-             helperForm.type === "photography" ? "Photographer Name" : "Helper Name"}
+             helperForm.type === "photography" ? "Photographer Name" :
+             helperForm.type === "baker" ? "Baker Name" : "Helper Name"}
           </label>
           <input
             type="text"
-            id="name"
+            name="name"
             className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
             placeholder={
               helperForm.type === "tutor" ? "John Smith" : 
               helperForm.type === "barber" ? "Your professional name" :
-              helperForm.type === "photography" ? "Your photography business name" : "Helper Name"
+              helperForm.type === "photography" ? "Your photography business name" :
+              helperForm.type === "baker" ? "Your baking business name" : "Helper Name"
             }
-            onChange={handleHelperChange}
-            value={helperForm.name}
+            onChange={(e) => setHelperForm(prev => ({ ...prev, name: e.target.value }))}
+            value={helperForm.name || ''}
             required
           />
         </div>
@@ -1942,11 +1935,11 @@ const handleHelperSubmit = async (e) => {
           <label className="font-medium text-gray-700">Service Area</label>
           <input
             type="text"
-            id="address"
+            name="address"
             className="w-full p-3 border border-gray-200 rounded-lg"
             placeholder="Areas you serve"
-            onChange={handleHelperChange}
-            value={helperForm.address}
+            onChange={(e) => setHelperForm(prev => ({ ...prev, address: e.target.value }))}
+            value={helperForm.address || ''}
             required
           />
         </div>
@@ -1959,20 +1952,23 @@ const handleHelperSubmit = async (e) => {
                 ? "Barber Experience & Specialties"
                 : helperForm.type === "photography"
                   ? "Photography Style & Experience"
-                  : "Service Description"}
+                  : helperForm.type === "baker"
+                    ? "Baking Experience & Specialties"
+                    : "Service Description"}
           </label>
           <textarea
-            id="description"
+            name="description"
             className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
             placeholder={
               helperForm.type === "domestic" ? "Describe your cleaning methods and experience..." :
               helperForm.type === "errand" ? "Describe the types of errands you can run..." :
               helperForm.type === "barber" ? "Describe your barber experience, specialties, and approach..." :
               helperForm.type === "photography" ? "Describe your photography style, experience, and approach..." :
+              helperForm.type === "baker" ? "Describe your baking experience, specialties, and approach..." :
               "Describe your teaching qualifications and methods..."
             }
-            onChange={handleHelperChange}
-            value={helperForm.description}
+            onChange={(e) => setHelperForm(prev => ({ ...prev, description: e.target.value }))}
+            value={helperForm.description || ''}
             required
           />
         </div>
@@ -1985,20 +1981,23 @@ const handleHelperSubmit = async (e) => {
                 ? "Services Offered"
                 : helperForm.type === "photography"
                   ? "Photography Services Offered"
-                  : "Specific Services Offered"}
+                  : helperForm.type === "baker"
+                    ? "Baked Goods & Services Offered"
+                    : "Specific Services Offered"}
           </label>
           <textarea
-            id="near"
+            name="near"
             className="w-full p-3 border border-gray-200 rounded-lg h-32 whitespace-pre-wrap"
             placeholder={
               helperForm.type === "domestic" ? "E.g., Deep cleaning, laundry, ironing" :
               helperForm.type === "errand" ? "E.g., Grocery shopping, pharmacy runs" :
               helperForm.type === "barber" ? "E.g., Men's haircuts, beard trims, straight razor shaves, kids cuts" :
               helperForm.type === "photography" ? "E.g., Portrait sessions, event photography, product photography, headshots" :
+              helperForm.type === "baker" ? "E.g., Custom cakes, wedding cakes, pastries, breads, cupcakes, cookies" :
               "E.g., Mathematics, English, Science"
             }
-            onChange={handleHelperChange}
-            value={helperForm.near}
+            onChange={(e) => setHelperForm(prev => ({ ...prev, near: e.target.value }))}
+            value={helperForm.near || ''}
           />
         </div>
 
@@ -2006,11 +2005,11 @@ const handleHelperSubmit = async (e) => {
           <label className="font-medium text-gray-700">Contact Number</label>
           <input
             type="tel"
-            id="contact"
+            name="contact"
             className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
             placeholder="Phone number"
-            onChange={handleHelperChange}
-            value={helperForm.contact}
+            onChange={(e) => setHelperForm(prev => ({ ...prev, contact: e.target.value }))}
+            value={helperForm.contact || ''}
             required
           />
         </div>
@@ -2019,20 +2018,22 @@ const handleHelperSubmit = async (e) => {
           <label className="font-medium text-gray-700">
             {helperForm.type === "tutor" ? "Years of Experience" : 
              helperForm.type === "barber" ? "Barber Experience" :
-             helperForm.type === "photography" ? "Photography Experience" : "Experience"}
+             helperForm.type === "photography" ? "Photography Experience" :
+             helperForm.type === "baker" ? "Baking Experience" : "Experience"}
           </label>
           <input
             type="text"
-            id="host"
+            name="host"
             className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
             placeholder={
               helperForm.type === "tutor" ? "5 years teaching experience" :
               helperForm.type === "barber" ? "3 years as professional barber" :
               helperForm.type === "photography" ? "4 years professional photography" :
+              helperForm.type === "baker" ? "5 years professional baking experience" :
               "3 years as domestic helper"
             }
-            onChange={handleHelperChange}
-            value={helperForm.host}
+            onChange={(e) => setHelperForm(prev => ({ ...prev, host: e.target.value }))}
+            value={helperForm.host || ''}
             required
           />
         </div>
@@ -2043,49 +2044,49 @@ const handleHelperSubmit = async (e) => {
               <label className="font-medium text-gray-700">Education Level</label>
               <input
                 type="text"
-                id="kind"
+                name="kind"
                 className="w-full p-3 border border-gray-200 rounded-lg"
                 placeholder="E.g., Bachelor's Degree in Education"
-                onChange={handleHelperChange}
-                value={helperForm.kind}
+                onChange={(e) => setHelperForm(prev => ({ ...prev, kind: e.target.value }))}
+                value={helperForm.kind || ''}
               />
             </div>
             <div className="space-y-1">
               <label className="font-medium text-gray-700">Age Group</label>
               <input
                 type="text"
-                id="period"
+                name="period"
                 className="w-full p-3 border border-gray-200 rounded-lg"
                 placeholder="E.g., Primary school, High school"
-                onChange={handleHelperChange}
-                value={helperForm.period}
+                onChange={(e) => setHelperForm(prev => ({ ...prev, period: e.target.value }))}
+                value={helperForm.period || ''}
               />
             </div>
           </>
         )}
 
-        {(helperForm.type !== "tutor" && helperForm.type !== "barber" && helperForm.type !== "photography") && (
+        {(helperForm.type !== "tutor" && helperForm.type !== "barber" && helperForm.type !== "photography" && helperForm.type !== "baker") && (
           <>
             <div className="space-y-1">
               <label className="font-medium text-gray-700">Availability</label>
               <input
                 type="text"
-                id="period"
+                name="period"
                 className="w-full p-3 border border-gray-200 rounded-lg"
                 placeholder="E.g., Weekdays 8am-5pm"
-                onChange={handleHelperChange}
-                value={helperForm.period}
+                onChange={(e) => setHelperForm(prev => ({ ...prev, period: e.target.value }))}
+                value={helperForm.period || ''}
               />
             </div>
             <div className="space-y-1">
               <label className="font-medium text-gray-700">Languages Spoken</label>
               <input
                 type="text"
-                id="cancel"
+                name="cancel"
                 className="w-full p-3 border border-gray-200 rounded-lg"
                 placeholder="E.g., English, Afrikaans"
-                onChange={handleHelperChange}
-                value={helperForm.cancel}
+                onChange={(e) => setHelperForm(prev => ({ ...prev, cancel: e.target.value }))}
+                value={helperForm.cancel || ''}
               />
             </div>
           </>
@@ -2098,22 +2099,22 @@ const handleHelperSubmit = async (e) => {
               <label className="font-medium text-gray-700">Specializations</label>
               <input
                 type="text"
-                id="specializations"
+                name="specializations"
                 className="w-full p-3 border border-gray-200 rounded-lg"
                 placeholder="E.g., Fades, classic cuts, beard designs"
-                onChange={handleHelperChange}
-                value={helperForm.specializations}
+                onChange={(e) => setHelperForm(prev => ({ ...prev, specializations: e.target.value }))}
+                value={helperForm.specializations || ''}
               />
             </div>
             <div className="space-y-1">
               <label className="font-medium text-gray-700">Equipment</label>
               <input
                 type="text"
-                id="equipment"
+                name="equipment"
                 className="w-full p-3 border border-gray-200 rounded-lg"
                 placeholder="E.g., Bring own tools, sanitized equipment"
-                onChange={handleHelperChange}
-                value={helperForm.equipment}
+                onChange={(e) => setHelperForm(prev => ({ ...prev, equipment: e.target.value }))}
+                value={helperForm.equipment || ''}
               />
             </div>
           </>
@@ -2126,22 +2127,50 @@ const handleHelperSubmit = async (e) => {
               <label className="font-medium text-gray-700">Photography Style</label>
               <input
                 type="text"
-                id="style"
+                name="style"
                 className="w-full p-3 border border-gray-200 rounded-lg"
                 placeholder="E.g., Portrait, candid, studio, outdoor"
-                onChange={handleHelperChange}
-                value={helperForm.style}
+                onChange={(e) => setHelperForm(prev => ({ ...prev, style: e.target.value }))}
+                value={helperForm.style || ''}
               />
             </div>
             <div className="space-y-1">
               <label className="font-medium text-gray-700">Equipment</label>
               <input
                 type="text"
-                id="equipment"
+                name="equipment"
                 className="w-full p-3 border border-gray-200 rounded-lg"
                 placeholder="E.g., Professional DSLR, lighting, backup equipment"
-                onChange={handleHelperChange}
-                value={helperForm.equipment}
+                onChange={(e) => setHelperForm(prev => ({ ...prev, equipment: e.target.value }))}
+                value={helperForm.equipment || ''}
+              />
+            </div>
+          </>
+        )}
+
+        {/* Baker-specific fields */}
+        {helperForm.type === "baker" && (
+          <>
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700">Specialties</label>
+              <input
+                type="text"
+                name="specialties"
+                className="w-full p-3 border border-gray-200 rounded-lg"
+                placeholder="E.g., Wedding cakes, gluten-free baking, French pastries"
+                onChange={(e) => setHelperForm(prev => ({ ...prev, specialties: e.target.value }))}
+                value={helperForm.specialties || ''}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700">Dietary Options</label>
+              <input
+                type="text"
+                name="dietaryOptions"
+                className="w-full p-3 border border-gray-200 rounded-lg"
+                placeholder="E.g., Vegan, gluten-free, sugar-free options"
+                onChange={(e) => setHelperForm(prev => ({ ...prev, dietaryOptions: e.target.value }))}
+                value={helperForm.dietaryOptions || ''}
               />
             </div>
           </>
@@ -2149,7 +2178,7 @@ const handleHelperSubmit = async (e) => {
       </div>
     </div>
 
-    {/* Media Upload - UPDATED FOR BARBER & PHOTOGRAPHY */}
+    {/* Media Upload */}
     <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
       <h2 className="text-xl font-semibold">
         {helperForm.type === "tutor"
@@ -2158,7 +2187,9 @@ const handleHelperSubmit = async (e) => {
             ? "Add Photos of Your Work (Haircuts, Styles)"
             : helperForm.type === "photography"
               ? "Add Your Photography Portfolio"
-              : "Add Photos of Your Work"}
+              : helperForm.type === "baker"
+                ? "Add Photos of Your Baked Goods"
+                : "Add Photos of Your Work"}
       </h2>
 
       <div className="space-y-4">
@@ -2194,7 +2225,7 @@ const handleHelperSubmit = async (e) => {
         )}
 
         {/* Image Previews */}
-        {helperForm.imageUrls.length > 0 && (
+        {helperForm.imageUrls && helperForm.imageUrls.length > 0 && (
           <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {helperForm.imageUrls.map((url, index) => (
               <div key={url} className="relative aspect-square">
@@ -2217,7 +2248,7 @@ const handleHelperSubmit = async (e) => {
       </div>
     </div>
 
-    {/* Pricing & Details - UPDATED FOR BARBER & PHOTOGRAPHY */}
+    {/* Pricing & Details */}
     <div className="bg-white p-6 rounded-xl shadow-sm">
       <h2 className="text-xl font-semibold mb-6">Pricing & Details</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2230,22 +2261,25 @@ const handleHelperSubmit = async (e) => {
                 ? "Service Rates"
                 : helperForm.type === "photography"
                   ? "Session Rates"
-                  : "Service Rate"}
+                  : helperForm.type === "baker"
+                    ? "Product/Service Rates"
+                    : "Service Rate"}
           </label>
           <div className="relative">
             <input
               type="number"
-              id="regularPrice"
+              name="regularPrice"
               min="50"
               max="100000"
               required
               className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-              onChange={handleHelperChange}
-              value={helperForm.regularPrice}
+              onChange={(e) => setHelperForm(prev => ({ ...prev, regularPrice: e.target.value }))}
+              value={helperForm.regularPrice || ''}
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
               / {helperForm.type === "tutor" ? "hour" : 
-                 helperForm.type === "photography" ? "session" : "service"}
+                 helperForm.type === "photography" ? "session" : 
+                 helperForm.type === "baker" ? "starting from" : "service"}
             </span>
           </div>
           
@@ -2256,11 +2290,11 @@ const handleHelperSubmit = async (e) => {
                 Additional Services Pricing (Optional)
               </label>
               <textarea
-                id="additionalPricing"
+                name="additionalPricing"
                 className="w-full p-3 border border-gray-200 rounded-lg text-sm"
                 placeholder="E.g., Beard trim: R80, Kids cut: R100, Haircut + Beard: R200"
-                onChange={handleHelperChange}
-                value={helperForm.additionalPricing}
+                onChange={(e) => setHelperForm(prev => ({ ...prev, additionalPricing: e.target.value }))}
+                value={helperForm.additionalPricing || ''}
               />
             </div>
           )}
@@ -2272,11 +2306,27 @@ const handleHelperSubmit = async (e) => {
                 Package Pricing (Optional)
               </label>
               <textarea
-                id="additionalPricing"
+                name="additionalPricing"
                 className="w-full p-3 border border-gray-200 rounded-lg text-sm"
                 placeholder="E.g., 1-hour portrait: R500, 2-hour event: R1000, Full wedding: R5000"
-                onChange={handleHelperChange}
-                value={helperForm.additionalPricing}
+                onChange={(e) => setHelperForm(prev => ({ ...prev, additionalPricing: e.target.value }))}
+                value={helperForm.additionalPricing || ''}
+              />
+            </div>
+          )}
+
+          {/* Additional pricing field for Baker */}
+          {helperForm.type === "baker" && (
+            <div className="mt-4">
+              <label htmlFor="additionalPricing" className="block text-sm font-medium text-gray-700 mb-1">
+                Product Pricing (Optional)
+              </label>
+              <textarea
+                name="additionalPricing"
+                className="w-full p-3 border border-gray-200 rounded-lg text-sm"
+                placeholder="E.g., Custom cakes: from R300, Dozen cupcakes: R150, Pastry box: R200"
+                onChange={(e) => setHelperForm(prev => ({ ...prev, additionalPricing: e.target.value }))}
+                value={helperForm.additionalPricing || ''}
               />
             </div>
           )}
@@ -2289,10 +2339,10 @@ const handleHelperSubmit = async (e) => {
               Teaching Format
             </label>
             <select
-              id="bathrooms"
+              name="bathrooms"
               className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-              onChange={(e) => setHelperForm({ ...helperForm, bathrooms: e.target.value })}
-              value={helperForm.bathrooms}
+              onChange={(e) => setHelperForm(prev => ({ ...prev, bathrooms: e.target.value }))}
+              value={helperForm.bathrooms || ''}
             >
               <option value="1">In-person</option>
               <option value="2">Online</option>
@@ -2310,12 +2360,12 @@ const handleHelperSubmit = async (e) => {
             <div className="relative">
               <input
                 type="number"
-                id="bedrooms"
+                name="bedrooms"
                 min="1"
                 max="24"
                 className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                onChange={handleHelperChange}
-                value={helperForm.bedrooms}
+                onChange={(e) => setHelperForm(prev => ({ ...prev, bedrooms: e.target.value }))}
+                value={helperForm.bedrooms || ''}
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
                 hours
@@ -2335,15 +2385,15 @@ const handleHelperSubmit = async (e) => {
               <div className="relative">
                 <input
                   type="number"
-                  id="travelFee"
+                  name="travelFee"
                   min="0"
                   max="500"
                   className="w-full p-3 pl-10 border border-gray-200 rounded-lg"
                   placeholder="Optional"
-                  onChange={handleHelperChange}
-                  value={helperForm.travelFee}
+                  onChange={(e) => setHelperForm(prev => ({ ...prev, travelFee: e.target.value }))}
+                  value={helperForm.travelFee || ''}
                 />
-                <span className="absolute right-3 top-1/2 -translate-Y-1/2 text-gray-500">R</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">R</span>
               </div>
             </div>
 
@@ -2353,10 +2403,10 @@ const handleHelperSubmit = async (e) => {
                 Booking Notice
               </label>
               <select
-                id="bookingNotice"
+                name="bookingNotice"
                 className="w-full p-3 pl-10 border border-gray-200 rounded-lg"
-                onChange={handleHelperChange}
-                value={helperForm.bookingNotice}
+                onChange={(e) => setHelperForm(prev => ({ ...prev, bookingNotice: e.target.value }))}
+                value={helperForm.bookingNotice || ''}
               >
                 <option value="">Select notice period</option>
                 <option value="1">Same day</option>
@@ -2377,10 +2427,10 @@ const handleHelperSubmit = async (e) => {
                 Session Duration
               </label>
               <select
-                id="sessionDuration"
+                name="sessionDuration"
                 className="w-full p-3 pl-10 border border-gray-200 rounded-lg"
-                onChange={handleHelperChange}
-                value={helperForm.sessionDuration}
+                onChange={(e) => setHelperForm(prev => ({ ...prev, sessionDuration: e.target.value }))}
+                value={helperForm.sessionDuration || ''}
               >
                 <option value="">Select duration</option>
                 <option value="30">30 minutes</option>
@@ -2398,12 +2448,55 @@ const handleHelperSubmit = async (e) => {
               </label>
               <input
                 type="text"
-                id="photoDelivery"
+                name="photoDelivery"
                 className="w-full p-3 pl-10 border border-gray-200 rounded-lg"
                 placeholder="E.g., 5-7 days, digital download"
-                onChange={handleHelperChange}
-                value={helperForm.photoDelivery}
+                onChange={(e) => setHelperForm(prev => ({ ...prev, photoDelivery: e.target.value }))}
+                value={helperForm.photoDelivery || ''}
               />
+            </div>
+          </div>
+        )}
+
+        {/* Baker-specific details */}
+        {helperForm.type === "baker" && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="orderNotice" className="flex items-center gap-2 text-gray-700 font-medium">
+                <span>📅</span>
+                Order Notice Required
+              </label>
+              <select
+                name="orderNotice"
+                className="w-full p-3 pl-10 border border-gray-200 rounded-lg"
+                onChange={(e) => setHelperForm(prev => ({ ...prev, orderNotice: e.target.value }))}
+                value={helperForm.orderNotice || ''}
+              >
+                <option value="">Select notice period</option>
+                <option value="24">24 hours</option>
+                <option value="48">48 hours</option>
+                <option value="72">72 hours</option>
+                <option value="168">1 week</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-gray-700 font-medium">
+                <span>🚚</span>
+                Delivery Available
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  name="delivery"
+                  checked={helperForm.delivery || false}
+                  onChange={(e) => setHelperForm(prev => ({ ...prev, delivery: e.target.checked }))}
+                  className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
+                />
+                <label htmlFor="delivery" className="font-medium text-gray-700">
+                  Offer delivery service
+                </label>
+              </div>
             </div>
           </div>
         )}
@@ -2416,9 +2509,9 @@ const handleHelperSubmit = async (e) => {
           <div className="flex items-center gap-3">
             <input
               type="checkbox"
-              id="security"
-              checked={helperForm.security}
-              onChange={handleHelperChange}
+              name="security"
+              checked={helperForm.security || false}
+              onChange={(e) => setHelperForm(prev => ({ ...prev, security: e.target.checked }))}
               className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
             />
             <label htmlFor="security" className="font-medium text-gray-700">
@@ -2436,9 +2529,9 @@ const handleHelperSubmit = async (e) => {
             <div className="flex items-center gap-3">
               <input
                 type="checkbox"
-                id="pets"
-                checked={helperForm.pets}
-                onChange={handleHelperChange}
+                name="pets"
+                checked={helperForm.pets || false}
+                onChange={(e) => setHelperForm(prev => ({ ...prev, pets: e.target.checked }))}
                 className="h-5 w-5 text-airbnb-red rounded focus:ring-airbnb-red"
               />
               <label htmlFor="pets" className="font-medium text-gray-700">
@@ -2463,7 +2556,6 @@ const handleHelperSubmit = async (e) => {
     </div>
   </form>
 )}
-
 
 
       {/* Event Form */}
