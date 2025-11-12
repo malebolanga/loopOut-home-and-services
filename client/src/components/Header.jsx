@@ -325,10 +325,10 @@ export default function Header() {
   ];
 
   return (
-    <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+   <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
   isScrolled 
-    ? 'bg-[#eff6ff]/95 backdrop-blur-lg border-0 border-gray-00' 
-    : 'bg-[#eff6ff]'
+    ? 'bg-gray-50/95 backdrop-blur-lg ' 
+    : 'bg-gray-50'
 }`}>
       {/* Mobile Search Overlay */}
       {showMobileSearchBar && (
