@@ -912,10 +912,10 @@ const handleHelperSubmit = async (e) => {
       
 <nav className="flex bg-gray-50 rounded-lg p-1.5">
   {[
-    { id: 'stays', icon: '🏠', label: 'Properties' },
-    { id: 'experiences', icon: '🛎️', label: 'Services' },
-    { id: 'online', icon: '👷', label: 'Helpers' },
-    { id: 'events', icon: '🎪', label: 'Events' }
+    { id: 'stays', icon: '🏠', label: '' },
+    { id: 'experiences', icon: '🛎️', label: '' },
+    { id: 'online', icon: '👷', label: '' },
+    { id: 'events', icon: '🎪', label: '' }
   ].map((tab) => {
     const isActive = activeTab === tab.id;
     
