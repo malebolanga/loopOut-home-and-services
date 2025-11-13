@@ -1,16 +1,18 @@
 import express from 'express';
-import { deleteUser, 
-       test, updateUser,  
-       getUserListings, 
-       getUserServices, 
-       getUserHelpers,
-       getUserEvents, // Add this import
-       getUserPostCount, // Add this import  
-       getUser,
-       getUsers, // Add this import
-       rateHost, // Add this
-       getHostRatings // Add this
-    } from '../controllers/user.controller.js';
+import {
+    deleteUser,
+    test,
+    updateUser,
+    getUserListings,
+    getUserServices,
+    getUserHelpers,
+    getUserEvents, // Add this import
+    getUserPostCount, // Add this import  
+    getUser,
+    getUsers, // Add this import
+    rateHost, // Add this
+    getHostRatings // Add this
+} from '../controllers/user.controller.js';
 import { verifyToken } from '../utils/verifyUser.js';
 
 
