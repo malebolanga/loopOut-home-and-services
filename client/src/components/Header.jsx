@@ -32,8 +32,6 @@ export default function Header() {
   const notificationRef = useRef();
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showMobileSearchBar, setShowMobileSearchBar] = useState(false);
-  const mobileSearchRef = useRef();
 
   // New states for enhanced search
   const [activeType, setActiveType] = useState('all');
@@ -61,7 +59,7 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Effect to handle clicks outside of the dropdown menu and mobile search bar
+  // Effect to handle clicks outside of the dropdown menu
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -70,14 +68,10 @@ export default function Header() {
       if (notificationRef.current && !notificationRef.current.contains(e.target)) {
         setNotificationMenu(false);
       }
-      if (mobileSearchRef.current && !mobileSearchRef.current.contains(e.target) && showMobileSearchBar) {
-        setShowMobileSearchBar(false);
-        setShowSuggestions(false);
-      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showMobileSearchBar]);
+  }, []);
 
   // Effect to save search history to localStorage whenever it changes
   useEffect(() => {
@@ -86,7 +80,7 @@ export default function Header() {
 
   // Effect to generate search suggestions based on user input
   useEffect(() => {
-    if (!searchTerm.trim() || !showMobileSearchBar) {
+    if (!searchTerm.trim()) {
       setSuggestions([]);
       return;
     }
@@ -133,7 +127,7 @@ export default function Header() {
 
     setSuggestions(allSuggestions);
     setShowSuggestions(allSuggestions.length > 0);
-  }, [searchTerm, activeType, searchHistory, showMobileSearchBar]);
+  }, [searchTerm, activeType, searchHistory]);
 
   // Fetch notifications from the server
   const fetchNotifications = async () => {
@@ -221,7 +215,6 @@ export default function Header() {
     }
 
     navigate(`/search?${searchParams.toString()}`);
-    setShowMobileSearchBar(false);
     setShowSuggestions(false);
   };
 
@@ -270,7 +263,6 @@ export default function Header() {
     }
 
     navigate(`/search?${searchParams.toString()}`);
-    setShowMobileSearchBar(false);
   };
 
   // Clear search history
@@ -330,136 +322,6 @@ export default function Header() {
     ? 'bg-gray-50/95 backdrop-blur-lg ' 
     : 'bg-gray-50'
 }`}>
-      {/* Mobile Search Overlay */}
-      {showMobileSearchBar && (
-        <div className="fixed inset-0 bg-white z-50 md:hidden">
-          <div ref={mobileSearchRef} className="p-4">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <button 
-                onClick={() => setShowMobileSearchBar(false)}
-                className="p-2 rounded-full hover:bg-gray-100"
-              >
-                <FiX className="w-5 h-5" />
-              </button>
-              <h3 className="text-lg font-semibold">Search</h3>
-              <div className="w-9"></div> {/* Spacer for balance */}
-            </div>
-
-            {/* Search Types */}
-            <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-              {searchTypes.map((type) => (
-                <button
-                  key={type.key}
-                  onClick={() => setActiveType(type.key)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                    activeType === type.key
-                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <span>{type.icon}</span>
-                  {type.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Search Input */}
-            <form onSubmit={handleSearch} className="relative mb-4">
-              <input
-                type="text"
-                placeholder={`Search ${searchTypes.find(t => t.key === activeType)?.label?.toLowerCase() || 'everything'}...`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-4 pl-12 rounded-2xl border border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition-all bg-white shadow-sm"
-                autoFocus
-              />
-              <FiSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            </form>
-
-            {/* Search Suggestions */}
-            {showSuggestions && suggestions.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-4">
-                <div className="p-3 border-b border-gray-100 flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-700">Suggestions</span>
-                  {searchHistory.length > 0 && (
-                    <button
-                      onClick={clearSearchHistory}
-                      className="text-xs text-pink-600 hover:text-pink-700 font-medium"
-                    >
-                      Clear history
-                    </button>
-                  )}
-                </div>
-                <div className="max-h-60 overflow-y-auto">
-                  {suggestions.map((suggestion, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSuggestionClick(suggestion)}
-                      className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
-                    >
-                      <FiClock className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-700">{suggestion}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Recent Searches */}
-            {searchHistory.length > 0 && !showSuggestions && (
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                <div className="p-3 border-b border-gray-100 flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-700">Recent searches</span>
-                  <button
-                    onClick={clearSearchHistory}
-                    className="text-xs text-pink-600 hover:text-pink-700 font-medium"
-                  >
-                    Clear all
-                  </button>
-                </div>
-                <div className="max-h-60 overflow-y-auto">
-                  {searchHistory.slice(0, 5).map((item, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSuggestionClick(item.term)}
-                      className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
-                    >
-                      <FiClock className="w-4 h-4 text-gray-400" />
-                      <div className="flex-1">
-                        <div className="text-gray-700">{item.term}</div>
-                        <div className="text-xs text-gray-400 capitalize">{item.type}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Quick Actions */}
-            <div className="mt-6">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Quick actions</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <button 
-                  onClick={() => navigate('/plan-trip')}
-                  className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 text-blue-700 hover:shadow-md transition-all text-left"
-                >
-                  <FiMap className="w-5 h-5 mb-2" />
-                  <div className="text-sm font-medium">Plan Trip</div>
-                </button>
-                <button 
-                  onClick={() => navigate('/ai-assistant')}
-                  className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 text-purple-700 hover:shadow-md transition-all text-left"
-                >
-                  <FaBrain className="w-5 h-5 mb-2" />
-                  <div className="text-sm font-medium">AI Assistant</div>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Main Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -593,14 +455,6 @@ export default function Header() {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
-            {/* Mobile Search Button */}
-            <button 
-              onClick={() => setShowMobileSearchBar(true)}
-              className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors"
-            >
-              <FiSearch className="w-5 h-5 text-gray-600" />
-            </button>
-
             {/* Create Listing Button - Hidden on mobile (shown in footer) */}
             <Link
               to={currentUser ? `/${currentUser._id}/create-listing` : "/login-required"}

@@ -1482,14 +1482,14 @@ export default function Home() {
                       </div>
                       <div>
                         <h2 className="text-1xl font-bold text-gray-900">Helpers</h2>
-                        <p className="text-gray-600 text-sm">Find trusted helpers for your needs</p>
+                     
                       </div>
                     </div>
                     <button 
                       onClick={() => setActiveTab("helper")}
                       className="px-2 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
                     >
-                      View all
+                      all
                       <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                       </svg>
@@ -1550,14 +1550,14 @@ export default function Home() {
                       </div>
                       <div>
                         <h2 className="text-1xl font-bold text-gray-900">Properties</h2>
-                        <p className="text-gray-600 text-sm">Find your perfect home or investment</p>
+                      
                       </div>
                     </div>
                     <button 
                       onClick={() => setActiveTab("properties")}
                       className="px-2 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
                     >
-                      View all
+                      all
                       <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                       </svg>
@@ -1618,14 +1618,14 @@ export default function Home() {
                       </div>
                       <div>
                         <h2 className="text-1xl font-bold text-gray-900">Services</h2>
-                        <p className="text-gray-600 text-sm">Professional services for your needs</p>
+                      
                       </div>
                     </div>
                     <button 
                       onClick={() => setActiveTab("services")}
                       className="px-2 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
                     >
-                      View all
+                      all
                       <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                       </svg>
@@ -1686,14 +1686,14 @@ export default function Home() {
                       </div>
                       <div>
                         <h2 className="text-1xl font-bold text-gray-900">Events</h2>
-                        <p className="text-gray-600 text-sm">Discover local happenings and activities</p>
+                       
                       </div>
                     </div>
                     <button 
                       onClick={() => setActiveTab("events")}
                       className="px-2 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
                     >
-                      View all
+                      all
                       <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                       </svg>

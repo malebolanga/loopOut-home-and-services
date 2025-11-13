@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from 'react-redux';
+import { FiSearch, FiClock, FiX, FiHome, FiUser, FiFileText, FiMap } from "react-icons/fi";
+import { FaBrain } from "react-icons/fa";
 
 const Footer = () => {
   const navigate = useNavigate();
@@ -10,6 +12,27 @@ const Footer = () => {
   const [isAtTop, setIsAtTop] = useState(true);
   const lastScroll = useRef(0);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const mobileSearchRef = useRef();
+
+  // Search states (same as header)
+  const [activeType, setActiveType] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchHistory, setSearchHistory] = useState(() => {
+    const saved = localStorage.getItem('searchHistory');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Search types (same as header)
+  const searchTypes = [
+    { key: 'all', label: 'All', icon: '🔍' },
+    { key: 'name', label: 'Name', icon: <FiUser className="w-4 h-4" /> },
+    { key: 'address', label: 'Address', icon: <FiHome className="w-4 h-4" /> },
+    { key: 'description', label: 'Description', icon: <FiFileText className="w-4 h-4" /> }
+  ];
 
   useEffect(() => {
     if (currentUser) {
@@ -38,12 +61,211 @@ const Footer = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Effect to handle clicks outside of mobile search
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (mobileSearchRef.current && !mobileSearchRef.current.contains(e.target) && showSearch) {
+        setShowSearch(false);
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSearch]);
+
+  // Effect to save search history
+  useEffect(() => {
+    localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+  }, [searchHistory]);
+
+  // Effect to generate search suggestions
+  useEffect(() => {
+    if (!searchTerm.trim() || !showSearch) {
+      setSuggestions([]);
+      return;
+    }
+
+    const typeFiltered = searchHistory.filter(
+      item => (activeType === 'all' || item.type === activeType)
+    );
+
+    const matched = typeFiltered
+      .filter(item =>
+        item.term.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      .slice(0, 5);
+
+    const genericSuggestions = [];
+    const types = {
+      name: ['Beach house', 'Mountain cabin', 'Downtown loft', 'Luxury villa', 'Cozy apartment'],
+      address: ['New York', 'Los Angeles', 'Miami Beach', 'Chicago downtown', 'San Francisco'],
+      description: ['Ocean view', 'Swimming pool', 'Pet friendly', 'Free parking', 'Garden']
+    };
+
+    if (activeType === 'all' || activeType === 'name') {
+      genericSuggestions.push(...types.name);
+    }
+    if (activeType === 'all' || activeType === 'address') {
+      genericSuggestions.push(...types.address);
+    }
+    if (activeType === 'all' || activeType === 'description') {
+      genericSuggestions.push(...types.description);
+    }
+
+    const allSuggestions = [...new Set([
+      ...matched.map(item => item.term),
+      ...genericSuggestions.filter(term =>
+        term.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    ])].slice(0, 8);
+
+    setSuggestions(allSuggestions);
+    setShowSuggestions(allSuggestions.length > 0);
+  }, [searchTerm, activeType, searchHistory, showSearch]);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleSearchClick = () => {
+    setShowSearch(true);
+  };
+
+  const handleCreateClick = () => {
+    if (!currentUser) {
+      navigate('/login-required');
+      return;
+    }
+    setShowCreate(true);
+  };
+
+  const closeModals = () => {
+    setShowSearch(false);
+    setShowCreate(false);
+    setShowSuggestions(false);
+  };
+
+  // Handle search submission (same as header)
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!searchTerm.trim()) return;
+
+    const newSearch = {
+      term: searchTerm,
+      type: activeType,
+      timestamp: new Date().toISOString()
+    };
+
+    setSearchHistory(prev => {
+      const filtered = prev.filter(item => 
+        !(item.term === searchTerm && item.type === activeType)
+      );
+      return [newSearch, ...filtered].slice(0, 10);
+    });
+
+    const searchTypeMap = {
+      'all': 'properties',
+      'name': 'properties',
+      'address': 'properties', 
+      'description': 'properties'
+    };
+
+    const searchPageType = searchTypeMap[activeType] || 'properties';
+
+    const searchParams = new URLSearchParams({
+      q: searchTerm,
+      searchType: searchPageType
+    });
+
+    if (activeType === 'name') {
+      searchParams.set('name', searchTerm);
+    } else if (activeType === 'address') {
+      searchParams.set('address', searchTerm);
+    } else if (activeType === 'description') {
+      searchParams.set('description', searchTerm);
+    }
+
+    navigate(`/search?${searchParams.toString()}`);
+    setShowSearch(false);
+    setShowSuggestions(false);
+  };
+
+  // Handle suggestion click (same as header)
+  const handleSuggestionClick = (suggestion) => {
+    setSearchTerm(suggestion);
+    setShowSuggestions(false);
+    
+    const newSearch = {
+      term: suggestion,
+      type: activeType,
+      timestamp: new Date().toISOString()
+    };
+
+    setSearchHistory(prev => {
+      const filtered = prev.filter(item => 
+        !(item.term === suggestion && item.type === activeType)
+      );
+      return [newSearch, ...filtered].slice(0, 10);
+    });
+
+    const searchTypeMap = {
+      'all': 'properties',
+      'name': 'properties',
+      'address': 'properties',
+      'description': 'properties'
+    };
+
+    const searchPageType = searchTypeMap[activeType] || 'properties';
+
+    const searchParams = new URLSearchParams({
+      q: suggestion,
+      searchType: searchPageType
+    });
+
+    if (activeType === 'name') {
+      searchParams.set('name', suggestion);
+    } else if (activeType === 'address') {
+      searchParams.set('address', suggestion);
+    } else if (activeType === 'description') {
+      searchParams.set('description', suggestion);
+    }
+
+    navigate(`/search?${searchParams.toString()}`);
+    setShowSearch(false);
+  };
+
+  // Clear search history
+  const clearSearchHistory = () => {
+    setSearchHistory([]);
+    localStorage.removeItem('searchHistory');
+  };
+
+  const handleCreateListing = (tab = '') => {
+    if (!currentUser) {
+      navigate('/login-required');
+      return;
+    }
+    
+    let url = `/${currentUser._id}/create-listing`;
+    if (tab) {
+      url += `?tab=${tab}`;
+    }
+    
+    navigate(url);
+    setShowCreate(false);
+  };
+
   const getMobileNavItems = () => {
-    const commonItems = [
+    return [
+      {
+        icon: (
+          <div className="p-2 rounded-full text-gray-600 hover:bg-gray-100">
+            <FiSearch className="w-6 h-6" />
+          </div>
+        ),
+        label: "Search",
+        onClick: handleSearchClick
+      },
       {
         to: "/",
         icon: (
@@ -57,105 +279,257 @@ const Footer = () => {
         active: window.location.pathname === '/'
       },
       {
-        to: "/plan-trip",
         icon: (
-          <div className={`p-2 rounded-full ${window.location.pathname === '/my-trips' ? 'bg-teal-100 text-teal-600' : 'text-gray-600 hover:bg-gray-100'}`}>
+          <div className="p-2 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
           </div>
         ),
-        label: "Trips",
-        active: window.location.pathname === '/my-trips'
-      },
-      // NEW: My Listings tab
-      {
-        to: currentUser ? `/${currentUser._id}/list` : "/login-required",
-        icon: (
-          <div className={`p-2 rounded-full ${window.location.pathname.includes('listings') ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}>
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
-          </div>
-        ),
-        label: "My List",
-        active: window.location.pathname.includes('listings'),
-        onClick: !currentUser ? handleProtectedClick : undefined
+        label: "Create",
+        special: true,
+        onClick: handleCreateClick
       }
     ];
-
-    if (currentUser) {
-      return [
-        ...commonItems,
-        {
-          to: `/${currentUser._id}/wishlist`,
-          icon: (
-            <div className={`relative p-2 rounded-full ${window.location.pathname.includes('wishlist') ? 'bg-red-100 text-red-600' : 'text-gray-600 hover:bg-gray-100'}`}>
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              {isFavorite && (
-                <span className="absolute top-1 right-1 h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                </span>
-              )}
-            </div>
-          ),
-          label: "Wishlist",
-          active: window.location.pathname.includes('wishlist'),
-          pulse: isFavorite
-        },
-        {
-          to: `/${currentUser._id}/create-listing`,
-          icon: (
-            <div className="p-2 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </div>
-          ),
-          label: "Create",
-          special: true,
-          onClick: handleProtectedClick
-        }
-      ];
-    } else {
-      return [
-        ...commonItems,
-        {
-          to: "/login-required",
-          icon: (
-            <div className="p-2 rounded-full text-gray-600 hover:bg-gray-100">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-            </div>
-          ),
-          label: "Wishlist",
-          onClick: handleProtectedClick
-        }
-      ];
-    }
   };
 
   return (
     <>
-      {/* Mobile Bottom Navigation */}
-      <nav className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-lg rounded-full shadow-2xl md:hidden z-50 transition-all duration-300 ${!isNavVisible ? 'translate-y-24 opacity-0' : 'translate-y-0 opacity-100'}`}>
-        <div className="flex justify-around items-center h-16 px-4">
-          {getMobileNavItems().map((item, index) => (
-            <Link
-              key={index}
-              to={item.to}
-              onClick={item.onClick}
-              className="flex flex-col items-center p-2 w-14 transition-all"
+      {/* Enhanced Floating Search Modal - Same as Header */}
+      {showSearch && (
+        <div className="fixed inset-0 bg-white z-50 md:hidden">
+          <div ref={mobileSearchRef} className="p-4">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <button 
+                onClick={closeModals}
+                className="p-2 rounded-full hover:bg-gray-100"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+              <h3 className="text-lg font-semibold">Search</h3>
+              <div className="w-9"></div> {/* Spacer for balance */}
+            </div>
+
+            {/* Search Types */}
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+              {searchTypes.map((type) => (
+                <button
+                  key={type.key}
+                  onClick={() => setActiveType(type.key)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                    activeType === type.key
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <span>{type.icon}</span>
+                  {type.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Search Input */}
+            <form onSubmit={handleSearch} className="relative mb-4">
+              <input
+                type="text"
+                placeholder={`Search ${searchTypes.find(t => t.key === activeType)?.label?.toLowerCase() || 'everything'}...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-4 pl-12 rounded-2xl border border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition-all bg-white shadow-sm"
+                autoFocus
+              />
+              <FiSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            </form>
+
+            {/* Search Suggestions */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-4">
+                <div className="p-3 border-b border-gray-100 flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">Suggestions</span>
+                  {searchHistory.length > 0 && (
+                    <button
+                      onClick={clearSearchHistory}
+                      className="text-xs text-pink-600 hover:text-pink-700 font-medium"
+                    >
+                      Clear history
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-60 overflow-y-auto">
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
+                    >
+                      <FiClock className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-700">{suggestion}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Searches */}
+            {searchHistory.length > 0 && !showSuggestions && (
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                <div className="p-3 border-b border-gray-100 flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">Recent searches</span>
+                  <button
+                    onClick={clearSearchHistory}
+                    className="text-xs text-pink-600 hover:text-pink-700 font-medium"
+                  >
+                    Clear all
+                  </button>
+                </div>
+                <div className="max-h-60 overflow-y-auto">
+                  {searchHistory.slice(0, 5).map((item, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(item.term)}
+                      className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
+                    >
+                      <FiClock className="w-4 h-4 text-gray-400" />
+                      <div className="flex-1">
+                        <div className="text-gray-700">{item.term}</div>
+                        <div className="text-xs text-gray-400 capitalize">{item.type}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Quick Actions */}
+            <div className="mt-6">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Quick actions</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  onClick={() => {
+                    navigate('/plan-trip');
+                    setShowSearch(false);
+                  }}
+                  className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 text-blue-700 hover:shadow-md transition-all text-left"
+                >
+                  <FiMap className="w-5 h-5 mb-2" />
+                  <div className="text-sm font-medium">Plan Trip</div>
+                </button>
+                <button 
+                  onClick={() => {
+                    navigate('/ai-assistant');
+                    setShowSearch(false);
+                  }}
+                  className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 text-purple-700 hover:shadow-md transition-all text-left"
+                >
+                  <FaBrain className="w-5 h-5 mb-2" />
+                  <div className="text-sm font-medium">AI Assistant</div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Create Modal */}
+      {showCreate && (
+        <div className="fixed inset-0 bg-white z-50 flex flex-col">
+          <div className="flex items-center justify-between p-4 border-b">
+            <button 
+              onClick={closeModals}
+              className="p-2 rounded-full hover:bg-gray-100"
             >
-              {item.icon}
-              <span className={`text-xs mt-1 ${item.active ? 'text-pink-600 font-medium' : 'text-gray-500'}`}>
-                {item.label}
-              </span>
-            </Link>
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <h2 className="text-lg font-semibold">Create Listing</h2>
+            <div className="w-10"></div> {/* Spacer for balance */}
+          </div>
+          
+          <div className="flex-1 p-4">
+            <div className="max-w-2xl mx-auto">
+              {/* Main Create Listing Button */}
+              <div 
+                className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-pink-400 hover:bg-pink-50 transition-all cursor-pointer mb-8"
+                onClick={() => handleCreateListing()} // No tab specified = default
+              >
+                <span className="text-4xl mb-4 block">🏠</span>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Create New Listing</h3>
+                <p className="text-gray-500">Share your space with travelers around the world</p>
+              </div>
+              
+              {/* Quick Create Options with Emojis */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Properties - House emoji */}
+                <div 
+                  className="border rounded-xl p-4 text-center hover:border-pink-400 hover:bg-pink-50 transition-all cursor-pointer"
+                  onClick={() => handleCreateListing('stays')}
+                >
+                  <span className="text-3xl mb-2 block">🏠</span>
+                  <span className="text-sm font-medium">Properties</span>
+                </div>
+
+                {/* Services - Tools emoji */}
+                <div 
+                  className="border rounded-xl p-4 text-center hover:border-pink-400 hover:bg-pink-50 transition-all cursor-pointer"
+                  onClick={() => handleCreateListing('experiences')}
+                >
+                  <span className="text-3xl mb-2 block">🛠️</span>
+                  <span className="text-sm font-medium">Services</span>
+                </div>
+
+                {/* Helper - Hand helping emoji */}
+                <div 
+                  className="border rounded-xl p-4 text-center hover:border-pink-400 hover:bg-pink-50 transition-all cursor-pointer"
+                  onClick={() => handleCreateListing('online')}
+                >
+                  <span className="text-3xl mb-2 block">👷</span>
+                  <span className="text-sm font-medium">Helper</span>
+                </div>
+
+                {/* Events - Party emoji */}
+                <div 
+                  className="border rounded-xl p-4 text-center hover:border-pink-400 hover:bg-pink-50 transition-all cursor-pointer"
+                  onClick={() => handleCreateListing('events')}
+                >
+                  <span className="text-3xl mb-2 block">🎪</span>
+                  <span className="text-sm font-medium">Events</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Bottom Navigation */}
+      <nav className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-lg rounded-full shadow-2xl md:hidden z-40 transition-all duration-300 ${!isNavVisible ? 'translate-y-24 opacity-0' : 'translate-y-0 opacity-100'}`}>
+        <div className="flex justify-around items-center h-16 px-6">
+          {getMobileNavItems().map((item, index) => (
+            item.to ? (
+              <Link
+                key={index}
+                to={item.to}
+                onClick={item.onClick}
+                className="flex flex-col items-center p-2 w-14 transition-all"
+              >
+                {item.icon}
+                <span className={`text-xs mt-1 ${item.active ? 'text-pink-600 font-medium' : 'text-gray-500'}`}>
+                  {item.label}
+                </span>
+              </Link>
+            ) : (
+              <button
+                key={index}
+                onClick={item.onClick}
+                className="flex flex-col items-center p-2 w-14 transition-all"
+              >
+                {item.icon}
+                <span className={`text-xs mt-1 text-gray-500`}>
+                  {item.label}
+                </span>
+              </button>
+            )
           ))}
         </div>
       </nav>

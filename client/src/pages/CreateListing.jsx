@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
 import { app } from "../firebase";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import "../styles/ListingDetails.scss";
+
 
 export default function CreateListing() {
   const { currentUser } = useSelector((state) => state.user);
@@ -12,6 +13,19 @@ export default function CreateListing() {
   const [files, setFiles] = useState([]);
   const [videoFile, setVideoFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+   const [searchParams] = useSearchParams(); // Add this hook
+  
+  // Get the tab from URL parameters, default to 'stays'
+  const initialTab = searchParams.get('tab') || 'stays';
+
+  
+  // Update activeTab when URL parameters change
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
 
   // Separate form data for each tab
   const [propertyForm, setPropertyForm] = useState({
