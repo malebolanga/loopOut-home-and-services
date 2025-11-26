@@ -365,28 +365,27 @@ function EventItem({ event, className = "", compactMode = false }) {
 
         
 
-            <div className="flex items-center justify-between pt-0 mt-auto">
-              <div className="flex items-center gap-1 text-sm font-bold text-gray-900">
+        <div className="mt-auto pt-0">
+          <div className="flex items-baseline justify-between">
+            <div className="flex items-baseline">
+              <span className="text-[15px] font-semibold text-gray-900">
                 {formatPrice(event.regularPrice)}
-              </div>
+              </span>
+           
+            </div>
+            
+            <div className="flex items-center text-gray-600">
+              <FaStar className="text-amber-500 text-[12px]" />
+              <span className="font-medium text-gray-900 text-[13px] ml-1">
+                {calculatedStarRating}
+              </span>
+          
             </div>
           </div>
+        </div>
+        </div>
           
-          {showShareOptions && (
-            <div className="absolute bottom-16 right-3 mt-2 w-40 bg-white rounded-lg shadow-lg z-20 border border-gray-200 divide-y divide-gray-100 text-sm">
-              <div className="py-1">
-                <button onClick={(e) => shareEvent('whatsapp', e)} className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors flex items-center">
-                  WhatsApp
-                </button>
-                <button onClick={(e) => shareEvent('facebook', e)} className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center">
-                  Facebook
-                </button>
-                <button onClick={(e) => shareEvent('copy', e)} className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center">
-                  Copy Link
-                </button>
-              </div>
-            </div>
-          )}
+
         </>
       )}
     </Link>

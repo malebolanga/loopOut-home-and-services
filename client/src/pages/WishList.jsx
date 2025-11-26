@@ -114,7 +114,7 @@ export default function WishList() {
           </div>
           
           <h1 className="text-3xl font-bold text-gray-800 mb-3 font-sans">
-            Curating Your Wishlist
+            Curating Your Wishlistss
           </h1>
           
           <div className="flex justify-center mb-6">

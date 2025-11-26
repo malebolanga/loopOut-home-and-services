@@ -132,7 +132,7 @@ export default function App() {
         
         {/* User Routes */}
         <Route path="/:userId/list" element={<MyListing />} />
-        <Route path="/:userId/wishlist" element={<Wishlist />} />
+        <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/users" element={<Users />} />
         <Route path="/:userId/listings" element={<UserListings />} />
         <Route path="/events/:id" element={<Events />} />

@@ -404,35 +404,47 @@ function HelperItem({ helper, className = "", compactMode = false }) {
             </div>
           </div>
 
-          <div className="p-3 flex-grow flex flex-col">
-            <div className="flex justify-between items-start">
-              <h3 className="text-sm font-semibold text-gray-900 truncate max-w-[70%]">
-                {helper.name || 'Helper Name'}
-              </h3>
+         <div className="p-4 flex-grow flex flex-col space-y-2">
+  {/* Header with rating */}
+  <div className="flex justify-between items-start">
+    <div className="flex-1 min-w-0">
+      <h3 className="text-[15px] font-semibold text-gray-900 truncate pr-2 leading-tight">
+        {helper.name || 'Helper Name'}
+      </h3>
+      
+      {/* Location */}
+      <div className="flex items-center mt-0">
+        <MdLocationOn className="text-rose-500 mr-1 flex-shrink-0 text-[13px]" />
+        <span className="text-gray-600 text-[13px] truncate">
+          {helper.address || 'Location not available'}
+        </span>
+      </div>
+    </div>
 
-              {/* Star rating moved to top right corner */}
-              <div className="flex items-center text-xs bg-white/80 backdrop-blur-sm px-2 py-1 rounded-full border border-gray-200">
-                <FaStar className="text-yellow-400" />
-                <span className="ml-1 font-medium">{calculatedStarRating}</span>
-                <span className="text-gray-500 ml-1">({clickCount})</span>
-              </div>
-            </div>
+    {/* Airbnb-style compact rating */}
+ 
+  </div>
 
-            {/* Location */}
-            <p className="text-gray-600 text-xs flex items-center">
-              <MdLocationOn className="text-rose-600 mr-1 min-w-fit text-xs" />
-              <span className="truncate hover:text-gray-800 transition-colors">
-                {helper.address || 'Location not available'}
-              </span>
-            </p>
-
-        
-
-            {/* Price at the bottom */}
-            <div className="mt-0 flex items-center gap-1 text-sm font-bold text-gray-900">
-              {formatPrice(helper.regularPrice)}
-            </div>
-          </div>
+  {/* Price section - Airbnb style */}
+<div className="mt-auto pt-0">
+  <div className="flex items-baseline justify-between">
+    <div className="flex items-baseline">
+      <span className="text-[15px] font-semibold text-gray-900">
+        {formatPrice(helper.regularPrice)}
+      </span>
+   
+    </div>
+    
+    <div className="flex items-center text-gray-600">
+      <FaStar className="text-amber-500 text-[12px]" />
+      <span className="font-medium text-gray-900 text-[13px] ml-1">
+        {calculatedStarRating}
+      </span>
+  
+    </div>
+  </div>
+</div>
+</div>
         </>
       )}
     </Link>
