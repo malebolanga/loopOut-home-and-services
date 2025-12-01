@@ -1890,10 +1890,10 @@ export default function HelperPage() {
                         />
                         <div className="flex-1">
                           <div className="font-semibold text-gray-900 text-lg">
-                            I'll go to {getProfessionalTitle(helper.type).toLowerCase()}'s location
+                            I ll go to {getProfessionalTitle(helper.type).toLowerCase()} s location
                           </div>
                           <div className="text-gray-600 mt-1">
-                            Visit {getProfessionalTitle(helper.type).toLowerCase()}'s location
+                            Visit {getProfessionalTitle(helper.type).toLowerCase()} s location
                           </div>
                         </div>
                       </label>
@@ -2161,7 +2161,7 @@ export default function HelperPage() {
                   <div className="text-center pt-4 border-t border-gray-200">
                     <p className="text-sm text-gray-500 flex items-center justify-center gap-2">
                       <FaShieldAlt className="text-blue-500" />
-                      🔒 Your information is secure. We'll only share what's necessary for the booking.
+                      🔒 Your information is secure. We ll only share what s necessary for the booking.
                     </p>
                   </div>
                 </form>
