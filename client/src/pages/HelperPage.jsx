@@ -3674,26 +3674,26 @@ export default function HelperPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              {/* WhatsApp Form Button */}
-              <button
-                onClick={openBookingFormOverlay}
-                className="flex items-center gap-2 px-4 py-2 text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
-              >
-                <FaWhatsapp className="text-lg" />
-                <span className="font-semibold">WhatsApp</span>
-              </button>
+        <div className="flex items-center gap-3 flex-shrink-0">
+  {/* WhatsApp Form Button */}
+  <button
+    onClick={openBookingFormOverlay}
+    className="flex items-center gap-2 px-4 py-2 text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
+  >
+    <FaWhatsapp className="text-lg" />
+    <span className="font-semibold">WhatsApp</span>
+  </button>
 
-              {/* Quick WhatsApp Button */}
-              <button
-                onClick={handleQuickBooking}
-                disabled={!helper?.contact}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <FaWhatsapp className="text-lg" />
-                <span className="font-semibold">Quick </span>
-              </button>
-            </div>
+  {/* Info Button with Link */}
+  <Link to="/safetyhelper" className="flex-shrink-0">
+    <button
+      className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-md hover:shadow-lg"
+    >
+      <FaInfoCircle className="text-lg" />
+     
+    </button>
+  </Link>
+</div>
           </div>
         </div>
       </div>
