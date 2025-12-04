@@ -59,7 +59,8 @@ import {
   FaLinkedin,
   FaTiktok,
   FaGlobe,
- 
+  FaTimes,
+  FaHeart,
 } from "react-icons/fa";
 
 // Styles
@@ -69,7 +70,6 @@ import "swiper/css/zoom";
 import "swiper/css/thumbs";
 import "react-calendar/dist/Calendar.css";
 import "../styles/ListingDetails.scss";
-import Comments from '../components/Comments';
 
 // Constants
 const AMENITIES = [
@@ -136,9 +136,13 @@ export default function Listing() {
   const navigate = useNavigate();
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
-const [numberOfGuests, setNumberOfGuests] = useState(1);
-const [extraBed, setExtraBed] = useState('no');
-const [ironRequest, setIronRequest] = useState(false);
+  const [numberOfGuests, setNumberOfGuests] = useState(1);
+  const [extraBed, setExtraBed] = useState('no');
+  const [ironRequest, setIronRequest] = useState(false);
+  
+  // Modal state
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  
   // State declarations
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isTablet, setIsTablet] = useState(window.innerWidth >= 768 && window.innerWidth <= 1024);
@@ -191,7 +195,7 @@ const [ironRequest, setIronRequest] = useState(false);
     aiComments: [],
   });
 
-  // NEW: Host Rating State
+  // Host Rating State
   const [hostRatings, setHostRatings] = useState({
     average: 0,
     totalRatings: 0,
@@ -199,10 +203,10 @@ const [ironRequest, setIronRequest] = useState(false);
       acc[key] = 0;
       return acc;
     }, {}),
-    userRating: null, // Store user's current rating
+    userRating: null,
   });
 
-  // NEW: Advertising State
+  // Advertising State
   const [advertisingState, setAdvertisingState] = useState({
     showAdModal: false,
     selectedPlatforms: [],
@@ -274,7 +278,7 @@ const [ironRequest, setIronRequest] = useState(false);
     return times;
   };
 
-  // NEW: Star Rating Component
+  // Star Rating Component
   const StarRating = ({ rating, onRatingChange, readonly = false, size = 'text-lg' }) => {
     return (
       <div className="flex items-center gap-1">
@@ -299,7 +303,7 @@ const [ironRequest, setIronRequest] = useState(false);
     );
   };
 
-  // NEW: Rate Host Functionality
+  // Rate Host Functionality
   const handleRateHost = async (category, rating) => {
     if (!currentUser) {
       navigate('/sign-in');
@@ -341,7 +345,7 @@ const [ironRequest, setIronRequest] = useState(false);
     }
   };
 
-  // NEW: Fetch Host Ratings
+  // Fetch Host Ratings
   const fetchHostRatings = async () => {
     if (!listing?.userRef) return;
 
@@ -360,7 +364,7 @@ const [ironRequest, setIronRequest] = useState(false);
     }
   };
 
-  // NEW: Advertising Functions
+  // Advertising Functions
   const handleAdPlatformToggle = (platform) => {
     setAdvertisingState(prev => ({
       ...prev,
@@ -423,7 +427,6 @@ const [ironRequest, setIronRequest] = useState(false);
     setSocialMediaVerified(prev => ({ ...prev, loading: true }));
     
     try {
-      // Simulate API call - replace with actual endpoint
       const response = await fetch('/api/ai/verify-social-media', {
         method: 'POST',
         headers: {
@@ -445,7 +448,6 @@ const [ironRequest, setIronRequest] = useState(false);
         });
         setHostSocialLinks(verification.socialLinks || {});
       } else {
-        // Fallback to simulated verification for demo
         setTimeout(() => {
           setSocialMediaVerified({
             facebook: Math.random() > 0.3,
@@ -490,82 +492,78 @@ const [ironRequest, setIronRequest] = useState(false);
       console.error('Facebook check failed:', error);
     }
     
-    // Fallback for demo
     return Math.random() > 0.5;
   };
 
-  // Handle overnight WhatsApp booking
-const handleOvernightWhatsAppBooking = () => {
-  if (!listing) return;
-  
-  // Calculate prices
-  const roomTotal = listing.regularPrice * nights;
-  const breakfastTotal = mealPlan === 'breakfast' ? breakfastPrice * nights : 0;
-  const totalPrice = roomTotal + breakfastTotal;
+  // Updated handleOvernightWhatsAppBooking to close modal after sending
+  const handleOvernightWhatsAppBooking = () => {
+    if (!listing) return;
+    
+    // Calculate prices
+    const roomTotal = listing.regularPrice * nights;
+    const breakfastTotal = mealPlan === 'breakfast' ? breakfastPrice * nights : 0;
+    const totalPrice = roomTotal + breakfastTotal;
 
-  // Format prices
-  const formatPrice = (price) =>
-    price.toLocaleString('en-ZA', { minimumFractionDigits: 2 });
+    // Format prices
+    const formatPrice = (price) =>
+      price.toLocaleString('en-ZA', { minimumFractionDigits: 2 });
 
-  // Robust WhatsApp number formatting
-  let num = String(listing?.contact || '27123456789').replace(/\D/g, '');
-  let whatsappNumber;
+    // Robust WhatsApp number formatting
+    let num = String(listing?.contact || '27123456789').replace(/\D/g, '');
+    let whatsappNumber;
 
-  if (num.startsWith('27') && num.length === 11) {
-    // Already valid international format
-    whatsappNumber = num;
-  } else {
-    // Convert to 10-digit local format
-    if (!num.startsWith('0')) num = '0' + num;
-    // Ensure exactly 10 digits
-    if (num.length > 10) num = num.substring(num.length - 10);
-    if (num.length < 10) num = num.padEnd(10, '0');
-    // Convert to international format
-    whatsappNumber = num.replace(/^0/, '27');
-  }
+    if (num.startsWith('27') && num.length === 11) {
+      whatsappNumber = num;
+    } else {
+      if (!num.startsWith('0')) num = '0' + num;
+      if (num.length > 10) num = num.substring(num.length - 10);
+      if (num.length < 10) num = num.padEnd(10, '0');
+      whatsappNumber = num.replace(/^0/, '27');
+    }
 
-  const message = encodeURIComponent(
-    `🏨 *NEW BOOKING REQUEST* 🏨\n\n` +
-    `*PROPERTY DETAILS*\n` +
-    `🏠 ${listing.name}\n` +
-    `📍 Location: ${listing.address || 'Not specified'}\n\n` +
-    `📅 *DATES*\n` +
-    `• Check-in: ${dateRange[0].toDateString()}\n` +
-    `• Check-out: ${dateRange[1].toDateString()}\n` +
-    `• ${nights} Night${nights > 1 ? 's' : ''}\n\n` +
-    `👥 *GUEST DETAILS*\n` +
-    `• Number of Guests: ${numberOfGuests}\n` +
-    `• Extra Bed for Kids: ${extraBed === 'yes' ? 'Yes' : 'No'}\n` +
-    `• Iron & Ironing Board: ${ironRequest ? 'Yes' : 'No'}\n\n` +
-    `💰 *PRICE BREAKDOWN*\n` +
-    `• Room Rate: R${formatPrice(listing.regularPrice)}/night\n` +
-    `  → ${nights} night${nights > 1 ? 's' : ''}: R${formatPrice(roomTotal)}\n` +
-    `${mealPlan === 'breakfast' ?
-      `• Breakfast: R${formatPrice(breakfastPrice)}/night\n` +
-      `  → ${nights} night${nights > 1 ? 's' : ''}: R${formatPrice(breakfastTotal)}\n` : ''}` +
-    `*TOTAL: R${formatPrice(totalPrice)}*\n\n` +
-    `👤 *GUEST INFORMATION*\n` +
-    `• Full Name: ${guestName}\n` +
-    `• Contact: ${guestContact}\n` +
-    `• Special Requests: ${specialRequests || 'None'}\n\n` +
-    `📋 *HOST ACTIONS*\n` +
-    `Please reply with:\n` +
-    `✅ \`ACCEPT\` - Confirm this booking\n` +
-    `❌ \`DECLINE\` - Reject this request\n` +
-    `💬 \`MESSAGE\` - Contact guest for details\n\n` +
-    `_Sent from ${window.location.hostname}_`
-  );
+    const message = encodeURIComponent(
+      `🏨 *NEW BOOKING REQUEST* 🏨\n\n` +
+      `*PROPERTY DETAILS*\n` +
+      `🏠 ${listing.name}\n` +
+      `📍 Location: ${listing.address || 'Not specified'}\n\n` +
+      `📅 *DATES*\n` +
+      `• Check-in: ${dateRange[0].toDateString()}\n` +
+      `• Check-out: ${dateRange[1].toDateString()}\n` +
+      `• ${nights} Night${nights > 1 ? 's' : ''}\n\n` +
+      `👥 *GUEST DETAILS*\n` +
+      `• Number of Guests: ${numberOfGuests}\n` +
+      `• Extra Bed for Kids: ${extraBed === 'yes' ? 'Yes' : 'No'}\n` +
+      `• Iron & Ironing Board: ${ironRequest ? 'Yes' : 'No'}\n\n` +
+      `💰 *PRICE BREAKDOWN*\n` +
+      `• Room Rate: R${formatPrice(listing.regularPrice)}/night\n` +
+      `  → ${nights} night${nights > 1 ? 's' : ''}: R${formatPrice(roomTotal)}\n` +
+      `${mealPlan === 'breakfast' ?
+        `• Breakfast: R${formatPrice(breakfastPrice)}/night\n` +
+        `  → ${nights} night${nights > 1 ? 's' : ''}: R${formatPrice(breakfastTotal)}\n` : ''}` +
+      `*TOTAL: R${formatPrice(totalPrice)}*\n\n` +
+      `👤 *GUEST INFORMATION*\n` +
+      `• Full Name: ${guestName}\n` +
+      `• Contact: ${guestContact}\n` +
+      `• Special Requests: ${specialRequests || 'None'}\n\n` +
+      `📋 *HOST ACTIONS*\n` +
+      `Please reply with:\n` +
+      `✅ \`ACCEPT\` - Confirm this booking\n` +
+      `❌ \`DECLINE\` - Reject this request\n` +
+      `💬 \`MESSAGE\` - Contact guest for details\n\n` +
+      `_Sent from ${window.location.hostname}_`
+    );
 
-  window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
+    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
 
-  // Reset form
-  setGuestName('');
-  setGuestContact('');
-  setSpecialRequests('');
-  setNumberOfGuests(1);
-  setExtraBed('no');
-  setIronRequest(false);
-};
+    // Close modal and reset form
+    setShowBookingModal(false);
+    setGuestName('');
+    setGuestContact('');
+    setSpecialRequests('');
+    setNumberOfGuests(1);
+    setExtraBed('no');
+    setIronRequest(false);
+  };
 
   const handleOfficeWhatsAppBooking = () => {
     if (!listing) return;
@@ -622,7 +620,7 @@ const handleOvernightWhatsAppBooking = () => {
   const [hostData, setHostData] = useState({
     likeCount: 0,
     dislikeCount: 0,
-    userAction: null, // 'like', 'dislike', or null
+    userAction: null,
   });
   const [ratingLoading, setRatingLoading] = useState(false);
 
@@ -635,7 +633,6 @@ const handleOvernightWhatsAppBooking = () => {
     const fetchHostRatings = async () => {
       if (!currentUser || !listing?.userRef) return;
 
-      // Extract host ID from listing (userRef could be string or object)
       const hostId = typeof listing.userRef === 'string'
         ? listing.userRef
         : listing.userRef._id;
@@ -677,7 +674,6 @@ const handleOvernightWhatsAppBooking = () => {
 
     if (!listing?.userRef) return;
 
-    // Extract host ID from listing (userRef could be string or object)
     const hostId = typeof listing.userRef === 'string'
       ? listing.userRef
       : listing.userRef._id;
@@ -807,12 +803,10 @@ const handleOvernightWhatsAppBooking = () => {
     const verifyHostAndListing = async () => {
       if (!listing) return;
       
-      // Verify social media
       if (listing.userRef) {
         await verifySocialMedia(listing.userRef);
       }
       
-      // Check Facebook listing
       const facebookPosted = await checkFacebookListing();
       setIsFacebookPosted(facebookPosted);
     };
@@ -822,31 +816,27 @@ const handleOvernightWhatsAppBooking = () => {
     }
   }, [listing]);
 
-  // NEW: Fetch host ratings when listing loads
+  // Fetch host ratings when listing loads
   useEffect(() => {
     if (listing) {
       fetchHostRatings();
     }
   }, [listing]);
 
-  // FIXED: Fetch comment count using existing comments endpoint
+  // Fetch comment count
   useEffect(() => {
     const fetchCommentCount = async () => {
       try {
-        // Use the existing comments endpoint and count the results
         const response = await fetch(`/api/comment/get/${listingId}`);
         if (response.ok) {
           const comments = await response.json();
-          // If comments is an array, use its length, otherwise default to 0
           setCommentCount(Array.isArray(comments) ? comments.length : 0);
         } else {
-          // If endpoint fails, use AI rating count as fallback
           console.log('Comments endpoint not available, using fallback count');
           setCommentCount(aiRating.totalRatings || 0);
         }
       } catch (error) {
         console.error('Error fetching comments:', error);
-        // Fallback to AI rating count
         setCommentCount(aiRating.totalRatings || 0);
       }
     };
@@ -929,7 +919,6 @@ const handleOvernightWhatsAppBooking = () => {
     if (hostSocialLinks[platform]) {
       window.open(hostSocialLinks[platform], '_blank');
     } else if (socialMediaVerified[platform]) {
-      // Fallback to platform base URL with host username
       const hostUsername = listing.userRef?.username || '';
       if (hostUsername) {
         window.open(`${SOCIAL_PLATFORMS.find(p => p.name === platform)?.baseUrl}${hostUsername}`, '_blank');
@@ -954,473 +943,905 @@ const handleOvernightWhatsAppBooking = () => {
 
   const propertyType = PROPERTY_TYPES[listing.type] || PROPERTY_TYPES.rent;
 
-  return (
-    <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
-      {/* Floating Action Buttons */}
-      <div className="fixed bottom-4 right-4 flex gap-2 z-50 fixed-buttons">
-        <button
-          onClick={() => {
-            const routeMap = {
-              rent: '/for-rent',
-              sale: '/for-sale',
-              office: '/office',
-              over: '/overnight',
-              land: '/land',
-              default: '/listings'
-            };
-            navigate(routeMap[listing.type?.toLowerCase()] || routeMap.default);
-          }}
-          className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
-          title="Go back to listings"
-        >
-          <FaArrowLeft className="text-xl" />
-        </button>
-        <a
-          href={`tel:${listing?.contact || '+27123456789'}`}
-          className="bg-green-600 text-white p-3 rounded-full shadow-lg hover:bg-green-700 transition-colors"
-          title={`Call ${listing?.contact || 'the host'}`}
-        >
-          <FaPhone className="text-xl" />
-        </a>
-        <a
-          href={`https://wa.me/${String(listing?.contact || '27123456789').replace(/^0/, '27')}?text=${encodeURIComponent(`Hello, I'm interested in your property ${listing.name}`)}`}
-          target="_blank"
-          rel="noreferrer"
-          className="bg-green-600 text-white p-3 rounded-full shadow-lg hover:bg-green-700 transition-colors"
-          title="Contact via WhatsApp"
-        >
-          <FaWhatsapp className="text-xl" />
-        </a>
-      </div>
+  // Modal component
+  const BookingModal = () => {
+    if (!showBookingModal) return null;
 
-      {/* Image Gallery Section */}
-      <section className="relative mb-8 mt-10">
-        <div
-          className={`flex ${isMobile ? 'flex-col h-auto' :
-            isTablet ? 'flex-row h-[500px]' :
-              'flex-row h-[700px]'
-            } gap-4`}
-        >
-          <Swiper
-            className={`main-swiper ${isMobile ? 'w-full h-64' : 'w-3/4 h-full'
-              } rounded-xl shadow-lg`}
-            modules={[Navigation, Thumbs, Zoom]}
-            navigation
-            thumbs={{ swiper: activeThumb }}
-            zoom
-          >
-            {listing.imageUrls.map((img, index) => (
-              <SwiperSlide key={`main-${img}-${index}`}>
-                <div
-                  className="relative h-full bg-cover bg-center cursor-zoom-in"
-                  style={{ backgroundImage: `url(${img})` }}
-                  onClick={() => setFullscreenImage({ open: true, index })}
-                  role="button"
-                  aria-label={`View image ${index + 1} in fullscreen`}
-                >
-                  <div className="swiper-zoom-container" />
-                </div>
-              </SwiperSlide>
-            ))}
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn">
+        <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto animate-slideUp">
+          {/* Modal Header */}
+          <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">Complete Your Booking</h2>
+              <p className="text-gray-600 text-sm">Fill in your details to reserve via WhatsApp</p>
+            </div>
             <button
-              onClick={() => setFullscreenImage({ open: true, index: 0 })}
-              className="absolute bottom-4 left-4 bg-white text-gray-800 px-4 py-2 rounded-full shadow-md hover:bg-gray-100 transition-colors flex items-center z-10"
-              title="View all photos"
+              onClick={() => setShowBookingModal(false)}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
             >
-              <FaImages className="mr-2" /> Show all photos
+              <FaTimes className="text-2xl text-gray-500" />
             </button>
-          </Swiper>
-
-          <Swiper
-            className={`thumbs-swiper ${isMobile ? 'w-full h-24' : 'w-1/4 h-full'
-              }`}
-            modules={[Navigation, Thumbs]}
-            spaceBetween={10}
-            slidesPerView={isMobile ? 4 : isTablet ? 4 : 5}
-            direction={isMobile ? 'horizontal' : 'vertical'}
-            onSwiper={setActiveThumb}
-          >
-            {listing.imageUrls.map((img, index) => (
-              <SwiperSlide key={`thumb-${img}-${index}`}>
-                <div
-                  className={`${isMobile ? 'w-24 h-full' : 'h-32'
-                    } bg-cover bg-center rounded-lg cursor-pointer`}
-                  style={{ backgroundImage: `url(${img})` }}
-                  role="button"
-                  aria-label={`Select image ${index + 1}`}
-                />
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
-
-        {fullscreenImage.open && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-4"
-            onClick={() => setFullscreenImage({ open: false, index: 0 })}
-          >
-            <button
-              className="absolute top-4 right-4 text-white text-4xl z-50"
-              onClick={(e) => { e.stopPropagation(); setFullscreenImage({ open: false, index: 0 }); }}
-              aria-label="Close image viewer"
-            >
-              &times;
-            </button>
-            <Swiper
-              className="w-full h-full"
-              initialSlide={fullscreenImage.index}
-              modules={[Navigation, Zoom]}
-              navigation
-              zoom={{ maxRatio: 3 }}
-              grabCursor={true}
-              onClick={(swiper) => swiper.zoom.toggle()}
-            >
-              {listing.imageUrls.map((img, index) => (
-                <SwiperSlide key={`full-${img}-${index}`}>
-                  <div className="swiper-zoom-container">
-                    <img
-                      src={img}
-                      alt={`Listing view ${index + 1}`}
-                      className="object-contain h-full w-full"
-                      onLoad={(e) => e.target.style.cursor = 'zoom-in'}
-                      onError={(e) => { e.target.onerror = null; e.target.src = '/placeholder-image.jpg'; }}
-                    />
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
           </div>
-        )}
-      </section>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Property Details */}
-        <div className="lg:col-span-2">
-
-          <header className="mb-6">
-            {/* Title and Verification Badge */}
-            <div className="flex items-center gap-3 mb-3">
-              <h1 className="text-2xl md:text-3xl font-bold text-dark flex-1 min-w-0 truncate">
-                {listing.name}
-              </h1>
-              {aiRating.verified && (
-                <span className="flex items-center bg-airbnb-light-red text-airbnb-red px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap shadow-sm">
-                  <span className="mr-1.5">🏆</span> Verified
-                </span>
-              )}
-            </div>
-
-            {/* Property Type Badge */}
-            <div className="flex items-center gap-2 mb-3">
-              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-${propertyType.color}-100 text-${propertyType.color}-800`}>
-                <span className="mr-1.5">{propertyType.icon}</span>
-                {propertyType.label}
-              </span>
-              
-              {/* Facebook Posted Badge */}
-              {isFacebookPosted && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                  <FaFacebook className="mr-1.5" />
-                  Also on Facebook
-                </span>
-              )}
-            </div>
-
-            {/* Property Details - Single Row */}
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-airbnb-gray text-sm md:text-base px-1">
-              {/* Bedrooms/Size */}
-              {listing.bedrooms && (
-                <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-lg">
-                  <span className="mr-2 text-airbnb-dark">
-                    {listing.propertyType !== '' && listing.propertyType !== 'land' ? '🛏️' : '📐'}
-                  </span>
-                  <span className="font-medium">
-                    {listing.propertyType === '' || listing.propertyType === 'land'
-                      ? `${listing.bedrooms}m²`
-                      : `${listing.bedrooms} ${listing.bedrooms === 1 ? 'bed' : 'beds'}`}
-                  </span>
+          {/* Modal Content */}
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Property Info & Calendar */}
+              <div className="lg:col-span-1 space-y-4">
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <h3 className="font-semibold text-lg mb-2">Property Details</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <FaBed className="text-blue-500" />
+                      <span>{listing.bedrooms} {listing.bedrooms === 1 ? 'bedroom' : 'bedrooms'}</span>
+                    </div>
+                    {listing.bathrooms && (
+                      <div className="flex items-center gap-2">
+                        <FaShower className="text-blue-500" />
+                        <span>{listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <FaMapMarkerAlt className="text-blue-500" />
+                      <span className="text-sm">{listing.address}</span>
+                    </div>
+                  </div>
                 </div>
-              )}
 
-              {/* Bathrooms */}
-              {listing.bathrooms && listing.propertyType !== 'land' && (
-                <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-lg">
-                  <span className="mr-2 text-airbnb-dark">🚿</span>
-                  <span className="font-medium">{listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'}</span>
-                </div>
-              )}
-
-              {/* Rating */}
-              <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-lg">
-                <FaStar className="text-airbnb-red mr-1.5" />
-                <span className="font-medium">{aiRating.average} ({aiRating.totalRatings.toLocaleString()})</span>
-              </div>
-
-              {/* Location */}
-              <div className="flex items-center bg-airbnb-light-gray px-3 py-1.5 rounded-lg">
-                <FaMapMarkerAlt className="text-airbnb-red mr-1.5" />
-                <span className="font-medium">{listing.address}</span>
-              </div>
-            </div>
-          </header>
-
-          {/* Enhanced Host Information Section */}
-          <section className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <img
-                    src={listing.userRef?.avatar || '/default-avatar.png'}
-                    alt={listing.userRef?.username || 'Host'}
-                    className="w-16 h-16 rounded-full object-cover border-2 border-airbnb-red"
-                    onError={(e) => { e.target.onerror = null; e.target.src = '/default-avatar.png'; }}
+                {/* Calendar Section */}
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <h3 className="font-semibold text-lg mb-2">Select Dates</h3>
+                  <Calendar
+                    onChange={setDateRange}
+                    value={dateRange}
+                    selectRange={true}
+                    minDate={new Date()}
+                    className="rounded-lg w-full"
                   />
-                  {aiRating.verified && (
-                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
-                      <FaCheckCircle className="text-airbnb-red text-lg" />
-                    </div>
-                  )}
                 </div>
-                <div>
-                  <h3 className="font-semibold text-lg flex items-center gap-2">
-                    Hosted by {listing.userRef?.username || 'Unknown Host'}
-                    {aiRating.verified && (
-                      <FaCheckCircle className="text-airbnb-red text-sm" title="Verified Host" />
-                    )}
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    Joined {listing.userRef?.createdAt ? new Date(listing.userRef.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Recently'}
-                  </p>
-                  {listing.contact && (
-                    <div className="flex items-center gap-1 text-gray-700 text-sm mt-1">
-                      <FaPhone className="text-blue-500" />
-                      <span>0{listing.contact}</span>
+
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <h3 className="font-semibold text-lg mb-2">Booking Summary</h3>
+                  {dateRange[0] && dateRange[1] && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Check-in:</span>
+                        <span className="font-medium">{dateRange[0].toDateString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Check-out:</span>
+                        <span className="font-medium">{dateRange[1].toDateString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Nights:</span>
+                        <span className="font-medium">{nights} night{nights > 1 ? 's' : ''}</span>
+                      </div>
+                      <div className="pt-2 border-t border-gray-200 mt-2">
+                        <div className="flex justify-between font-semibold">
+                          <span>Total:</span>
+                          <span className="text-blue-600">
+                            R{(listing.regularPrice * nights + (mealPlan === 'breakfast' ? breakfastPrice * nights : 0)).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Host Rating Section */}
-              <div className="flex flex-col items-center gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <FaStar
-                        key={i}
-                        className={`text-lg ${i < hostStarRating ? 'text-yellow-400' : 'text-gray-300'}`}
-                      />
-                    ))}
+              {/* Right Column - Booking Form */}
+              <div className="lg:col-span-2">
+                <form className="space-y-6">
+                  {/* Guest Information */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-5">
+                    <h3 className="text-xl font-semibold mb-4 text-gray-800">Guest Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="modalGuestName" className="block text-sm font-medium text-gray-700 mb-1">
+                          Full Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          id="modalGuestName"
+                          value={guestName}
+                          onChange={(e) => setGuestName(e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="As it appears on ID"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="modalGuestContact" className="block text-sm font-medium text-gray-700 mb-1">
+                          WhatsApp Number <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          id="modalGuestContact"
+                          value={guestContact}
+                          onChange={(e) => setGuestContact(e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="+27 82 123 4567"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="modalNumberOfGuests" className="block text-sm font-medium text-gray-700 mb-1">
+                          Number of Guests <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          id="modalNumberOfGuests"
+                          value={numberOfGuests}
+                          onChange={(e) => setNumberOfGuests(parseInt(e.target.value))}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        >
+                          <option value={1}>1 Guest</option>
+                          <option value={2}>2 Guests</option>
+                          <option value={3}>3 Guests</option>
+                          <option value={4}>4 Guests</option>
+                          <option value={5}>5 Guests</option>
+                          <option value={6}>6+ Guests</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label htmlFor="modalExtraBed" className="block text-sm font-medium text-gray-700 mb-1">
+                          Extra Bed for Kids
+                        </label>
+                        <select
+                          id="modalExtraBed"
+                          value={extraBed}
+                          onChange={(e) => setExtraBed(e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="no">Not Needed</option>
+                          <option value="yes">Yes, Please</option>
+                        </select>
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          Additional Requests
+                        </label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id="modalIronRequest"
+                              checked={ironRequest}
+                              onChange={(e) => setIronRequest(e.target.checked)}
+                              className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <label htmlFor="modalIronRequest" className="ml-2 text-sm text-gray-700">
+                              Iron & Ironing Board Needed
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label htmlFor="modalSpecialRequests" className="block text-sm font-medium text-gray-700 mb-1">
+                          Special Requests
+                        </label>
+                        <textarea
+                          id="modalSpecialRequests"
+                          value={specialRequests}
+                          onChange={(e) => setSpecialRequests(e.target.value)}
+                          rows={3}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Dietary restrictions, accessibility needs, etc."
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-sm text-gray-600">
-                    ({hostData.likeCount + hostData.dislikeCount} ratings)
-                  </span>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleRateHostLikeDislike('like')}
-                    disabled={ratingLoading}
-                    className={`flex items-center gap-1 px-3 py-1 rounded-lg transition-colors ${hostData.userAction === 'like' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700 hover:bg-green-50'}`}
-                  >
-                    <FaThumbsUp className={hostData.userAction === 'like' ? 'text-green-600' : 'text-gray-500'} />
-                    <span>{hostData.likeCount}</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => handleRateHostLikeDislike('dislike')}
-                    disabled={ratingLoading}
-                    className={`flex items-center gap-1 px-3 py-1 rounded-lg transition-colors ${hostData.userAction === 'dislike' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700 hover:bg-red-50'}`}
-                  >
-                    <FaThumbsDown className={hostData.userAction === 'dislike' ? 'text-red-600' : 'text-gray-500'} />
-                    <span>{hostData.dislikeCount}</span>
-                  </button>
-                </div>
+
+                  {/* Meal Options */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-5">
+                    <h3 className="text-xl font-semibold mb-4 text-gray-800">Meal Options</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div
+                        className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${mealPlan === 'breakfast' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}
+                        onClick={() => setMealPlan('breakfast')}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${mealPlan === 'breakfast' ? 'bg-green-500 border-green-500' : 'border-gray-400'}`}>
+                            {mealPlan === 'breakfast' && (
+                              <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-lg">Breakfast Included</p>
+                            <p className="text-sm text-gray-600 mt-1">+ R{breakfastPrice.toLocaleString('en-ZA')}/night</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${mealPlan === 'none' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
+                        onClick={() => setMealPlan('none')}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${mealPlan === 'none' ? 'bg-blue-500 border-blue-500' : 'border-gray-400'}`}>
+                            {mealPlan === 'none' && (
+                              <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-lg">Room Only</p>
+                            <p className="text-sm text-gray-600 mt-1">No meals included</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Price Breakdown */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-5">
+                    <h3 className="text-xl font-semibold mb-4 text-gray-800">Price Breakdown</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Room Rate ({nights} nights)</span>
+                        <span className="font-medium">R{(listing.regularPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
+                      </div>
+
+                      {mealPlan === 'breakfast' && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Breakfast ({nights} nights)</span>
+                          <span className="font-medium">R{(breakfastPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      )}
+
+                      <div className="pt-3 mt-2 border-t border-gray-200 font-semibold flex justify-between text-xl">
+                        <span>Total Amount</span>
+                        <span className="text-blue-600 font-bold">
+                          R{(listing.regularPrice * nights + (mealPlan === 'breakfast' ? breakfastPrice * nights : 0)).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </form>
               </div>
             </div>
 
-            {/* Social Media Verification */}
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <h4 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
-                <FaUserFriends className="text-airbnb-red" />
-                Host Social Media Verification
-              </h4>
-              
-              {socialMediaVerified.loading ? (
-                <div className="flex items-center gap-2 text-gray-500">
-                  <FaSpinner className="animate-spin" />
-                  Verifying social media profiles...
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-3">
-                  {SOCIAL_PLATFORMS.map((platform) => {
-                    const isVerified = socialMediaVerified[platform.name];
-                    const Icon = platform.icon;
-                    
-                    return (
-                      <button
-                        key={platform.name}
-                        onClick={() => handleSocialMediaClick(platform.name)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
-                          isVerified 
-                            ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100 cursor-pointer' 
-                            : 'bg-gray-50 border-gray-200 text-gray-500 cursor-default'
-                        }`}
-                        disabled={!isVerified}
-                      >
-                        <Icon className={platform.color} />
-                        <span className="text-sm font-medium capitalize">
-                          {platform.name}
-                        </span>
-                        {isVerified ? (
-                          <FaCheckCircle className="text-green-500 text-sm" />
-                        ) : (
-                          <span className="text-xs text-gray-400">Not found</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                  
-                  {/* Website Verification */}
-                  <button
-                    onClick={() => handleSocialMediaClick('website')}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
-                      socialMediaVerified.website 
-                        ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100 cursor-pointer' 
-                        : 'bg-gray-50 border-gray-200 text-gray-500 cursor-default'
-                    }`}
-                    disabled={!socialMediaVerified.website}
-                  >
-                    <FaGlobe className="text-blue-500" />
-                    <span className="text-sm font-medium">Website</span>
-                    {socialMediaVerified.website ? (
-                      <FaCheckCircle className="text-green-500 text-sm" />
-                    ) : (
-                      <span className="text-xs text-gray-400">Not found</span>
-                    )}
-                  </button>
-                </div>
-              )}
+            {/* Modal Footer */}
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 mt-6">
+              <div className="flex flex-col sm:flex-row gap-3">
+               
+                <button
+                  onClick={handleOvernightWhatsAppBooking}
+                  disabled={!guestName || !guestContact || !numberOfGuests}
+                  className="flex-1 bg-green-500 text-white py-3 px-6 rounded-xl font-medium hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <FaWhatsapp className="text-xl" />
+                  Book 
+                </button>
+              </div>
+              <p className="text-center text-sm text-gray-500 mt-3">
+                You'll be redirected to WhatsApp to complete your booking
+              </p>
             </div>
-          </section>
-
-          {/* NEW: Host Rating Section */}
-{/* Host Rating Categories */}
-<section className="mb-8 section-card">
-  <h2 className="text-xl md:text-2xl font-semibold mb-6 text-gray-800 flex items-center gap-2">
-    <FaUserFriends className="text-blue-600" />
-    Rate the Host & Staff
-  </h2>
-  
-  {/* Overall Host Rating Summary */}
-  <div className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div className="text-center sm:text-left">
-        <h3 className="text-lg font-semibold text-gray-800 mb-1">Overall Host Rating</h3>
-        <p className="text-gray-600 text-sm">
-          Based on {hostRatings.totalRatings} rating{hostRatings.totalRatings !== 1 ? 's' : ''}
-        </p>
-      </div>
-      <div className="flex items-center gap-4">
-        <div className="text-center">
-          <div className="text-3xl font-bold text-blue-600">
-            {hostRatings.average.toFixed(1)}
           </div>
-          <StarRating 
-            rating={Math.round(hostRatings.average)} 
-            readonly={true}
-            size="text-lg"
-          />
         </div>
       </div>
-    </div>
-  </div>
+    );
+  };
 
-  {/* Rating Categories Grid */}
-  <div className="space-y-3">
-    {HOST_RATING_CATEGORIES.map(({ name, icon: Icon, key }) => (
-      <div 
-        key={key} 
-        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200"
-      >
-        {/* Category Info */}
-        <div className="flex items-center gap-3 mb-3 sm:mb-0 sm:flex-1">
-          <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-            <Icon className="text-blue-600 text-lg" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="font-semibold text-gray-800 text-sm sm:text-base">{name}</h3>
-            <p className="text-gray-500 text-xs sm:text-sm">
-              Rate your experience
+  return (
+    <>
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(40px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+
+        .animate-slideUp {
+          animation: slideUp 0.4s ease-out;
+        }
+
+        /* Airbnb Style Header - Full Cover */
+        .airbnb-header-container {
+          position: relative;
+          width: 100%;
+          height: 100vh;
+          overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+          .airbnb-header-container {
+            height: 60vh;
+          }
+        }
+
+        .airbnb-main-swiper {
+          width: 100%;
+          height: 100%;
+        }
+
+        .airbnb-slide {
+          width: 100%;
+          height: 100%;
+        }
+
+        .airbnb-main-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .airbnb-navigation-btn {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 40px;
+          height: 40px;
+          background: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          z-index: 10;
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .airbnb-navigation-btn:hover {
+          background: #f7f7f7;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .airbnb-navigation-btn.prev {
+          left: 20px;
+        }
+
+        .airbnb-navigation-btn.next {
+          right: 20px;
+        }
+
+        .airbnb-image-counter {
+          position: absolute;
+          bottom: 20px;
+          right: 20px;
+          background: rgba(0,0,0,0.7);
+          color: white;
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 14px;
+          font-weight: 500;
+          z-index: 10;
+        }
+
+        /* Header Overlay Content */
+        .airbnb-header-content {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          padding: 20px 40px;
+          z-index: 10;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          background: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent);
+        }
+
+        .airbnb-header-left {
+          color: white;
+        }
+
+        .airbnb-header-title {
+          font-size: 28px;
+          font-weight: 600;
+          margin-bottom: 8px;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .airbnb-header-subtitle {
+          font-size: 16px;
+          opacity: 0.9;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .airbnb-header-right {
+          display: flex;
+          gap: 10px;
+        }
+
+        .airbnb-share-btn,
+        .airbnb-save-btn {
+          width: 40px;
+          height: 40px;
+          background: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: none;
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          transition: all 0.2s ease;
+        }
+
+        .airbnb-share-btn:hover,
+        .airbnb-save-btn:hover {
+          transform: scale(1.05);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        /* Airbnb Info Bar - Floating */
+        .airbnb-info-bar {
+          position: fixed;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: white;
+          border-radius: 12px;
+          padding: 16px 24px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+          z-index: 100;
+          width: 90%;
+          max-width: 800px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+          .airbnb-info-bar {
+            width: calc(100% - 32px);
+            left: 16px;
+            transform: none;
+            bottom: 16px;
+            flex-direction: column;
+            gap: 12px;
+            align-items: stretch;
+          }
+
+          .airbnb-info-content {
+            flex-direction: column;
+            gap: 12px;
+            align-items: stretch;
+          }
+
+          .airbnb-price-info {
+            text-align: center;
+          }
+
+          .airbnb-whatsapp-btn {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+
+        .airbnb-info-content {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 20px;
+          width: 100%;
+        }
+
+        .airbnb-price-info {
+          flex: 1;
+        }
+
+        .airbnb-price-night {
+          font-size: 22px;
+          font-weight: 600;
+          color: #222;
+        }
+
+        .airbnb-price-total {
+          font-size: 16px;
+          color: #717171;
+          margin-top: 4px;
+        }
+
+        .airbnb-listing-title {
+          font-size: 14px;
+          color: #717171;
+          margin-top: 2px;
+        }
+
+        .airbnb-whatsapp-btn {
+          background: #FF385C;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          padding: 14px 28px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: background 0.2s ease;
+          white-space: nowrap;
+          min-width: 200px;
+        }
+
+        .airbnb-whatsapp-btn:hover {
+          background: #E31C5F;
+        }
+
+        .airbnb-whatsapp-btn:disabled {
+          background: #cccccc;
+          cursor: not-allowed;
+        }
+
+        /* Content Spacing */
+        .main-content-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 40px 24px;
+          padding-top: 60px;
+        }
+
+        @media (max-width: 768px) {
+          .main-content-container {
+            padding: 24px 16px;
+            padding-top: 40px;
+            padding-bottom: 120px; /* Extra space for floating bar */
+          }
+        }
+      `}</style>
+
+      {/* Airbnb Style Header Gallery - Full Cover */}
+      <div className="airbnb-header-container">
+        {/* Header Overlay Content */}
+        <div className="airbnb-header-content">
+          <div className="airbnb-header-left">
+            <h1 className="airbnb-header-title">{listing.name}</h1>
+            <p className="airbnb-header-subtitle">
+              {listing.bedrooms} {listing.bedrooms === 1 ? 'bedroom' : 'bedrooms'} · 
+              {listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'} · 
+              {listing.kind || 'Serviced Apartment'}
             </p>
           </div>
-        </div>
-
-        {/* Rating Controls */}
-        <div className="flex items-center justify-between sm:justify-end gap-4 sm:w-auto">
-          <div className="flex-shrink-0">
-            <StarRating
-              rating={hostRatings.userRating?.[key] || 0}
-              onRatingChange={(rating) => handleRateHost(key, rating)}
-              readonly={false}
-              size="text-base sm:text-lg"
-            />
-          </div>
-          <div className="w-12 text-right">
-            <span className="text-sm font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded-md min-w-[40px] inline-block text-center">
-              {hostRatings.categoryRatings[key]?.toFixed(1) || '0.0'}
-            </span>
+          <div className="airbnb-header-right">
+            <button className="airbnb-share-btn" title="Share">
+              <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+                <path d="M22 20C20.8954 20 20 20.8954 20 22C20 23.1046 20.8954 24 22 24C23.1046 24 24 23.1046 24 22C24 20.8954 23.1046 20 22 20Z" fill="#222222"/>
+                <path d="M16 12C14.8954 12 14 12.8954 14 14C14 15.1046 14.8954 16 16 16C17.1046 16 18 15.1046 18 14C18 12.8954 17.1046 12 16 12Z" fill="#222222"/>
+                <path d="M10 20C8.89543 20 8 20.8954 8 22C8 23.1046 8.89543 24 10 24C11.1046 24 12 23.1046 12 22C12 20.8954 11.1046 20 10 20Z" fill="#222222"/>
+                <path d="M20.2929 10.2929L13 17.5858" stroke="#222222" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M13 12.4142L20.2929 19.7071" stroke="#222222" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+            <button className="airbnb-save-btn" title="Save">
+              <FaHeart className="text-gray-700" />
+            </button>
           </div>
         </div>
+
+        <Swiper
+          className="airbnb-main-swiper"
+          modules={[Navigation]}
+          navigation={{
+            nextEl: '.airbnb-next-btn',
+            prevEl: '.airbnb-prev-btn',
+          }}
+          loop={true}
+          spaceBetween={0}
+        >
+          {listing.imageUrls.map((img, index) => (
+            <SwiperSlide key={`airbnb-${index}`} className="airbnb-slide">
+              <img
+                src={img}
+                alt={`Property view ${index + 1}`}
+                className="airbnb-main-image"
+                onError={(e) => { 
+                  e.target.onerror = null; 
+                  e.target.src = '/placeholder-image.jpg'; 
+                }}
+              />
+            </SwiperSlide>
+          ))}
+        </Swiper>
+        
+        {/* Navigation buttons */}
+        <button className="airbnb-navigation-btn airbnb-prev-btn prev">
+          <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor">
+            <path d="M20.6667 24.6667L12 16L20.6667 7.33334L22 8.66668L14.6667 16L22 23.3333L20.6667 24.6667Z" />
+          </svg>
+        </button>
+        <button className="airbnb-navigation-btn airbnb-next-btn next">
+          <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor">
+            <path d="M11.3333 7.33334L20 16L11.3333 24.6667L10 23.3333L17.3333 16L10 8.66668L11.3333 7.33334Z" />
+          </svg>
+        </button>
+        
+        {/* Image counter */}
+        <div className="airbnb-image-counter">
+          {listing.imageUrls.length} photos
+        </div>
       </div>
-    ))}
-  </div>
 
-  {/* Rating Guidelines */}
-  <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-    <div className="flex items-start gap-3">
-      <div className="flex-shrink-0 w-5 h-5 bg-amber-100 rounded-full flex items-center justify-center mt-0.5">
-        <svg className="w-3 h-3 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-        </svg>
-      </div>
-      <div>
-        <h4 className="font-medium text-amber-800 text-sm mb-1">Rating Guidelines</h4>
-        <p className="text-amber-700 text-xs leading-relaxed">
-          Your honest ratings help other guests find great hosts and maintain community standards. 
-          Rate based on your actual experience with cleanliness, communication, staff service, and location accuracy.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-
-          <section className="mb-8 section-card">
-            <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">About this space</h2>
-
-            <div className="relative">
-              <p className="text-base md:text-lg text-gray-600 leading-relaxed whitespace-pre-line">
-                {truncateDescription(listing.description)}
-              </p>
-
-              {listing.description && listing.description.split(' ').length > 50 && (
-                <button
-                  onClick={() => setIsDescriptionModalOpen(true)}
-                  className="mt-2 flex items-center text-gray-600 hover:text-gray-800 transition-colors  font-semibold"
-                  aria-expanded={isDescriptionModalOpen}
-                  aria-controls="full-description-modal"
-                >
-                  <span className="text-sm">Read more</span>
-                  <FaChevronDown className="ml-1 text-xs mt-px transition-transform duration-200 group-hover:translate-y-0.5" />
-                </button>
-              )}
+      {/* Floating Booking Info Bar */}
+      <div className="airbnb-info-bar">
+        <div className="airbnb-info-content">
+          <div className="airbnb-price-info">
+            <div className="airbnb-price-night">
+              R{listing.regularPrice.toLocaleString('en-ZA')} / night
             </div>
-          </section>
+            {dateRange[0] && dateRange[1] && (
+              <div className="airbnb-price-total">
+                R{(listing.regularPrice * nights).toLocaleString('en-ZA')} for {nights} night{nights > 1 ? 's' : ''}
+              </div>
+            )}
+            <div className="airbnb-listing-title">
+              {listing.bedrooms} {listing.bedrooms === 1 ? 'bedroom' : 'bedrooms'} · 
+              {listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'} · 
+              Free cancellation
+            </div>
+          </div>
+          
+          <button
+            className="airbnb-whatsapp-btn"
+            onClick={() => setShowBookingModal(true)}
+            disabled={!listing?.contact}
+          >
+            <FaWhatsapp className="text-lg" />
+            Reserve
+          </button>
+        </div>
+      </div>
 
-          {isDescriptionModalOpen && (
-            <div id="full-description-modal" className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto section-card" onClick={(e) => e.stopPropagation()}>
-                <div className="p-6">
+      {/* Booking Modal with Calendar */}
+      <BookingModal />
+
+      {/* Main Content */}
+      <main className="main-content-container">
+        {/* Floating Action Buttons */}
+        <div className="fixed bottom-28 right-4 flex gap-2 z-50">
+          <button
+            onClick={() => {
+              const routeMap = {
+                rent: '/for-rent',
+                sale: '/for-sale',
+                office: '/office',
+                over: '/overnight',
+                land: '/land',
+                default: '/listings'
+              };
+              navigate(routeMap[listing.type?.toLowerCase()] || routeMap.default);
+            }}
+            className="bg-white text-gray-800 p-3 rounded-full shadow-lg hover:bg-gray-100 transition-colors border border-gray-200"
+            title="Go back to listings"
+          >
+            <FaArrowLeft className="text-xl" />
+          </button>
+          <a
+            href={`tel:${listing?.contact || '+27123456789'}`}
+            className="bg-white text-gray-800 p-3 rounded-full shadow-lg hover:bg-gray-100 transition-colors border border-gray-200"
+            title={`Call ${listing?.contact || 'the host'}`}
+          >
+            <FaPhone className="text-xl" />
+          </a>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Property Details */}
+          <div className="lg:col-span-2">
+            {/* Property Type & Rating */}
+            <div className="mb-6">
+              <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-2">
+                {listing.name}
+              </h1>
+              <div className="flex flex-wrap items-center gap-4 text-gray-600">
+                <div className="flex items-center">
+                  <FaStar className="text-yellow-400 mr-1" />
+                  <span className="font-semibold">{Number(aiRating.average).toFixed(1)}</span>
+                  <span className="mx-1">·</span>
+                  <span>{commentCount} reviews</span>
+                </div>
+                <div className="flex items-center">
+                  <FaMapMarkerAlt className="mr-1" />
+                  <span>{listing.address}</span>
+                </div>
+                {listing.kind && (
+                  <div className="px-3 py-1 bg-gray-100 rounded-full text-sm">
+                    {listing.kind}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Enhanced Host Information Section */}
+            <section className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <img
+                      src={listing.userRef?.avatar || '/default-avatar.png'}
+                      alt={listing.userRef?.username || 'Host'}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-red-500"
+                      onError={(e) => { e.target.onerror = null; e.target.src = '/default-avatar.png'; }}
+                    />
+                    {aiRating.verified && (
+                      <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
+                        <FaCheckCircle className="text-red-500 text-lg" />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                      Hosted by {listing.userRef?.username || 'Unknown Host'}
+                      {aiRating.verified && (
+                        <FaCheckCircle className="text-red-500 text-sm" title="Verified Host" />
+                      )}
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      Joined {listing.userRef?.createdAt ? new Date(listing.userRef.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Recently'}
+                    </p>
+                    {listing.contact && (
+                      <div className="flex items-center gap-1 text-gray-700 text-sm mt-1">
+                        <FaPhone className="text-blue-500" />
+                        <span>0{listing.contact}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Host Rating Section */}
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <FaStar
+                          key={i}
+                          className={`text-lg ${i < hostStarRating ? 'text-yellow-400' : 'text-gray-300'}`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-600">
+                      ({hostData.likeCount + hostData.dislikeCount} ratings)
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleRateHostLikeDislike('like')}
+                      disabled={ratingLoading}
+                      className={`flex items-center gap-1 px-3 py-1 rounded-lg transition-colors ${hostData.userAction === 'like' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700 hover:bg-green-50'}`}
+                    >
+                      <FaThumbsUp className={hostData.userAction === 'like' ? 'text-green-600' : 'text-gray-500'} />
+                      <span>{hostData.likeCount}</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => handleRateHostLikeDislike('dislike')}
+                      disabled={ratingLoading}
+                      className={`flex items-center gap-1 px-3 py-1 rounded-lg transition-colors ${hostData.userAction === 'dislike' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700 hover:bg-red-50'}`}
+                    >
+                      <FaThumbsDown className={hostData.userAction === 'dislike' ? 'text-red-600' : 'text-gray-500'} />
+                      <span>{hostData.dislikeCount}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Social Media Verification */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <h4 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                  <FaUserFriends className="text-red-500" />
+                  Host Social Media Verification
+                </h4>
+                
+                {socialMediaVerified.loading ? (
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <FaSpinner className="animate-spin" />
+                    Verifying social media profiles...
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-3">
+                    {SOCIAL_PLATFORMS.map((platform) => {
+                      const isVerified = socialMediaVerified[platform.name];
+                      const Icon = platform.icon;
+                      
+                      return (
+                        <button
+                          key={platform.name}
+                          onClick={() => handleSocialMediaClick(platform.name)}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
+                            isVerified 
+                              ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100 cursor-pointer' 
+                              : 'bg-gray-50 border-gray-200 text-gray-500 cursor-default'
+                          }`}
+                          disabled={!isVerified}
+                        >
+                          <Icon className={platform.color} />
+                          <span className="text-sm font-medium capitalize">
+                            {platform.name}
+                          </span>
+                          {isVerified ? (
+                            <FaCheckCircle className="text-green-500 text-sm" />
+                          ) : (
+                            <span className="text-xs text-gray-400">Not found</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                    
+                    {/* Website Verification */}
+                    <button
+                      onClick={() => handleSocialMediaClick('website')}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
+                        socialMediaVerified.website 
+                          ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100 cursor-pointer' 
+                          : 'bg-gray-50 border-gray-200 text-gray-500 cursor-default'
+                      }`}
+                      disabled={!socialMediaVerified.website}
+                    >
+                      <FaGlobe className="text-blue-500" />
+                      <span className="text-sm font-medium">Website</span>
+                      {socialMediaVerified.website ? (
+                        <FaCheckCircle className="text-green-500 text-sm" />
+                      ) : (
+                        <span className="text-xs text-gray-400">Not found</span>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Description Section */}
+            <section className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+              <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">About this space</h2>
+              <div className="relative">
+                <p className="text-base md:text-lg text-gray-600 leading-relaxed whitespace-pre-line">
+                  {truncateDescription(listing.description)}
+                </p>
+                {listing.description && listing.description.split(' ').length > 50 && (
+                  <button
+                    onClick={() => setIsDescriptionModalOpen(true)}
+                    className="mt-2 flex items-center text-gray-600 hover:text-gray-800 transition-colors font-semibold"
+                    aria-expanded={isDescriptionModalOpen}
+                    aria-controls="full-description-modal"
+                  >
+                    <span className="text-sm">Read more</span>
+                    <FaChevronDown className="ml-1 text-xs mt-px transition-transform duration-200 group-hover:translate-y-0.5" />
+                  </button>
+                )}
+              </div>
+            </section>
+
+            {isDescriptionModalOpen && (
+              <div id="full-description-modal" className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl md:text-2xl font-semibold text-gray-800">About this space</h2>
                     <button
@@ -1436,874 +1857,747 @@ const handleOvernightWhatsAppBooking = () => {
                   </p>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <section className="mb-8 section-card">
-            <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">At a glance</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="border rounded-xl p-4 hover:shadow-md transition-shadow h-24 flex items-center">
-                <div className="flex items-center gap-3 w-full">
-                  <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
-                    {listing.propertyType !== 'office' && listing.propertyType !== 'land' ? (
-                      <FaBed className="h-5 w-5 text-blue-600" />
-                    ) : (
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                      </svg>
-                    )}
+            {/* Amenities Section */}
+            <section className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+              <h2 className="text-xl md:text-2xl font-semibold mb-6 text-gray-800">What this place offers</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {AMENITIES.map(({ icon: Icon, label, key }) => (
+                  <div key={key} className="flex items-center gap-3 p-3">
+                    <Icon className="text-gray-600 text-lg" />
+                    <span className="text-gray-700">{label}</span>
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-lg font-semibold text-gray-900 truncate">
-                      {listing.bedrooms ?? 'N/A'}
-                    </h3>
-                    <p className="text-sm text-gray-500 truncate">
-                      {listing.propertyType === 'office' || listing.propertyType === 'land' ? 'Total m²' :
-                        listing.bedrooms === 1 ? 'Bedroom' : 'Bedrooms'}
+                ))}
+              </div>
+            </section>
+
+            {/* Additional Information */}
+            <section className="mb-12 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+              <h2 className="text-2xl font-semibold mb-6 text-gray-800">
+                Additional Information
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex items-start">
+                  <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
+                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Property Type</h3>
+                    <p className="text-gray-900 font-medium">{listing.kind || 'Residential Home'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
+                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2A9 9 0 111 10a9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Cancellation Policy</h3>
+                    <p className="text-gray-900 font-medium">{listing.cancel || 'Free cancellation'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
+                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Nearby Amenities</h3>
+                    <p className="text-gray-900 font-medium">
+                      {listing.near
+                        ? isNearExpanded
+                          ? listing.near
+                          : listing.near.split(' ').slice(0, 15).join(' ') +
+                          (listing.near.split(' ').length > 15 ? '...' : '')
+                        : 'Restaurants, shopping, parks'
+                      }
+                      {listing.near && listing.near.split(' ').length > 15 && (
+                        <button
+                          onClick={() => setIsNearExpanded(!isNearExpanded)}
+                          className="text-gray-600 ml-1 hover:underline text-sm"
+                        >
+                          {isNearExpanded ? 'Read less' : 'Read More'}
+                        </button>
+                      )}
                     </p>
                   </div>
                 </div>
-              </div>
 
-              {listing.propertyType !== 'land' && (
-                <div className="border rounded-xl p-4 hover:shadow-md transition-shadow h-24 flex items-center">
-                  <div className="flex items-center gap-3 w-full">
-                    <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
-                      <FaShower className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-lg font-semibold text-gray-900 truncate">
-                        {listing.bathrooms ?? 'N/A'}
-                      </h3>
-                      <p className="text-sm text-gray-500 truncate">
-                        {listing.bathrooms === 1 ? 'Bathroom' : 'Bathrooms'}
-                      </p>
-                    </div>
+                <div className="flex items-start">
+                  <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
+                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    </svg>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Rules & Policies</h3>
+                    <p className="text-gray-900 font-medium">
+                      {listing.rules
+                        ? isExpanded
+                          ? listing.rules
+                          : listing.rules.split(' ').slice(0, 15).join(' ') +
+                          (listing.rules.split(' ').length > 15 ? '...' : '')
+                        : 'No smoking, no parties, no pets'
+                      }
+                      {listing.rules && listing.rules.split(' ').length > 20 && (
+                        <button
+                          onClick={() => setIsExpanded(!isExpanded)}
+                          className="text-gray-600 ml-1 hover:underline text-sm"
+                        >
+                          {isExpanded ? 'Read less' : 'Read More'}
+                        </button>
+                      )}
+                    </p>
                   </div>
                 </div>
-              )}
 
-              <div className="border rounded-xl p-4 hover:shadow-md transition-shadow h-24 flex items-center">
-                <div className="flex items-center gap-3 w-full">
-                  <div className="p-2 bg-yellow-50 rounded-lg flex-shrink-0">
-                    <FaStar className="h-5 w-5 text-yellow-600" />
+                <div className="flex items-start">
+                  <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
+                    <FaMapMarkerAlt className="w-5 h-5 text-gray-600" />
                   </div>
-                  <div className="flex items-center">
-                    <FaStar className="text-yellow-400 mr-1" />
-                    <span className="font-semibold">{Number(aiRating.average).toFixed(1)}</span>
-                    <span className="mx-1">·</span>
-                    <span className="text-gray-600">{commentCount} reviews</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="mb-12 section-card">
-            <h2 className="text-2xl font-semibold mb-6 flex items-center text-gray-800">
-              <svg className="w-6 h-6 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-              Additional Information
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex items-start">
-                <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">Property Type</h3>
-                  <p className="text-gray-900 font-medium">{listing.kind || 'Residential Home'}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">Period</h3>
-                  <p className="text-gray-900 font-medium">{listing.period || 'Residential Home'}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2A9 9 0 111 10a9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">Cancellation Policy</h3>
-                  <p className="text-gray-900 font-medium">{listing.cancel || 'Residential Home'}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">Nearby Amenities</h3>
-                  <p className="text-gray-900 font-medium">
-                    {listing.near
-                      ? isNearExpanded
-                        ? listing.near
-                        : listing.near.split(' ').slice(0, 15).join(' ') +
-                        (listing.near.split(' ').length > 15 ? '...' : '')
-                      : 'Residential Home'
-                    }
-                    {listing.near && listing.near.split(' ').length > 15 && (
-                      <button
-                        onClick={() => setIsNearExpanded(!isNearExpanded)}
-                        className="text-gray-600 ml-1 hover:underline text-sm"
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Location</h3>
+                    <p className="text-gray-900 font-medium">{listing.address}</p>
+                    {listing.address && (
+                      <a
+                        href={generateMapLink(listing.address)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 inline-flex items-center text-blue-600 hover:underline text-sm"
                       >
-                        {isNearExpanded ? 'Read less' : 'Read More'}
-                      </button>
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                  </svg>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">Rules & Policies</h3>
-                  <p className="text-gray-900 font-medium">
-                    {listing.rules
-                      ? isExpanded
-                        ? listing.rules
-                        : listing.rules.split(' ').slice(0, 15).join(' ') +
-                        (listing.rules.split(' ').length > 15 ? '...' : '')
-                      : 'Residential Home'
-                    }
-                    {listing.rules && listing.rules.split(' ').length > 20 && (
-                      <button
-                        onClick={() => setIsExpanded(!isExpanded)}
-                        className="text-gray-600 ml-1 hover:underline text-sm"
-                      >
-                        {isExpanded ? 'Read less' : 'Read More'}
-                      </button>
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
-                  <FaMapMarkerAlt className="w-5 h-5 text-gray-600" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">Location</h3>
-                  <p className="text-gray-900 font-medium">{listing.address}</p>
-                  {listing.address && (
-                    <a
-                      href={generateMapLink(listing.address)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-1 inline-flex items-center text-blue-600 hover:underline text-sm"
-                    >
-                      View on map <FaExternalLinkAlt className="ml-1 text-xs" />
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
-
-
-                        {/* Quick Contact Actions */}
-                        <div className="mt-6 pt-6 border-t border-gray-200">
-                          <h3 className="font-medium text-gray-700 mb-3">Quick Actions</h3>
-                          <div className="flex flex-wrap gap-3">
-                            {listing.contact && (
-                              <a
-                                href={`tel:${listing.contact}`}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                              >
-                                <FaPhone className="text-sm" />
-                                Call Now
-                              </a>
-                            )}
-                        
-                            <Link
-                              to="/propertysafety"
-                              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                            >
-                              <FaShieldAlt className="text-sm" />
-                              Safety Policy
-                            </Link>
-                          </div>
-                        </div>
-          </section>
-
-          {/* Office Booking Section */}
-          {listing.type === 'office' && (
-            <section className="mb-8 section-card">
-              <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Availability & Booking</h2>
-
-              <div className="flex flex-col lg:flex-row gap-6">
-                {/* Calendar Section - 40% width */}
-                <div className="w-full lg:w-2/5">
-                  <div className="sticky top-4">
-                    <Calendar
-                      onChange={setSelectedDate}
-                      value={selectedDate}
-                      minDate={new Date()}
-                      className="rounded-xl shadow-lg w-full"
-                    />
-
-                    {selectedDate && (
-                      <div className="mt-6 bg-white p-4 rounded-lg border border-gray-200">
-                        <h3 className="font-medium text-gray-700 mb-3">Select Hours</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                            <select
-                              value={startTime}
-                              onChange={(e) => setStartTime(e.target.value)}
-                              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                              {generateTimeOptions().map(time => (
-                                <option key={time} value={time}>{time}</option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                            <select
-                              value={endTime}
-                              onChange={(e) => setEndTime(e.target.value)}
-                              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                              {generateTimeOptions().map(time => (
-                                <option key={time} value={time}>{time}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Booking Summary Section - 60% width */}
-                <div className="w-full lg:w-3/5">
-                  <div className="">
-                    <h3 className="text-lg font-semibold text-blue-800 mb-4">Booking Summary</h3>
-
-                    {selectedDate && startTime && endTime ? (
-                      <div className="space-y-4">
-                        {/* Selected Date & Time */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 className="font-medium text-gray-700 mb-2">Booking Date</h4>
-                            <p className="font-medium text-lg">{selectedDate.toDateString()}</p>
-                          </div>
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 className="font-medium text-gray-700 mb-2">Start Time</h4>
-                            <p className="font-medium text-lg">{startTime}</p>
-                          </div>
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 className="font-medium text-gray-700 mb-2">End Time</h4>
-                            <p className="font-medium text-lg">{endTime}</p>
-                          </div>
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 className="font-medium text-gray-700 mb-2">Total Hours</h4>
-                            <p className="font-medium text-lg">{totalHours} hour{totalHours > 1 ? 's' : ''}</p>
-                          </div>
-                        </div>
-
-                        {/* Price Summary */}
-                        <div className="bg-white p-4 rounded-lg border border-gray-200">
-                          <h4 className="font-medium text-gray-700 mb-3">Price Summary</h4>
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Hourly Rate ({totalHours} hours)</span>
-                              <span className="font-medium">R{(listing.regularPrice * totalHours).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
-                            </div>
-
-                            <div className="pt-3 mt-2 border-t border-gray-200 font-semibold flex justify-between text-lg">
-                              <span>Total Amount</span>
-                              <span className="text-blue-600 font-bold">
-                                R{totalPrice.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Guest Information */}
-                        <div className="bg-white p-4 rounded-lg border border-gray-200">
-                          <h4 className="font-medium text-gray-700 mb-3">Your Information</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label htmlFor="guestName" className="block text-sm font-medium text-gray-700 mb-1">
-                                Full Name <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="text"
-                                id="guestName"
-                                value={guestName}
-                                onChange={(e) => setGuestName(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="As it appears on ID"
-                                required
-                              />
-                            </div>
-
-                            <div>
-                              <label htmlFor="guestContact" className="block text-sm font-medium text-gray-700 mb-1">
-                                WhatsApp Number <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="tel"
-                                id="guestContact"
-                                value={guestContact}
-                                onChange={(e) => setGuestContact(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="+27 82 123 4567"
-                                required
-                              />
-                            </div>
-
-                            <div className="md:col-span-2">
-                              <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
-                                Special Requests
-                              </label>
-                              <textarea
-                                id="specialRequests"
-                                value={specialRequests}
-                                onChange={(e) => setSpecialRequests(e.target.value)}
-                                rows={3}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Equipment needs, meeting setup, etc."
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* WhatsApp Booking Button */}
-                        <div className="pt-2">
-                          <div className="mb-3 text-center text-sm text-gray-600">
-                            <p>You ll complete your booking via WhatsApp</p>
-                          </div>
-                          <button
-                            className="w-full bg-green-500 text-white py-2.5 px-4 rounded-md hover:bg-green-600 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-md hover:shadow-sm"
-                            onClick={handleOfficeWhatsAppBooking}
-                            disabled={!guestName || !guestContact}
-                          >
-                            <FaWhatsapp className="text-base" />
-                            Book Office
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-6">
-                        <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <p className="text-gray-600 mt-3 text-lg">
-                          Please select a date and time to see pricing and book
-                        </p>
-                      </div>
+                        View on map <FaExternalLinkAlt className="ml-1 text-xs" />
+                      </a>
                     )}
                   </div>
                 </div>
               </div>
             </section>
-          )}
 
-          {/* Overnight Stay Booking Section */}
-        {listing.type === 'over' && (
-  <section className="mb-8 section-card">
-    <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Availability & Booking</h2>
-
-    <div className="flex flex-col lg:flex-row gap-6">
-      {/* Calendar Section - 40% width on large screens */}
-      <div className="w-full lg:w-2/5">
-        <div className="sticky top-4">
-          <Calendar
-            onChange={setDateRange}
-            value={dateRange}
-            selectRange={true}
-            minDate={new Date()}
-            className="rounded-xl shadow-lg w-full"
-          />
-        </div>
-      </div>
-
-      {/* Booking Summary Section - 60% width on large screens */}
-      <div className="w-full lg:w-3/5">
-        <div className="">
-          <h3 className="text-lg font-semibold text-blue-800 mb-4">Booking Summary</h3>
-
-          {dateRange[0] && dateRange[1] ? (
-            <div className="space-y-4">
-              {/* Selected Dates */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white p-4 rounded-lg border border-gray-200">
-                  <h4 className="font-medium text-gray-700 mb-2">Check-in</h4>
-                  <p className="font-medium text-lg">{dateRange[0].toDateString()}</p>
+            {/* Office Booking Section */}
+            {listing.type === 'office' && (
+              <section className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+                <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Availability & Booking</h2>
+                <div className="flex flex-col lg:flex-row gap-6">
+                  {/* Calendar Section */}
+                  <div className="w-full lg:w-2/5">
+                    <div className="sticky top-4">
+                      <Calendar
+                        onChange={setSelectedDate}
+                        value={selectedDate}
+                        minDate={new Date()}
+                        className="rounded-xl shadow-lg w-full"
+                      />
+                      {selectedDate && (
+                        <div className="mt-6 bg-white p-4 rounded-lg border border-gray-200">
+                          <h3 className="font-medium text-gray-700 mb-3">Select Hours</h3>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                              <select
+                                value={startTime}
+                                onChange={(e) => setStartTime(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                {generateTimeOptions().map(time => (
+                                  <option key={time} value={time}>{time}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                              <select
+                                value={endTime}
+                                onChange={(e) => setEndTime(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                {generateTimeOptions().map(time => (
+                                  <option key={time} value={time}>{time}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* Booking Summary Section */}
+                  <div className="w-full lg:w-3/5">
+                    <div className="">
+                      <h3 className="text-lg font-semibold text-blue-800 mb-4">Booking Summary</h3>
+                      {selectedDate && startTime && endTime ? (
+                        <div className="space-y-4">
+                          {/* Selected Date & Time */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-white p-4 rounded-lg border border-gray-200">
+                              <h4 className="font-medium text-gray-700 mb-2">Booking Date</h4>
+                              <p className="font-medium text-lg">{selectedDate.toDateString()}</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-lg border border-gray-200">
+                              <h4 className="font-medium text-gray-700 mb-2">Start Time</h4>
+                              <p className="font-medium text-lg">{startTime}</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-lg border border-gray-200">
+                              <h4 className="font-medium text-gray-700 mb-2">End Time</h4>
+                              <p className="font-medium text-lg">{endTime}</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-lg border border-gray-200">
+                              <h4 className="font-medium text-gray-700 mb-2">Total Hours</h4>
+                              <p className="font-medium text-lg">{totalHours} hour{totalHours > 1 ? 's' : ''}</p>
+                            </div>
+                          </div>
+                          {/* Price Summary */}
+                          <div className="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 className="font-medium text-gray-700 mb-3">Price Summary</h4>
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Hourly Rate ({totalHours} hours)</span>
+                                <span className="font-medium">R{(listing.regularPrice * totalHours).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
+                              </div>
+                              <div className="pt-3 mt-2 border-t border-gray-200 font-semibold flex justify-between text-lg">
+                                <span>Total Amount</span>
+                                <span className="text-blue-600 font-bold">
+                                  R{totalPrice.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Guest Information */}
+                          <div className="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 className="font-medium text-gray-700 mb-3">Your Information</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label htmlFor="guestName" className="block text-sm font-medium text-gray-700 mb-1">
+                                  Full Name <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="text"
+                                  id="guestName"
+                                  value={guestName}
+                                  onChange={(e) => setGuestName(e.target.value)}
+                                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="As it appears on ID"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label htmlFor="guestContact" className="block text-sm font-medium text-gray-700 mb-1">
+                                  WhatsApp Number <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="tel"
+                                  id="guestContact"
+                                  value={guestContact}
+                                  onChange={(e) => setGuestContact(e.target.value)}
+                                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="+27 82 123 4567"
+                                  required
+                                />
+                              </div>
+                              <div className="md:col-span-2">
+                                <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
+                                  Special Requests
+                                </label>
+                                <textarea
+                                  id="specialRequests"
+                                  value={specialRequests}
+                                  onChange={(e) => setSpecialRequests(e.target.value)}
+                                  rows={3}
+                                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Equipment needs, meeting setup, etc."
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          {/* WhatsApp Booking Button */}
+                          <div className="pt-2">
+                            <div className="mb-3 text-center text-sm text-gray-600">
+                              <p>You ll complete your booking via WhatsApp</p>
+                            </div>
+                            <button
+                              className="w-full bg-green-500 text-white py-2.5 px-4 rounded-md hover:bg-green-600 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-md hover:shadow-sm"
+                              onClick={handleOfficeWhatsAppBooking}
+                              disabled={!guestName || !guestContact}
+                            >
+                              <FaWhatsapp className="text-base" />
+                              Book Office
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-6">
+                          <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-gray-600 mt-3 text-lg">
+                            Please select a date and time to see pricing and book
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-white p-4 rounded-lg border border-gray-200">
-                  <h4 className="font-medium text-gray-700 mb-2">Check-out</h4>
-                  <p className="font-medium text-lg">{dateRange[1].toDateString()}</p>
+              </section>
+            )}
+
+            {/* Overnight Stay Booking Section */}
+            {listing.type === 'over' && (
+              <section className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+                <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Availability & Booking</h2>
+                <div className="flex flex-col lg:flex-row gap-6">
+                  {/* Calendar Section */}
+                  <div className="w-full lg:w-2/5">
+                    <div className="sticky top-4">
+                      <Calendar
+                        onChange={setDateRange}
+                        value={dateRange}
+                        selectRange={true}
+                        minDate={new Date()}
+                        className="rounded-xl shadow-lg w-full"
+                      />
+                    </div>
+                  </div>
+                  {/* Booking Summary Section */}
+                  <div className="w-full lg:w-3/5">
+                    <div className="">
+                      <h3 className="text-lg font-semibold text-blue-800 mb-4">Booking Summary</h3>
+                      {dateRange[0] && dateRange[1] ? (
+                        <div className="space-y-4">
+                          {/* Selected Dates */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-white p-4 rounded-lg border border-gray-200">
+                              <h4 className="font-medium text-gray-700 mb-2">Check-in</h4>
+                              <p className="font-medium text-lg">{dateRange[0].toDateString()}</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-lg border border-gray-200">
+                              <h4 className="font-medium text-gray-700 mb-2">Check-out</h4>
+                              <p className="font-medium text-lg">{dateRange[1].toDateString()}</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-lg border border-gray-200 md:col-span-2">
+                              <h4 className="font-medium text-gray-700 mb-2">Total Nights</h4>
+                              <p className="font-medium text-lg">{nights} night{nights > 1 ? 's' : ''}</p>
+                            </div>
+                          </div>
+                          {/* Guest Information */}
+                          <div className="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 className="font-medium text-gray-700 mb-3">Guest Information</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label htmlFor="guestName" className="block text-sm font-medium text-gray-700 mb-1">
+                                  Full Name <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="text"
+                                  id="guestName"
+                                  value={guestName}
+                                  onChange={(e) => setGuestName(e.target.value)}
+                                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="As it appears on ID"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label htmlFor="guestContact" className="block text-sm font-medium text-gray-700 mb-1">
+                                  WhatsApp Number <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="tel"
+                                  id="guestContact"
+                                  value={guestContact}
+                                  onChange={(e) => setGuestContact(e.target.value)}
+                                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="+27 82 123 4567"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label htmlFor="numberOfGuests" className="block text-sm font-medium text-gray-700 mb-1">
+                                  Number of Guests <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                  id="numberOfGuests"
+                                  value={numberOfGuests}
+                                  onChange={(e) => setNumberOfGuests(parseInt(e.target.value))}
+                                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  required
+                                >
+                                  <option value={1}>1 Guest</option>
+                                  <option value={2}>2 Guests</option>
+                                  <option value={3}>3 Guests</option>
+                                  <option value={4}>4 Guests</option>
+                                  <option value={5}>5 Guests</option>
+                                  <option value={6}>6+ Guests</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label htmlFor="extraBed" className="block text-sm font-medium text-gray-700 mb-1">
+                                  Extra Bed for Kids
+                                </label>
+                                <select
+                                  id="extraBed"
+                                  value={extraBed}
+                                  onChange={(e) => setExtraBed(e.target.value)}
+                                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                  <option value="no">Not Needed</option>
+                                  <option value="yes">Yes, Please</option>
+                                </select>
+                              </div>
+                              <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-3">
+                                  Additional Requests
+                                </label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="flex items-center">
+                                    <input
+                                      type="checkbox"
+                                      id="ironRequest"
+                                      checked={ironRequest}
+                                      onChange={(e) => setIronRequest(e.target.checked)}
+                                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    />
+                                    <label htmlFor="ironRequest" className="ml-2 text-sm text-gray-700">
+                                      Iron & Ironing Board Needed
+                                    </label>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="md:col-span-2">
+                                <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
+                                  Special Requests
+                                </label>
+                                <textarea
+                                  id="specialRequests"
+                                  value={specialRequests}
+                                  onChange={(e) => setSpecialRequests(e.target.value)}
+                                  rows={3}
+                                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Dietary restrictions, accessibility needs, etc."
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          {/* Meal Options */}
+                          <div className="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 className="font-medium text-gray-700 mb-3">Meal Options</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div
+                                className={`p-4 border rounded-lg cursor-pointer transition-colors ${mealPlan === 'breakfast' ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:bg-gray-50'}`}
+                                onClick={() => setMealPlan('breakfast')}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${mealPlan === 'breakfast' ? 'bg-green-500 border-green-500' : 'border-gray-400'}`}>
+                                    {mealPlan === 'breakfast' && (
+                                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="font-medium">Breakfast Included</p>
+                                    <p className="text-sm text-gray-600 mt-1">+ R{breakfastPrice.toLocaleString('en-ZA')}/night</p>
+                                  </div>
+                                </div>
+                              </div>
+                              <div
+                                className={`p-4 border rounded-lg cursor-pointer transition-colors ${mealPlan === 'none' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'}`}
+                                onClick={() => setMealPlan('none')}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${mealPlan === 'none' ? 'bg-blue-500 border-blue-500' : 'border-gray-400'}`}>
+                                    {mealPlan === 'none' && (
+                                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="font-medium">Room Only</p>
+                                    <p className="text-sm text-gray-600 mt-1">No meals included</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Price Summary */}
+                          <div className="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 className="font-medium text-gray-700 mb-3">Price Summary</h4>
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Room Rate ({nights} nights)</span>
+                                <span className="font-medium">R{(listing.regularPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
+                              </div>
+                              {mealPlan === 'breakfast' && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Breakfast ({nights} nights)</span>
+                                  <span className="font-medium">R{(breakfastPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                              )}
+                              <div className="pt-3 mt-2 border-t border-gray-200 font-semibold flex justify-between text-lg">
+                                <span>Total Amount</span>
+                                <span className="text-blue-600 font-bold">
+                                  R{(listing.regularPrice * nights + (mealPlan === 'breakfast' ? breakfastPrice * nights : 0)).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          {/* WhatsApp Booking Button */}
+                          <div className="pt-2">
+                            <div className="mb-3 text-center text-sm text-gray-600">
+                              <p>Youll complete your booking via WhatsApp</p>
+                            </div>
+                            <button
+                              className="w-full bg-green-500 text-white py-2.5 px-4 rounded-md hover:bg-green-600 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-md hover:shadow-sm"
+                              onClick={() => setShowBookingModal(true)}
+                              disabled={!guestName || !guestContact || !numberOfGuests}
+                            >
+                              <FaWhatsapp className="text-base" />
+                              Submit Booking Request
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-6">
+                          <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-gray-600 mt-3 text-lg">
+                            Please select check-in and check-out dates to see pricing and book
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-white p-4 rounded-lg border border-gray-200 md:col-span-2">
-                  <h4 className="font-medium text-gray-700 mb-2">Total Nights</h4>
-                  <p className="font-medium text-lg">{nights} night{nights > 1 ? 's' : ''}</p>
+              </section>
+            )}
+
+            {/* Location */}
+            <section className="mb-8">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-xl font-semibold mb-4">Location</h2>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 text-gray-700">
+                    <FaMapMarkerAlt className="text-red-500" />
+                    <span>{listing.address}</span>
+                  </div>
+                  <div className="h-64 bg-gray-200 rounded-lg overflow-hidden">
+                    <iframe
+                      src={`https://maps.google.com/maps?q=${encodeURIComponent(listing.address)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      allowFullScreen=""
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title={`Location of ${listing.name}`}
+                    ></iframe>
+                  </div>
+                  <a
+                    href={generateMapLink(listing.address)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    <FaExternalLinkAlt />
+                    Open in Google Maps
+                  </a>
                 </div>
               </div>
+            </section>
 
-              {/* Guest Information */}
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <h4 className="font-medium text-gray-700 mb-3">Guest Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Contact Host Section */}
+            <section className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+              <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Contact Host</h2>
+              {currentUser ? (
+                <form onSubmit={handleContactSubmit} className="space-y-4">
                   <div>
-                    <label htmlFor="guestName" className="block text-sm font-medium text-gray-700 mb-1">
-                      Full Name <span className="text-red-500">*</span>
-                    </label>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">Your Name</label>
                     <input
                       type="text"
-                      id="guestName"
-                      value={guestName}
-                      onChange={(e) => setGuestName(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="As it appears on ID"
+                      id="name"
+                      name="name"
+                      value={contactForm.name}
+                      onChange={handleContactChange}
+                      placeholder="Enter your name"
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
                       required
                     />
                   </div>
-
                   <div>
-                    <label htmlFor="guestContact" className="block text-sm font-medium text-gray-700 mb-1">
-                      WhatsApp Number <span className="text-red-500">*</span>
-                    </label>
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Your Phone Number</label>
                     <input
                       type="tel"
-                      id="guestContact"
-                      value={guestContact}
-                      onChange={(e) => setGuestContact(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="+27 82 123 4567"
+                      id="phone"
+                      name="phone"
+                      value={contactForm.phone}
+                      onChange={handleContactChange}
+                      placeholder="e.g., 0821234567"
+                      className={`mt-1 block w-full border ${contactForm.phoneError ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500`}
                       required
                     />
+                    {contactForm.phoneError && (
+                      <p className="text-red-500 text-sm mt-1">Please enter a valid 10-digit South African phone number (e.g., 0821234567).</p>
+                    )}
                   </div>
-
                   <div>
-                    <label htmlFor="numberOfGuests" className="block text-sm font-medium text-gray-700 mb-1">
-                      Number of Guests <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      id="numberOfGuests"
-                      value={numberOfGuests}
-                      onChange={(e) => setNumberOfGuests(parseInt(e.target.value))}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value={1}>1 Guest</option>
-                      <option value={2}>2 Guests</option>
-                      <option value={3}>3 Guests</option>
-                      <option value={4}>4 Guests</option>
-                      <option value={5}>5 Guests</option>
-                      <option value={6}>6+ Guests</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label htmlFor="extraBed" className="block text-sm font-medium text-gray-700 mb-1">
-                      Extra Bed for Kids
-                    </label>
-                    <select
-                      id="extraBed"
-                      value={extraBed}
-                      onChange={(e) => setExtraBed(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="no">Not Needed</option>
-                      <option value="yes">Yes, Please</option>
-                    </select>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      Additional Requests
-                    </label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id="ironRequest"
-                          checked={ironRequest}
-                          onChange={(e) => setIronRequest(e.target.checked)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <label htmlFor="ironRequest" className="ml-2 text-sm text-gray-700">
-                          Iron & Ironing Board Needed
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
-                      Special Requests
-                    </label>
+                    <label htmlFor="message" className="block text-sm font-medium text-gray-700">Your Message</label>
                     <textarea
-                      id="specialRequests"
-                      value={specialRequests}
-                      onChange={(e) => setSpecialRequests(e.target.value)}
-                      rows={3}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Dietary restrictions, accessibility needs, etc."
-                    />
+                      id="message"
+                      name="message"
+                      value={contactForm.message}
+                      onChange={handleContactChange}
+                      rows="5"
+                      placeholder={`Hello, I'm interested in your property located at ${listing.address} and would like to schedule a viewing...`}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    ></textarea>
                   </div>
-                </div>
-              </div>
-
-              {/* Meal Options */}
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <h4 className="font-medium text-gray-700 mb-3">Meal Options</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div
-                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${mealPlan === 'breakfast' ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:bg-gray-50'}`}
-                    onClick={() => setMealPlan('breakfast')}
+                  <button
+                    type="submit"
+                    disabled={uiState.submitting}
+                    className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${mealPlan === 'breakfast' ? 'bg-green-500 border-green-500' : 'border-gray-400'}`}>
-                        {mealPlan === 'breakfast' && (
-                          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium">Breakfast Included</p>
-                        <p className="text-sm text-gray-600 mt-1">+ R{breakfastPrice.toLocaleString('en-ZA')}/night</p>
-                      </div>
-                    </div>
-                  </div>
+                    {uiState.submitting ? (
+                      <>
+                        <FaSpinner className="animate-spin mr-2" /> Sending...
+                      </>
+                    ) : (
+                      <>
+                        <FaPaperPlane className="mr-2" /> Send Message
+                      </>
+                    )}
+                  </button>
+                </form>
+              ) : (
+                <p className="text-gray-600 text-center py-4">
+                  Please <span className="font-semibold text-blue-600 cursor-pointer" onClick={() => navigate('/sign-in')}>sign in</span> to contact the host.
+                </p>
+              )}
+            </section>
+          </div>
 
-                  <div
-                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${mealPlan === 'none' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'}`}
-                    onClick={() => setMealPlan('none')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${mealPlan === 'none' ? 'bg-blue-500 border-blue-500' : 'border-gray-400'}`}>
-                        {mealPlan === 'none' && (
-                          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium">Room Only</p>
-                        <p className="text-sm text-gray-600 mt-1">No meals included</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Price Summary */}
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <h4 className="font-medium text-gray-700 mb-3">Price Summary</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Room Rate ({nights} nights)</span>
-                    <span className="font-medium">R{(listing.regularPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
-                  </div>
-
-                  {mealPlan === 'breakfast' && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Breakfast ({nights} nights)</span>
-                      <span className="font-medium">R{(breakfastPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                  )}
-
-                  <div className="pt-3 mt-2 border-t border-gray-200 font-semibold flex justify-between text-lg">
-                    <span>Total Amount</span>
-                    <span className="text-blue-600 font-bold">
-                      R{(listing.regularPrice * nights + (mealPlan === 'breakfast' ? breakfastPrice * nights : 0)).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* WhatsApp Booking Button */}
-              <div className="pt-2">
-                <div className="mb-3 text-center text-sm text-gray-600">
-                  <p>You ll complete your booking via WhatsApp</p>
-                </div>
-                <button
-                  className="w-full bg-green-500 text-white py-2.5 px-4 rounded-md hover:bg-green-600 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-md hover:shadow-sm"
-                  onClick={handleOvernightWhatsAppBooking}
-                  disabled={!guestName || !guestContact || !numberOfGuests}
-                >
-                  <FaWhatsapp className="text-base" />
-                  Submit Booking Request
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-6">
-              <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <p className="text-gray-600 mt-3 text-lg">
-                Please select check-in and check-out dates to see pricing and book
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  </section>
-)}
-
-                 {/* Location */}
-                    <section className="mb-8">
-                      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h2 className="text-xl font-semibold mb-4">Location</h2>
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-3 text-gray-700">
-                            <FaMapMarkerAlt className="text-red-500" />
-                            <span>{listing.address}</span>
-                          </div>
-                          <div className="h-64 bg-gray-200 rounded-lg overflow-hidden">
-                            <iframe
-                              src={`https://maps.google.com/maps?q=${encodeURIComponent(listing.address)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
-                              width="100%"
-                              height="100%"
-                              style={{ border: 0 }}
-                              allowFullScreen=""
-                              loading="lazy"
-                              referrerPolicy="no-referrer-when-downgrade"
-                              title={`Location of ${listing.name}`}
-                            ></iframe>
-                          </div>
-                          <a
-                            href={generateMapLink(listing.address)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-                          >
-                            <FaExternalLinkAlt />
-                            Open in Google Maps
-                          </a>
+          {/* Right Column - Sidebar */}
+          <div className="lg:col-span-1">
+            {/* Advertising Section */}
+            <section className="mb-8">
+              <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <MdAdsClick className="text-purple-600" />
+                  Boost This Listing
+                </h2>
+                <div className="space-y-4">
+                  <p className="text-gray-600 text-sm">
+                    Get more visibility for your property by advertising on popular platforms.
+                  </p>
+                  <div className="space-y-3">
+                    {ADVERTISING_PLATFORMS.map((platform) => (
+                      <div
+                        key={platform.name}
+                        className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
+                          advertisingState.selectedPlatforms.includes(platform.name)
+                            ? 'border-purple-500 bg-purple-50'
+                            : 'border-gray-200 hover:border-purple-300'
+                        }`}
+                        onClick={() => handleAdPlatformToggle(platform.name)}
+                      >
+                        <div className={`p-2 rounded-full text-white ${platform.color}`}>
+                          <platform.icon />
+                        </div>
+                        <span className="flex-1 font-medium">{platform.name}</span>
+                        <div className={`w-5 h-5 border-2 rounded ${
+                          advertisingState.selectedPlatforms.includes(platform.name)
+                            ? 'bg-purple-500 border-purple-500'
+                            : 'border-gray-300'
+                        }`}>
+                          {advertisingState.selectedPlatforms.includes(platform.name) && (
+                            <FaCheckCircle className="text-white text-xs" />
+                          )}
                         </div>
                       </div>
-                    </section>
-
-          {/* Contact Host Section */}
-          <section className="mb-8 section-card">
-            <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Contact Host</h2>
-            {currentUser ? (
-              <form onSubmit={handleContactSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">Your Name</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={contactForm.name}
-                    onChange={handleContactChange}
-                    placeholder="Enter your name"
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Your Phone Number</label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={contactForm.phone}
-                    onChange={handleContactChange}
-                    placeholder="e.g., 0821234567"
-                    className={`mt-1 block w-full border ${contactForm.phoneError ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500`}
-                    required
-                  />
-                  {contactForm.phoneError && (
-                    <p className="text-red-500 text-sm mt-1">Please enter a valid 10-digit South African phone number (e.g., 0821234567).</p>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700">Your Message</label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    value={contactForm.message}
-                    onChange={handleContactChange}
-                    rows="5"
-                    placeholder={`Hello, I'm interested in your property located at ${listing.address} and would like to schedule a viewing...`}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  ></textarea>
-                </div>
-                <button
-                  type="submit"
-                  disabled={uiState.submitting}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {uiState.submitting ? (
-                    <>
-                      <FaSpinner className="animate-spin mr-2" /> Sending...
-                    </>
-                  ) : (
-                    <>
-                      <FaPaperPlane className="mr-2" /> Send Message
-                    </>
-                  )}
-                </button>
-              </form>
-            ) : (
-              <p className="text-gray-600 text-center py-4">
-                Please <span className="font-semibold text-blue-600 cursor-pointer" onClick={() => navigate('/sign-in')}>sign in</span> to contact the host.
-              </p>
-            )}
-          </section>
-        </div>
-
-        {/* Right Column - Map and Reviews */}
-        <div className="lg:col-span-1">
-          {/* NEW: Advertising Section */}
-          <section className="mb-8">
-            <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <MdAdsClick className="text-purple-600" />
-                Boost This Listing
-              </h2>
-              
-              <div className="space-y-4">
-                <p className="text-gray-600 text-sm">
-                  Get more visibility for your property by advertising on popular platforms.
-                </p>
-                
-                <div className="space-y-3">
-                  {ADVERTISING_PLATFORMS.map((platform) => (
-                    <div
-                      key={platform.name}
-                      className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
-                        advertisingState.selectedPlatforms.includes(platform.name)
-                          ? 'border-purple-500 bg-purple-50'
-                          : 'border-gray-200 hover:border-purple-300'
-                      }`}
-                      onClick={() => handleAdPlatformToggle(platform.name)}
-                    >
-                      <div className={`p-2 rounded-full text-white ${platform.color}`}>
-                        <platform.icon />
-                      </div>
-                      <span className="flex-1 font-medium">{platform.name}</span>
-                      <div className={`w-5 h-5 border-2 rounded ${
-                        advertisingState.selectedPlatforms.includes(platform.name)
-                          ? 'bg-purple-500 border-purple-500'
-                          : 'border-gray-300'
-                      }`}>
-                        {advertisingState.selectedPlatforms.includes(platform.name) && (
-                          <FaCheckCircle className="text-white text-xs" />
-                        )}
+                    ))}
+                  </div>
+                  {/* Budget and Duration */}
+                  <div className="space-y-4 pt-4 border-t">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Daily Budget: R{advertisingState.budget}
+                      </label>
+                      <input
+                        type="range"
+                        min="50"
+                        max="1000"
+                        step="50"
+                        value={advertisingState.budget}
+                        onChange={(e) => setAdvertisingState(prev => ({
+                          ...prev,
+                          budget: parseInt(e.target.value)
+                        }))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>R50</span>
+                        <span>R1000</span>
                       </div>
                     </div>
-                  ))}
-                </div>
-
-                {/* Budget and Duration */}
-                <div className="space-y-4 pt-4 border-t">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Daily Budget: R{advertisingState.budget}
-                    </label>
-                    <input
-                      type="range"
-                      min="50"
-                      max="1000"
-                      step="50"
-                      value={advertisingState.budget}
-                      onChange={(e) => setAdvertisingState(prev => ({
-                        ...prev,
-                        budget: parseInt(e.target.value)
-                      }))}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                    />
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>R50</span>
-                      <span>R1000</span>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Duration: {advertisingState.duration} days
+                      </label>
+                      <input
+                        type="range"
+                        min="1"
+                        max="30"
+                        value={advertisingState.duration}
+                        onChange={(e) => setAdvertisingState(prev => ({
+                          ...prev,
+                          duration: parseInt(e.target.value)
+                        }))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>1 day</span>
+                        <span>30 days</span>
+                      </div>
                     </div>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Duration: {advertisingState.duration} days
-                    </label>
-                    <input
-                      type="range"
-                      min="1"
-                      max="30"
-                      value={advertisingState.duration}
-                      onChange={(e) => setAdvertisingState(prev => ({
-                        ...prev,
-                        duration: parseInt(e.target.value)
-                      }))}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                    />
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>1 day</span>
-                      <span>30 days</span>
+                  {/* Cost Estimate */}
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between text-sm">
+                      <span>Estimated total:</span>
+                      <span className="font-semibold">
+                        R{(advertisingState.budget * advertisingState.duration).toLocaleString()}
+                      </span>
                     </div>
                   </div>
+                  <button
+                    onClick={handleAdvertiseSubmit}
+                    disabled={advertisingState.loading || advertisingState.selectedPlatforms.length === 0}
+                    className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white py-3 px-4 rounded-md font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    {advertisingState.loading ? (
+                      <>
+                        <FaSpinner className="animate-spin" />
+                        Starting Campaign...
+                      </>
+                    ) : (
+                      'Start Advertising Campaign'
+                    )}
+                  </button>
                 </div>
-
-                {/* Cost Estimate */}
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <div className="flex justify-between text-sm">
-                    <span>Estimated total:</span>
-                    <span className="font-semibold">
-                      R{(advertisingState.budget * advertisingState.duration).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleAdvertiseSubmit}
-                  disabled={advertisingState.loading || advertisingState.selectedPlatforms.length === 0}
-                  className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white py-3 px-4 rounded-md font-medium transition-colors flex items-center justify-center gap-2"
-                >
-                  {advertisingState.loading ? (
-                    <>
-                      <FaSpinner className="animate-spin" />
-                      Starting Campaign...
-                    </>
-                  ) : (
-                    'Start Advertising Campaign'
-                  )}
-                </button>
               </div>
-            </div>
-          </section>
+            </section>
 
-          {showCommentsPanel && (
-            <CommentsSidePanel
-              listingId={listingId}
-              onClose={() => setShowCommentsPanel(false)}
-            />
-          )}
-
-          <div>
-            {/* Guest Reviews Section */}
+            {/* Reviews Section */}
             <section className="mb-8">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Guest Reviews</h2>
@@ -2314,29 +2608,19 @@ const handleOvernightWhatsAppBooking = () => {
                   <span className="text-gray-600">{commentCount} reviews</span>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                {/* Recent Reviews Card */}
-                <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-semibold text-lg">Recent Reviews</h3>
-                    {commentCount > 2 && (
-                      <button
-                        onClick={() => setShowCommentsPanel(true)}
-                        className="text-blue-600 hover:underline flex items-center text-sm"
-                      >
-                        View all <FaChevronDown className="ml-1 text-xs" />
-                      </button>
-                    )}
-                  </div>
-
-                  <Comments
-                    listingId={listingId}
-                    maxComments={2}
-                    onTotalComments={setCommentCount}
-                    cardStyle={true}
-                  />
+              <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-semibold text-lg">Recent Reviews</h3>
+                  {commentCount > 2 && (
+                    <button
+                      onClick={() => setShowCommentsPanel(true)}
+                      className="text-blue-600 hover:underline flex items-center text-sm"
+                    >
+                      View all <FaChevronDown className="ml-1 text-xs" />
+                    </button>
+                  )}
                 </div>
+                {/* Reviews content would go here */}
               </div>
             </section>
 
@@ -2348,7 +2632,7 @@ const handleOvernightWhatsAppBooking = () => {
             )}
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }
