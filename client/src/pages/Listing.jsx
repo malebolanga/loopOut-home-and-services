@@ -11,7 +11,7 @@ import emailjs from "emailjs-com";
 
 import Calendar from "react-calendar";
 import CommentsSidePanel from '../components/CommentsSidePanel';
-
+import Comments from '../components/Comments';
 // Icons imports
 import {
   MdCleanHands,
@@ -61,6 +61,7 @@ import {
   FaGlobe,
   FaTimes,
   FaHeart,
+  FaEnvelope,
 } from "react-icons/fa";
 
 // Styles
@@ -130,6 +131,120 @@ const ADVERTISING_PLATFORMS = [
   { name: 'TikTok Ads', icon: FaTiktok, color: 'bg-black' },
 ];
 
+// Contact Host Modal Component
+const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
+  const [contactMethod, setContactMethod] = useState('whatsapp');
+  const [message, setMessage] = useState('');
+  
+  const defaultMessage = `Hello, I'm ${user?.name || 'Potential Buyer/Tenant'}. I'm interested in viewing your ${listing.name || 'Property Listing'} for ${listing.type === 'sale' ? 'purchase' : 'rental'}. Could you please provide more details or schedule a viewing?`;
+  
+  const handleSubmit = () => {
+    if (!listing?.contact && !listing?.email) {
+      alert('No contact information available for this host');
+      return;
+    }
+
+    const finalMessage = message || defaultMessage;
+    
+    if (contactMethod === 'whatsapp' && listing.contact) {
+      const phoneNumber = listing.contact.replace(/\D/g, '');
+      let whatsappNumber;
+      
+      if (phoneNumber.startsWith('27') && phoneNumber.length === 11) {
+        whatsappNumber = phoneNumber;
+      } else {
+        let num = phoneNumber;
+        if (!num.startsWith('0')) num = '0' + num;
+        if (num.length > 10) num = num.substring(num.length - 10);
+        if (num.length < 10) num = num.padEnd(10, '0');
+        whatsappNumber = num.replace(/^0/, '27');
+      }
+      
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(finalMessage)}`;
+      window.open(whatsappUrl, '_blank');
+    } else if (contactMethod === 'email' && (listing.email || listing.userRef?.email)) {
+      const emailTo = listing.email || listing.userRef?.email;
+      const subject = `Interest in ${listing.name}`;
+      window.location.href = `mailto:${emailTo}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(finalMessage)}`;
+    } else if (contactMethod === 'call' && listing.contact) {
+      window.location.href = `tel:${listing.contact}`;
+    }
+    onClose();
+  };
+  
+  if (!isOpen) return null;
+  
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h3>Contact Host</h3>
+          <button onClick={onClose}><FaTimes /></button>
+        </div>
+        
+        <div className="form-group">
+          <label>Your Name</label>
+          <input 
+            type="text" 
+            value={user?.name || ''} 
+            placeholder="Enter your name" 
+            readOnly={!!user?.name}
+            className="w-full p-2 border rounded"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Contact Method</label>
+          <div className="contact-methods flex flex-wrap gap-2 my-2">
+            {listing.contact && (
+              <button 
+                className={`method-btn px-4 py-2 rounded flex items-center gap-2 ${contactMethod === 'whatsapp' ? 'bg-green-100 text-green-700 border-green-300' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
+                onClick={() => setContactMethod('whatsapp')}
+              >
+                <FaWhatsapp /> WhatsApp
+              </button>
+            )}
+            {(listing.email || listing.userRef?.email) && (
+              <button 
+                className={`method-btn px-4 py-2 rounded flex items-center gap-2 ${contactMethod === 'email' ? 'bg-blue-100 text-blue-700 border-blue-300' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
+                onClick={() => setContactMethod('email')}
+              >
+                <FaEnvelope /> Email
+              </button>
+            )}
+            {listing.contact && (
+              <button 
+                className={`method-btn px-4 py-2 rounded flex items-center gap-2 ${contactMethod === 'call' ? 'bg-red-100 text-red-700 border-red-300' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
+                onClick={() => setContactMethod('call')}
+              >
+                <FaPhone /> Call
+              </button>
+            )}
+          </div>
+        </div>
+        
+        <div className="form-group">
+          <label>Message</label>
+          <textarea 
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder={defaultMessage}
+            rows="4"
+            className="w-full p-2 border rounded"
+          />
+        </div>
+        
+        <div className="modal-actions flex gap-2 mt-4">
+          <button className="btn-secondary px-4 py-2 rounded bg-gray-200 hover:bg-gray-300" onClick={onClose}>Cancel</button>
+          <button className="btn-primary px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700" onClick={handleSubmit}>
+            Send Message
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Listing() {
   const { listingId } = useParams();
   const { currentUser } = useSelector((state) => state.user);
@@ -142,6 +257,7 @@ export default function Listing() {
   
   // Modal state
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
   
   // State declarations
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -643,6 +759,44 @@ export default function Listing() {
     setGuestName('');
     setGuestContact('');
     setSpecialRequests('');
+  };
+
+  // Contact Host for Sale/Rent Listings
+  const handleContactHost = () => {
+    if (!listing?.contact && !listing?.email) {
+      alert('No contact information available for this host');
+      return;
+    }
+
+    const userName = currentUser?.name || 'Potential Buyer/Tenant';
+    const listingName = listing.name || 'Property Listing';
+    
+    // Prepare the message for sale/rent listings
+    const message = `Hello, I'm ${userName}. I'm interested in viewing your ${listingName} for ${listing.type === 'sale' ? 'purchase' : 'rental'}. Could you please provide more details or schedule a viewing?`;
+    
+    // Try WhatsApp first if contact is available
+    if (listing.contact) {
+      const phoneNumber = listing.contact.replace(/\D/g, '');
+      let whatsappNumber;
+      
+      if (phoneNumber.startsWith('27') && phoneNumber.length === 11) {
+        whatsappNumber = phoneNumber;
+      } else {
+        let num = phoneNumber;
+        if (!num.startsWith('0')) num = '0' + num;
+        if (num.length > 10) num = num.substring(num.length - 10);
+        if (num.length < 10) num = num.padEnd(10, '0');
+        whatsappNumber = num.replace(/^0/, '27');
+      }
+      
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+    } else if (listing.email || listing.userRef?.email) {
+      // Fallback to email
+      const emailTo = listing.email || listing.userRef?.email;
+      const subject = `Interest in ${listingName}`;
+      window.location.href = `mailto:${emailTo}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+    }
   };
 
   // Host rating states
@@ -1467,7 +1621,9 @@ export default function Listing() {
             text-align: center;
           }
 
-          .airbnb-whatsapp-btn {
+          .airbnb-whatsapp-btn,
+          .airbnb-contact-host-btn,
+          .airbnb-book-now-btn {
             width: 100%;
             justify-content: center;
           }
@@ -1485,7 +1641,7 @@ export default function Listing() {
           flex: 1;
         }
 
-        .airbnb-price-night {
+        .airbnb-price-unit {
           font-size: 22px;
           font-weight: 600;
           color: #222;
@@ -1520,11 +1676,55 @@ export default function Listing() {
           min-width: 200px;
         }
 
+        .airbnb-contact-host-btn {
+          background: #4285F4;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          padding: 14px 28px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: background 0.2s ease;
+          white-space: nowrap;
+          min-width: 200px;
+        }
+
+        .airbnb-book-now-btn {
+          background: #34A853;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          padding: 14px 28px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: background 0.2s ease;
+          white-space: nowrap;
+          min-width: 200px;
+        }
+
         .airbnb-whatsapp-btn:hover {
           background: #E31C5F;
         }
 
-        .airbnb-whatsapp-btn:disabled {
+        .airbnb-contact-host-btn:hover {
+          background: #3367D6;
+        }
+
+        .airbnb-book-now-btn:hover {
+          background: #2E7D32;
+        }
+
+        .airbnb-whatsapp-btn:disabled,
+        .airbnb-contact-host-btn:disabled,
+        .airbnb-book-now-btn:disabled {
           background: #cccccc;
           cursor: not-allowed;
         }
@@ -1543,6 +1743,63 @@ export default function Listing() {
             padding-top: 40px;
             padding-bottom: 120px; /* Extra space for floating bar */
           }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999;
+          padding: 20px;
+        }
+
+        .modal-content {
+          background: white;
+          border-radius: 12px;
+          padding: 24px;
+          max-width: 500px;
+          width: 100%;
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+
+        .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: #333;
+        }
+
+        .modal-header button {
+          background: none;
+          border: none;
+          font-size: 1.5rem;
+          cursor: pointer;
+          color: #666;
+        }
+
+        .form-group {
+          margin-bottom: 20px;
+        }
+
+        .form-group label {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: 500;
+          color: #333;
         }
       `}</style>
 
@@ -1642,47 +1899,86 @@ export default function Listing() {
       <div className="airbnb-info-bar">
         <div className="airbnb-info-content">
           <div className="airbnb-price-info">
-  <div className="airbnb-price-unit">
-    {listing.type === 'sale' && (
-      <>R{listing.regularPrice.toLocaleString('en-ZA')} for sale</>
-    )}
-    {listing.type === 'rent' && (
-      <>R{listing.regularPrice.toLocaleString('en-ZA')} / month</>
-    )}
-    {listing.type === 'office' && (
-      <>R{listing.regularPrice.toLocaleString('en-ZA')} / hour</>
-    )}
-    {(listing.type === 'overnight' || !listing.type) && (
-      <>R{listing.regularPrice.toLocaleString('en-ZA')} / night</>
-    )}
-  </div>
-  
-  {dateRange[0] && dateRange[1] && (listing.type === 'overnight' || !listing.type) && (
-    <div className="airbnb-price-total">
-      R{(listing.regularPrice * nights).toLocaleString('en-ZA')} for {nights} night{nights > 1 ? 's' : ''}
-    </div>
-  )}
-  
-  <div className="airbnb-listing-title">
-    {listing.bedrooms} {listing.bedrooms === 1 ? 'bedroom' : 'bedrooms'} · 
-    {listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'} · 
-    Free cancellation
-  </div>
-</div>
+            <div className="airbnb-price-unit">
+              {listing.type === 'sale' && (
+                <>R{listing.regularPrice.toLocaleString('en-ZA')} for sale</>
+              )}
+              {listing.type === 'rent' && (
+                <>R{listing.regularPrice.toLocaleString('en-ZA')} / month</>
+              )}
+              {listing.type === 'office' && (
+                <>R{listing.regularPrice.toLocaleString('en-ZA')} / hour</>
+              )}
+              {(listing.type === 'over' || !listing.type) && (
+                <>R{listing.regularPrice.toLocaleString('en-ZA')} / night</>
+              )}
+            </div>
+            
+            {dateRange[0] && dateRange[1] && (listing.type === 'over' || !listing.type) && (
+              <div className="airbnb-price-total">
+                R{(listing.regularPrice * nights).toLocaleString('en-ZA')} for {nights} night{nights > 1 ? 's' : ''}
+              </div>
+            )}
+            
+            <div className="airbnb-listing-title">
+              {listing.bedrooms} {listing.bedrooms === 1 ? 'bedroom' : 'bedrooms'} · 
+              {listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'} · 
+              Free cancellation
+            </div>
+          </div>
           
-          <button
-            className="airbnb-whatsapp-btn"
-            onClick={() => setShowBookingModal(true)}
-            disabled={!listing?.contact}
-          >
-            <FaWhatsapp className="text-lg" />
-            Reserve
-          </button>
+          {/* Conditional button based on listing type */}
+          {listing.type === 'over' || !listing.type ? (
+            // Reserve button for overnight stays
+            <button
+              className="airbnb-whatsapp-btn"
+              onClick={() => setShowBookingModal(true)}
+              disabled={!listing?.contact}
+            >
+              <FaWhatsapp className="text-lg" />
+              Reserve
+            </button>
+          ) : listing.type === 'office' ? (
+            // Book Now button for office spaces
+            <button
+              className="airbnb-book-now-btn"
+              onClick={() => {
+                if (!currentUser) {
+                  navigate('/sign-in');
+                  return;
+                }
+                // Scroll to office booking section
+                document.getElementById('office-booking-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              disabled={!listing?.contact}
+            >
+              <FaWhatsapp className="text-lg" />
+              Book Now
+            </button>
+          ) : (
+            // Contact Host button for sale/rent listings
+            <button
+              className="airbnb-contact-host-btn"
+              onClick={() => setShowContactModal(true)}
+              disabled={!listing?.contact && !listing?.email}
+            >
+              <FaPhone className="text-lg" />
+              Contact Host
+            </button>
+          )}
         </div>
       </div>
 
       {/* Booking Modal with Calendar */}
       <BookingModal />
+
+      {/* Contact Host Modal */}
+      <ContactHostModal 
+        listing={listing}
+        user={currentUser}
+        isOpen={showContactModal}
+        onClose={() => setShowContactModal(false)}
+      />
 
       {/* Main Content */}
       <main className="main-content-container">
@@ -1705,13 +2001,15 @@ export default function Listing() {
           >
             <FaArrowLeft className="text-xl" />
           </button>
-          <a
-            href={`tel:${listing?.contact || '+27123456789'}`}
-            className="bg-white text-gray-800 p-3 rounded-full shadow-lg hover:bg-gray-100 transition-colors border border-gray-200"
-            title={`Call ${listing?.contact || 'the host'}`}
-          >
-            <FaPhone className="text-xl" />
-          </a>
+          {listing?.contact && (
+            <a
+              href={`tel:${listing.contact}`}
+              className="bg-white text-gray-800 p-3 rounded-full shadow-lg hover:bg-gray-100 transition-colors border border-gray-200"
+              title={`Call ${listing.contact}`}
+            >
+              <FaPhone className="text-xl" />
+            </a>
+          )}
         </div>
 
         {/* Main Content Grid */}
@@ -2048,7 +2346,7 @@ export default function Listing() {
 
             {/* Office Booking Section */}
             {listing.type === 'office' && (
-              <section className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+              <section id="office-booking-section" className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
                 <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Availability & Booking</h2>
                 <div className="flex flex-col lg:flex-row gap-6">
                   {/* Calendar Section */}
@@ -2478,7 +2776,7 @@ export default function Listing() {
               </div>
             </section>
 
-            {/* Contact Host Section */}
+            {/* Contact Host Section (for all listing types) */}
             <section className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
               <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Contact Host</h2>
               {currentUser ? (
@@ -2671,28 +2969,34 @@ export default function Listing() {
                   <span className="text-gray-600">{commentCount} reviews</span>
                 </div>
               </div>
-              <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-semibold text-lg">Recent Reviews</h3>
-                  {commentCount > 2 && (
-                    <button
-                      onClick={() => setShowCommentsPanel(true)}
-                      className="text-blue-600 hover:underline flex items-center text-sm"
-                    >
-                      View all <FaChevronDown className="ml-1 text-xs" />
-                    </button>
-                  )}
-                </div>
-                {/* Reviews content would go here */}
-              </div>
+            
             </section>
 
-            {showCommentsPanel && (
-              <CommentsSidePanel
-                listingId={listingId}
-                onClose={() => setShowCommentsPanel(false)}
-              />
-            )}
+             {/* Comments Section */}
+                      <div className="bg-white rounded-xl shadow-sm p-6  border border-gray-200">
+                        <div className="flex items-center justify-between mb-6">
+                          <h3 className="text-lg font-semibold text-gray-900">Customer Reviews</h3>
+                          <button
+                            onClick={() => setShowCommentsPanel(true)}
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                          >
+                            View All ({commentCount})
+                          </button>
+                        </div>
+                        <Comments 
+              listingId={listingId} 
+              maxComments={2}
+              onTotalComments={setCommentCount} 
+              cardStyle={true}
+            />
+                      </div>
+
+             {showCommentsPanel && (
+        <CommentsSidePanel 
+          listingId={listingId} 
+          onClose={() => setShowCommentsPanel(false)} 
+        />
+      )}
           </div>
         </div>
       </main>
