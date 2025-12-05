@@ -47,7 +47,7 @@ import {
   FaWarehouse,
   FaChevronDown,
   FaBed,
-  FaImages,
+  FaRegHeart,
   FaThumbsUp,
   FaThumbsDown,
   FaPaperPlane,
@@ -150,7 +150,7 @@ export default function Listing() {
   const [guestContact, setGuestContact] = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
   const [listing, setListing] = useState(null);
-  const [activeThumb, setActiveThumb] = useState(null);
+
   const [mealPlan, setMealPlan] = useState('breakfast');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [startTime, setStartTime] = useState('09:00');
@@ -205,6 +205,35 @@ export default function Listing() {
     }, {}),
     userRating: null,
   });
+
+    const [isFavorite, setIsFavorite] = useState(() => {
+      try {
+        const wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+        return listing?._id ? wishlist.some(item => item?._id === listing._id) : false;
+      } catch (error) {
+        console.error('Error reading wishlist from localStorage:', error);
+        return false;
+      }
+    });
+
+   const toggleFavorite = (e) => {
+      e.preventDefault();
+      if (!listing?._id) return;
+  
+      const newFavoriteStatus = !isFavorite;
+      setIsFavorite(newFavoriteStatus);
+  
+      try {
+        const wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+        const updatedWishlist = newFavoriteStatus
+          ? [...wishlist, listing]
+          : wishlist.filter(item => item?._id !== listing._id);
+        localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+        window.dispatchEvent(new Event('storage'));
+      } catch (error) {
+        console.error('Error updating wishlist in localStorage:', error);
+      }
+    };
 
   // Advertising State
   const [advertisingState, setAdvertisingState] = useState({
@@ -1224,7 +1253,7 @@ export default function Listing() {
                 </button>
               </div>
               <p className="text-center text-sm text-gray-500 mt-3">
-                You'll be redirected to WhatsApp to complete your booking
+                Youll be redirected to WhatsApp to complete your booking
               </p>
             </div>
           </div>
@@ -1530,17 +1559,38 @@ export default function Listing() {
             </p>
           </div>
           <div className="airbnb-header-right">
-            <button className="airbnb-share-btn" title="Share">
-              <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
-                <path d="M22 20C20.8954 20 20 20.8954 20 22C20 23.1046 20.8954 24 22 24C23.1046 24 24 23.1046 24 22C24 20.8954 23.1046 20 22 20Z" fill="#222222"/>
-                <path d="M16 12C14.8954 12 14 12.8954 14 14C14 15.1046 14.8954 16 16 16C17.1046 16 18 15.1046 18 14C18 12.8954 17.1046 12 16 12Z" fill="#222222"/>
-                <path d="M10 20C8.89543 20 8 20.8954 8 22C8 23.1046 8.89543 24 10 24C11.1046 24 12 23.1046 12 22C12 20.8954 11.1046 20 10 20Z" fill="#222222"/>
-                <path d="M20.2929 10.2929L13 17.5858" stroke="#222222" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M13 12.4142L20.2929 19.7071" stroke="#222222" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
+            
+           
+            <button 
+            onClick={() => {
+              const routeMap = {
+                rent: '/for-rent',
+                sale: '/for-sale',
+                office: '/office',
+                over: '/overnight',
+                land: '/land',
+                default: '/listings'
+              };
+              navigate(routeMap[listing.type?.toLowerCase()] || routeMap.default);
+            }}
+           
+            className="airbnb-share-btn" title="Share"
+            >
+               <FaArrowLeft className="text-xl" />
+              
             </button>
-            <button className="airbnb-save-btn" title="Save">
-              <FaHeart className="text-gray-700" />
+            <button
+            onClick={toggleFavorite}
+            className="airbnb-save-btn" title="Save"
+               aria-label={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
+            >
+            
+
+               {isFavorite ? (
+                            <FaHeart className="w-5 h-5 text-rose-600" />
+                          ) : (
+                            <FaRegHeart className="w-5 h-5 text-gray-700 group-hover/favorite:text-rose-600" />
+                          )}
             </button>
           </div>
         </div>
@@ -1592,20 +1642,33 @@ export default function Listing() {
       <div className="airbnb-info-bar">
         <div className="airbnb-info-content">
           <div className="airbnb-price-info">
-            <div className="airbnb-price-night">
-              R{listing.regularPrice.toLocaleString('en-ZA')} / night
-            </div>
-            {dateRange[0] && dateRange[1] && (
-              <div className="airbnb-price-total">
-                R{(listing.regularPrice * nights).toLocaleString('en-ZA')} for {nights} night{nights > 1 ? 's' : ''}
-              </div>
-            )}
-            <div className="airbnb-listing-title">
-              {listing.bedrooms} {listing.bedrooms === 1 ? 'bedroom' : 'bedrooms'} · 
-              {listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'} · 
-              Free cancellation
-            </div>
-          </div>
+  <div className="airbnb-price-unit">
+    {listing.type === 'sale' && (
+      <>R{listing.regularPrice.toLocaleString('en-ZA')} for sale</>
+    )}
+    {listing.type === 'rent' && (
+      <>R{listing.regularPrice.toLocaleString('en-ZA')} / month</>
+    )}
+    {listing.type === 'office' && (
+      <>R{listing.regularPrice.toLocaleString('en-ZA')} / hour</>
+    )}
+    {(listing.type === 'overnight' || !listing.type) && (
+      <>R{listing.regularPrice.toLocaleString('en-ZA')} / night</>
+    )}
+  </div>
+  
+  {dateRange[0] && dateRange[1] && (listing.type === 'overnight' || !listing.type) && (
+    <div className="airbnb-price-total">
+      R{(listing.regularPrice * nights).toLocaleString('en-ZA')} for {nights} night{nights > 1 ? 's' : ''}
+    </div>
+  )}
+  
+  <div className="airbnb-listing-title">
+    {listing.bedrooms} {listing.bedrooms === 1 ? 'bedroom' : 'bedrooms'} · 
+    {listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'} · 
+    Free cancellation
+  </div>
+</div>
           
           <button
             className="airbnb-whatsapp-btn"
