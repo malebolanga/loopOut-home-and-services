@@ -10,23 +10,26 @@ import {
   FaClock, FaShieldAlt, FaDog, FaUsers,
   FaGraduationCap, FaWhatsapp,
   FaExclamationTriangle, FaCheckCircle,
-  FaRobot,  FaArrowLeft,
+  FaRobot, FaArrowLeft,
   FaBandcamp, FaCut, FaTools, FaCar, 
-  FaInfoCircle, FaMoneyBillWave,  FaTimes,
+  FaInfoCircle, FaMoneyBillWave, FaTimes,
   FaFileImage, FaFilePdf, FaUserFriends, FaBroom, FaArrowUp, FaArrowDown,
   FaCalendar, FaEnvelope, FaBriefcase, FaAward,
   FaTshirt, FaBroom as FaBroomClean, FaFire, FaBaby, FaGlassCheers, FaEllipsisH,
   FaPalette, FaSpa, FaHandSparkles, FaHandHoldingHeart, FaRing,
   FaBrush, FaSprayCan, FaSmile, FaUtensils, FaShoppingBasket, FaCookie,
   FaInstagram, FaFacebook, FaCheck, FaTimes as FaTimesCircle, FaSpinner,
-  FaLinkedin, FaTwitter, FaCamera, FaHome
+  FaLinkedin, FaTwitter, FaCamera, FaHome,
+  FaExpand, FaCompress, FaChevronLeft, FaChevronRight,
 } from 'react-icons/fa';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Zoom, Thumbs } from 'swiper/modules';
+import { Navigation, Zoom, Thumbs, Pagination, FreeMode } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/zoom';
 import 'swiper/css/thumbs';
+import 'swiper/css/pagination';
+import 'swiper/css/free-mode';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -34,6 +37,7 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/zoom';
 import 'swiper/css/thumbs';
+import 'swiper/css/free-mode';
 
 import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
@@ -53,6 +57,10 @@ export default function HelperPage() {
 
   // Full page overlay state for booking form
   const [showBookingFormOverlay, setShowBookingFormOverlay] = useState(false);
+
+  // Full screen gallery states
+  const [showFullScreenGallery, setShowFullScreenGallery] = useState(false);
+  const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
 
   // Enhanced Location States
   const [locationData, setLocationData] = useState({
@@ -1387,6 +1395,34 @@ export default function HelperPage() {
     document.body.style.overflow = 'auto';
   };
 
+  // Full screen gallery functions
+  const openFullScreenGallery = (index = 0) => {
+    setCurrentGalleryIndex(index);
+    setShowFullScreenGallery(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeFullScreenGallery = () => {
+    setShowFullScreenGallery(false);
+    document.body.style.overflow = 'auto';
+  };
+
+  const nextImage = () => {
+    if (helper.imageUrls && helper.imageUrls.length > 0) {
+      setCurrentGalleryIndex((prevIndex) => 
+        prevIndex === helper.imageUrls.length - 1 ? 0 : prevIndex + 1
+      );
+    }
+  };
+
+  const prevImage = () => {
+    if (helper.imageUrls && helper.imageUrls.length > 0) {
+      setCurrentGalleryIndex((prevIndex) => 
+        prevIndex === 0 ? helper.imageUrls.length - 1 : prevIndex - 1
+      );
+    }
+  };
+
   const whatsappNumber = helper ? formatContactForWhatsApp(helper.contact) : null;
   const whatsappLink = whatsappNumber
     ? `https://wa.me/${whatsappNumber}?text=Hi ${helper.name}, I'm interested in your ${getProfessionalTitle(helper.type).toLowerCase()} services.`
@@ -1482,6 +1518,162 @@ export default function HelperPage() {
             transform: translateY(0);
           }
         }
+        /* Full screen gallery styles */
+        .fullscreen-gallery {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.95);
+          z-index: 99999;
+          display: flex;
+          flex-direction: column;
+          animation: fadeIn 0.3s ease-out;
+        }
+        .gallery-header {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 10;
+          background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+          padding: 1rem 1.5rem;
+        }
+        .gallery-main-image {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          overflow: hidden;
+        }
+        .gallery-main-image img {
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+          transition: transform 0.3s ease;
+        }
+        .gallery-thumbnails {
+          padding: 1rem;
+          background: rgba(0,0,0,0.8);
+          border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .gallery-navigation {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 100%;
+          display: flex;
+          justify-content: space-between;
+          padding: 0 1.5rem;
+          z-index: 5;
+        }
+        .gallery-navigation button {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.2);
+          border: none;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          backdrop-filter: blur(10px);
+        }
+        .gallery-navigation button:hover {
+          background: rgba(255,255,255,0.3);
+          transform: scale(1.1);
+        }
+        .gallery-counter {
+          position: absolute;
+          bottom: 1rem;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(0,0,0,0.7);
+          color: white;
+          padding: 0.5rem 1rem;
+          border-radius: 20px;
+          font-size: 0.875rem;
+          backdrop-filter: blur(10px);
+        }
+        .image-grid-container {
+          position: relative;
+          border-radius: 1rem;
+          overflow: hidden;
+        }
+        .image-grid-main {
+          aspect-ratio: 16/9;
+          background: #f3f4f6;
+        }
+        .image-grid-main img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.3s ease;
+        }
+        .image-grid-main:hover img {
+          transform: scale(1.05);
+        }
+        .image-grid-overlay {
+          position: absolute;
+          bottom: 1rem;
+          right: 1rem;
+          background: rgba(0,0,0,0.7);
+          color: white;
+          padding: 0.5rem 1rem;
+          border-radius: 20px;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
+          backdrop-filter: blur(10px);
+          transition: all 0.3s ease;
+        }
+        .image-grid-overlay:hover {
+          background: rgba(0,0,0,0.9);
+          transform: translateY(-2px);
+        }
+        .thumbnail-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 0.5rem;
+          margin-top: 0.5rem;
+        }
+        .thumbnail-item {
+          aspect-ratio: 1;
+          border-radius: 0.5rem;
+          overflow: hidden;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          position: relative;
+        }
+        .thumbnail-item:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .thumbnail-item img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .thumbnail-overlay {
+          position: absolute;
+          inset: 0;
+          background: rgba(0,0,0,0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        .thumbnail-item:hover .thumbnail-overlay {
+          opacity: 1;
+        }
       `}</style>
 
       {/* Navigation Button */}
@@ -1499,6 +1691,85 @@ export default function HelperPage() {
           <FaArrowLeft className="text-lg" />
         </button>
       </div>
+
+      {/* Full Screen Gallery Overlay */}
+      {showFullScreenGallery && helper.imageUrls && helper.imageUrls.length > 0 && (
+        <div className="fullscreen-gallery">
+          {/* Header with close button */}
+          <div className="gallery-header">
+            <div className="flex justify-between items-center">
+              <button
+                onClick={closeFullScreenGallery}
+                className="bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-sm transition-all"
+              >
+                <FaTimes className="text-xl" />
+              </button>
+              <div className="text-white">
+                {currentGalleryIndex + 1} / {helper.imageUrls.length}
+              </div>
+            </div>
+          </div>
+
+          {/* Main Image */}
+          <div className="gallery-main-image">
+            <img
+              src={helper.imageUrls[currentGalleryIndex]}
+              alt={`Gallery image ${currentGalleryIndex + 1}`}
+              onError={(e) => {
+                e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found';
+              }}
+            />
+            
+            {/* Navigation Arrows */}
+            <div className="gallery-navigation">
+              <button onClick={prevImage} aria-label="Previous image">
+                <FaChevronLeft className="text-xl" />
+              </button>
+              <button onClick={nextImage} aria-label="Next image">
+                <FaChevronRight className="text-xl" />
+              </button>
+            </div>
+
+            {/* Counter */}
+            <div className="gallery-counter">
+              {currentGalleryIndex + 1} / {helper.imageUrls.length}
+            </div>
+          </div>
+
+          {/* Thumbnails */}
+          {helper.imageUrls.length > 1 && (
+            <div className="gallery-thumbnails">
+              <Swiper
+                modules={[FreeMode]}
+                spaceBetween={8}
+                slidesPerView="auto"
+                freeMode={true}
+                className="thumbs-swiper"
+              >
+                {helper.imageUrls.map((url, index) => (
+                  <SwiperSlide key={index} style={{ width: '80px' }}>
+                    <div
+                      className={`thumbnail-item ${index === currentGalleryIndex ? 'ring-2 ring-white' : ''}`}
+                      onClick={() => setCurrentGalleryIndex(index)}
+                    >
+                      <img
+                        src={url}
+                        alt={`Thumbnail ${index + 1}`}
+                        onError={(e) => {
+                          e.target.src = 'https://via.placeholder.com/100x100?text=Thumb';
+                        }}
+                      />
+                      {index === currentGalleryIndex && (
+                        <div className="absolute inset-0 border-2 border-white rounded-lg"></div>
+                      )}
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Full Page Booking Form Overlay */}
       {showBookingFormOverlay && (
@@ -2395,63 +2666,64 @@ export default function HelperPage() {
             </div>
           </div>
 
-          {/* Image Gallery */}
+          {/* Image Gallery - Airbnb Style */}
           {helper.imageUrls && helper.imageUrls.length > 0 && (
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Gallery</h3>
-                <p className="text-gray-600 text-sm">View {getProfessionalTitle(helper.type).toLowerCase()} s work and environment</p>
-              </div>
-              
-              <div className="space-y-4">
-                {/* Main Swiper - Fixed Configuration */}
-                <Swiper
-                  modules={[Navigation, Zoom, Thumbs]}
-                  navigation={true}
-                  zoom={true}
-                  thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
-                  className="rounded-lg overflow-hidden"
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="image-grid-container">
+                {/* Main Image */}
+                <div 
+                  className="image-grid-main cursor-pointer relative"
+                  onClick={() => openFullScreenGallery(0)}
                 >
-                  {helper.imageUrls.map((url, index) => (
-                    <SwiperSlide key={index}>
-                      <div className="swiper-zoom-container">
-                        <img
-                          src={url}
-                          alt={`${helper.name} - Image ${index + 1}`}
-                          className="w-full h-64 sm:h-80 md:h-96 object-cover"
-                          onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found';
-                          }}
-                        />
-                      </div>
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
+                  <img
+                    src={helper.imageUrls[0]}
+                    alt={`${helper.name} - Main image`}
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found';
+                    }}
+                  />
+                  
+                  {/* Show all photos button */}
+                  {helper.imageUrls.length > 1 && (
+                    <div 
+                      className="image-grid-overlay"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openFullScreenGallery(0);
+                      }}
+                    >
+                      <FaExpand className="text-sm" />
+                      <span className="text-sm font-medium">Show all photos</span>
+                    </div>
+                  )}
+                </div>
 
-                {/* Thumbnail Swiper - Fixed Configuration */}
+                {/* Thumbnail Grid - Only show if more than 1 image */}
                 {helper.imageUrls.length > 1 && (
-                  <Swiper
-                    modules={[Thumbs]}
-                    watchSlidesProgress={true}
-                    onSwiper={setThumbsSwiper}
-                    spaceBetween={8}
-                    slidesPerView={4}
-                    freeMode={true}
-                    className="thumbs-swiper mt-4"
-                  >
-                    {helper.imageUrls.map((url, index) => (
-                      <SwiperSlide key={index}>
-                        <img
-                          src={url}
-                          alt={`Thumbnail ${index + 1}`}
-                          className="w-full h-16 object-cover rounded cursor-pointer border-2 border-transparent hover:border-blue-500 transition-colors"
-                          onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/100x75?text=Image+Not+Found';
-                          }}
-                        />
-                      </SwiperSlide>
-                    ))}
-                  </Swiper>
+                  <div className="p-4">
+                    <div className="thumbnail-grid">
+                      {helper.imageUrls.slice(1, 5).map((url, index) => (
+                        <div
+                          key={index + 1}
+                          className="thumbnail-item"
+                          onClick={() => openFullScreenGallery(index + 1)}
+                        >
+                          <img
+                            src={url}
+                            alt={`${helper.name} - Image ${index + 2}`}
+                            onError={(e) => {
+                              e.target.src = 'https://via.placeholder.com/200x200?text=Thumbnail';
+                            }}
+                          />
+                          {index === 3 && helper.imageUrls.length > 5 && (
+                            <div className="thumbnail-overlay">
+                              +{helper.imageUrls.length - 5} more
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -3575,33 +3847,30 @@ export default function HelperPage() {
                   </div>
                 )}
               </div>
-            
-
-
- {/* Comments Section */}
-          <div className="bg-white rounded-xl shadow-sm p-6  border border-gray-200">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Customer Reviews</h3>
-              <button
-                onClick={() => setShowCommentsPanel(true)}
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-              >
-                View All ({commentCount})
-              </button>
             </div>
-            <HelperComments 
-              helperId={helper._id} 
-              onCommentCountChange={setCommentCount}
-              onAnalyzeComments={analyzeCommentsWithAI}
-              commentAnalysis={commentAnalysis}
-              analyzingComments={analyzingComments}
-            />
-          </div>
-</div>
+
+            {/* Comments Section */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 mt-8">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Customer Reviews</h3>
+                <button
+                  onClick={() => setShowCommentsPanel(true)}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                >
+                  View All ({commentCount})
+                </button>
+              </div>
+              <HelperComments 
+                helperId={helper._id} 
+                onCommentCountChange={setCommentCount}
+                onAnalyzeComments={analyzeCommentsWithAI}
+                commentAnalysis={commentAnalysis}
+                analyzingComments={analyzingComments}
+              />
+            </div>
 
             {/* Quick Contact Actions */}
             <div className="mt-6 pt-6 border-t border-gray-200">
-             
               <div className="flex flex-wrap gap-3">
                 {helper.contact && (
                   <a
@@ -3633,12 +3902,8 @@ export default function HelperPage() {
               </div>
             </div>
           </section>
-
-         
         </div>
-
-        {/* Right Column - Booking Card */}
-    </div>
+      </div>
 
       {/* Bottom Booking Belt */}
       <div className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 transition-transform duration-300 ${
@@ -3674,26 +3939,25 @@ export default function HelperPage() {
             </div>
 
             {/* Action Buttons */}
-        <div className="flex items-center gap-3 flex-shrink-0">
-  {/* WhatsApp Form Button */}
-  <button
-    onClick={openBookingFormOverlay}
-    className="flex items-center gap-2 px-4 py-2 text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
-  >
-    <FaWhatsapp className="text-lg" />
-    <span className="font-semibold">WhatsApp</span>
-  </button>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {/* WhatsApp Form Button */}
+              <button
+                onClick={openBookingFormOverlay}
+                className="flex items-center gap-2 px-4 py-2 text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
+              >
+                <FaWhatsapp className="text-lg" />
+                <span className="font-semibold">WhatsApp</span>
+              </button>
 
-  {/* Info Button with Link */}
-  <Link to="/safetyhelper" className="flex-shrink-0">
-    <button
-      className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-md hover:shadow-lg"
-    >
-      <FaInfoCircle className="text-lg" />
-     
-    </button>
-  </Link>
-</div>
+              {/* Info Button with Link */}
+              <Link to="/safetyhelper" className="flex-shrink-0">
+                <button
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-md hover:shadow-lg"
+                >
+                  <FaInfoCircle className="text-lg" />
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
