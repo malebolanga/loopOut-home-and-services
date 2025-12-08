@@ -52,7 +52,7 @@ const SEARCH_TYPES = [
   },
   { 
     id: 'helpers', 
-    label: 'Services', 
+    label: 'Helpers', 
     icon: UserGroupIcon,
     description: 'Tutors, caregivers, handymen, etc.',
     color: 'bg-purple-100 text-purple-800',
