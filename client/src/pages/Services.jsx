@@ -1,4 +1,4 @@
-// Services.jsx - Completely Matches HelperPage Format
+// Services.jsx - Completely Matches HelperPage Format with Airbnb-Style Image Gallery
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -10,8 +10,9 @@ import {
   FaBroom, FaRobot, FaBriefcase, FaTshirt, FaGlassCheers, FaGraduationCap,
   FaPalette, FaRing, FaBrush, FaCookie, FaCheckCircle, FaTimes, FaFileImage, 
   FaFilePdf, FaSpinner, FaInstagram, FaFacebook, FaLinkedin, FaTwitter, 
-  FaInfoCircle, FaDog,  FaTimes as FaTimesCircle, FaGlassCheers as FaGlassCheersIcon, FaBaby as FaBabyIcon,
-  FaTshirt as FaTshirtIcon, FaBroom as FaBroomIcon,  FaPalette as FaPaletteIcon
+  FaInfoCircle, FaDog, FaTimes as FaTimesCircle, FaGlassCheers as FaGlassCheersIcon, FaBaby as FaBabyIcon,
+  FaTshirt as FaTshirtIcon, FaBroom as FaBroomIcon, FaPalette as FaPaletteIcon,
+  FaChevronLeft, FaChevronRight
 } from 'react-icons/fa';
 import CommentsSidePanelService from '../components/CommentsSidePanelService';
 import Comment from '../components/Comment';
@@ -36,6 +37,7 @@ const ServicePage = () => {
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [showBookingBelt, setShowBookingBelt] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(1);
 
   // Enhanced Location States
   const [locationData, setLocationData] = useState({
@@ -938,6 +940,108 @@ const ServicePage = () => {
       <style jsx>{`
         footer { display: none !important; }
         .service-page { overflow-x: hidden; }
+        
+        /* Airbnb Style Swiper Customizations - 100% Full Width */
+        .airbnb-swiper .swiper-button-next,
+        .airbnb-swiper .swiper-button-prev {
+          background: white;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+          opacity: 0.9;
+          transition: opacity 0.3s ease, transform 0.2s ease;
+          margin-top: -20px;
+        }
+        
+        .airbnb-swiper .swiper-button-next:hover,
+        .airbnb-swiper .swiper-button-prev:hover {
+          opacity: 1;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          transform: scale(1.05);
+        }
+        
+        .airbnb-swiper .swiper-button-next:after,
+        .airbnb-swiper .swiper-button-prev:after {
+          font-size: 16px;
+          font-weight: bold;
+          color: #222;
+        }
+        
+        .airbnb-swiper .swiper-button-next {
+          right: 24px;
+        }
+        
+        .airbnb-swiper .swiper-button-prev {
+          left: 24px;
+        }
+        
+        .thumbnail-swiper .swiper-slide {
+          opacity: 0.6;
+          transition: opacity 0.3s ease;
+        }
+        
+        .thumbnail-swiper .swiper-slide-thumb-active {
+          opacity: 1;
+          border-color: #3b82f6 !important;
+        }
+        
+        .airbnb-image-container {
+          width: 100vw;
+          position: relative;
+          left: 50%;
+          right: 50%;
+          margin-left: -50vw;
+          margin-right: -50vw;
+          margin-bottom: 16px;
+        }
+        
+        @media (max-width: 768px) {
+          .airbnb-swiper .swiper-button-next,
+          .airbnb-swiper .swiper-button-prev {
+            width: 32px;
+            height: 32px;
+            margin-top: -16px;
+          }
+          
+          .airbnb-swiper .swiper-button-next:after,
+          .airbnb-swiper .swiper-button-prev:after {
+            font-size: 14px;
+          }
+          
+          .airbnb-swiper .swiper-button-next {
+            right: 16px;
+          }
+          
+          .airbnb-swiper .swiper-button-prev {
+            left: 16px;
+          }
+        }
+        
+        @media (max-width: 640px) {
+          .airbnb-swiper .swiper-button-next,
+          .airbnb-swiper .swiper-button-prev {
+            display: none !important;
+          }
+        }
+        
+        /* Full width image styling */
+        .full-width-swiper .swiper-slide {
+          width: 100% !important;
+          height: 100% !important;
+        }
+        
+        .full-width-swiper .swiper-slide img {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover;
+          display: block;
+        }
+        
+        .swiper-zoom-container {
+          width: 100% !important;
+          height: 100% !important;
+        }
       `}</style>
 
       {/* Navigation Button - Same as HelperPage */}
@@ -1177,32 +1281,41 @@ const ServicePage = () => {
             </div>
           </div>
 
-          {/* Image Gallery - Exact same as HelperPage */}
+          {/* Image Gallery - Airbnb Style 100% Full Width - NO SPACING */}
           {service.imageUrls && service.imageUrls.length > 0 && (
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Gallery</h3>
-                <p className="text-gray-600 text-sm">View {getProfessionalTitle(service.type).toLowerCase()} s work and environment</p>
-              </div>
-              
-              <div className="space-y-4">
-                {/* Main Swiper - Fixed Configuration */}
+            <div className="airbnb-image-container">
+              <div className="relative w-full h-[60vh] min-h-[400px] max-h-[600px] overflow-hidden">
                 <Swiper
                   modules={[Navigation, Zoom, Thumbs]}
-                  navigation={true}
-                  zoom={true}
+                  navigation={{
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                  }}
+                  zoom={{
+                    maxRatio: 3,
+                    minRatio: 1,
+                  }}
                   thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
-                  className="rounded-lg overflow-hidden"
+                  className="w-full h-full full-width-swiper"
+                  onSlideChange={(swiper) => {
+                    setCurrentImageIndex(swiper.activeIndex + 1);
+                  }}
+                  grabCursor={true}
+                  touchRatio={0.5}
+                  touchAngle={45}
+                  slidesPerView={1}
+                  spaceBetween={0}
+                  loop={service.imageUrls.length > 1}
                 >
                   {service.imageUrls.map((url, index) => (
-                    <SwiperSlide key={index}>
-                      <div className="swiper-zoom-container">
+                    <SwiperSlide key={index} className="relative">
+                      <div className="swiper-zoom-container w-full h-full">
                         <img
                           src={url}
                           alt={`${service.name} - Image ${index + 1}`}
-                          className="w-full h-64 sm:h-80 md:h-96 object-cover"
+                          className="w-full h-full object-cover cursor-zoom-in"
                           onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found';
+                            e.target.src = 'https://via.placeholder.com/1200x800?text=Image+Not+Found';
                           }}
                         />
                       </div>
@@ -1210,32 +1323,64 @@ const ServicePage = () => {
                   ))}
                 </Swiper>
 
-                {/* Thumbnail Swiper - Fixed Configuration */}
-                {service.imageUrls.length > 1 && (
+                {/* Custom Navigation Buttons - Airbnb Style */}
+                <div className="swiper-button-next !w-10 !h-10 md:!w-12 md:!h-12 !bg-white !rounded-full !shadow-lg !text-gray-700 hover:!bg-gray-50 hover:!shadow-xl transition-all duration-200">
+                  <FaChevronRight />
+                </div>
+                <div className="swiper-button-prev !w-10 !h-10 md:!w-12 md:!h-12 !bg-white !rounded-full !shadow-lg !text-gray-700 hover:!bg-gray-50 hover:!shadow-xl transition-all duration-200">
+                  <FaChevronLeft />
+                </div>
+                
+                {/* Image Counter - Like Airbnb */}
+                <div className="absolute bottom-6 right-6 bg-black/70 text-white px-4 py-2 rounded-full text-sm font-medium z-10">
+                  <span className="font-semibold">{currentImageIndex}</span>
+                  <span className="mx-2">/</span>
+                  <span>{service.imageUrls.length}</span>
+                </div>
+              </div>
+
+              {/* Thumbnail Grid - Airbnb Style Grid (Only show if multiple images) */}
+              {service.imageUrls.length > 1 && (
+                <div className="mt-4 px-4">
                   <Swiper
                     modules={[Thumbs]}
                     watchSlidesProgress={true}
                     onSwiper={setThumbsSwiper}
                     spaceBetween={8}
-                    slidesPerView={4}
+                    slidesPerView={service.imageUrls.length >= 5 ? 5 : service.imageUrls.length}
                     freeMode={true}
-                    className="thumbs-swiper mt-4"
+                    className="thumbnail-swiper"
+                    breakpoints={{
+                      320: {
+                        slidesPerView: 3,
+                      },
+                      640: {
+                        slidesPerView: service.imageUrls.length >= 4 ? 4 : service.imageUrls.length,
+                      },
+                      1024: {
+                        slidesPerView: service.imageUrls.length >= 5 ? 5 : service.imageUrls.length,
+                      },
+                    }}
                   >
                     {service.imageUrls.map((url, index) => (
                       <SwiperSlide key={index}>
-                        <img
-                          src={url}
-                          alt={`Thumbnail ${index + 1}`}
-                          className="w-full h-16 object-cover rounded cursor-pointer border-2 border-transparent hover:border-blue-500 transition-colors"
-                          onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/100x75?text=Image+Not+Found';
-                          }}
-                        />
+                        <div className="relative pb-[75%] overflow-hidden rounded-lg cursor-pointer group">
+                          <img
+                            src={url}
+                            alt={`Thumbnail ${index + 1}`}
+                            className="absolute inset-0 w-full h-full object-cover rounded-lg border-2 border-transparent group-hover:border-blue-500 transition-all duration-200"
+                            onError={(e) => {
+                              e.target.src = 'https://via.placeholder.com/200x150?text=Image+Not+Found';
+                            }}
+                          />
+                          {/* Overlay effect on hover */}
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200"></div>
+                        </div>
                       </SwiperSlide>
                     ))}
                   </Swiper>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
 
