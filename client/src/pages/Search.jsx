@@ -3,37 +3,68 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, Transition } from '@headlessui/react';
 import {
   HomeIcon,
-  CurrencyDollarIcon,
-  TagIcon,
-  BuildingOfficeIcon,
   MapIcon,
-  UserGroupIcon,
   ChevronDownIcon,
   XMarkIcon,
-  ClockIcon,
-  LightBulbIcon,
   AdjustmentsHorizontalIcon,
-  UserIcon,
-  CalendarIcon,
-  WrenchIcon,
-  MapPinIcon,
   MagnifyingGlassIcon,
   HeartIcon,
   StarIcon,
-  ArrowsPointingOutIcon,
-  SparklesIcon,
   FunnelIcon,
-  CheckIcon,
-  ArrowsRightLeftIcon
+  BuildingOfficeIcon,
+  WrenchScrewdriverIcon,
+  SparklesIcon,
+  CalendarDaysIcon,
+  UserGroupIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
-import {
-  HeartIcon as HeartIconSolid,
-  StarIcon as StarIconSolid
-} from '@heroicons/react/24/solid';
+import "../styles/ListingDetails.scss";
+import ListingItem from "../components/ListingItem";
+import ServiceItem from "../components/ServiceItem";
+import HelperItem from "../components/HelperItem";
 
-const RECENT_SEARCHES_KEY = 'recentPropertySearches';
+
+
+const RECENT_SEARCHES_KEY = 'recentSearches';
 const MAX_RECENT_SEARCHES = 5;
 const DEFAULT_LISTING_LIMIT = 12;
+
+// Search types configuration
+const SEARCH_TYPES = [
+  { 
+    id: 'properties', 
+    label: 'Properties', 
+    icon: HomeIcon,
+    description: 'Homes, apartments, offices, land',
+    color: 'bg-blue-100 text-blue-800',
+    endpoint: '/api/listing/get'
+  },
+  { 
+    id: 'services', 
+    label: 'Services', 
+    icon: SparklesIcon,
+    description: 'Cleaning, maintenance, moving, etc.',
+    color: 'bg-green-100 text-green-800',
+    endpoint: '/api/service/get'
+  },
+  { 
+    id: 'helpers', 
+    label: 'Helpers', 
+    icon: UserGroupIcon,
+    description: 'Tutors, caregivers, handymen, etc.',
+    color: 'bg-purple-100 text-purple-800',
+    endpoint: '/api/helper/get'
+  },
+  { 
+    id: 'events', 
+    label: 'Events', 
+    icon: CalendarDaysIcon,
+    description: 'Local events and activities',
+    color: 'bg-amber-100 text-amber-800',
+    endpoint: '/api/event/get'
+  }
+];
 
 // Helper functions for property types
 const getPropertyTypeName = (type) => {
@@ -52,8 +83,9 @@ const getPriceLabel = (type) => {
     case 'sale':
       return 'for sale';
     case 'rent-short':
-    case 'rent-long':
       return 'night';
+    case 'rent-long':
+      return 'month';
     case 'office':
       return 'per hour';
     case 'land':
@@ -96,83 +128,70 @@ const SkeletonCard = () => (
   </div>
 );
 
-// Airbnb-style Listing Card Component
-const AirbnbCard = ({ listing }) => {
-  const navigate = useNavigate();
-  const typeBadge = getTypeBadge(listing.type);
-  const priceLabel = getPriceLabel(listing.type);
-
-  const handleClick = () => {
-    navigate(`/listing/${listing._id}`);
-  };
-
-  return (
-    <div 
-      className="cursor-pointer p-2"
-      onClick={handleClick}
-    >
-      <div className="relative overflow-hidden rounded-2xl mb-3">
-        <img
-          src={listing.imageUrls?.[0] || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
-          alt={listing.name}
-          className="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-        />
-        <button 
-          className="absolute top-3 right-3 p-2 bg-white/90 rounded-full hover:bg-white transition-all duration-300 hover:scale-110"
-          onClick={(e) => {
-            e.stopPropagation();
-            // Handle favorite
-          }}
-        >
-          <HeartIcon className="w-5 h-5" />
-        </button>
-        <div className="absolute top-3 left-3">
-          <span className={`text-xs font-medium px-2 py-1 rounded ${typeBadge.color}`}>
-            {typeBadge.label}
-          </span>
-        </div>
-      </div>
-      
-      <div className="space-y-1">
-        <div className="flex justify-between items-start">
-          <h3 className="font-medium text-gray-900 truncate">{listing.name || listing.title}</h3>
-          <div className="flex items-center gap-1">
-            <StarIcon className="w-4 h-4" />
-            <span className="text-sm font-medium">{listing.rating || 4.9}</span>
+// Item Card Wrapper Component
+const ItemCard = ({ item, searchType }) => {
+  switch (searchType) {
+    case 'properties':
+      return <ListingItem listing={item} />;
+    case 'services':
+      return <ServiceItem service={item} />;
+    case 'helpers':
+      return <HelperItem helper={item} />;
+    default:
+      // Generic card for events or other types
+      return (
+        <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+          <div className="aspect-[4/3] bg-gray-100 relative">
+            <img
+              src={item.imageUrls?.[0] || 'https://images.unsplash.com/photo-1511578314322-379afb476865?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+              alt={item.name}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute top-3 left-3">
+              <span className={`text-xs font-medium px-2 py-1 rounded ${SEARCH_TYPES.find(t => t.id === searchType)?.color || 'bg-gray-100 text-gray-800'}`}>
+                {SEARCH_TYPES.find(t => t.id === searchType)?.label}
+              </span>
+            </div>
+          </div>
+          <div className="p-4">
+            <h3 className="font-medium text-gray-900 truncate mb-2">{item.name || item.title}</h3>
+            <p className="text-sm text-gray-600 truncate mb-3">{item.description || item.location}</p>
+            <div className="flex justify-between items-center">
+              <div className="text-sm font-medium text-gray-900">
+                {item.price ? `R${item.price}` : 'Free'}
+              </div>
+              {item.date && (
+                <div className="text-xs text-gray-500">{new Date(item.date).toLocaleDateString()}</div>
+              )}
+            </div>
           </div>
         </div>
-        
-        <p className="text-sm text-gray-500 truncate">{listing.description || listing.location}</p>
-        
-        {listing.type !== 'land' && (
-          <div className="flex items-center gap-1 text-sm text-gray-500">
-            <span>{listing.bedrooms || 2} beds</span>
-            <span>·</span>
-            <span>{listing.bathrooms || 1} baths</span>
-          </div>
-        )}
-        
-        <div className="flex items-center justify-between pt-2">
-          <div>
-            <span className="font-bold text-gray-900">R{listing.price || listing.regularPrice || 8698}</span>
-            <span className="text-gray-500"> {priceLabel}</span>
-          </div>
-          {listing.offer && (
-            <span className="text-xs font-medium bg-rose-100 text-rose-800 px-2 py-1 rounded transition-all duration-300 hover:scale-105">Instant Book</span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+      );
+  }
 };
 
 // Map Component for showing listings
-const MapView = ({ listings, address = 'Johannesburg' }) => {
+const MapView = ({ items, searchType, address = 'Polokwane' }) => {
   const mapRef = useRef(null);
 
   // Static map image for demonstration
   const getStaticMapUrl = () => {
     return `https://images.unsplash.com/photo-1511895426328-dc8714191300?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80`;
+  };
+
+  const getTypeColor = (type) => {
+    switch(searchType) {
+      case 'properties':
+        return getTypeBadge(type).color;
+      case 'services':
+        return 'bg-blue-500';
+      case 'helpers':
+        return 'bg-purple-500';
+      case 'events':
+        return 'bg-amber-500';
+      default:
+        return 'bg-gray-500';
+    }
   };
 
   return (
@@ -185,11 +204,11 @@ const MapView = ({ listings, address = 'Johannesburg' }) => {
       
       {/* Map markers overlay */}
       <div className="absolute inset-0">
-        {listings.slice(0, 10).map((listing, index) => {
-          const typeBadge = getTypeBadge(listing.type);
+        {items.slice(0, 10).map((item, index) => {
+          const typeColor = getTypeColor(item.type);
           return (
             <div 
-              key={listing._id}
+              key={item._id}
               className="absolute transform -translate-x-1/2 -translate-y-1/2"
               style={{
                 left: `${30 + (index % 5) * 15}%`,
@@ -198,13 +217,15 @@ const MapView = ({ listings, address = 'Johannesburg' }) => {
             >
               <div className="relative">
                 <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-125 transition-transform duration-300 cursor-pointer group">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${typeBadge.color.replace('text-', 'bg-').split(' ')[0]}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${typeColor}`}>
                     <span className="text-xs font-bold text-white">{index + 1}</span>
                   </div>
                 </div>
                 <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-white px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-                  <div className="text-xs font-medium">R{listing.price || listing.regularPrice}</div>
-                  <div className="text-xs text-gray-500">{getPriceLabel(listing.type)}</div>
+                  <div className="text-xs font-medium">R{item.price || item.regularPrice}</div>
+                  <div className="text-xs text-gray-500">
+                    {searchType === 'properties' ? getPriceLabel(item.type) : searchType === 'services' ? '/service' : '/work'}
+                  </div>
                 </div>
               </div>
             </div>
@@ -216,7 +237,7 @@ const MapView = ({ listings, address = 'Johannesburg' }) => {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-bold text-gray-900">{address}</h3>
-            <p className="text-sm text-gray-600">{listings.length} properties available</p>
+            <p className="text-sm text-gray-600">{items.length} {SEARCH_TYPES.find(t => t.id === searchType)?.label?.toLowerCase()} available</p>
           </div>
           <button className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
             Show all on map
@@ -227,21 +248,131 @@ const MapView = ({ listings, address = 'Johannesburg' }) => {
   );
 };
 
-const Search = () => {
+// Airbnb-style Sliding Tabs Component
+const SlidingTabs = ({ tabs, activeTab, onTabClick }) => {
+  const containerRef = useRef(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+  const [scrollPosition, setScrollPosition] = useState(0);
+
+  const checkArrows = () => {
+    if (containerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = containerRef.current;
+      setShowLeftArrow(scrollLeft > 0);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    checkArrows();
+    window.addEventListener('resize', checkArrows);
+    return () => window.removeEventListener('resize', checkArrows);
+  }, []);
+
+  const scrollLeft = () => {
+    if (containerRef.current) {
+      containerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+      setTimeout(checkArrows, 300);
+    }
+  };
+
+  const scrollRight = () => {
+    if (containerRef.current) {
+      containerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+      setTimeout(checkArrows, 300);
+    }
+  };
+
+  const handleScroll = () => {
+    if (containerRef.current) {
+      setScrollPosition(containerRef.current.scrollLeft);
+      checkArrows();
+    }
+  };
+
+  return (
+    <div className="relative mb-6">
+      {/* Left Arrow */}
+      {showLeftArrow && (
+        <button
+          onClick={scrollLeft}
+          className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-1.5 hover:shadow-lg transition-shadow"
+        >
+          <ChevronLeftIcon className="w-4 h-4 text-gray-600" />
+        </button>
+      )}
+
+      {/* Right Arrow */}
+      {showRightArrow && (
+        <button
+          onClick={scrollRight}
+          className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-1.5 hover:shadow-lg transition-shadow"
+        >
+          <ChevronRightIcon className="w-4 h-4 text-gray-600" />
+        </button>
+      )}
+
+      {/* Tabs Container */}
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="flex gap-2 overflow-x-auto scrollbar-hide py-1 px-1 scroll-smooth"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        <style jsx>{`
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+        
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabClick(tab.id)}
+              className={`flex-shrink-0 flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                activeTab === tab.id
+                  ? 'bg-gray-900 text-white shadow-sm'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400 hover:shadow-sm'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const UniversalSearch = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const getInitialSearchType = () => {
     const urlParams = new URLSearchParams(location.search);
     const typeFromUrl = urlParams.get('searchType');
-    return ['properties', 'services', 'helpers', 'events'].includes(typeFromUrl) 
+    return SEARCH_TYPES.map(t => t.id).includes(typeFromUrl) 
       ? typeFromUrl 
       : 'properties';
   };
 
   const [searchType, setSearchType] = useState(getInitialSearchType());
   const [sidebarData, setSidebarData] = useState({
+    // Common fields
     searchTerm: '',
+    address: '',
+    name: '',
+    description: '',
+    location: '',
+    priceMin: 0,
+    priceMax: 100000000,
+    sort: 'createdAt',
+    order: 'desc',
+    
+    // Property specific fields
     type: 'all',
     parking: false,
     furnished: false,
@@ -249,12 +380,8 @@ const Search = () => {
     pool: false,
     tv: false,
     offer: false,
-    sort: 'createdAt',
-    order: 'desc',
     bedroomsMin: '',
     bedroomsMax: '',
-    priceMin: 0,
-    priceMax: 100000000,
     breakfast: false,
     pets: false,
     security: false,
@@ -263,26 +390,29 @@ const Search = () => {
     view: false,
     kitchen: false,
     laundry: false,
-    address: 'Johannesburg',
-    name: '',
-    description: '',
+    
+    // Service specific fields
     category: 'all',
-    location: '',
+    serviceType: 'all',
+    
+    // Helper specific fields
+    helperType: 'all',
+    availability: 'all',
+    
+    // Event specific fields
     date: '',
-    availability: 'all'
+    eventType: 'all'
   });
 
   const [loading, setLoading] = useState(false);
-  const [listings, setListings] = useState([]);
+  const [items, setItems] = useState([]);
   const [showMore, setShowMore] = useState(false);
   const [recentSearches, setRecentSearches] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState(['all']);
   const [isMobile, setIsMobile] = useState(false);
   const [showMap, setShowMap] = useState(false);
-  const [activeFilterTab, setActiveFilterTab] = useState('recommended');
 
-  // Property types based on your requirements
+  // Property types
   const propertyTypes = [
     { id: 'all', label: 'Any type', icon: '🏠', description: 'All properties' },
     { id: 'sale', label: 'For Sale', icon: '💰', description: 'Buy property' },
@@ -292,28 +422,50 @@ const Search = () => {
     { id: 'land', label: 'Land', icon: '🌳', description: 'For sale' }
   ];
 
-  // Airbnb-style filter categories
-  const filterCategories = [
-    {
-      id: 'recommended',
-      title: 'Recommended for you',
-      filters: [
-        { id: 'parking', label: 'Free parking', icon: '🅿️' },
-        { id: 'offer', label: 'Instant Book', icon: '⚡' },
-        { id: 'wifi', label: 'Wifi', icon: '📶' }
-      ]
-    },
-    {
-      id: 'type',
-      title: 'Type of place',
-      items: propertyTypes
-    },
-    {
-      id: 'price',
-      title: 'Price range',
-      description: 'Trip price, includes all fees'
-    }
+  // Service types
+  const serviceTypes = [
+    { id: 'all', label: 'All Services', icon: '✨', description: 'All service types' },
+    { id: 'cleaning', label: 'Cleaning', icon: '🧹', description: 'Home & office cleaning' },
+    { id: 'maintenance', label: 'Maintenance', icon: '🔧', description: 'Repairs & fixes' },
+    { id: 'moving', label: 'Moving', icon: '🚚', description: 'Moving services' },
+    { id: 'landscaping', label: 'Landscaping', icon: '🌿', description: 'Garden & lawn care' },
+    { id: 'catering', label: 'Catering', icon: '🍽️', description: 'Food & catering' },
+    { id: 'daycare', label: 'DayCare', icon: '👶', description: 'Child care services' },
+    { id: 'schoolTransport', label: 'School Transport', icon: '🚌', description: 'School transport' }
   ];
+
+  // Helper types
+  const helperTypes = [
+    { id: 'all', label: 'All Helpers', icon: '👥', description: 'All helper types' },
+    { id: 'tutor', label: 'Tutor', icon: '📚', description: 'Academic tutoring' },
+    { id: 'caregiver', label: 'Caregiver', icon: '👵', description: 'Elderly & child care' },
+    { id: 'handyman', label: 'Handyman', icon: '🛠️', description: 'Home repairs' },
+    { id: 'cleaner', label: 'Cleaner', icon: '🧽', description: 'Cleaning services' },
+    { id: 'beauty', label: 'Beauty', icon: '💄', description: 'Beauty services' },
+    { id: 'barber', label: 'Barber', icon: '✂️', description: 'Haircut & grooming' },
+    { id: 'photography', label: 'Photographer', icon: '📷', description: 'Photography services' }
+  ];
+
+  // Event types
+  const eventTypes = [
+    { id: 'all', label: 'All Events', icon: '🎉', description: 'All event types' },
+    { id: 'concert', label: 'Concert', icon: '🎵', description: 'Music concerts' },
+    { id: 'workshop', label: 'Workshop', icon: '🎨', description: 'Learning workshops' },
+    { id: 'sports', label: 'Sports', icon: '⚽', description: 'Sports events' },
+    { id: 'community', label: 'Community', icon: '🤝', description: 'Community events' },
+    { id: 'festival', label: 'Festival', icon: '🎪', description: 'Festivals & fairs' }
+  ];
+
+  // Get active type array based on searchType
+  const getActiveTypeArray = () => {
+    switch(searchType) {
+      case 'properties': return propertyTypes;
+      case 'services': return serviceTypes;
+      case 'helpers': return helperTypes;
+      case 'events': return eventTypes;
+      default: return propertyTypes;
+    }
+  };
 
   // Check if mobile on mount and resize
   useEffect(() => {
@@ -326,6 +478,7 @@ const Search = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Initialize sidebar data from URL params
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const initialData = { ...sidebarData };
@@ -357,11 +510,13 @@ const Search = () => {
     setSidebarData(initialData);
   }, [location.search]);
 
+  // Update search type when URL changes
   useEffect(() => {
     const newSearchType = getInitialSearchType();
     setSearchType(newSearchType);
   }, [location.search]);
 
+  // Fetch data based on search type and filters
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const fetchData = async () => {
@@ -370,7 +525,7 @@ const Search = () => {
         
         const cleanParams = new URLSearchParams();
         urlParams.forEach((value, key) => {
-          if (value && value !== 'false' && value !== '0') {
+          if (value && value !== 'false' && value !== '0' && value !== 'all') {
             cleanParams.set(key, value);
           }
         });
@@ -382,70 +537,126 @@ const Search = () => {
           cleanParams.set('searchTerm', q);
         }
         
-        let endpoint = '';
-        switch(searchType) {
-          case 'services':
-            endpoint = '/api/service/get';
-            break;
-          case 'helpers':
-            endpoint = '/api/helper/get';
-            break;
-          case 'events':
-            endpoint = '/api/event/get';
-            break;
-          default:
-            endpoint = '/api/listing/get';
-        }
+        const endpoint = SEARCH_TYPES.find(t => t.id === searchType)?.endpoint || '/api/listing/get';
         
         const res = await fetch(`${endpoint}?${cleanParams.toString()}`);
         if (!res.ok) throw new Error('Failed to fetch data');
         
         const data = await res.json();
         
-        // Add mock location data for map
+        // Add mock data for demonstration
         const typedData = data.map((item, index) => {
-          const types = ['sale', 'rent-short', 'rent-long', 'office', 'land'];
-          const type = types[index % types.length];
+          // Add type-specific mock data
+          let type = '';
+          let mockData = {};
+          
+          switch(searchType) {
+            case 'properties':
+              const propertyTypes = ['sale', 'rent-short', 'rent-long', 'office', 'land'];
+              type = propertyTypes[index % propertyTypes.length];
+              mockData = {
+                type: type,
+                price: item.price || item.regularPrice || Math.floor(Math.random() * 5000) + 1000,
+                imageUrls: item.imageUrls || [item.image] || [],
+                rating: Math.floor(Math.random() * 2 + 3.5) + Math.random(),
+                bedrooms: type !== 'land' ? (Math.floor(Math.random() * 4) + 1) : undefined,
+                bathrooms: type !== 'land' ? (Math.floor(Math.random() * 3) + 1) : undefined,
+                offer: Math.random() > 0.5
+              };
+              break;
+            case 'services':
+              const serviceTypes = ['cleaning', 'maintenance', 'moving', 'landscaping', 'catering', 'daycare', 'schoolTransport'];
+              type = serviceTypes[index % serviceTypes.length];
+              mockData = {
+                type: type,
+                regularPrice: item.regularPrice || item.price || Math.floor(Math.random() * 500) + 50,
+                imageUrls: item.imageUrls || [item.image] || [],
+                capacity: type === 'daycare' ? Math.floor(Math.random() * 20) + 5 : undefined,
+                vehicleType: type === 'schoolTransport' ? ['Bus', 'Van', 'Car'][Math.floor(Math.random() * 3)] : undefined
+              };
+              break;
+            case 'helpers':
+              const helperTypes = ['tutor', 'caregiver', 'handyman', 'cleaner', 'beauty', 'barber', 'photography'];
+              type = helperTypes[index % helperTypes.length];
+              mockData = {
+                type: type,
+                regularPrice: item.regularPrice || item.price || Math.floor(Math.random() * 200) + 20,
+                imageUrls: item.imageUrls || [item.image] || [],
+                reviews: item.reviews || [],
+                address: item.address || 'Johannesburg, South Africa'
+              };
+              break;
+            case 'events':
+              const eventTypes = ['concert', 'workshop', 'sports', 'community', 'festival'];
+              type = eventTypes[index % eventTypes.length];
+              mockData = {
+                type: type,
+                price: item.price || Math.floor(Math.random() * 500) + 50,
+                imageUrls: item.imageUrls || [item.image] || [],
+                date: item.date || new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+                location: item.location || 'Various Locations'
+              };
+              break;
+          }
           
           return {
             ...item,
             itemType: searchType,
-            type: type,
-            price: item.price || item.regularPrice || item.fee || Math.floor(Math.random() * 5000) + 1000,
-            imageUrls: item.imageUrls || [item.image] || [],
-            rating: Math.floor(Math.random() * 2 + 3.5) + Math.random(),
-            bedrooms: type !== 'land' ? (Math.floor(Math.random() * 4) + 1) : undefined,
-            bathrooms: type !== 'land' ? (Math.floor(Math.random() * 3) + 1) : undefined,
+            ...mockData,
             latitude: -26.2041 + (Math.random() - 0.5) * 0.1,
             longitude: 28.0473 + (Math.random() - 0.5) * 0.1,
-            offer: Math.random() > 0.5
           };
         });
         
-        setListings(typedData);
+        setItems(typedData);
         setShowMore(typedData.length >= DEFAULT_LISTING_LIMIT);
       } catch (error) {
         console.error('Failed to fetch data:', error);
-        // Mock data for demo
-        const types = ['sale', 'rent-short', 'rent-long', 'office', 'land'];
-        const mockData = Array.from({ length: 12 }, (_, i) => {
-          const type = types[i % types.length];
-          return {
-            _id: `mock-${i}`,
-            name: `${type === 'sale' ? 'Modern ' : type === 'rent-short' ? 'Luxury ' : type === 'rent-long' ? 'Spacious ' : type === 'office' ? 'Professional ' : 'Prime '}${getPropertyTypeName(type)} ${i + 1}`,
-            description: `Premium ${getPropertyTypeName(type).toLowerCase()} in ${sidebarData.address}`,
-            type: type,
+        // Generate mock data for demo
+        let mockData = [];
+        const count = 12;
+        
+        for (let i = 0; i < count; i++) {
+          let item = {
+            _id: `mock-${searchType}-${i}`,
+            name: `${searchType.charAt(0).toUpperCase() + searchType.slice(1)} Item ${i + 1}`,
+            description: `Premium ${searchType.slice(0, -1)} in ${sidebarData.address || 'Johannesburg'}`,
+            address: sidebarData.address || 'Johannesburg, South Africa',
             price: Math.floor(Math.random() * 5000) + 1000,
-            rating: Math.floor(Math.random() * 2 + 3.5) + Math.random(),
-            bedrooms: type !== 'land' ? Math.floor(Math.random() * 4) + 1 : undefined,
-            bathrooms: type !== 'land' ? Math.floor(Math.random() * 3) + 1 : undefined,
-            offer: Math.random() > 0.5,
+            regularPrice: Math.floor(Math.random() * 5000) + 1000,
+            imageUrls: [`https://images.unsplash.com/photo-${1566073771259 + i}?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`],
             latitude: -26.2041 + (Math.random() - 0.5) * 0.1,
             longitude: 28.0473 + (Math.random() - 0.5) * 0.1,
-            imageUrls: [`https://images.unsplash.com/photo-${1566073771259 + i}?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`]
           };
-        });
-        setListings(mockData);
+          
+          // Add type-specific fields
+          switch(searchType) {
+            case 'properties':
+              const propertyTypes = ['sale', 'rent-short', 'rent-long', 'office', 'land'];
+              item.type = propertyTypes[i % propertyTypes.length];
+              item.bedrooms = item.type !== 'land' ? Math.floor(Math.random() * 4) + 1 : undefined;
+              item.bathrooms = item.type !== 'land' ? Math.floor(Math.random() * 3) + 1 : undefined;
+              item.offer = Math.random() > 0.5;
+              break;
+            case 'services':
+              const serviceTypes = ['cleaning', 'maintenance', 'moving', 'landscaping', 'catering', 'daycare', 'schoolTransport'];
+              item.type = serviceTypes[i % serviceTypes.length];
+              break;
+            case 'helpers':
+              const helperTypes = ['tutor', 'caregiver', 'handyman', 'cleaner', 'beauty', 'barber', 'photography'];
+              item.type = helperTypes[i % helperTypes.length];
+              break;
+            case 'events':
+              const eventTypes = ['concert', 'workshop', 'sports', 'community', 'festival'];
+              item.type = eventTypes[i % eventTypes.length];
+              item.date = new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString();
+              break;
+          }
+          
+          mockData.push(item);
+        }
+        
+        setItems(mockData);
         setShowMore(mockData.length >= DEFAULT_LISTING_LIMIT);
       } finally {
         setLoading(false);
@@ -467,6 +678,7 @@ const Search = () => {
     e.preventDefault();
     const urlParams = new URLSearchParams();
     
+    // Add all non-empty, non-default values to URL params
     Object.entries(sidebarData).forEach(([key, value]) => {
       if (value !== '' && value !== false && value !== 0 && value !== 'all') {
         if (Array.isArray(value)) {
@@ -479,6 +691,7 @@ const Search = () => {
 
     urlParams.set('searchType', searchType);
 
+    // Save to recent searches
     const updatedSearches = saveRecentSearch(sidebarData, searchType);
     setRecentSearches(updatedSearches);
     
@@ -510,7 +723,18 @@ const Search = () => {
 
   const clearFilters = () => {
     setSidebarData({
+      // Common fields
       searchTerm: '',
+      address: 'Johannesburg',
+      name: '',
+      description: '',
+      location: '',
+      priceMin: 0,
+      priceMax: 100000000,
+      sort: 'createdAt',
+      order: 'desc',
+      
+      // Property specific fields
       type: 'all',
       parking: false,
       furnished: false,
@@ -518,12 +742,8 @@ const Search = () => {
       pool: false,
       tv: false,
       offer: false,
-      sort: 'createdAt',
-      order: 'desc',
       bedroomsMin: '',
       bedroomsMax: '',
-      priceMin: 0,
-      priceMax: 100000000,
       breakfast: false,
       pets: false,
       security: false,
@@ -532,19 +752,63 @@ const Search = () => {
       view: false,
       kitchen: false,
       laundry: false,
-      address: 'Johannesburg',
-      name: '',
-      description: '',
+      
+      // Service specific fields
       category: 'all',
-      location: '',
+      serviceType: 'all',
+      
+      // Helper specific fields
+      helperType: 'all',
+      availability: 'all',
+      
+      // Event specific fields
       date: '',
-      availability: 'all'
+      eventType: 'all'
     });
     
     if (isMobile) {
       setShowFilters(false);
     }
   };
+
+  // Filter functions for different search types
+  const getFilteredItems = () => {
+    let filtered = [...items];
+    
+    // Filter by type
+    if (sidebarData.type !== 'all' && searchType === 'properties') {
+      filtered = filtered.filter(item => item.type === sidebarData.type);
+    }
+    if (sidebarData.serviceType !== 'all' && searchType === 'services') {
+      filtered = filtered.filter(item => item.type === sidebarData.serviceType);
+    }
+    if (sidebarData.helperType !== 'all' && searchType === 'helpers') {
+      filtered = filtered.filter(item => item.type === sidebarData.helperType);
+    }
+    if (sidebarData.eventType !== 'all' && searchType === 'events') {
+      filtered = filtered.filter(item => item.type === sidebarData.eventType);
+    }
+    
+    // Filter by price
+    filtered = filtered.filter(item => {
+      const price = item.price || item.regularPrice || 0;
+      return price >= sidebarData.priceMin && price <= sidebarData.priceMax;
+    });
+    
+    // Filter by search term
+    if (sidebarData.searchTerm) {
+      const term = sidebarData.searchTerm.toLowerCase();
+      filtered = filtered.filter(item => 
+        (item.name && item.name.toLowerCase().includes(term)) ||
+        (item.description && item.description.toLowerCase().includes(term)) ||
+        (item.address && item.address.toLowerCase().includes(term))
+      );
+    }
+    
+    return filtered;
+  };
+
+  const filteredItems = getFilteredItems();
 
   return (
     <div className="w-full px-2 sm:px-4 py-4 max-w-7xl mx-auto">
@@ -558,7 +822,7 @@ const Search = () => {
             >
               <div className="flex items-center gap-2">
                 <MagnifyingGlassIcon className="w-4 h-4" />
-                <span className="text-gray-600">{sidebarData.address || 'Search places...'}</span>
+                <span className="text-gray-600">{sidebarData.address || 'Search...'}</span>
               </div>
               <AdjustmentsHorizontalIcon className="w-4 h-4" />
             </button>
@@ -576,36 +840,66 @@ const Search = () => {
       {/* Desktop Header */}
       {!isMobile && (
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {sidebarData.address ? `Properties near ${sidebarData.address}` : 'Explore properties'}
-          </h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {sidebarData.address 
+                ? `${SEARCH_TYPES.find(t => t.id === searchType)?.label} in ${sidebarData.address}` 
+                : `Explore ${SEARCH_TYPES.find(t => t.id === searchType)?.label}`}
+            </h1>
+            
+            {/* Search Type Selector */}
+            <Menu as="div" className="relative">
+              <Menu.Button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400 bg-white">
+                <span>{SEARCH_TYPES.find(t => t.id === searchType)?.label}</span>
+                <ChevronDownIcon className="w-4 h-4" />
+              </Menu.Button>
+              <Transition
+                enter="transition duration-200 ease-out"
+                enterFrom="transform scale-95 opacity-0"
+                enterTo="transform scale-100 opacity-100"
+                leave="transition duration-150 ease-in"
+                leaveFrom="transform scale-100 opacity-100"
+                leaveTo="transform scale-95 opacity-0"
+              >
+                <Menu.Items className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-20">
+                  {SEARCH_TYPES.map((type) => (
+                    <Menu.Item key={type.id}>
+                      {({ active }) => (
+                        <button
+                          onClick={() => {
+                            setSearchType(type.id);
+                            navigate(`/search?searchType=${type.id}`);
+                          }}
+                          className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''} ${
+                            searchType === type.id ? 'text-blue-600 font-medium' : 'text-gray-700'
+                          }`}
+                        >
+                          <type.icon className="w-4 h-4" />
+                          {type.label}
+                        </button>
+                      )}
+                    </Menu.Item>
+                  ))}
+                </Menu.Items>
+              </Transition>
+            </Menu>
+          </div>
+          
           <p className="text-gray-600 text-sm">
-            Dec 9-10 · Add guests · Prices include all fees
+            {filteredItems.length}+ {SEARCH_TYPES.find(t => t.id === searchType)?.label?.toLowerCase()} available • {sidebarData.address || 'All locations'}
           </p>
         </div>
       )}
 
-      {/* Airbnb-style Filter Tabs */}
-      <div className="mb-6 overflow-x-auto">
-        <div className="flex gap-2 pb-2">
-          {filterCategories.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveFilterTab(tab.id);
-                if (isMobile) setShowFilters(true);
-              }}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                activeFilterTab === tab.id
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400'
-              }`}
-            >
-              {tab.title}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Airbnb-style Sliding Tabs */}
+      <SlidingTabs
+        tabs={SEARCH_TYPES}
+        activeTab={searchType}
+        onTabClick={(tabId) => {
+          setSearchType(tabId);
+          navigate(`/search?searchType=${tabId}`);
+        }}
+      />
 
       {/* Mobile Filter Overlay */}
       {showFilters && isMobile && (
@@ -624,48 +918,33 @@ const Search = () => {
           
           <div className="p-4 pb-24">
             <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Recommended Filters */}
+              {/* Type Selection */}
               <div>
-                <h3 className="font-bold text-gray-900 mb-4">Recommended for you</h3>
-                <div className="space-y-3">
-                  {filterCategories[0].filters.map((filter) => (
-                    <div key={filter.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-xl">{filter.icon}</span>
-                        <span className="text-gray-700">{filter.label}</span>
-                      </div>
-                      <input
-                        type="checkbox"
-                        id={filter.id}
-                        checked={sidebarData[filter.id]}
-                        onChange={handleChange}
-                        className="h-5 w-5 rounded border-gray-300 text-black focus:ring-black"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Type of Place */}
-              <div>
-                <h3 className="font-bold text-gray-900 mb-4">Type of place</h3>
+                <h3 className="font-bold text-gray-900 mb-4">Type</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  {filterCategories[1].items.map((place) => (
+                  {getActiveTypeArray().map((item) => (
                     <button
-                      key={place.id}
+                      key={item.id}
                       type="button"
-                      onClick={() => setSidebarData(prev => ({ ...prev, type: place.id }))}
+                      onClick={() => {
+                        const typeField = searchType === 'properties' ? 'type' : 
+                                        searchType === 'services' ? 'serviceType' : 
+                                        searchType === 'helpers' ? 'helperType' : 'eventType';
+                        setSidebarData(prev => ({ ...prev, [typeField]: item.id }));
+                      }}
                       className={`p-4 border rounded-xl text-left transition-all ${
-                        sidebarData.type === place.id
+                        sidebarData[searchType === 'properties' ? 'type' : 
+                                   searchType === 'services' ? 'serviceType' : 
+                                   searchType === 'helpers' ? 'helperType' : 'eventType'] === item.id
                           ? 'border-black bg-gray-50'
                           : 'border-gray-300 hover:border-gray-400'
                       }`}
                     >
                       <div className="flex items-center gap-3 mb-1">
-                        <span className="text-2xl">{place.icon}</span>
-                        <span className="font-medium">{place.label}</span>
+                        <span className="text-2xl">{item.icon}</span>
+                        <span className="font-medium">{item.label}</span>
                       </div>
-                      <p className="text-xs text-gray-500">{place.description}</p>
+                      <p className="text-xs text-gray-500">{item.description}</p>
                     </button>
                   ))}
                 </div>
@@ -675,7 +954,11 @@ const Search = () => {
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold text-gray-900">Price range</h3>
-                  <span className="text-sm text-gray-500">Trip price, includes all fees</span>
+                  <span className="text-sm text-gray-500">
+                    {searchType === 'properties' ? 'Trip price, includes all fees' : 
+                     searchType === 'services' ? 'Service price' : 
+                     searchType === 'helpers' ? 'Work price' : 'Ticket price'}
+                  </span>
                 </div>
                 
                 <div className="space-y-6">
@@ -709,14 +992,6 @@ const Search = () => {
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="relative py-4">
-                    <div className="h-1 bg-gray-300 rounded-full"></div>
-                    <div className="absolute top-4 left-0 right-0 flex justify-between">
-                      <div className="w-4 h-4 bg-white border-2 border-black rounded-full -translate-y-1.5"></div>
-                      <div className="w-4 h-4 bg-white border-2 border-black rounded-full -translate-y-1.5"></div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </form>
@@ -740,7 +1015,7 @@ const Search = () => {
                 }}
                 className="flex-1 py-3.5 bg-black text-white rounded-lg font-medium hover:bg-gray-800"
               >
-                Show {listings.length}+ places
+                Show {filteredItems.length}+ results
               </button>
             </div>
           </div>
@@ -766,48 +1041,33 @@ const Search = () => {
                   </div>
                   
                   <form onSubmit={handleSubmit} className="space-y-8">
-                    {/* Recommended Filters */}
+                    {/* Type Selection */}
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-4">Recommended for you</h3>
-                      <div className="space-y-3">
-                        {filterCategories[0].filters.map((filter) => (
-                          <div key={filter.id} className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              id={filter.id}
-                              checked={sidebarData[filter.id]}
-                              onChange={handleChange}
-                              className="h-5 w-5 rounded border-gray-300 text-black focus:ring-black"
-                            />
-                            <label htmlFor={filter.id} className="flex items-center gap-2 text-sm text-gray-700">
-                              <span className="text-lg">{filter.icon}</span>
-                              {filter.label}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Type of Place */}
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-4">Type of place</h3>
+                      <h3 className="font-semibold text-gray-900 mb-4">Type</h3>
                       <div className="grid grid-cols-2 gap-3">
-                        {filterCategories[1].items.map((place) => (
+                        {getActiveTypeArray().map((item) => (
                           <button
-                            key={place.id}
+                            key={item.id}
                             type="button"
-                            onClick={() => setSidebarData(prev => ({ ...prev, type: place.id }))}
+                            onClick={() => {
+                              const typeField = searchType === 'properties' ? 'type' : 
+                                              searchType === 'services' ? 'serviceType' : 
+                                              searchType === 'helpers' ? 'helperType' : 'eventType';
+                              setSidebarData(prev => ({ ...prev, [typeField]: item.id }));
+                            }}
                             className={`p-4 border rounded-lg text-left transition-all ${
-                              sidebarData.type === place.id
+                              sidebarData[searchType === 'properties' ? 'type' : 
+                                        searchType === 'services' ? 'serviceType' : 
+                                        searchType === 'helpers' ? 'helperType' : 'eventType'] === item.id
                                 ? 'border-black bg-gray-50'
                                 : 'border-gray-300 hover:border-gray-400'
                             }`}
                           >
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xl">{place.icon}</span>
-                              <span className="font-medium text-sm">{place.label}</span>
+                            <div className="flex items-center gap-2 mb-1 p-2">
+                              <span className="text-xl">{item.icon}</span>
+                              <span className="font-medium text-sm">{item.label}</span>
                             </div>
-                            <p className="text-xs text-gray-500">{place.description}</p>
+                            <p className="text-xs text-gray-500">{item.description}</p>
                           </button>
                         ))}
                       </div>
@@ -818,7 +1078,9 @@ const Search = () => {
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="font-semibold text-gray-900">Price range</h3>
                         <span className="text-sm text-gray-600">
-                          Trip price, includes all fees
+                          {searchType === 'properties' ? 'Trip price, includes all fees' : 
+                           searchType === 'services' ? 'Service price' : 
+                           searchType === 'helpers' ? 'Work price' : 'Ticket price'}
                         </span>
                       </div>
                       
@@ -853,14 +1115,6 @@ const Search = () => {
                             </div>
                           </div>
                         </div>
-                        
-                        <div className="relative py-4">
-                          <div className="h-1 bg-gray-300 rounded-full"></div>
-                          <div className="absolute top-4 left-0 right-0 flex justify-between">
-                            <div className="w-4 h-4 bg-white border-2 border-black rounded-full -translate-y-1.5"></div>
-                            <div className="w-4 h-4 bg-white border-2 border-black rounded-full -translate-y-1.5"></div>
-                          </div>
-                        </div>
                       </div>
                     </div>
 
@@ -868,7 +1122,7 @@ const Search = () => {
                       type="submit"
                       className="w-full py-3.5 bg-black text-white font-medium rounded-lg hover:bg-gray-800"
                     >
-                      Show {listings.length}+ places
+                      Show {filteredItems.length}+ results
                     </button>
                   </form>
                 </div>
@@ -881,10 +1135,10 @@ const Search = () => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">
-                    {listings.length}+ properties available
+                    {filteredItems.length}+ {SEARCH_TYPES.find(t => t.id === searchType)?.label?.toLowerCase()} available
                   </h2>
                   {sidebarData.address && (
-                    <p className="text-gray-600 text-sm">in {sidebarData.address} · Prices include all fees</p>
+                    <p className="text-gray-600 text-sm">in {sidebarData.address} • Prices include all fees</p>
                   )}
                 </div>
                 
@@ -935,21 +1189,30 @@ const Search = () => {
                       <Menu.Items className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-10">
                         <Menu.Item>
                           {({ active }) => (
-                            <button className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''}`}>
+                            <button 
+                              onClick={() => setSidebarData(prev => ({ ...prev, sort: 'createdAt', order: 'desc' }))}
+                              className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''}`}
+                            >
                               Recommended
                             </button>
                           )}
                         </Menu.Item>
                         <Menu.Item>
                           {({ active }) => (
-                            <button className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''}`}>
+                            <button 
+                              onClick={() => setSidebarData(prev => ({ ...prev, sort: 'price', order: 'asc' }))}
+                              className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''}`}
+                            >
                               Price: Low to high
                             </button>
                           )}
                         </Menu.Item>
                         <Menu.Item>
                           {({ active }) => (
-                            <button className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''}`}>
+                            <button 
+                              onClick={() => setSidebarData(prev => ({ ...prev, sort: 'price', order: 'desc' }))}
+                              className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''}`}
+                            >
                               Price: High to low
                             </button>
                           )}
@@ -963,7 +1226,7 @@ const Search = () => {
               {/* Map View */}
               {showMap ? (
                 <div className="h-[600px] rounded-2xl overflow-hidden">
-                  <MapView listings={listings} address={sidebarData.address} />
+                  <MapView items={filteredItems} searchType={searchType} address={sidebarData.address} />
                 </div>
               ) : (
                 /* List View */
@@ -973,11 +1236,11 @@ const Search = () => {
                       <SkeletonCard key={i} />
                     ))}
                   </div>
-                ) : listings.length > 0 ? (
+                ) : filteredItems.length > 0 ? (
                   <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-2">
-                      {listings.map((item) => (
-                        <AirbnbCard key={item._id} listing={item} />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+                      {filteredItems.map((item) => (
+                        <ItemCard key={item._id} item={item} searchType={searchType} />
                       ))}
                     </div>
 
@@ -986,7 +1249,7 @@ const Search = () => {
                       <div className="mt-8 flex justify-center">
                         <button
                           onClick={() => {
-                            const startIndex = listings.length;
+                            const startIndex = filteredItems.length;
                             const urlParams = new URLSearchParams(location.search);
                             urlParams.set('startIndex', startIndex);
                             navigate(`/search?${urlParams.toString()}`);
@@ -1038,4 +1301,4 @@ const Search = () => {
   );
 };
 
-export default Search;
+export default UniversalSearch;
