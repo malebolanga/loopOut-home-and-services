@@ -11,8 +11,7 @@ import {
   HeartIcon,
   StarIcon,
   FunnelIcon,
-  BuildingOfficeIcon,
-  WrenchScrewdriverIcon,
+
   SparklesIcon,
   CalendarDaysIcon,
   UserGroupIcon,
@@ -23,7 +22,7 @@ import "../styles/ListingDetails.scss";
 import ListingItem from "../components/ListingItem";
 import ServiceItem from "../components/ServiceItem";
 import HelperItem from "../components/HelperItem";
-
+import EventItem from "../components/EventItem";
 
 
 const RECENT_SEARCHES_KEY = 'recentSearches';
@@ -821,7 +820,7 @@ const UniversalSearch = () => {
               className="flex-1 flex items-center justify-between px-4 py-3 bg-white border border-gray-300 rounded-full shadow-sm text-sm font-medium"
             >
               <div className="flex items-center gap-2">
-                <MagnifyingGlassIcon className="w-4 h-4" />
+                <MagnifyingGlassIcon className="w-4 h-4 " />
                 <span className="text-gray-600">{sidebarData.address || 'Search...'}</span>
               </div>
               <AdjustmentsHorizontalIcon className="w-4 h-4" />
@@ -918,6 +917,22 @@ const UniversalSearch = () => {
           
           <div className="p-4 pb-24">
             <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Search Input in Mobile Filter */}
+              <div>
+                <h3 className="font-bold text-gray-900 mb-4">Search</h3>
+                <div className="relative">
+                  <MagnifyingGlassIcon className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    id="searchTerm"
+                    value={sidebarData.searchTerm}
+                    onChange={handleChange}
+                    placeholder={`Search ${SEARCH_TYPES.find(t => t.id === searchType)?.label?.toLowerCase()}...`}
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-transparent"
+                  />
+                </div>
+              </div>
+
               {/* Type Selection */}
               <div>
                 <h3 className="font-bold text-gray-900 mb-4">Type</h3>
@@ -1041,6 +1056,22 @@ const UniversalSearch = () => {
                   </div>
                   
                   <form onSubmit={handleSubmit} className="space-y-8">
+                    {/* Search Input in Desktop Filter */}
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-4">Search</h3>
+                      <div className="relative">
+                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          type="text"
+                          id="searchTerm"
+                          value={sidebarData.searchTerm}
+                          onChange={handleChange}
+                          placeholder={`Search ${SEARCH_TYPES.find(t => t.id === searchType)?.label?.toLowerCase()}...`}
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+
                     {/* Type Selection */}
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-4">Type</h3>
@@ -1063,7 +1094,7 @@ const UniversalSearch = () => {
                                 : 'border-gray-300 hover:border-gray-400'
                             }`}
                           >
-                            <div className="flex items-center gap-2 mb-1 p-2">
+                            <div className="flex items-center gap-2 mb-1">
                               <span className="text-xl">{item.icon}</span>
                               <span className="font-medium text-sm">{item.label}</span>
                             </div>
