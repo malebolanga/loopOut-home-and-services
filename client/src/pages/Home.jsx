@@ -441,19 +441,22 @@ const FeaturedListings = ({ items, searchType, loading, title, showAllLink }) =>
   if (!items || items.length === 0) return null;
 
   return (
-    <div className="mb-12">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-        <button className="text-sm font-medium text-gray-900 hover:underline">
-          Show all →
-        </button>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {items.map((item) => (
-          <ItemCard key={item._id} item={item} searchType={searchType} />
-        ))}
-      </div>
-    </div>
+  <div className="mb-12">
+  <div className="flex justify-between items-center mb-6">
+    <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+    <a 
+      href="/listing-home-page" 
+      className="text-sm font-medium text-gray-900 hover:underline"
+    >
+      Show all →
+    </a>
+  </div>
+  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    {items.map((item) => (
+      <ItemCard key={item._id} item={item} searchType={searchType} />
+    ))}
+  </div>
+</div>
   );
 };
 
