@@ -108,7 +108,7 @@ export default function CreateListing() {
     category: "",
     
     // Property specific - ALL REQUIRED FIELDS
-    near: "",
+    near: "", // This field is required for ALL categories
     rules: "",
     kind: "apartment", // Default value
     period: "Immediate", // Default value
@@ -173,6 +173,8 @@ export default function CreateListing() {
         type: selectedType,
         // Set default kind based on type for stays
         kind: selectedCategory === 'stays' ? getDefaultKind(selectedType) : prev.kind,
+        // Set default near placeholder based on category
+        near: prev.near || getDefaultNearPlaceholder(selectedCategory, selectedType),
       }));
     }
   }, [selectedCategory, selectedType]);
@@ -185,6 +187,27 @@ export default function CreateListing() {
       case 'land': return 'plot';
       case 'sale': return 'house';
       default: return 'apartment';
+    }
+  };
+
+  const getDefaultNearPlaceholder = (category, type) => {
+    switch(category) {
+      case 'stays':
+        return "Nearby attractions, restaurants, parks, etc.";
+      case 'experiences':
+        if (type === 'daycare') return "Your experience with childcare, certifications, training...";
+        if (type === 'schoolTransport') return "Your driving experience, safety certifications...";
+        return "Your experience and qualifications in this service";
+      case 'online':
+        if (type === 'tutor') return "Subjects you teach, teaching methods, qualifications...";
+        if (type === 'barber') return "Services you offer, specialties, experience...";
+        if (type === 'photography') return "Your photography style, experience, services...";
+        if (type === 'baker') return "Your baking specialties, experience, dietary options...";
+        return "Specific services you provide, experience, skills...";
+      case 'events':
+        return "Event highlights, special features, what makes it unique...";
+      default:
+        return "Additional information about your listing...";
     }
   };
 
@@ -321,10 +344,37 @@ export default function CreateListing() {
           return;
         }
       }
+      
+      // near field is required for ALL categories
+      if (!listingForm.near.trim()) {
+        setError(`Please provide ${getNearLabel(selectedCategory, selectedType)}`);
+        return;
+      }
     }
     
     setError(null);
     setCurrentStep(prev => Math.min(prev + 1, 4));
+  };
+
+  const getNearLabel = (category, type) => {
+    switch(category) {
+      case 'stays':
+        return "information about nearby attractions";
+      case 'experiences':
+        if (type === 'daycare') return "your experience and qualifications";
+        if (type === 'schoolTransport') return "your driving experience and certifications";
+        return "your experience and qualifications";
+      case 'online':
+        if (type === 'tutor') return "subjects and teaching approach";
+        if (type === 'barber') return "services and specialties";
+        if (type === 'photography') return "photography services and style";
+        if (type === 'baker') return "baking specialties and options";
+        return "your services and experience";
+      case 'events':
+        return "event highlights and features";
+      default:
+        return "additional information";
+    }
   };
 
   const handlePrevStep = () => {
@@ -626,42 +676,50 @@ export default function CreateListing() {
         return setError("Cancellation policy is required");
       }
     }
+    
+    // Ensure near field is filled for all categories
+    if (!listingForm.near.trim()) {
+      return setError(`${getNearLabel(selectedCategory, selectedType)} is required`);
+    }
 
     setLoading(true);
     setError(null);
 
     try {
-      const listingId = new Date().getTime().toString(36) + Math.random().toString(36).substr(2, 5);
-      
+      // DON'T create _id on client side - let MongoDB generate it
       const endpoint = selectedCategory === 'stays' ? '/api/listing/create' :
                       selectedCategory === 'experiences' ? '/api/service/create' :
                       selectedCategory === 'online' ? '/api/helper/create' :
                       '/api/event/create';
 
-      // Prepare the request body with all required fields
+      // Prepare the request body WITHOUT _id field
       const requestBody = {
         ...listingForm,
         userRef: currentUser._id,
-        _id: listingId,
         type: selectedType,
         category: selectedCategory,
         listingType: selectedCategory === 'stays' ? 'property' : selectedCategory,
-        // Ensure kind and cancel are included (they have defaults but double-check)
+        // Ensure all required fields are included
         kind: listingForm.kind || "apartment",
         cancel: listingForm.cancel || "Flexible - Free cancellation 48 hours before check-in",
         period: listingForm.period || "Immediate",
         near: listingForm.near || "",
-        rules: listingForm.rules || ""
+        rules: listingForm.rules || "",
+        // Remove any undefined values
+        imageUrls: listingForm.imageUrls || [],
+        videoUrl: listingForm.videoUrl || "",
+        name: listingForm.name || "",
+        description: listingForm.description || "",
+        address: listingForm.address || "",
+        contact: listingForm.contact || "",
+        host: listingForm.host || "",
+        regularPrice: listingForm.regularPrice || 50,
+        discountPrice: listingForm.discountPrice || 0,
       };
 
-      // Remove undefined or empty values that might cause issues
-      Object.keys(requestBody).forEach(key => {
-        if (requestBody[key] === undefined || requestBody[key] === null) {
-          requestBody[key] = "";
-        }
-      });
-
-      console.log("Submitting listing data:", requestBody);
+      // Log what we're sending for debugging
+      console.log("Submitting to:", endpoint);
+      console.log("Request body:", JSON.stringify(requestBody, null, 2));
 
       const res = await fetch(endpoint, {
         method: "POST",
@@ -672,23 +730,40 @@ export default function CreateListing() {
         body: JSON.stringify(requestBody),
       });
 
-      const data = await res.json();
-      console.log("Response from server:", data);
+      let data;
+      try {
+        data = await res.json();
+        console.log("Response from server:", data);
+      } catch (jsonError) {
+        console.error("Failed to parse JSON response:", jsonError);
+        const text = await res.text();
+        console.error("Raw response:", text);
+        throw new Error(`Server error: ${res.status} ${res.statusText}`);
+      }
 
       if (data.success === false) {
-        setError(data.message || "Failed to create listing. Please check all required fields.");
+        // Show user-friendly error message
+        let errorMessage = data.message || "Failed to create listing. Please check all required fields.";
+        
+        // Parse MongoDB validation errors
+        if (data.errors) {
+          const errorList = Object.values(data.errors).map(err => err.message).join(', ');
+          errorMessage = `Validation errors: ${errorList}`;
+        }
+        
+        setError(errorMessage);
       } else {
         if (selectedCategory === 'stays') {
-          setNewListingId(data._id || listingId);
+          setNewListingId(data._id || data.listing?._id);
           setShowPromotionPopup(true);
         } else {
           navigate(`/${selectedCategory === 'experiences' ? 'service' : 
-                   selectedCategory === 'online' ? 'helper' : 'event'}/${data._id}`);
+                   selectedCategory === 'online' ? 'helper' : 'event'}/${data._id || data.listing?._id}`);
         }
       }
     } catch (err) {
       console.error("Submission error:", err);
-      setError(err.message || "Network error. Please try again.");
+      setError(err.message || "Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -857,11 +932,12 @@ export default function CreateListing() {
     </div>
   );
 
-  const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, placeholder, required = false, className = "", rows = 4 }) => (
+  const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, placeholder, required = false, className = "", rows = 4, helpText = "" }) => (
     <div className={className}>
       <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
         {Icon && <Icon className="w-4 h-4" />}
         {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       {type === "textarea" ? (
         <textarea
@@ -893,6 +969,9 @@ export default function CreateListing() {
           required={required}
           className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent transition-all duration-200"
         />
+      )}
+      {helpText && (
+        <p className="mt-1 text-xs text-gray-500">{helpText}</p>
       )}
     </div>
   );
@@ -1235,6 +1314,25 @@ export default function CreateListing() {
                       />
                     </div>
                     
+                    {/* REQUIRED near FIELD FOR ALL CATEGORIES */}
+                    <div className="sm:col-span-2">
+                      <FormInput
+                        label={getNearLabel(selectedCategory, selectedType).charAt(0).toUpperCase() + getNearLabel(selectedCategory, selectedType).slice(1)}
+                        icon={selectedCategory === 'stays' ? MapPinIcon : 
+                              selectedCategory === 'experiences' ? AcademicCapIcon :
+                              selectedCategory === 'online' ? BriefcaseIcon :
+                              CalendarIcon}
+                        type="textarea"
+                        id="near"
+                        value={listingForm.near}
+                        onChange={handleFormChange}
+                        placeholder={getDefaultNearPlaceholder(selectedCategory, selectedType)}
+                        required
+                        rows={3}
+                        helpText="This information helps users understand what you offer"
+                      />
+                    </div>
+                    
                     {/* REQUIRED FIELDS FOR STAYS CATEGORY */}
                     {selectedCategory === 'stays' && (
                       <>
@@ -1295,32 +1393,18 @@ export default function CreateListing() {
                     )}
                     
                     {selectedCategory === 'stays' && (
-                      <>
-                        <div className="sm:col-span-2">
-                          <FormInput
-                            label="Nearby Attractions"
-                            icon={MapPinIcon}
-                            type="textarea"
-                            id="near"
-                            value={listingForm.near}
-                            onChange={handleFormChange}
-                            placeholder="Mention nearby points of interest, restaurants, parks, etc."
-                            rows={3}
-                          />
-                        </div>
-                        <div className="sm:col-span-2">
-                          <FormInput
-                            label="House Rules"
-                            icon={KeyIcon}
-                            type="textarea"
-                            id="rules"
-                            value={listingForm.rules}
-                            onChange={handleFormChange}
-                            placeholder="Enter any rules or regulations"
-                            rows={3}
-                          />
-                        </div>
-                      </>
+                      <div className="sm:col-span-2">
+                        <FormInput
+                          label="House Rules"
+                          icon={KeyIcon}
+                          type="textarea"
+                          id="rules"
+                          value={listingForm.rules}
+                          onChange={handleFormChange}
+                          placeholder="Enter any rules or regulations for guests"
+                          rows={3}
+                        />
+                      </div>
                     )}
                     
                     {selectedCategory === 'events' && (
@@ -1364,6 +1448,16 @@ export default function CreateListing() {
                           onChange={handleFormChange}
                           placeholder="Number of children"
                         />
+                        <div className="sm:col-span-2">
+                          <FormInput
+                            label="License Number"
+                            icon={ShieldCheckIcon}
+                            id="licenseNumber"
+                            value={listingForm.licenseNumber}
+                            onChange={handleFormChange}
+                            placeholder="Your daycare license number (if applicable)"
+                          />
+                        </div>
                       </>
                     )}
                     
@@ -1385,10 +1479,94 @@ export default function CreateListing() {
                             id="routeAreas"
                             value={listingForm.routeAreas}
                             onChange={handleFormChange}
-                            placeholder="Areas you serve"
+                            placeholder="Areas and schools you serve"
                             rows={2}
                           />
                         </div>
+                      </>
+                    )}
+                    
+                    {selectedCategory === 'online' && selectedType === 'tutor' && (
+                      <>
+                        <FormInput
+                          label="Education Level"
+                          icon={AcademicCapIcon}
+                          id="kind"
+                          value={listingForm.kind}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Bachelor's Degree in Education"
+                        />
+                        <FormInput
+                          label="Subjects"
+                          icon={BookOpenIcon}
+                          id="specializations"
+                          value={listingForm.specializations}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Mathematics, Science, English"
+                        />
+                      </>
+                    )}
+                    
+                    {selectedCategory === 'online' && selectedType === 'barber' && (
+                      <>
+                        <FormInput
+                          label="Specializations"
+                          icon={ScissorsIcon}
+                          id="specializations"
+                          value={listingForm.specializations}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Fades, beard trims, classic cuts"
+                        />
+                        <FormInput
+                          label="Equipment"
+                          icon={BriefcaseIcon}
+                          id="equipment"
+                          value={listingForm.equipment}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Professional clippers, sanitized tools"
+                        />
+                      </>
+                    )}
+                    
+                    {selectedCategory === 'online' && selectedType === 'photography' && (
+                      <>
+                        <FormInput
+                          label="Photography Style"
+                          icon={PhotoIcon}
+                          id="style"
+                          value={listingForm.style}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Portrait, event, studio, lifestyle"
+                        />
+                        <FormInput
+                          label="Session Duration"
+                          icon={ClockIcon}
+                          id="sessionDuration"
+                          value={listingForm.sessionDuration}
+                          onChange={handleFormChange}
+                          placeholder="e.g., 1-2 hours, half day, full day"
+                        />
+                      </>
+                    )}
+                    
+                    {selectedCategory === 'online' && selectedType === 'baker' && (
+                      <>
+                        <FormInput
+                          label="Specialties"
+                          icon={CakeIcon}
+                          id="specialties"
+                          value={listingForm.specialties}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Wedding cakes, custom pastries, breads"
+                        />
+                        <FormInput
+                          label="Dietary Options"
+                          icon={BeakerIcon}
+                          id="dietaryOptions"
+                          value={listingForm.dietaryOptions}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Vegan, gluten-free, sugar-free options"
+                        />
                       </>
                     )}
                   </div>
@@ -1517,6 +1695,24 @@ export default function CreateListing() {
                         )}
                       </div>
                     )}
+                    
+                    {selectedCategory === 'online' && selectedType === 'barber' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Travel fee (optional)</label>
+                        <div className="relative">
+                          <span className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
+                          <input
+                            type="number"
+                            id="travelFee"
+                            value={listingForm.travelFee}
+                            onChange={handleFormChange}
+                            className="w-full pl-8 sm:pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
+                            placeholder="0"
+                            min="0"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </SectionCard>
               </div>
@@ -1583,7 +1779,7 @@ export default function CreateListing() {
                           id="kind"
                           value={listingForm.kind}
                           onChange={handleFormChange}
-                          placeholder="e.g., Residential, Commercial"
+                          placeholder="e.g., Residential, Commercial, Both"
                         />
                         <FormInput
                           label="Availability"
@@ -1591,92 +1787,128 @@ export default function CreateListing() {
                           id="period"
                           value={listingForm.period}
                           onChange={handleFormChange}
-                          placeholder="e.g., Weekdays 9am-5pm"
+                          placeholder="e.g., Weekdays 9am-5pm, Weekends available"
                         />
                       </>
                     )}
                     
                     {selectedCategory === 'online' && selectedType === 'tutor' && (
                       <>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Teaching format</label>
+                          <select
+                            id="bathrooms"
+                            value={listingForm.bathrooms}
+                            onChange={handleFormChange}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
+                          >
+                            <option value="1">In-person</option>
+                            <option value="2">Online</option>
+                            <option value="3">Both</option>
+                          </select>
+                        </div>
                         <FormInput
-                          label="Education Level"
-                          icon={AcademicCapIcon}
-                          id="kind"
-                          value={listingForm.kind}
+                          label="Age group"
+                          icon={UserGroupIcon}
+                          id="ageGroup"
+                          value={listingForm.ageGroup}
                           onChange={handleFormChange}
-                          placeholder="e.g., Bachelor's Degree"
-                        />
-                        <FormInput
-                          label="Subjects"
-                          icon={BookOpenIcon}
-                          id="specializations"
-                          value={listingForm.specializations}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Math, Science, English"
+                          placeholder="e.g., Primary school, High school, Adults"
                         />
                       </>
                     )}
                     
                     {selectedCategory === 'online' && selectedType === 'barber' && (
                       <>
-                        <FormInput
-                          label="Specializations"
-                          icon={ScissorsIcon}
-                          id="specializations"
-                          value={listingForm.specializations}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Fades, beard trims"
-                        />
-                        <FormInput
-                          label="Experience"
-                          icon={ClockIcon}
-                          id="host"
-                          value={listingForm.host}
-                          onChange={handleFormChange}
-                          placeholder="Years of experience"
-                        />
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Booking notice</label>
+                          <select
+                            id="bookingNotice"
+                            value={listingForm.bookingNotice}
+                            onChange={handleFormChange}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl"
+                          >
+                            <option value="">Select notice period</option>
+                            <option value="1">Same day</option>
+                            <option value="24">24 hours</option>
+                            <option value="48">48 hours</option>
+                            <option value="72">72 hours</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Additional pricing</label>
+                          <textarea
+                            id="additionalPricing"
+                            value={listingForm.additionalPricing}
+                            onChange={handleFormChange}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
+                            placeholder="E.g., Beard trim: R80, Kids cut: R100"
+                            rows={3}
+                          />
+                        </div>
                       </>
                     )}
                     
                     {selectedCategory === 'online' && selectedType === 'photography' && (
                       <>
                         <FormInput
-                          label="Photography Style"
-                          icon={PhotoIcon}
-                          id="style"
-                          value={listingForm.style}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Portrait, event, studio"
-                        />
-                        <FormInput
-                          label="Session Duration"
+                          label="Photo delivery time"
                           icon={ClockIcon}
-                          id="sessionDuration"
-                          value={listingForm.sessionDuration}
+                          id="photoDelivery"
+                          value={listingForm.photoDelivery}
                           onChange={handleFormChange}
-                          placeholder="e.g., 1-2 hours"
+                          placeholder="E.g., 5-7 days, digital download"
                         />
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Delivery available</label>
+                          <div className="flex items-center h-full space-x-3">
+                            <input
+                              type="checkbox"
+                              id="delivery"
+                              checked={listingForm.delivery}
+                              onChange={handleFormChange}
+                              className="h-5 w-5 text-[#FF5A5F] rounded focus:ring-[#FF5A5F]"
+                            />
+                            <label htmlFor="delivery" className="font-medium text-gray-700">
+                              Offer delivery service
+                            </label>
+                          </div>
+                        </div>
                       </>
                     )}
                     
                     {selectedCategory === 'online' && selectedType === 'baker' && (
                       <>
-                        <FormInput
-                          label="Specialties"
-                          icon={CakeIcon}
-                          id="specialties"
-                          value={listingForm.specialties}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Wedding cakes, pastries"
-                        />
-                        <FormInput
-                          label="Dietary Options"
-                          icon={BeakerIcon}
-                          id="dietaryOptions"
-                          value={listingForm.dietaryOptions}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Vegan, gluten-free"
-                        />
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Order notice required</label>
+                          <select
+                            id="orderNotice"
+                            value={listingForm.orderNotice}
+                            onChange={handleFormChange}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl"
+                          >
+                            <option value="">Select notice period</option>
+                            <option value="24">24 hours</option>
+                            <option value="48">48 hours</option>
+                            <option value="72">72 hours</option>
+                            <option value="168">1 week</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Delivery available</label>
+                          <div className="flex items-center h-full space-x-3">
+                            <input
+                              type="checkbox"
+                              id="delivery"
+                              checked={listingForm.delivery}
+                              onChange={handleFormChange}
+                              className="h-5 w-5 text-[#FF5A5F] rounded focus:ring-[#FF5A5F]"
+                            />
+                            <label htmlFor="delivery" className="font-medium text-gray-700">
+                              Offer delivery service
+                            </label>
+                          </div>
+                        </div>
                       </>
                     )}
                   </div>
@@ -1684,12 +1916,17 @@ export default function CreateListing() {
               </div>
             )}
 
-            {/* Error Display */}
+            {/* Error Display - Stays at bottom without kicking user out */}
             {error && (
-              <div className="mt-4 sm:mt-6 bg-red-50 border border-red-200 rounded-xl sm:rounded-2xl p-3 sm:p-4">
-                <div className="flex items-center gap-2">
-                  <ExclamationTriangleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
-                  <p className="text-red-600 font-medium text-sm sm:text-base">{error}</p>
+              <div className="mt-4 sm:mt-6 bg-red-50 border border-red-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 animate-pulse">
+                <div className="flex items-start gap-2">
+                  <ExclamationTriangleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-red-600 font-medium text-sm sm:text-base">{error}</p>
+                    <p className="text-red-500 text-xs sm:text-sm mt-1">
+                      Please fix the errors above and try again. You can continue editing without losing your data.
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -1723,7 +1960,7 @@ export default function CreateListing() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-6 py-3 sm:px-10 sm:py-4 bg-[#FF5A5F] text-white rounded-xl sm:rounded-2xl font-semibold hover:bg-[#E14E50] transition-all duration-300 flex items-center gap-2 hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                    className="px-6 py-3 sm:px-10 sm:py-4 bg-[#FF5A5F] text-white rounded-xl sm:rounded-2xl font-semibold hover:bg-[#E14E50] transition-all duration-300 flex items-center gap-2 hover:scale-[1.02] shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <>
