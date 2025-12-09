@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
 import { app } from "../firebase";
 import { useSelector } from "react-redux";
@@ -14,7 +14,6 @@ import {
   XMarkIcon,
   ArrowRightIcon,
   CreditCardIcon,
-
   DevicePhoneMobileIcon,
   BuildingLibraryIcon,
   TruckIcon,
@@ -23,7 +22,6 @@ import {
   PhotoIcon,
   AcademicCapIcon,
   SparklesIcon,
- 
   MapPinIcon,
   PhoneIcon,
   UserIcon,
@@ -31,18 +29,17 @@ import {
   TagIcon,
   ShieldCheckIcon,
   ExclamationTriangleIcon,
- 
   KeyIcon,
- 
   UsersIcon,
-  
   HeartIcon,
   BeakerIcon,
   BookOpenIcon,
-  
+  ArrowLeftIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 
-// Custom paw icon since PawPrintIcon doesn't exist in heroicons
+// Custom paw icon
 const PawIcon = ({ className = "w-4 h-4" }) => (
   <svg 
     className={className} 
@@ -64,9 +61,16 @@ export default function CreateListing() {
   const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') || 'stays';
   
-  const [activeTab, setActiveTab] = useState(initialTab);
+  // Multi-step form state
+  const [currentStep, setCurrentStep] = useState(1);
+  const [fadeIn, setFadeIn] = useState(true);
+  const [direction, setDirection] = useState('next');
+  
+  // Listing type selection
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedType, setSelectedType] = useState('');
+
   const [files, setFiles] = useState([]);
   const [videoFile, setVideoFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -79,6 +83,7 @@ export default function CreateListing() {
   const [postLimitReached, setPostLimitReached] = useState(false);
   const [paymentRequired, setPaymentRequired] = useState(false);
   const [newListingId, setNewListingId] = useState(null);
+  const [promotionSteps, setPromotionSteps] = useState(0);
   const [promotionPackage, setPromotionPackage] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [cardDetails, setCardDetails] = useState({
@@ -88,24 +93,28 @@ export default function CreateListing() {
     name: ''
   });
 
-  // Form states
-  const [propertyForm, setPropertyForm] = useState({
+  // Combined form state with all required fields
+  const [listingForm, setListingForm] = useState({
+    // Common fields
     imageUrls: [],
     videoUrl: "",
     name: "",
     description: "",
-    near: "",
-    rules: "",
     address: "",
     contact: "",
     host: "",
-    kind: "",
-    period: "",
-    cancel: "",
-    type: "rent",
+    regularPrice: 50,
+    type: "",
+    category: "",
+    
+    // Property specific - ALL REQUIRED FIELDS
+    near: "",
+    rules: "",
+    kind: "apartment", // Default value
+    period: "Immediate", // Default value
+    cancel: "Flexible - Free cancellation 48 hours before check-in", // Default value
     bedrooms: 1,
     bathrooms: 1,
-    regularPrice: 50,
     discountPrice: 0,
     parking: false,
     pool: false,
@@ -124,47 +133,15 @@ export default function CreateListing() {
     share: false,
     breakfast: false,
     party: false,
-  });
-
-  const [serviceForm, setServiceForm] = useState({
-    imageUrls: [],
-    name: "",
-    description: "",
-    near: "",
-    address: "",
-    contact: "",
-    host: "",
-    type: "cleaning",
-    regularPrice: 50,
-    kind: "",
-    period: "",
-    cancel: "",
-    security: false,
-    pets: false,
+    
+    // Service specific
     ageGroup: "",
     licenseNumber: "",
     capacity: "",
     vehicleType: "",
     routeAreas: "",
-  });
-
-  const [helperForm, setHelperForm] = useState({
-    imageUrls: [],
-    name: "",
-    description: "",
-    near: "",
-    address: "",
-    contact: "",
-    host: "",
-    type: "domestic",
-    regularPrice: 50,
-    kind: "",
-    period: "",
-    cancel: "",
-    security: false,
-    pets: false,
-    bedrooms: 1,
-    bathrooms: 1,
+    
+    // Helper specific
     specializations: '',
     equipment: '',
     travelFee: '',
@@ -176,30 +153,46 @@ export default function CreateListing() {
     specialties: '',
     dietaryOptions: '',
     orderNotice: '',
-    delivery: false
-  });
-
-  const [eventForm, setEventForm] = useState({
-    imageUrls: [],
-    videoUrl: "",
-    name: "",
-    description: "",
-    address: "",
-    contact: "",
-    host: "",
-    type: "music",
+    delivery: false,
+    
+    // Event specific
     date: "",
     time: "",
-    regularPrice: 0,
-    parking: false,
     foodAvailable: false,
     familyFriendly: false,
   });
 
+  const stepRef = useRef(null);
+
+  // Update form when category or type changes
+  useEffect(() => {
+    if (selectedCategory && selectedType) {
+      setListingForm(prev => ({
+        ...prev,
+        category: selectedCategory,
+        type: selectedType,
+        // Set default kind based on type for stays
+        kind: selectedCategory === 'stays' ? getDefaultKind(selectedType) : prev.kind,
+      }));
+    }
+  }, [selectedCategory, selectedType]);
+
+  const getDefaultKind = (type) => {
+    switch(type) {
+      case 'rent': return 'apartment';
+      case 'over': return 'guest_house';
+      case 'office': return 'hourly_room';
+      case 'land': return 'plot';
+      case 'sale': return 'house';
+      default: return 'apartment';
+    }
+  };
+
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
     if (tabFromUrl) {
-      setActiveTab(tabFromUrl);
+      setSelectedCategory(tabFromUrl);
+      setCurrentStep(2); // Skip to step 2 if category is in URL
     }
   }, [searchParams]);
 
@@ -252,6 +245,93 @@ export default function CreateListing() {
 
     return () => clearTimeout(timer);
   }, [currentUser]);
+
+  // Animation effect
+  useEffect(() => {
+    setFadeIn(false);
+    const timer = setTimeout(() => {
+      setFadeIn(true);
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, [currentStep]);
+
+  const handleNextStep = () => {
+    setDirection('next');
+    
+    // Validation for step 1
+    if (currentStep === 1 && !selectedCategory) {
+      setError("Please select a category");
+      return;
+    }
+    
+    // Validation for step 2
+    if (currentStep === 2 && !selectedType) {
+      setError("Please select a type");
+      return;
+    }
+    
+    // Validation for step 3
+    if (currentStep === 3) {
+      if (!listingForm.name.trim()) {
+        setError("Please enter a name");
+        return;
+      }
+      if (!listingForm.description.trim()) {
+        setError("Please enter a description");
+        return;
+      }
+      if (!listingForm.address.trim()) {
+        setError("Please enter an address");
+        return;
+      }
+      if (!listingForm.contact.trim()) {
+        setError("Please enter a contact number");
+        return;
+      }
+      if (!listingForm.host.trim()) {
+        setError("Please enter a host/organizer name");
+        return;
+      }
+      
+      // Additional validation for stays category
+      if (selectedCategory === 'stays') {
+        if (!listingForm.kind.trim()) {
+          setError("Please enter the property type (e.g., Apartment, House)");
+          return;
+        }
+        if (!listingForm.period.trim()) {
+          setError("Please enter when the property is available from");
+          return;
+        }
+        if (!listingForm.cancel.trim()) {
+          setError("Please enter the cancellation policy");
+          return;
+        }
+      }
+      
+      // Additional validation for events
+      if (selectedCategory === 'events') {
+        if (!listingForm.date) {
+          setError("Please select an event date");
+          return;
+        }
+        if (!listingForm.time) {
+          setError("Please select an event time");
+          return;
+        }
+      }
+    }
+    
+    setError(null);
+    setCurrentStep(prev => Math.min(prev + 1, 4));
+  };
+
+  const handlePrevStep = () => {
+    setDirection('prev');
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+    setError(null);
+  };
 
   // Image compression function
   const compressImage = async (file) => {
@@ -414,31 +494,14 @@ export default function CreateListing() {
     });
   };
 
-  const handleRemoveImage = (index, formType) => {
-    if (formType === 'property') {
-      setPropertyForm({
-        ...propertyForm,
-        imageUrls: propertyForm.imageUrls.filter((_, i) => i !== index),
-      });
-    } else if (formType === 'service') {
-      setServiceForm({
-        ...serviceForm,
-        imageUrls: serviceForm.imageUrls.filter((_, i) => i !== index),
-      });
-    } else if (formType === 'helper') {
-      setHelperForm({
-        ...helperForm,
-        imageUrls: helperForm.imageUrls.filter((_, i) => i !== index),
-      });
-    } else if (formType === 'event') {
-      setEventForm({
-        ...eventForm,
-        imageUrls: eventForm.imageUrls.filter((_, i) => i !== index),
-      });
-    }
+  const handleRemoveImage = (index) => {
+    setListingForm({
+      ...listingForm,
+      imageUrls: listingForm.imageUrls.filter((_, i) => i !== index),
+    });
   };
 
-  const handleImageSubmit = async (formType) => {
+  const handleImageSubmit = async () => {
     try {
       if (files.length === 0) {
         setImageUploadError("Please select at least one image");
@@ -483,28 +546,10 @@ export default function CreateListing() {
       }
 
       const urls = await Promise.all(uploadPromises);
-
-      if (formType === 'property') {
-        setPropertyForm({
-          ...propertyForm,
-          imageUrls: propertyForm.imageUrls.concat(urls),
-        });
-      } else if (formType === 'service') {
-        setServiceForm({
-          ...serviceForm,
-          imageUrls: serviceForm.imageUrls.concat(urls),
-        });
-      } else if (formType === 'helper') {
-        setHelperForm({
-          ...helperForm,
-          imageUrls: helperForm.imageUrls.concat(urls),
-        });
-      } else if (formType === 'event') {
-        setEventForm({
-          ...eventForm,
-          imageUrls: eventForm.imageUrls.concat(urls),
-        });
-      }
+      setListingForm({
+        ...listingForm,
+        imageUrls: [...listingForm.imageUrls, ...urls],
+      });
 
       setFiles([]);
       setImageUploadError(null);
@@ -536,11 +581,7 @@ export default function CreateListing() {
       setUploadProgress(0);
 
       const url = await storeVideo(videoFile);
-      if (activeTab === 'stays') {
-        setPropertyForm({ ...propertyForm, videoUrl: url });
-      } else if (activeTab === 'events') {
-        setEventForm({ ...eventForm, videoUrl: url });
-      }
+      setListingForm({ ...listingForm, videoUrl: url });
       setVideoFile(null);
       setVideoUploadError(null);
     } catch (err) {
@@ -551,76 +592,39 @@ export default function CreateListing() {
     }
   };
 
-  const handlePropertyChange = (e) => {
+  const handleFormChange = (e) => {
     const { id, value, type, checked } = e.target;
 
-    if (id === "sale" || id === "rent" || id === "over" || id === "office" || id === "land") {
-      return setPropertyForm({ ...propertyForm, type: id });
-    }
-
     if (type === "checkbox") {
-      setPropertyForm({ ...propertyForm, [id]: checked });
+      setListingForm({ ...listingForm, [id]: checked });
     } else {
-      setPropertyForm({ ...propertyForm, [id]: value });
+      setListingForm({ ...listingForm, [id]: value });
     }
   };
 
-  const handleServiceChange = (e) => {
-    const { id, value, type, checked } = e.target;
-
-    const serviceTypes = [
-      "cleaning", "maintenance", "moving", "landscaping", 
-      "catering", "other", "daycare", "schoolTransport"
-    ];
-
-    if (serviceTypes.includes(id)) {
-      return setServiceForm({ ...serviceForm, type: id });
-    }
-
-    if (type === "checkbox") {
-      setServiceForm({ ...serviceForm, [id]: checked });
-    } else {
-      setServiceForm({ ...serviceForm, [id]: value });
-    }
-  };
-
-  const handleHelperChange = (e) => {
-    const { id, value, type, checked } = e.target;
-
-    if (id === "domestic" || id === "errand" || id === "tutor" || id === "chef" || 
-        id === "beauty" || id === "tattoo" || id === "barber" || id === "photography" || id === "baker") {
-      return setHelperForm({ ...helperForm, type: id });
-    }
-
-    if (type === "checkbox") {
-      setHelperForm({ ...helperForm, [id]: checked });
-    } else {
-      setHelperForm({ ...helperForm, [id]: value });
-    }
-  };
-
-  const handleEventChange = (e) => {
-    const { id, value, type, checked } = e.target;
-
-    if (id === "music" || id === "sports" || id === "art" || id === "community" || id === "food") {
-      return setEventForm({ ...eventForm, type: id });
-    }
-
-    if (type === "checkbox") {
-      setEventForm({ ...eventForm, [id]: checked });
-    } else {
-      setEventForm({ ...eventForm, [id]: value });
-    }
-  };
-
-  const handlePropertySubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (propertyForm.imageUrls.length < 1) {
+    
+    // Final validation
+    if (listingForm.imageUrls.length < 1) {
       return setError("You must upload at least one image");
     }
-    if (+propertyForm.regularPrice < +propertyForm.discountPrice) {
+    
+    if (selectedCategory === 'stays' && +listingForm.regularPrice < +listingForm.discountPrice) {
       return setError("Discount price must be lower than regular price");
+    }
+    
+    // Ensure required fields for stays are filled
+    if (selectedCategory === 'stays') {
+      if (!listingForm.kind.trim()) {
+        return setError("Property type is required");
+      }
+      if (!listingForm.period.trim()) {
+        return setError("Availability period is required");
+      }
+      if (!listingForm.cancel.trim()) {
+        return setError("Cancellation policy is required");
+      }
     }
 
     setLoading(true);
@@ -628,132 +632,172 @@ export default function CreateListing() {
 
     try {
       const listingId = new Date().getTime().toString(36) + Math.random().toString(36).substr(2, 5);
+      
+      const endpoint = selectedCategory === 'stays' ? '/api/listing/create' :
+                      selectedCategory === 'experiences' ? '/api/service/create' :
+                      selectedCategory === 'online' ? '/api/helper/create' :
+                      '/api/event/create';
 
-      const res = await fetch("/api/listing/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...propertyForm,
-          userRef: currentUser._id,
-          _id: listingId,
-          listingType: 'property'
-        }),
+      // Prepare the request body with all required fields
+      const requestBody = {
+        ...listingForm,
+        userRef: currentUser._id,
+        _id: listingId,
+        type: selectedType,
+        category: selectedCategory,
+        listingType: selectedCategory === 'stays' ? 'property' : selectedCategory,
+        // Ensure kind and cancel are included (they have defaults but double-check)
+        kind: listingForm.kind || "apartment",
+        cancel: listingForm.cancel || "Flexible - Free cancellation 48 hours before check-in",
+        period: listingForm.period || "Immediate",
+        near: listingForm.near || "",
+        rules: listingForm.rules || ""
+      };
+
+      // Remove undefined or empty values that might cause issues
+      Object.keys(requestBody).forEach(key => {
+        if (requestBody[key] === undefined || requestBody[key] === null) {
+          requestBody[key] = "";
+        }
       });
-      const data = await res.json();
 
-      if (data.success === false) {
-        setError(data.message);
-      } else {
-        setNewListingId(data._id || listingId);
-        setShowPromotionPopup(true);
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+      console.log("Submitting listing data:", requestBody);
 
-  const handleServiceSubmit = async (e) => {
-    e.preventDefault();
-
-    if (serviceForm.imageUrls.length < 1) {
-      return setError("You must upload at least one image");
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/service/create", {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem('access_token')}`
         },
-        body: JSON.stringify({
-          ...serviceForm,
-          creator: currentUser._id,
-          offer: false
-        }),
+        body: JSON.stringify(requestBody),
       });
+
       const data = await res.json();
+      console.log("Response from server:", data);
 
       if (data.success === false) {
-        setError(data.message);
+        setError(data.message || "Failed to create listing. Please check all required fields.");
       } else {
-        navigate(`/service/${data._id}`);
+        if (selectedCategory === 'stays') {
+          setNewListingId(data._id || listingId);
+          setShowPromotionPopup(true);
+        } else {
+          navigate(`/${selectedCategory === 'experiences' ? 'service' : 
+                   selectedCategory === 'online' ? 'helper' : 'event'}/${data._id}`);
+        }
       }
     } catch (err) {
-      setError(err.message);
+      console.error("Submission error:", err);
+      setError(err.message || "Network error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleHelperSubmit = async (e) => {
-    e.preventDefault();
-
-    if (helperForm.imageUrls.length < 1) {
-      return setError("You must upload at least one image");
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/helper/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem('access_token')}`
-        },
-        body: JSON.stringify({
-          ...helperForm,
-          userRef: currentUser._id
-        }),
-      });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText || "Failed to create helper listing");
-      }
-
-      const data = await res.json();
-      navigate(`/helper/${data._id}`);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+  const getAmenitiesByCategory = () => {
+    switch (selectedCategory) {
+      case 'stays':
+        return [
+          { id: "wifi", label: "WiFi", emoji: "📶", checked: listingForm.wifi },
+          { id: "kitchen", label: "Kitchen", emoji: "🍳", checked: listingForm.kitchen },
+          { id: "parking", label: "Parking", emoji: "🅿️", checked: listingForm.parking },
+          { id: "pool", label: "Pool", emoji: "🏊‍♂️", checked: listingForm.pool },
+          { id: "tv", label: "TV", emoji: "📺", checked: listingForm.tv },
+          { id: "security", label: "Security", emoji: "🔒", checked: listingForm.security },
+          { id: "furnished", label: "Furnished", emoji: "🪑", checked: listingForm.furnished },
+          { id: "pets", label: "Pets Allowed", emoji: "🐾", checked: listingForm.pets },
+          { id: "fridge", label: "Refrigerator", emoji: "❄️", checked: listingForm.fridge },
+          { id: "breakfast", label: "Breakfast", emoji: "🍳", checked: listingForm.breakfast },
+          { id: "hot", label: "Hot Shower", emoji: "🚿", checked: listingForm.hot },
+          { id: "stove", label: "Stove", emoji: "🔥", checked: listingForm.stove },
+          { id: "storage", label: "Storage", emoji: "📦", checked: listingForm.storage },
+          { id: "share", label: "House Share", emoji: "👥", checked: listingForm.share },
+          { id: "party", label: "No Parties", emoji: "🔇", checked: listingForm.party },
+        ];
+      case 'experiences':
+        return [
+          { id: "security", label: "Background Check", emoji: "✅", checked: listingForm.security },
+          { id: "pets", label: "Pet Friendly", emoji: "🐾", checked: listingForm.pets },
+        ];
+      case 'online':
+        return [
+          { id: "security", label: "Background Check", emoji: "✅", checked: listingForm.security },
+          { id: "pets", label: "Pet Friendly", emoji: "🐾", checked: listingForm.pets },
+        ];
+      case 'events':
+        return [
+          { id: "parking", label: "Parking", emoji: "🅿️", checked: listingForm.parking },
+          { id: "foodAvailable", label: "Food Available", emoji: "🍔", checked: listingForm.foodAvailable },
+          { id: "familyFriendly", label: "Family Friendly", emoji: "👨‍👩‍👧‍👦", checked: listingForm.familyFriendly },
+        ];
+      default:
+        return [];
     }
   };
 
-  const handleEventSubmit = async (e) => {
-    e.preventDefault();
-    if (eventForm.imageUrls.length < 1) {
-      return setError("You must upload at least one image for the event");
+  const getTypesByCategory = () => {
+    switch (selectedCategory) {
+      case 'stays':
+        return [
+          { id: "rent", label: "Room/Home Rent", emoji: "🏠", description: "Monthly rental" },
+          { id: "over", label: "Guest House", emoji: "🛌", description: "Nightly stays" },
+          { id: "office", label: "Hourly Stay", emoji: "🕒", description: "Per hour accommodation" },
+          { id: "land", label: "Land", emoji: "🌳", description: "Plot for sale" },
+          { id: "sale", label: "For Sale", emoji: "💰", description: "Property sale" },
+        ];
+      case 'experiences':
+        return [
+          { id: "cleaning", label: "Cleaning", emoji: "🧹", description: "Home & office cleaning" },
+          { id: "maintenance", label: "Maintenance", emoji: "🔧", description: "Repairs & fixes" },
+          { id: "moving", label: "Moving", emoji: "🚚", description: "Relocation services" },
+          { id: "landscaping", label: "Landscaping", emoji: "🌿", description: "Garden & yard work" },
+          { id: "catering", label: "Catering", emoji: "🍽️", description: "Food & catering" },
+          { id: "daycare", label: "Day Care", emoji: "👶", description: "Child care services" },
+          { id: "schoolTransport", label: "Transport", emoji: "🚌", description: "School transport" },
+          { id: "other", label: "Other", emoji: "✨", description: "Other services" },
+        ];
+      case 'online':
+        return [
+          { id: "domestic", label: "Domestic Helper", emoji: "🧹", description: "Cleaning, laundry, chores" },
+          { id: "errand", label: "Errand Runner", emoji: "🏃", description: "Shopping, deliveries, tasks" },
+          { id: "tutor", label: "Private Tutor", emoji: "📚", description: "Academic tutoring" },
+          { id: "chef", label: "Private Chef", emoji: "👨‍🍳", description: "Meal preparation" },
+          { id: "beauty", label: "Beauty Specialist", emoji: "💅", description: "Hair, nails, makeup" },
+          { id: "tattoo", label: "Tattoo Artist", emoji: "🖌️", description: "Tattoo design" },
+          { id: "barber", label: "Barber", emoji: "✂️", description: "Haircuts, grooming" },
+          { id: "photography", label: "Photographer", emoji: "📷", description: "Photo sessions" },
+          { id: "baker", label: "Baker", emoji: "🍰", description: "Custom baked goods" },
+        ];
+      case 'events':
+        return [
+          { id: "music", label: "Music", emoji: "🎵", description: "Concerts, festivals" },
+          { id: "sports", label: "Sports", emoji: "⚽", description: "Games, tournaments" },
+          { id: "art", label: "Art & Culture", emoji: "🎨", description: "Exhibitions, shows" },
+          { id: "community", label: "Community", emoji: "🧑‍🤝‍🧑", description: "Meetups, gatherings" },
+          { id: "food", label: "Food & Drink", emoji: "🍔", description: "Food festivals, tastings" },
+        ];
+      default:
+        return [];
     }
-    setLoading(true);
-    setError(null);
+  };
+
+  const handlePayment = async () => {
     try {
-      const res = await fetch("/api/event/create", {
+      const res = await fetch("/api/payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...eventForm,
-          userRef: currentUser._id,
-        }),
+        body: JSON.stringify({ userId: currentUser._id, amount: 35 }),
       });
       const data = await res.json();
-      if (data.success === false) {
-        setError(data.message);
+      if (data.success) {
+        setPaymentRequired(false);
+        setPostLimitReached(false);
       } else {
-        navigate(`/event/${data._id}`);
+        setError("Payment failed. Please try again.");
       }
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      setError("Payment error. Please try again later.");
+      console.error("Payment error:", err);
     }
   };
 
@@ -789,30 +833,6 @@ export default function CreateListing() {
     }
   };
 
-  const handlePayment = async () => {
-    try {
-      const res = await fetch("/api/payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: currentUser._id, amount: 35 }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setPaymentRequired(false);
-        setPostLimitReached(false);
-      } else {
-        setError("Payment failed. Please try again.");
-      }
-    } catch (err) {
-      setError("Payment error. Please try again later.");
-      console.error("Payment error:", err);
-    }
-  };
-
-  const handlePaymentSelection = (method) => {
-    setSelectedPaymentMethod(method);
-  };
-
   const cardDetailsValid = () => {
     const cardNumberValid = /^\d{16}$/.test(cardDetails.number.replace(/\s/g, ''));
     const expiryValid = /^\d{2}\/\d{2}$/.test(cardDetails.expiry);
@@ -822,35 +842,14 @@ export default function CreateListing() {
     return cardNumberValid && expiryValid && cvvValid && nameValid;
   };
 
-  // UI Components
-  const TabButton = ({ id, icon: Icon, label, description }) => (
-    <button
-      onClick={() => setActiveTab(id)}
-      className={`
-        flex flex-col items-center p-6 rounded-2xl transition-all duration-300
-        ${activeTab === id 
-          ? 'bg-white border-2 border-[#FF5A5F] shadow-lg shadow-red-100' 
-          : 'bg-gray-50 border-2 border-transparent hover:bg-white hover:border-gray-200'
-        }
-      `}
-    >
-      <div className={`
-        p-4 rounded-full mb-4 transition-all duration-300
-        ${activeTab === id 
-          ? 'bg-[#FF5A5F]/10 text-[#FF5A5F]' 
-          : 'bg-gray-100 text-gray-600'
-        }
-      `}>
-        <Icon className="w-8 h-8" />
-      </div>
-      <h3 className="font-semibold text-gray-900 mb-1">{label}</h3>
-      <p className="text-sm text-gray-500 text-center">{description}</p>
-    </button>
-  );
+  const handlePaymentSelection = (method) => {
+    setSelectedPaymentMethod(method);
+  };
 
+  // UI Components
   const SectionCard = ({ title, children, className = "" }) => (
-    <div className={`bg-white rounded-3xl shadow-sm border border-gray-100 p-8 ${className}`}>
-      <h2 className="text-2xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+    <div className={`bg-white rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6 md:p-8 ${className}`}>
+      <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
         <div className="w-1.5 h-6 bg-[#FF5A5F] rounded-full"></div>
         {title}
       </h2>
@@ -898,12 +897,68 @@ export default function CreateListing() {
     </div>
   );
 
+  const CategoryCard = ({ id, icon: Icon, label, description, selected }) => (
+    <button
+      type="button"
+      onClick={() => setSelectedCategory(id)}
+      className={`
+        flex flex-col items-center p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl transition-all duration-300 w-full min-h-[180px] sm:min-h-[220px]
+        ${selected 
+          ? 'bg-white border-2 sm:border-3 border-[#FF5A5F] shadow-lg sm:shadow-xl shadow-red-100 scale-[1.02]' 
+          : 'bg-gray-50 border border-gray-200 hover:bg-white hover:border-gray-300 hover:shadow-lg'
+        }
+      `}
+    >
+      <div className={`
+        p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl mb-4 sm:mb-6 transition-all duration-300
+        ${selected 
+          ? 'bg-[#FF5A5F]/10 text-[#FF5A5F]' 
+          : 'bg-gray-100 text-gray-600'
+        }
+      `}>
+        <Icon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" />
+      </div>
+      <h3 className="font-bold text-base sm:text-lg md:text-xl text-gray-900 mb-2 text-center">{label}</h3>
+      <p className="text-gray-500 text-center text-xs sm:text-sm leading-relaxed hidden sm:block">{description}</p>
+      {selected && (
+        <div className="mt-4 flex items-center gap-2 text-[#FF5A5F] font-medium text-sm">
+          <CheckCircleIcon className="w-4 h-4" />
+          Selected
+        </div>
+      )}
+    </button>
+  );
+
+  const TypeCard = ({ id, label, emoji, description, selected }) => (
+    <button
+      type="button"
+      onClick={() => setSelectedType(id)}
+      className={`
+        text-left p-4 sm:p-6 md:p-8 border-2 rounded-2xl sm:rounded-3xl transition-all duration-300 w-full min-h-[140px] sm:min-h-[160px]
+        ${selected 
+          ? 'border-[#FF5A5F] bg-[#FF5A5F]/5 shadow-md' 
+          : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+        }
+      `}
+    >
+      <span className="text-3xl sm:text-4xl mb-3 sm:mb-4 block">{emoji}</span>
+      <h4 className="font-bold text-sm sm:text-base md:text-lg text-gray-900 mb-1 sm:mb-2">{label}</h4>
+      <p className="text-gray-500 text-xs sm:text-sm hidden sm:block">{description}</p>
+      {selected && (
+        <div className="mt-2 sm:mt-4 flex items-center gap-2 text-[#FF5A5F] text-xs sm:text-sm font-medium">
+          <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+          Selected
+        </div>
+      )}
+    </button>
+  );
+
   const AmenityCard = ({ id, label, emoji, checked, onChange }) => (
     <label className={`
-      flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all duration-200
+      flex items-center gap-3 p-3 sm:p-4 border border-gray-200 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] min-w-[140px]
       ${checked 
         ? 'border-[#FF5A5F] bg-[#FF5A5F]/5 shadow-sm' 
-        : 'border-gray-200 hover:border-gray-300'
+        : 'hover:border-gray-300'
       }
     `}>
       <input
@@ -913,33 +968,23 @@ export default function CreateListing() {
         onChange={onChange}
         className="hidden"
       />
-      <span className="text-xl">{emoji}</span>
-      <span className="font-medium text-gray-700">{label}</span>
-      <CheckCircleIcon className={`w-5 h-5 ml-auto ${checked ? 'text-[#FF5A5F]' : 'text-gray-300'}`} />
-    </label>
-  );
-
-  const TypeCard = ({ id, label, emoji, description, selected, onClick }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`
-        text-left p-6 border-2 rounded-2xl transition-all duration-200
-        ${selected 
-          ? 'border-[#FF5A5F] bg-[#FF5A5F]/5 shadow-sm' 
-          : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+      <span className="text-xl sm:text-2xl">{emoji}</span>
+      <span className="font-medium text-gray-700 text-sm sm:text-base flex-1">{label}</span>
+      <div className={`
+        w-5 h-5 sm:w-6 sm:h-6 rounded-full border flex items-center justify-center transition-all duration-300
+        ${checked 
+          ? 'bg-[#FF5A5F] border-[#FF5A5F]' 
+          : 'bg-white border-gray-300'
         }
-      `}
-    >
-      <span className="text-3xl mb-3 block">{emoji}</span>
-      <h4 className="font-semibold text-gray-900 mb-1">{label}</h4>
-      <p className="text-sm text-gray-500">{description}</p>
-    </button>
+      `}>
+        {checked && <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />}
+      </div>
+    </label>
   );
 
   const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFiles = 10, label }) => (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
         <input
           type="file"
           id={`${type}-upload`}
@@ -952,23 +997,23 @@ export default function CreateListing() {
         <label
           htmlFor={`${type}-upload`}
           className={`
-            flex-1 p-8 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center 
-            cursor-pointer transition-all duration-200 hover:border-[#FF5A5F]/50
+            flex-1 p-6 sm:p-8 md:p-12 border-2 border-dashed rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center 
+            cursor-pointer transition-all duration-300 hover:border-[#FF5A5F]/50 min-h-[140px]
             ${uploading ? 'border-gray-200 bg-gray-50' : 'border-gray-300'}
           `}
         >
           {type === 'image' ? (
             <>
-              <CameraIcon className="w-12 h-12 text-gray-400 mb-3" />
-              <span className="text-gray-600 font-medium">{label || "Select photos"}</span>
-              <span className="text-sm text-gray-500 mt-1">PNG, JPG or WebP (max 2MB each)</span>
-              <span className="text-xs text-gray-400 mt-2">{filesCount || 0} of {maxFiles} photos</span>
+              <CameraIcon className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-gray-400 mb-2 sm:mb-3 md:mb-4" />
+              <span className="text-gray-600 font-semibold text-sm sm:text-base md:text-lg text-center">{label || "Select photos"}</span>
+              <span className="text-gray-500 mt-1 text-xs sm:text-sm text-center">PNG, JPG or WebP (max 2MB each)</span>
+              <span className="text-gray-400 mt-2 text-xs">{filesCount || 0} of {maxFiles} photos</span>
             </>
           ) : (
             <>
-              <VideoCameraIcon className="w-12 h-12 text-gray-400 mb-3" />
-              <span className="text-gray-600 font-medium">{label || "Select video"}</span>
-              <span className="text-sm text-gray-500 mt-1">MP4 or MOV (max 50MB)</span>
+              <VideoCameraIcon className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-gray-400 mb-2 sm:mb-3 md:mb-4" />
+              <span className="text-gray-600 font-semibold text-sm sm:text-base md:text-lg text-center">{label || "Select video"}</span>
+              <span className="text-gray-500 mt-1 text-xs sm:text-sm text-center">MP4 or MOV (max 50MB)</span>
             </>
           )}
         </label>
@@ -976,9 +1021,9 @@ export default function CreateListing() {
           type="button"
           onClick={onSubmit}
           className={`
-            px-8 py-4 rounded-xl font-medium transition-all duration-200 whitespace-nowrap
+            px-6 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl font-semibold text-sm sm:text-base md:text-lg transition-all duration-300 whitespace-nowrap
             ${filesCount > 0 
-              ? 'bg-[#FF5A5F] text-white hover:bg-[#E14E50]' 
+              ? 'bg-[#FF5A5F] text-white hover:bg-[#E14E50] hover:scale-[1.02]' 
               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
             }
           `}
@@ -990,32 +1035,34 @@ export default function CreateListing() {
     </div>
   );
 
-  const ProgressBar = ({ progress }) => (
-    <div className="w-full bg-gray-200 rounded-full h-2">
-      <div 
-        className="bg-[#FF5A5F] h-2 rounded-full transition-all duration-300"
-        style={{ width: `${progress}%` }}
-      ></div>
-    </div>
-  );
-
-  const CheckboxField = ({ id, label, checked, onChange, description, icon: Icon }) => (
-    <div className="flex items-start space-x-4 p-3">
-      <input
-        type="checkbox"
-        id={id}
-        checked={checked}
-        onChange={onChange}
-        className="mt-1 h-5 w-5 text-[#FF5A5F] rounded focus:ring-[#FF5A5F]"
-      />
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
-          {Icon && <Icon className="w-4 h-4 text-gray-500" />}
-          <label htmlFor={id} className="font-medium text-gray-700">
-            {label}
-          </label>
-        </div>
-        {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
+  const StepProgress = () => (
+    <div className="mb-8 sm:mb-12 overflow-x-auto">
+      <div className="flex items-center justify-between min-w-[300px]">
+        {[1, 2, 3, 4].map((step) => (
+          <div key={step} className="flex items-center">
+            <div className={`
+              w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-sm sm:text-base md:text-lg transition-all duration-500
+              ${step < currentStep ? 'bg-[#FF5A5F] text-white' :
+                step === currentStep ? 'bg-[#FF5A5F] text-white ring-2 sm:ring-4 ring-[#FF5A5F]/20' :
+                'bg-gray-100 text-gray-400'
+              }
+            `}>
+              {step < currentStep ? <CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" /> : step}
+            </div>
+            {step < 4 && (
+              <div className={`
+                h-1 w-12 sm:w-16 md:w-20 lg:w-24 transition-all duration-500
+                ${step < currentStep ? 'bg-[#FF5A5F]' : 'bg-gray-200'}
+              `} />
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-between mt-3 sm:mt-4 text-xs sm:text-sm min-w-[300px]">
+        <span className={`font-medium ${currentStep >= 1 ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>Category</span>
+        <span className={`font-medium ${currentStep >= 2 ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>Type</span>
+        <span className={`font-medium ${currentStep >= 3 ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>Details</span>
+        <span className={`font-medium ${currentStep >= 4 ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>Amenities</span>
       </div>
     </div>
   );
@@ -1024,8 +1071,8 @@ export default function CreateListing() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#FF5A5F] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Preparing your listing form...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#FF5A5F] mx-auto mb-4"></div>
+          <p className="text-gray-600">Preparing your listing form...</p>
         </div>
       </div>
     );
@@ -1067,1899 +1114,955 @@ export default function CreateListing() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-6 sm:py-8 md:py-12">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
             Create a New Listing
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-gray-600 text-sm sm:text-base md:text-lg lg:text-xl">
             Share your space, service, or event with our community
           </p>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-          <TabButton
-            id="stays"
-            icon={HomeIcon}
-            label="Places to stay"
-            description="Rent out your property"
-          />
-          <TabButton
-            id="experiences"
-            icon={BriefcaseIcon}
-            label="Services"
-            description="Offer professional services"
-          />
-          <TabButton
-            id="online"
-            icon={UserGroupIcon}
-            label="Helpers"
-            description="Register as a personal helper"
-          />
-          <TabButton
-            id="events"
-            icon={CalendarIcon}
-            label="Events"
-            description="Create local happenings"
-          />
-        </div>
+        {/* Step Progress */}
+        <StepProgress />
 
-        {/* Property Form */}
-        {activeTab === 'stays' && (
-          <form onSubmit={handlePropertySubmit} className="space-y-6">
-            <SectionCard title="What type of place are you listing?">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[
-                  { id: "rent", label: "Room/Home Rent", emoji: "🏠", description: "Monthly rental" },
-                  { id: "over", label: "Guest House", emoji: "🛌", description: "Nightly stays" },
-                  { id: "office", label: "Hourly Stay", emoji: "🕒", description: "Per hour accommodation" },
-                  { id: "land", label: "Land", emoji: "🌳", description: "Plot for sale" },
-                  { id: "sale", label: "For Sale", emoji: "💰", description: "Property sale" },
-                ].map((type) => (
-                  <TypeCard
-                    key={type.id}
-                    {...type}
-                    selected={propertyForm.type === type.id}
-                    onClick={() => setPropertyForm({ ...propertyForm, type: type.id })}
+        {/* Main Form Container */}
+        <div className={`transition-all duration-500 ${fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <form onSubmit={handleSubmit} ref={stepRef} className="space-y-4 sm:space-y-6">
+            {/* Step 1: Select Category */}
+            {currentStep === 1 && (
+              <SectionCard title="What would you like to list?">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+                  <CategoryCard
+                    id="stays"
+                    icon={HomeIcon}
+                    label="Places to Stay"
+                    description="Rent out your property, room, or entire home"
+                    selected={selectedCategory === 'stays'}
                   />
-                ))}
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Tell us about your place">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormInput
-                  label="Listing title"
-                  icon={HomeIcon}
-                  id="name"
-                  value={propertyForm.name}
-                  onChange={handlePropertyChange}
-                  placeholder="Cozy mountain cabin with amazing views"
-                  required
-                />
-                <FormInput
-                  label="Address"
-                  icon={MapPinIcon}
-                  id="address"
-                  value={propertyForm.address}
-                  onChange={handlePropertyChange}
-                  placeholder="Enter full address"
-                  required
-                />
-                <div className="md:col-span-2">
-                  <FormInput
-                    label="Description"
-                    type="textarea"
-                    id="description"
-                    value={propertyForm.description}
-                    onChange={handlePropertyChange}
-                    placeholder="Describe what makes your place special..."
-                    required
-                    rows={5}
+                  <CategoryCard
+                    id="experiences"
+                    icon={BriefcaseIcon}
+                    label="Services"
+                    description="Offer professional services to the community"
+                    selected={selectedCategory === 'experiences'}
+                  />
+                  <CategoryCard
+                    id="online"
+                    icon={UserGroupIcon}
+                    label="Helpers"
+                    description="Register as a personal helper or specialist"
+                    selected={selectedCategory === 'online'}
+                  />
+                  <CategoryCard
+                    id="events"
+                    icon={CalendarIcon}
+                    label="Events"
+                    description="Create and promote local happenings"
+                    selected={selectedCategory === 'events'}
                   />
                 </div>
-                <div className="md:col-span-2">
-                  <FormInput
-                    label="Nearby attractions"
-                    icon={MapPinIcon}
-                    type="textarea"
-                    id="near"
-                    value={propertyForm.near}
-                    onChange={handlePropertyChange}
-                    placeholder="Mention nearby points of interest, restaurants, parks, etc."
-                    rows={3}
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <FormInput
-                    label="House rules"
-                    icon={KeyIcon}
-                    type="textarea"
-                    id="rules"
-                    value={propertyForm.rules}
-                    onChange={handlePropertyChange}
-                    placeholder="Enter any rules or regulations for the property"
-                    rows={3}
-                  />
-                </div>
-                <FormInput
-                  label="Contact number"
-                  icon={PhoneIcon}
-                  id="contact"
-                  value={propertyForm.contact}
-                  onChange={handlePropertyChange}
-                  placeholder="Contact phone number"
-                  required
-                />
-                <FormInput
-                  label="Host name"
-                  icon={UserIcon}
-                  id="host"
-                  value={propertyForm.host}
-                  onChange={handlePropertyChange}
-                  placeholder="Your name or property manager"
-                  required
-                />
-                <FormInput
-                  label="Property type"
-                  icon={HomeIcon}
-                  id="kind"
-                  value={propertyForm.kind}
-                  onChange={handlePropertyChange}
-                  placeholder="e.g., Apartment, House, Room"
-                  required
-                />
-                <FormInput
-                  label="Available from"
-                  icon={CalendarIcon}
-                  id="period"
-                  value={propertyForm.period}
-                  onChange={handlePropertyChange}
-                  placeholder="e.g., Immediate, 1st December"
-                  required
-                />
-                <FormInput
-                  label="Cancellation policy"
-                  icon={ClockIcon}
-                  id="cancel"
-                  value={propertyForm.cancel}
-                  onChange={handlePropertyChange}
-                  placeholder="e.g., Free cancellation 48 hours before"
-                  required
-                />
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Add some photos">
-              <MediaUploadArea
-                type="image"
-                onChange={handleFileChange}
-                onSubmit={() => handleImageSubmit('property')}
-                filesCount={files.length}
-                label="Upload property photos"
-              />
-              
-              {imageUploadError && (
-                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-red-600 text-sm">{imageUploadError}</p>
-                </div>
-              )}
-
-              {propertyForm.imageUrls.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="font-medium text-gray-700 mb-4">Uploaded photos ({propertyForm.imageUrls.length})</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {propertyForm.imageUrls.map((url, index) => (
-                      <div key={url} className="relative aspect-square rounded-xl overflow-hidden group">
-                        <img
-                          src={url}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(index, 'property')}
-                          className="absolute top-2 right-2 bg-white p-1.5 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                        >
-                          <XMarkIcon className="w-4 h-4 text-gray-600" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-8">
-                <h3 className="font-medium text-gray-700 mb-4">Add a video tour (optional)</h3>
-                <MediaUploadArea
-                  type="video"
-                  onChange={(e) => setVideoFile(e.target.files[0])}
-                  onSubmit={handleVideoUpload}
-                  filesCount={videoFile ? 1 : 0}
-                  maxFiles={1}
-                  label="Upload property video"
-                />
-                {videoUploadError && (
-                  <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                    <p className="text-red-600 text-sm">{videoUploadError}</p>
-                  </div>
-                )}
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Amenities">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                <AmenityCard
-                  id="wifi"
-                  label="WiFi"
-                  emoji="📶"
-                  checked={propertyForm.wifi}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="kitchen"
-                  label="Kitchen"
-                  emoji="🍳"
-                  checked={propertyForm.kitchen}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="parking"
-                  label="Parking"
-                  emoji="🅿️"
-                  checked={propertyForm.parking}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="pool"
-                  label="Pool"
-                  emoji="🏊‍♂️"
-                  checked={propertyForm.pool}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="tv"
-                  label="TV"
-                  emoji="📺"
-                  checked={propertyForm.tv}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="bedrooms"
-                  label="Bedrooms"
-                  emoji="🛏️"
-                  checked={propertyForm.bedrooms}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="bathrooms"
-                  label="Baths"
-                  emoji="🚿"
-                  checked={propertyForm.bathrooms}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="stove"
-                  label="Stovetop"
-                  emoji="🔥"
-                  checked={propertyForm.stove}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="storage"
-                  label="Wardrobe"
-                  emoji="👔"
-                  checked={propertyForm.storage}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="security"
-                  label="Security"
-                  emoji="🔒"
-                  checked={propertyForm.security}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="furnished"
-                  label="Furnished"
-                  emoji="🪑"
-                  checked={propertyForm.furnished}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="hot"
-                  label="Hot Shower"
-                  emoji="🚿"
-                  checked={propertyForm.hot}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="pets"
-                  label="Pets Allowed"
-                  emoji="🐾"
-                  checked={propertyForm.pets}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="prepaid"
-                  label="Electricity"
-                  emoji="⚡"
-                  checked={propertyForm.prepaid}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="fridge"
-                  label="Refrigerator"
-                  emoji="❄️"
-                  checked={propertyForm.fridge}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="share"
-                  label="House Share"
-                  emoji="👥"
-                  checked={propertyForm.share}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="breakfast"
-                  label="Breakfast"
-                  emoji="🍳"
-                  checked={propertyForm.breakfast}
-                  onChange={handlePropertyChange}
-                />
-                <AmenityCard
-                  id="party"
-                  label="Non-Party"
-                  emoji="🔇"
-                  checked={propertyForm.party}
-                  onChange={handlePropertyChange}
-                />
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Property details">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {propertyForm.type === "land" || propertyForm.type === "office" ? "Square Meters" : "Bedrooms"}
-                  </label>
-                  <input
-                    type="number"
-                    id="bedrooms"
-                    value={propertyForm.bedrooms}
-                    onChange={handlePropertyChange}
-                    min={propertyForm.type === "land" || propertyForm.type === "office" ? 0 : 1}
-                    max={10000}
-                    required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                  />
-                </div>
-                
-                {propertyForm.type !== "land" && propertyForm.type !== "office" && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Bathrooms</label>
-                    <input
-                      type="number"
-                      id="bathrooms"
-                      value={propertyForm.bathrooms}
-                      onChange={handlePropertyChange}
-                      min="1"
-                      max="10"
-                      required
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                    />
-                  </div>
-                )}
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Pricing">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Price per {propertyForm.type === "rent" ? "month" : propertyForm.type === "over" ? "night" : propertyForm.type === "office" ? "hour" : "item"}
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
-                    <input
-                      type="number"
-                      id="regularPrice"
-                      value={propertyForm.regularPrice}
-                      onChange={handlePropertyChange}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                      min="50"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <CheckboxField
-                  id="offer"
-                  label="Offer a discount"
-                  checked={propertyForm.offer}
-                  onChange={handlePropertyChange}
-                  description="Attract more guests with a special price"
-                  icon={TagIcon}
-                />
-
-                {propertyForm.offer && (
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Discounted price
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
-                      <input
-                        type="number"
-                        id="discountPrice"
-                        value={propertyForm.discountPrice}
-                        onChange={handlePropertyChange}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                        min="0"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </SectionCard>
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                <p className="text-red-600 text-sm">{error}</p>
-              </div>
+              </SectionCard>
             )}
 
-            <div className="flex justify-end gap-4">
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="px-8 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors duration-200"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-8 py-3 bg-[#FF5A5F] text-white rounded-xl font-medium hover:bg-[#E14E50] transition-colors duration-200 flex items-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <SparklesIcon className="w-5 h-5" />
-                    Publish Listing
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* Service Form */}
-        {activeTab === 'experiences' && (
-          <form onSubmit={handleServiceSubmit} className="space-y-6">
-            <SectionCard title="What type of service are you offering?">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { id: "cleaning", label: "Cleaning", emoji: "🧹", description: "Home & office cleaning" },
-                  { id: "maintenance", label: "Maintenance", emoji: "🔧", description: "Repairs & fixes" },
-                  { id: "moving", label: "Moving", emoji: "🚚", description: "Relocation services" },
-                  { id: "landscaping", label: "Landscaping", emoji: "🌿", description: "Garden & yard work" },
-                  { id: "catering", label: "Catering", emoji: "🍽️", description: "Food & catering" },
-                  { id: "daycare", label: "Day Care", emoji: "👶", description: "Child care services" },
-                  { id: "schoolTransport", label: "Transport", emoji: "🚌", description: "School transport" },
-                  { id: "other", label: "Other", emoji: "✨", description: "Other services" },
-                ].map((type) => (
-                  <TypeCard
-                    key={type.id}
-                    {...type}
-                    selected={serviceForm.type === type.id}
-                    onClick={() => setServiceForm({ ...serviceForm, type: type.id })}
-                  />
-                ))}
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Service information">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormInput
-                  label="Service name"
-                  icon={BriefcaseIcon}
-                  id="name"
-                  value={serviceForm.name}
-                  onChange={handleServiceChange}
-                  placeholder={
-                    serviceForm.type === "daycare" 
-                      ? "Little Explorers Daycare" 
-                      : serviceForm.type === "schoolTransport" 
-                      ? "SafeRide School Transport"
-                      : "Professional Cleaning Service"
-                  }
-                  required
-                />
-                <FormInput
-                  label="Service area"
-                  icon={MapPinIcon}
-                  id="address"
-                  value={serviceForm.address}
-                  onChange={handleServiceChange}
-                  placeholder="Areas you serve"
-                  required
-                />
-                <div className="md:col-span-2">
-                  <FormInput
-                    label="Service description"
-                    type="textarea"
-                    id="description"
-                    value={serviceForm.description}
-                    onChange={handleServiceChange}
-                    placeholder={
-                      serviceForm.type === "daycare" 
-                        ? "Describe your daycare program, activities, educational approach..." 
-                        : serviceForm.type === "schoolTransport" 
-                        ? "Describe your transport service, safety measures, vehicle details..."
-                        : "Describe your service in detail..."
-                    }
-                    required
-                    rows={5}
-                  />
+            {/* Step 2: Select Type */}
+            {currentStep === 2 && (
+              <SectionCard title={`What type of ${selectedCategory === 'stays' ? 'place' : 
+                selectedCategory === 'experiences' ? 'service' :
+                selectedCategory === 'online' ? 'helper' : 'event'} are you listing?`}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+                  {getTypesByCategory().map((type) => (
+                    <TypeCard
+                      key={type.id}
+                      {...type}
+                      selected={selectedType === type.id}
+                    />
+                  ))}
                 </div>
-                <div className="md:col-span-2">
-                  <FormInput
-                    label="Experience & qualifications"
-                    type="textarea"
-                    id="near"
-                    value={serviceForm.near}
-                    onChange={handleServiceChange}
-                    placeholder={
-                      serviceForm.type === "daycare" 
-                        ? "Your experience with childcare, relevant certifications, training..." 
-                        : serviceForm.type === "schoolTransport" 
-                        ? "Driving experience, safety certifications, background checks..."
-                        : "Describe your experience and qualifications"
-                    }
-                    rows={4}
-                  />
-                </div>
-                <FormInput
-                  label="Contact number"
-                  icon={PhoneIcon}
-                  id="contact"
-                  value={serviceForm.contact}
-                  onChange={handleServiceChange}
-                  placeholder="Contact phone number"
-                  required
-                />
-                <FormInput
-                  label="Service provider"
-                  icon={UserIcon}
-                  id="host"
-                  value={serviceForm.host}
-                  onChange={handleServiceChange}
-                  placeholder={
-                    serviceForm.type === "daycare" 
-                      ? "Daycare center name" 
-                      : "Your name or company name"
-                  }
-                  required
-                />
-                
-                {serviceForm.type === "daycare" && (
-                  <>
+              </SectionCard>
+            )}
+
+            {/* Step 3: Form Details - UPDATED WITH REQUIRED FIELDS */}
+            {currentStep === 3 && (
+              <div className="space-y-4 sm:space-y-6">
+                <SectionCard title="Basic Information">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <FormInput
-                      label="Age group"
-                      icon={UserGroupIcon}
-                      id="ageGroup"
-                      value={serviceForm.ageGroup}
-                      onChange={handleServiceChange}
-                      placeholder="e.g., 6 months - 5 years"
+                      label="Name / Title"
+                      icon={selectedCategory === 'stays' ? HomeIcon : 
+                            selectedCategory === 'events' ? CalendarIcon : UserIcon}
+                      id="name"
+                      value={listingForm.name}
+                      onChange={handleFormChange}
+                      placeholder={
+                        selectedCategory === 'stays' ? "Cozy mountain cabin with amazing views" :
+                        selectedCategory === 'experiences' ? "Professional Cleaning Service" :
+                        selectedCategory === 'online' ? "John's Tutoring Services" :
+                        "Summer Music Festival"
+                      }
+                      required
                     />
                     <FormInput
-                      label="License number"
-                      icon={ShieldCheckIcon}
-                      id="licenseNumber"
-                      value={serviceForm.licenseNumber}
-                      onChange={handleServiceChange}
-                      placeholder="Your daycare license number"
-                    />
-                    <FormInput
-                      label="Capacity"
-                      icon={UsersIcon}
-                      id="capacity"
-                      value={serviceForm.capacity}
-                      onChange={handleServiceChange}
-                      placeholder="Number of children you can accommodate"
-                    />
-                  </>
-                )}
-                
-                {serviceForm.type === "schoolTransport" && (
-                  <>
-                    <FormInput
-                      label="Vehicle type"
-                      icon={TruckIcon}
-                      id="vehicleType"
-                      value={serviceForm.vehicleType}
-                      onChange={handleServiceChange}
-                      placeholder="e.g., Minivan, School Bus, SUV"
-                    />
-                    <FormInput
-                      label="Route areas"
+                      label="Address / Location"
                       icon={MapPinIcon}
-                      id="routeAreas"
-                      value={serviceForm.routeAreas}
-                      onChange={handleServiceChange}
-                      placeholder="Neighborhoods or schools served"
-                    />
-                  </>
-                )}
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Add service photos">
-              <MediaUploadArea
-                type="image"
-                onChange={handleFileChange}
-                onSubmit={() => handleImageSubmit('service')}
-                filesCount={files.length}
-                label="Upload service photos"
-              />
-              
-              {imageUploadError && (
-                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-red-600 text-sm">{imageUploadError}</p>
-                </div>
-              )}
-
-              {serviceForm.imageUrls.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="font-medium text-gray-700 mb-4">Uploaded photos ({serviceForm.imageUrls.length})</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {serviceForm.imageUrls.map((url, index) => (
-                      <div key={url} className="relative aspect-square rounded-xl overflow-hidden group">
-                        <img
-                          src={url}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(index, 'service')}
-                          className="absolute top-2 right-2 bg-white p-1.5 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                        >
-                          <XMarkIcon className="w-4 h-4 text-gray-600" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </SectionCard>
-
-            <SectionCard title="Service details">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {serviceForm.type === "daycare" ? "Monthly rate" : "Hourly rate"}
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
-                    <input
-                      type="number"
-                      id="regularPrice"
-                      value={serviceForm.regularPrice}
-                      onChange={handleServiceChange}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                      min="50"
+                      id="address"
+                      value={listingForm.address}
+                      onChange={handleFormChange}
+                      placeholder={
+                        selectedCategory === 'stays' ? "123 Main Street, City" :
+                        "Service area or venue address"
+                      }
                       required
                     />
-                    <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
-                      {serviceForm.type === "daycare" ? "/month" : "/hour"}
-                    </span>
-                  </div>
-                </div>
-                
-                <FormInput
-                  label="Service category"
-                  icon={TagIcon}
-                  id="kind"
-                  value={serviceForm.kind}
-                  onChange={handleServiceChange}
-                  placeholder={
-                    serviceForm.type === "daycare" 
-                      ? "e.g., Montessori, Play-based, Bilingual" 
-                      : "e.g., Residential, Commercial"
-                  }
-                />
-
-                <FormInput
-                  label="Availability"
-                  icon={ClockIcon}
-                  id="period"
-                  value={serviceForm.period}
-                  onChange={handleServiceChange}
-                  placeholder={
-                    serviceForm.type === "daycare" 
-                      ? "e.g., Mon-Fri 7:30am-6:00pm" 
-                      : "e.g., Weekdays 9am-5pm"
-                  }
-                />
-
-                <FormInput
-                  label="Cancellation policy"
-                  icon={ClockIcon}
-                  id="cancel"
-                  value={serviceForm.cancel}
-                  onChange={handleServiceChange}
-                  placeholder="Your cancellation policy"
-                />
-
-                <CheckboxField
-                  id="security"
-                  label="Background check verified"
-                  checked={serviceForm.security}
-                  onChange={handleServiceChange}
-                  description="I have a verified background check"
-                  icon={ShieldCheckIcon}
-                />
-
-                <CheckboxField
-                  id="pets"
-                  label={
-                    serviceForm.type === "daycare" 
-                      ? "Special needs experience" 
-                      : "Pet friendly"
-                  }
-                  checked={serviceForm.pets}
-                  onChange={handleServiceChange}
-                  description={
-                    serviceForm.type === "daycare" 
-                      ? "Experience with special needs children" 
-                      : "Comfortable working with pets"
-                  }
-                  icon={serviceForm.type === "daycare" ? AcademicCapIcon : PawIcon}
-                />
-              </div>
-            </SectionCard>
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                <p className="text-red-600 text-sm">{error}</p>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-4">
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="px-8 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors duration-200"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-8 py-3 bg-[#FF5A5F] text-white rounded-xl font-medium hover:bg-[#E14E50] transition-colors duration-200 flex items-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <SparklesIcon className="w-5 h-5" />
-                    Publish Service
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* Helper Form */}
-        {activeTab === 'online' && (
-          <form onSubmit={handleHelperSubmit} className="space-y-6">
-            <SectionCard title="What type of helper are you?">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {[
-                  { id: "domestic", label: "Domestic Helper", emoji: "🧹", description: "Cleaning, laundry, chores" },
-                  { id: "errand", label: "Errand Runner", emoji: "🏃", description: "Shopping, deliveries, tasks" },
-                  { id: "tutor", label: "Private Tutor", emoji: "📚", description: "Academic tutoring" },
-                  { id: "chef", label: "Private Chef", emoji: "👨‍🍳", description: "Meal preparation" },
-                  { id: "beauty", label: "Beauty Specialist", emoji: "💅", description: "Hair, nails, makeup" },
-                  { id: "tattoo", label: "Tattoo Artist", emoji: "🖌️", description: "Tattoo design" },
-                  { id: "barber", label: "Barber", emoji: "✂️", description: "Haircuts, grooming" },
-                  { id: "photography", label: "Photographer", emoji: "📷", description: "Photo sessions" },
-                  { id: "baker", label: "Baker", emoji: "🍰", description: "Custom baked goods" },
-                ].map((type) => (
-                  <TypeCard
-                    key={type.id}
-                    {...type}
-                    selected={helperForm.type === type.id}
-                    onClick={() => setHelperForm(prev => ({ ...prev, type: type.id }))}
-                  />
-                ))}
-              </div>
-            </SectionCard>
-
-            <SectionCard title="About you">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormInput
-                  label={
-                    helperForm.type === "tutor" ? "Tutor Name" : 
-                    helperForm.type === "barber" ? "Barber Name" :
-                    helperForm.type === "photography" ? "Photographer Name" :
-                    helperForm.type === "baker" ? "Baker Name" : "Helper Name"
-                  }
-                  icon={UserIcon}
-                  id="name"
-                  value={helperForm.name}
-                  onChange={handleHelperChange}
-                  placeholder={
-                    helperForm.type === "tutor" ? "John Smith" : 
-                    helperForm.type === "barber" ? "Your professional name" :
-                    helperForm.type === "photography" ? "Your photography business name" :
-                    helperForm.type === "baker" ? "Your baking business name" : "Your name"
-                  }
-                  required
-                />
-                <FormInput
-                  label="Service area"
-                  icon={MapPinIcon}
-                  id="address"
-                  value={helperForm.address}
-                  onChange={handleHelperChange}
-                  placeholder="Areas you serve"
-                  required
-                />
-                <div className="md:col-span-2">
-                  <FormInput
-                    label={
-                      helperForm.type === "tutor"
-                        ? "Qualifications & Teaching Approach"
-                        : helperForm.type === "barber" 
-                          ? "Barber Experience & Specialties"
-                          : helperForm.type === "photography"
-                            ? "Photography Style & Experience"
-                            : helperForm.type === "baker"
-                              ? "Baking Experience & Specialties"
-                              : "Service Description"
-                    }
-                    type="textarea"
-                    id="description"
-                    value={helperForm.description}
-                    onChange={handleHelperChange}
-                    placeholder={
-                      helperForm.type === "domestic" ? "Describe your cleaning methods and experience..." :
-                      helperForm.type === "errand" ? "Describe the types of errands you can run..." :
-                      helperForm.type === "barber" ? "Describe your barber experience, specialties, and approach..." :
-                      helperForm.type === "photography" ? "Describe your photography style, experience, and approach..." :
-                      helperForm.type === "baker" ? "Describe your baking experience, specialties, and approach..." :
-                      "Describe your teaching qualifications and methods..."
-                    }
-                    required
-                    rows={5}
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <FormInput
-                    label={
-                      helperForm.type === "tutor"
-                        ? "Subjects/Skills You Teach"
-                        : helperForm.type === "barber"
-                          ? "Services Offered"
-                          : helperForm.type === "photography"
-                            ? "Photography Services"
-                            : helperForm.type === "baker"
-                              ? "Baked Goods & Services"
-                              : "Specific Services"
-                    }
-                    type="textarea"
-                    id="near"
-                    value={helperForm.near}
-                    onChange={handleHelperChange}
-                    placeholder={
-                      helperForm.type === "domestic" ? "E.g., Deep cleaning, laundry, ironing" :
-                      helperForm.type === "errand" ? "E.g., Grocery shopping, pharmacy runs" :
-                      helperForm.type === "barber" ? "E.g., Men's haircuts, beard trims, straight razor shaves" :
-                      helperForm.type === "photography" ? "E.g., Portrait sessions, event photography, product photography" :
-                      helperForm.type === "baker" ? "E.g., Custom cakes, wedding cakes, pastries, breads" :
-                      "E.g., Mathematics, English, Science"
-                    }
-                    rows={4}
-                  />
-                </div>
-                <FormInput
-                  label="Contact number"
-                  icon={PhoneIcon}
-                  id="contact"
-                  value={helperForm.contact}
-                  onChange={handleHelperChange}
-                  placeholder="Phone number"
-                  required
-                />
-                <FormInput
-                  label={
-                    helperForm.type === "tutor" ? "Years of Experience" : 
-                    helperForm.type === "barber" ? "Barber Experience" :
-                    helperForm.type === "photography" ? "Photography Experience" :
-                    helperForm.type === "baker" ? "Baking Experience" : "Experience"
-                  }
-                  icon={ClockIcon}
-                  id="host"
-                  value={helperForm.host}
-                  onChange={handleHelperChange}
-                  placeholder={
-                    helperForm.type === "tutor" ? "5 years teaching experience" :
-                    helperForm.type === "barber" ? "3 years as professional barber" :
-                    helperForm.type === "photography" ? "4 years professional photography" :
-                    helperForm.type === "baker" ? "5 years professional baking" :
-                    "3 years experience"
-                  }
-                  required
-                />
-
-                {helperForm.type === "tutor" && (
-                  <>
-                    <FormInput
-                      label="Education level"
-                      icon={AcademicCapIcon}
-                      id="kind"
-                      value={helperForm.kind}
-                      onChange={handleHelperChange}
-                      placeholder="E.g., Bachelor's Degree in Education"
-                    />
-                    <FormInput
-                      label="Age group"
-                      icon={UserGroupIcon}
-                      id="period"
-                      value={helperForm.period}
-                      onChange={handleHelperChange}
-                      placeholder="E.g., Primary school, High school"
-                    />
-                  </>
-                )}
-
-                {(helperForm.type !== "tutor" && helperForm.type !== "barber" && helperForm.type !== "photography" && helperForm.type !== "baker") && (
-                  <>
-                    <FormInput
-                      label="Availability"
-                      icon={ClockIcon}
-                      id="period"
-                      value={helperForm.period}
-                      onChange={handleHelperChange}
-                      placeholder="E.g., Weekdays 8am-5pm"
-                    />
-                    <FormInput
-                      label="Languages spoken"
-                      icon={BookOpenIcon}
-                      id="cancel"
-                      value={helperForm.cancel}
-                      onChange={handleHelperChange}
-                      placeholder="E.g., English, Afrikaans"
-                    />
-                  </>
-                )}
-
-                {helperForm.type === "barber" && (
-                  <>
-                    <FormInput
-                      label="Specializations"
-                      icon={ScissorsIcon}
-                      id="specializations"
-                      value={helperForm.specializations}
-                      onChange={handleHelperChange}
-                      placeholder="E.g., Fades, classic cuts, beard designs"
-                    />
-                    <FormInput
-                      label="Equipment"
-                      icon={BriefcaseIcon}
-                      id="equipment"
-                      value={helperForm.equipment}
-                      onChange={handleHelperChange}
-                      placeholder="E.g., Bring own tools, sanitized equipment"
-                    />
-                  </>
-                )}
-
-                {helperForm.type === "photography" && (
-                  <>
-                    <FormInput
-                      label="Photography style"
-                      icon={PhotoIcon}
-                      id="style"
-                      value={helperForm.style}
-                      onChange={handleHelperChange}
-                      placeholder="E.g., Portrait, candid, studio, outdoor"
-                    />
-                    <FormInput
-                      label="Equipment"
-                      icon={CameraIcon}
-                      id="equipment"
-                      value={helperForm.equipment}
-                      onChange={handleHelperChange}
-                      placeholder="E.g., Professional DSLR, lighting, backup equipment"
-                    />
-                  </>
-                )}
-
-                {helperForm.type === "baker" && (
-                  <>
-                    <FormInput
-                      label="Specialties"
-                      icon={CakeIcon}
-                      id="specialties"
-                      value={helperForm.specialties}
-                      onChange={handleHelperChange}
-                      placeholder="E.g., Wedding cakes, gluten-free baking, French pastries"
-                    />
-                    <FormInput
-                      label="Dietary options"
-                      icon={BeakerIcon}
-                      id="dietaryOptions"
-                      value={helperForm.dietaryOptions}
-                      onChange={handleHelperChange}
-                      placeholder="E.g., Vegan, gluten-free, sugar-free options"
-                    />
-                  </>
-                )}
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Add your portfolio photos">
-              <MediaUploadArea
-                type="image"
-                onChange={handleFileChange}
-                onSubmit={() => handleImageSubmit('helper')}
-                filesCount={files.length}
-                label={
-                  helperForm.type === "tutor"
-                    ? "Upload certificates and teaching materials"
-                    : helperForm.type === "barber"
-                      ? "Upload photos of your work"
-                      : helperForm.type === "photography"
-                        ? "Upload your photography portfolio"
-                        : helperForm.type === "baker"
-                          ? "Upload photos of your baked goods"
-                          : "Upload photos of your work"
-                }
-              />
-              
-              {imageUploadError && (
-                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-red-600 text-sm">{imageUploadError}</p>
-                </div>
-              )}
-
-              {helperForm.imageUrls && helperForm.imageUrls.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="font-medium text-gray-700 mb-4">Uploaded photos ({helperForm.imageUrls.length})</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {helperForm.imageUrls.map((url, index) => (
-                      <div key={url} className="relative aspect-square rounded-xl overflow-hidden group">
-                        <img
-                          src={url}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(index, 'helper')}
-                          className="absolute top-2 right-2 bg-white p-1.5 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                        >
-                          <XMarkIcon className="w-4 h-4 text-gray-600" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </SectionCard>
-
-            <SectionCard title="Pricing & details">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {helperForm.type === "tutor"
-                      ? "Hourly rate"
-                      : helperForm.type === "barber"
-                        ? "Starting price"
-                        : helperForm.type === "photography"
-                          ? "Session starting price"
-                          : helperForm.type === "baker"
-                            ? "Starting price"
-                            : "Service rate"}
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
-                    <input
-                      type="number"
-                      id="regularPrice"
-                      value={helperForm.regularPrice}
-                      onChange={handleHelperChange}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                      min="50"
-                      required
-                    />
-                    <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
-                      {helperForm.type === "tutor" ? "/hour" : 
-                       helperForm.type === "photography" ? "/session" : "/service"}
-                    </span>
-                  </div>
-                </div>
-
-                {helperForm.type === "tutor" ? (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Teaching format</label>
-                    <select
-                      id="bathrooms"
-                      value={helperForm.bathrooms}
-                      onChange={handleHelperChange}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                    >
-                      <option value="1">In-person</option>
-                      <option value="2">Online</option>
-                      <option value="3">Both</option>
-                    </select>
-                  </div>
-                ) : helperForm.type === "domestic" ? (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Minimum hours</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        id="bedrooms"
-                        value={helperForm.bedrooms}
-                        onChange={handleHelperChange}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                        min="1"
+                    <div className="sm:col-span-2">
+                      <FormInput
+                        label="Description"
+                        type="textarea"
+                        id="description"
+                        value={listingForm.description}
+                        onChange={handleFormChange}
+                        placeholder={
+                          selectedCategory === 'stays' ? "Describe what makes your place special..." :
+                          selectedCategory === 'experiences' ? "Describe your service in detail..." :
+                          selectedCategory === 'online' ? "Describe your skills and experience..." :
+                          "Describe the event, activities, and what attendees can expect..."
+                        }
+                        required
+                        rows={4}
                       />
-                      <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
-                        hours
-                      </span>
                     </div>
+                    
+                    {/* REQUIRED FIELDS FOR STAYS CATEGORY */}
+                    {selectedCategory === 'stays' && (
+                      <>
+                        <FormInput
+                          label="Property Type"
+                          icon={HomeIcon}
+                          id="kind"
+                          value={listingForm.kind}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Apartment, House, Room, Studio"
+                          required
+                        />
+                        <FormInput
+                          label="Available From"
+                          icon={CalendarIcon}
+                          id="period"
+                          value={listingForm.period}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Immediate, 1st December 2024"
+                          required
+                        />
+                      </>
+                    )}
+                    
+                    <FormInput
+                      label="Contact Number"
+                      icon={PhoneIcon}
+                      id="contact"
+                      value={listingForm.contact}
+                      onChange={handleFormChange}
+                      placeholder="Phone number for inquiries"
+                      required
+                    />
+                    <FormInput
+                      label={selectedCategory === 'stays' ? "Host Name" : 
+                             selectedCategory === 'events' ? "Organizer" : "Provider Name"}
+                      icon={UserIcon}
+                      id="host"
+                      value={listingForm.host}
+                      onChange={handleFormChange}
+                      placeholder="Your name or business name"
+                      required
+                    />
+                    
+                    {/* ADDITIONAL REQUIRED FIELD FOR STAYS */}
+                    {selectedCategory === 'stays' && (
+                      <div className="sm:col-span-2">
+                        <FormInput
+                          label="Cancellation Policy"
+                          icon={ClockIcon}
+                          id="cancel"
+                          value={listingForm.cancel}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Flexible - Free cancellation 48 hours before check-in"
+                          required
+                        />
+                      </div>
+                    )}
+                    
+                    {selectedCategory === 'stays' && (
+                      <>
+                        <div className="sm:col-span-2">
+                          <FormInput
+                            label="Nearby Attractions"
+                            icon={MapPinIcon}
+                            type="textarea"
+                            id="near"
+                            value={listingForm.near}
+                            onChange={handleFormChange}
+                            placeholder="Mention nearby points of interest, restaurants, parks, etc."
+                            rows={3}
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <FormInput
+                            label="House Rules"
+                            icon={KeyIcon}
+                            type="textarea"
+                            id="rules"
+                            value={listingForm.rules}
+                            onChange={handleFormChange}
+                            placeholder="Enter any rules or regulations"
+                            rows={3}
+                          />
+                        </div>
+                      </>
+                    )}
+                    
+                    {selectedCategory === 'events' && (
+                      <>
+                        <FormInput
+                          label="Event Date"
+                          icon={CalendarIcon}
+                          type="date"
+                          id="date"
+                          value={listingForm.date}
+                          onChange={handleFormChange}
+                          required
+                        />
+                        <FormInput
+                          label="Event Time"
+                          icon={ClockIcon}
+                          type="time"
+                          id="time"
+                          value={listingForm.time}
+                          onChange={handleFormChange}
+                          required
+                        />
+                      </>
+                    )}
+                    
+                    {selectedCategory === 'experiences' && selectedType === 'daycare' && (
+                      <>
+                        <FormInput
+                          label="Age Group"
+                          icon={UserGroupIcon}
+                          id="ageGroup"
+                          value={listingForm.ageGroup}
+                          onChange={handleFormChange}
+                          placeholder="e.g., 6 months - 5 years"
+                        />
+                        <FormInput
+                          label="Capacity"
+                          icon={UsersIcon}
+                          id="capacity"
+                          value={listingForm.capacity}
+                          onChange={handleFormChange}
+                          placeholder="Number of children"
+                        />
+                      </>
+                    )}
+                    
+                    {selectedCategory === 'experiences' && selectedType === 'schoolTransport' && (
+                      <>
+                        <FormInput
+                          label="Vehicle Type"
+                          icon={TruckIcon}
+                          id="vehicleType"
+                          value={listingForm.vehicleType}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Minivan, Bus, SUV"
+                        />
+                        <div className="sm:col-span-2">
+                          <FormInput
+                            label="Route Areas"
+                            icon={MapPinIcon}
+                            type="textarea"
+                            id="routeAreas"
+                            value={listingForm.routeAreas}
+                            onChange={handleFormChange}
+                            placeholder="Areas you serve"
+                            rows={2}
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
-                ) : null}
+                </SectionCard>
 
-                {helperForm.type === "barber" && (
-                  <>
+                <SectionCard title="Photos & Media">
+                  <MediaUploadArea
+                    type="image"
+                    onChange={handleFileChange}
+                    onSubmit={handleImageSubmit}
+                    filesCount={files.length}
+                    label={`Upload ${selectedCategory} photos`}
+                  />
+                  
+                  {imageUploadError && (
+                    <div className="mt-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl">
+                      <p className="text-red-600 text-xs sm:text-sm">{imageUploadError}</p>
+                    </div>
+                  )}
+
+                  {listingForm.imageUrls.length > 0 && (
+                    <div className="mt-4 sm:mt-6">
+                      <h3 className="font-medium text-gray-700 mb-3 sm:mb-4">Uploaded photos ({listingForm.imageUrls.length})</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                        {listingForm.imageUrls.map((url, index) => (
+                          <div key={url} className="relative aspect-square rounded-lg sm:rounded-xl overflow-hidden group">
+                            <img
+                              src={url}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(index)}
+                              className="absolute top-1 sm:top-2 right-1 sm:right-2 bg-white p-1 sm:p-1.5 rounded-md sm:rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                            >
+                              <XMarkIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-6 sm:mt-8">
+                    <h3 className="font-medium text-gray-700 mb-3 sm:mb-4">Add a video (optional)</h3>
+                    <MediaUploadArea
+                      type="video"
+                      onChange={(e) => setVideoFile(e.target.files[0])}
+                      onSubmit={handleVideoUpload}
+                      filesCount={videoFile ? 1 : 0}
+                      maxFiles={1}
+                      label={`Upload ${selectedCategory} video`}
+                    />
+                    {videoUploadError && (
+                      <div className="mt-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl">
+                        <p className="text-red-600 text-xs sm:text-sm">{videoUploadError}</p>
+                      </div>
+                    )}
+                  </div>
+                </SectionCard>
+
+                <SectionCard title="Pricing">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Travel fee (optional)</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {selectedCategory === 'stays' 
+                          ? `Price per ${selectedType === "rent" ? "month" : selectedType === "over" ? "night" : "hour"}`
+                          : selectedCategory === 'events' ? "Ticket price" : "Service rate"}
+                      </label>
                       <div className="relative">
-                        <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
+                        <span className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
                         <input
                           type="number"
-                          id="travelFee"
-                          value={helperForm.travelFee}
-                          onChange={handleHelperChange}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl"
-                          placeholder="0"
+                          id="regularPrice"
+                          value={listingForm.regularPrice}
+                          onChange={handleFormChange}
+                          className="w-full pl-8 sm:pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
                           min="0"
+                          required
                         />
+                        <span className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs sm:text-sm">
+                          {selectedCategory === 'events' && '(0 for free)'}
+                          {selectedCategory === 'stays' && selectedType === 'rent' && '/month'}
+                          {selectedCategory === 'stays' && selectedType === 'over' && '/night'}
+                          {selectedCategory === 'stays' && selectedType === 'office' && '/hour'}
+                        </span>
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Booking notice</label>
-                      <select
-                        id="bookingNotice"
-                        value={helperForm.bookingNotice}
-                        onChange={handleHelperChange}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl"
-                      >
-                        <option value="">Select notice period</option>
-                        <option value="1">Same day</option>
-                        <option value="24">24 hours</option>
-                        <option value="48">48 hours</option>
-                        <option value="72">72 hours</option>
-                      </select>
-                    </div>
-                  </>
-                )}
-
-                {helperForm.type === "photography" && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Session duration</label>
-                      <select
-                        id="sessionDuration"
-                        value={helperForm.sessionDuration}
-                        onChange={handleHelperChange}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl"
-                      >
-                        <option value="">Select duration</option>
-                        <option value="30">30 minutes</option>
-                        <option value="60">1 hour</option>
-                        <option value="90">1.5 hours</option>
-                        <option value="120">2 hours</option>
-                        <option value="custom">Custom</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Photo delivery time</label>
-                      <input
-                        type="text"
-                        id="photoDelivery"
-                        value={helperForm.photoDelivery}
-                        onChange={handleHelperChange}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl"
-                        placeholder="E.g., 5-7 days, digital download"
-                      />
-                    </div>
-                  </>
-                )}
-
-                {helperForm.type === "baker" && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Order notice required</label>
-                      <select
-                        id="orderNotice"
-                        value={helperForm.orderNotice}
-                        onChange={handleHelperChange}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl"
-                      >
-                        <option value="">Select notice period</option>
-                        <option value="24">24 hours</option>
-                        <option value="48">48 hours</option>
-                        <option value="72">72 hours</option>
-                        <option value="168">1 week</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Delivery available</label>
-                      <div className="flex items-center h-full">
-                        <input
-                          type="checkbox"
-                          id="delivery"
-                          checked={helperForm.delivery}
-                          onChange={handleHelperChange}
-                          className="h-5 w-5 text-[#FF5A5F] rounded focus:ring-[#FF5A5F]"
-                        />
-                        <label htmlFor="delivery" className="ml-2 font-medium text-gray-700">
-                          Offer delivery service
-                        </label>
+                    
+                    {selectedCategory === 'stays' && (
+                      <div>
+                        <div className="flex items-start h-full space-x-3 sm:space-x-4">
+                          <input
+                            type="checkbox"
+                            id="offer"
+                            checked={listingForm.offer}
+                            onChange={handleFormChange}
+                            className="mt-1 h-5 w-5 text-[#FF5A5F] rounded focus:ring-[#FF5A5F]"
+                          />
+                          <div>
+                            <label htmlFor="offer" className="font-medium text-gray-700">
+                              Offer a discount
+                            </label>
+                            <p className="text-sm text-gray-500 mt-1">Attract more guests with a special price</p>
+                          </div>
+                        </div>
+                        
+                        {listingForm.offer && (
+                          <div className="mt-3 sm:mt-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Discounted price
+                            </label>
+                            <div className="relative">
+                              <span className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
+                              <input
+                                type="number"
+                                id="discountPrice"
+                                value={listingForm.discountPrice}
+                                onChange={handleFormChange}
+                                className="w-full pl-8 sm:pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
+                                min="0"
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  </>
-                )}
-
-                <CheckboxField
-                  id="security"
-                  label="Background check verified"
-                  checked={helperForm.security}
-                  onChange={handleHelperChange}
-                  description="I have a verified background check"
-                  icon={ShieldCheckIcon}
-                />
-
-                {helperForm.type !== "tutor" && (
-                  <CheckboxField
-                    id="pets"
-                    label="Pet friendly"
-                    checked={helperForm.pets}
-                    onChange={handleHelperChange}
-                    description="Comfortable with pets"
-                    icon={PawIcon}
-                  />
-                )}
-              </div>
-
-              {(helperForm.type === "barber" || helperForm.type === "photography" || helperForm.type === "baker") && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <h3 className="font-medium text-gray-700 mb-4">Additional pricing details</h3>
-                  <textarea
-                    id="additionalPricing"
-                    value={helperForm.additionalPricing}
-                    onChange={handleHelperChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                    placeholder={
-                      helperForm.type === "barber" 
-                        ? "E.g., Beard trim: R80, Kids cut: R100, Haircut + Beard: R200"
-                        : helperForm.type === "photography"
-                          ? "E.g., 1-hour portrait: R500, 2-hour event: R1000, Full wedding: R5000"
-                          : "E.g., Custom cakes: from R300, Dozen cupcakes: R150, Pastry box: R200"
-                    }
-                    rows={4}
-                  />
-                </div>
-              )}
-            </SectionCard>
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                <p className="text-red-600 text-sm">{error}</p>
+                    )}
+                  </div>
+                </SectionCard>
               </div>
             )}
 
-            <div className="flex justify-end gap-4">
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="px-8 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors duration-200"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-8 py-3 bg-[#FF5A5F] text-white rounded-xl font-medium hover:bg-[#E14E50] transition-colors duration-200 flex items-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <SparklesIcon className="w-5 h-5" />
-                    Publish Profile
-                  </>
+            {/* Step 4: Amenities */}
+            {currentStep === 4 && (
+              <div className="space-y-4 sm:space-y-6">
+                <SectionCard title="Amenities & Features">
+                  <div className="overflow-x-auto pb-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 min-w-max">
+                      {getAmenitiesByCategory().map((amenity) => (
+                        <AmenityCard
+                          key={amenity.id}
+                          {...amenity}
+                          onChange={handleFormChange}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </SectionCard>
+
+                <SectionCard title="Additional Details">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    {selectedCategory === 'stays' && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            {selectedType === "land" || selectedType === "office" ? "Square Meters" : "Bedrooms"}
+                          </label>
+                          <input
+                            type="number"
+                            id="bedrooms"
+                            value={listingForm.bedrooms}
+                            onChange={handleFormChange}
+                            min={selectedType === "land" || selectedType === "office" ? 0 : 1}
+                            max={10000}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
+                          />
+                        </div>
+                        
+                        {selectedType !== "land" && selectedType !== "office" && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Bathrooms</label>
+                            <input
+                              type="number"
+                              id="bathrooms"
+                              value={listingForm.bathrooms}
+                              onChange={handleFormChange}
+                              min="1"
+                              max="10"
+                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
+                            />
+                          </div>
+                        )}
+                      </>
+                    )}
+                    
+                    {selectedCategory === 'experiences' && (
+                      <>
+                        <FormInput
+                          label="Service Category"
+                          icon={TagIcon}
+                          id="kind"
+                          value={listingForm.kind}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Residential, Commercial"
+                        />
+                        <FormInput
+                          label="Availability"
+                          icon={ClockIcon}
+                          id="period"
+                          value={listingForm.period}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Weekdays 9am-5pm"
+                        />
+                      </>
+                    )}
+                    
+                    {selectedCategory === 'online' && selectedType === 'tutor' && (
+                      <>
+                        <FormInput
+                          label="Education Level"
+                          icon={AcademicCapIcon}
+                          id="kind"
+                          value={listingForm.kind}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Bachelor's Degree"
+                        />
+                        <FormInput
+                          label="Subjects"
+                          icon={BookOpenIcon}
+                          id="specializations"
+                          value={listingForm.specializations}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Math, Science, English"
+                        />
+                      </>
+                    )}
+                    
+                    {selectedCategory === 'online' && selectedType === 'barber' && (
+                      <>
+                        <FormInput
+                          label="Specializations"
+                          icon={ScissorsIcon}
+                          id="specializations"
+                          value={listingForm.specializations}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Fades, beard trims"
+                        />
+                        <FormInput
+                          label="Experience"
+                          icon={ClockIcon}
+                          id="host"
+                          value={listingForm.host}
+                          onChange={handleFormChange}
+                          placeholder="Years of experience"
+                        />
+                      </>
+                    )}
+                    
+                    {selectedCategory === 'online' && selectedType === 'photography' && (
+                      <>
+                        <FormInput
+                          label="Photography Style"
+                          icon={PhotoIcon}
+                          id="style"
+                          value={listingForm.style}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Portrait, event, studio"
+                        />
+                        <FormInput
+                          label="Session Duration"
+                          icon={ClockIcon}
+                          id="sessionDuration"
+                          value={listingForm.sessionDuration}
+                          onChange={handleFormChange}
+                          placeholder="e.g., 1-2 hours"
+                        />
+                      </>
+                    )}
+                    
+                    {selectedCategory === 'online' && selectedType === 'baker' && (
+                      <>
+                        <FormInput
+                          label="Specialties"
+                          icon={CakeIcon}
+                          id="specialties"
+                          value={listingForm.specialties}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Wedding cakes, pastries"
+                        />
+                        <FormInput
+                          label="Dietary Options"
+                          icon={BeakerIcon}
+                          id="dietaryOptions"
+                          value={listingForm.dietaryOptions}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Vegan, gluten-free"
+                        />
+                      </>
+                    )}
+                  </div>
+                </SectionCard>
+              </div>
+            )}
+
+            {/* Error Display */}
+            {error && (
+              <div className="mt-4 sm:mt-6 bg-red-50 border border-red-200 rounded-xl sm:rounded-2xl p-3 sm:p-4">
+                <div className="flex items-center gap-2">
+                  <ExclamationTriangleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
+                  <p className="text-red-600 font-medium text-sm sm:text-base">{error}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Navigation Buttons */}
+            <div className="mt-6 sm:mt-8 flex justify-between items-center">
+              <div>
+                {currentStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={handlePrevStep}
+                    className="px-6 py-3 sm:px-8 sm:py-3 border border-gray-300 text-gray-700 rounded-xl sm:rounded-2xl font-medium hover:bg-gray-50 transition-all duration-300 flex items-center gap-2 hover:scale-[1.02]"
+                  >
+                    <ArrowLeftIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden sm:inline">Back</span>
+                  </button>
                 )}
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* Event Form */}
-        {activeTab === 'events' && (
-          <form onSubmit={handleEventSubmit} className="space-y-6">
-            <SectionCard title="What type of event are you creating?">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                {[
-                  { id: "music", label: "Music", emoji: "🎵", description: "Concerts, festivals" },
-                  { id: "sports", label: "Sports", emoji: "⚽", description: "Games, tournaments" },
-                  { id: "art", label: "Art & Culture", emoji: "🎨", description: "Exhibitions, shows" },
-                  { id: "community", label: "Community", emoji: "🧑‍🤝‍🧑", description: "Meetups, gatherings" },
-                  { id: "food", label: "Food & Drink", emoji: "🍔", description: "Food festivals, tastings" },
-                ].map((type) => (
-                  <TypeCard
-                    key={type.id}
-                    {...type}
-                    selected={eventForm.type === type.id}
-                    onClick={() => setEventForm({ ...eventForm, type: type.id })}
-                  />
-                ))}
               </div>
-            </SectionCard>
-
-            <SectionCard title="Event information">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <FormInput
-                    label="Event title"
-                    icon={CalendarIcon}
-                    id="name"
-                    value={eventForm.name}
-                    onChange={handleEventChange}
-                    placeholder="e.g., Summer Music Festival"
-                    required
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <FormInput
-                    label="Event description"
-                    type="textarea"
-                    id="description"
-                    value={eventForm.description}
-                    onChange={handleEventChange}
-                    placeholder="Describe the event, activities, and what attendees can expect..."
-                    required
-                    rows={5}
-                  />
-                </div>
-                <FormInput
-                  label="Venue / Location"
-                  icon={MapPinIcon}
-                  id="address"
-                  value={eventForm.address}
-                  onChange={handleEventChange}
-                  placeholder="Enter the full address"
-                  required
-                />
-                <FormInput
-                  label="Organizer name"
-                  icon={UserIcon}
-                  id="host"
-                  value={eventForm.host}
-                  onChange={handleEventChange}
-                  placeholder="Your name or organization"
-                  required
-                />
-                <FormInput
-                  label="Event date"
-                  icon={CalendarIcon}
-                  type="date"
-                  id="date"
-                  value={eventForm.date}
-                  onChange={handleEventChange}
-                  required
-                />
-                <FormInput
-                  label="Event time"
-                  icon={ClockIcon}
-                  type="time"
-                  id="time"
-                  value={eventForm.time}
-                  onChange={handleEventChange}
-                  required
-                />
-                <FormInput
-                  label="Contact information"
-                  icon={PhoneIcon}
-                  id="contact"
-                  value={eventForm.contact}
-                  onChange={handleEventChange}
-                  placeholder="Contact phone or email"
-                  required
-                />
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Add event media">
-              <MediaUploadArea
-                type="image"
-                onChange={handleFileChange}
-                onSubmit={() => handleImageSubmit('event')}
-                filesCount={files.length}
-                label="Upload event photos and posters"
-              />
               
-              {imageUploadError && (
-                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-red-600 text-sm">{imageUploadError}</p>
-                </div>
-              )}
-
-              {eventForm.imageUrls.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="font-medium text-gray-700 mb-4">Uploaded photos ({eventForm.imageUrls.length})</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {eventForm.imageUrls.map((url, index) => (
-                      <div key={url} className="relative aspect-square rounded-xl overflow-hidden group">
-                        <img
-                          src={url}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(index, 'event')}
-                          className="absolute top-2 right-2 bg-white p-1.5 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                        >
-                          <XMarkIcon className="w-4 h-4 text-gray-600" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-8">
-                <h3 className="font-medium text-gray-700 mb-4">Add event video (optional)</h3>
-                <MediaUploadArea
-                  type="video"
-                  onChange={(e) => setVideoFile(e.target.files[0])}
-                  onSubmit={handleVideoUpload}
-                  filesCount={videoFile ? 1 : 0}
-                  maxFiles={1}
-                  label="Upload event video"
-                />
-                {videoUploadError && (
-                  <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                    <p className="text-red-600 text-sm">{videoUploadError}</p>
-                  </div>
-                )}
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Event details">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Ticket price</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
-                    <input
-                      type="number"
-                      id="regularPrice"
-                      value={eventForm.regularPrice}
-                      onChange={handleEventChange}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                      min="0"
-                      required
-                    />
-                    <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
-                      (0 for free event)
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
-                <CheckboxField
-                  id="parking"
-                  label="Parking available"
-                  checked={eventForm.parking}
-                  onChange={handleEventChange}
-                  description="On-site parking facilities"
-                  icon={TruckIcon}
-                />
-                <CheckboxField
-                  id="foodAvailable"
-                  label="Food & drinks"
-                  checked={eventForm.foodAvailable}
-                  onChange={handleEventChange}
-                  description="Food and beverages available"
-                  icon={CakeIcon}
-                />
-                <CheckboxField
-                  id="familyFriendly"
-                  label="Family friendly"
-                  checked={eventForm.familyFriendly}
-                  onChange={handleEventChange}
-                  description="Suitable for all ages"
-                  icon={HeartIcon}
-                />
-              </div>
-            </SectionCard>
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                <p className="text-red-600 text-sm">{error}</p>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-4">
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="px-8 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors duration-200"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-8 py-3 bg-[#FF5A5F] text-white rounded-xl font-medium hover:bg-[#E14E50] transition-colors duration-200 flex items-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Creating...
-                  </>
+              <div>
+                {currentStep < 4 ? (
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="px-6 py-3 sm:px-10 sm:py-4 bg-[#FF5A5F] text-white rounded-xl sm:rounded-2xl font-semibold hover:bg-[#E14E50] transition-all duration-300 flex items-center gap-2 hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                  >
+                    <span className="text-sm sm:text-base">Continue</span>
+                    <ArrowRightIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
                 ) : (
-                  <>
-                    <SparklesIcon className="w-5 h-5" />
-                    Publish Event
-                  </>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-3 sm:px-10 sm:py-4 bg-[#FF5A5F] text-white rounded-xl sm:rounded-2xl font-semibold hover:bg-[#E14E50] transition-all duration-300 flex items-center gap-2 hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
+                        <span className="text-sm sm:text-base">Creating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <SparklesIcon className="w-4 h-4 sm:w-6 sm:h-6" />
+                        <span className="text-sm sm:text-base">Publish Listing</span>
+                      </>
+                    )}
+                  </button>
                 )}
-              </button>
+              </div>
             </div>
           </form>
-        )}
+        </div>
 
         {/* Important Message */}
-        <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
-          <div className="flex items-start gap-4">
-            <ExclamationTriangleIcon className="w-6 h-6 text-blue-500 mt-1" />
+        <div className="mt-6 sm:mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <ExclamationTriangleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-blue-900 mb-2">Important Note</h3>
-              <p className="text-blue-700 text-sm">
+              <h3 className="font-semibold text-blue-900 mb-1 sm:mb-2 text-sm sm:text-base">Important Note</h3>
+              <p className="text-blue-700 text-xs sm:text-sm">
                 If your post doesn't go through, we recommend logging out of your account and then logging back in. 
                 This will help refresh your session and resolve any potential errors you may encounter.
               </p>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Upload Progress Modal */}
-        {uploading && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl p-8 max-w-md w-full">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#FF5A5F] mx-auto"></div>
-                <h3 className="mt-4 text-lg font-semibold text-gray-900">Uploading Media</h3>
-                <p className="mt-2 text-gray-600">{Math.round(uploadProgress)}% complete</p>
-                <div className="mt-4">
-                  <ProgressBar progress={uploadProgress} />
+      {/* Upload Progress Modal */}
+      {uploading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 border-b-2 border-[#FF5A5F] mx-auto mb-4 sm:mb-6"></div>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Uploading Media</h3>
+              <p className="text-gray-600 text-base sm:text-lg mb-3 sm:mb-4">{Math.round(uploadProgress)}% complete</p>
+              <div className="relative">
+                <div className="w-full bg-gray-200 rounded-full h-2 sm:h-3">
+                  <div 
+                    className="bg-[#FF5A5F] h-2 sm:h-3 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
                 </div>
-                <p className="mt-4 text-sm text-gray-500">
-                  Please don't close this window while uploading...
-                </p>
               </div>
+              <p className="mt-4 sm:mt-6 text-gray-500 text-sm sm:text-base">
+                Please don't close this window while uploading...
+              </p>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Promotion Popup */}
-        {showPromotionPopup && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl">
-              {promotionSteps === 0 && (
-                <div className="p-12 text-center">
-                  <div className="w-20 h-20 bg-[#FF5A5F]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <SparklesIcon className="w-10 h-10 text-[#FF5A5F]" />
-                  </div>
-                  <h3 className="text-3xl font-bold text-gray-900 mb-3">Listing Created! 🎉</h3>
-                  <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                    Boost your listing's visibility and get more bookings with our promotion packages.
-                  </p>
-                  <div className="flex gap-4 justify-center">
-                    <button
-                      onClick={() => setPromotionSteps(1)}
-                      className="px-8 py-3 bg-[#FF5A5F] text-white rounded-xl font-medium hover:bg-[#E14E50] transition-colors duration-200 flex items-center gap-2"
-                    >
-                      Promote Now
-                      <ArrowRightIcon className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => navigate(`/listing/${newListingId}`)}
-                      className="px-8 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors duration-200"
-                    >
-                      Skip for Now
-                    </button>
-                  </div>
+      {/* Promotion Popup */}
+      {showPromotionPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl my-auto">
+            {promotionSteps === 0 && (
+              <div className="p-6 sm:p-8 md:p-12 text-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#FF5A5F]/10 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                  <SparklesIcon className="w-8 h-8 sm:w-10 sm:h-10 text-[#FF5A5F]" />
                 </div>
-              )}
-
-              {promotionSteps === 1 && (
-                <div className="p-8">
-                  <div className="flex items-center gap-2 mb-2">
-                    <SparklesIcon className="w-6 h-6 text-[#FF5A5F]" />
-                    <h3 className="text-2xl font-bold text-gray-900">Choose Your Promotion</h3>
-                  </div>
-                  <p className="text-gray-600 mb-8">Select a package that fits your needs</p>
-                  
-                  <div className="grid md:grid-cols-2 gap-6 mb-8">
-                    <div
-                      onClick={() => setPromotionPackage('standard')}
-                      className={`p-6 border-2 rounded-2xl cursor-pointer transition-all duration-200 ${
-                        promotionPackage === 'standard' 
-                          ? 'border-[#FF5A5F] bg-[#FF5A5F]/5' 
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h4 className="font-semibold text-lg text-gray-900">Standard</h4>
-                          <p className="text-sm text-gray-500 mt-1">25x more visibility</p>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-2xl font-bold text-[#FF5A5F]">R40</span>
-                          <p className="text-xs text-gray-500">one-time payment</p>
-                        </div>
-                      </div>
-                      <ul className="space-y-2">
-                        <li className="flex items-center gap-2 text-sm text-gray-600">
-                          <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                          25x more clicks
-                        </li>
-                        <li className="flex items-center gap-2 text-sm text-gray-600">
-                          <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                          Featured in category
-                        </li>
-                        <li className="flex items-center gap-2 text-sm text-gray-600">
-                          <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                          7-day promotion
-                        </li>
-                      </ul>
-                    </div>
-
-                    <div
-                      onClick={() => setPromotionPackage('premium')}
-                      className={`p-6 border-2 rounded-2xl cursor-pointer transition-all duration-200 ${
-                        promotionPackage === 'premium' 
-                          ? 'border-[#FF5A5F] bg-[#FF5A5F]/5' 
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h4 className="font-semibold text-lg text-gray-900">Premium</h4>
-                          <p className="text-sm text-gray-500 mt-1">80x more visibility</p>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-2xl font-bold text-[#FF5A5F]">R100</span>
-                          <p className="text-xs text-gray-500">one-time payment</p>
-                        </div>
-                      </div>
-                      <ul className="space-y-2">
-                        <li className="flex items-center gap-2 text-sm text-gray-600">
-                          <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                          80x more clicks
-                        </li>
-                        <li className="flex items-center gap-2 text-sm text-gray-600">
-                          <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                          Homepage feature
-                        </li>
-                        <li className="flex items-center gap-2 text-sm text-gray-600">
-                          <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                          14-day promotion
-                        </li>
-                        <li className="flex items-center gap-2 text-sm text-gray-600">
-                          <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                          Priority support
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <button
-                      onClick={() => setPromotionSteps(0)}
-                      className="px-6 py-2 text-gray-600 hover:text-gray-900 transition-colors duration-200"
-                    >
-                      ← Back
-                    </button>
-                    <button
-                      onClick={() => setPromotionSteps(2)}
-                      disabled={!promotionPackage}
-                      className={`px-8 py-3 rounded-xl font-medium transition-all duration-200 ${
-                        promotionPackage
-                          ? 'bg-[#FF5A5F] text-white hover:bg-[#E14E50]'
-                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      }`}
-                    >
-                      Continue to Payment
-                    </button>
-                  </div>
+                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-3">Listing Created! 🎉</h3>
+                <p className="text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base">
+                  Boost your listing's visibility and get more bookings with our promotion packages.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+                  <button
+                    onClick={() => setPromotionSteps(1)}
+                    className="px-6 py-3 sm:px-8 sm:py-3 bg-[#FF5A5F] text-white rounded-xl font-medium hover:bg-[#E14E50] transition-colors duration-200 flex items-center justify-center gap-2"
+                  >
+                    Promote Now
+                    <ArrowRightIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                  <button
+                    onClick={() => navigate(`/listing/${newListingId}`)}
+                    className="px-6 py-3 sm:px-8 sm:py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors duration-200"
+                  >
+                    Skip for Now
+                  </button>
                 </div>
-              )}
+              </div>
+            )}
 
-              {promotionSteps === 2 && (
-                <div className="p-8">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Complete Payment</h3>
-                  <p className="text-gray-600 mb-6">Choose your payment method</p>
-
-                  <div className="mb-6 p-4 bg-gray-50 rounded-xl">
-                    <div className="flex justify-between items-center">
+            {promotionSteps === 1 && (
+              <div className="p-6 sm:p-8">
+                <div className="flex items-center gap-2 mb-2">
+                  <SparklesIcon className="w-5 h-5 sm:w-6 sm:h-6 text-[#FF5A5F]" />
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Choose Your Promotion</h3>
+                </div>
+                <p className="text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base">Select a package that fits your needs</p>
+                
+                <div className="grid md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                  <div
+                    onClick={() => setPromotionPackage('standard')}
+                    className={`p-4 sm:p-6 border-2 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-200 ${
+                      promotionPackage === 'standard' 
+                        ? 'border-[#FF5A5F] bg-[#FF5A5F]/5' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-3 sm:mb-4">
                       <div>
-                        <p className="font-medium text-gray-900">Order Summary</p>
-                        <p className="text-sm text-gray-500">Promotion: {promotionPackage}</p>
+                        <h4 className="font-semibold text-base sm:text-lg text-gray-900">Standard</h4>
+                        <p className="text-xs sm:text-sm text-gray-500 mt-1">25x more visibility</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-[#FF5A5F]">
-                          R{promotionPackage === 'standard' ? '40' : '100'}
-                        </p>
+                        <span className="text-xl sm:text-2xl font-bold text-[#FF5A5F]">R40</span>
                         <p className="text-xs text-gray-500">one-time payment</p>
                       </div>
                     </div>
+                    <ul className="space-y-1 sm:space-y-2">
+                      <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
+                        25x more clicks
+                      </li>
+                      <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
+                        Featured in category
+                      </li>
+                      <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
+                        7-day promotion
+                      </li>
+                    </ul>
                   </div>
 
-                  <div className="space-y-4 mb-6">
-                    {[
-                      {
-                        id: 'card',
-                        name: 'Credit/Debit Card',
-                        description: 'Pay with Visa, Mastercard, etc.',
-                        emoji: '💳',
-                        icon: CreditCardIcon
-                      },
-                      {
-                        id: 'paypal',
-                        name: 'PayPal',
-                        description: 'Pay with your PayPal account',
-                        emoji: '📱',
-                        icon: DevicePhoneMobileIcon
-                      },
-                      {
-                        id: 'bank',
-                        name: 'Bank Transfer',
-                        description: 'Direct bank transfer',
-                        emoji: '🏦',
-                        icon: BuildingLibraryIcon
-                      }
-                    ].map((method) => (
-                      <div
-                        key={method.id}
-                        onClick={() => handlePaymentSelection(method.id)}
-                        className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
-                          selectedPaymentMethod === method.id
-                            ? 'border-[#FF5A5F] bg-[#FF5A5F]/5'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-gray-100 rounded-lg">
-                            <method.icon className="w-5 h-5 text-gray-600" />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">{method.name}</h4>
-                            <p className="text-sm text-gray-600">{method.description}</p>
-                          </div>
-                          {selectedPaymentMethod === method.id && (
-                            <CheckCircleIcon className="w-5 h-5 text-[#FF5A5F]" />
-                          )}
-                        </div>
+                  <div
+                    onClick={() => setPromotionPackage('premium')}
+                    className={`p-4 sm:p-6 border-2 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-200 ${
+                      promotionPackage === 'premium' 
+                        ? 'border-[#FF5A5F] bg-[#FF5A5F]/5' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-3 sm:mb-4">
+                      <div>
+                        <h4 className="font-semibold text-base sm:text-lg text-gray-900">Premium</h4>
+                        <p className="text-xs sm:text-sm text-gray-500 mt-1">80x more visibility</p>
                       </div>
-                    ))}
-
-                    {selectedPaymentMethod === 'card' && (
-                      <div className="mt-4 space-y-4 p-4 border border-gray-200 rounded-xl">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
-                          <input
-                            type="text"
-                            placeholder="1234 5678 9012 3456"
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                            value={cardDetails.number}
-                            onChange={(e) => setCardDetails({ ...cardDetails, number: e.target.value })}
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-                            <input
-                              type="text"
-                              placeholder="MM/YY"
-                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                              value={cardDetails.expiry}
-                              onChange={(e) => setCardDetails({ ...cardDetails, expiry: e.target.value })}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                            <input
-                              type="text"
-                              placeholder="123"
-                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                              value={cardDetails.cvv}
-                              onChange={(e) => setCardDetails({ ...cardDetails, cvv: e.target.value })}
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
-                          <input
-                            type="text"
-                            placeholder="John Doe"
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                            value={cardDetails.name}
-                            onChange={(e) => setCardDetails({ ...cardDetails, name: e.target.value })}
-                          />
-                        </div>
+                      <div className="text-right">
+                        <span className="text-xl sm:text-2xl font-bold text-[#FF5A5F]">R100</span>
+                        <p className="text-xs text-gray-500">one-time payment</p>
                       </div>
-                    )}
-                  </div>
-
-                  {error && (
-                    <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg">
-                      <p className="text-red-600 text-sm">{error}</p>
                     </div>
-                  )}
-
-                  <div className="flex justify-between items-center">
-                    <button
-                      onClick={() => setPromotionSteps(1)}
-                      className="px-6 py-2 text-gray-600 hover:text-gray-900 transition-colors duration-200"
-                    >
-                      ← Back
-                    </button>
-                    <button
-                      onClick={handlePromoteListing}
-                      disabled={selectedPaymentMethod === 'card' && !cardDetailsValid()}
-                      className={`px-8 py-3 rounded-xl font-medium transition-all duration-200 ${
-                        (selectedPaymentMethod !== 'card' || cardDetailsValid())
-                          ? 'bg-[#FF5A5F] text-white hover:bg-[#E14E50]'
-                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      }`}
-                    >
-                      Complete Payment
-                    </button>
+                    <ul className="space-y-1 sm:space-y-2">
+                      <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
+                        80x more clicks
+                      </li>
+                      <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
+                        Homepage feature
+                      </li>
+                      <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
+                        14-day promotion
+                      </li>
+                      <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
+                        Priority support
+                      </li>
+                    </ul>
                   </div>
                 </div>
-              )}
-            </div>
+
+                <div className="flex justify-between items-center">
+                  <button
+                    onClick={() => setPromotionSteps(0)}
+                    className="px-4 sm:px-6 py-2 text-gray-600 hover:text-gray-900 transition-colors duration-200 text-sm sm:text-base"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    onClick={() => setPromotionSteps(2)}
+                    disabled={!promotionPackage}
+                    className={`px-6 py-3 sm:px-8 sm:py-3 rounded-xl font-medium transition-all duration-200 text-sm sm:text-base ${
+                      promotionPackage
+                        ? 'bg-[#FF5A5F] text-white hover:bg-[#E14E50]'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    Continue to Payment
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {promotionSteps === 2 && (
+              <div className="p-6 sm:p-8">
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Complete Payment</h3>
+                <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">Choose your payment method</p>
+
+                <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 rounded-xl">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm sm:text-base">Order Summary</p>
+                      <p className="text-xs sm:text-sm text-gray-500">Promotion: {promotionPackage}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-[#FF5A5F] text-base sm:text-lg">
+                        R{promotionPackage === 'standard' ? '40' : '100'}
+                      </p>
+                      <p className="text-xs text-gray-500">one-time payment</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+                  {[
+                    {
+                      id: 'card',
+                      name: 'Credit/Debit Card',
+                      description: 'Pay with Visa, Mastercard, etc.',
+                      emoji: '💳',
+                      icon: CreditCardIcon
+                    },
+                    {
+                      id: 'paypal',
+                      name: 'PayPal',
+                      description: 'Pay with your PayPal account',
+                      emoji: '📱',
+                      icon: DevicePhoneMobileIcon
+                    },
+                    {
+                      id: 'bank',
+                      name: 'Bank Transfer',
+                      description: 'Direct bank transfer',
+                      emoji: '🏦',
+                      icon: BuildingLibraryIcon
+                    }
+                  ].map((method) => (
+                    <div
+                      key={method.id}
+                      onClick={() => handlePaymentSelection(method.id)}
+                      className={`p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                        selectedPaymentMethod === method.id
+                          ? 'border-[#FF5A5F] bg-[#FF5A5F]/5'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-gray-100 rounded-lg">
+                          <method.icon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 text-sm sm:text-base">{method.name}</h4>
+                          <p className="text-xs sm:text-sm text-gray-600">{method.description}</p>
+                        </div>
+                        {selectedPaymentMethod === method.id && (
+                          <CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF5A5F]" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {selectedPaymentMethod === 'card' && (
+                    <div className="mt-3 sm:mt-4 space-y-3 sm:space-y-4 p-3 sm:p-4 border border-gray-200 rounded-xl">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+                        <input
+                          type="text"
+                          placeholder="1234 5678 9012 3456"
+                          className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent text-sm sm:text-base"
+                          value={cardDetails.number}
+                          onChange={(e) => setCardDetails({ ...cardDetails, number: e.target.value })}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                          <input
+                            type="text"
+                            placeholder="MM/YY"
+                            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent text-sm sm:text-base"
+                            value={cardDetails.expiry}
+                            onChange={(e) => setCardDetails({ ...cardDetails, expiry: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+                          <input
+                            type="text"
+                            placeholder="123"
+                            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent text-sm sm:text-base"
+                            value={cardDetails.cvv}
+                            onChange={(e) => setCardDetails({ ...cardDetails, cvv: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
+                        <input
+                          type="text"
+                          placeholder="John Doe"
+                          className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent text-sm sm:text-base"
+                          value={cardDetails.name}
+                          onChange={(e) => setCardDetails({ ...cardDetails, name: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {error && (
+                  <div className="mb-4 sm:mb-6 p-2 sm:p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-600 text-xs sm:text-sm">{error}</p>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center">
+                  <button
+                    onClick={() => setPromotionSteps(1)}
+                    className="px-4 sm:px-6 py-2 text-gray-600 hover:text-gray-900 transition-colors duration-200 text-sm sm:text-base"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    onClick={handlePromoteListing}
+                    disabled={selectedPaymentMethod === 'card' && !cardDetailsValid()}
+                    className={`px-6 py-3 sm:px-8 sm:py-3 rounded-xl font-medium transition-all duration-200 text-sm sm:text-base ${
+                      (selectedPaymentMethod !== 'card' || cardDetailsValid())
+                        ? 'bg-[#FF5A5F] text-white hover:bg-[#E14E50]'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    Complete Payment
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
