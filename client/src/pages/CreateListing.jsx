@@ -1164,7 +1164,7 @@ export default function CreateListing() {
           <ExclamationTriangleIcon className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Listing Limit Reached</h2>
           <p className="text-gray-600 mb-6">
-            You've used all 3 free listings. Upgrade to create more amazing listings.
+            You ve used all 3 free listings. Upgrade to create more amazing listings.
           </p>
           {paymentRequired ? (
             <button
@@ -1987,7 +1987,7 @@ export default function CreateListing() {
             <div>
               <h3 className="font-semibold text-blue-900 mb-1 sm:mb-2 text-sm sm:text-base">Important Note</h3>
               <p className="text-blue-700 text-xs sm:text-sm">
-                If your post doesn't go through, we recommend logging out of your account and then logging back in. 
+                If your post doesnt go through, we recommend logging out of your account and then logging back in. 
                 This will help refresh your session and resolve any potential errors you may encounter.
               </p>
             </div>
@@ -2012,7 +2012,7 @@ export default function CreateListing() {
                 </div>
               </div>
               <p className="mt-4 sm:mt-6 text-gray-500 text-sm sm:text-base">
-                Please don't close this window while uploading...
+                Please dont close this window while uploading...
               </p>
             </div>
           </div>
@@ -2030,7 +2030,7 @@ export default function CreateListing() {
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-3">Listing Created! 🎉</h3>
                 <p className="text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base">
-                  Boost your listing's visibility and get more bookings with our promotion packages.
+                  Boost your listings visibility and get more bookings with our promotion packages.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                   <button
