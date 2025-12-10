@@ -28,7 +28,9 @@ import HelperItem from "../components/HelperItem";
 
 // Constants
 const RECENT_SEARCHES_KEY = 'recentSearches';
+const RECENTLY_VIEWED_KEY = 'recentlyViewed';
 const MAX_RECENT_SEARCHES = 5;
+const MAX_RECENTLY_VIEWED = 12;
 const DEFAULT_LISTING_LIMIT = 12;
 const DATA_FETCH_LIMIT = 8; // Number of items to fetch for each category
 
@@ -165,23 +167,386 @@ const SkeletonCard = () => (
   </div>
 );
 
-// Item Card Wrapper Component
-const ItemCard = ({ item, searchType }) => {
+// Custom Eye Icon for empty state
+const EyeIcon = (props) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    fill="none" 
+    viewBox="0 0 24 24" 
+    strokeWidth={1.5} 
+    stroke="currentColor" 
+    {...props}
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
+
+// Recently Viewed Card Component
+const RecentlyViewedCard = ({ item, onClick, onLike }) => {
+  const [isLiked, setIsLiked] = useState(item.isLiked || false);
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (onClick) {
+      onClick(item);
+    }
+    navigate(`/${item.itemType}/${item._id}`);
+  };
+
+  const handleLike = (e) => {
+    e.stopPropagation();
+    setIsLiked(!isLiked);
+    if (onLike) {
+      onLike(item._id, !isLiked);
+    }
+  };
+
+  const getCategoryColor = (itemType) => {
+    switch(itemType) {
+      case 'properties': return 'bg-blue-100 text-blue-800';
+      case 'services': return 'bg-emerald-100 text-emerald-800';
+      case 'helpers': return 'bg-purple-100 text-purple-800';
+      case 'events': return 'bg-amber-100 text-amber-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getCategoryLabel = (itemType) => {
+    switch(itemType) {
+      case 'properties': return 'Property';
+      case 'services': return 'Service';
+      case 'helpers': return 'Helper';
+      case 'events': return 'Event';
+      default: return itemType;
+    }
+  };
+
+  return (
+    <div 
+      className="flex-shrink-0 w-full rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200"
+      onClick={handleClick}
+    >
+      <div className="relative aspect-[4/3] overflow-hidden">
+        <img
+          src={item.imageUrls?.[0] || item.imageUrl || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+          alt={item.name || item.title}
+          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent"></div>
+        <button
+          onClick={handleLike}
+          className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:scale-110 transition-transform z-10"
+        >
+          {isLiked ? (
+            <HeartIconSolid className="w-5 h-5 text-rose-500" />
+          ) : (
+            <HeartIcon className="w-5 h-5 text-gray-600" />
+          )}
+        </button>
+        <div className="absolute bottom-3 left-3">
+          <span className={`text-xs font-medium px-2 py-1 rounded ${getCategoryColor(item.itemType)}`}>
+            {getCategoryLabel(item.itemType)}
+          </span>
+        </div>
+        <div className="absolute top-3 left-3">
+          {item.offer && (
+            <span className="text-xs font-medium px-2 py-1 rounded bg-red-100 text-red-800">
+              Special Offer
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="p-4">
+        <div className="flex justify-between items-start mb-2">
+          <div className="flex-1 min-w-0 mr-2">
+            <h3 className="font-semibold text-gray-900 truncate text-sm md:text-base">{item.name || item.title}</h3>
+            <p className="text-xs text-gray-500 truncate mt-1">{item.location || item.address}</p>
+          </div>
+          {item.rating !== undefined && (
+            <div className="flex items-center flex-shrink-0">
+              <StarIconSolid className="w-4 h-4 text-yellow-400" />
+              <span className="text-sm font-medium ml-1">{item.rating?.toFixed(1) || '4.5'}</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="flex justify-between items-center mt-3">
+          <div className="flex flex-col">
+            <span className="font-bold text-gray-900 text-lg">
+              {item.price || item.regularPrice || 'N/A'}
+            </span>
+            <span className="text-xs text-gray-500">
+              {item.itemType === 'properties' && item.type ? 
+                getPriceLabel(item.type) : 
+                item.itemType === 'services' ? '/service' : 
+                item.itemType === 'helpers' ? '/hour' : 
+                ''}
+            </span>
+          </div>
+          <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
+            {item.viewedAt ? new Date(item.viewedAt).toLocaleDateString() : 'Recently'}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Recently Viewed Section Component - Updated with Airbnb-style 3-card carousel
+const RecentlyViewedSection = ({ items = [], onItemClick, onItemLike, refreshRecentlyViewed }) => {
+  const scrollContainerRef = useRef(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const itemsPerView = 3;
+  const totalPages = Math.ceil(items.length / itemsPerView);
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      const newIndex = Math.max(0, currentIndex - 1);
+      setCurrentIndex(newIndex);
+      const cardWidth = scrollContainerRef.current.children[0]?.offsetWidth || 320;
+      const gap = 16;
+      const scrollAmount = (cardWidth + gap) * itemsPerView * newIndex;
+      scrollContainerRef.current.scrollTo({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      const newIndex = Math.min(totalPages - 1, currentIndex + 1);
+      setCurrentIndex(newIndex);
+      const cardWidth = scrollContainerRef.current.children[0]?.offsetWidth || 320;
+      const gap = 16;
+      const scrollAmount = (cardWidth + gap) * itemsPerView * newIndex;
+      scrollContainerRef.current.scrollTo({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const handleClearAll = () => {
+    localStorage.removeItem(RECENTLY_VIEWED_KEY);
+    refreshRecentlyViewed();
+    setCurrentIndex(0);
+  };
+
+  // Update current index on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (scrollContainerRef.current) {
+        const scrollLeft = scrollContainerRef.current.scrollLeft;
+        const cardWidth = scrollContainerRef.current.children[0]?.offsetWidth || 320;
+        const gap = 16;
+        const scrollWidth = (cardWidth + gap) * itemsPerView;
+        const newIndex = Math.round(scrollLeft / scrollWidth);
+        setCurrentIndex(newIndex);
+      }
+    };
+
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
+
+  if (!items || items.length === 0) {
+    return (
+      <div className="mb-12">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Recently viewed</h2>
+            <p className="text-sm text-gray-500">Your recently viewed items will appear here</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl p-8 text-center border border-gray-200">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <EyeIcon className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No recently viewed items
+          </h3>
+          <p className="text-gray-600 mb-4 text-sm">
+            Start browsing properties, services, helpers, and events to see them here
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-12">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Recently viewed</h2>
+          <p className="text-sm text-gray-500">Based on your browsing history</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleClearAll}
+            className="text-sm text-gray-600 hover:text-gray-900 underline"
+          >
+            Clear all
+          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={scrollLeft}
+              disabled={currentIndex === 0}
+              className={`p-2 rounded-full border border-gray-300 transition-colors ${
+                currentIndex === 0 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:bg-gray-50 hover:shadow-sm'
+              }`}
+            >
+              <ChevronLeftIcon className="w-5 h-5 text-gray-600" />
+            </button>
+            <button
+              onClick={scrollRight}
+              disabled={currentIndex >= totalPages - 1}
+              className={`p-2 rounded-full border border-gray-300 transition-colors ${
+                currentIndex >= totalPages - 1
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:bg-gray-50 hover:shadow-sm'
+              }`}
+            >
+              <ChevronRightIcon className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative">
+        {/* Left gradient fade - only show when not at start */}
+        {currentIndex > 0 && (
+          <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none"></div>
+        )}
+        
+        {/* Right gradient fade - only show when not at end */}
+        {currentIndex < totalPages - 1 && (
+          <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none"></div>
+        )}
+
+        {/* Scrollable container with 3 cards per view */}
+        <div
+          ref={scrollContainerRef}
+          className="flex gap-4 overflow-x-auto scrollbar-hide pb-4"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          }}
+        >
+          <style jsx>{`
+            .scrollbar-hide::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
+          
+          {items.map((item, index) => (
+            <div 
+              key={`${item._id}-${item.viewedAt}`} 
+              className="flex-shrink-0 w-[calc(33.333%-0.666rem)] min-w-[190px] max-w-[240px]"
+            >
+              <RecentlyViewedCard 
+                item={item} 
+                onClick={onItemClick}
+                onLike={onItemLike}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Dots indicator - Airbnb style */}
+        {totalPages > 1 && (
+          <div className="flex justify-center gap-2 mt-8">
+            {Array.from({ length: totalPages }).map((_, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  setCurrentIndex(index);
+                  if (scrollContainerRef.current) {
+                    const cardWidth = scrollContainerRef.current.children[0]?.offsetWidth || 320;
+                    const gap = 16;
+                    const scrollAmount = (cardWidth + gap) * itemsPerView * index;
+                    scrollContainerRef.current.scrollTo({ left: scrollAmount, behavior: 'smooth' });
+                  }
+                }}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  index === currentIndex 
+                    ? 'bg-gray-900 w-6' 
+                    : 'bg-gray-300 hover:bg-gray-400'
+                }`}
+                aria-label={`Go to page ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Item Card Wrapper Component with click tracking
+const ItemCard = ({ item, searchType, onClick }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleClick = () => {
+    // Add to recently viewed
+    if (onClick) {
+      onClick(item, searchType);
+    }
+    
+    // Navigate to detail page
+    switch(searchType) {
+      case 'properties':
+        navigate(`/listing/${item._id}`, { state: { from: location.pathname } });
+        break;
+      case 'services':
+        navigate(`/service/${item._id}`, { state: { from: location.pathname } });
+        break;
+      case 'helpers':
+        navigate(`/helper/${item._id}`, { state: { from: location.pathname } });
+        break;
+      case 'events':
+        navigate(`/event/${item._id}`, { state: { from: location.pathname } });
+        break;
+      default:
+        navigate(`/item/${item._id}`, { state: { from: location.pathname } });
+    }
+  };
+
   switch (searchType) {
     case 'properties':
-      return <ListingItem listing={item} className="w-full" />;
+      return (
+        <div onClick={handleClick} className="cursor-pointer">
+          <ListingItem listing={item} className="w-full" />
+        </div>
+      );
     case 'services':
-      return <ServiceItem service={item} className="w-full" />;
+      return (
+        <div onClick={handleClick} className="cursor-pointer">
+          <ServiceItem service={item} className="w-full" />
+        </div>
+      );
     case 'helpers':
-      return <HelperItem helper={item} className="w-full" />;
+      return (
+        <div onClick={handleClick} className="cursor-pointer">
+          <HelperItem helper={item} className="w-full" />
+        </div>
+      );
     case 'events':
-      return <EventItem event={item} className="w-full" />;
+      return (
+        <div onClick={handleClick} className="cursor-pointer">
+          <EventItem event={item} className="w-full" />
+        </div>
+      );
     default:
       return (
-        <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div 
+          className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+          onClick={handleClick}
+        >
           <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
             <img
-              src={item.imageUrls?.[0] || 'https://images.unsplash.com/photo-1511578314322-379afb476865?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+              src={item.imageUrls?.[0] || item.image || 'https://images.unsplash.com/photo-1511578314322-379afb476865?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
               alt={item.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
@@ -283,7 +648,7 @@ const AirbnbSearchBar = ({ onSubmit, searchType }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div className="w-full max-w-3xl mx-auto hidden md:block">
       <div className="bg-white rounded-full shadow-lg p-1 border border-gray-200">
         <div className="flex items-center">
           <div className="flex-1 px-4">
@@ -291,7 +656,7 @@ const AirbnbSearchBar = ({ onSubmit, searchType }) => {
             <input
               type="text"
               placeholder="Search destinations..."
-              className="w-full text-sm text-gray-600 placeholder-gray-400 outline-none"
+              className="w-full text-sm text-gray-600 "
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
             />
@@ -339,7 +704,7 @@ const HeroBanner = ({ onSearch, searchType }) => {
         <p className="text-lg text-gray-600 mb-8 max-w-2xl">
           Discover unique homes, experiences, and services around you
         </p>
-       
+        <AirbnbSearchBar onSubmit={onSearch} searchType={searchType} />
       </div>
     </div>
   );
@@ -418,8 +783,8 @@ const PopularDestinations = () => {
   );
 };
 
-// Featured Listings Section
-const FeaturedListings = ({ items, searchType, loading, title, showAllLink }) => {
+// Featured Listings Section with click tracking
+const FeaturedListings = ({ items, searchType, loading, title, showAllLink, onItemClick }) => {
   if (loading) {
     return (
       <div className="mb-12">
@@ -441,22 +806,27 @@ const FeaturedListings = ({ items, searchType, loading, title, showAllLink }) =>
   if (!items || items.length === 0) return null;
 
   return (
-  <div className="mb-12">
-  <div className="flex justify-between items-center mb-6">
-    <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-    <a 
-      href="/listing-home-page" 
-      className="text-sm font-medium text-gray-900 hover:underline"
-    >
-      Show all →
-    </a>
-  </div>
-  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
-    {items.map((item) => (
-      <ItemCard key={item._id} item={item} searchType={searchType} />
-    ))}
-  </div>
-</div>
+    <div className="mb-12">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+        <a 
+          href="/listing-home-page" 
+          className="text-sm font-medium text-gray-900 hover:underline"
+        >
+          Show all →
+        </a>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {items.map((item) => (
+          <ItemCard 
+            key={item._id} 
+            item={item} 
+            searchType={searchType} 
+            onClick={onItemClick}
+          />
+        ))}
+      </div>
+    </div>
   );
 };
 
@@ -474,7 +844,11 @@ const Navigation = ({ isHomePage, onLogoClick, searchType, onSubmitSearch }) => 
     }
   };
 
- 
+  return (
+    <nav >
+  
+    </nav>
+  );
 };
 
 // Homepage Component
@@ -493,7 +867,11 @@ const Homepage = ({
   loadingServices,
   loadingHelpers,
   loadingEvents,
-  stats
+  stats,
+  onItemClick,
+  recentlyViewedItems,
+  onRecentlyViewedLike,
+  refreshRecentlyViewed
 }) => {
   const handleSearch = (value) => {
     if (setSidebarData) {
@@ -512,9 +890,9 @@ const Homepage = ({
       'Services': 'helpers',
       'Events': 'events',
       'Office': 'properties',
-      'Land': 'over',
+      'Land': 'properties',
       'Moving': 'services',
-      'Cleaning': 'helpers'
+      'Cleaning': 'services'
     };
     
     const type = searchTypeMap[category] || 'properties';
@@ -542,6 +920,14 @@ const Homepage = ({
           searchType={searchType}
         />
 
+        {/* Recently Viewed Section */}
+        <RecentlyViewedSection 
+          items={recentlyViewedItems}
+          onItemClick={onItemClick}
+          onItemLike={onRecentlyViewedLike}
+          refreshRecentlyViewed={refreshRecentlyViewed}
+        />
+
         <CategoryGrid 
           onCategoryClick={handleCategoryClick}
           stats={stats}
@@ -555,6 +941,7 @@ const Homepage = ({
           loading={loadingProperties}
           title="Popular homes in South Africa"
           showAllLink="/search?searchType=properties"
+          onItemClick={onItemClick}
         />
 
         <FeaturedListings 
@@ -563,6 +950,7 @@ const Homepage = ({
           loading={loadingServices}
           title="Top experiences near you"
           showAllLink="/search?searchType=services"
+          onItemClick={onItemClick}
         />
 
         <FeaturedListings 
@@ -571,6 +959,7 @@ const Homepage = ({
           loading={loadingHelpers}
           title="Recommended service providers"
           showAllLink="/search?searchType=helpers"
+          onItemClick={onItemClick}
         />
 
         <FeaturedListings 
@@ -579,6 +968,7 @@ const Homepage = ({
           loading={loadingEvents}
           title="Upcoming local events"
           showAllLink="/search?searchType=events"
+          onItemClick={onItemClick}
         />
 
         <div className="bg-gradient-to-r from-rose-500 to-blue-500 rounded-3xl p-8 md:p-12 text-white mb-8">
@@ -612,7 +1002,8 @@ const SearchResults = ({
   clearFilters,
   setShowHomePage,
   navigate,
-  location
+  location,
+  onItemClick
 }) => {
   const loadMore = () => {
     const startIndex = filteredItems.length;
@@ -753,7 +1144,12 @@ const SearchResults = ({
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredItems.map((item) => (
-                      <ItemCard key={item._id} item={item} searchType={searchType} />
+                      <ItemCard 
+                        key={item._id} 
+                        item={item} 
+                        searchType={searchType} 
+                        onClick={onItemClick}
+                      />
                     ))}
                   </div>
 
@@ -936,6 +1332,86 @@ const UniversalSearch = () => {
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [stats, setStats] = useState({});
 
+  // Recently viewed items state
+  const [recentlyViewedItems, setRecentlyViewedItems] = useState([]);
+
+  // Load recently viewed items from localStorage
+  useEffect(() => {
+    const loadRecentlyViewed = () => {
+      try {
+        const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
+        if (stored) {
+          const items = JSON.parse(stored);
+          setRecentlyViewedItems(items);
+        }
+      } catch (error) {
+        console.error('Failed to load recently viewed items:', error);
+      }
+    };
+
+    loadRecentlyViewed();
+  }, []);
+
+  // Function to add item to recently viewed
+  const addToRecentlyViewed = (item, itemType) => {
+    try {
+      const viewedItem = {
+        ...item,
+        itemType: itemType,
+        viewedAt: new Date().toISOString(),
+        isLiked: false
+      };
+
+      // Get existing items
+      const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
+      let items = stored ? JSON.parse(stored) : [];
+
+      // Remove if already exists (to update timestamp)
+      items = items.filter(i => i._id !== item._id || i.itemType !== itemType);
+      
+      // Add new item to beginning
+      items.unshift(viewedItem);
+      
+      // Keep only MAX_RECENTLY_VIEWED items
+      items = items.slice(0, MAX_RECENTLY_VIEWED);
+      
+      // Save to localStorage
+      localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(items));
+      
+      // Update state
+      setRecentlyViewedItems(items);
+    } catch (error) {
+      console.error('Failed to save to recently viewed:', error);
+    }
+  };
+
+  // Function to update like status
+  const updateRecentlyViewedLike = (itemId, isLiked) => {
+    try {
+      const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
+      if (stored) {
+        let items = JSON.parse(stored);
+        items = items.map(item => 
+          item._id === itemId ? { ...item, isLiked } : item
+        );
+        localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(items));
+        setRecentlyViewedItems(items);
+      }
+    } catch (error) {
+      console.error('Failed to update like status:', error);
+    }
+  };
+
+  // Function to refresh recently viewed
+  const refreshRecentlyViewed = () => {
+    const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
+    if (stored) {
+      setRecentlyViewedItems(JSON.parse(stored));
+    } else {
+      setRecentlyViewedItems([]);
+    }
+  };
+
   // Check if mobile
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -1005,7 +1481,6 @@ const UniversalSearch = () => {
 
       // Fetch stats
       try {
-        // You can create a stats endpoint or fetch counts separately
         const statsData = {
           properties: featuredProperties.length * 100 || 1234,
           services: featuredServices.length * 50 || 456,
@@ -1289,6 +1764,10 @@ const UniversalSearch = () => {
         loadingHelpers={loadingHelpers}
         loadingEvents={loadingEvents}
         stats={stats}
+        onItemClick={addToRecentlyViewed}
+        recentlyViewedItems={recentlyViewedItems}
+        onRecentlyViewedLike={updateRecentlyViewedLike}
+        refreshRecentlyViewed={refreshRecentlyViewed}
       />
     );
   }
@@ -1311,6 +1790,7 @@ const UniversalSearch = () => {
       setShowHomePage={setShowHomePage}
       navigate={navigate}
       location={location}
+      onItemClick={addToRecentlyViewed}
     />
   );
 };
