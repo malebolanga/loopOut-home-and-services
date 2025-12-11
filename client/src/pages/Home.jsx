@@ -809,12 +809,12 @@ const FeaturedListings = ({ items, searchType, loading, title, showAllLink, onIt
     <div className="mb-12">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-        <a 
-          href="/listing-home-page" 
+          <Link 
+          to={showAllLink}
           className="text-sm font-medium text-gray-900 hover:underline"
         >
           Show all →
-        </a>
+        </Link>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {items.map((item) => (
@@ -940,7 +940,7 @@ const Homepage = ({
           searchType="properties"
           loading={loadingProperties}
           title="Popular homes in South Africa"
-          showAllLink="/search?searchType=properties"
+           showAllLink="/listing-home-page"
           onItemClick={onItemClick}
         />
 
@@ -949,7 +949,7 @@ const Homepage = ({
           searchType="services"
           loading={loadingServices}
           title="Top experiences near you"
-          showAllLink="/search?searchType=services"
+          showAllLink="/service-home-page"
           onItemClick={onItemClick}
         />
 
@@ -958,7 +958,7 @@ const Homepage = ({
           searchType="helpers"
           loading={loadingHelpers}
           title="Recommended service providers"
-          showAllLink="/search?searchType=helpers"
+          showAllLink="/helper-home-page"
           onItemClick={onItemClick}
         />
 
@@ -967,7 +967,7 @@ const Homepage = ({
           searchType="events"
           loading={loadingEvents}
           title="Upcoming local events"
-          showAllLink="/search?searchType=events"
+          showAllLink="/event-home-page"
           onItemClick={onItemClick}
         />
 
