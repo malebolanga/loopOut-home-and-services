@@ -57,6 +57,7 @@ import UserListings from './pages/UserListings';
 import PromotionSelection from './pages/PromotionSelection';
 import PaymentMethod from './pages/PaymentMethod';
 import Sale from "./pages/Sale";
+import RecentlyViewedPage from "./pages/RecentlyViewedPage";
 
 // Help & Resources
 import PropertySafety from "./components/PropertySafety";
@@ -175,7 +176,7 @@ export default function App() {
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/newsroom" element={<Newsroom />} />
         <Route path='/listings/user/:id' element={<UserListings />} />
-        
+        <Route path="/recently-viewed" element={<RecentlyViewedPage />} />
         {/* Private Routes */}
         <Route element={<PrivateRoute />}>
           <Route path="/sale" element={<Sale />} />

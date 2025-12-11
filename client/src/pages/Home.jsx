@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   HomeIcon,
   MapIcon,
@@ -261,7 +261,7 @@ const RecentlyViewedCard = ({ item, onClick, onLike }) => {
         <div className="flex justify-between items-start mb-2">
           <div className="flex-1 min-w-0 mr-2">
             <h3 className="font-semibold text-gray-900 truncate text-sm md:text-base">{item.name || item.title}</h3>
-            <p className="text-xs text-gray-500 truncate mt-1">{item.location || item.address}</p>
+            
           </div>
           {item.rating !== undefined && (
             <div className="flex items-center flex-shrink-0">
@@ -271,18 +271,12 @@ const RecentlyViewedCard = ({ item, onClick, onLike }) => {
           )}
         </div>
         
-        <div className="flex justify-between items-center mt-3">
+        <div className="flex justify-between items-center mt-0">
           <div className="flex flex-col">
-            <span className="font-bold text-gray-900 text-lg">
-              {item.price || item.regularPrice || 'N/A'}
+            <span className="font-bold text-gray-900 text-sm">
+             R{item.price || item.regularPrice || 'N/A'}
             </span>
-            <span className="text-xs text-gray-500">
-              {item.itemType === 'properties' && item.type ? 
-                getPriceLabel(item.type) : 
-                item.itemType === 'services' ? '/service' : 
-                item.itemType === 'helpers' ? '/hour' : 
-                ''}
-            </span>
+           
           </div>
           <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
             {item.viewedAt ? new Date(item.viewedAt).toLocaleDateString() : 'Recently'}
@@ -376,7 +370,7 @@ const RecentlyViewedSection = ({ items = [], onItemClick, onItemLike, refreshRec
     <div className="mb-12">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Recently viewed</h2>
+          <h2 className="text-1xl font-bold text-gray-900">Recently viewed</h2>
           <p className="text-sm text-gray-500">Based on your browsing history</p>
         </div>
         <div className="flex items-center gap-3">
@@ -386,6 +380,12 @@ const RecentlyViewedSection = ({ items = [], onItemClick, onItemLike, refreshRec
           >
             Clear all
           </button>
+          <Link
+      to="/recently-viewed"
+      className="text-sm font-medium text-gray-900 hover:underline"
+    >
+      See all →
+    </Link>
           <div className="flex gap-2">
             <button
               onClick={scrollLeft}
@@ -455,7 +455,7 @@ const RecentlyViewedSection = ({ items = [], onItemClick, onItemLike, refreshRec
 
         {/* Dots indicator - Airbnb style */}
         {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mt-8">
+          <div className="flex justify-center gap-2 mt-8"> 
             {Array.from({ length: totalPages }).map((_, index) => (
               <button
                 key={index}
