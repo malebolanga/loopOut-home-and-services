@@ -607,7 +607,7 @@ export default function Sidebar() {
               ) : (
                 /* For non-logged in users */
                 <div className="p-4">
-                  <p className="text-gray-600 text-center mb-4">Welcome to Lput</p>
+                  <p className="text-gray-600 text-center mb-4">Welcome to loopOut</p>
                   
                   <button
                     onClick={handleSignIn}
@@ -746,7 +746,7 @@ export default function Sidebar() {
             ) : (
               /* For non-logged in users */
               <div className="p-4">
-                <p className="text-gray-600 text-center mb-4">Welcome to Lput</p>
+                <p className="text-gray-600 text-center mb-4">Welcome to loopOut</p>
                 
                 <button
                   onClick={handleSignIn}
@@ -870,7 +870,7 @@ export default function Sidebar() {
                 onFocus={() => setShowSuggestions(true)}
                 className="w-full p-4 pl-12 rounded-xl border border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition-all bg-white shadow-sm"
               />
-              <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <FiSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               
               {/* Search Suggestions */}
               {showSuggestions && suggestions.length > 0 && (

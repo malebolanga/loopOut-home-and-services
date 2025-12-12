@@ -8,8 +8,7 @@ import {
   XMarkIcon,
   AdjustmentsHorizontalIcon,
   MagnifyingGlassIcon,
-  HeartIcon,
-  StarIcon,
+ 
   FunnelIcon,
 
   SparklesIcon,
@@ -77,6 +76,48 @@ const getPropertyTypeName = (type) => {
   }
 };
 
+// Helper function for helper types
+const getHelperTypeName = (type) => {
+  switch (type) {
+    case 'domestic': return 'Maid';
+    case 'tutor': return 'Tutor';
+    case 'chef': return 'Chef';
+    case 'handyman': return 'Handyman';
+    case 'tattoo': return 'Tattoo Artist';
+    case 'beauty': return 'Beauty';
+    case 'barber': return 'Barber';
+    case 'photography': return 'Photographer';
+    default: return 'Helper';
+  }
+};
+
+// Helper function for service types
+const getServiceTypeName = (type) => {
+  switch (type) {
+    case 'cleaning': return 'Cleaning';
+    case 'maintenance': return 'Maintenance';
+    case 'moving': return 'Moving';
+    case 'landscaping': return 'Landscaping';
+    case 'catering': return 'Catering';
+    case 'other': return 'Other';
+    case 'daycare': return 'DayCare';
+    case 'schoolTransport': return 'School Transport';
+    default: return 'Service';
+  }
+};
+
+// Helper function for event types
+const getEventTypeName = (type) => {
+  switch (type) {
+    case 'concert': return 'Concert';
+    case 'workshop': return 'Workshop';
+    case 'sports': return 'Sports';
+    case 'community': return 'Community';
+    case 'festival': return 'Festival';
+    default: return 'Event';
+  }
+};
+
 const getPriceLabel = (type) => {
   switch (type) {
     case 'sale':
@@ -94,20 +135,45 @@ const getPriceLabel = (type) => {
   }
 };
 
-const getTypeBadge = (type) => {
-  switch (type) {
-    case 'sale':
-      return { label: 'For Sale', color: 'bg-blue-100 text-blue-800' };
-    case 'rent-short':
-      return { label: 'Short Term', color: 'bg-green-100 text-green-800' };
-    case 'rent-long':
-      return { label: 'Long Term', color: 'bg-emerald-100 text-emerald-800' };
-    case 'office':
-      return { label: 'Office Space', color: 'bg-purple-100 text-purple-800' };
-    case 'land':
-      return { label: 'Land Plot', color: 'bg-amber-100 text-amber-800' };
+const getTypeBadge = (type, searchType) => {
+  // For properties
+  switch (searchType) {
+    case 'properties':
+      switch (type) {
+        case 'sale':
+          return { label: 'For Sale', color: 'bg-blue-100 text-blue-800' };
+        case 'rent-short':
+          return { label: 'Short Term', color: 'bg-green-100 text-green-800' };
+        case 'rent-long':
+          return { label: 'Long Term', color: 'bg-emerald-100 text-emerald-800' };
+        case 'office':
+          return { label: 'Office Space', color: 'bg-purple-100 text-purple-800' };
+        case 'land':
+          return { label: 'Land Plot', color: 'bg-amber-100 text-amber-800' };
+        default:
+          return { label: 'Property', color: 'bg-gray-100 text-gray-800' };
+      }
+    
+    case 'services':
+      return { 
+        label: getServiceTypeName(type), 
+        color: 'bg-green-100 text-green-800' 
+      };
+    
+    case 'helpers':
+      return { 
+        label: getHelperTypeName(type), 
+        color: 'bg-purple-100 text-purple-800' 
+      };
+    
+    case 'events':
+      return { 
+        label: getEventTypeName(type), 
+        color: 'bg-amber-100 text-amber-800' 
+      };
+    
     default:
-      return { label: 'Property', color: 'bg-gray-100 text-gray-800' };
+      return { label: 'Item', color: 'bg-gray-100 text-gray-800' };
   }
 };
 
@@ -147,8 +213,10 @@ const ItemCard = ({ item, searchType }) => {
               className="w-full h-full object-cover"
             />
             <div className="absolute top-3 left-3">
-              <span className={`text-xs font-medium px-2 py-1 rounded ${SEARCH_TYPES.find(t => t.id === searchType)?.color || 'bg-gray-100 text-gray-800'}`}>
-                {SEARCH_TYPES.find(t => t.id === searchType)?.label}
+              <span className={`text-xs font-medium px-2 py-1 rounded ${
+                getTypeBadge(item.type, searchType).color
+              }`}>
+                {getTypeBadge(item.type, searchType).label}
               </span>
             </div>
           </div>
@@ -181,9 +249,9 @@ const MapView = ({ items, searchType, address = 'Polokwane' }) => {
   const getTypeColor = (type) => {
     switch(searchType) {
       case 'properties':
-        return getTypeBadge(type).color;
+        return getTypeBadge(type, searchType).color.split(' ')[0]; // Get just the background color
       case 'services':
-        return 'bg-blue-500';
+        return 'bg-green-500';
       case 'helpers':
         return 'bg-purple-500';
       case 'events':
@@ -421,7 +489,7 @@ const UniversalSearch = () => {
     { id: 'land', label: 'Land', icon: '🌳', description: 'For sale' }
   ];
 
-  // Service types
+  // Service types - updated to match getServiceTypeName
   const serviceTypes = [
     { id: 'all', label: 'All Services', icon: '✨', description: 'All service types' },
     { id: 'cleaning', label: 'Cleaning', icon: '🧹', description: 'Home & office cleaning' },
@@ -430,19 +498,21 @@ const UniversalSearch = () => {
     { id: 'landscaping', label: 'Landscaping', icon: '🌿', description: 'Garden & lawn care' },
     { id: 'catering', label: 'Catering', icon: '🍽️', description: 'Food & catering' },
     { id: 'daycare', label: 'DayCare', icon: '👶', description: 'Child care services' },
-    { id: 'schoolTransport', label: 'School Transport', icon: '🚌', description: 'School transport' }
+    { id: 'schoolTransport', label: 'School Transport', icon: '🚌', description: 'School transport' },
+    { id: 'other', label: 'Other', icon: '🔧', description: 'Other services' }
   ];
 
-  // Helper types
+  // Helper types - updated to match getHelperTypeName
   const helperTypes = [
     { id: 'all', label: 'All Helpers', icon: '👥', description: 'All helper types' },
     { id: 'tutor', label: 'Tutor', icon: '📚', description: 'Academic tutoring' },
-    { id: 'caregiver', label: 'Caregiver', icon: '👵', description: 'Elderly & child care' },
+    { id: 'chef', label: 'Chef', icon: '👨‍🍳', description: 'Cooking & catering' },
     { id: 'handyman', label: 'Handyman', icon: '🛠️', description: 'Home repairs' },
-    { id: 'cleaner', label: 'Cleaner', icon: '🧽', description: 'Cleaning services' },
+    { id: 'domestic', label: 'Maid', icon: '🧽', description: 'House helper' },
     { id: 'beauty', label: 'Beauty', icon: '💄', description: 'Beauty services' },
     { id: 'barber', label: 'Barber', icon: '✂️', description: 'Haircut & grooming' },
-    { id: 'photography', label: 'Photographer', icon: '📷', description: 'Photography services' }
+    { id: 'photography', label: 'Photographer', icon: '📷', description: 'Photography services' },
+    { id: 'tattoo', label: 'Tattoo Artist', icon: '🖋️', description: 'Tattoo services' }
   ];
 
   // Event types
@@ -564,7 +634,7 @@ const UniversalSearch = () => {
               };
               break;
             case 'services':
-              const serviceTypes = ['cleaning', 'maintenance', 'moving', 'landscaping', 'catering', 'daycare', 'schoolTransport'];
+              const serviceTypes = ['cleaning', 'maintenance', 'moving', 'landscaping', 'catering', 'daycare', 'schoolTransport', 'other'];
               type = serviceTypes[index % serviceTypes.length];
               mockData = {
                 type: type,
@@ -575,7 +645,7 @@ const UniversalSearch = () => {
               };
               break;
             case 'helpers':
-              const helperTypes = ['tutor', 'caregiver', 'handyman', 'cleaner', 'beauty', 'barber', 'photography'];
+              const helperTypes = ['tutor', 'domestic', 'handyman', 'chef', 'beauty', 'barber', 'photography', 'tattoo'];
               type = helperTypes[index % helperTypes.length];
               mockData = {
                 type: type,
@@ -638,11 +708,11 @@ const UniversalSearch = () => {
               item.offer = Math.random() > 0.5;
               break;
             case 'services':
-              const serviceTypes = ['cleaning', 'maintenance', 'moving', 'landscaping', 'catering', 'daycare', 'schoolTransport'];
+              const serviceTypes = ['cleaning', 'maintenance', 'moving', 'landscaping', 'catering', 'daycare', 'schoolTransport', 'other'];
               item.type = serviceTypes[i % serviceTypes.length];
               break;
             case 'helpers':
-              const helperTypes = ['tutor', 'caregiver', 'handyman', 'cleaner', 'beauty', 'barber', 'photography'];
+              const helperTypes = ['tutor', 'domestic', 'handyman', 'chef', 'beauty', 'barber', 'photography', 'tattoo'];
               item.type = helperTypes[i % helperTypes.length];
               break;
             case 'events':
