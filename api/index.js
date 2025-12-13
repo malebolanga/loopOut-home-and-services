@@ -11,6 +11,7 @@ import serviceCommentRouter from './routes/service-comment.route.js';
 import eventRouter from './routes/event.route.js';
 import cookieParser from 'cookie-parser';
 // Add to your imports:
+
 import helperCommentRouter from './routes/helper-comment.route.js';
 import eventCommentRouter from './routes/event-comment.route.js';
 import tripRouter from './routes/trip.js'; // Make sure this is imported
@@ -41,6 +42,7 @@ app.use('/api/helper', helperRouter); // ADD THIS LINE
 app.use('/api/event', eventRouter);
 app.use('/api/service-comments', serviceCommentRouter);
 // Add to your routes:
+
 app.use('/api/trips', tripRouter); // Make sure this is included
 app.use('/api/helper-comments', helperCommentRouter);
 app.use('/api/event-comments', eventCommentRouter);
