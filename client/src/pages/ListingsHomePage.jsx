@@ -230,7 +230,7 @@ const ListingsHomePage = () => {
                       </div>
                       
                       <Swiper
-                        slidesPerView={1.2}
+                        slidesPerView={1.8}
                         spaceBetween={16}
                         modules={[Navigation]}
                         navigation

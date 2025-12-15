@@ -119,7 +119,7 @@ const ServicesHomePage = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Airbnb-style Header Section */}
-      <div className="relative bg-gradient-to-r from-blue-50 to-green-50 pt-8 pb-12">
+      <div className="relative bg-gradient-to-r from-airbnb-pink/5 to-blue-50 pt-8 pb-12">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">

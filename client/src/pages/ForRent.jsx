@@ -557,7 +557,7 @@ export default function ForRent() {
             </div>
           ) : rentalListings.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-2">
                 {rentalListings.map((listing) => (
                   <ListingItem
                     key={listing._id || `listing-${Math.random()}`}
@@ -573,7 +573,7 @@ export default function ForRent() {
                         : null
                     }
                     onClick={() => markAsViewed(listing)}
-                    className="group"
+                    className=""
                     isRental={true}
                   />
                 ))}

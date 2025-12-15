@@ -440,7 +440,7 @@ export default function OverNight() {
                           : null
                       }
                       onClick={() => markAsViewed(listing)}
-                      className="group"
+                      className=""
                       showBadge={true}
                       isOvernight={true}
                     />
@@ -463,7 +463,7 @@ export default function OverNight() {
           </div>
 
           {loading && page === 1 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-2">
               {[...Array(8)].map((_, i) => (
                 <div key={i} className="animate-pulse rounded-xl overflow-hidden">
                   <div className="aspect-[4/3] bg-gray-200 rounded-xl" />
@@ -493,7 +493,7 @@ export default function OverNight() {
                         : null
                     }
                     onClick={() => markAsViewed(listing)}
-                    className="group"
+                    className=""
                     isOvernight={true}
                   />
                 ))}
