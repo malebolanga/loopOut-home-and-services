@@ -1,9 +1,19 @@
-// eslint-disable-next-line no-unused-vars
+// src/components/Footer.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import { FiSearch, FiClock, FiX, FiHome, FiUser, FiFileText, FiMap } from "react-icons/fi";
 import { FaBrain } from "react-icons/fa";
+
+// Import search utilities - Use correct path
+import {
+  getSearchUrl,
+  saveSearchHistory,
+  getSearchHistory,
+  clearSearchHistory as clearSearchHistoryUtil,
+  generateSuggestions,
+  SEARCH_TYPE_CONFIG
+} from "../utils/searchUtils";
 
 const Footer = () => {
   const navigate = useNavigate();
@@ -16,22 +26,20 @@ const Footer = () => {
   const [showCreate, setShowCreate] = useState(false);
   const mobileSearchRef = useRef();
 
-  // Search states (same as header)
+  // Search states
   const [activeType, setActiveType] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [searchHistory, setSearchHistory] = useState(() => {
-    const saved = localStorage.getItem('searchHistory');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [searchHistory, setSearchHistory] = useState(getSearchHistory());
 
-  // Search types (same as header)
+  // Search types
   const searchTypes = [
     { key: 'all', label: 'All', icon: '🔍' },
-    { key: 'name', label: 'Name', icon: <FiUser className="w-4 h-4" /> },
-    { key: 'address', label: 'Address', icon: <FiHome className="w-4 h-4" /> },
-    { key: 'description', label: 'Description', icon: <FiFileText className="w-4 h-4" /> }
+    { key: 'properties', label: 'Properties', icon: <FiHome className="w-4 h-4" /> },
+    { key: 'services', label: 'Services', icon: <FiFileText className="w-4 h-4" /> },
+    { key: 'helpers', label: 'Helpers', icon: <FiUser className="w-4 h-4" /> },
+    { key: 'events', label: 'Events', icon: <FiClock className="w-4 h-4" /> }
   ];
 
   useEffect(() => {
@@ -73,54 +81,16 @@ const Footer = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showSearch]);
 
-  // Effect to save search history
-  useEffect(() => {
-    localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
-  }, [searchHistory]);
-
   // Effect to generate search suggestions
   useEffect(() => {
-    if (!searchTerm.trim() || !showSearch) {
+    if (searchTerm.trim() && showSearch) {
+      const newSuggestions = generateSuggestions(searchTerm, activeType, searchHistory);
+      setSuggestions(newSuggestions);
+      setShowSuggestions(newSuggestions.length > 0);
+    } else {
       setSuggestions([]);
-      return;
+      setShowSuggestions(false);
     }
-
-    const typeFiltered = searchHistory.filter(
-      item => (activeType === 'all' || item.type === activeType)
-    );
-
-    const matched = typeFiltered
-      .filter(item =>
-        item.term.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      .slice(0, 5);
-
-    const genericSuggestions = [];
-    const types = {
-      name: ['Beach house', 'Mountain cabin', 'Downtown loft', 'Luxury villa', 'Cozy apartment'],
-      address: ['New York', 'Los Angeles', 'Miami Beach', 'Chicago downtown', 'San Francisco'],
-      description: ['Ocean view', 'Swimming pool', 'Pet friendly', 'Free parking', 'Garden']
-    };
-
-    if (activeType === 'all' || activeType === 'name') {
-      genericSuggestions.push(...types.name);
-    }
-    if (activeType === 'all' || activeType === 'address') {
-      genericSuggestions.push(...types.address);
-    }
-    if (activeType === 'all' || activeType === 'description') {
-      genericSuggestions.push(...types.description);
-    }
-
-    const allSuggestions = [...new Set([
-      ...matched.map(item => item.term),
-      ...genericSuggestions.filter(term =>
-        term.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    ])].slice(0, 8);
-
-    setSuggestions(allSuggestions);
-    setShowSuggestions(allSuggestions.length > 0);
   }, [searchTerm, activeType, searchHistory, showSearch]);
 
   const scrollToTop = () => {
@@ -145,99 +115,58 @@ const Footer = () => {
     setShowSuggestions(false);
   };
 
-  // Handle search submission (same as header)
+  // Handle search submission
   const handleSearch = (e) => {
     e.preventDefault();
     if (!searchTerm.trim()) return;
 
-    const newSearch = {
-      term: searchTerm,
-      type: activeType,
-      timestamp: new Date().toISOString()
-    };
+    const searchType = activeType === 'all' ? 'properties' : activeType;
+    const updatedHistory = saveSearchHistory(searchTerm, searchType, {
+      address: searchTerm,
+      name: searchTerm
+    });
+    setSearchHistory(updatedHistory);
 
-    setSearchHistory(prev => {
-      const filtered = prev.filter(item => 
-        !(item.term === searchTerm && item.type === activeType)
-      );
-      return [newSearch, ...filtered].slice(0, 10);
+    const searchUrl = getSearchUrl({
+      searchTerm,
+      searchType,
+      address: searchTerm,
+      name: searchTerm
     });
 
-    const searchTypeMap = {
-      'all': 'properties',
-      'name': 'properties',
-      'address': 'properties', 
-      'description': 'properties'
-    };
-
-    const searchPageType = searchTypeMap[activeType] || 'properties';
-
-    const searchParams = new URLSearchParams({
-      q: searchTerm,
-      searchType: searchPageType
-    });
-
-    if (activeType === 'name') {
-      searchParams.set('name', searchTerm);
-    } else if (activeType === 'address') {
-      searchParams.set('address', searchTerm);
-    } else if (activeType === 'description') {
-      searchParams.set('description', searchTerm);
-    }
-
-    navigate(`/search?${searchParams.toString()}`);
+    navigate(searchUrl);
     setShowSearch(false);
     setShowSuggestions(false);
   };
 
-  // Handle suggestion click (same as header)
+  // Handle suggestion click
   const handleSuggestionClick = (suggestion) => {
-    setSearchTerm(suggestion);
+    setSearchTerm(suggestion.term);
     setShowSuggestions(false);
     
-    const newSearch = {
-      term: suggestion,
-      type: activeType,
-      timestamp: new Date().toISOString()
-    };
+    const searchType = suggestion.type;
+    const updatedHistory = saveSearchHistory(suggestion.term, searchType, {
+      address: suggestion.term,
+      name: suggestion.term
+    });
+    setSearchHistory(updatedHistory);
 
-    setSearchHistory(prev => {
-      const filtered = prev.filter(item => 
-        !(item.term === suggestion && item.type === activeType)
-      );
-      return [newSearch, ...filtered].slice(0, 10);
+    const searchUrl = getSearchUrl({
+      searchTerm: suggestion.term,
+      searchType,
+      address: suggestion.term,
+      name: suggestion.term
     });
 
-    const searchTypeMap = {
-      'all': 'properties',
-      'name': 'properties',
-      'address': 'properties',
-      'description': 'properties'
-    };
-
-    const searchPageType = searchTypeMap[activeType] || 'properties';
-
-    const searchParams = new URLSearchParams({
-      q: suggestion,
-      searchType: searchPageType
-    });
-
-    if (activeType === 'name') {
-      searchParams.set('name', suggestion);
-    } else if (activeType === 'address') {
-      searchParams.set('address', suggestion);
-    } else if (activeType === 'description') {
-      searchParams.set('description', suggestion);
-    }
-
-    navigate(`/search?${searchParams.toString()}`);
+    navigate(searchUrl);
     setShowSearch(false);
   };
 
   // Clear search history
   const clearSearchHistory = () => {
-    setSearchHistory([]);
-    localStorage.removeItem('searchHistory');
+    const clearedHistory = clearSearchHistoryUtil();
+    setSearchHistory(clearedHistory);
+    setSuggestions([]);
   };
 
   const handleCreateListing = (tab = '') => {
@@ -295,7 +224,7 @@ const Footer = () => {
 
   return (
     <>
-      {/* Enhanced Floating Search Modal - Same as Header */}
+      {/* Enhanced Floating Search Modal */}
       {showSearch && (
         <div className="fixed inset-0 bg-white z-50 md:hidden">
           <div ref={mobileSearchRef} className="p-4">
@@ -333,7 +262,7 @@ const Footer = () => {
             <form onSubmit={handleSearch} className="relative mb-4">
               <input
                 type="text"
-                placeholder={`Search ${searchTypes.find(t => t.key === activeType)?.label?.toLowerCase() || 'everything'}...`}
+                placeholder={`Search ${activeType === 'all' ? 'everything' : activeType}...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full p-4 pl-12 rounded-2xl border border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition-all bg-white shadow-sm"
@@ -363,8 +292,17 @@ const Footer = () => {
                       onClick={() => handleSuggestionClick(suggestion)}
                       className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
                     >
-                      <FiClock className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-700">{suggestion}</span>
+                      {suggestion.isHistory ? (
+                        <FiClock className="w-4 h-4 text-gray-400" />
+                      ) : (
+                        <span className="text-lg">{SEARCH_TYPE_CONFIG[suggestion.type]?.icon}</span>
+                      )}
+                      <div className="flex-1">
+                        <div className="text-gray-700">{suggestion.term}</div>
+                        {suggestion.type !== 'all' && (
+                          <div className="text-xs text-gray-400 capitalize">{suggestion.type}</div>
+                        )}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -387,7 +325,7 @@ const Footer = () => {
                   {searchHistory.slice(0, 5).map((item, index) => (
                     <button
                       key={index}
-                      onClick={() => handleSuggestionClick(item.term)}
+                      onClick={() => handleSuggestionClick({ term: item.term, type: item.type })}
                       className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
                     >
                       <FiClock className="w-4 h-4 text-gray-400" />

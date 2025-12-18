@@ -1,3 +1,4 @@
+// src/components/Header.jsx
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useEffect, useState, useRef } from 'react';
@@ -34,6 +35,16 @@ import {
   signOutUserFailure,
 } from "../redux/user/userSlice";
 
+// Import search utilities - Use correct path
+import {
+  getSearchUrl,
+  saveSearchHistory,
+  getSearchHistory,
+  clearSearchHistory as clearSearchHistoryUtil,
+  generateSuggestions,
+  SEARCH_TYPE_CONFIG
+} from "../utils/searchUtils";
+
 export default function Sidebar() {
   const { currentUser } = useSelector((state) => state.user);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -53,6 +64,7 @@ export default function Sidebar() {
   
   const sidebarRef = useRef();
   const profileDropdownRef = useRef();
+  const searchInputRef = useRef();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -73,6 +85,11 @@ export default function Sidebar() {
       // Close profile dropdown when clicking outside
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target)) {
         setShowProfileDropdown(false);
+      }
+      
+      // Close suggestions when clicking outside
+      if (searchInputRef.current && !searchInputRef.current.contains(e.target)) {
+        setShowSuggestions(false);
       }
     };
     
@@ -100,11 +117,6 @@ export default function Sidebar() {
     };
   }, [isSidebarOpen]);
 
-  // Save search history to localStorage
-  useEffect(() => {
-    localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
-  }, [searchHistory]);
-
   // Generate search suggestions
   useEffect(() => {
     if (!searchTerm.trim()) {
@@ -112,42 +124,9 @@ export default function Sidebar() {
       return;
     }
 
-    const typeFiltered = searchHistory.filter(
-      item => (activeType === 'all' || item.type === activeType)
-    );
-
-    const matched = typeFiltered
-      .filter(item =>
-        item.term.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      .slice(0, 5);
-
-    const genericSuggestions = [];
-    const types = {
-      name: ['Beach house', 'Mountain cabin', 'Downtown loft', 'Luxury villa', 'Cozy apartment'],
-      address: ['New York', 'Los Angeles', 'Miami Beach', 'Chicago downtown', 'San Francisco'],
-      description: ['Ocean view', 'Swimming pool', 'Pet friendly', 'Free parking', 'Garden']
-    };
-
-    if (activeType === 'all' || activeType === 'name') {
-      genericSuggestions.push(...types.name);
-    }
-    if (activeType === 'all' || activeType === 'address') {
-      genericSuggestions.push(...types.address);
-    }
-    if (activeType === 'all' || activeType === 'description') {
-      genericSuggestions.push(...types.description);
-    }
-
-    const allSuggestions = [...new Set([
-      ...matched.map(item => item.term),
-      ...genericSuggestions.filter(term =>
-        term.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    ])].slice(0, 8);
-
-    setSuggestions(allSuggestions);
-    setShowSuggestions(allSuggestions.length > 0);
+    const newSuggestions = generateSuggestions(searchTerm, activeType, searchHistory);
+    setSuggestions(newSuggestions);
+    setShowSuggestions(newSuggestions.length > 0);
   }, [searchTerm, activeType, searchHistory]);
 
   // Fetch notifications
@@ -212,76 +191,53 @@ export default function Sidebar() {
     e.preventDefault();
     if (!searchTerm.trim()) return;
 
-    const newSearch = {
-      term: searchTerm,
-      type: activeType,
-      timestamp: new Date().toISOString()
-    };
+    const searchType = activeType === 'all' ? 'properties' : activeType;
+    const updatedHistory = saveSearchHistory(searchTerm, searchType, {
+      address: searchTerm,
+      name: searchTerm
+    });
+    setSearchHistory(updatedHistory);
 
-    setSearchHistory(prev => {
-      const filtered = prev.filter(item => 
-        !(item.term === searchTerm && item.type === activeType)
-      );
-      return [newSearch, ...filtered].slice(0, 10);
+    const searchUrl = getSearchUrl({
+      searchTerm,
+      searchType,
+      address: searchTerm,
+      name: searchTerm
     });
 
-    const searchParams = new URLSearchParams({
-      q: searchTerm,
-      searchType: 'properties'
-    });
-
-    if (activeType === 'name') {
-      searchParams.set('name', searchTerm);
-    } else if (activeType === 'address') {
-      searchParams.set('address', searchTerm);
-    } else if (activeType === 'description') {
-      searchParams.set('description', searchTerm);
-    }
-
-    navigate(`/search?${searchParams.toString()}`);
+    navigate(searchUrl);
     setShowSuggestions(false);
     setIsSidebarOpen(false);
   };
 
   // Handle suggestion click
   const handleSuggestionClick = (suggestion) => {
-    setSearchTerm(suggestion);
+    setSearchTerm(suggestion.term);
     setShowSuggestions(false);
     
-    const newSearch = {
-      term: suggestion,
-      type: activeType,
-      timestamp: new Date().toISOString()
-    };
+    const searchType = suggestion.type;
+    const updatedHistory = saveSearchHistory(suggestion.term, searchType, {
+      address: suggestion.term,
+      name: suggestion.term
+    });
+    setSearchHistory(updatedHistory);
 
-    setSearchHistory(prev => {
-      const filtered = prev.filter(item => 
-        !(item.term === suggestion && item.type === activeType)
-      );
-      return [newSearch, ...filtered].slice(0, 10);
+    const searchUrl = getSearchUrl({
+      searchTerm: suggestion.term,
+      searchType,
+      address: suggestion.term,
+      name: suggestion.term
     });
 
-    const searchParams = new URLSearchParams({
-      q: suggestion,
-      searchType: 'properties'
-    });
-
-    if (activeType === 'name') {
-      searchParams.set('name', suggestion);
-    } else if (activeType === 'address') {
-      searchParams.set('address', suggestion);
-    } else if (activeType === 'description') {
-      searchParams.set('description', suggestion);
-    }
-
-    navigate(`/search?${searchParams.toString()}`);
+    navigate(searchUrl);
     setIsSidebarOpen(false);
   };
 
   // Clear search history
   const clearSearchHistory = () => {
-    setSearchHistory([]);
-    localStorage.removeItem('searchHistory');
+    const clearedHistory = clearSearchHistoryUtil();
+    setSearchHistory(clearedHistory);
+    setSuggestions([]);
   };
 
   // Mark notifications as read
@@ -322,9 +278,10 @@ export default function Sidebar() {
 
   const searchTypes = [
     { key: 'all', label: 'All', icon: '🔍' },
-    { key: 'name', label: 'Name', icon: <FiUser className="w-4 h-4" /> },
-    { key: 'address', label: 'Address', icon: <FiHome className="w-4 h-4" /> },
-    { key: 'description', label: 'Description', icon: <FiFileText className="w-4 h-4" /> }
+    { key: 'properties', label: 'Properties', icon: <FiHome className="w-4 h-4" /> },
+    { key: 'services', label: 'Services', icon: <FiFileText className="w-4 h-4" /> },
+    { key: 'helpers', label: 'Helpers', icon: <FiUser className="w-4 h-4" /> },
+    { key: 'events', label: 'Events', icon: <FiClock className="w-4 h-4" /> }
   ];
 
   return (
@@ -377,6 +334,63 @@ export default function Sidebar() {
               </span>
             </span>
           </Link>
+        </div>
+
+        {/* Center: Search Bar */}
+        <div className="flex-1 max-w-2xl mx-8" ref={searchInputRef}>
+          <div className="relative">
+            <form onSubmit={handleSearch}>
+              <input
+                type="text"
+                placeholder="Search properties, services, helpers, events..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onFocus={() => searchTerm.trim() && setShowSuggestions(true)}
+                className="w-full p-3 pl-12 rounded-full border border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition-all bg-white shadow-sm"
+              />
+              <FiSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            </form>
+            
+            {/* Search Suggestions */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
+                <div className="p-3 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white">
+                  <span className="text-sm font-medium text-gray-700">Suggestions</span>
+                  {searchHistory.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={clearSearchHistory}
+                      className="text-xs text-pink-600 hover:text-pink-700 font-medium"
+                    >
+                      Clear history
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      type="button"
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
+                    >
+                      {suggestion.isHistory ? (
+                        <FiClock className="w-4 h-4 text-gray-400" />
+                      ) : (
+                        <span className="text-lg">{SEARCH_TYPE_CONFIG[suggestion.type]?.icon}</span>
+                      )}
+                      <div className="flex-1">
+                        <span className="text-gray-700">{suggestion.term}</span>
+                        {suggestion.type !== 'all' && (
+                          <div className="text-xs text-gray-400 capitalize">{suggestion.type}</div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right side: Navigation Icons + Profile Dropdown */}
@@ -840,7 +854,7 @@ export default function Sidebar() {
         </div>
 
         {/* Search Section - Mobile Only */}
-        <div className="flex-shrink-0 p-6 border-b border-gray-200">
+        <div className="flex-shrink-0 p-6 border-b border-gray-200" ref={searchInputRef}>
           <div className="space-y-3">
             {/* Search Types */}
             <div className="flex gap-1 overflow-x-auto pb-2 hide-scrollbar">
@@ -864,10 +878,10 @@ export default function Sidebar() {
             <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
-                placeholder={`Search ${searchTypes.find(t => t.key === activeType)?.label?.toLowerCase() || 'everything'}...`}
+                placeholder={`Search ${activeType === 'all' ? 'everything' : activeType}...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onFocus={() => setShowSuggestions(true)}
+                onFocus={() => searchTerm.trim() && setShowSuggestions(true)}
                 className="w-full p-4 pl-12 rounded-xl border border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition-all bg-white shadow-sm"
               />
               <FiSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -895,8 +909,17 @@ export default function Sidebar() {
                         onClick={() => handleSuggestionClick(suggestion)}
                         className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
                       >
-                        <FiClock className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-700">{suggestion}</span>
+                        {suggestion.isHistory ? (
+                          <FiClock className="w-4 h-4 text-gray-400" />
+                        ) : (
+                          <span className="text-lg">{SEARCH_TYPE_CONFIG[suggestion.type]?.icon}</span>
+                        )}
+                        <div className="flex-1">
+                          <span className="text-gray-700">{suggestion.term}</span>
+                          {suggestion.type !== 'all' && (
+                            <div className="text-xs text-gray-400 capitalize">{suggestion.type}</div>
+                          )}
+                        </div>
                       </button>
                     ))}
                   </div>

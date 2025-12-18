@@ -643,22 +643,29 @@ const MapView = ({ items, searchType, address = 'Polokwane' }) => {
 };
 
 // Airbnb-style Search Bar
-const AirbnbSearchBar = ({ onSubmit, searchType }) => {
+const AirbnbSearchBar = ({ onSubmit, searchType, currentLocation = 'South Africa' }) => {
   const [searchValue, setSearchValue] = useState('');
   const navigate = useNavigate();
+
+  const handleSubmit = () => {
+    if (searchValue.trim()) {
+      onSubmit(searchValue);
+    }
+  };
 
   return (
     <div className="w-full max-w-3xl mx-auto hidden md:block">
       <div className="bg-white rounded-full shadow-lg p-1 border border-gray-200">
         <div className="flex items-center">
           <div className="flex-1 px-4">
-            <div className="text-xs font-medium text-gray-900 mb-1">Start your search</div>
+            <div className="text-xs font-medium text-gray-900 mb-1">Search in {currentLocation}</div>
             <input
               type="text"
-              placeholder="Search destinations..."
-              className="w-full text-sm text-gray-600 "
+              placeholder={`Search in ${currentLocation}...`}
+              className="w-full text-sm text-gray-600 outline-none"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
             />
           </div>
 
@@ -669,7 +676,7 @@ const AirbnbSearchBar = ({ onSubmit, searchType }) => {
             <select 
               className="text-sm text-gray-600 outline-none bg-transparent"
               defaultValue={searchType}
-              onChange={(e) => navigate(`/search?searchType=${e.target.value}`)}
+              onChange={(e) => navigate(`/search?searchType=${e.target.value}&address=${encodeURIComponent(currentLocation)}`)}
             >
               {SEARCH_TYPES.map(type => (
                 <option key={type.id} value={type.id}>{type.label}</option>
@@ -680,7 +687,7 @@ const AirbnbSearchBar = ({ onSubmit, searchType }) => {
           <div className="h-10 w-px bg-gray-300"></div>
 
           <button 
-            onClick={() => onSubmit && onSubmit(searchValue)}
+            onClick={handleSubmit}
             className="flex items-center gap-2 bg-rose-500 text-white px-6 py-3 rounded-full ml-2 hover:bg-rose-600 transition-colors"
           >
             <MagnifyingGlassIcon className="w-4 h-4" />
@@ -693,34 +700,107 @@ const AirbnbSearchBar = ({ onSubmit, searchType }) => {
 };
 
 // Hero Banner
-const HeroBanner = ({ onSearch, searchType }) => {
+const HeroBanner = ({ onSearch, searchType, currentLocation = 'South Africa' }) => {
+  const [searchValue, setSearchValue] = useState('');
+  const navigate = useNavigate();
+
+  const handleSubmit = () => {
+    if (searchValue.trim()) {
+      onSearch(searchValue);
+    }
+  };
+
   return (
     <div className="relative bg-gradient-to-r from-rose-50 to-blue-50 rounded-3xl overflow-hidden mb-8">
       <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-blue-500/10"></div>
       <div className="relative z-10 px-8 py-12 md:py-16">
+        <div className="flex items-center gap-2 mb-4">
+          <GlobeAltIcon className="w-5 h-5 text-gray-600" />
+          <span className="text-sm font-medium text-gray-700">Currently showing results for: {currentLocation}</span>
+        </div>
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-          Find your perfect space
+          Find your perfect space in {currentLocation}
         </h1>
         <p className="text-lg text-gray-600 mb-8 max-w-2xl">
-          Discover unique homes, experiences, and services around you
+          Discover unique homes, experiences, and services around {currentLocation}
         </p>
-        <AirbnbSearchBar onSubmit={onSearch} searchType={searchType} />
+        <AirbnbSearchBar 
+          onSubmit={onSearch} 
+          searchType={searchType} 
+          currentLocation={currentLocation}
+        />
       </div>
     </div>
   );
 };
 
 // Category Grid
-const CategoryGrid = ({ onCategoryClick, stats }) => {
+const CategoryGrid = ({ onCategoryClick, stats, location = 'South Africa' }) => {
   const categories = [
-    { icon: '🏠', label: 'Homes', count: stats?.properties || '1,234', color: 'bg-rose-100' },
-    { icon: '✨', label: 'Experiences', count: stats?.services || '456', color: 'bg-emerald-100' },
-    { icon: '👥', label: 'Services', count: stats?.helpers || '789', color: 'bg-purple-100' },
-    { icon: '🎉', label: 'Events', count: stats?.events || '321', color: 'bg-amber-100' },
-    { icon: '🏢', label: 'Office', count: '567', color: 'bg-blue-100' },
-    { icon: '🌳', label: 'Land', count: '234', color: 'bg-green-100' },
-    { icon: '🚚', label: 'Moving', count: '123', color: 'bg-indigo-100' },
-    { icon: '🧹', label: 'Cleaning', count: '456', color: 'bg-pink-100' },
+    { 
+      icon: '🏠', 
+      label: 'Homes', 
+      count: stats?.properties || '1,234', 
+      color: 'bg-rose-100',
+      searchType: 'properties',
+      category: 'all'
+    },
+    { 
+      icon: '✨', 
+      label: 'Experiences', 
+      count: stats?.services || '456', 
+      color: 'bg-emerald-100',
+      searchType: 'services',
+      category: 'all'
+    },
+    { 
+      icon: '👥', 
+      label: 'Services', 
+      count: stats?.helpers || '789', 
+      color: 'bg-purple-100',
+      searchType: 'helpers',
+      category: 'all'
+    },
+    { 
+      icon: '🎉', 
+      label: 'Events', 
+      count: stats?.events || '321', 
+      color: 'bg-amber-100',
+      searchType: 'events',
+      category: 'all'
+    },
+    { 
+      icon: '🏢', 
+      label: 'Office', 
+      count: '567', 
+      color: 'bg-blue-100',
+      searchType: 'properties',
+      category: 'office'
+    },
+    { 
+      icon: '🌳', 
+      label: 'Land', 
+      count: '234', 
+      color: 'bg-green-100',
+      searchType: 'properties',
+      category: 'land'
+    },
+    { 
+      icon: '🚚', 
+      label: 'Moving', 
+      count: '123', 
+      color: 'bg-indigo-100',
+      searchType: 'services',
+      category: 'moving'
+    },
+    { 
+      icon: '🧹', 
+      label: 'Cleaning', 
+      count: '456', 
+      color: 'bg-pink-100',
+      searchType: 'services',
+      category: 'cleaning'
+    },
   ];
 
   return (
@@ -730,13 +810,13 @@ const CategoryGrid = ({ onCategoryClick, stats }) => {
         {categories.map((category, index) => (
           <button
             key={index}
-            onClick={() => onCategoryClick && onCategoryClick(category.label)}
-            className="flex flex-col items-center p-4 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300"
+            onClick={() => onCategoryClick && onCategoryClick(category, location)}
+            className="flex flex-col items-center p-4 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300 group"
           >
-            <div className={`w-12 h-12 ${category.color} rounded-full flex items-center justify-center text-2xl mb-2`}>
+            <div className={`w-12 h-12 ${category.color} rounded-full flex items-center justify-center text-2xl mb-2 group-hover:scale-110 transition-transform duration-300`}>
               {category.icon}
             </div>
-            <span className="font-medium text-gray-900 text-sm">{category.label}</span>
+            <span className="font-medium text-gray-900 text-sm group-hover:text-rose-500 transition-colors">{category.label}</span>
             <span className="text-xs text-gray-500">{category.count}+</span>
           </button>
         ))}
@@ -746,26 +826,65 @@ const CategoryGrid = ({ onCategoryClick, stats }) => {
 };
 
 // Popular Destinations
-const PopularDestinations = () => {
+const PopularDestinations = ({ onDestinationClick }) => {
   const destinations = [
-    { name: 'Seshego', image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' },
-    { name: 'Johannesburg', image: 'https://plus.unsplash.com/premium_photo-1742457604656-b9feed9543f1?q=80&w=790&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-    { name: 'Soweto', image: 'https://images.unsplash.com/photo-1526583547718-e88dc16de312?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-    { name: 'Pretoria', image: 'https://images.unsplash.com/photo-1603553224936-a0466e549586?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-    { name: 'Polokwane', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' },
+    { 
+      name: 'Seshego', 
+      image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      propertyCount: 135 
+    },
+    { 
+      name: 'Johannesburg', 
+      image: 'https://plus.unsplash.com/premium_photo-1742457604656-b9feed9543f1?q=80&w=790&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      propertyCount: 289 
+    },
+    { 
+      name: 'Soweto', 
+      image: 'https://images.unsplash.com/photo-1526583547718-e88dc16de312?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      propertyCount: 167 
+    },
+    { 
+      name: 'Pretoria', 
+      image: 'https://images.unsplash.com/photo-1603553224936-a0466e549586?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      propertyCount: 221 
+    },
+    { 
+      name: 'Polokwane', 
+      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      propertyCount: 98 
+    },
   ];
+
+  const handleShowAll = () => {
+    if (onDestinationClick) {
+      onDestinationClick('all');
+    }
+  };
+
+  const handleDestinationClick = (destination) => {
+    if (onDestinationClick) {
+      onDestinationClick(destination);
+    }
+  };
 
   return (
     <div className="mb-12">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Popular destinations</h2>
-        <button className="text-sm font-medium text-gray-900 hover:underline">
+        <button 
+          onClick={handleShowAll}
+          className="text-sm font-medium text-gray-900 hover:underline"
+        >
           Show all →
         </button>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {destinations.map((dest, index) => (
-          <div key={index} className="cursor-pointer">
+          <div 
+            key={index} 
+            className="cursor-pointer"
+            onClick={() => handleDestinationClick(dest.name)}
+          >
             <div className="relative aspect-square rounded-2xl overflow-hidden mb-2">
               <img
                 src={dest.image}
@@ -774,8 +893,8 @@ const PopularDestinations = () => {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
             </div>
-            <h3 className="font-medium text-gray-900">{dest.name}</h3>
-            <p className="text-sm text-gray-500">135 properties</p>
+            <h3 className="font-medium text-gray-900 group-hover:text-rose-500 transition-colors">{dest.name}</h3>
+            <p className="text-sm text-gray-500">{dest.propertyCount} properties</p>
           </div>
         ))}
       </div>
@@ -784,15 +903,18 @@ const PopularDestinations = () => {
 };
 
 // Featured Listings Section with click tracking
-const FeaturedListings = ({ items, searchType, loading, title, showAllLink, onItemClick }) => {
+const FeaturedListings = ({ items, searchType, loading, title, showAllLink, onItemClick, location = 'South Africa' }) => {
   if (loading) {
     return (
       <div className="mb-12">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-          <button className="text-sm font-medium text-gray-900 hover:underline">
+          <Link 
+            to={`${showAllLink}?location=${encodeURIComponent(location)}`}
+            className="text-sm font-medium text-gray-900 hover:underline"
+          >
             Show all →
-          </button>
+          </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
@@ -809,8 +931,8 @@ const FeaturedListings = ({ items, searchType, loading, title, showAllLink, onIt
     <div className="mb-12">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-          <Link 
-          to={showAllLink}
+        <Link 
+          to={`${showAllLink}?location=${encodeURIComponent(location)}`}
           className="text-sm font-medium text-gray-900 hover:underline"
         >
           Show all →
@@ -871,7 +993,8 @@ const Homepage = ({
   onItemClick,
   recentlyViewedItems,
   onRecentlyViewedLike,
-  refreshRecentlyViewed
+  refreshRecentlyViewed,
+  currentLocation = 'South Africa'
 }) => {
   const handleSearch = (value) => {
     if (setSidebarData) {
@@ -880,29 +1003,25 @@ const Homepage = ({
     if (setShowHomePage) {
       setShowHomePage(false);
     }
-    navigate(`/search?searchTerm=${value}&searchType=${searchType}`);
+    navigate(`/search?searchTerm=${value}&searchType=${searchType}&address=${encodeURIComponent(currentLocation)}`);
   };
 
-  const handleCategoryClick = (category) => {
-    const searchTypeMap = {
-      'Homes': 'properties',
-      'Experiences': 'services',
-      'Services': 'helpers',
-      'Events': 'events',
-      'Office': 'properties',
-      'Land': 'properties',
-      'Moving': 'services',
-      'Cleaning': 'services'
-    };
-    
-    const type = searchTypeMap[category] || 'properties';
-    if (onSearch) {
-      onSearch(type);
+  const handleCategoryClick = (category, location) => {
+    if (onCategoryClick) {
+      onCategoryClick(category, location);
     }
+  };
+
+  const handleDestinationClick = (destination) => {
     if (setShowHomePage) {
       setShowHomePage(false);
     }
-    navigate(`/search?searchType=${type}&category=${category.toLowerCase()}`);
+    
+    if (destination === 'all') {
+      navigate(`/search?searchType=properties&address=${encodeURIComponent(currentLocation)}`);
+    } else {
+      navigate(`/search?searchType=properties&address=${encodeURIComponent(destination)}`);
+    }
   };
 
   return (
@@ -918,6 +1037,7 @@ const Homepage = ({
         <HeroBanner 
           onSearch={handleSearch}
           searchType={searchType}
+          currentLocation={currentLocation}
         />
 
         {/* Recently Viewed Section */}
@@ -929,46 +1049,59 @@ const Homepage = ({
         />
 
         <CategoryGrid 
-          onCategoryClick={handleCategoryClick}
+          onCategoryClick={(categoryObj) => {
+            const { label, searchType, category } = categoryObj;
+            if (setShowHomePage) {
+              setShowHomePage(false);
+            }
+            navigate(`/search?searchType=${searchType}&category=${category}&address=${encodeURIComponent(currentLocation)}`);
+          }}
           stats={stats}
+          location={currentLocation}
         />
 
-        <PopularDestinations />
+        <PopularDestinations 
+          onDestinationClick={handleDestinationClick}
+        />
 
         <FeaturedListings 
           items={featuredProperties}
           searchType="properties"
           loading={loadingProperties}
-          title="Popular homes in South Africa"
-           showAllLink="/listing-home-page"
+          title={`Popular homes in ${currentLocation}`}
+          showAllLink="/listing-home-page"
           onItemClick={onItemClick}
+          location={currentLocation}
         />
 
         <FeaturedListings 
           items={featuredServices}
           searchType="services"
           loading={loadingServices}
-          title="Top experiences near you"
+          title={`Top experiences in ${currentLocation}`}
           showAllLink="/service-home-page"
           onItemClick={onItemClick}
+          location={currentLocation}
         />
 
         <FeaturedListings 
           items={featuredHelpers}
           searchType="helpers"
           loading={loadingHelpers}
-          title="Recommended service providers"
+          title={`Recommended service providers in ${currentLocation}`}
           showAllLink="/helper-home-page"
           onItemClick={onItemClick}
+          location={currentLocation}
         />
 
         <FeaturedListings 
           items={featuredEvents}
           searchType="events"
           loading={loadingEvents}
-          title="Upcoming local events"
+          title={`Upcoming events in ${currentLocation}`}
           showAllLink="/event-home-page"
           onItemClick={onItemClick}
+          location={currentLocation}
         />
 
         <div className="bg-gradient-to-r from-rose-500 to-blue-500 rounded-3xl p-8 md:p-12 text-white mb-8">
@@ -1320,6 +1453,7 @@ const UniversalSearch = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [showHomePage, setShowHomePage] = useState(true);
+  const [currentLocation, setCurrentLocation] = useState('South Africa');
 
   // Homepage data states
   const [featuredProperties, setFeaturedProperties] = useState([]);
@@ -1351,6 +1485,16 @@ const UniversalSearch = () => {
 
     loadRecentlyViewed();
   }, []);
+
+  // Get user's location from URL or use default
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const addressFromUrl = urlParams.get('address');
+    if (addressFromUrl) {
+      setCurrentLocation(decodeURIComponent(addressFromUrl));
+      setSidebarData(prev => ({ ...prev, address: decodeURIComponent(addressFromUrl) }));
+    }
+  }, [location.search]);
 
   // Function to add item to recently viewed
   const addToRecentlyViewed = (item, itemType) => {
@@ -1426,7 +1570,7 @@ const UniversalSearch = () => {
       // Fetch properties
       setLoadingProperties(true);
       try {
-        const propertiesRes = await fetch(`/api/listing/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc`);
+        const propertiesRes = await fetch(`/api/listing/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc&address=${encodeURIComponent(currentLocation)}`);
         if (propertiesRes.ok) {
           const propertiesData = await propertiesRes.json();
           setFeaturedProperties(propertiesData.slice(0, 4)); // Show 4 featured properties
@@ -1440,7 +1584,7 @@ const UniversalSearch = () => {
       // Fetch services
       setLoadingServices(true);
       try {
-        const servicesRes = await fetch(`/api/service/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc`);
+        const servicesRes = await fetch(`/api/service/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc&location=${encodeURIComponent(currentLocation)}`);
         if (servicesRes.ok) {
           const servicesData = await servicesRes.json();
           setFeaturedServices(servicesData.slice(0, 4));
@@ -1454,7 +1598,7 @@ const UniversalSearch = () => {
       // Fetch helpers
       setLoadingHelpers(true);
       try {
-        const helpersRes = await fetch(`/api/helper/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc`);
+        const helpersRes = await fetch(`/api/helper/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc&address=${encodeURIComponent(currentLocation)}`);
         if (helpersRes.ok) {
           const helpersData = await helpersRes.json();
           setFeaturedHelpers(helpersData.slice(0, 4));
@@ -1468,7 +1612,7 @@ const UniversalSearch = () => {
       // Fetch events
       setLoadingEvents(true);
       try {
-        const eventsRes = await fetch(`/api/event/get?limit=${DATA_FETCH_LIMIT}&sort=date&order=asc`);
+        const eventsRes = await fetch(`/api/event/get?limit=${DATA_FETCH_LIMIT}&sort=date&order=asc&location=${encodeURIComponent(currentLocation)}`);
         if (eventsRes.ok) {
           const eventsData = await eventsRes.json();
           setFeaturedEvents(eventsData.slice(0, 4));
@@ -1496,7 +1640,7 @@ const UniversalSearch = () => {
     if (showHomePage) {
       fetchHomepageData();
     }
-  }, [showHomePage]);
+  }, [showHomePage, currentLocation]);
 
   // Initialize sidebar data from URL params
   useEffect(() => {
@@ -1529,7 +1673,10 @@ const UniversalSearch = () => {
       const description = urlParams.get('description');
       
       if (name) initialData.name = name;
-      if (address) initialData.address = address;
+      if (address) {
+        initialData.address = address;
+        setCurrentLocation(address);
+      }
       if (description) initialData.description = description;
     }
 
@@ -1608,7 +1755,7 @@ const UniversalSearch = () => {
                   regularPrice: item.regularPrice || item.price || Math.floor(Math.random() * 200) + 20,
                   imageUrls: item.imageUrls || [item.image] || [],
                   reviews: item.reviews || [],
-                  address: item.address || 'Johannesburg, South Africa'
+                  address: item.address || currentLocation
                 };
                 break;
               case 'events':
@@ -1619,7 +1766,7 @@ const UniversalSearch = () => {
                   price: item.price || Math.floor(Math.random() * 500) + 50,
                   imageUrls: item.imageUrls || [item.image] || [],
                   date: item.date || new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-                  location: item.location || 'Various Locations'
+                  location: item.location || currentLocation
                 };
                 break;
             }
@@ -1645,8 +1792,8 @@ const UniversalSearch = () => {
             let item = {
               _id: `mock-${searchType}-${i}`,
               name: `${searchType.charAt(0).toUpperCase() + searchType.slice(1)} Item ${i + 1}`,
-              description: `Premium ${searchType.slice(0, -1)} in ${sidebarData.address || 'Johannesburg'}`,
-              address: sidebarData.address || 'Johannesburg, South Africa',
+              description: `Premium ${searchType.slice(0, -1)} in ${sidebarData.address || currentLocation}`,
+              address: sidebarData.address || currentLocation,
               price: Math.floor(Math.random() * 5000) + 1000,
               regularPrice: Math.floor(Math.random() * 5000) + 1000,
               imageUrls: [`https://images.unsplash.com/photo-${1566073771259 + i}?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`],
@@ -1689,7 +1836,7 @@ const UniversalSearch = () => {
 
       fetchData();
     }
-  }, [location.search, searchType, showHomePage]);
+  }, [location.search, searchType, showHomePage, currentLocation]);
 
   const handleChange = (e) => {
     const { id, value, checked, type } = e.target;
@@ -1721,7 +1868,7 @@ const UniversalSearch = () => {
 
   const clearFilters = () => {
     setSidebarData(getInitialSidebarData());
-    setSidebarData(prev => ({ ...prev, address: 'Johannesburg' }));
+    setSidebarData(prev => ({ ...prev, address: currentLocation }));
     
     if (isMobile) {
       setShowFilters(false);
@@ -1734,22 +1881,10 @@ const UniversalSearch = () => {
     return (
       <Homepage 
         onSearch={setSearchType}
-        onCategoryClick={(category) => {
-          const searchTypeMap = {
-            'Homes': 'properties',
-            'Experiences': 'services',
-            'Services': 'helpers',
-            'Events': 'events',
-            'Office': 'properties',
-            'Land': 'properties',
-            'Moving': 'services',
-            'Cleaning': 'services'
-          };
-          
-          const type = searchTypeMap[category] || 'properties';
-          setSearchType(type);
+        onCategoryClick={(category, location) => {
+          const { searchType, category: cat } = category;
           setShowHomePage(false);
-          navigate(`/search?searchType=${type}&category=${category.toLowerCase()}`);
+          navigate(`/search?searchType=${searchType}&category=${cat}&address=${encodeURIComponent(location || currentLocation)}`);
         }}
         searchType={searchType}
         setSidebarData={setSidebarData}
@@ -1768,6 +1903,7 @@ const UniversalSearch = () => {
         recentlyViewedItems={recentlyViewedItems}
         onRecentlyViewedLike={updateRecentlyViewedLike}
         refreshRecentlyViewed={refreshRecentlyViewed}
+        currentLocation={currentLocation}
       />
     );
   }

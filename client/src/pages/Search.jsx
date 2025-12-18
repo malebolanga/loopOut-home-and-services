@@ -1,3 +1,4 @@
+// src/pages/Search.jsx
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, Transition } from '@headlessui/react';
@@ -8,9 +9,7 @@ import {
   XMarkIcon,
   AdjustmentsHorizontalIcon,
   MagnifyingGlassIcon,
- 
   FunnelIcon,
-
   SparklesIcon,
   CalendarDaysIcon,
   UserGroupIcon,
@@ -23,46 +22,20 @@ import ServiceItem from "../components/ServiceItem";
 import HelperItem from "../components/HelperItem";
 import EventItem from "../components/EventItem";
 
+// Import search utilities - Correct path for pages directory
+import {
+  SEARCH_TYPE_CONFIG,
+  getSearchConfig,
+  getSearchUrl,
+  saveSearchHistory,
+  getSearchHistory,
+  clearSearchHistory as clearSearchHistoryUtil,
+  generateSuggestions
+} from "../utils/searchUtils";
 
 const RECENT_SEARCHES_KEY = 'recentSearches';
 const MAX_RECENT_SEARCHES = 5;
 const DEFAULT_LISTING_LIMIT = 12;
-
-// Search types configuration
-const SEARCH_TYPES = [
-  { 
-    id: 'properties', 
-    label: 'Properties', 
-    icon: HomeIcon,
-    description: 'Homes, apartments, offices, land',
-    color: 'bg-blue-100 text-blue-800',
-    endpoint: '/api/listing/get'
-  },
-  { 
-    id: 'services', 
-    label: 'Services', 
-    icon: SparklesIcon,
-    description: 'Cleaning, maintenance, moving, etc.',
-    color: 'bg-green-100 text-green-800',
-    endpoint: '/api/service/get'
-  },
-  { 
-    id: 'helpers', 
-    label: 'Helpers', 
-    icon: UserGroupIcon,
-    description: 'Tutors, caregivers, handymen, etc.',
-    color: 'bg-purple-100 text-purple-800',
-    endpoint: '/api/helper/get'
-  },
-  { 
-    id: 'events', 
-    label: 'Events', 
-    icon: CalendarDaysIcon,
-    description: 'Local events and activities',
-    color: 'bg-amber-100 text-amber-800',
-    endpoint: '/api/event/get'
-  }
-];
 
 // Helper functions for property types
 const getPropertyTypeName = (type) => {
@@ -202,6 +175,8 @@ const ItemCard = ({ item, searchType }) => {
       return <ServiceItem service={item} />;
     case 'helpers':
       return <HelperItem helper={item} />;
+    case 'events':
+      return <EventItem event={item} />;
     default:
       // Generic card for events or other types
       return (
@@ -304,7 +279,7 @@ const MapView = ({ items, searchType, address = 'Polokwane' }) => {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-bold text-gray-900">{address}</h3>
-            <p className="text-sm text-gray-600">{items.length} {SEARCH_TYPES.find(t => t.id === searchType)?.label?.toLowerCase()} available</p>
+            <p className="text-sm text-gray-600">{items.length} {searchType} available</p>
           </div>
           <button className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
             Show all on map
@@ -421,9 +396,7 @@ const UniversalSearch = () => {
   const getInitialSearchType = () => {
     const urlParams = new URLSearchParams(location.search);
     const typeFromUrl = urlParams.get('searchType');
-    return SEARCH_TYPES.map(t => t.id).includes(typeFromUrl) 
-      ? typeFromUrl 
-      : 'properties';
+    return typeFromUrl && SEARCH_TYPE_CONFIG[typeFromUrl] ? typeFromUrl : 'properties';
   };
 
   const [searchType, setSearchType] = useState(getInitialSearchType());
@@ -606,7 +579,8 @@ const UniversalSearch = () => {
           cleanParams.set('searchTerm', q);
         }
         
-        const endpoint = SEARCH_TYPES.find(t => t.id === searchType)?.endpoint || '/api/listing/get';
+        const config = getSearchConfig(searchType);
+        const endpoint = config.endpoint;
         
         const res = await fetch(`${endpoint}?${cleanParams.toString()}`);
         if (!res.ok) throw new Error('Failed to fetch data');
@@ -890,7 +864,7 @@ const UniversalSearch = () => {
               className="flex-1 flex items-center justify-between px-4 py-3 bg-white border border-gray-300 rounded-full shadow-sm text-sm font-medium"
             >
               <div className="flex items-center gap-2">
-                <MagnifyingGlassIcon className="w-4 h-4 " />
+                <MagnifyingGlassIcon className="w-4 h-4" />
                 <span className="text-gray-600">{sidebarData.address || 'Search...'}</span>
               </div>
               <AdjustmentsHorizontalIcon className="w-4 h-4" />
@@ -912,14 +886,14 @@ const UniversalSearch = () => {
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-gray-900">
               {sidebarData.address 
-                ? `${SEARCH_TYPES.find(t => t.id === searchType)?.label} in ${sidebarData.address}` 
-                : `Explore ${SEARCH_TYPES.find(t => t.id === searchType)?.label}`}
+                ? `${SEARCH_TYPE_CONFIG[searchType]?.label || 'Items'} in ${sidebarData.address}` 
+                : `Explore ${SEARCH_TYPE_CONFIG[searchType]?.label || 'Items'}`}
             </h1>
             
             {/* Search Type Selector */}
             <Menu as="div" className="relative">
               <Menu.Button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400 bg-white">
-                <span>{SEARCH_TYPES.find(t => t.id === searchType)?.label}</span>
+                <span>{SEARCH_TYPE_CONFIG[searchType]?.label || 'Items'}</span>
                 <ChevronDownIcon className="w-4 h-4" />
               </Menu.Button>
               <Transition
@@ -931,20 +905,20 @@ const UniversalSearch = () => {
                 leaveTo="transform scale-95 opacity-0"
               >
                 <Menu.Items className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-20">
-                  {SEARCH_TYPES.map((type) => (
-                    <Menu.Item key={type.id}>
+                  {Object.entries(SEARCH_TYPE_CONFIG).map(([typeId, config]) => (
+                    <Menu.Item key={typeId}>
                       {({ active }) => (
                         <button
                           onClick={() => {
-                            setSearchType(type.id);
-                            navigate(`/search?searchType=${type.id}`);
+                            setSearchType(typeId);
+                            navigate(`/search?searchType=${typeId}`);
                           }}
                           className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''} ${
-                            searchType === type.id ? 'text-blue-600 font-medium' : 'text-gray-700'
+                            searchType === typeId ? 'text-blue-600 font-medium' : 'text-gray-700'
                           }`}
                         >
-                          <type.icon className="w-4 h-4" />
-                          {type.label}
+                          <span className="text-lg">{config.icon}</span>
+                          {config.label}
                         </button>
                       )}
                     </Menu.Item>
@@ -955,14 +929,21 @@ const UniversalSearch = () => {
           </div>
           
           <p className="text-gray-600 text-sm">
-            {filteredItems.length}+ {SEARCH_TYPES.find(t => t.id === searchType)?.label?.toLowerCase()} available • {sidebarData.address || 'All locations'}
+            {filteredItems.length}+ {SEARCH_TYPE_CONFIG[searchType]?.label?.toLowerCase() || 'items'} available • {sidebarData.address || 'All locations'}
           </p>
         </div>
       )}
 
       {/* Airbnb-style Sliding Tabs */}
       <SlidingTabs
-        tabs={SEARCH_TYPES}
+        tabs={Object.entries(SEARCH_TYPE_CONFIG).map(([id, config]) => ({
+          id,
+          label: config.label,
+          icon: id === 'properties' ? HomeIcon : 
+                id === 'services' ? SparklesIcon : 
+                id === 'helpers' ? UserGroupIcon : 
+                CalendarDaysIcon
+        }))}
         activeTab={searchType}
         onTabClick={(tabId) => {
           setSearchType(tabId);
@@ -997,7 +978,7 @@ const UniversalSearch = () => {
                     id="searchTerm"
                     value={sidebarData.searchTerm}
                     onChange={handleChange}
-                    placeholder={`Search ${SEARCH_TYPES.find(t => t.id === searchType)?.label?.toLowerCase()}...`}
+                    placeholder={`Search ${SEARCH_TYPE_CONFIG[searchType]?.label?.toLowerCase() || 'items'}...`}
                     className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-transparent"
                   />
                 </div>
@@ -1005,7 +986,7 @@ const UniversalSearch = () => {
 
               {/* Type Selection */}
               <div>
-                <h3 className="font-bold text-gray-900 mb-4">Type</h3>
+                <h3 className="font-semibold text-gray-900 mb-4">Type</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {getActiveTypeArray().map((item) => (
                     <button
@@ -1017,17 +998,17 @@ const UniversalSearch = () => {
                                         searchType === 'helpers' ? 'helperType' : 'eventType';
                         setSidebarData(prev => ({ ...prev, [typeField]: item.id }));
                       }}
-                      className={`p-4 border rounded-xl text-left transition-all ${
+                      className={`p-4 border rounded-lg text-left transition-all ${
                         sidebarData[searchType === 'properties' ? 'type' : 
-                                   searchType === 'services' ? 'serviceType' : 
-                                   searchType === 'helpers' ? 'helperType' : 'eventType'] === item.id
+                                  searchType === 'services' ? 'serviceType' : 
+                                  searchType === 'helpers' ? 'helperType' : 'eventType'] === item.id
                           ? 'border-black bg-gray-50'
                           : 'border-gray-300 hover:border-gray-400'
                       }`}
                     >
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="text-2xl">{item.icon}</span>
-                        <span className="font-medium">{item.label}</span>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xl">{item.icon}</span>
+                        <span className="font-medium text-sm">{item.label}</span>
                       </div>
                       <p className="text-xs text-gray-500">{item.description}</p>
                     </button>
@@ -1038,40 +1019,40 @@ const UniversalSearch = () => {
               {/* Price Range */}
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-gray-900">Price range</h3>
-                  <span className="text-sm text-gray-500">
+                  <h3 className="font-semibold text-gray-900">Price range</h3>
+                  <span className="text-sm text-gray-600">
                     {searchType === 'properties' ? 'Trip price, includes all fees' : 
                      searchType === 'services' ? 'Service price' : 
                      searchType === 'helpers' ? 'Work price' : 'Ticket price'}
                   </span>
                 </div>
                 
-                <div className="space-y-6">
-                  <div className="flex gap-4">
+                <div className="space-y-4">
+                  <div className="flex gap-3">
                     <div className="flex-1">
-                      <label className="block text-xs text-gray-500 mb-2">Min price</label>
+                      <label className="block text-xs text-gray-500 mb-1">Min price</label>
                       <div className="relative">
-                        <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
                         <input
                           type="number"
                           id="priceMin"
                           value={sidebarData.priceMin}
                           onChange={handleChange}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm"
+                          className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm"
                           placeholder="0"
                         />
                       </div>
                     </div>
                     <div className="flex-1">
-                      <label className="block text-xs text-gray-500 mb-2">Max price</label>
+                      <label className="block text-xs text-gray-500 mb-1">Max price</label>
                       <div className="relative">
-                        <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
                         <input
                           type="number"
                           id="priceMax"
                           value={sidebarData.priceMax}
                           onChange={handleChange}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm"
+                          className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm"
                           placeholder="Any price"
                         />
                       </div>
@@ -1079,313 +1060,171 @@ const UniversalSearch = () => {
                   </div>
                 </div>
               </div>
-            </form>
-          </div>
 
-          {/* Fixed Bottom Buttons */}
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg">
-            <div className="flex gap-3">
               <button
-                type="button"
-                onClick={clearFilters}
-                className="flex-1 py-3.5 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Clear all
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  handleSubmit({ preventDefault: () => {} });
-                  setShowFilters(false);
-                }}
-                className="flex-1 py-3.5 bg-black text-white rounded-lg font-medium hover:bg-gray-800"
+                type="submit"
+                className="w-full py-3.5 bg-black text-white font-medium rounded-lg hover:bg-gray-800"
               >
                 Show {filteredItems.length}+ results
               </button>
-            </div>
+            </form>
           </div>
         </div>
       )}
 
-      {/* Main Content */}
-      {(!isMobile || (isMobile && !showFilters)) && (
-        <>
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Desktop Filters Sidebar */}
-            {!isMobile && !showMap && (
-              <div className="lg:w-80 flex-shrink-0">
-                <div className="bg-white rounded-xl p-6 sticky top-4">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold text-gray-900">Filters</h2>
-                    <button
-                      onClick={clearFilters}
-                      className="text-sm text-gray-600 hover:text-gray-900 underline"
-                    >
-                      Clear all
-                    </button>
-                  </div>
-                  
-                  <form onSubmit={handleSubmit} className="space-y-8">
-                    {/* Search Input in Desktop Filter */}
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-4">Search</h3>
-                      <div className="relative">
-                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                          type="text"
-                          id="searchTerm"
-                          value={sidebarData.searchTerm}
-                          onChange={handleChange}
-                          placeholder={`Search ${SEARCH_TYPES.find(t => t.id === searchType)?.label?.toLowerCase()}...`}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Type Selection */}
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-4">Type</h3>
-                      <div className="grid grid-cols-2 gap-3">
-                        {getActiveTypeArray().map((item) => (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => {
-                              const typeField = searchType === 'properties' ? 'type' : 
-                                              searchType === 'services' ? 'serviceType' : 
-                                              searchType === 'helpers' ? 'helperType' : 'eventType';
-                              setSidebarData(prev => ({ ...prev, [typeField]: item.id }));
-                            }}
-                            className={`p-4 border rounded-lg text-left transition-all ${
-                              sidebarData[searchType === 'properties' ? 'type' : 
-                                        searchType === 'services' ? 'serviceType' : 
-                                        searchType === 'helpers' ? 'helperType' : 'eventType'] === item.id
-                                ? 'border-black bg-gray-50'
-                                : 'border-gray-300 hover:border-gray-400'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xl">{item.icon}</span>
-                              <span className="font-medium text-sm">{item.label}</span>
-                            </div>
-                            <p className="text-xs text-gray-500">{item.description}</p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Price Range */}
-                    <div>
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-semibold text-gray-900">Price range</h3>
-                        <span className="text-sm text-gray-600">
-                          {searchType === 'properties' ? 'Trip price, includes all fees' : 
-                           searchType === 'services' ? 'Service price' : 
-                           searchType === 'helpers' ? 'Work price' : 'Ticket price'}
-                        </span>
-                      </div>
-                      
-                      <div className="space-y-4">
-                        <div className="flex gap-3">
-                          <div className="flex-1">
-                            <label className="block text-xs text-gray-500 mb-1">Min price</label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
-                              <input
-                                type="number"
-                                id="priceMin"
-                                value={sidebarData.priceMin}
-                                onChange={handleChange}
-                                className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm"
-                                placeholder="0"
-                              />
-                            </div>
-                          </div>
-                          <div className="flex-1">
-                            <label className="block text-xs text-gray-500 mb-1">Max price</label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
-                              <input
-                                type="number"
-                                id="priceMax"
-                                value={sidebarData.priceMax}
-                                onChange={handleChange}
-                                className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm"
-                                placeholder="Any price"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full py-3.5 bg-black text-white font-medium rounded-lg hover:bg-gray-800"
-                    >
-                      Show {filteredItems.length}+ results
-                    </button>
-                  </form>
-                </div>
-              </div>
+      {/* Main Content Area - List View or Map View */}
+      <div className="flex-1">
+        {/* Results Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">
+              {filteredItems.length}+ {SEARCH_TYPE_CONFIG[searchType]?.label?.toLowerCase() || 'items'} available
+            </h2>
+            {sidebarData.address && (
+              <p className="text-gray-600 text-sm">in {sidebarData.address} • Prices include all fees</p>
             )}
-
-            {/* Main Content Area - List View or Map View */}
-            <div className="flex-1">
-              {/* Results Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">
-                    {filteredItems.length}+ {SEARCH_TYPES.find(t => t.id === searchType)?.label?.toLowerCase()} available
-                  </h2>
-                  {sidebarData.address && (
-                    <p className="text-gray-600 text-sm">in {sidebarData.address} • Prices include all fees</p>
-                  )}
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  {/* Mobile Filter Button */}
-                  {isMobile && (
-                    <button
-                      onClick={() => setShowFilters(true)}
-                      className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400"
-                    >
-                      <FunnelIcon className="w-4 h-4" />
-                      Filters
-                    </button>
-                  )}
-                  
-                  {/* Map Toggle */}
-                  <button
-                    onClick={() => setShowMap(!showMap)}
-                    className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400"
-                  >
-                    {showMap ? (
-                      <>
-                        <HomeIcon className="w-4 h-4" />
-                        Show list
-                      </>
-                    ) : (
-                      <>
-                        <MapIcon className="w-4 h-4" />
-                        Show map
-                      </>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {/* Mobile Filter Button */}
+            {isMobile && (
+              <button
+                onClick={() => setShowFilters(true)}
+                className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400"
+              >
+                <FunnelIcon className="w-4 h-4" />
+                Filters
+              </button>
+            )}
+            
+            {/* Map Toggle */}
+            <button
+              onClick={() => setShowMap(!showMap)}
+              className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400"
+            >
+              {showMap ? (
+                <>
+                  <HomeIcon className="w-4 h-4" />
+                  Show list
+                </>
+              ) : (
+                <>
+                  <MapIcon className="w-4 h-4" />
+                  Show map
+                </>
+              )}
+            </button>
+            
+            {/* Sort Dropdown */}
+            <Menu as="div" className="relative">
+              <Menu.Button className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400">
+                Sort by
+                <ChevronDownIcon className="w-4 h-4" />
+              </Menu.Button>
+              <Transition
+                enter="transition duration-200 ease-out"
+                enterFrom="transform scale-95 opacity-0"
+                enterTo="transform scale-100 opacity-100"
+                leave="transition duration-150 ease-in"
+                leaveFrom="transform scale-100 opacity-100"
+                leaveTo="transform scale-95 opacity-0"
+              >
+                <Menu.Items className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-10">
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button 
+                        onClick={() => setSidebarData(prev => ({ ...prev, sort: 'createdAt', order: 'desc' }))}
+                        className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''}`}
+                      >
+                        Recommended
+                      </button>
                     )}
-                  </button>
-                  
-                  {/* Sort Dropdown */}
-                  <Menu as="div" className="relative">
-                    <Menu.Button className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400">
-                      Sort by
-                      <ChevronDownIcon className="w-4 h-4" />
-                    </Menu.Button>
-                    <Transition
-                      enter="transition duration-200 ease-out"
-                      enterFrom="transform scale-95 opacity-0"
-                      enterTo="transform scale-100 opacity-100"
-                      leave="transition duration-150 ease-in"
-                      leaveFrom="transform scale-100 opacity-100"
-                      leaveTo="transform scale-95 opacity-0"
-                    >
-                      <Menu.Items className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-10">
-                        <Menu.Item>
-                          {({ active }) => (
-                            <button 
-                              onClick={() => setSidebarData(prev => ({ ...prev, sort: 'createdAt', order: 'desc' }))}
-                              className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''}`}
-                            >
-                              Recommended
-                            </button>
-                          )}
-                        </Menu.Item>
-                        <Menu.Item>
-                          {({ active }) => (
-                            <button 
-                              onClick={() => setSidebarData(prev => ({ ...prev, sort: 'price', order: 'asc' }))}
-                              className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''}`}
-                            >
-                              Price: Low to high
-                            </button>
-                          )}
-                        </Menu.Item>
-                        <Menu.Item>
-                          {({ active }) => (
-                            <button 
-                              onClick={() => setSidebarData(prev => ({ ...prev, sort: 'price', order: 'desc' }))}
-                              className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''}`}
-                            >
-                              Price: High to low
-                            </button>
-                          )}
-                        </Menu.Item>
-                      </Menu.Items>
-                    </Transition>
-                  </Menu>
-                </div>
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button 
+                        onClick={() => setSidebarData(prev => ({ ...prev, sort: 'price', order: 'asc' }))}
+                        className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''}`}
+                      >
+                        Price: Low to high
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button 
+                        onClick={() => setSidebarData(prev => ({ ...prev, sort: 'price', order: 'desc' }))}
+                        className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''}`}
+                      >
+                        Price: High to low
+                      </button>
+                    )}
+                  </Menu.Item>
+                </Menu.Items>
+              </Transition>
+            </Menu>
+          </div>
+        </div>
+
+        {/* Map View */}
+        {showMap ? (
+          <div className="h-[600px] rounded-2xl overflow-hidden">
+            <MapView items={filteredItems} searchType={searchType} address={sidebarData.address} />
+          </div>
+        ) : (
+          /* List View */
+          loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-2">
+              {[...Array(6)].map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          ) : filteredItems.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+                {filteredItems.map((item) => (
+                  <ItemCard key={item._id} item={item} searchType={searchType} />
+                ))}
               </div>
 
-              {/* Map View */}
-              {showMap ? (
-                <div className="h-[600px] rounded-2xl overflow-hidden">
-                  <MapView items={filteredItems} searchType={searchType} address={sidebarData.address} />
+              {/* Load More Button */}
+              {showMore && (
+                <div className="mt-8 flex justify-center">
+                  <button
+                    onClick={() => {
+                      const startIndex = filteredItems.length;
+                      const urlParams = new URLSearchParams(location.search);
+                      urlParams.set('startIndex', startIndex);
+                      navigate(`/search?${urlParams.toString()}`);
+                    }}
+                    className="px-6 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
+                  >
+                    Show more
+                  </button>
                 </div>
-              ) : (
-                /* List View */
-                loading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-2">
-                    {[...Array(6)].map((_, i) => (
-                      <SkeletonCard key={i} />
-                    ))}
-                  </div>
-                ) : filteredItems.length > 0 ? (
-                  <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
-                      {filteredItems.map((item) => (
-                        <ItemCard key={item._id} item={item} searchType={searchType} />
-                      ))}
-                    </div>
-
-                    {/* Load More Button */}
-                    {showMore && (
-                      <div className="mt-8 flex justify-center">
-                        <button
-                          onClick={() => {
-                            const startIndex = filteredItems.length;
-                            const urlParams = new URLSearchParams(location.search);
-                            urlParams.set('startIndex', startIndex);
-                            navigate(`/search?${urlParams.toString()}`);
-                          }}
-                          className="px-6 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
-                        >
-                          Show more
-                        </button>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="bg-white rounded-xl p-8 text-center">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <MagnifyingGlassIcon className="w-8 h-8 text-gray-400" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      No exact matches
-                    </h3>
-                    <p className="text-gray-600 mb-6 text-sm">
-                      Try adjusting your filters or search term
-                    </p>
-                    <button
-                      onClick={clearFilters}
-                      className="px-6 py-3 bg-black hover:bg-gray-800 text-white font-medium rounded-lg text-sm"
-                    >
-                      Clear all filters
-                    </button>
-                  </div>
-                )
               )}
+            </>
+          ) : (
+            <div className="bg-white rounded-xl p-8 text-center">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MagnifyingGlassIcon className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No exact matches
+              </h3>
+              <p className="text-gray-600 mb-6 text-sm">
+                Try adjusting your filters or search term
+              </p>
+              <button
+                onClick={clearFilters}
+                className="px-6 py-3 bg-black hover:bg-gray-800 text-white font-medium rounded-lg text-sm"
+              >
+                Clear all filters
+              </button>
             </div>
-          </div>
-        </>
-      )}
+          )
+        )}
+      </div>
 
       {/* Floating Filter Button for Mobile */}
       {isMobile && !showFilters && (
