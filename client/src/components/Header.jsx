@@ -42,7 +42,8 @@ import {
   getSearchHistory,
   clearSearchHistory as clearSearchHistoryUtil,
   generateSuggestions,
-  SEARCH_TYPE_CONFIG
+  SEARCH_TYPE_CONFIG,
+  getSearchFieldName
 } from "../utils/searchUtils";
 
 export default function Sidebar() {
@@ -198,11 +199,14 @@ export default function Sidebar() {
     });
     setSearchHistory(updatedHistory);
 
+    // Get the appropriate field name for the search type
+    const searchField = getSearchFieldName(searchType);
+    
     const searchUrl = getSearchUrl({
       searchTerm,
       searchType,
-      address: searchTerm,
-      name: searchTerm
+      [searchField]: searchTerm, // Dynamic field name
+      address: searchTerm
     });
 
     navigate(searchUrl);
@@ -216,17 +220,18 @@ export default function Sidebar() {
     setShowSuggestions(false);
     
     const searchType = suggestion.type;
+    const searchField = getSearchFieldName(searchType);
     const updatedHistory = saveSearchHistory(suggestion.term, searchType, {
-      address: suggestion.term,
-      name: suggestion.term
+      [searchField]: suggestion.term,
+      address: suggestion.term
     });
     setSearchHistory(updatedHistory);
 
     const searchUrl = getSearchUrl({
       searchTerm: suggestion.term,
       searchType,
-      address: suggestion.term,
-      name: suggestion.term
+      [searchField]: suggestion.term,
+      address: suggestion.term
     });
 
     navigate(searchUrl);

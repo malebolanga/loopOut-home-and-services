@@ -1,221 +1,321 @@
-// src/utils/searchUtils.js
-export const SEARCH_TYPES = {
-  PROPERTIES: 'properties',
-  SERVICES: 'services',
-  HELPERS: 'helpers',
-  EVENTS: 'events'
-};
-
-export const SEARCH_TYPE_CONFIG = {
-  properties: {
-    label: 'Properties',
-    endpoint: '/api/listing/get',
-    types: ['sale', 'rent-short', 'rent-long', 'office', 'land'],
-    placeholder: 'Search properties...',
-    icon: '🏠'
-  },
-  services: {
-    label: 'Services',
-    endpoint: '/api/service/get',
-    types: ['cleaning', 'maintenance', 'moving', 'landscaping', 'catering', 'daycare', 'schoolTransport', 'other'],
-    placeholder: 'Search services...',
-    icon: '🔧'
-  },
-  helpers: {
-    label: 'Helpers',
-    endpoint: '/api/helper/get',
-    types: ['domestic', 'tutor', 'chef', 'handyman', 'tattoo', 'beauty', 'barber', 'photography'],
-    placeholder: 'Search helpers...',
-    icon: '👥'
-  },
-  events: {
-    label: 'Events',
-    endpoint: '/api/event/get',
-    types: ['concert', 'workshop', 'sports', 'community', 'festival'],
-    placeholder: 'Search events...',
-    icon: '🎉'
-  }
-};
-
-export const getSearchConfig = (searchType) => {
-  return SEARCH_TYPE_CONFIG[searchType] || SEARCH_TYPE_CONFIG.properties;
-};
-
-export const getSearchUrl = (params) => {
-  const {
-    searchTerm,
-    searchType = 'properties',
-    address = '',
-    name = '',
-    description = '',
-    type = 'all',
-    minPrice = '',
-    maxPrice = '',
-    location = ''
-  } = params;
-
-  const urlParams = new URLSearchParams();
-  
-  // Add search term
-  if (searchTerm) {
-    urlParams.set('q', searchTerm);
-    
-    // Determine field based on search type
-    switch(searchType) {
-      case 'properties':
-        urlParams.set('name', searchTerm);
-        break;
-      case 'services':
-        urlParams.set('serviceName', searchTerm);
-        break;
-      case 'helpers':
-        urlParams.set('helperName', searchTerm);
-        break;
-      case 'events':
-        urlParams.set('eventName', searchTerm);
-        break;
-    }
-  }
-  
-  // Add search type
-  urlParams.set('searchType', searchType);
-  
-  // Add other parameters
-  if (address) urlParams.set('address', address);
-  if (name) urlParams.set('name', name);
-  if (description) urlParams.set('description', description);
-  if (type && type !== 'all') urlParams.set('type', type);
-  if (minPrice) urlParams.set('priceMin', minPrice);
-  if (maxPrice) urlParams.set('priceMax', maxPrice);
-  if (location) urlParams.set('location', location);
-  
-  return `/search?${urlParams.toString()}`;
-};
-
-export const saveSearchHistory = (searchTerm, searchType = 'properties', searchData = {}) => {
-  try {
-    const searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-    const newSearch = {
-      term: searchTerm,
-      type: searchType,
-      data: searchData,
-      timestamp: new Date().toISOString()
-    };
-    
-    // Remove duplicates and keep only last 10 searches
-    const filtered = searchHistory.filter(
-      item => !(item.term === searchTerm && item.type === searchType)
-    );
-    
-    const updatedHistory = [newSearch, ...filtered].slice(0, 10);
-    localStorage.setItem('searchHistory', JSON.stringify(updatedHistory));
-    
-    return updatedHistory;
-  } catch (error) {
-    console.error('Error saving search history:', error);
-    return [];
-  }
-};
-
+// utils/searchUtils.js
 export const getSearchHistory = () => {
   try {
-    return JSON.parse(localStorage.getItem('searchHistory') || '[]');
+    const history = localStorage.getItem('searchHistory');
+    if (!history || history === 'undefined' || history === 'null') {
+      return [];
+    }
+    
+    const parsedHistory = JSON.parse(history);
+    
+    // Ensure we return a valid array
+    if (Array.isArray(parsedHistory)) {
+      // Filter out any invalid entries
+      return parsedHistory.filter(item => 
+        item && 
+        typeof item === 'object' && 
+        item.term && 
+        typeof item.term === 'string' &&
+        item.term.trim() !== ''
+      );
+    }
+    
+    return [];
   } catch (error) {
     console.error('Error getting search history:', error);
+    // Clear corrupted data
+    localStorage.removeItem('searchHistory');
     return [];
+  }
+};
+
+export const generateSuggestions = (query, type = 'properties', history = []) => {
+  try {
+    // Validate inputs
+    if (!query || typeof query !== 'string') {
+      return [];
+    }
+    
+    const normalizedQuery = query.toLowerCase().trim();
+    if (normalizedQuery.length === 0) {
+      return [];
+    }
+    
+    const suggestions = [];
+    
+    // Safely process history items
+    if (Array.isArray(history)) {
+      history.forEach((item) => {
+        try {
+          // Validate item structure
+          if (!item || typeof item !== 'object') return;
+          if (!item.term || typeof item.term !== 'string') return;
+          
+          const term = item.term.trim();
+          if (term.length === 0) return;
+          
+          const normalizedItem = term.toLowerCase();
+          if (normalizedItem.includes(normalizedQuery) || normalizedQuery.includes(normalizedItem)) {
+            suggestions.push({
+              term: term,
+              type: item.type || 'all',
+              score: 1,
+              fromHistory: true
+            });
+          }
+        } catch (itemError) {
+          console.warn('Skipping invalid history item:', itemError);
+        }
+      });
+    }
+    
+    // Add type-based suggestions only if type is valid
+    if (type && typeof type === 'string' && type !== 'all') {
+      const typeLabels = {
+        properties: ['apartment', 'house', 'rent', 'sale', 'property', 'home', 'flat', 'villa'],
+        services: ['cleaning', 'repair', 'maintenance', 'service', 'plumbing', 'electrician', 'gardening'],
+        helpers: ['helper', 'assistant', 'cleaner', 'driver', 'chef', 'tutor', 'babysitter'],
+        events: ['event', 'concert', 'festival', 'party', 'meeting', 'show', 'exhibition']
+      };
+      
+      const typeWords = typeLabels[type] || [];
+      typeWords.forEach(word => {
+        try {
+          if (word.includes(normalizedQuery) || normalizedQuery.includes(word)) {
+            suggestions.push({
+              term: `${query} ${word}`,
+              type: type,
+              score: 0.8,
+              fromHistory: false
+            });
+          }
+        } catch (wordError) {
+          console.warn('Error processing type word:', wordError);
+        }
+      });
+    }
+    
+    // Add location-based suggestions
+    const locations = ['Cape Town', 'Johannesburg', 'Pretoria', 'Durban', 'Sandton', 'Waterfront', 'Rosebank', 'Fourways'];
+    locations.forEach(location => {
+      try {
+        const normalizedLocation = location.toLowerCase();
+        if (normalizedQuery.includes(normalizedLocation) || 
+            normalizedLocation.includes(normalizedQuery)) {
+          suggestions.push({
+            term: `${query} in ${location}`,
+            type: 'all',
+            score: 0.7,
+            fromHistory: false
+          });
+        }
+      } catch (locationError) {
+        console.warn('Error processing location:', locationError);
+      }
+    });
+    
+    // Add generic suggestions based on query
+    if (normalizedQuery.length > 2) {
+      const genericSuggestions = [
+        { term: `${query} near me`, type: 'all', score: 0.6 },
+        { term: `${query} affordable`, type: 'all', score: 0.5 },
+        { term: `${query} today`, type: 'all', score: 0.5 },
+        { term: `${query} this weekend`, type: 'all', score: 0.5 }
+      ];
+      
+      genericSuggestions.forEach(suggestion => {
+        try {
+          suggestions.push({
+            ...suggestion,
+            fromHistory: false
+          });
+        } catch (suggestionError) {
+          console.warn('Error adding generic suggestion:', suggestionError);
+        }
+      });
+    }
+    
+    // Sort by score and remove duplicates
+    const uniqueSuggestions = [];
+    const seenTerms = new Set();
+    
+    // First filter out any invalid suggestions
+    const validSuggestions = suggestions.filter(s => {
+      try {
+        return s && 
+               s.term && 
+               typeof s.term === 'string' && 
+               s.term.trim().length > 0;
+      } catch {
+        return false;
+      }
+    });
+    
+    // Sort and deduplicate
+    validSuggestions
+      .sort((a, b) => (b.score || 0) - (a.score || 0))
+      .forEach(suggestion => {
+        try {
+          const termKey = suggestion.term.toLowerCase().trim();
+          if (!seenTerms.has(termKey)) {
+            seenTerms.add(termKey);
+            uniqueSuggestions.push({
+              term: suggestion.term.trim(),
+              type: suggestion.type || 'all',
+              score: suggestion.score || 0
+            });
+          }
+        } catch (dedupeError) {
+          console.warn('Error deduplicating suggestion:', dedupeError);
+        }
+      });
+    
+    return uniqueSuggestions.slice(0, 10);
+    
+  } catch (error) {
+    console.error('Error generating suggestions:', error);
+    return [];
+  }
+};
+
+export const saveSearchHistory = (term, type = 'all', params = {}) => {
+  try {
+    // Validate inputs
+    if (!term || typeof term !== 'string') {
+      console.warn('Invalid term provided to saveSearchHistory:', term);
+      return getSearchHistory();
+    }
+    
+    const cleanTerm = term.trim();
+    if (cleanTerm.length === 0) {
+      return getSearchHistory();
+    }
+    
+    const cleanType = type && typeof type === 'string' ? type : 'all';
+    
+    const history = getSearchHistory();
+    const newEntry = {
+      term: cleanTerm,
+      type: cleanType,
+      params: params && typeof params === 'object' ? params : {},
+      timestamp: new Date().toISOString(),
+      id: Date.now()
+    };
+    
+    // Remove duplicates (case insensitive)
+    const filteredHistory = history.filter(item => {
+      if (!item || !item.term || typeof item.term !== 'string') {
+        return true; // Keep valid items
+      }
+      return item.term.toLowerCase() !== cleanTerm.toLowerCase();
+    });
+    
+    const newHistory = [newEntry, ...filteredHistory].slice(0, 15);
+    
+    try {
+      localStorage.setItem('searchHistory', JSON.stringify(newHistory));
+    } catch (storageError) {
+      console.error('Failed to save to localStorage:', storageError);
+      // If localStorage is full, remove oldest items
+      if (storageError.name === 'QuotaExceededError') {
+        const reducedHistory = newHistory.slice(0, 5);
+        localStorage.setItem('searchHistory', JSON.stringify(reducedHistory));
+        return reducedHistory;
+      }
+    }
+    
+    return newHistory;
+  } catch (error) {
+    console.error('Error in saveSearchHistory:', error);
+    return getSearchHistory(); // Return current history as fallback
   }
 };
 
 export const clearSearchHistory = () => {
-  localStorage.removeItem('searchHistory');
-  return [];
+  try {
+    localStorage.removeItem('searchHistory');
+    return [];
+  } catch (error) {
+    console.error('Error clearing search history:', error);
+    return [];
+  }
 };
 
-export const generateSuggestions = (searchTerm, searchType = 'all', searchHistory = []) => {
-  if (!searchTerm.trim()) return [];
-  
-  // Filter history by type
-  const typeFiltered = searchHistory.filter(
-    item => searchType === 'all' || item.type === searchType
-  );
-  
-  // Get matches from history
-  const historyMatches = typeFiltered
-    .filter(item => item.term.toLowerCase().includes(searchTerm.toLowerCase()))
-    .slice(0, 5)
-    .map(item => ({ term: item.term, type: item.type, isHistory: true }));
-  
-  // Generic suggestions based on type
-  const genericSuggestions = [];
-  
-  const config = SEARCH_TYPE_CONFIG[searchType] || SEARCH_TYPE_CONFIG.properties;
-  
-  if (searchType === 'all' || searchType === 'properties') {
-    genericSuggestions.push(
-      { term: 'Beach house', type: 'properties' },
-      { term: 'Mountain cabin', type: 'properties' },
-      { term: 'Downtown loft', type: 'properties' },
-      { term: 'Luxury villa', type: 'properties' },
-      { term: 'Cozy apartment', type: 'properties' }
-    );
+export const getSearchUrl = (params = {}) => {
+  try {
+    const { searchTerm = '', searchType = 'properties', ...otherParams } = params;
+    const urlParams = new URLSearchParams();
+    
+    if (searchTerm && typeof searchTerm === 'string') {
+      urlParams.set('q', searchTerm.trim());
+    }
+    
+    if (searchType && typeof searchType === 'string') {
+      urlParams.set('type', searchType);
+    }
+    
+    if (otherParams && typeof otherParams === 'object') {
+      Object.entries(otherParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          urlParams.set(key, String(value));
+        }
+      });
+    }
+    
+    return `/search?${urlParams.toString()}`;
+  } catch (error) {
+    console.error('Error generating search URL:', error);
+    return '/search';
   }
-  
-  if (searchType === 'all' || searchType === 'services') {
-    genericSuggestions.push(
-      { term: 'House cleaning', type: 'services' },
-      { term: 'Gardening service', type: 'services' },
-      { term: 'Moving help', type: 'services' },
-      { term: 'Car wash', type: 'services' },
-      { term: 'Pet sitting', type: 'services' }
-    );
-  }
-  
-  if (searchType === 'all' || searchType === 'helpers') {
-    genericSuggestions.push(
-      { term: 'Tutor', type: 'helpers' },
-      { term: 'Cleaner', type: 'helpers' },
-      { term: 'Chef', type: 'helpers' },
-      { term: 'Handyman', type: 'helpers' },
-      { term: 'Babysitter', type: 'helpers' }
-    );
-  }
-  
-  if (searchType === 'all' || searchType === 'events') {
-    genericSuggestions.push(
-      { term: 'Concert tickets', type: 'events' },
-      { term: 'Workshop', type: 'events' },
-      { term: 'Sports event', type: 'events' },
-      { term: 'Festival', type: 'events' },
-      { term: 'Community gathering', type: 'events' }
-    );
-  }
-  
-  // Filter generic suggestions by search term
-  const filteredGeneric = genericSuggestions
-    .filter(item => item.term.toLowerCase().includes(searchTerm.toLowerCase()))
-    .map(item => ({ ...item, isHistory: false }));
-  
-  // Combine and deduplicate
-  const allSuggestions = [...historyMatches, ...filteredGeneric]
-    .filter((item, index, self) => 
-      index === self.findIndex((t) => t.term === item.term && t.type === item.type)
-    )
-    .slice(0, 8);
-  
-  return allSuggestions;
 };
 
 export const getSearchFieldName = (searchType) => {
-  switch(searchType) {
-    case 'properties': return 'name';
-    case 'services': return 'serviceName';
-    case 'helpers': return 'helperName';
-    case 'events': return 'eventName';
-    default: return 'name';
+  const fieldMap = {
+    properties: 'name',
+    services: 'title',
+    helpers: 'name',
+    events: 'title'
+  };
+  
+  if (searchType && fieldMap[searchType]) {
+    return fieldMap[searchType];
+  }
+  
+  return 'name'; // Default field
+};
+
+export const SEARCH_TYPE_CONFIG = {
+  properties: {
+    endpoint: '/api/listing/search',
+    field: 'name',
+    label: 'Properties'
+  },
+  services: {
+    endpoint: '/api/service/search',
+    field: 'title',
+    label: 'Services'
+  },
+  helpers: {
+    endpoint: '/api/helper/search',
+    field: 'name',
+    label: 'Helpers'
+  },
+  events: {
+    endpoint: '/api/event/search',
+    field: 'title',
+    label: 'Events'
   }
 };
 
-export const getIconForSearchType = (searchType) => {
-  const config = getSearchConfig(searchType);
-  return config.icon;
+// Utility function to safely clear and reset localStorage if corrupted
+export const resetSearchHistory = () => {
+  try {
+    localStorage.removeItem('searchHistory');
+    // Initialize with empty array
+    localStorage.setItem('searchHistory', JSON.stringify([]));
+    return [];
+  } catch (error) {
+    console.error('Error resetting search history:', error);
+    return [];
+  }
 };

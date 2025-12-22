@@ -1,418 +1,38 @@
-// src/pages/Search.jsx
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Transition } from '@headlessui/react';
+import { Menu } from '@headlessui/react';
 import {
   HomeIcon,
+  CurrencyDollarIcon,
+  TagIcon,
+  BuildingOfficeIcon,
   MapIcon,
+  UserGroupIcon,
   ChevronDownIcon,
   XMarkIcon,
+  ClockIcon,
+  LightBulbIcon,
   AdjustmentsHorizontalIcon,
-  MagnifyingGlassIcon,
-  FunnelIcon,
-  SparklesIcon,
-  CalendarDaysIcon,
-  UserGroupIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
+  UserIcon,
+  CalendarIcon,
+  WrenchIcon
 } from '@heroicons/react/24/outline';
-import "../styles/ListingDetails.scss";
 import ListingItem from "../components/ListingItem";
 import ServiceItem from "../components/ServiceItem";
 import HelperItem from "../components/HelperItem";
 import EventItem from "../components/EventItem";
 
-// Import search utilities - Correct path for pages directory
-import {
-  SEARCH_TYPE_CONFIG,
-  getSearchConfig,
-  getSearchUrl,
-  saveSearchHistory,
-  getSearchHistory,
-  clearSearchHistory as clearSearchHistoryUtil,
-  generateSuggestions
-} from "../utils/searchUtils";
-
-const RECENT_SEARCHES_KEY = 'recentSearches';
+const RECENT_SEARCHES_KEY = 'recentPropertySearches';
 const MAX_RECENT_SEARCHES = 5;
 const DEFAULT_LISTING_LIMIT = 12;
 
-// Helper functions for property types
-const getPropertyTypeName = (type) => {
-  switch (type) {
-    case 'sale': return 'Sale';
-    case 'rent-short': return 'Short Term';
-    case 'rent-long': return 'Long Term';
-    case 'office': return 'Office';
-    case 'land': return 'Land Plot';
-    default: return 'Property';
-  }
-};
-
-// Helper function for helper types
-const getHelperTypeName = (type) => {
-  switch (type) {
-    case 'domestic': return 'Maid';
-    case 'tutor': return 'Tutor';
-    case 'chef': return 'Chef';
-    case 'handyman': return 'Handyman';
-    case 'tattoo': return 'Tattoo Artist';
-    case 'beauty': return 'Beauty';
-    case 'barber': return 'Barber';
-    case 'photography': return 'Photographer';
-    default: return 'Helper';
-  }
-};
-
-// Helper function for service types
-const getServiceTypeName = (type) => {
-  switch (type) {
-    case 'cleaning': return 'Cleaning';
-    case 'maintenance': return 'Maintenance';
-    case 'moving': return 'Moving';
-    case 'landscaping': return 'Landscaping';
-    case 'catering': return 'Catering';
-    case 'other': return 'Other';
-    case 'daycare': return 'DayCare';
-    case 'schoolTransport': return 'School Transport';
-    default: return 'Service';
-  }
-};
-
-// Helper function for event types
-const getEventTypeName = (type) => {
-  switch (type) {
-    case 'concert': return 'Concert';
-    case 'workshop': return 'Workshop';
-    case 'sports': return 'Sports';
-    case 'community': return 'Community';
-    case 'festival': return 'Festival';
-    default: return 'Event';
-  }
-};
-
-const getPriceLabel = (type) => {
-  switch (type) {
-    case 'sale':
-      return 'for sale';
-    case 'rent-short':
-      return 'night';
-    case 'rent-long':
-      return 'month';
-    case 'office':
-      return 'per hour';
-    case 'land':
-      return 'for sale';
-    default:
-      return 'night';
-  }
-};
-
-const getTypeBadge = (type, searchType) => {
-  // For properties
-  switch (searchType) {
-    case 'properties':
-      switch (type) {
-        case 'sale':
-          return { label: 'For Sale', color: 'bg-blue-100 text-blue-800' };
-        case 'rent-short':
-          return { label: 'Short Term', color: 'bg-green-100 text-green-800' };
-        case 'rent-long':
-          return { label: 'Long Term', color: 'bg-emerald-100 text-emerald-800' };
-        case 'office':
-          return { label: 'Office Space', color: 'bg-purple-100 text-purple-800' };
-        case 'land':
-          return { label: 'Land Plot', color: 'bg-amber-100 text-amber-800' };
-        default:
-          return { label: 'Property', color: 'bg-gray-100 text-gray-800' };
-      }
-    
-    case 'services':
-      return { 
-        label: getServiceTypeName(type), 
-        color: 'bg-green-100 text-green-800' 
-      };
-    
-    case 'helpers':
-      return { 
-        label: getHelperTypeName(type), 
-        color: 'bg-purple-100 text-purple-800' 
-      };
-    
-    case 'events':
-      return { 
-        label: getEventTypeName(type), 
-        color: 'bg-amber-100 text-amber-800' 
-      };
-    
-    default:
-      return { label: 'Item', color: 'bg-gray-100 text-gray-800' };
-  }
-};
-
-// Skeleton Card Component
-const SkeletonCard = () => (
-  <div className="animate-pulse bg-white rounded-xl overflow-hidden shadow-sm">
-    <div className="aspect-[4/3] bg-gradient-to-r from-gray-200 to-gray-300"></div>
-    <div className="p-4 space-y-3">
-      <div className="flex justify-between">
-        <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-1/2"></div>
-        <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-8"></div>
-      </div>
-      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-3/4"></div>
-      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-1/2"></div>
-      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-1/3"></div>
-    </div>
-  </div>
-);
-
-// Item Card Wrapper Component
-const ItemCard = ({ item, searchType }) => {
-  switch (searchType) {
-    case 'properties':
-      return <ListingItem listing={item} />;
-    case 'services':
-      return <ServiceItem service={item} />;
-    case 'helpers':
-      return <HelperItem helper={item} />;
-    case 'events':
-      return <EventItem event={item} />;
-    default:
-      // Generic card for events or other types
-      return (
-        <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
-          <div className="aspect-[4/3] bg-gray-100 relative">
-            <img
-              src={item.imageUrls?.[0] || 'https://images.unsplash.com/photo-1511578314322-379afb476865?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
-              alt={item.name}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute top-3 left-3">
-              <span className={`text-xs font-medium px-2 py-1 rounded ${
-                getTypeBadge(item.type, searchType).color
-              }`}>
-                {getTypeBadge(item.type, searchType).label}
-              </span>
-            </div>
-          </div>
-          <div className="p-4">
-            <h3 className="font-medium text-gray-900 truncate mb-2">{item.name || item.title}</h3>
-            <p className="text-sm text-gray-600 truncate mb-3">{item.description || item.location}</p>
-            <div className="flex justify-between items-center">
-              <div className="text-sm font-medium text-gray-900">
-                {item.price ? `R${item.price}` : 'Free'}
-              </div>
-              {item.date && (
-                <div className="text-xs text-gray-500">{new Date(item.date).toLocaleDateString()}</div>
-              )}
-            </div>
-          </div>
-        </div>
-      );
-  }
-};
-
-// Map Component for showing listings
-const MapView = ({ items, searchType, address = 'Polokwane' }) => {
-  const mapRef = useRef(null);
-
-  // Static map image for demonstration
-  const getStaticMapUrl = () => {
-    return `https://images.unsplash.com/photo-1511895426328-dc8714191300?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80`;
-  };
-
-  const getTypeColor = (type) => {
-    switch(searchType) {
-      case 'properties':
-        return getTypeBadge(type, searchType).color.split(' ')[0]; // Get just the background color
-      case 'services':
-        return 'bg-green-500';
-      case 'helpers':
-        return 'bg-purple-500';
-      case 'events':
-        return 'bg-amber-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
-  return (
-    <div className="relative h-full rounded-2xl overflow-hidden">
-      <img
-        src={getStaticMapUrl()}
-        alt="Map view"
-        className="w-full h-full object-cover"
-      />
-      
-      {/* Map markers overlay */}
-      <div className="absolute inset-0">
-        {items.slice(0, 10).map((item, index) => {
-          const typeColor = getTypeColor(item.type);
-          return (
-            <div 
-              key={item._id}
-              className="absolute transform -translate-x-1/2 -translate-y-1/2"
-              style={{
-                left: `${30 + (index % 5) * 15}%`,
-                top: `${40 + Math.floor(index / 5) * 25}%`
-              }}
-            >
-              <div className="relative">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-125 transition-transform duration-300 cursor-pointer group">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${typeColor}`}>
-                    <span className="text-xs font-bold text-white">{index + 1}</span>
-                  </div>
-                </div>
-                <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-white px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-                  <div className="text-xs font-medium">R{item.price || item.regularPrice}</div>
-                  <div className="text-xs text-gray-500">
-                    {searchType === 'properties' ? getPriceLabel(item.type) : searchType === 'services' ? '/service' : '/work'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      
-      <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-gray-900">{address}</h3>
-            <p className="text-sm text-gray-600">{items.length} {searchType} available</p>
-          </div>
-          <button className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
-            Show all on map
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Airbnb-style Sliding Tabs Component
-const SlidingTabs = ({ tabs, activeTab, onTabClick }) => {
-  const containerRef = useRef(null);
-  const [showLeftArrow, setShowLeftArrow] = useState(false);
-  const [showRightArrow, setShowRightArrow] = useState(true);
-  const [scrollPosition, setScrollPosition] = useState(0);
-
-  const checkArrows = () => {
-    if (containerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = containerRef.current;
-      setShowLeftArrow(scrollLeft > 0);
-      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
-    }
-  };
-
-  useEffect(() => {
-    checkArrows();
-    window.addEventListener('resize', checkArrows);
-    return () => window.removeEventListener('resize', checkArrows);
-  }, []);
-
-  const scrollLeft = () => {
-    if (containerRef.current) {
-      containerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
-      setTimeout(checkArrows, 300);
-    }
-  };
-
-  const scrollRight = () => {
-    if (containerRef.current) {
-      containerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
-      setTimeout(checkArrows, 300);
-    }
-  };
-
-  const handleScroll = () => {
-    if (containerRef.current) {
-      setScrollPosition(containerRef.current.scrollLeft);
-      checkArrows();
-    }
-  };
-
-  return (
-    <div className="relative mb-6">
-      {/* Left Arrow */}
-      {showLeftArrow && (
-        <button
-          onClick={scrollLeft}
-          className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-1.5 hover:shadow-lg transition-shadow"
-        >
-          <ChevronLeftIcon className="w-4 h-4 text-gray-600" />
-        </button>
-      )}
-
-      {/* Right Arrow */}
-      {showRightArrow && (
-        <button
-          onClick={scrollRight}
-          className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-1.5 hover:shadow-lg transition-shadow"
-        >
-          <ChevronRightIcon className="w-4 h-4 text-gray-600" />
-        </button>
-      )}
-
-      {/* Tabs Container */}
-      <div
-        ref={containerRef}
-        onScroll={handleScroll}
-        className="flex gap-2 overflow-x-auto scrollbar-hide py-1 px-1 scroll-smooth"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        <style jsx>{`
-          .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-          }
-        `}</style>
-        
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => onTabClick(tab.id)}
-              className={`flex-shrink-0 flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                activeTab === tab.id
-                  ? 'bg-gray-900 text-white shadow-sm'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400 hover:shadow-sm'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-const UniversalSearch = () => {
+const Search = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const getInitialSearchType = () => {
-    const urlParams = new URLSearchParams(location.search);
-    const typeFromUrl = urlParams.get('searchType');
-    return typeFromUrl && SEARCH_TYPE_CONFIG[typeFromUrl] ? typeFromUrl : 'properties';
-  };
-
-  const [searchType, setSearchType] = useState(getInitialSearchType());
+  const [searchType, setSearchType] = useState('properties');
   const [sidebarData, setSidebarData] = useState({
-    // Common fields
     searchTerm: '',
-    address: '',
-    name: '',
-    description: '',
-    location: '',
-    priceMin: 0,
-    priceMax: 100000000,
-    sort: 'createdAt',
-    order: 'desc',
-    
-    // Property specific fields
     type: 'all',
     parking: false,
     furnished: false,
@@ -420,8 +40,12 @@ const UniversalSearch = () => {
     pool: false,
     tv: false,
     offer: false,
+    sort: 'createdAt',
+    order: 'desc',
     bedroomsMin: '',
     bedroomsMax: '',
+    priceMin: 0,
+    priceMax: 100000000,
     breakfast: false,
     pets: false,
     security: false,
@@ -429,79 +53,66 @@ const UniversalSearch = () => {
     gym: false,
     view: false,
     kitchen: false,
-    laundry: false,
-    
-    // Service specific fields
-    category: 'all',
-    serviceType: 'all',
-    
-    // Helper specific fields
-    helperType: 'all',
-    availability: 'all',
-    
-    // Event specific fields
-    date: '',
-    eventType: 'all'
+    laundry: false
   });
 
   const [loading, setLoading] = useState(false);
-  const [items, setItems] = useState([]);
+  const [listings, setListings] = useState([]);
   const [showMore, setShowMore] = useState(false);
   const [recentSearches, setRecentSearches] = useState([]);
+  const [aiSuggestions, setAiSuggestions] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [showMap, setShowMap] = useState(false);
+  const [searchExamples, setSearchExamples] = useState([
+    'Beachfront villa in Cape Town',
+    '3 bedroom apartment in Sandton',
+    'Office space in Johannesburg CBD',
+    'Pet-friendly home with garden',
+    'Luxury penthouse with pool',
+    'Cleaning service for office',
+    'Personal chef for dinner party',
+    'Weekend music festival tickets'
+  ]);
 
-  // Property types
   const propertyTypes = [
-    { id: 'all', label: 'Any type', icon: '🏠', description: 'All properties' },
-    { id: 'sale', label: 'For Sale', icon: '💰', description: 'Buy property' },
-    { id: 'rent-short', label: 'Short Term', icon: '🏡', description: 'Nightly stays' },
-    { id: 'rent-long', label: 'Long Term', icon: '🏘️', description: 'Monthly rental' },
-    { id: 'office', label: 'Office', icon: '🏢', description: 'Per hour' },
-    { id: 'land', label: 'Land', icon: '🌳', description: 'For sale' }
+    { value: 'all', label: 'All Types', icon: <HomeIcon className="w-5 h-5" /> },
+    { value: 'rent', label: 'For Rent', icon: <CurrencyDollarIcon className="w-5 h-5" /> },
+    { value: 'sale', label: 'For Sale', icon: <TagIcon className="w-5 h-5" /> },
+    { value: 'office', label: 'Office', icon: <BuildingOfficeIcon className="w-5 h-5" /> },
+    { value: 'land', label: 'Land', icon: <MapIcon className="w-5 h-5" /> },
+    { value: 'guesthouse', label: 'Guest House', icon: <UserGroupIcon className="w-5 h-5" /> }
   ];
 
-  // Service types - updated to match getServiceTypeName
   const serviceTypes = [
-    { id: 'all', label: 'All Services', icon: '✨', description: 'All service types' },
-    { id: 'cleaning', label: 'Cleaning', icon: '🧹', description: 'Home & office cleaning' },
-    { id: 'maintenance', label: 'Maintenance', icon: '🔧', description: 'Repairs & fixes' },
-    { id: 'moving', label: 'Moving', icon: '🚚', description: 'Moving services' },
-    { id: 'landscaping', label: 'Landscaping', icon: '🌿', description: 'Garden & lawn care' },
-    { id: 'catering', label: 'Catering', icon: '🍽️', description: 'Food & catering' },
-    { id: 'daycare', label: 'DayCare', icon: '👶', description: 'Child care services' },
-    { id: 'schoolTransport', label: 'School Transport', icon: '🚌', description: 'School transport' },
-    { id: 'other', label: 'Other', icon: '🔧', description: 'Other services' }
+    { value: 'all', label: 'All Services', icon: <WrenchIcon className="w-5 h-5" /> },
+    { value: 'cleaning', label: 'Cleaning', icon: '🧹' },
+    { value: 'maintenance', label: 'Maintenance', icon: '🔧' },
+    { value: 'moving', label: 'Moving', icon: '🚚' },
+    { value: 'landscaping', label: 'Landscaping', icon: '🌿' },
+    { value: 'catering', label: 'Catering', icon: '🍳' }
   ];
 
-  // Helper types - updated to match getHelperTypeName
   const helperTypes = [
-    { id: 'all', label: 'All Helpers', icon: '👥', description: 'All helper types' },
-    { id: 'tutor', label: 'Tutor', icon: '📚', description: 'Academic tutoring' },
-    { id: 'chef', label: 'Chef', icon: '👨‍🍳', description: 'Cooking & catering' },
-    { id: 'handyman', label: 'Handyman', icon: '🛠️', description: 'Home repairs' },
-    { id: 'domestic', label: 'Maid', icon: '🧽', description: 'House helper' },
-    { id: 'beauty', label: 'Beauty', icon: '💄', description: 'Beauty services' },
-    { id: 'barber', label: 'Barber', icon: '✂️', description: 'Haircut & grooming' },
-    { id: 'photography', label: 'Photographer', icon: '📷', description: 'Photography services' },
-    { id: 'tattoo', label: 'Tattoo Artist', icon: '🖋️', description: 'Tattoo services' }
+    { value: 'all', label: 'All Helpers', icon: <UserIcon className="w-5 h-5" /> },
+    { value: 'domestic', label: 'General Help', icon: '👨‍💼' },
+    { value: 'errand', label: 'Errand Runner', icon: '🛒' },
+    { value: 'tutor', label: 'Tutor', icon: '📚' },
+    { value: 'chef', label: 'Chef', icon: '👨‍🍳' },
+    { value: 'maid', label: 'Maid', icon: '🧹' }
   ];
 
-  // Event types
   const eventTypes = [
-    { id: 'all', label: 'All Events', icon: '🎉', description: 'All event types' },
-    { id: 'concert', label: 'Concert', icon: '🎵', description: 'Music concerts' },
-    { id: 'workshop', label: 'Workshop', icon: '🎨', description: 'Learning workshops' },
-    { id: 'sports', label: 'Sports', icon: '⚽', description: 'Sports events' },
-    { id: 'community', label: 'Community', icon: '🤝', description: 'Community events' },
-    { id: 'festival', label: 'Festival', icon: '🎪', description: 'Festivals & fairs' }
+    { value: 'all', label: 'All Events', icon: <CalendarIcon className="w-5 h-5" /> },
+    { value: 'music', label: 'Music', icon: '🎵' },
+    { value: 'sports', label: 'Sports', icon: '⚽' },
+    { value: 'art', label: 'Art & Culture', icon: '🎨' },
+    { value: 'community', label: 'Community', icon: '👥' },
+    { value: 'food', label: 'Food & Drink', icon: '🍔' }
   ];
 
-  // Get active type array based on searchType
-  const getActiveTypeArray = () => {
-    switch(searchType) {
-      case 'properties': return propertyTypes;
+  const getCurrentTypes = () => {
+    switch (searchType) {
       case 'services': return serviceTypes;
       case 'helpers': return helperTypes;
       case 'events': return eventTypes;
@@ -509,206 +120,153 @@ const UniversalSearch = () => {
     }
   };
 
-  // Check if mobile on mount and resize
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const amenities = [
+    { 
+      category: 'Essentials',
+      items: [
+        { id: 'wifi', label: 'WiFi', icon: '📶' },
+        { id: 'parking', label: 'Parking', icon: '🚗' },
+        { id: 'aircon', label: 'Air Conditioning', icon: '❄️' }
+      ]
+    },
+    {
+      category: 'Features',
+      items: [
+        { id: 'pool', label: 'Pool', icon: '🏊' },
+        { id: 'gym', label: 'Gym', icon: '💪' },
+        { id: 'view', label: 'Great View', icon: '🌄' }
+      ]
+    },
+    {
+      category: 'Living',
+      items: [
+        { id: 'furnished', label: 'Furnished', icon: '🛋️' },
+        { id: 'kitchen', label: 'Kitchen', icon: '🍳' },
+        { id: 'laundry', label: 'Laundry', icon: '🧺' }
+      ]
+    },
+    {
+      category: 'Rules',
+      items: [
+        { id: 'pets', label: 'Pets Allowed', icon: '🐾' },
+        { id: 'security', label: 'Security', icon: '🔒' }
+      ]
+    },
+    {
+      category: 'Deals',
+      items: [
+        { id: 'offer', label: 'Special Offer', icon: '🎁' },
+        { id: 'breakfast', label: 'Breakfast Included', icon: '🍳' }
+      ]
+    }
+  ];
 
-  // Initialize sidebar data from URL params
+  // Initialize search term from URL
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    const initialData = { ...sidebarData };
+    const searchTermParam = urlParams.get('searchTerm');
     
-    urlParams.forEach((value, key) => {
-      if (key in initialData) {
-        if (typeof initialData[key] === 'boolean') {
-          initialData[key] = value === 'true';
-        } else if (typeof initialData[key] === 'number') {
-          initialData[key] = Number(value);
-        } else {
-          initialData[key] = value;
-        }
-      }
-    });
-
-    const q = urlParams.get('q');
-    if (q) {
-      initialData.searchTerm = q;
-      const name = urlParams.get('name');
-      const address = urlParams.get('address');
-      const description = urlParams.get('description');
-      
-      if (name) initialData.name = name;
-      if (address) initialData.address = address;
-      if (description) initialData.description = description;
+    if (searchTermParam) {
+      setSidebarData(prev => ({
+        ...prev,
+        searchTerm: searchTermParam
+      }));
     }
-
-    setSidebarData(initialData);
   }, [location.search]);
 
-  // Update search type when URL changes
-  useEffect(() => {
-    const newSearchType = getInitialSearchType();
-    setSearchType(newSearchType);
-  }, [location.search]);
-
-  // Fetch data based on search type and filters
+  // Fetch listings when search params change
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        const cleanParams = new URLSearchParams();
-        urlParams.forEach((value, key) => {
-          if (value && value !== 'false' && value !== '0' && value !== 'all') {
-            cleanParams.set(key, value);
-          }
-        });
-
-        cleanParams.set('searchType', searchType);
-        
-        const q = urlParams.get('q');
-        if (q) {
-          cleanParams.set('searchTerm', q);
+        // Fetch based on search type
+        let endpoint = '';
+        switch(searchType) {
+          case 'services':
+            endpoint = '/api/service/get';
+            break;
+          case 'helpers':
+            endpoint = '/api/helper/get';
+            break;
+          case 'events':
+            endpoint = '/api/event/get';
+            break;
+          default:
+            endpoint = '/api/listing/get';
         }
         
-        const config = getSearchConfig(searchType);
-        const endpoint = config.endpoint;
-        
-        const res = await fetch(`${endpoint}?${cleanParams.toString()}`);
-        if (!res.ok) throw new Error('Failed to fetch data');
-        
+        const res = await fetch(`${endpoint}?${urlParams.toString()}`);
         const data = await res.json();
         
-        // Add mock data for demonstration
-        const typedData = data.map((item, index) => {
-          // Add type-specific mock data
-          let type = '';
-          let mockData = {};
-          
-          switch(searchType) {
-            case 'properties':
-              const propertyTypes = ['sale', 'rent-short', 'rent-long', 'office', 'land'];
-              type = propertyTypes[index % propertyTypes.length];
-              mockData = {
-                type: type,
-                price: item.price || item.regularPrice || Math.floor(Math.random() * 5000) + 1000,
-                imageUrls: item.imageUrls || [item.image] || [],
-                rating: Math.floor(Math.random() * 2 + 3.5) + Math.random(),
-                bedrooms: type !== 'land' ? (Math.floor(Math.random() * 4) + 1) : undefined,
-                bathrooms: type !== 'land' ? (Math.floor(Math.random() * 3) + 1) : undefined,
-                offer: Math.random() > 0.5
-              };
-              break;
-            case 'services':
-              const serviceTypes = ['cleaning', 'maintenance', 'moving', 'landscaping', 'catering', 'daycare', 'schoolTransport', 'other'];
-              type = serviceTypes[index % serviceTypes.length];
-              mockData = {
-                type: type,
-                regularPrice: item.regularPrice || item.price || Math.floor(Math.random() * 500) + 50,
-                imageUrls: item.imageUrls || [item.image] || [],
-                capacity: type === 'daycare' ? Math.floor(Math.random() * 20) + 5 : undefined,
-                vehicleType: type === 'schoolTransport' ? ['Bus', 'Van', 'Car'][Math.floor(Math.random() * 3)] : undefined
-              };
-              break;
-            case 'helpers':
-              const helperTypes = ['tutor', 'domestic', 'handyman', 'chef', 'beauty', 'barber', 'photography', 'tattoo'];
-              type = helperTypes[index % helperTypes.length];
-              mockData = {
-                type: type,
-                regularPrice: item.regularPrice || item.price || Math.floor(Math.random() * 200) + 20,
-                imageUrls: item.imageUrls || [item.image] || [],
-                reviews: item.reviews || [],
-                address: item.address || 'Johannesburg, South Africa'
-              };
-              break;
-            case 'events':
-              const eventTypes = ['concert', 'workshop', 'sports', 'community', 'festival'];
-              type = eventTypes[index % eventTypes.length];
-              mockData = {
-                type: type,
-                price: item.price || Math.floor(Math.random() * 500) + 50,
-                imageUrls: item.imageUrls || [item.image] || [],
-                date: item.date || new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-                location: item.location || 'Various Locations'
-              };
-              break;
-          }
-          
-          return {
-            ...item,
-            itemType: searchType,
-            ...mockData,
-            latitude: -26.2041 + (Math.random() - 0.5) * 0.1,
-            longitude: 28.0473 + (Math.random() - 0.5) * 0.1,
-          };
-        });
+        // Add type to each item
+        const typedData = data.map(item => ({
+          ...item,
+          itemType: searchType,
+          // Normalize price for all types
+          price: item.price || item.regularPrice || 0
+        }));
         
-        setItems(typedData);
+        setListings(typedData);
         setShowMore(typedData.length >= DEFAULT_LISTING_LIMIT);
       } catch (error) {
         console.error('Failed to fetch data:', error);
-        // Generate mock data for demo
-        let mockData = [];
-        const count = 12;
-        
-        for (let i = 0; i < count; i++) {
-          let item = {
-            _id: `mock-${searchType}-${i}`,
-            name: `${searchType.charAt(0).toUpperCase() + searchType.slice(1)} Item ${i + 1}`,
-            description: `Premium ${searchType.slice(0, -1)} in ${sidebarData.address || 'Johannesburg'}`,
-            address: sidebarData.address || 'Johannesburg, South Africa',
-            price: Math.floor(Math.random() * 5000) + 1000,
-            regularPrice: Math.floor(Math.random() * 5000) + 1000,
-            imageUrls: [`https://images.unsplash.com/photo-${1566073771259 + i}?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`],
-            latitude: -26.2041 + (Math.random() - 0.5) * 0.1,
-            longitude: 28.0473 + (Math.random() - 0.5) * 0.1,
-          };
-          
-          // Add type-specific fields
-          switch(searchType) {
-            case 'properties':
-              const propertyTypes = ['sale', 'rent-short', 'rent-long', 'office', 'land'];
-              item.type = propertyTypes[i % propertyTypes.length];
-              item.bedrooms = item.type !== 'land' ? Math.floor(Math.random() * 4) + 1 : undefined;
-              item.bathrooms = item.type !== 'land' ? Math.floor(Math.random() * 3) + 1 : undefined;
-              item.offer = Math.random() > 0.5;
-              break;
-            case 'services':
-              const serviceTypes = ['cleaning', 'maintenance', 'moving', 'landscaping', 'catering', 'daycare', 'schoolTransport', 'other'];
-              item.type = serviceTypes[i % serviceTypes.length];
-              break;
-            case 'helpers':
-              const helperTypes = ['tutor', 'domestic', 'handyman', 'chef', 'beauty', 'barber', 'photography', 'tattoo'];
-              item.type = helperTypes[i % helperTypes.length];
-              break;
-            case 'events':
-              const eventTypes = ['concert', 'workshop', 'sports', 'community', 'festival'];
-              item.type = eventTypes[i % eventTypes.length];
-              item.date = new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString();
-              break;
-          }
-          
-          mockData.push(item);
-        }
-        
-        setItems(mockData);
-        setShowMore(mockData.length >= DEFAULT_LISTING_LIMIT);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    if (urlParams.toString()) {
+      fetchData();
+    }
   }, [location.search, searchType]);
 
+  // AI analysis effect
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (sidebarData.searchTerm.length > 2) {
+        const suggestions = await analyzeSearchTerm(sidebarData.searchTerm);
+        setAiSuggestions(suggestions);
+      } else {
+        setAiSuggestions(null);
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [sidebarData.searchTerm]);
+
+  // Save recent searches
+  const saveRecentSearch = (params) => {
+    try {
+      const searches = JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY)) || [];
+      const filtered = searches.filter(
+        item => JSON.stringify(item.params) !== JSON.stringify(params)
+      );
+      const score = Object.keys(params).filter(k => params[k] && k !== 'searchTerm').length;
+      const newSearches = [
+        { params, timestamp: new Date().toISOString(), score },
+        ...filtered
+      ].slice(0, MAX_RECENT_SEARCHES);
+      localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(newSearches));
+      return newSearches;
+    } catch (error) {
+      console.error('Failed to save recent search:', error);
+      return [];
+    }
+  };
+
+  // Load recent searches
+  useEffect(() => {
+    try {
+      const searches = JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY)) || [];
+      setRecentSearches(searches);
+    } catch (error) {
+      console.error('Failed to load recent searches:', error);
+    }
+  }, []);
+
+  // Form handlers
   const handleChange = (e) => {
     const { id, value, checked, type } = e.target;
     setSidebarData(prev => ({
@@ -721,63 +279,111 @@ const UniversalSearch = () => {
     e.preventDefault();
     const urlParams = new URLSearchParams();
     
-    // Add all non-empty, non-default values to URL params
+    // Include all non-default values
     Object.entries(sidebarData).forEach(([key, value]) => {
-      if (value !== '' && value !== false && value !== 0 && value !== 'all') {
-        if (Array.isArray(value)) {
-          value.forEach(v => urlParams.append(key, v));
-        } else {
-          urlParams.set(key, value.toString());
+      if (value && value !== 'all' && value !== false) {
+        urlParams.set(key, value);
+      }
+    });
+
+    const updatedSearches = saveRecentSearch(sidebarData);
+    setRecentSearches(updatedSearches);
+    navigate(`/search?${urlParams.toString()}`);
+  };
+
+  // AI analysis simulation
+  const analyzeSearchTerm = async (term) => {
+    if (term.length < 3) return null;
+    setIsAnalyzing(true);
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    const suggestions = { searchTerm: term, filters: {} };
+    let hasSuggestion = false;
+
+    const typePatterns = [
+      { patterns: ['apartment', 'flat', 'studio', 'house'], type: 'properties' },
+      { patterns: ['clean', 'service', 'maintain'], type: 'services' },
+      { patterns: ['helper', 'chef', 'tutor', 'maid'], type: 'helpers' },
+      { patterns: ['event', 'festival', 'concert', 'show'], type: 'events' }
+    ];
+
+    typePatterns.forEach(({ patterns, type }) => {
+      if (patterns.some(p => term.toLowerCase().includes(p))) {
+        suggestions.filters.type = type;
+        hasSuggestion = true;
+      }
+    });
+
+    const locationContexts = [
+      { patterns: ['near beach', 'waterfront', 'ocean view'], filters: { view: true } },
+      { patterns: ['city center', 'downtown'], filters: { furnished: true } },
+      { patterns: ['secure estate', 'gated community'], filters: { security: true } }
+    ];
+
+    locationContexts.forEach(({ patterns, filters }) => {
+      if (patterns.some(p => term.toLowerCase().includes(p))) {
+        Object.assign(suggestions.filters, filters);
+        hasSuggestion = true;
+      }
+    });
+
+    const numberExtractors = [
+      { 
+        regex: /(\d+)\s*(bed|bedroom|beds|bd)/i, 
+        handler: (num) => { suggestions.filters.bedroomsMin = num; }
+      },
+      {
+        regex: /(under|below|up to|max)\s*(R|€|£|¥|₹|\$)?\s*(\d+[\d,]*)/i,
+        handler: (num) => { suggestions.filters.priceMax = num; }
+      }
+    ];
+
+    numberExtractors.forEach(({ regex, handler }) => {
+      const match = term.match(regex);
+      if (match) {
+        const num = parseInt(match[3].replace(/,/g, ''));
+        if (!isNaN(num)) {
+          handler(num);
+          hasSuggestion = true;
         }
       }
     });
 
-    urlParams.set('searchType', searchType);
+    const amenityKeywords = [
+      { patterns: ['wifi', 'internet'], key: 'wifi' },
+      { patterns: ['parking', 'garage'], key: 'parking' },
+      { patterns: ['pool', 'swimming'], key: 'pool' },
+      { patterns: ['furnished'], key: 'furnished' },
+      { patterns: ['pet friendly'], key: 'pets' },
+      { patterns: ['gym', 'fitness'], key: 'gym' },
+      { patterns: ['view', 'scenic'], key: 'view' }
+    ];
 
-    // Save to recent searches
-    const updatedSearches = saveRecentSearch(sidebarData, searchType);
-    setRecentSearches(updatedSearches);
-    
-    navigate(`/search?${urlParams.toString()}`);
+    amenityKeywords.forEach(({ patterns, key }) => {
+      if (patterns.some(p => new RegExp(p, 'i').test(term))) {
+        suggestions.filters[key] = true;
+        hasSuggestion = true;
+      }
+    });
+
+    setIsAnalyzing(false);
+    return hasSuggestion ? suggestions : null;
   };
 
-  const saveRecentSearch = (params, searchType) => {
-    try {
-      const searches = JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY)) || [];
-      const searchEntry = { 
-        params, 
-        searchType,
-        timestamp: new Date().toISOString(), 
-        score: Object.keys(params).filter(k => params[k] && k !== 'searchTerm').length 
-      };
-      
-      const filtered = searches.filter(
-        item => !(JSON.stringify(item.params) === JSON.stringify(params) && item.searchType === searchType)
-      );
-      
-      const newSearches = [searchEntry, ...filtered].slice(0, MAX_RECENT_SEARCHES);
-      localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(newSearches));
-      return newSearches;
-    } catch (error) {
-      console.error('Failed to save recent search:', error);
-      return [];
+  const applyAiSuggestion = () => {
+    if (aiSuggestions) {
+      setSidebarData(prev => ({
+        ...prev,
+        ...aiSuggestions.filters,
+        searchTerm: aiSuggestions.searchTerm
+      }));
+      setAiSuggestions(prev => ({ ...prev, applied: true }));
     }
   };
 
   const clearFilters = () => {
     setSidebarData({
-      // Common fields
       searchTerm: '',
-      address: 'Johannesburg',
-      name: '',
-      description: '',
-      location: '',
-      priceMin: 0,
-      priceMax: 100000000,
-      sort: 'createdAt',
-      order: 'desc',
-      
-      // Property specific fields
       type: 'all',
       parking: false,
       furnished: false,
@@ -785,8 +391,12 @@ const UniversalSearch = () => {
       pool: false,
       tv: false,
       offer: false,
+      sort: 'createdAt',
+      order: 'desc',
       bedroomsMin: '',
       bedroomsMax: '',
+      priceMin: 0,
+      priceMax: 100000000,
       breakfast: false,
       pets: false,
       security: false,
@@ -794,451 +404,426 @@ const UniversalSearch = () => {
       gym: false,
       view: false,
       kitchen: false,
-      laundry: false,
-      
-      // Service specific fields
-      category: 'all',
-      serviceType: 'all',
-      
-      // Helper specific fields
-      helperType: 'all',
-      availability: 'all',
-      
-      // Event specific fields
-      date: '',
-      eventType: 'all'
+      laundry: false
     });
-    
-    if (isMobile) {
-      setShowFilters(false);
-    }
   };
 
-  // Filter functions for different search types
-  const getFilteredItems = () => {
-    let filtered = [...items];
-    
-    // Filter by type
-    if (sidebarData.type !== 'all' && searchType === 'properties') {
-      filtered = filtered.filter(item => item.type === sidebarData.type);
-    }
-    if (sidebarData.serviceType !== 'all' && searchType === 'services') {
-      filtered = filtered.filter(item => item.type === sidebarData.serviceType);
-    }
-    if (sidebarData.helperType !== 'all' && searchType === 'helpers') {
-      filtered = filtered.filter(item => item.type === sidebarData.helperType);
-    }
-    if (sidebarData.eventType !== 'all' && searchType === 'events') {
-      filtered = filtered.filter(item => item.type === sidebarData.eventType);
-    }
-    
-    // Filter by price
-    filtered = filtered.filter(item => {
-      const price = item.price || item.regularPrice || 0;
-      return price >= sidebarData.priceMin && price <= sidebarData.priceMax;
-    });
-    
-    // Filter by search term
-    if (sidebarData.searchTerm) {
-      const term = sidebarData.searchTerm.toLowerCase();
-      filtered = filtered.filter(item => 
-        (item.name && item.name.toLowerCase().includes(term)) ||
-        (item.description && item.description.toLowerCase().includes(term)) ||
-        (item.address && item.address.toLowerCase().includes(term))
-      );
-    }
-    
-    return filtered;
-  };
-
-  const filteredItems = getFilteredItems();
+  const SkeletonCard = () => (
+    <div className="animate-pulse bg-white rounded-xl shadow-sm overflow-hidden h-80">
+      <div className="h-48 bg-gray-200"></div>
+      <div className="p-4 space-y-3">
+        <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="w-full px-2 sm:px-4 py-4 max-w-7xl mx-auto">
-      {/* Mobile Search Header */}
-      {isMobile && (
-        <div className="mb-4">
-          <div className="flex items-center gap-2">
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Find exactly what you need</h1>
+        <p className="text-gray-600">
+          Search through properties, services, helpers, and events with our AI-powered search
+        </p>
+      </div>
+
+      {/* Search type selector with horizontal scrolling */}
+      <div className="mb-6 overflow-x-auto pb-2 -mx-4 px-4">
+        <div className="flex space-x-4 min-w-max">
+          {['properties', 'services', 'helpers', 'events'].map((type) => (
             <button
-              onClick={() => setShowFilters(true)}
-              className="flex-1 flex items-center justify-between px-4 py-3 bg-white border border-gray-300 rounded-full shadow-sm text-sm font-medium"
+              key={type}
+              onClick={() => setSearchType(type)}
+              className={`px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
+                searchType === type
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
             >
-              <div className="flex items-center gap-2">
-                <MagnifyingGlassIcon className="w-4 h-4" />
-                <span className="text-gray-600">{sidebarData.address || 'Search...'}</span>
-              </div>
-              <AdjustmentsHorizontalIcon className="w-4 h-4" />
+              {type.charAt(0).toUpperCase() + type.slice(1)}
             </button>
-            
-            <button
-              onClick={() => setShowMap(!showMap)}
-              className="p-3 border border-gray-300 rounded-full"
-            >
-              <MapIcon className="w-5 h-5" />
-            </button>
-          </div>
+          ))}
         </div>
-      )}
+      </div>
 
-      {/* Desktop Header */}
-      {!isMobile && (
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-gray-900">
-              {sidebarData.address 
-                ? `${SEARCH_TYPE_CONFIG[searchType]?.label || 'Items'} in ${sidebarData.address}` 
-                : `Explore ${SEARCH_TYPE_CONFIG[searchType]?.label || 'Items'}`}
-            </h1>
-            
-            {/* Search Type Selector */}
-            <Menu as="div" className="relative">
-              <Menu.Button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400 bg-white">
-                <span>{SEARCH_TYPE_CONFIG[searchType]?.label || 'Items'}</span>
-                <ChevronDownIcon className="w-4 h-4" />
-              </Menu.Button>
-              <Transition
-                enter="transition duration-200 ease-out"
-                enterFrom="transform scale-95 opacity-0"
-                enterTo="transform scale-100 opacity-100"
-                leave="transition duration-150 ease-in"
-                leaveFrom="transform scale-100 opacity-100"
-                leaveTo="transform scale-95 opacity-0"
-              >
-                <Menu.Items className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-20">
-                  {Object.entries(SEARCH_TYPE_CONFIG).map(([typeId, config]) => (
-                    <Menu.Item key={typeId}>
-                      {({ active }) => (
-                        <button
-                          onClick={() => {
-                            setSearchType(typeId);
-                            navigate(`/search?searchType=${typeId}`);
-                          }}
-                          className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''} ${
-                            searchType === typeId ? 'text-blue-600 font-medium' : 'text-gray-700'
-                          }`}
-                        >
-                          <span className="text-lg">{config.icon}</span>
-                          {config.label}
-                        </button>
-                      )}
-                    </Menu.Item>
-                  ))}
-                </Menu.Items>
-              </Transition>
-            </Menu>
-          </div>
-          
-          <p className="text-gray-600 text-sm">
-            {filteredItems.length}+ {SEARCH_TYPE_CONFIG[searchType]?.label?.toLowerCase() || 'items'} available • {sidebarData.address || 'All locations'}
-          </p>
-        </div>
-      )}
-
-      {/* Airbnb-style Sliding Tabs */}
-      <SlidingTabs
-        tabs={Object.entries(SEARCH_TYPE_CONFIG).map(([id, config]) => ({
-          id,
-          label: config.label,
-          icon: id === 'properties' ? HomeIcon : 
-                id === 'services' ? SparklesIcon : 
-                id === 'helpers' ? UserGroupIcon : 
-                CalendarDaysIcon
-        }))}
-        activeTab={searchType}
-        onTabClick={(tabId) => {
-          setSearchType(tabId);
-          navigate(`/search?searchType=${tabId}`);
-        }}
-      />
-
-      {/* Mobile Filter Overlay */}
-      {showFilters && isMobile && (
-        <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
-          <div className="sticky top-0 bg-white border-b border-gray-200 p-4 z-10">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">Filters</h2>
-              <button
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Search sidebar */}
+        <div className={`lg:w-80 lg:sticky lg:top-8 h-fit ${showFilters ? 'block' : 'hidden'} lg:block`}>
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Search Filters</h2>
+              <button 
                 onClick={() => setShowFilters(false)}
-                className="p-2 hover:bg-gray-100 rounded-full"
+                className="lg:hidden text-gray-500 hover:text-gray-700"
               >
-                <XMarkIcon className="w-6 h-6" />
+                <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
-          </div>
-          
-          <div className="p-4 pb-24">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Search Input in Mobile Filter */}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* AI Suggestions */}
+              {aiSuggestions && !aiSuggestions.applied && (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                  <div className="flex items-start gap-3">
+                    <LightBulbIcon className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-blue-800">AI Suggestions</h3>
+                      <p className="text-sm text-blue-700 mt-1">
+                        Based on your search, we recommend:
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {Object.entries(aiSuggestions.filters).map(([key, value]) => (
+                          <span key={key} className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                            {key}: {value.toString()}
+                          </span>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={applyAiSuggestion}
+                        className="mt-3 text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        Apply Suggestions
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Search input */}
               <div>
-                <h3 className="font-bold text-gray-900 mb-4">Search</h3>
+                <label htmlFor="searchTerm" className="block text-sm font-medium text-gray-700 mb-1">
+                  What are you looking for?
+                </label>
                 <div className="relative">
-                  <MagnifyingGlassIcon className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     type="text"
                     id="searchTerm"
                     value={sidebarData.searchTerm}
                     onChange={handleChange}
-                    placeholder={`Search ${SEARCH_TYPE_CONFIG[searchType]?.label?.toLowerCase() || 'items'}...`}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-transparent"
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+                    placeholder="Try '2 bed apartment in Cape Town' or 'Cleaning service'"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
-                </div>
-              </div>
-
-              {/* Type Selection */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-4">Type</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {getActiveTypeArray().map((item) => (
+                  {sidebarData.searchTerm && (
                     <button
-                      key={item.id}
                       type="button"
-                      onClick={() => {
-                        const typeField = searchType === 'properties' ? 'type' : 
-                                        searchType === 'services' ? 'serviceType' : 
-                                        searchType === 'helpers' ? 'helperType' : 'eventType';
-                        setSidebarData(prev => ({ ...prev, [typeField]: item.id }));
-                      }}
-                      className={`p-4 border rounded-lg text-left transition-all ${
-                        sidebarData[searchType === 'properties' ? 'type' : 
-                                  searchType === 'services' ? 'serviceType' : 
-                                  searchType === 'helpers' ? 'helperType' : 'eventType'] === item.id
-                          ? 'border-black bg-gray-50'
-                          : 'border-gray-300 hover:border-gray-400'
-                      }`}
+                      onClick={() => setSidebarData(prev => ({ ...prev, searchTerm: '' }))}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     >
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xl">{item.icon}</span>
-                        <span className="font-medium text-sm">{item.label}</span>
-                      </div>
-                      <p className="text-xs text-gray-500">{item.description}</p>
+                      <XMarkIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                     </button>
-                  ))}
+                  )}
+                </div>
+
+                {/* Search examples */}
+                <div className="mt-2">
+                  <p className="text-xs text-gray-500 mb-1">Try searching for:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {searchExamples.map((example, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setSidebarData(prev => ({ ...prev, searchTerm: example }))}
+                        className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                      >
+                        {example}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Price Range */}
+              {/* Type dropdown */}
               <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-semibold text-gray-900">Price range</h3>
-                  <span className="text-sm text-gray-600">
-                    {searchType === 'properties' ? 'Trip price, includes all fees' : 
-                     searchType === 'services' ? 'Service price' : 
-                     searchType === 'helpers' ? 'Work price' : 'Ticket price'}
-                  </span>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex gap-3">
-                    <div className="flex-1">
-                      <label className="block text-xs text-gray-500 mb-1">Min price</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
-                        <input
-                          type="number"
-                          id="priceMin"
-                          value={sidebarData.priceMin}
-                          onChange={handleChange}
-                          className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm"
-                          placeholder="0"
-                        />
-                      </div>
+                <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
+                  {searchType.charAt(0).toUpperCase() + searchType.slice(1)} Type
+                </label>
+                <Menu as="div" className="relative">
+                  <Menu.Button className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {getCurrentTypes().find(t => t.value === sidebarData.type)?.icon}
+                      <span>{getCurrentTypes().find(t => t.value === sidebarData.type)?.label}</span>
                     </div>
-                    <div className="flex-1">
-                      <label className="block text-xs text-gray-500 mb-1">Max price</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
-                        <input
-                          type="number"
-                          id="priceMax"
-                          value={sidebarData.priceMax}
-                          onChange={handleChange}
-                          className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm"
-                          placeholder="Any price"
-                        />
-                      </div>
+                    <ChevronDownIcon className="w-5 h-5 text-gray-400" />
+                  </Menu.Button>
+                  <Menu.Items className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-lg border border-gray-200 py-1">
+                    {getCurrentTypes().map((type) => (
+                      <Menu.Item key={type.value}>
+                        {({ active }) => (
+                          <button
+                            type="button"
+                            onClick={() => setSidebarData(prev => ({ ...prev, type: type.value }))}
+                            className={`flex items-center gap-3 w-full px-4 py-2 text-left ${active ? 'bg-gray-100' : ''}`}
+                          >
+                            <span className="text-lg">{type.icon}</span>
+                            <span>{type.label}</span>
+                          </button>
+                        )}
+                      </Menu.Item>
+                    ))}
+                  </Menu.Items>
+                </Menu>
+              </div>
+
+              {/* Price range */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="priceMin" className="block text-xs text-gray-500 mb-1">Min</label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center">R</span>
+                      <input
+                        type="number"
+                        id="priceMin"
+                        value={sidebarData.priceMin}
+                        onChange={handleChange}
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="priceMax" className="block text-xs text-gray-500 mb-1">Max</label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center">R</span>
+                      <input
+                        type="number"
+                        id="priceMax"
+                        value={sidebarData.priceMax}
+                        onChange={handleChange}
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="Any"
+                      />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="w-full py-3.5 bg-black text-white font-medium rounded-lg hover:bg-gray-800"
-              >
-                Show {filteredItems.length}+ results
-              </button>
+              {/* Bedrooms - only for properties */}
+              {searchType === 'properties' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bedrooms</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="bedroomsMin" className="block text-xs text-gray-500 mb-1">Min</label>
+                      <input
+                        type="number"
+                        id="bedroomsMin"
+                        value={sidebarData.bedroomsMin}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="bedroomsMax" className="block text-xs text-gray-500 mb-1">Max</label>
+                      <input
+                        type="number"
+                        id="bedroomsMax"
+                        value={sidebarData.bedroomsMax}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="Any"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Amenities - only for properties */}
+              {searchType === 'properties' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Amenities</label>
+                  <div className="space-y-4">
+                    {amenities.map((category) => (
+                      <div key={category.category}>
+                        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                          {category.category}
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          {category.items.map((item) => (
+                            <div key={item.id} className="flex items-center">
+                              <input
+                                type="checkbox"
+                                id={item.id}
+                                checked={sidebarData[item.id]}
+                                onChange={handleChange}
+                                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <label htmlFor={item.id} className="ml-2 text-sm flex items-center gap-1">
+                                <span>{item.icon}</span>
+                                {item.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Form actions */}
+              <div className="space-y-3">
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all"
+                >
+                  {isAnalyzing ? 'Analyzing...' : 'Search'}
+                </button>
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="w-full py-2 text-gray-600 hover:text-gray-800 text-sm font-medium"
+                >
+                  Clear all filters
+                </button>
+              </div>
             </form>
           </div>
-        </div>
-      )}
 
-      {/* Main Content Area - List View or Map View */}
-      <div className="flex-1">
-        {/* Results Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-          <div>
+          {/* Recent searches panel */}
+          {recentSearches.length > 0 && (
+            <div className="mt-6 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-medium text-gray-900">Recent Searches</h3>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem(RECENT_SEARCHES_KEY);
+                    setRecentSearches([]);
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-800"
+                >
+                  Clear all
+                </button>
+              </div>
+              <ul className="space-y-3">
+                {recentSearches.map((search, i) => (
+                  <li
+                    key={i}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                    onClick={() => {
+                      setSidebarData(search.params);
+                      const urlParams = new URLSearchParams();
+                      Object.entries(search.params).forEach(([key, value]) => {
+                        if (value) urlParams.set(key, value);
+                      });
+                      navigate(`/search?${urlParams.toString()}`);
+                    }}
+                  >
+                    <ClockIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {search.params.searchTerm || 'Anywhere'}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {Object.entries(search.params)
+                          .filter(([k, v]) => k !== 'searchTerm' && v)
+                          .map(([k, v]) => `${k}: ${v}`)
+                          .join(', ')}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Main content area */}
+        <div className="flex-1">
+          {/* Mobile filters toggle */}
+          <div className="lg:hidden flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-gray-900">
-              {filteredItems.length}+ {SEARCH_TYPE_CONFIG[searchType]?.label?.toLowerCase() || 'items'} available
+              {sidebarData.searchTerm ? `Results for "${sidebarData.searchTerm}"` : `All ${searchType}`}
             </h2>
-            {sidebarData.address && (
-              <p className="text-gray-600 text-sm">in {sidebarData.address} • Prices include all fees</p>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-3">
-            {/* Mobile Filter Button */}
-            {isMobile && (
-              <button
-                onClick={() => setShowFilters(true)}
-                className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400"
-              >
-                <FunnelIcon className="w-4 h-4" />
-                Filters
-              </button>
-            )}
-            
-            {/* Map Toggle */}
             <button
-              onClick={() => setShowMap(!showMap)}
-              className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium"
             >
-              {showMap ? (
-                <>
-                  <HomeIcon className="w-4 h-4" />
-                  Show list
-                </>
-              ) : (
-                <>
-                  <MapIcon className="w-4 h-4" />
-                  Show map
-                </>
-              )}
+              <AdjustmentsHorizontalIcon className="w-5 h-5" />
+              Filters
             </button>
-            
-            {/* Sort Dropdown */}
-            <Menu as="div" className="relative">
-              <Menu.Button className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400">
-                Sort by
-                <ChevronDownIcon className="w-4 h-4" />
-              </Menu.Button>
-              <Transition
-                enter="transition duration-200 ease-out"
-                enterFrom="transform scale-95 opacity-0"
-                enterTo="transform scale-100 opacity-100"
-                leave="transition duration-150 ease-in"
-                leaveFrom="transform scale-100 opacity-100"
-                leaveTo="transform scale-95 opacity-0"
-              >
-                <Menu.Items className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-10">
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button 
-                        onClick={() => setSidebarData(prev => ({ ...prev, sort: 'createdAt', order: 'desc' }))}
-                        className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''}`}
-                      >
-                        Recommended
-                      </button>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button 
-                        onClick={() => setSidebarData(prev => ({ ...prev, sort: 'price', order: 'asc' }))}
-                        className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''}`}
-                      >
-                        Price: Low to high
-                      </button>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button 
-                        onClick={() => setSidebarData(prev => ({ ...prev, sort: 'price', order: 'desc' }))}
-                        className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100' : ''}`}
-                      >
-                        Price: High to low
-                      </button>
-                    )}
-                  </Menu.Item>
-                </Menu.Items>
-              </Transition>
-            </Menu>
           </div>
-        </div>
 
-        {/* Map View */}
-        {showMap ? (
-          <div className="h-[600px] rounded-2xl overflow-hidden">
-            <MapView items={filteredItems} searchType={searchType} address={sidebarData.address} />
-          </div>
-        ) : (
-          /* List View */
-          loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-2">
+          {/* Results count */}
+          {!loading && listings.length > 0 && (
+            <div className="mb-6">
+              <p className="text-gray-600">
+                Showing <span className="font-medium">{listings.length}</span> {searchType}
+                {sidebarData.searchTerm && ` matching "${sidebarData.searchTerm}"`}
+              </p>
+            </div>
+          )}
+
+          {/* Loading state */}
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
                 <SkeletonCard key={i} />
               ))}
             </div>
-          ) : filteredItems.length > 0 ? (
+          ) : listings.length > 0 ? (
             <>
+              {/* Results grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
-                {filteredItems.map((item) => (
-                  <ItemCard key={item._id} item={item} searchType={searchType} />
-                ))}
+                {listings.map((item) => {
+                  switch(item.itemType) {
+                    case 'services':
+                      return <ServiceItem key={item._id} service={item} />;
+                    case 'helpers':
+                      return <HelperItem key={item._id} helper={item} />;
+                    case 'events':
+                      return <EventItem key={item._id} event={item} />;
+                    default:
+                      return <ListingItem key={item._id} listing={item} />;
+                  }
+                })}
               </div>
 
-              {/* Load More Button */}
+              {/* Load more button */}
               {showMore && (
                 <div className="mt-8 flex justify-center">
                   <button
                     onClick={() => {
-                      const startIndex = filteredItems.length;
+                      const startIndex = listings.length;
                       const urlParams = new URLSearchParams(location.search);
                       urlParams.set('startIndex', startIndex);
                       navigate(`/search?${urlParams.toString()}`);
                     }}
-                    className="px-6 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
+                    className="px-6 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 font-medium"
                   >
-                    Show more
+                    Load More
                   </button>
                 </div>
               )}
             </>
           ) : (
-            <div className="bg-white rounded-xl p-8 text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MagnifyingGlassIcon className="w-8 h-8 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No exact matches
+            /* Empty state */
+            <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
+              <HomeIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-medium text-gray-900 mb-2">
+                No {searchType} found
               </h3>
-              <p className="text-gray-600 mb-6 text-sm">
-                Try adjusting your filters or search term
+              <p className="text-gray-600 mb-6">
+                Try adjusting your search filters or search for a different location
               </p>
               <button
                 onClick={clearFilters}
-                className="px-6 py-3 bg-black hover:bg-gray-800 text-white font-medium rounded-lg text-sm"
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm"
               >
-                Clear all filters
+                Clear All Filters
               </button>
             </div>
-          )
-        )}
-      </div>
-
-      {/* Floating Filter Button for Mobile */}
-      {isMobile && !showFilters && (
-        <div className="fixed bottom-6 right-4 z-40">
-          <button
-            onClick={() => setShowFilters(true)}
-            className="bg-black text-white p-4 rounded-full shadow-xl hover:bg-gray-800"
-          >
-            <FunnelIcon className="w-5 h-5" />
-          </button>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
 
-export default UniversalSearch;
+export default Search;

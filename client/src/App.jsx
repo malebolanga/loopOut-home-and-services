@@ -90,6 +90,9 @@ import TripSearch from './pages/TripSearch';
 import TripDetail from './pages/TripDetail';
 import Trips from './pages/Trips';
 
+
+import ExplorePage from './pages/ExplorePage';
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -104,7 +107,7 @@ export default function App() {
         
         {/* Dashboard Route */}
         <Route path="/dashboard" element={<DashBoard />} />
-        
+           <Route path="/explore" element={<ExplorePage />} />
         {/* Listing Routes */}
         <Route path="/list" element={<List />} />
         <Route path="/listings/:type" element={<ListingsPage />} />
