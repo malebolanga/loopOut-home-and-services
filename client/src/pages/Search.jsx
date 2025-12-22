@@ -1,4 +1,5 @@
-import { useEffect, useState, } from 'react';
+// src/pages/Search.jsx
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu } from '@headlessui/react';
 import {
@@ -15,15 +16,26 @@ import {
   AdjustmentsHorizontalIcon,
   UserIcon,
   CalendarIcon,
-  WrenchIcon
+  WrenchIcon,
+  SparklesIcon,
+  MapPinIcon,
+  FunnelIcon
 } from '@heroicons/react/24/outline';
 import ListingItem from "../components/ListingItem";
 import ServiceItem from "../components/ServiceItem";
 import HelperItem from "../components/HelperItem";
 import EventItem from "../components/EventItem";
+import {
+  getSearchUrl,
+  saveSearchHistory,
+  getSearchHistory,
+  clearSearchHistory as clearSearchHistoryUtil,
+  SEARCH_TYPE_CONFIG,
+  extractFiltersFromQuery
+} from "../utils/searchUtils";
 
 const RECENT_SEARCHES_KEY = 'recentPropertySearches';
-const MAX_RECENT_SEARCHES = 5;
+const MAX_RECENT_SEARCHES = 10;
 const DEFAULT_LISTING_LIMIT = 12;
 
 const Search = () => {
@@ -44,8 +56,8 @@ const Search = () => {
     order: 'desc',
     bedroomsMin: '',
     bedroomsMax: '',
-    priceMin: 0,
-    priceMax: 100000000,
+    priceMin: '',
+    priceMax: '',
     breakfast: false,
     pets: false,
     security: false,
@@ -62,18 +74,9 @@ const Search = () => {
   const [recentSearches, setRecentSearches] = useState([]);
   const [aiSuggestions, setAiSuggestions] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [searchExamples, setSearchExamples] = useState([
-    'Beachfront villa in Cape Town',
-    '3 bedroom apartment in Sandton',
-    'Office space in Johannesburg CBD',
-    'Pet-friendly home with garden',
-    'Luxury penthouse with pool',
-    'Cleaning service for office',
-    'Personal chef for dinner party',
-    'Weekend music festival tickets'
-  ]);
+  const [smartFilters, setSmartFilters] = useState({});
+  const [searchHistory, setSearchHistory] = useState(getSearchHistory());
 
   const propertyTypes = [
     { value: 'all', label: 'All Types', icon: <HomeIcon className="w-5 h-5" /> },
@@ -161,42 +164,97 @@ const Search = () => {
     }
   ];
 
-  // Initialize search term from URL
+  // Initialize from URL
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const searchTermParam = urlParams.get('searchTerm');
+    const typeParam = urlParams.get('type');
+    
+    const newSidebarData = { ...sidebarData };
     
     if (searchTermParam) {
-      setSidebarData(prev => ({
-        ...prev,
-        searchTerm: searchTermParam
-      }));
+      newSidebarData.searchTerm = searchTermParam;
     }
+    
+    if (typeParam && ['properties', 'services', 'helpers', 'events'].includes(typeParam)) {
+      setSearchType(typeParam);
+    }
+    
+    // Set all filters from URL
+    urlParams.forEach((value, key) => {
+      if (key in newSidebarData) {
+        if (key === 'parking' || key === 'furnished' || key === 'wifi' || 
+            key === 'pool' || key === 'offer' || key === 'breakfast' || 
+            key === 'pets' || key === 'security' || key === 'aircon' || 
+            key === 'gym' || key === 'view' || key === 'kitchen' || 
+            key === 'laundry') {
+          newSidebarData[key] = value === 'true';
+        } else {
+          newSidebarData[key] = value;
+        }
+      }
+    });
+    
+    setSidebarData(newSidebarData);
   }, [location.search]);
 
-  // Fetch listings when search params change
+  // Smart search analysis
+  useEffect(() => {
+    const analyzeQuery = async () => {
+      if (sidebarData.searchTerm.length < 3) {
+        setAiSuggestions(null);
+        return;
+      }
+
+      setIsAnalyzing(true);
+      
+      // Simulate AI analysis
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const extractedFilters = extractFiltersFromQuery(sidebarData.searchTerm);
+      
+      // Determine search type based on keywords
+      let suggestedType = searchType;
+      const query = sidebarData.searchTerm.toLowerCase();
+      
+      if (query.includes('service') || query.includes('clean') || query.includes('repair')) {
+        suggestedType = 'services';
+      } else if (query.includes('helper') || query.includes('chef') || query.includes('tutor')) {
+        suggestedType = 'helpers';
+      } else if (query.includes('event') || query.includes('festival') || query.includes('concert')) {
+        suggestedType = 'events';
+      }
+      
+      setSmartFilters(extractedFilters);
+      
+      if (Object.keys(extractedFilters).length > 0 || suggestedType !== searchType) {
+        setAiSuggestions({
+          searchTerm: sidebarData.searchTerm,
+          filters: extractedFilters,
+          suggestedType,
+          applied: false
+        });
+      } else {
+        setAiSuggestions(null);
+      }
+      
+      setIsAnalyzing(false);
+    };
+
+    const timer = setTimeout(analyzeQuery, 600);
+    return () => clearTimeout(timer);
+  }, [sidebarData.searchTerm, searchType]);
+
+  // Fetch data
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const fetchData = async () => {
+      if (!urlParams.toString()) return;
+      
       try {
         setLoading(true);
         
-        // Fetch based on search type
-        let endpoint = '';
-        switch(searchType) {
-          case 'services':
-            endpoint = '/api/service/get';
-            break;
-          case 'helpers':
-            endpoint = '/api/helper/get';
-            break;
-          case 'events':
-            endpoint = '/api/event/get';
-            break;
-          default:
-            endpoint = '/api/listing/get';
-        }
-        
+        const endpoint = SEARCH_TYPE_CONFIG[searchType]?.endpoint || '/api/listing/get';
         const res = await fetch(`${endpoint}?${urlParams.toString()}`);
         const data = await res.json();
         
@@ -204,8 +262,7 @@ const Search = () => {
         const typedData = data.map(item => ({
           ...item,
           itemType: searchType,
-          // Normalize price for all types
-          price: item.price || item.regularPrice || 0
+          price: item.price || item.regularPrice || item.rate || item.ticketPrice || 0
         }));
         
         setListings(typedData);
@@ -217,44 +274,8 @@ const Search = () => {
       }
     };
 
-    if (urlParams.toString()) {
-      fetchData();
-    }
+    fetchData();
   }, [location.search, searchType]);
-
-  // AI analysis effect
-  useEffect(() => {
-    const timer = setTimeout(async () => {
-      if (sidebarData.searchTerm.length > 2) {
-        const suggestions = await analyzeSearchTerm(sidebarData.searchTerm);
-        setAiSuggestions(suggestions);
-      } else {
-        setAiSuggestions(null);
-      }
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, [sidebarData.searchTerm]);
-
-  // Save recent searches
-  const saveRecentSearch = (params) => {
-    try {
-      const searches = JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY)) || [];
-      const filtered = searches.filter(
-        item => JSON.stringify(item.params) !== JSON.stringify(params)
-      );
-      const score = Object.keys(params).filter(k => params[k] && k !== 'searchTerm').length;
-      const newSearches = [
-        { params, timestamp: new Date().toISOString(), score },
-        ...filtered
-      ].slice(0, MAX_RECENT_SEARCHES);
-      localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(newSearches));
-      return newSearches;
-    } catch (error) {
-      console.error('Failed to save recent search:', error);
-      return [];
-    }
-  };
 
   // Load recent searches
   useEffect(() => {
@@ -265,6 +286,42 @@ const Search = () => {
       console.error('Failed to load recent searches:', error);
     }
   }, []);
+
+  // Save to recent searches
+  const saveRecentSearch = useCallback((params) => {
+    try {
+      const searches = JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY)) || [];
+      const existingIndex = searches.findIndex(
+        s => JSON.stringify(s.params) === JSON.stringify(params)
+      );
+      
+      if (existingIndex > -1) {
+        searches.splice(existingIndex, 1);
+      }
+      
+      const newSearch = {
+        params,
+        timestamp: new Date().toISOString(),
+        type: searchType
+      };
+      
+      searches.unshift(newSearch);
+      
+      // Keep only recent searches
+      const limitedSearches = searches.slice(0, MAX_RECENT_SEARCHES);
+      localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(limitedSearches));
+      setRecentSearches(limitedSearches);
+      
+      // Also save to general search history
+      saveSearchHistory(params.searchTerm, searchType, params);
+      setSearchHistory(getSearchHistory());
+      
+      return limitedSearches;
+    } catch (error) {
+      console.error('Failed to save recent search:', error);
+      return [];
+    }
+  }, [searchType]);
 
   // Form handlers
   const handleChange = (e) => {
@@ -277,107 +334,43 @@ const Search = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Merge smart filters with sidebar data
+    const allFilters = { ...sidebarData, ...smartFilters };
+    
     const urlParams = new URLSearchParams();
     
     // Include all non-default values
-    Object.entries(sidebarData).forEach(([key, value]) => {
-      if (value && value !== 'all' && value !== false) {
-        urlParams.set(key, value);
+    Object.entries(allFilters).forEach(([key, value]) => {
+      if (value !== '' && value !== false && value !== 0 && value !== 'all') {
+        urlParams.set(key, value.toString());
       }
     });
 
-    const updatedSearches = saveRecentSearch(sidebarData);
-    setRecentSearches(updatedSearches);
-    navigate(`/search?${urlParams.toString()}`);
-  };
-
-  // AI analysis simulation
-  const analyzeSearchTerm = async (term) => {
-    if (term.length < 3) return null;
-    setIsAnalyzing(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
+    // Add search type
+    urlParams.set('type', searchType);
     
-    const suggestions = { searchTerm: term, filters: {} };
-    let hasSuggestion = false;
-
-    const typePatterns = [
-      { patterns: ['apartment', 'flat', 'studio', 'house'], type: 'properties' },
-      { patterns: ['clean', 'service', 'maintain'], type: 'services' },
-      { patterns: ['helper', 'chef', 'tutor', 'maid'], type: 'helpers' },
-      { patterns: ['event', 'festival', 'concert', 'show'], type: 'events' }
-    ];
-
-    typePatterns.forEach(({ patterns, type }) => {
-      if (patterns.some(p => term.toLowerCase().includes(p))) {
-        suggestions.filters.type = type;
-        hasSuggestion = true;
-      }
-    });
-
-    const locationContexts = [
-      { patterns: ['near beach', 'waterfront', 'ocean view'], filters: { view: true } },
-      { patterns: ['city center', 'downtown'], filters: { furnished: true } },
-      { patterns: ['secure estate', 'gated community'], filters: { security: true } }
-    ];
-
-    locationContexts.forEach(({ patterns, filters }) => {
-      if (patterns.some(p => term.toLowerCase().includes(p))) {
-        Object.assign(suggestions.filters, filters);
-        hasSuggestion = true;
-      }
-    });
-
-    const numberExtractors = [
-      { 
-        regex: /(\d+)\s*(bed|bedroom|beds|bd)/i, 
-        handler: (num) => { suggestions.filters.bedroomsMin = num; }
-      },
-      {
-        regex: /(under|below|up to|max)\s*(R|€|£|¥|₹|\$)?\s*(\d+[\d,]*)/i,
-        handler: (num) => { suggestions.filters.priceMax = num; }
-      }
-    ];
-
-    numberExtractors.forEach(({ regex, handler }) => {
-      const match = term.match(regex);
-      if (match) {
-        const num = parseInt(match[3].replace(/,/g, ''));
-        if (!isNaN(num)) {
-          handler(num);
-          hasSuggestion = true;
-        }
-      }
-    });
-
-    const amenityKeywords = [
-      { patterns: ['wifi', 'internet'], key: 'wifi' },
-      { patterns: ['parking', 'garage'], key: 'parking' },
-      { patterns: ['pool', 'swimming'], key: 'pool' },
-      { patterns: ['furnished'], key: 'furnished' },
-      { patterns: ['pet friendly'], key: 'pets' },
-      { patterns: ['gym', 'fitness'], key: 'gym' },
-      { patterns: ['view', 'scenic'], key: 'view' }
-    ];
-
-    amenityKeywords.forEach(({ patterns, key }) => {
-      if (patterns.some(p => new RegExp(p, 'i').test(term))) {
-        suggestions.filters[key] = true;
-        hasSuggestion = true;
-      }
-    });
-
-    setIsAnalyzing(false);
-    return hasSuggestion ? suggestions : null;
+    // Save to recent searches
+    saveRecentSearch(allFilters);
+    
+    // Navigate
+    navigate(`/search?${urlParams.toString()}`);
   };
 
   const applyAiSuggestion = () => {
     if (aiSuggestions) {
-      setSidebarData(prev => ({
-        ...prev,
-        ...aiSuggestions.filters,
-        searchTerm: aiSuggestions.searchTerm
-      }));
+      const newData = {
+        ...sidebarData,
+        ...aiSuggestions.filters
+      };
+      
+      if (aiSuggestions.suggestedType !== searchType) {
+        setSearchType(aiSuggestions.suggestedType);
+      }
+      
+      setSidebarData(newData);
       setAiSuggestions(prev => ({ ...prev, applied: true }));
+      setSmartFilters(aiSuggestions.filters);
     }
   };
 
@@ -395,8 +388,8 @@ const Search = () => {
       order: 'desc',
       bedroomsMin: '',
       bedroomsMax: '',
-      priceMin: 0,
-      priceMax: 100000000,
+      priceMin: '',
+      priceMax: '',
       breakfast: false,
       pets: false,
       security: false,
@@ -406,6 +399,35 @@ const Search = () => {
       kitchen: false,
       laundry: false
     });
+    setSmartFilters({});
+    setAiSuggestions(null);
+  };
+
+  const clearSearchHistory = () => {
+    localStorage.removeItem(RECENT_SEARCHES_KEY);
+    setRecentSearches([]);
+    clearSearchHistoryUtil();
+    setSearchHistory([]);
+  };
+
+  const handleRecentSearchClick = (search) => {
+    const newData = { ...sidebarData, ...search.params };
+    setSidebarData(newData);
+    
+    if (search.type && search.type !== searchType) {
+      setSearchType(search.type);
+    }
+    
+    const urlParams = new URLSearchParams();
+    Object.entries(search.params).forEach(([key, value]) => {
+      if (value) urlParams.set(key, value);
+    });
+    
+    if (search.type) {
+      urlParams.set('type', search.type);
+    }
+    
+    navigate(`/search?${urlParams.toString()}`);
   };
 
   const SkeletonCard = () => (
@@ -422,26 +444,34 @@ const Search = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Find exactly what you need</h1>
+        <div className="flex items-center gap-2 mb-2">
+          <SparklesIcon className="w-6 h-6 text-purple-600" />
+          <h1 className="text-3xl font-bold text-gray-900">Smart Search</h1>
+        </div>
         <p className="text-gray-600">
-          Search through properties, services, helpers, and events with our AI-powered search
+          Search across properties, services, helpers, and events with AI-powered suggestions
         </p>
       </div>
 
-      {/* Search type selector with horizontal scrolling */}
-      <div className="mb-6 overflow-x-auto pb-2 -mx-4 px-4">
-        <div className="flex space-x-4 min-w-max">
+      {/* Search type selector */}
+      <div className="mb-6">
+        <div className="flex flex-wrap gap-2">
           {['properties', 'services', 'helpers', 'events'].map((type) => (
             <button
               key={type}
               onClick={() => setSearchType(type)}
-              className={`px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
-                searchType === type
-                  ? 'bg-blue-600 text-white shadow-md'
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${searchType === type
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+                }`}
             >
-              {type.charAt(0).toUpperCase() + type.slice(1)}
+              <span className="text-lg">{SEARCH_TYPE_CONFIG[type]?.icon}</span>
+              <span>{type.charAt(0).toUpperCase() + type.slice(1)}</span>
+              {searchType === type && (
+                <span className="ml-1 text-xs bg-white/20 px-1.5 py-0.5 rounded">
+                  Active
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -450,10 +480,13 @@ const Search = () => {
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Search sidebar */}
         <div className={`lg:w-80 lg:sticky lg:top-8 h-fit ${showFilters ? 'block' : 'hidden'} lg:block`}>
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Search Filters</h2>
-              <button 
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-2">
+                <FunnelIcon className="w-5 h-5 text-gray-700" />
+                <h2 className="text-xl font-bold text-gray-900">Smart Filters</h2>
+              </div>
+              <button
                 onClick={() => setShowFilters(false)}
                 className="lg:hidden text-gray-500 hover:text-gray-700"
               >
@@ -464,27 +497,43 @@ const Search = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* AI Suggestions */}
               {aiSuggestions && !aiSuggestions.applied && (
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl border border-purple-100">
                   <div className="flex items-start gap-3">
-                    <LightBulbIcon className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-semibold text-blue-800">AI Suggestions</h3>
-                      <p className="text-sm text-blue-700 mt-1">
-                        Based on your search, we recommend:
+                    <LightBulbIcon className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-purple-800">AI Suggestions</h3>
+                        <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
+                          Smart Search
+                        </span>
+                      </div>
+                      <p className="text-sm text-purple-700 mb-3">
+                        We found these patterns in your search:
                       </p>
-                      <div className="mt-2 flex flex-wrap gap-2">
+                      <div className="space-y-2">
+                        {aiSuggestions.suggestedType !== searchType && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="font-medium">Type:</span>
+                            <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded">
+                              {aiSuggestions.suggestedType}
+                            </span>
+                          </div>
+                        )}
                         {Object.entries(aiSuggestions.filters).map(([key, value]) => (
-                          <span key={key} className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-                            {key}: {value.toString()}
-                          </span>
+                          <div key={key} className="flex items-center gap-2 text-sm">
+                            <span className="font-medium">{key}:</span>
+                            <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded">
+                              {value.toString()}
+                            </span>
+                          </div>
                         ))}
                       </div>
                       <button
                         type="button"
                         onClick={applyAiSuggestion}
-                        className="mt-3 text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition-colors"
+                        className="mt-4 w-full py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-lg shadow-sm transition-all"
                       >
-                        Apply Suggestions
+                        Apply Smart Filters
                       </button>
                     </div>
                   </div>
@@ -493,41 +542,50 @@ const Search = () => {
 
               {/* Search input */}
               <div>
-                <label htmlFor="searchTerm" className="block text-sm font-medium text-gray-700 mb-1">
-                  What are you looking for?
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label htmlFor="searchTerm" className="block text-sm font-medium text-gray-700">
+                    What are you looking for?
+                  </label>
+                  {isAnalyzing && (
+                    <span className="text-xs text-purple-600 animate-pulse">
+                      Analyzing...
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
                   <input
                     type="text"
                     id="searchTerm"
                     value={sidebarData.searchTerm}
                     onChange={handleChange}
-                    onFocus={() => setSearchFocused(true)}
-                    onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-                    placeholder="Try '2 bed apartment in Cape Town' or 'Cleaning service'"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Try '2 bed apartment with pool in Cape Town' or 'Cleaning service for office'"
+                    className="w-full px-4 py-3 pl-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
                   />
+                  <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   {sidebarData.searchTerm && (
                     <button
                       type="button"
                       onClick={() => setSidebarData(prev => ({ ...prev, searchTerm: '' }))}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
                     >
                       <XMarkIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                     </button>
                   )}
                 </div>
-
-                {/* Search examples */}
                 <div className="mt-2">
-                  <p className="text-xs text-gray-500 mb-1">Try searching for:</p>
+                  <p className="text-xs text-gray-500 mb-1">Try natural language search:</p>
                   <div className="flex flex-wrap gap-2">
-                    {searchExamples.map((example, i) => (
+                    {[
+                      '3 bedroom apartment with pool',
+                      'Cleaning service this weekend',
+                      'Personal chef for dinner party',
+                      'Music festival tickets'
+                    ].map((example, i) => (
                       <button
                         key={i}
                         type="button"
                         onClick={() => setSidebarData(prev => ({ ...prev, searchTerm: example }))}
-                        className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                        className="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
                       >
                         {example}
                       </button>
@@ -542,14 +600,14 @@ const Search = () => {
                   {searchType.charAt(0).toUpperCase() + searchType.slice(1)} Type
                 </label>
                 <Menu as="div" className="relative">
-                  <Menu.Button className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left flex items-center justify-between">
+                  <Menu.Button className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left flex items-center justify-between hover:border-gray-400 transition-colors">
                     <div className="flex items-center gap-3">
                       {getCurrentTypes().find(t => t.value === sidebarData.type)?.icon}
                       <span>{getCurrentTypes().find(t => t.value === sidebarData.type)?.label}</span>
                     </div>
                     <ChevronDownIcon className="w-5 h-5 text-gray-400" />
                   </Menu.Button>
-                  <Menu.Items className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-lg border border-gray-200 py-1">
+                  <Menu.Items className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-lg border border-gray-200 py-1 max-h-60 overflow-auto">
                     {getCurrentTypes().map((type) => (
                       <Menu.Item key={type.value}>
                         {({ active }) => (
@@ -637,7 +695,16 @@ const Search = () => {
               {/* Amenities - only for properties */}
               {searchType === 'properties' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amenities</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-sm font-medium text-gray-700">Amenities</label>
+                    {Object.keys(smartFilters).some(key => 
+                      ['wifi', 'parking', 'pool', 'furnished', 'pets', 'gym', 'view', 'security'].includes(key)
+                    ) && (
+                      <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded">
+                        AI Detected
+                      </span>
+                    )}
+                  </div>
                   <div className="space-y-4">
                     {amenities.map((category) => (
                       <div key={category.category}>
@@ -650,13 +717,16 @@ const Search = () => {
                               <input
                                 type="checkbox"
                                 id={item.id}
-                                checked={sidebarData[item.id]}
+                                checked={sidebarData[item.id] || smartFilters[item.id] === true}
                                 onChange={handleChange}
-                                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                               />
                               <label htmlFor={item.id} className="ml-2 text-sm flex items-center gap-1">
                                 <span>{item.icon}</span>
                                 {item.label}
+                                {smartFilters[item.id] && (
+                                  <span className="text-xs text-purple-600 ml-1">•</span>
+                                )}
                               </label>
                             </div>
                           ))}
@@ -668,17 +738,25 @@ const Search = () => {
               )}
 
               {/* Form actions */}
-              <div className="space-y-3">
+              <div className="space-y-3 pt-4 border-t border-gray-200">
                 <button
                   type="submit"
-                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all"
+                  disabled={isAnalyzing}
+                  className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isAnalyzing ? 'Analyzing...' : 'Search'}
+                  {isAnalyzing ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Analyzing...
+                    </div>
+                  ) : (
+                    'Search'
+                  )}
                 </button>
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="w-full py-2 text-gray-600 hover:text-gray-800 text-sm font-medium"
+                  className="w-full py-2 text-gray-600 hover:text-gray-800 text-sm font-medium hover:bg-gray-50 rounded-lg transition-colors"
                 >
                   Clear all filters
                 </button>
@@ -687,45 +765,50 @@ const Search = () => {
           </div>
 
           {/* Recent searches panel */}
-          {recentSearches.length > 0 && (
-            <div className="mt-6 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          {(recentSearches.length > 0 || searchHistory.length > 0) && (
+            <div className="mt-6 bg-white rounded-xl shadow-lg p-6 border border-gray-100">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium text-gray-900">Recent Searches</h3>
+                <h3 className="font-medium text-gray-900 flex items-center gap-2">
+                  <ClockIcon className="w-5 h-5 text-gray-400" />
+                  Recent Searches
+                </h3>
                 <button
-                  onClick={() => {
-                    localStorage.removeItem(RECENT_SEARCHES_KEY);
-                    setRecentSearches([]);
-                  }}
-                  className="text-sm text-blue-600 hover:text-blue-800"
+                  onClick={clearSearchHistory}
+                  className="text-sm text-purple-600 hover:text-purple-800 font-medium"
                 >
                   Clear all
                 </button>
               </div>
               <ul className="space-y-3">
-                {recentSearches.map((search, i) => (
+                {[...recentSearches, ...searchHistory.slice(0, 3)].slice(0, 5).map((search, i) => (
                   <li
                     key={i}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
-                    onClick={() => {
-                      setSidebarData(search.params);
-                      const urlParams = new URLSearchParams();
-                      Object.entries(search.params).forEach(([key, value]) => {
-                        if (value) urlParams.set(key, value);
-                      });
-                      navigate(`/search?${urlParams.toString()}`);
-                    }}
+                    className="group p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-all"
+                    onClick={() => handleRecentSearchClick(search)}
                   >
-                    <ClockIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {search.params.searchTerm || 'Anywhere'}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {Object.entries(search.params)
-                          .filter(([k, v]) => k !== 'searchTerm' && v)
-                          .map(([k, v]) => `${k}: ${v}`)
-                          .join(', ')}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 flex items-center justify-center">
+                        <span className="text-sm">{SEARCH_TYPE_CONFIG[search.type]?.icon || '🔍'}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {search.params?.searchTerm || search.term || 'Search'}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-gray-500 capitalize">
+                            {search.type || 'all'}
+                          </span>
+                          {search.timestamp && (
+                            <>
+                              <span className="text-gray-300">•</span>
+                              <span className="text-xs text-gray-400">
+                                {new Date(search.timestamp).toLocaleDateString()}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <ChevronDownIcon className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 rotate-90 transition-opacity" />
                     </div>
                   </li>
                 ))}
@@ -738,24 +821,63 @@ const Search = () => {
         <div className="flex-1">
           {/* Mobile filters toggle */}
           <div className="lg:hidden flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900">
-              {sidebarData.searchTerm ? `Results for "${sidebarData.searchTerm}"` : `All ${searchType}`}
-            </h2>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">
+                {sidebarData.searchTerm ? `Results for "${sidebarData.searchTerm}"` : `All ${searchType}`}
+              </h2>
+              {listings.length > 0 && (
+                <p className="text-gray-600 text-sm mt-1">
+                  {listings.length} results • {searchType}
+                </p>
+              )}
+            </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium hover:border-gray-400 transition-colors"
             >
               <AdjustmentsHorizontalIcon className="w-5 h-5" />
-              Filters
+              {showFilters ? 'Hide Filters' : 'Show Filters'}
+              {Object.keys(smartFilters).length > 0 && (
+                <span className="ml-1 w-2 h-2 bg-purple-600 rounded-full"></span>
+              )}
             </button>
           </div>
 
+          {/* Smart filter tags */}
+          {Object.keys(smartFilters).length > 0 && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100">
+              <div className="flex items-center gap-2 mb-2">
+                <SparklesIcon className="w-4 h-4 text-purple-600" />
+                <span className="text-sm font-medium text-purple-800">Active Smart Filters:</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(smartFilters).map(([key, value]) => (
+                  <span
+                    key={key}
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-white border border-purple-200 text-purple-700 rounded-full text-sm"
+                  >
+                    <span className="font-medium">{key}:</span>
+                    <span>{value.toString()}</span>
+                  </span>
+                ))}
+                <button
+                  onClick={() => setSmartFilters({})}
+                  className="text-sm text-purple-600 hover:text-purple-800 font-medium px-3 py-1 hover:bg-white/50 rounded-full"
+                >
+                  Clear AI Filters
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Results count */}
           {!loading && listings.length > 0 && (
-            <div className="mb-6">
-              <p className="text-gray-600">
-                Showing <span className="font-medium">{listings.length}</span> {searchType}
-                {sidebarData.searchTerm && ` matching "${sidebarData.searchTerm}"`}
+            <div className="mb-6 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+              <p className="text-gray-700">
+                Showing <span className="font-bold text-gray-900">{listings.length}</span> {searchType}
+                {sidebarData.searchTerm && (
+                  <span> matching "<span className="font-semibold">{sidebarData.searchTerm}</span>"</span>
+                )}
               </p>
             </div>
           )}
@@ -770,7 +892,7 @@ const Search = () => {
           ) : listings.length > 0 ? (
             <>
               {/* Results grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {listings.map((item) => {
                   switch(item.itemType) {
                     case 'services':
@@ -795,7 +917,7 @@ const Search = () => {
                       urlParams.set('startIndex', startIndex);
                       navigate(`/search?${urlParams.toString()}`);
                     }}
-                    className="px-6 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 font-medium"
+                    className="px-6 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow-md font-medium transition-all"
                   >
                     Load More
                   </button>
@@ -805,19 +927,33 @@ const Search = () => {
           ) : (
             /* Empty state */
             <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
-              <HomeIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-medium text-gray-900 mb-2">
+              <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full flex items-center justify-center">
+                <SparklesIcon className="w-12 h-12 text-purple-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
                 No {searchType} found
               </h3>
-              <p className="text-gray-600 mb-6">
-                Try adjusting your search filters or search for a different location
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                {sidebarData.searchTerm ? (
+                  `We couldn't find any ${searchType} matching "${sidebarData.searchTerm}". Try adjusting your search or try a different category.`
+                ) : (
+                  `No ${searchType} available with the current filters. Try adjusting your search criteria.`
+                )}
               </p>
-              <button
-                onClick={clearFilters}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm"
-              >
-                Clear All Filters
-              </button>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <button
+                  onClick={clearFilters}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all"
+                >
+                  Clear All Filters
+                </button>
+                <button
+                  onClick={() => setSearchType('properties')}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-all"
+                >
+                  Browse Properties
+                </button>
+              </div>
             </div>
           )}
         </div>

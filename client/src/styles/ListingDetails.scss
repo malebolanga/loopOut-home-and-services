@@ -1453,3 +1453,150 @@ main.max-w-7xl.mx-auto {
 .animate-slideUp {
     animation: slideUp 0.4s ease-out;
 }
+/* Add these styles to your existing ListingDetails.scss */
+
+// Animation for the filters panel
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.3s ease-out;
+}
+
+// Sticky search bar styles
+.sticky {
+  position: sticky;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+// Property type quick filter buttons
+.property-type-btn {
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .property-type-buttons {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 8px;
+    
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 2px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 2px;
+    }
+  }
+}
+
+// Loading skeleton animation
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+// Back to top button animation
+.back-to-top {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Add to ListingDetails.scss or your global CSS */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Hover effects for images */
+.group:hover .group-hover\:scale-105 {
+  transform: scale(1.05);
+}
+
+/* Smooth transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* Custom scrollbar for Swiper */
+.swiper-pagination-bullet {
+  background: rgba(255, 255, 255, 0.5) !important;
+}
+
+.swiper-pagination-bullet-active {
+  background: white !important;
+}
+
+/* Tooltip styling */
+[class*="absolute"].z-20 {
+  z-index: 20;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .group-hover\/compact\:scale-105 {
+    transform: scale(1);
+  }
+  
+  .group-hover\/compact\:text-blue-600 {
+    color: inherit;
+  }
+}

@@ -2,8 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 import SearchInput from '../components/SearchInput';
 import ListingItem from '../components/ListingItem';
 import ServiceItem from '../components/ServiceItem';
@@ -124,18 +122,18 @@ const ExplorePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       
-      <main className="pt-24 pb-16">
+      
+      <main className="pt-4 pb-4">
         {/* Hero Section */}
-        <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white overflow-hidden">
-          <div className="absolute inset-0 bg-black/20"></div>
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="relative bg-gradient-to-r from-rose-50 to-blue-50 rounded-3xl mb-8 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-blue-500/10"></div>
+        <div className="relative z-10 px-8 py-12 md:py-16">
             <div className="text-center max-w-3xl mx-auto">
-              <h1 className="text-2xl font-bold mb-6">
+              <h1 className="text-2xl md:text-5xl font-bold text-gray-900 mb-4">
                 Discover Amazing Places & Services
               </h1>
-              <p className="text-xl mb-8 text-blue-100">
+               <p className="text-lg text-gray-600 mb-8 max-w-2xl">
                 Find properties, services, helpers, and events that match your lifestyle
               </p>
               
@@ -331,7 +329,7 @@ const ExplorePage = () => {
         </div>
       </main>
 
-      <Footer />
+    
     </div>
   );
 };

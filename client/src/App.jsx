@@ -90,8 +90,7 @@ import TripSearch from './pages/TripSearch';
 import TripDetail from './pages/TripDetail';
 import Trips from './pages/Trips';
 
-
-import ExplorePage from './pages/ExplorePage';
+import SmartSearchPage from './pages/SmartSearchPage';
 
 export default function App() {
   return (
@@ -104,10 +103,11 @@ export default function App() {
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/search" element={<Search />} />
         <Route path="/message" element={<Message />} />
-        
+        <Route path="/smart-search" element={<SmartSearchPage />} />
         {/* Dashboard Route */}
         <Route path="/dashboard" element={<DashBoard />} />
-           <Route path="/explore" element={<ExplorePage />} />
+        {/* REMOVED or COMMENTED OUT: <Route path="/explore" element={<ExplorePage />} /> */}
+        
         {/* Listing Routes */}
         <Route path="/list" element={<List />} />
         <Route path="/listings/:type" element={<ListingsPage />} />

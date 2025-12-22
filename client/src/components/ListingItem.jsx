@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { Link } from "react-router-dom";
 import { MdLocationOn } from "react-icons/md";
-import { FaBed, FaBath, FaHeart, FaRegHeart, FaStar } from "react-icons/fa";
+import { FaBed, FaBath, FaHeart, FaRegHeart, FaStar, FaUser } from "react-icons/fa";
 import { useState, useMemo, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
@@ -128,24 +128,33 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
     [listing?.imageUrls]
   );
 
-  // User avatar display logic
+  // Get user's first name from username
+  const getUserFirstName = () => {
+    if (!listing?.userRef?.username) return 'User';
+    const username = listing.userRef.username;
+    // Extract first name (handle formats like "john_doe", "john.doe", "john doe")
+    const firstName = username.split(/[._\s]/)[0];
+    return firstName.charAt(0).toUpperCase() + firstName.slice(1);
+  };
+
+  // User avatar display logic - modified to always show in left corner
   const getUserAvatar = () => {
     if (listing?.userRef?.avatar) {
       return (
         <img
           src={listing.userRef.avatar}
-          alt={listing.userRef.username || 'User'}
+          alt={getUserFirstName()}
           className="w-full h-full rounded-full object-cover"
         />
       );
     }
 
     const initials = listing?.userRef?.username
-      ? listing.userRef.username.slice(0, 2).toUpperCase()
+      ? getUserFirstName().charAt(0).toUpperCase()
       : 'U';
 
     return (
-      <div className="w-full h-full rounded-full bg-gray-300 flex items-center justify-center text-xs font-semibold">
+      <div className="w-full h-full rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-semibold">
         {initials}
       </div>
     );
@@ -227,11 +236,11 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
     return (
       <div className="rounded-xl w-full relative overflow-hidden bg-white p-3 shadow-md transition-all duration-300 hover:shadow-lg max-w-sm mx-auto min-h-[380px]">
         <div className="animate-pulse">
-          <div className="bg-gray-200 h-48 rounded-lg"></div>
-          <div className="mt-3 space-y-2">
+          <div className="bg-gray-200 h-64 rounded-xl"></div>
+          <div className="mt-4 space-y-2">
             <div className="bg-gray-200 h-4 w-3/4 rounded"></div>
             <div className="bg-gray-200 h-4 w-1/2 rounded"></div>
-            <div className="bg-gray-200 h-5 w-1/3 rounded mt-2"></div>
+            <div className="bg-gray-200 h-6 w-1/3 rounded mt-2"></div>
           </div>
         </div>
       </div>
@@ -264,13 +273,12 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
 
               {/* User avatar link - Compact Mode */}
               {listing?.userRef?._id && (
-                <Link
-                  to={`/user-listings/${listing.userRef._id}`}
-                  className="absolute bottom-1 left-1 z-10 w-6 h-6 rounded-full border-2 border-white shadow-md"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {getUserAvatar()}
-                </Link>
+                <div className="absolute top-1 left-1 z-10 flex items-center gap-1 bg-white/80 backdrop-blur-sm px-1.5 py-0.5 rounded-full">
+                  <div className="w-4 h-4 rounded-full overflow-hidden">
+                    {getUserAvatar()}
+                  </div>
+                  <span className="text-[9px] font-medium text-gray-700">{getUserFirstName()}</span>
+                </div>
               )}
 
               {isNewListing && (
@@ -349,6 +357,16 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
               <FaRegHeart className="w-3 h-3 text-gray-700 group-hover/favorite:text-rose-600" />
             )}
           </button>
+
+          {/* ADDED: User avatar and first name in left corner */}
+          {listing?.userRef?._id && (
+            <div className="absolute top-1 left-3 z-10 flex items-center gap-1.5 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-full shadow-md">
+              <div className="w-5 h-5 rounded-full overflow-hidden">
+                {getUserAvatar()}
+              </div>
+              <span className="text-xs font-medium text-gray-700">{getUserFirstName()}</span>
+            </div>
+          )}
 
           <Link
             to={`/listing/${listing._id}`}

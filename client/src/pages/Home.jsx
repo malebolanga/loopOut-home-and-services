@@ -718,7 +718,7 @@ const HeroBanner = ({ onSearch, searchType, currentLocation = 'South Africa' }) 
           <GlobeAltIcon className="w-5 h-5 text-gray-600" />
           <span className="text-sm font-medium text-gray-700">Currently showing results for: {currentLocation}</span>
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+        <h1 className="text-2xl md:text-5xl font-bold text-gray-900 mb-4">
           Find your perfect space in {currentLocation}
         </h1>
         <p className="text-lg text-gray-600 mb-8 max-w-2xl">
@@ -735,7 +735,10 @@ const HeroBanner = ({ onSearch, searchType, currentLocation = 'South Africa' }) 
 };
 
 // Category Grid
+// Category Grid
 const CategoryGrid = ({ onCategoryClick, stats, location = 'South Africa' }) => {
+  const navigate = useNavigate();
+  
   const categories = [
     { 
       icon: '🏠', 
@@ -743,7 +746,8 @@ const CategoryGrid = ({ onCategoryClick, stats, location = 'South Africa' }) => 
       count: stats?.properties || '1,234', 
       color: 'bg-rose-100',
       searchType: 'properties',
-      category: 'all'
+      category: 'all',
+      onClick: () => navigate('/smart-search')
     },
     { 
       icon: '✨', 
@@ -751,7 +755,8 @@ const CategoryGrid = ({ onCategoryClick, stats, location = 'South Africa' }) => 
       count: stats?.services || '456', 
       color: 'bg-emerald-100',
       searchType: 'services',
-      category: 'all'
+      category: 'all',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Experiences', searchType: 'services', category: 'all' }, location)
     },
     { 
       icon: '👥', 
@@ -759,7 +764,8 @@ const CategoryGrid = ({ onCategoryClick, stats, location = 'South Africa' }) => 
       count: stats?.helpers || '789', 
       color: 'bg-purple-100',
       searchType: 'helpers',
-      category: 'all'
+      category: 'all',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Services', searchType: 'helpers', category: 'all' }, location)
     },
     { 
       icon: '🎉', 
@@ -767,7 +773,8 @@ const CategoryGrid = ({ onCategoryClick, stats, location = 'South Africa' }) => 
       count: stats?.events || '321', 
       color: 'bg-amber-100',
       searchType: 'events',
-      category: 'all'
+      category: 'all',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Events', searchType: 'events', category: 'all' }, location)
     },
     { 
       icon: '🏢', 
@@ -775,7 +782,8 @@ const CategoryGrid = ({ onCategoryClick, stats, location = 'South Africa' }) => 
       count: '567', 
       color: 'bg-blue-100',
       searchType: 'properties',
-      category: 'office'
+      category: 'office',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Office', searchType: 'properties', category: 'office' }, location)
     },
     { 
       icon: '🌳', 
@@ -783,7 +791,8 @@ const CategoryGrid = ({ onCategoryClick, stats, location = 'South Africa' }) => 
       count: '234', 
       color: 'bg-green-100',
       searchType: 'properties',
-      category: 'land'
+      category: 'land',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Land', searchType: 'properties', category: 'land' }, location)
     },
     { 
       icon: '🚚', 
@@ -791,7 +800,8 @@ const CategoryGrid = ({ onCategoryClick, stats, location = 'South Africa' }) => 
       count: '123', 
       color: 'bg-indigo-100',
       searchType: 'services',
-      category: 'moving'
+      category: 'moving',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Moving', searchType: 'services', category: 'moving' }, location)
     },
     { 
       icon: '🧹', 
@@ -799,7 +809,8 @@ const CategoryGrid = ({ onCategoryClick, stats, location = 'South Africa' }) => 
       count: '456', 
       color: 'bg-pink-100',
       searchType: 'services',
-      category: 'cleaning'
+      category: 'cleaning',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Cleaning', searchType: 'services', category: 'cleaning' }, location)
     },
   ];
 
@@ -810,7 +821,7 @@ const CategoryGrid = ({ onCategoryClick, stats, location = 'South Africa' }) => 
         {categories.map((category, index) => (
           <button
             key={index}
-            onClick={() => onCategoryClick && onCategoryClick(category, location)}
+            onClick={category.onClick}
             className="flex flex-col items-center p-4 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300 group"
           >
             <div className={`w-12 h-12 ${category.color} rounded-full flex items-center justify-center text-2xl mb-2 group-hover:scale-110 transition-transform duration-300`}>
@@ -929,7 +940,7 @@ const FeaturedListings = ({ items, searchType, loading, title, showAllLink, onIt
 
   return (
     <div className="mb-12">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 ">
         <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
         <Link 
           to={`${showAllLink}?location=${encodeURIComponent(location)}`}
@@ -938,7 +949,7 @@ const FeaturedListings = ({ items, searchType, loading, title, showAllLink, onIt
           Show all →
         </Link>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-3">
         {items.map((item) => (
           <ItemCard 
             key={item._id} 
