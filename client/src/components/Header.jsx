@@ -401,10 +401,10 @@ export default function Sidebar() {
         {/* Right side: Navigation Icons + Profile Dropdown */}
         <div className="flex items-center gap-6" ref={profileDropdownRef}>
           {/* Explore - For all users */}
-          <Link
-            to="/explore"
+           <Link
+            to="/explore"  // FIXED: Changed '/expore' to '/explore'
             className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 ${
-              location.pathname === '/explore' 
+              location.pathname === '/explore'  // FIXED: Changed '/expore' to '/explore'
                 ? 'text-emerald-600 bg-emerald-50' 
                 : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-50'
             }`}

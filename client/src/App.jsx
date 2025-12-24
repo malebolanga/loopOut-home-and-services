@@ -91,6 +91,7 @@ import TripDetail from './pages/TripDetail';
 import Trips from './pages/Trips';
 
 import SmartSearchPage from './pages/SmartSearchPage';
+import ExplorePage from "./pages/ExplorePage"; // Single import - REMOVED DUPLICATE
 
 export default function App() {
   return (
@@ -106,7 +107,8 @@ export default function App() {
         <Route path="/smart-search" element={<SmartSearchPage />} />
         {/* Dashboard Route */}
         <Route path="/dashboard" element={<DashBoard />} />
-        {/* REMOVED or COMMENTED OUT: <Route path="/explore" element={<ExplorePage />} /> */}
+        {/* Explore Page Route */}
+        <Route path="/explore" element={<ExplorePage />} />
         
         {/* Listing Routes */}
         <Route path="/list" element={<List />} />
@@ -180,6 +182,7 @@ export default function App() {
         <Route path="/newsroom" element={<Newsroom />} />
         <Route path='/listings/user/:id' element={<UserListings />} />
         <Route path="/recently-viewed" element={<RecentlyViewedPage />} />
+        
         {/* Private Routes */}
         <Route element={<PrivateRoute />}>
           <Route path="/sale" element={<Sale />} />

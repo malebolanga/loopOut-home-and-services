@@ -783,7 +783,7 @@ const Search = () => {
                 {[...recentSearches, ...searchHistory.slice(0, 3)].slice(0, 5).map((search, i) => (
                   <li
                     key={i}
-                    className="group p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-all"
+                    className="p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-all"
                     onClick={() => handleRecentSearchClick(search)}
                   >
                     <div className="flex items-center gap-3">
@@ -892,7 +892,7 @@ const Search = () => {
           ) : listings.length > 0 ? (
             <>
               {/* Results grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-3">
                 {listings.map((item) => {
                   switch(item.itemType) {
                     case 'services':

@@ -294,7 +294,7 @@ export default function CreateListing() {
       return;
     }
     
-    // Validation for step 3
+    // Validation for step 3 (Details)
     if (currentStep === 3) {
       if (!listingForm.name.trim()) {
         setError("Please enter a name");
@@ -352,8 +352,21 @@ export default function CreateListing() {
       }
     }
     
+    // Validation for step 5 (Images)
+    if (currentStep === 5) {
+      if (listingForm.imageUrls.length < 1) {
+        setError("You must upload at least one image");
+        return;
+      }
+      
+      if (selectedCategory === 'stays' && +listingForm.regularPrice < +listingForm.discountPrice) {
+        setError("Discount price must be lower than regular price");
+        return;
+      }
+    }
+    
     setError(null);
-    setCurrentStep(prev => Math.min(prev + 1, 4));
+    setCurrentStep(prev => Math.min(prev + 1, 6));
   };
 
   const getNearLabel = (category, type) => {
@@ -655,7 +668,7 @@ export default function CreateListing() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Final validation
+    // Final validation before submission
     if (listingForm.imageUrls.length < 1) {
       return setError("You must upload at least one image");
     }
@@ -1116,8 +1129,8 @@ export default function CreateListing() {
 
   const StepProgress = () => (
     <div className="mb-8 sm:mb-12 overflow-x-auto">
-      <div className="flex items-center justify-between min-w-[300px]">
-        {[1, 2, 3, 4].map((step) => (
+      <div className="flex items-center justify-between min-w-[400px]">
+        {[1, 2, 3, 4, 5, 6].map((step) => (
           <div key={step} className="flex items-center">
             <div className={`
               w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-sm sm:text-base md:text-lg transition-all duration-500
@@ -1128,20 +1141,22 @@ export default function CreateListing() {
             `}>
               {step < currentStep ? <CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" /> : step}
             </div>
-            {step < 4 && (
+            {step < 6 && (
               <div className={`
-                h-1 w-12 sm:w-16 md:w-20 lg:w-24 transition-all duration-500
+                h-1 w-8 sm:w-10 md:w-12 lg:w-14 transition-all duration-500
                 ${step < currentStep ? 'bg-[#FF5A5F]' : 'bg-gray-200'}
               `} />
             )}
           </div>
         ))}
       </div>
-      <div className="flex justify-between mt-3 sm:mt-4 text-xs sm:text-sm min-w-[300px]">
+      <div className="flex justify-between mt-3 sm:mt-4 text-xs sm:text-sm min-w-[400px]">
         <span className={`font-medium ${currentStep >= 1 ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>Category</span>
         <span className={`font-medium ${currentStep >= 2 ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>Type</span>
         <span className={`font-medium ${currentStep >= 3 ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>Details</span>
         <span className={`font-medium ${currentStep >= 4 ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>Amenities</span>
+        <span className={`font-medium ${currentStep >= 5 ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>Images</span>
+        <span className={`font-medium ${currentStep >= 6 ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>Submit</span>
       </div>
     </div>
   );
@@ -1264,7 +1279,7 @@ export default function CreateListing() {
               </SectionCard>
             )}
 
-            {/* Step 3: Form Details - UPDATED WITH REQUIRED FIELDS */}
+            {/* Step 3: Form Details */}
             {currentStep === 3 && (
               <div className="space-y-4 sm:space-y-6">
                 <SectionCard title="Basic Information">
@@ -1572,63 +1587,6 @@ export default function CreateListing() {
                   </div>
                 </SectionCard>
 
-                <SectionCard title="Photos & Media">
-                  <MediaUploadArea
-                    type="image"
-                    onChange={handleFileChange}
-                    onSubmit={handleImageSubmit}
-                    filesCount={files.length}
-                    label={`Upload ${selectedCategory} photos`}
-                  />
-                  
-                  {imageUploadError && (
-                    <div className="mt-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl">
-                      <p className="text-red-600 text-xs sm:text-sm">{imageUploadError}</p>
-                    </div>
-                  )}
-
-                  {listingForm.imageUrls.length > 0 && (
-                    <div className="mt-4 sm:mt-6">
-                      <h3 className="font-medium text-gray-700 mb-3 sm:mb-4">Uploaded photos ({listingForm.imageUrls.length})</h3>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                        {listingForm.imageUrls.map((url, index) => (
-                          <div key={url} className="relative aspect-square rounded-lg sm:rounded-xl overflow-hidden group">
-                            <img
-                              src={url}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveImage(index)}
-                              className="absolute top-1 sm:top-2 right-1 sm:right-2 bg-white p-1 sm:p-1.5 rounded-md sm:rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                            >
-                              <XMarkIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="mt-6 sm:mt-8">
-                    <h3 className="font-medium text-gray-700 mb-3 sm:mb-4">Add a video (optional)</h3>
-                    <MediaUploadArea
-                      type="video"
-                      onChange={(e) => setVideoFile(e.target.files[0])}
-                      onSubmit={handleVideoUpload}
-                      filesCount={videoFile ? 1 : 0}
-                      maxFiles={1}
-                      label={`Upload ${selectedCategory} video`}
-                    />
-                    {videoUploadError && (
-                      <div className="mt-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl">
-                        <p className="text-red-600 text-xs sm:text-sm">{videoUploadError}</p>
-                      </div>
-                    )}
-                  </div>
-                </SectionCard>
-
                 <SectionCard title="Pricing">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div>
@@ -1916,7 +1874,152 @@ export default function CreateListing() {
               </div>
             )}
 
-            {/* Error Display - Stays at bottom without kicking user out */}
+            {/* Step 5: Images & Media */}
+            {currentStep === 5 && (
+              <div className="space-y-4 sm:space-y-6">
+                <SectionCard title="Photos & Media">
+                  <MediaUploadArea
+                    type="image"
+                    onChange={handleFileChange}
+                    onSubmit={handleImageSubmit}
+                    filesCount={files.length}
+                    label={`Upload ${selectedCategory} photos`}
+                  />
+                  
+                  {imageUploadError && (
+                    <div className="mt-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl">
+                      <p className="text-red-600 text-xs sm:text-sm">{imageUploadError}</p>
+                    </div>
+                  )}
+
+                  {listingForm.imageUrls.length > 0 && (
+                    <div className="mt-4 sm:mt-6">
+                      <h3 className="font-medium text-gray-700 mb-3 sm:mb-4">Uploaded photos ({listingForm.imageUrls.length})</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                        {listingForm.imageUrls.map((url, index) => (
+                          <div key={url} className="relative aspect-square rounded-lg sm:rounded-xl overflow-hidden group">
+                            <img
+                              src={url}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(index)}
+                              className="absolute top-1 sm:top-2 right-1 sm:right-2 bg-white p-1 sm:p-1.5 rounded-md sm:rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                            >
+                              <XMarkIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-6 sm:mt-8">
+                    <h3 className="font-medium text-gray-700 mb-3 sm:mb-4">Add a video (optional)</h3>
+                    <MediaUploadArea
+                      type="video"
+                      onChange={(e) => setVideoFile(e.target.files[0])}
+                      onSubmit={handleVideoUpload}
+                      filesCount={videoFile ? 1 : 0}
+                      maxFiles={1}
+                      label={`Upload ${selectedCategory} video`}
+                    />
+                    {videoUploadError && (
+                      <div className="mt-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl">
+                        <p className="text-red-600 text-xs sm:text-sm">{videoUploadError}</p>
+                      </div>
+                    )}
+                  </div>
+                </SectionCard>
+              </div>
+            )}
+
+            {/* Step 6: Review & Submit */}
+            {currentStep === 6 && (
+              <div className="space-y-4 sm:space-y-6">
+                <SectionCard title="Review Your Listing">
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="bg-gray-50 rounded-2xl p-4 sm:p-6">
+                      <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-lg sm:text-xl">Summary</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <div>
+                          <p className="text-sm text-gray-500">Category</p>
+                          <p className="font-medium text-gray-900">{selectedCategory}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Type</p>
+                          <p className="font-medium text-gray-900">{selectedType}</p>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <p className="text-sm text-gray-500">Title</p>
+                          <p className="font-medium text-gray-900">{listingForm.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Location</p>
+                          <p className="font-medium text-gray-900">{listingForm.address}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Price</p>
+                          <p className="font-medium text-gray-900">R{listingForm.regularPrice}</p>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <p className="text-sm text-gray-500">Description</p>
+                          <p className="font-medium text-gray-900">{listingForm.description.substring(0, 100)}...</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-2xl p-4 sm:p-6">
+                      <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-lg sm:text-xl">Media</h3>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <CameraIcon className="w-5 h-5 text-gray-400" />
+                          <span className="text-gray-700">{listingForm.imageUrls.length} photos</span>
+                        </div>
+                        {listingForm.videoUrl && (
+                          <div className="flex items-center gap-2">
+                            <VideoCameraIcon className="w-5 h-5 text-gray-400" />
+                            <span className="text-gray-700">1 video</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-2xl p-4 sm:p-6">
+                      <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-lg sm:text-xl">Amenities</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {getAmenitiesByCategory()
+                          .filter(amenity => listingForm[amenity.id])
+                          .map(amenity => (
+                            <span key={amenity.id} className="px-3 py-1 bg-white rounded-full text-sm border border-gray-200">
+                              {amenity.label}
+                            </span>
+                          ))}
+                        {getAmenitiesByCategory().filter(amenity => listingForm[amenity.id]).length === 0 && (
+                          <p className="text-gray-500">No amenities selected</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </SectionCard>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 sm:p-6">
+                  <div className="flex items-start gap-3">
+                    <ExclamationTriangleIcon className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold text-blue-900 mb-1">Important Notice</h4>
+                      <p className="text-blue-700 text-sm">
+                        By submitting this listing, you agree to our terms of service. Please ensure all information is accurate.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Error Display */}
             {error && (
               <div className="mt-4 sm:mt-6 bg-red-50 border border-red-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 animate-pulse">
                 <div className="flex items-start gap-2">
@@ -1947,7 +2050,7 @@ export default function CreateListing() {
               </div>
               
               <div>
-                {currentStep < 4 ? (
+                {currentStep < 6 ? (
                   <button
                     type="button"
                     onClick={handleNextStep}
