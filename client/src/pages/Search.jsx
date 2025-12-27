@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu } from '@headlessui/react';
 import {
   HomeIcon,
   CurrencyDollarIcon,
@@ -40,34 +39,18 @@ const Search = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   const [selectedCategory, setSelectedCategory] = useState('stays');
-  const [searchType, setSearchType] = useState('properties');
-  const [sidebarData, setSidebarData] = useState({
+  const [searchType, setSearchType] = useState('rent');
+  const [searchData, setSearchData] = useState({
     searchTerm: '',
     location: '',
     checkIn: '',
     checkOut: '',
     guests: 1,
     type: 'all',
-    parking: false,
-    furnished: false,
-    wifi: false,
-    pool: false,
-    tv: false,
-    offer: false,
-    sort: 'createdAt',
-    order: 'desc',
-    bedroomsMin: '',
-    bedroomsMax: '',
     priceMin: '',
     priceMax: '',
-    breakfast: false,
-    pets: false,
-    security: false,
-    aircon: false,
-    gym: false,
-    view: false,
-    kitchen: false,
-    laundry: false
+    bedroomsMin: '',
+    bedroomsMax: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -76,11 +59,10 @@ const Search = () => {
   const [recentSearches, setRecentSearches] = useState([]);
   const [aiSuggestions, setAiSuggestions] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
   const [smartFilters, setSmartFilters] = useState({});
   const [showSearchBox, setShowSearchBox] = useState(true);
 
-  // Categories configuration from first code
+  // Categories configuration
   const categories = [
     {
       id: 'stays',
@@ -108,7 +90,7 @@ const Search = () => {
     }
   ];
 
-  // Get types based on selected category from first code
+  // Get types based on selected category
   const getTypesByCategory = () => {
     switch (selectedCategory) {
       case 'stays':
@@ -195,27 +177,47 @@ const Search = () => {
     const checkInParam = urlParams.get('checkIn');
     const checkOutParam = urlParams.get('checkOut');
     const guestsParam = urlParams.get('guests');
+    const priceMinParam = urlParams.get('priceMin');
+    const priceMaxParam = urlParams.get('priceMax');
+    const bedroomsMinParam = urlParams.get('bedroomsMin');
+    const bedroomsMaxParam = urlParams.get('bedroomsMax');
     
-    const newSidebarData = { ...sidebarData };
+    const newSearchData = { ...searchData };
     
     if (searchTermParam) {
-      newSidebarData.searchTerm = searchTermParam;
+      newSearchData.searchTerm = searchTermParam;
     }
     
     if (locationParam) {
-      newSidebarData.location = locationParam;
+      newSearchData.location = locationParam;
     }
     
     if (checkInParam) {
-      newSidebarData.checkIn = checkInParam;
+      newSearchData.checkIn = checkInParam;
     }
     
     if (checkOutParam) {
-      newSidebarData.checkOut = checkOutParam;
+      newSearchData.checkOut = checkOutParam;
     }
     
     if (guestsParam) {
-      newSidebarData.guests = parseInt(guestsParam);
+      newSearchData.guests = parseInt(guestsParam);
+    }
+    
+    if (priceMinParam) {
+      newSearchData.priceMin = priceMinParam;
+    }
+    
+    if (priceMaxParam) {
+      newSearchData.priceMax = priceMaxParam;
+    }
+    
+    if (bedroomsMinParam) {
+      newSearchData.bedroomsMin = bedroomsMinParam;
+    }
+    
+    if (bedroomsMaxParam) {
+      newSearchData.bedroomsMax = bedroomsMaxParam;
     }
     
     // Handle old type param for backward compatibility
@@ -248,22 +250,7 @@ const Search = () => {
       }
     }
     
-    // Set all filters from URL
-    urlParams.forEach((value, key) => {
-      if (key in newSidebarData) {
-        if (key === 'parking' || key === 'furnished' || key === 'wifi' || 
-            key === 'pool' || key === 'offer' || key === 'breakfast' || 
-            key === 'pets' || key === 'security' || key === 'aircon' || 
-            key === 'gym' || key === 'view' || key === 'kitchen' || 
-            key === 'laundry') {
-          newSidebarData[key] = value === 'true';
-        } else {
-          newSidebarData[key] = value;
-        }
-      }
-    });
-    
-    setSidebarData(newSidebarData);
+    setSearchData(newSearchData);
   }, [location.search]);
 
   // Update search type when category changes
@@ -277,7 +264,7 @@ const Search = () => {
   // Smart search analysis
   useEffect(() => {
     const analyzeQuery = async () => {
-      if (sidebarData.searchTerm.length < 3) {
+      if (searchData.searchTerm.length < 3) {
         setAiSuggestions(null);
         return;
       }
@@ -287,12 +274,12 @@ const Search = () => {
       // Simulate AI analysis
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      const extractedFilters = extractFiltersFromQuery(sidebarData.searchTerm);
+      const extractedFilters = extractFiltersFromQuery(searchData.searchTerm);
       setSmartFilters(extractedFilters);
       
       if (Object.keys(extractedFilters).length > 0) {
         setAiSuggestions({
-          searchTerm: sidebarData.searchTerm,
+          searchTerm: searchData.searchTerm,
           filters: extractedFilters,
           applied: false
         });
@@ -305,7 +292,7 @@ const Search = () => {
 
     const timer = setTimeout(analyzeQuery, 600);
     return () => clearTimeout(timer);
-  }, [sidebarData.searchTerm]);
+  }, [searchData.searchTerm]);
 
   // Extract filters from query (simplified version)
   const extractFiltersFromQuery = (query) => {
@@ -332,24 +319,6 @@ const Search = () => {
       filters.priceMax = parseInt(priceMatch[1].replace(/,/g, ''));
     }
 
-    // Amenity detection
-    const amenities = [
-      { patterns: ['wifi', 'internet'], key: 'wifi' },
-      { patterns: ['parking', 'garage'], key: 'parking' },
-      { patterns: ['pool', 'swimming'], key: 'pool' },
-      { patterns: ['furnished'], key: 'furnished' },
-      { patterns: ['pet', 'pets'], key: 'pets' },
-      { patterns: ['gym', 'fitness'], key: 'gym' },
-      { patterns: ['view', 'scenic'], key: 'view' },
-      { patterns: ['secure', 'security'], key: 'security' }
-    ];
-
-    amenities.forEach(({ patterns, key }) => {
-      if (patterns.some(p => lowerQuery.includes(p))) {
-        filters[key] = true;
-      }
-    });
-
     return filters;
   };
 
@@ -370,8 +339,12 @@ const Search = () => {
         urlParams.set('category', selectedCategory);
         urlParams.set('subType', searchType);
         
+        console.log('Fetching from:', `${endpoint}?${urlParams.toString()}`);
+        
         const res = await fetch(`${endpoint}?${urlParams.toString()}`);
         const data = await res.json();
+        
+        console.log('Fetched data:', data);
         
         // Add type to each item
         const typedData = data.map(item => ({
@@ -386,6 +359,7 @@ const Search = () => {
         setShowMore(typedData.length >= DEFAULT_LISTING_LIMIT);
       } catch (error) {
         console.error('Failed to fetch data:', error);
+        setListings([]);
       } finally {
         setLoading(false);
       }
@@ -448,10 +422,10 @@ const Search = () => {
 
   // Form handlers
   const handleChange = (e) => {
-    const { id, value, checked, type } = e.target;
-    setSidebarData(prev => ({
+    const { id, value } = e.target;
+    setSearchData(prev => ({
       ...prev,
-      [id]: type === 'checkbox' ? checked : value
+      [id]: value
     }));
   };
 
@@ -460,9 +434,9 @@ const Search = () => {
     
     const urlParams = new URLSearchParams();
     
-    // Include all non-default values
-    Object.entries(sidebarData).forEach(([key, value]) => {
-      if (value !== '' && value !== false && value !== 0 && value !== 'all') {
+    // Include all non-empty values
+    Object.entries(searchData).forEach(([key, value]) => {
+      if (value !== '' && value !== 0) {
         urlParams.set(key, value.toString());
       }
     });
@@ -475,59 +449,47 @@ const Search = () => {
     urlParams.set('type', getOldTypeFromCategory(selectedCategory));
     
     // Save to recent searches
-    saveRecentSearch(sidebarData);
+    saveRecentSearch(searchData);
     
     // Navigate
-    navigate(`/search?${urlParams.toString()}`);
+    const urlString = urlParams.toString();
+    console.log('Navigating to:', `/search?${urlString}`);
+    navigate(`/search?${urlString}`);
     setShowSearchBox(false);
   };
 
   const applyAiSuggestion = () => {
     if (aiSuggestions) {
       const newData = {
-        ...sidebarData,
+        ...searchData,
         ...aiSuggestions.filters
       };
-      setSidebarData(newData);
+      setSearchData(newData);
       setAiSuggestions(prev => ({ ...prev, applied: true }));
       setSmartFilters(aiSuggestions.filters);
     }
   };
 
-  const clearFilters = () => {
-    setSidebarData({
+  const clearSearch = () => {
+    setSearchData({
       searchTerm: '',
       location: '',
       checkIn: '',
       checkOut: '',
       guests: 1,
       type: 'all',
-      parking: false,
-      furnished: false,
-      wifi: false,
-      pool: false,
-      tv: false,
-      offer: false,
-      sort: 'createdAt',
-      order: 'desc',
-      bedroomsMin: '',
-      bedroomsMax: '',
       priceMin: '',
       priceMax: '',
-      breakfast: false,
-      pets: false,
-      security: false,
-      aircon: false,
-      gym: false,
-      view: false,
-      kitchen: false,
-      laundry: false
+      bedroomsMin: '',
+      bedroomsMax: ''
     });
     setSmartFilters({});
     setAiSuggestions(null);
     setSelectedCategory('stays');
     setSearchType('rent');
+    setListings([]);
     setShowSearchBox(true);
+    navigate('/search');
   };
 
   const clearSearchHistory = () => {
@@ -547,6 +509,7 @@ const Search = () => {
   );
 
   const currentTypes = getTypesByCategory();
+  const currentType = currentTypes.find(t => t.id === searchType);
 
   return (
     <div 
@@ -556,11 +519,11 @@ const Search = () => {
     >
       {/* Hero Section with Search Box */}
       {showSearchBox && (
-        <div className="relative bg-gradient-to-r from-rose-50 to-blue-50 rounded-3xl overflow-hidden mb-8">
-          <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-blue-500/10"></div>
+        <div className="relative bg-gradient-to-r from-blue-50 to-purple-50 rounded-3xl overflow-hidden mb-8">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10"></div>
           <div className="max-w-7xl mx-auto px-4 py-16 relative z-10">
             <div className="text-center mb-12">
-              <h1 className="text-5xl font-bold mb-4 text-gray-900">Find exactly what you need</h1>
+              <h1 className="text-5xl font-bold mb-4 text-gray-900">Find your perfect stay</h1>
               <p className="text-xl text-gray-600">Search across properties, services, helpers, and events</p>
             </div>
 
@@ -568,37 +531,37 @@ const Search = () => {
             <div className="max-w-4xl mx-auto">
               <div className="bg-white rounded-2xl shadow-2xl p-2">
                 <form onSubmit={handleSubmit} className="flex flex-col md:flex-row items-center">
-                  {/* Location */}
+                  {/* Search Term */}
                   <div className="flex-1 p-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Where?</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">What are you looking for?</label>
                     <div className="relative">
                       <input
                         type="text"
-                        id="location"
-                        value={sidebarData.location}
+                        id="searchTerm"
+                        value={searchData.searchTerm}
                         onChange={handleChange}
-                        placeholder="Search destinations"
+                        placeholder="Try '2 bed apartment in Cape Town' or 'Cleaning service'"
                         className="w-full text-lg border-none focus:ring-0 outline-none placeholder-gray-500"
                       />
-                      <MapPinIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <MagnifyingGlassIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     </div>
                   </div>
 
                   <div className="w-px h-12 bg-gray-200 hidden md:block"></div>
 
-                  {/* Search Term */}
+                  {/* Location */}
                   <div className="flex-1 p-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">What?</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
                     <div className="relative">
                       <input
                         type="text"
-                        id="searchTerm"
-                        value={sidebarData.searchTerm}
+                        id="location"
+                        value={searchData.location}
                         onChange={handleChange}
-                        placeholder="Try '2 bed apartment' or 'Cleaning service'"
+                        placeholder="Search destinations"
                         className="w-full text-lg border-none focus:ring-0 outline-none placeholder-gray-500"
                       />
-                      <MagnifyingGlassIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <MapPinIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     </div>
                   </div>
 
@@ -618,7 +581,7 @@ const Search = () => {
               {/* Clear All Button */}
               <div className="flex justify-end mt-4">
                 <button
-                  onClick={clearFilters}
+                  onClick={clearSearch}
                   className="text-gray-600 hover:text-gray-800 text-sm font-medium"
                 >
                   Clear all
@@ -629,11 +592,10 @@ const Search = () => {
         </div>
       )}
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* AI Suggestions */}
-        {aiSuggestions && !aiSuggestions.applied && (
-          <div className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl border border-blue-100 animate-fadeIn">
+      {/* AI Suggestions */}
+      {aiSuggestions && !aiSuggestions.applied && (
+        <div className="max-w-7xl mx-auto px-4 mb-6">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl border border-blue-100 animate-fadeIn">
             <div className="flex items-start gap-3">
               <LightBulbIcon className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
@@ -666,42 +628,24 @@ const Search = () => {
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Smart filter tags */}
-        {Object.keys(smartFilters).length > 0 && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
-            <div className="flex items-center gap-2 mb-2">
-              <SparklesIcon className="w-4 h-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-800">Active Smart Filters:</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(smartFilters).map(([key, value]) => (
-                <span
-                  key={key}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-white border border-blue-200 text-blue-700 rounded-full text-sm"
-                >
-                  <span className="font-medium">{key}:</span>
-                  <span>{value.toString()}</span>
-                </span>
-              ))}
-              <button
-                onClick={() => setSmartFilters({})}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium px-3 py-1 hover:bg-white/50 rounded-full"
-              >
-                Clear AI Filters
-              </button>
-            </div>
-          </div>
-        )}
-
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Category selector */}
         <div className="mb-8">
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <button
                 key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
+                onClick={() => {
+                  setSelectedCategory(category.id);
+                  // Update URL with new category
+                  const urlParams = new URLSearchParams(location.search);
+                  urlParams.set('category', category.id);
+                  navigate(`/search?${urlParams.toString()}`);
+                }}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all ${selectedCategory === category.id
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
@@ -729,7 +673,13 @@ const Search = () => {
               {currentTypes.map((type) => (
                 <button
                   key={type.id}
-                  onClick={() => setSearchType(type.id)}
+                  onClick={() => {
+                    setSearchType(type.id);
+                    // Update URL with new type
+                    const urlParams = new URLSearchParams(location.search);
+                    urlParams.set('subType', type.id);
+                    navigate(`/search?${urlParams.toString()}`);
+                  }}
                   className={`flex flex-col items-center justify-center px-4 py-3 rounded-lg transition-all min-w-[120px] ${searchType === type.id
                       ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-500 text-blue-700 shadow-sm'
                       : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'
@@ -744,365 +694,116 @@ const Search = () => {
           </div>
         )}
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Filters Sidebar */}
-          <div className={`lg:w-80 lg:sticky lg:top-8 h-fit ${showFilters ? 'block' : 'hidden'} lg:block`}>
-            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-900">Filters</h2>
-                <button
-                  onClick={() => setShowFilters(false)}
-                  className="lg:hidden text-gray-500 hover:text-gray-700"
-                >
-                  <XMarkIcon className="w-5 h-5" />
-                </button>
+        {/* Results Section */}
+        <div>
+          {/* Results count */}
+          {!loading && listings.length > 0 && (
+            <div className="mb-6 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+              <p className="text-gray-700">
+                Showing <span className="font-bold text-gray-900">{listings.length}</span> {currentType?.label?.toLowerCase() || selectedCategory}
+                {searchData.searchTerm && (
+                  <span> for "<span className="font-semibold">{searchData.searchTerm}</span>"</span>
+                )}
+                {searchData.location && (
+                  <span> in <span className="font-semibold">{searchData.location}</span></span>
+                )}
+              </p>
+            </div>
+          )}
+
+          {/* Loading state */}
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          ) : listings.length > 0 ? (
+            <>
+              {/* Results grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {listings.map((item) => {
+                  switch(item.category) {
+                    case 'experiences':
+                      return <ServiceItem key={item._id} service={item} />;
+                    case 'online':
+                      return <HelperItem key={item._id} helper={item} />;
+                    case 'events':
+                      return <EventItem key={item._id} event={item} />;
+                    default:
+                      return <ListingItem key={item._id} listing={item} />;
+                  }
+                })}
               </div>
 
-              {/* Search input */}
-              <div className="mb-6">
-                <label htmlFor="searchTerm" className="block text-sm font-medium text-gray-700 mb-2">
-                  Search term
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    id="searchTerm"
-                    value={sidebarData.searchTerm}
-                    onChange={handleChange}
-                    placeholder="Search within results..."
-                    className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  />
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                </div>
-              </div>
-
-              {/* Price range */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">R</span>
-                      <input
-                        type="number"
-                        id="priceMin"
-                        value={sidebarData.priceMin}
-                        onChange={handleChange}
-                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg"
-                        placeholder="Min"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">R</span>
-                      <input
-                        type="number"
-                        id="priceMax"
-                        value={sidebarData.priceMax}
-                        onChange={handleChange}
-                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg"
-                        placeholder="Max"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bedrooms - only for stays */}
-              {selectedCategory === 'stays' && (
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Bedrooms</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <input
-                        type="number"
-                        id="bedroomsMin"
-                        value={sidebarData.bedroomsMin}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                        placeholder="Min"
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="number"
-                        id="bedroomsMax"
-                        value={sidebarData.bedroomsMax}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                        placeholder="Max"
-                      />
-                    </div>
-                  </div>
+              {/* Load more button */}
+              {showMore && (
+                <div className="mt-8 flex justify-center">
+                  <button
+                    onClick={() => {
+                      const startIndex = listings.length;
+                      const urlParams = new URLSearchParams(location.search);
+                      urlParams.set('startIndex', startIndex);
+                      navigate(`/search?${urlParams.toString()}`);
+                    }}
+                    className="px-6 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow-md font-medium transition-all"
+                  >
+                    Load More
+                  </button>
                 </div>
               )}
-
-              {/* Amenities - only for stays */}
-              {selectedCategory === 'stays' && (
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-sm font-medium text-gray-700">Amenities</label>
-                  </div>
-                  <div className="space-y-3">
-                    {[
-                      { id: 'wifi', label: 'WiFi', icon: '📶' },
-                      { id: 'parking', label: 'Parking', icon: '🚗' },
-                      { id: 'aircon', label: 'Air Conditioning', icon: '❄️' },
-                      { id: 'pool', label: 'Pool', icon: '🏊' },
-                      { id: 'gym', label: 'Gym', icon: '💪' },
-                      { id: 'furnished', label: 'Furnished', icon: '🛋️' },
-                      { id: 'kitchen', label: 'Kitchen', icon: '🍳' },
-                      { id: 'laundry', label: 'Laundry', icon: '🧺' },
-                      { id: 'pets', label: 'Pets Allowed', icon: '🐾' },
-                      { id: 'security', label: 'Security', icon: '🔒' }
-                    ].map((item) => (
-                      <div key={item.id} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id={item.id}
-                          checked={sidebarData[item.id] || smartFilters[item.id] === true}
-                          onChange={handleChange}
-                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <label htmlFor={item.id} className="ml-2 text-sm flex items-center gap-1">
-                          <span>{item.icon}</span>
-                          {item.label}
-                          {smartFilters[item.id] && (
-                            <span className="text-xs text-blue-600 ml-1">•</span>
-                          )}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Form actions */}
-              <div className="space-y-3 pt-4 border-t border-gray-200">
+            </>
+          ) : location.search ? (
+            /* Empty state when search has params but no results */
+            <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
+              <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
+                <SparklesIcon className="w-12 h-12 text-blue-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                No {currentType?.label?.toLowerCase() || selectedCategory} found
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                {searchData.searchTerm ? (
+                  `We couldn't find any ${currentType?.label?.toLowerCase() || selectedCategory} matching "${searchData.searchTerm}". Try adjusting your search or try a different category.`
+                ) : (
+                  `No ${currentType?.label?.toLowerCase() || selectedCategory} available with the current search. Try adjusting your search criteria.`
+                )}
+              </p>
+              <div className="flex flex-wrap gap-3 justify-center">
                 <button
-                  onClick={handleSubmit}
-                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition-all"
+                  onClick={clearSearch}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all"
                 >
-                  Apply Filters
+                  Clear Search
                 </button>
-
                 <button
-                  onClick={clearFilters}
-                  className="w-full py-2 text-gray-600 hover:text-gray-800 text-sm font-medium"
+                  onClick={() => setShowSearchBox(true)}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-all"
                 >
-                  Clear all filters
+                  New Search
                 </button>
               </div>
             </div>
-
-            {/* Recent searches panel */}
-            {recentSearches.length > 0 && (
-              <div className="mt-6 bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-medium text-gray-900 flex items-center gap-2">
-                    <ClockIcon className="w-5 h-5 text-gray-400" />
-                    Recent Searches
-                  </h3>
-                  <button
-                    onClick={clearSearchHistory}
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    Clear all
-                  </button>
-                </div>
-                <ul className="space-y-3">
-                  {recentSearches.map((search, i) => {
-                    const searchTerm = search?.params?.searchTerm || 
-                                    search?.params?.location || 
-                                    'Search';
-                    
-                    const searchCategory = search?.category || 'all';
-                    const searchType = search?.type || 'all';
-                    const searchParams = search?.params || {};
-
-                    return (
-                      <li
-                        key={i}
-                        className="p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-all"
-                        onClick={() => {
-                          if (!searchParams || typeof searchParams !== 'object') return;
-
-                          const newData = { ...sidebarData, ...searchParams };
-                          setSidebarData(newData);
-                          
-                          if (searchCategory && searchCategory !== 'all') {
-                            setSelectedCategory(searchCategory);
-                          }
-                          
-                          if (searchType && searchType !== 'all') {
-                            setSearchType(searchType);
-                          }
-                          
-                          const urlParams = new URLSearchParams();
-                          
-                          Object.entries(searchParams).forEach(([key, value]) => {
-                            if (value !== null && value !== undefined && value !== '') {
-                              urlParams.set(key, value.toString());
-                            }
-                          });
-                          
-                          if (searchCategory && searchCategory !== 'all') {
-                            urlParams.set('category', searchCategory);
-                          }
-                          
-                          if (searchType && searchType !== 'all') {
-                            urlParams.set('subType', searchType);
-                          }
-                          
-                          const urlString = urlParams.toString();
-                          navigate(`/search?${urlString}`);
-                        }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 flex items-center justify-center">
-                            <span className="text-sm">
-                              {categories.find(c => c.id === searchCategory)?.icon || '🔍'}
-                            </span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {searchTerm}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs text-gray-500 capitalize">
-                                {categories.find(c => c.id === searchCategory)?.label || searchCategory}
-                              </span>
-                              {search?.timestamp && (
-                                <>
-                                  <span className="text-gray-300">•</span>
-                                  <span className="text-xs text-gray-400">
-                                    {new Date(search.timestamp).toLocaleDateString()}
-                                  </span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          <ChevronDownIcon className="w-5 h-5 text-gray-400 rotate-90" />
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
+          ) : (
+            /* Initial state - no search yet */
+            <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
+              <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
+                <MagnifyingGlassIcon className="w-12 h-12 text-blue-600" />
               </div>
-            )}
-          </div>
-
-          {/* Main content area */}
-          <div className="flex-1">
-            {/* Mobile filters toggle */}
-            <div className="lg:hidden flex justify-between items-center mb-6">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  {sidebarData.searchTerm ? `Results for "${sidebarData.searchTerm}"` : `${currentTypes.find(t => t.id === searchType)?.label || categories.find(c => c.id === selectedCategory)?.label}`}
-                </h2>
-                {listings.length > 0 && (
-                  <p className="text-gray-600 text-sm mt-1">
-                    {listings.length} results • {selectedCategory}
-                  </p>
-                )}
-              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                Start your search
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Use the search box above to find properties, services, helpers, or events. Select a category and type to refine your search.
+              </p>
               <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium hover:border-gray-400 transition-colors"
+                onClick={() => setShowSearchBox(true)}
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all"
               >
-                <AdjustmentsHorizontalIcon className="w-5 h-5" />
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
+                Show Search Box
               </button>
             </div>
-
-            {/* Results count */}
-            {!loading && listings.length > 0 && (
-              <div className="mb-6 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-                <p className="text-gray-700">
-                  Showing <span className="font-bold text-gray-900">{listings.length}</span> {currentTypes.find(t => t.id === searchType)?.label?.toLowerCase() || selectedCategory}
-                  {sidebarData.searchTerm && (
-                    <span> for "<span className="font-semibold">{sidebarData.searchTerm}</span>"</span>
-                  )}
-                </p>
-              </div>
-            )}
-
-            {/* Loading state */}
-            {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(6)].map((_, i) => (
-                  <SkeletonCard key={i} />
-                ))}
-              </div>
-            ) : listings.length > 0 ? (
-              <>
-                {/* Results grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {listings.map((item) => {
-                    switch(item.category) {
-                      case 'experiences':
-                        return <ServiceItem key={item._id} service={item} />;
-                      case 'online':
-                        return <HelperItem key={item._id} helper={item} />;
-                      case 'events':
-                        return <EventItem key={item._id} event={item} />;
-                      default:
-                        return <ListingItem key={item._id} listing={item} />;
-                    }
-                  })}
-                </div>
-
-                {/* Load more button */}
-                {showMore && (
-                  <div className="mt-8 flex justify-center">
-                    <button
-                      onClick={() => {
-                        const startIndex = listings.length;
-                        const urlParams = new URLSearchParams(location.search);
-                        urlParams.set('startIndex', startIndex);
-                        navigate(`/search?${urlParams.toString()}`);
-                      }}
-                      className="px-6 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow-md font-medium transition-all"
-                    >
-                      Load More
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-              /* Empty state */
-              <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
-                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
-                  <SparklesIcon className="w-12 h-12 text-blue-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  No {currentTypes.find(t => t.id === searchType)?.label?.toLowerCase() || selectedCategory} found
-                </h3>
-                <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  {sidebarData.searchTerm ? (
-                    `We couldn't find any ${currentTypes.find(t => t.id === searchType)?.label?.toLowerCase() || selectedCategory} matching "${sidebarData.searchTerm}". Try adjusting your search or try a different category.`
-                  ) : (
-                    `No ${currentTypes.find(t => t.id === searchType)?.label?.toLowerCase() || selectedCategory} available with the current filters. Try adjusting your search criteria.`
-                  )}
-                </p>
-                <div className="flex flex-wrap gap-3 justify-center">
-                  <button
-                    onClick={clearFilters}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all"
-                  >
-                    Clear All Filters
-                  </button>
-                  <button
-                    onClick={() => setShowSearchBox(true)}
-                    className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-all"
-                  >
-                    New Search
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </div>
