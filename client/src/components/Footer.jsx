@@ -98,7 +98,10 @@ const Footer = () => {
   };
 
   const handleSearchClick = () => {
-    setShowSearch(true);
+    // Navigate to Search page with fade-in effect
+    navigate('/search', { 
+      state: { fadeIn: true } 
+    });
   };
 
   const handleCreateClick = () => {
@@ -134,7 +137,16 @@ const Footer = () => {
       name: searchTerm
     });
 
-    navigate(searchUrl);
+    // Navigate to Search page with fade-in effect
+    navigate('/search', { 
+      state: { fadeIn: true } 
+    });
+    
+    // Then update URL with search params after a brief delay
+    setTimeout(() => {
+      window.history.replaceState(null, '', searchUrl);
+    }, 100);
+    
     setShowSearch(false);
     setShowSuggestions(false);
   };
@@ -158,7 +170,16 @@ const Footer = () => {
       name: suggestion.term
     });
 
-    navigate(searchUrl);
+    // Navigate to Search page with fade-in effect
+    navigate('/search', { 
+      state: { fadeIn: true } 
+    });
+    
+    // Then update URL with search params after a brief delay
+    setTimeout(() => {
+      window.history.replaceState(null, '', searchUrl);
+    }, 100);
+    
     setShowSearch(false);
   };
 
@@ -226,7 +247,7 @@ const Footer = () => {
     <>
       {/* Enhanced Floating Search Modal */}
       {showSearch && (
-        <div className="fixed inset-0 bg-white z-50 md:hidden">
+        <div className="fixed inset-0 bg-white z-50 md:hidden animate-fadeIn">
           <div ref={mobileSearchRef} className="p-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
@@ -371,7 +392,7 @@ const Footer = () => {
 
       {/* Floating Create Modal */}
       {showCreate && (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col">
+        <div className="fixed inset-0 bg-white z-50 flex flex-col animate-fadeIn">
           <div className="flex items-center justify-between p-4 border-b">
             <button 
               onClick={closeModals}

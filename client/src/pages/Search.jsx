@@ -1,6 +1,6 @@
-// src/pages/Search.jsx
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Menu } from '@headlessui/react';
 import {
   HomeIcon,
   CurrencyDollarIcon,
@@ -16,26 +16,17 @@ import {
   UserIcon,
   CalendarIcon,
   WrenchIcon,
-  SparklesIcon,
+  MagnifyingGlassIcon,
   MapPinIcon,
-  FunnelIcon,
+  SparklesIcon,
   FireIcon,
   ComputerDesktopIcon,
-  TicketIcon,
-  MagnifyingGlassIcon
+  TicketIcon
 } from '@heroicons/react/24/outline';
 import ListingItem from "../components/ListingItem";
 import ServiceItem from "../components/ServiceItem";
 import HelperItem from "../components/HelperItem";
 import EventItem from "../components/EventItem";
-import {
-  getSearchUrl,
-  saveSearchHistory,
-  getSearchHistory,
-  clearSearchHistory as clearSearchHistoryUtil,
-  SEARCH_TYPE_CONFIG,
-  extractFiltersFromQuery
-} from "../utils/searchUtils";
 
 const RECENT_SEARCHES_KEY = 'recentPropertySearches';
 const MAX_RECENT_SEARCHES = 10;
@@ -45,8 +36,11 @@ const Search = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Add fade-in animation state
+  const [isVisible, setIsVisible] = useState(false);
+
   const [selectedCategory, setSelectedCategory] = useState('stays');
-  const [searchType, setSearchType] = useState('rent');
+  const [searchType, setSearchType] = useState('properties');
   const [sidebarData, setSidebarData] = useState({
     searchTerm: '',
     location: '',
@@ -84,10 +78,9 @@ const Search = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [smartFilters, setSmartFilters] = useState({});
-  const [searchHistory, setSearchHistory] = useState(getSearchHistory());
   const [showSearchBox, setShowSearchBox] = useState(true);
 
-  // Categories configuration
+  // Categories configuration from first code
   const categories = [
     {
       id: 'stays',
@@ -115,7 +108,7 @@ const Search = () => {
     }
   ];
 
-  // Get types based on selected category
+  // Get types based on selected category from first code
   const getTypesByCategory = () => {
     switch (selectedCategory) {
       case 'stays':
@@ -183,22 +176,14 @@ const Search = () => {
     }
   };
 
-  // Popular destinations (hardcoded for demo)
-  const popularDestinations = [
-    { name: "Temblsa", dates: "Jan 1–2, 2026", icon: "🏙️" },
-    { name: "Modimolle-Mookgophong", dates: "Jan 2–3, 2026", icon: "⛰️" },
-    { name: "Johannesburg", dates: "Jan 3–4, 2026", icon: "🏙️" },
-    { name: "Cape Town", dates: "Jan 4–5, 2026", icon: "🏖️" },
-    { name: "Durban", dates: "Jan 5–6, 2026", icon: "🌊" },
-    { name: "Pretoria", dates: "Jan 6–7, 2026", icon: "🏛️" },
-  ];
-
-  // Recent searches (from localStorage)
-  const recentDestinations = recentSearches.map((search, index) => ({
-    name: search.params?.location || search.params?.searchTerm || `Search ${index + 1}`,
-    dates: search.timestamp ? new Date(search.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "Dates not set",
-    icon: search.category === 'stays' ? '🏠' : search.category === 'experiences' ? '🔧' : '👥'
-  }));
+  // Initialize fade-in effect
+  useEffect(() => {
+    setIsVisible(false);
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 10);
+    return () => clearTimeout(timer);
+  }, [location.search]);
 
   // Initialize from URL
   useEffect(() => {
@@ -289,6 +274,85 @@ const Search = () => {
     }
   }, [selectedCategory]);
 
+  // Smart search analysis
+  useEffect(() => {
+    const analyzeQuery = async () => {
+      if (sidebarData.searchTerm.length < 3) {
+        setAiSuggestions(null);
+        return;
+      }
+
+      setIsAnalyzing(true);
+      
+      // Simulate AI analysis
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const extractedFilters = extractFiltersFromQuery(sidebarData.searchTerm);
+      setSmartFilters(extractedFilters);
+      
+      if (Object.keys(extractedFilters).length > 0) {
+        setAiSuggestions({
+          searchTerm: sidebarData.searchTerm,
+          filters: extractedFilters,
+          applied: false
+        });
+      } else {
+        setAiSuggestions(null);
+      }
+      
+      setIsAnalyzing(false);
+    };
+
+    const timer = setTimeout(analyzeQuery, 600);
+    return () => clearTimeout(timer);
+  }, [sidebarData.searchTerm]);
+
+  // Extract filters from query (simplified version)
+  const extractFiltersFromQuery = (query) => {
+    const filters = {};
+    const lowerQuery = query.toLowerCase();
+
+    // Property type detection
+    if (lowerQuery.includes('apartment') || lowerQuery.includes('flat')) {
+      filters.type = 'rent';
+    }
+    if (lowerQuery.includes('house') || lowerQuery.includes('villa')) {
+      filters.type = 'sale';
+    }
+
+    // Bedroom detection
+    const bedroomMatch = lowerQuery.match(/(\d+)\s*(?:bed|bedroom|beds)/);
+    if (bedroomMatch) {
+      filters.bedroomsMin = parseInt(bedroomMatch[1]);
+    }
+
+    // Price detection
+    const priceMatch = lowerQuery.match(/(?:under|below|up to|max)\s*(?:R|€|£|¥|₹|\$)?\s*(\d+[\d,]*)/);
+    if (priceMatch) {
+      filters.priceMax = parseInt(priceMatch[1].replace(/,/g, ''));
+    }
+
+    // Amenity detection
+    const amenities = [
+      { patterns: ['wifi', 'internet'], key: 'wifi' },
+      { patterns: ['parking', 'garage'], key: 'parking' },
+      { patterns: ['pool', 'swimming'], key: 'pool' },
+      { patterns: ['furnished'], key: 'furnished' },
+      { patterns: ['pet', 'pets'], key: 'pets' },
+      { patterns: ['gym', 'fitness'], key: 'gym' },
+      { patterns: ['view', 'scenic'], key: 'view' },
+      { patterns: ['secure', 'security'], key: 'security' }
+    ];
+
+    amenities.forEach(({ patterns, key }) => {
+      if (patterns.some(p => lowerQuery.includes(p))) {
+        filters[key] = true;
+      }
+    });
+
+    return filters;
+  };
+
   // Fetch data
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -300,7 +364,7 @@ const Search = () => {
         
         // Convert to old type for API compatibility
         const oldType = getOldTypeFromCategory(selectedCategory);
-        const endpoint = SEARCH_TYPE_CONFIG[oldType]?.endpoint || '/api/listing/get';
+        const endpoint = getEndpointForType(oldType);
         
         // Add category and type to params
         urlParams.set('category', selectedCategory);
@@ -329,6 +393,15 @@ const Search = () => {
 
     fetchData();
   }, [location.search, selectedCategory, searchType]);
+
+  const getEndpointForType = (type) => {
+    switch(type) {
+      case 'services': return '/api/service/get';
+      case 'helpers': return '/api/helper/get';
+      case 'events': return '/api/event/get';
+      default: return '/api/listing/get';
+    }
+  };
 
   // Load recent searches
   useEffect(() => {
@@ -365,10 +438,6 @@ const Search = () => {
       const limitedSearches = searches.slice(0, MAX_RECENT_SEARCHES);
       localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(limitedSearches));
       setRecentSearches(limitedSearches);
-      
-      // Also save to general search history
-      saveSearchHistory(params.searchTerm, selectedCategory, params);
-      setSearchHistory(getSearchHistory());
       
       return limitedSearches;
     } catch (error) {
@@ -413,6 +482,18 @@ const Search = () => {
     setShowSearchBox(false);
   };
 
+  const applyAiSuggestion = () => {
+    if (aiSuggestions) {
+      const newData = {
+        ...sidebarData,
+        ...aiSuggestions.filters
+      };
+      setSidebarData(newData);
+      setAiSuggestions(prev => ({ ...prev, applied: true }));
+      setSmartFilters(aiSuggestions.filters);
+    }
+  };
+
   const clearFilters = () => {
     setSidebarData({
       searchTerm: '',
@@ -452,16 +533,6 @@ const Search = () => {
   const clearSearchHistory = () => {
     localStorage.removeItem(RECENT_SEARCHES_KEY);
     setRecentSearches([]);
-    clearSearchHistoryUtil();
-    setSearchHistory([]);
-  };
-
-  const handleDestinationClick = (destination) => {
-    setSidebarData(prev => ({
-      ...prev,
-      location: destination.name,
-      searchTerm: destination.name
-    }));
   };
 
   const SkeletonCard = () => (
@@ -476,25 +547,28 @@ const Search = () => {
   );
 
   const currentTypes = getTypesByCategory();
-  const currentType = currentTypes.find(t => t.id === searchType);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div 
+      className={`min-h-screen bg-gradient-to-b from-gray-50 to-white transition-all duration-500 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+      }`}
+    >
       {/* Hero Section with Search Box */}
       {showSearchBox && (
-          <div className="relative bg-gradient-to-r from-rose-50 to-blue-50 rounded-3xl overflow-hidden mb-8">
-      <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-blue-500/10"></div>
-          <div className="max-w-7xl mx-auto px-4 py-16">
+        <div className="relative bg-gradient-to-r from-rose-50 to-blue-50 rounded-3xl overflow-hidden mb-8">
+          <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-blue-500/10"></div>
+          <div className="max-w-7xl mx-auto px-4 py-16 relative z-10">
             <div className="text-center mb-12">
-              <h1 className="text-5xl font-bold mb-4">Find your perfect stay</h1>
-              <p className="text-xl text-gray/90">Search across properties, services, helpers, and events</p>
+              <h1 className="text-5xl font-bold mb-4 text-gray-900">Find exactly what you need</h1>
+              <p className="text-xl text-gray-600">Search across properties, services, helpers, and events</p>
             </div>
 
-            {/* Main Search Box - Screenshot Style */}
+            {/* Main Search Box */}
             <div className="max-w-4xl mx-auto">
               <div className="bg-white rounded-2xl shadow-2xl p-2">
                 <form onSubmit={handleSubmit} className="flex flex-col md:flex-row items-center">
-                  {/* Destination */}
+                  {/* Location */}
                   <div className="flex-1 p-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Where?</label>
                     <div className="relative">
@@ -512,54 +586,19 @@ const Search = () => {
 
                   <div className="w-px h-12 bg-gray-200 hidden md:block"></div>
 
-                  {/* Check-in */}
+                  {/* Search Term */}
                   <div className="flex-1 p-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">When?</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">What?</label>
                     <div className="relative">
                       <input
-                        type="date"
-                        id="checkIn"
-                        value={sidebarData.checkIn}
+                        type="text"
+                        id="searchTerm"
+                        value={sidebarData.searchTerm}
                         onChange={handleChange}
-                        className="w-full text-lg border-none focus:ring-0 outline-none"
+                        placeholder="Try '2 bed apartment' or 'Cleaning service'"
+                        className="w-full text-lg border-none focus:ring-0 outline-none placeholder-gray-500"
                       />
-                    </div>
-                  </div>
-
-                  <div className="w-px h-12 bg-gray-200 hidden md:block"></div>
-
-                  {/* Check-out */}
-                  <div className="flex-1 p-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">When?</label>
-                    <div className="relative">
-                      <input
-                        type="date"
-                        id="checkOut"
-                        value={sidebarData.checkOut}
-                        onChange={handleChange}
-                        className="w-full text-lg border-none focus:ring-0 outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="w-px h-12 bg-gray-200 hidden md:block"></div>
-
-                  {/* Guests */}
-                  <div className="flex-1 p-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Who?</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        id="guests"
-                        value={sidebarData.guests}
-                        onChange={handleChange}
-                        min="1"
-                        max="16"
-                        className="w-full text-lg border-none focus:ring-0 outline-none"
-                      />
-                      <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500">
-                        guests
-                      </span>
+                      <MagnifyingGlassIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     </div>
                   </div>
 
@@ -567,7 +606,7 @@ const Search = () => {
                   <div className="p-4">
                     <button
                       type="submit"
-                      className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                      className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                     >
                       <MagnifyingGlassIcon className="w-5 h-5" />
                       Search
@@ -580,7 +619,7 @@ const Search = () => {
               <div className="flex justify-end mt-4">
                 <button
                   onClick={clearFilters}
-                  className="text-white/90 hover:text-white text-sm font-medium"
+                  className="text-gray-600 hover:text-gray-800 text-sm font-medium"
                 >
                   Clear all
                 </button>
@@ -592,67 +631,66 @@ const Search = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Recent Searches & Suggested Destinations */}
-        {showSearchBox && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            {/* Recent Searches */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <ClockIcon className="w-6 h-6 text-gray-700" />
-                <h2 className="text-2xl font-bold text-gray-900">Recent searches</h2>
-              </div>
-              <div className="space-y-4">
-                {recentDestinations.map((dest, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleDestinationClick(dest)}
-                    className="w-full text-left p-4 rounded-xl border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{dest.icon}</span>
-                        <div>
-                          <h3 className="font-semibold text-gray-900 group-hover:text-purple-700">
-                            {dest.name}
-                          </h3>
-                          <p className="text-sm text-gray-600">{dest.dates}</p>
-                        </div>
-                      </div>
-                      <ChevronDownIcon className="w-5 h-5 text-gray-400 group-hover:text-purple-600 rotate-90" />
+        {/* AI Suggestions */}
+        {aiSuggestions && !aiSuggestions.applied && (
+          <div className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl border border-blue-100 animate-fadeIn">
+            <div className="flex items-start gap-3">
+              <LightBulbIcon className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-semibold text-blue-800">AI Suggestions</h3>
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                    Smart Search
+                  </span>
+                </div>
+                <p className="text-sm text-blue-700 mb-3">
+                  We found these patterns in your search:
+                </p>
+                <div className="space-y-2">
+                  {Object.entries(aiSuggestions.filters).map(([key, value]) => (
+                    <div key={key} className="flex items-center gap-2 text-sm">
+                      <span className="font-medium">{key}:</span>
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                        {value.toString()}
+                      </span>
                     </div>
-                  </button>
-                ))}
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={applyAiSuggestion}
+                  className="mt-4 w-full py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg shadow-sm transition-all"
+                >
+                  Apply Smart Filters
+                </button>
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Suggested Destinations */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <SparklesIcon className="w-6 h-6 text-purple-600" />
-                <h2 className="text-2xl font-bold text-gray-900">Suggested destinations</h2>
-              </div>
-              <div className="space-y-4">
-                {popularDestinations.map((dest, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleDestinationClick(dest)}
-                    className="w-full text-left p-4 rounded-xl border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{dest.icon}</span>
-                        <div>
-                          <h3 className="font-semibold text-gray-900 group-hover:text-purple-700">
-                            {dest.name}
-                          </h3>
-                          <p className="text-sm text-gray-600">{dest.dates}</p>
-                        </div>
-                      </div>
-                      <ChevronDownIcon className="w-5 h-5 text-gray-400 group-hover:text-purple-600 rotate-90" />
-                    </div>
-                  </button>
-                ))}
-              </div>
+        {/* Smart filter tags */}
+        {Object.keys(smartFilters).length > 0 && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
+            <div className="flex items-center gap-2 mb-2">
+              <SparklesIcon className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-800">Active Smart Filters:</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(smartFilters).map(([key, value]) => (
+                <span
+                  key={key}
+                  className="inline-flex items-center gap-1 px-3 py-1 bg-white border border-blue-200 text-blue-700 rounded-full text-sm"
+                >
+                  <span className="font-medium">{key}:</span>
+                  <span>{value.toString()}</span>
+                </span>
+              ))}
+              <button
+                onClick={() => setSmartFilters({})}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium px-3 py-1 hover:bg-white/50 rounded-full"
+              >
+                Clear AI Filters
+              </button>
             </div>
           </div>
         )}
@@ -665,7 +703,7 @@ const Search = () => {
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all ${selectedCategory === category.id
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                   }`}
               >
@@ -681,7 +719,31 @@ const Search = () => {
           </div>
         </div>
 
-        {/* Results Section */}
+        {/* Type selector */}
+        {currentTypes.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">
+              Select {selectedCategory} Type
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {currentTypes.map((type) => (
+                <button
+                  key={type.id}
+                  onClick={() => setSearchType(type.id)}
+                  className={`flex flex-col items-center justify-center px-4 py-3 rounded-lg transition-all min-w-[120px] ${searchType === type.id
+                      ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-500 text-blue-700 shadow-sm'
+                      : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                    }`}
+                >
+                  <span className="text-2xl mb-1">{type.emoji}</span>
+                  <span className="text-sm font-medium">{type.label}</span>
+                  <span className="text-xs text-gray-500 mt-1 text-center">{type.description}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Filters Sidebar */}
           <div className={`lg:w-80 lg:sticky lg:top-8 h-fit ${showFilters ? 'block' : 'hidden'} lg:block`}>
@@ -694,6 +756,24 @@ const Search = () => {
                 >
                   <XMarkIcon className="w-5 h-5" />
                 </button>
+              </div>
+
+              {/* Search input */}
+              <div className="mb-6">
+                <label htmlFor="searchTerm" className="block text-sm font-medium text-gray-700 mb-2">
+                  Search term
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="searchTerm"
+                    value={sidebarData.searchTerm}
+                    onChange={handleChange}
+                    placeholder="Search within results..."
+                    className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  />
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                </div>
               </div>
 
               {/* Price range */}
@@ -758,21 +838,159 @@ const Search = () => {
                 </div>
               )}
 
-              {/* Search Button */}
-              <button
-                onClick={handleSubmit}
-                className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition-all"
-              >
-                Apply Filters
-              </button>
+              {/* Amenities - only for stays */}
+              {selectedCategory === 'stays' && (
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-sm font-medium text-gray-700">Amenities</label>
+                  </div>
+                  <div className="space-y-3">
+                    {[
+                      { id: 'wifi', label: 'WiFi', icon: '📶' },
+                      { id: 'parking', label: 'Parking', icon: '🚗' },
+                      { id: 'aircon', label: 'Air Conditioning', icon: '❄️' },
+                      { id: 'pool', label: 'Pool', icon: '🏊' },
+                      { id: 'gym', label: 'Gym', icon: '💪' },
+                      { id: 'furnished', label: 'Furnished', icon: '🛋️' },
+                      { id: 'kitchen', label: 'Kitchen', icon: '🍳' },
+                      { id: 'laundry', label: 'Laundry', icon: '🧺' },
+                      { id: 'pets', label: 'Pets Allowed', icon: '🐾' },
+                      { id: 'security', label: 'Security', icon: '🔒' }
+                    ].map((item) => (
+                      <div key={item.id} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={item.id}
+                          checked={sidebarData[item.id] || smartFilters[item.id] === true}
+                          onChange={handleChange}
+                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <label htmlFor={item.id} className="ml-2 text-sm flex items-center gap-1">
+                          <span>{item.icon}</span>
+                          {item.label}
+                          {smartFilters[item.id] && (
+                            <span className="text-xs text-blue-600 ml-1">•</span>
+                          )}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-              <button
-                onClick={clearFilters}
-                className="w-full mt-3 py-2 text-gray-600 hover:text-gray-800 text-sm font-medium"
-              >
-                Clear all filters
-              </button>
+              {/* Form actions */}
+              <div className="space-y-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={handleSubmit}
+                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition-all"
+                >
+                  Apply Filters
+                </button>
+
+                <button
+                  onClick={clearFilters}
+                  className="w-full py-2 text-gray-600 hover:text-gray-800 text-sm font-medium"
+                >
+                  Clear all filters
+                </button>
+              </div>
             </div>
+
+            {/* Recent searches panel */}
+            {recentSearches.length > 0 && (
+              <div className="mt-6 bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-medium text-gray-900 flex items-center gap-2">
+                    <ClockIcon className="w-5 h-5 text-gray-400" />
+                    Recent Searches
+                  </h3>
+                  <button
+                    onClick={clearSearchHistory}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    Clear all
+                  </button>
+                </div>
+                <ul className="space-y-3">
+                  {recentSearches.map((search, i) => {
+                    const searchTerm = search?.params?.searchTerm || 
+                                    search?.params?.location || 
+                                    'Search';
+                    
+                    const searchCategory = search?.category || 'all';
+                    const searchType = search?.type || 'all';
+                    const searchParams = search?.params || {};
+
+                    return (
+                      <li
+                        key={i}
+                        className="p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-all"
+                        onClick={() => {
+                          if (!searchParams || typeof searchParams !== 'object') return;
+
+                          const newData = { ...sidebarData, ...searchParams };
+                          setSidebarData(newData);
+                          
+                          if (searchCategory && searchCategory !== 'all') {
+                            setSelectedCategory(searchCategory);
+                          }
+                          
+                          if (searchType && searchType !== 'all') {
+                            setSearchType(searchType);
+                          }
+                          
+                          const urlParams = new URLSearchParams();
+                          
+                          Object.entries(searchParams).forEach(([key, value]) => {
+                            if (value !== null && value !== undefined && value !== '') {
+                              urlParams.set(key, value.toString());
+                            }
+                          });
+                          
+                          if (searchCategory && searchCategory !== 'all') {
+                            urlParams.set('category', searchCategory);
+                          }
+                          
+                          if (searchType && searchType !== 'all') {
+                            urlParams.set('subType', searchType);
+                          }
+                          
+                          const urlString = urlParams.toString();
+                          navigate(`/search?${urlString}`);
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 flex items-center justify-center">
+                            <span className="text-sm">
+                              {categories.find(c => c.id === searchCategory)?.icon || '🔍'}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {searchTerm}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-gray-500 capitalize">
+                                {categories.find(c => c.id === searchCategory)?.label || searchCategory}
+                              </span>
+                              {search?.timestamp && (
+                                <>
+                                  <span className="text-gray-300">•</span>
+                                  <span className="text-xs text-gray-400">
+                                    {new Date(search.timestamp).toLocaleDateString()}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <ChevronDownIcon className="w-5 h-5 text-gray-400 rotate-90" />
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Main content area */}
@@ -781,7 +999,7 @@ const Search = () => {
             <div className="lg:hidden flex justify-between items-center mb-6">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">
-                  {sidebarData.searchTerm ? `Results for "${sidebarData.searchTerm}"` : `${currentType?.label || categories.find(c => c.id === selectedCategory)?.label}`}
+                  {sidebarData.searchTerm ? `Results for "${sidebarData.searchTerm}"` : `${currentTypes.find(t => t.id === searchType)?.label || categories.find(c => c.id === selectedCategory)?.label}`}
                 </h2>
                 {listings.length > 0 && (
                   <p className="text-gray-600 text-sm mt-1">
@@ -802,7 +1020,7 @@ const Search = () => {
             {!loading && listings.length > 0 && (
               <div className="mb-6 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
                 <p className="text-gray-700">
-                  Showing <span className="font-bold text-gray-900">{listings.length}</span> {currentType?.label?.toLowerCase() || selectedCategory}
+                  Showing <span className="font-bold text-gray-900">{listings.length}</span> {currentTypes.find(t => t.id === searchType)?.label?.toLowerCase() || selectedCategory}
                   {sidebarData.searchTerm && (
                     <span> for "<span className="font-semibold">{sidebarData.searchTerm}</span>"</span>
                   )}
@@ -855,23 +1073,23 @@ const Search = () => {
             ) : (
               /* Empty state */
               <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
-                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full flex items-center justify-center">
-                  <SparklesIcon className="w-12 h-12 text-purple-600" />
+                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
+                  <SparklesIcon className="w-12 h-12 text-blue-600" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  No {currentType?.label?.toLowerCase() || selectedCategory} found
+                  No {currentTypes.find(t => t.id === searchType)?.label?.toLowerCase() || selectedCategory} found
                 </h3>
                 <p className="text-gray-600 mb-6 max-w-md mx-auto">
                   {sidebarData.searchTerm ? (
-                    `We couldn't find any ${currentType?.label?.toLowerCase() || selectedCategory} matching "${sidebarData.searchTerm}". Try adjusting your search or try a different category.`
+                    `We couldn't find any ${currentTypes.find(t => t.id === searchType)?.label?.toLowerCase() || selectedCategory} matching "${sidebarData.searchTerm}". Try adjusting your search or try a different category.`
                   ) : (
-                    `No ${currentType?.label?.toLowerCase() || selectedCategory} available with the current filters. Try adjusting your search criteria.`
+                    `No ${currentTypes.find(t => t.id === searchType)?.label?.toLowerCase() || selectedCategory} available with the current filters. Try adjusting your search criteria.`
                   )}
                 </p>
                 <div className="flex flex-wrap gap-3 justify-center">
                   <button
                     onClick={clearFilters}
-                    className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all"
+                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all"
                   >
                     Clear All Filters
                   </button>
