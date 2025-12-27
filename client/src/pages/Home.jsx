@@ -734,102 +734,291 @@ const HeroBanner = ({ onSearch, searchType, currentLocation = 'South Africa' }) 
   );
 };
 
-// Category Grid
-// Category Grid
+// Category Grid - UPDATED WITH AIRBNB-STYLE SLIDING AND NEW CATEGORIES
 const CategoryGrid = ({ onCategoryClick, stats, location = 'South Africa' }) => {
   const navigate = useNavigate();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const containerRef = useRef(null);
   
   const categories = [
+ 
+    
+    // Property Categories (Homes/Stays)
     { 
       icon: '🏠', 
-      label: 'Homes', 
-      count: stats?.properties || '1,234', 
-      color: 'bg-rose-100',
-      searchType: 'properties',
-      category: 'all',
-      onClick: () => navigate('/smart-search')
-    },
-    { 
-      icon: '✨', 
-      label: 'Experiences', 
-      count: stats?.services || '456', 
-      color: 'bg-emerald-100',
-      searchType: 'services',
-      category: 'all',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Experiences', searchType: 'services', category: 'all' }, location)
-    },
-    { 
-      icon: '👥', 
-      label: 'Services', 
-      count: stats?.helpers || '789', 
-      color: 'bg-purple-100',
-      searchType: 'helpers',
-      category: 'all',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Services', searchType: 'helpers', category: 'all' }, location)
-    },
-    { 
-      icon: '🎉', 
-      label: 'Events', 
-      count: stats?.events || '321', 
-      color: 'bg-amber-100',
-      searchType: 'events',
-      category: 'all',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Events', searchType: 'events', category: 'all' }, location)
-    },
-    { 
-      icon: '🏢', 
-      label: 'Office', 
-      count: '567', 
+      label: 'For Rental', 
+      count: stats?.rental || '400', 
       color: 'bg-blue-100',
       searchType: 'properties',
+      category: 'rent',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'For Rental', searchType: 'properties', category: 'rent' }, location)
+    },
+    { 
+      icon: '💰', 
+      label: 'For Sale', 
+      count: stats?.sale || '270', 
+      color: 'bg-yellow-100',
+      searchType: 'properties',
+      category: 'sale',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'For Sale', searchType: 'properties', category: 'sale' }, location)
+    },
+    { 
+      icon: '🛌', 
+      label: 'Guest House', 
+      count: stats?.guestHouse || '180', 
+      color: 'bg-indigo-100',
+      searchType: 'properties',
+      category: 'over',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Guest House', searchType: 'properties', category: 'over' }, location)
+    },
+    { 
+      icon: '🕒', 
+      label: 'Hourly Stay', 
+      count: stats?.hourly || '156', 
+      color: 'bg-purple-100',
+      searchType: 'properties',
       category: 'office',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Office', searchType: 'properties', category: 'office' }, location)
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Hourly Stay', searchType: 'properties', category: 'office' }, location)
     },
     { 
       icon: '🌳', 
       label: 'Land', 
-      count: '234', 
+      count: stats?.land || '234', 
       color: 'bg-green-100',
       searchType: 'properties',
       category: 'land',
       onClick: () => onCategoryClick && onCategoryClick({ label: 'Land', searchType: 'properties', category: 'land' }, location)
     },
+
+ 
+  
     { 
-      icon: '🚚', 
-      label: 'Moving', 
-      count: '123', 
-      color: 'bg-indigo-100',
+      icon: '🌙', 
+      label: 'Overnight', 
+      count: stats?.overnight || '432', 
+      color: 'bg-indigo-50',
       searchType: 'services',
-      category: 'moving',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Moving', searchType: 'services', category: 'moving' }, location)
+      category: 'overnight',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Overnight', searchType: 'services', category: 'overnight' }, location)
     },
+
+    // Helper Categories (Services/Online)
     { 
       icon: '🧹', 
-      label: 'Cleaning', 
-      count: '456', 
+      label: 'Domestic Helper', 
+      count: stats?.domestic || '345', 
+      color: 'bg-pink-50',
+      searchType: 'helpers',
+      category: 'domestic',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Domestic Helper', searchType: 'helpers', category: 'domestic' }, location)
+    },
+    { 
+      icon: '📸', 
+      label: 'Photographer', 
+      count: stats?.photography || '210', 
+      color: 'bg-gray-100',
+      searchType: 'helpers',
+      category: 'photography',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Photographer', searchType: 'helpers', category: 'photography' }, location)
+    },
+    { 
+      icon: '✂️', 
+      label: 'Barber', 
+      count: stats?.barber || '178', 
+      color: 'bg-blue-50',
+      searchType: 'helpers',
+      category: 'barber',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Barber', searchType: 'helpers', category: 'barber' }, location)
+    },
+    { 
+      icon: '💅', 
+      label: 'Beauty Specialist', 
+      count: stats?.beauty || '256', 
       color: 'bg-pink-100',
-      searchType: 'services',
-      category: 'cleaning',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Cleaning', searchType: 'services', category: 'cleaning' }, location)
+      searchType: 'helpers',
+      category: 'beauty',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Beauty Specialist', searchType: 'helpers', category: 'beauty' }, location)
+    },
+    { 
+      icon: '📚', 
+      label: 'Private Tutor', 
+      count: stats?.tutor || '189', 
+      color: 'bg-purple-50',
+      searchType: 'helpers',
+      category: 'tutor',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Private Tutor', searchType: 'helpers', category: 'tutor' }, location)
+    },
+    { 
+      icon: '👨‍🍳', 
+      label: 'Private Chef', 
+      count: stats?.chef || '98', 
+      color: 'bg-red-50',
+      searchType: 'helpers',
+      category: 'chef',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Private Chef', searchType: 'helpers', category: 'chef' }, location)
+    },
+    { 
+      icon: '🏃', 
+      label: 'Errand Runner', 
+      count: stats?.errand || '124', 
+      color: 'bg-orange-100',
+      searchType: 'helpers',
+      category: 'errand',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Errand Runner', searchType: 'helpers', category: 'errand' }, location)
+    },
+    { 
+      icon: '🖌️', 
+      label: 'Tattoo Artist', 
+      count: stats?.tattoo || '76', 
+      color: 'bg-gray-100',
+      searchType: 'helpers',
+      category: 'tattoo',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Tattoo Artist', searchType: 'helpers', category: 'tattoo' }, location)
+    },
+    { 
+      icon: '🍰', 
+      label: 'Baker', 
+      count: stats?.baker || '89', 
+      color: 'bg-amber-100',
+      searchType: 'helpers',
+      category: 'baker',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Baker', searchType: 'helpers', category: 'baker' }, location)
+    },
+
+    // Event Categories
+    { 
+      icon: '🎵', 
+      label: 'Music Events', 
+      count: stats?.music || '145', 
+      color: 'bg-purple-100',
+      searchType: 'events',
+      category: 'music',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Music Events', searchType: 'events', category: 'music' }, location)
+    },
+    { 
+      icon: '⚽', 
+      label: 'Sports Events', 
+      count: stats?.sports || '210', 
+      color: 'bg-green-100',
+      searchType: 'events',
+      category: 'sports',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Sports Events', searchType: 'events', category: 'sports' }, location)
+    },
+    { 
+      icon: '🎨', 
+      label: 'Art & Culture', 
+      count: stats?.art || '98', 
+      color: 'bg-pink-100',
+      searchType: 'events',
+      category: 'art',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Art & Culture', searchType: 'events', category: 'art' }, location)
+    },
+    { 
+      icon: '🧑‍🤝‍🧑', 
+      label: 'Community Events', 
+      count: stats?.community || '167', 
+      color: 'bg-blue-100',
+      searchType: 'events',
+      category: 'community',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Community Events', searchType: 'events', category: 'community' }, location)
+    },
+    { 
+      icon: '🍔', 
+      label: 'Food & Drink', 
+      count: stats?.food || '134', 
+      color: 'bg-amber-100',
+      searchType: 'events',
+      category: 'food',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Food & Drink', searchType: 'events', category: 'food' }, location)
+    },
+    { 
+      icon: '✨', 
+      label: 'Other Events', 
+      count: stats?.other || '89', 
+      color: 'bg-gray-100',
+      searchType: 'events',
+      category: 'other',
+      onClick: () => onCategoryClick && onCategoryClick({ label: 'Other Events', searchType: 'events', category: 'other' }, location)
     },
   ];
 
+  const itemsPerView = 8; // Number of categories visible at once
+  const maxIndex = Math.ceil(categories.length / itemsPerView) - 1;
+
+  const handleNext = () => {
+    if (currentIndex < maxIndex) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
   return (
     <div className="mb-12">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Explore by category</h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-        {categories.map((category, index) => (
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Explore by category</h2>
+        <div className="flex space-x-2">
+          <button
+            onClick={handlePrev}
+            disabled={currentIndex === 0}
+            className={`p-2 rounded-full ${currentIndex === 0 ? 'text-gray-300' : 'text-gray-700 hover:bg-gray-100'}`}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button
+            onClick={handleNext}
+            disabled={currentIndex === maxIndex}
+            className={`p-2 rounded-full ${currentIndex === maxIndex ? 'text-gray-300' : 'text-gray-700 hover:bg-gray-100'}`}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Category Carousel */}
+      <div className="relative">
+        <div className="overflow-hidden">
+          <div 
+            ref={containerRef}
+            className="flex transition-transform duration-300 ease-out"
+            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          >
+            {categories.map((category, index) => (
+              <div key={index} className="w-1/8 flex-shrink-0 px-2">
+                <button
+                  onClick={category.onClick}
+                  className="flex flex-col items-center p-4 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300 group w-full"
+                >
+                  <div className={`w-12 h-12 ${category.color} rounded-full flex items-center justify-center text-2xl mb-2 group-hover:scale-110 transition-transform duration-300`}>
+                    {category.icon}
+                  </div>
+                  <span className="font-medium text-gray-900 text-sm group-hover:text-rose-500 transition-colors text-center">
+                    {category.label}
+                  </span>
+                  <span className="text-xs text-gray-500 mt-1">{category.count}+</span>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Dots Indicator */}
+      <div className="flex justify-center mt-4 space-x-2">
+        {Array.from({ length: maxIndex + 1 }).map((_, index) => (
           <button
             key={index}
-            onClick={category.onClick}
-            className="flex flex-col items-center p-4 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300 group"
-          >
-            <div className={`w-12 h-12 ${category.color} rounded-full flex items-center justify-center text-2xl mb-2 group-hover:scale-110 transition-transform duration-300`}>
-              {category.icon}
-            </div>
-            <span className="font-medium text-gray-900 text-sm group-hover:text-rose-500 transition-colors">{category.label}</span>
-            <span className="text-xs text-gray-500">{category.count}+</span>
-          </button>
+            onClick={() => setCurrentIndex(index)}
+            className={`w-2 h-2 rounded-full ${index === currentIndex ? 'bg-rose-500' : 'bg-gray-300'}`}
+          />
         ))}
       </div>
     </div>
