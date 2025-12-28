@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Menu } from '@headlessui/react';
 import {
   HomeIcon,
   CurrencyDollarIcon,
@@ -16,11 +17,7 @@ import {
   CalendarIcon,
   WrenchIcon,
   MagnifyingGlassIcon,
-  MapPinIcon,
-  SparklesIcon,
-  FireIcon,
-  ComputerDesktopIcon,
-  TicketIcon
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 import ListingItem from "../components/ListingItem";
 import ServiceItem from "../components/ServiceItem";
@@ -28,29 +25,37 @@ import HelperItem from "../components/HelperItem";
 import EventItem from "../components/EventItem";
 
 const RECENT_SEARCHES_KEY = 'recentPropertySearches';
-const MAX_RECENT_SEARCHES = 10;
+const MAX_RECENT_SEARCHES = 5;
 const DEFAULT_LISTING_LIMIT = 12;
 
 const Search = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Add fade-in animation state
-  const [isVisible, setIsVisible] = useState(false);
-
-  const [selectedCategory, setSelectedCategory] = useState('stays');
-  const [searchType, setSearchType] = useState('rent');
-  const [searchData, setSearchData] = useState({
+  const [searchType, setSearchType] = useState('properties');
+  const [sidebarData, setSidebarData] = useState({
     searchTerm: '',
-    location: '',
-    checkIn: '',
-    checkOut: '',
-    guests: 1,
     type: 'all',
-    priceMin: '',
-    priceMax: '',
+    parking: false,
+    furnished: false,
+    wifi: false,
+    pool: false,
+    tv: false,
+    offer: false,
+    sort: 'createdAt',
+    order: 'desc',
     bedroomsMin: '',
-    bedroomsMax: ''
+    bedroomsMax: '',
+    priceMin: 0,
+    priceMax: 100000000,
+    breakfast: false,
+    pets: false,
+    security: false,
+    aircon: false,
+    gym: false,
+    view: false,
+    kitchen: false,
+    laundry: false
   });
 
   const [loading, setLoading] = useState(false);
@@ -59,321 +64,153 @@ const Search = () => {
   const [recentSearches, setRecentSearches] = useState([]);
   const [aiSuggestions, setAiSuggestions] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [smartFilters, setSmartFilters] = useState({});
-  const [showSearchBox, setShowSearchBox] = useState(true);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [searchExamples, setSearchExamples] = useState([
+   
+    '3 bedroom apartment in Sandton',
+    'Office space in Johannesburg CBD',
+   
+    'Weekend music festival tickets'
+  ]);
 
-  // Categories configuration
-  const categories = [
-    {
-      id: 'stays',
-      label: 'Stays & Properties',
-      icon: <HomeIcon className="w-5 h-5" />,
-      description: 'Rentals, sales, land'
-    },
-    {
-      id: 'experiences',
-      label: 'Services & Experiences',
-      icon: <FireIcon className="w-5 h-5" />,
-      description: 'Cleaning, maintenance, moving'
-    },
-    {
-      id: 'online',
-      label: 'Online Helpers',
-      icon: <ComputerDesktopIcon className="w-5 h-5" />,
-      description: 'Helpers, tutors, chefs'
-    },
-    {
-      id: 'events',
-      label: 'Events',
-      icon: <TicketIcon className="w-5 h-5" />,
-      description: 'Concerts, festivals, meetups'
-    }
+  const propertyTypes = [
+    { value: 'all', label: 'All Types', icon: <HomeIcon className="w-5 h-5" /> },
+    { value: 'rent', label: 'For Rent', icon: <CurrencyDollarIcon className="w-5 h-5" /> },
+    { value: 'sale', label: 'For Sale', icon: <TagIcon className="w-5 h-5" /> },
+    { value: 'office', label: 'Office', icon: <BuildingOfficeIcon className="w-5 h-5" /> },
+    { value: 'land', label: 'Land', icon: <MapIcon className="w-5 h-5" /> },
+    { value: 'guesthouse', label: 'Guest House', icon: <UserGroupIcon className="w-5 h-5" /> }
   ];
 
-  // Get types based on selected category
-  const getTypesByCategory = () => {
-    switch (selectedCategory) {
-      case 'stays':
-        return [
-          { id: "rent", label: "Room/Home Rent", emoji: "🏠", description: "Monthly rental" },
-          { id: "over", label: "Guest House", emoji: "🛌", description: "Nightly stays" },
-          { id: "office", label: "Hourly Stay", emoji: "🕒", description: "Per hour accommodation" },
-          { id: "land", label: "Land", emoji: "🌳", description: "Plot for sale" },
-          { id: "sale", label: "For Sale", emoji: "💰", description: "Property sale" },
-        ];
-      case 'experiences':
-        return [
-          { id: "cleaning", label: "Cleaning", emoji: "🧹", description: "Home & office cleaning" },
-          { id: "maintenance", label: "Maintenance", emoji: "🔧", description: "Repairs & fixes" },
-          { id: "moving", label: "Moving", emoji: "🚚", description: "Relocation services" },
-          { id: "landscaping", label: "Landscaping", emoji: "🌿", description: "Garden & yard work" },
-          { id: "catering", label: "Catering", emoji: "🍽️", description: "Food & catering" },
-          { id: "daycare", label: "Day Care", emoji: "👶", description: "Child care services" },
-          { id: "schoolTransport", label: "Transport", emoji: "🚌", description: "School transport" },
-          { id: "other", label: "Other", emoji: "✨", description: "Other services" },
-        ];
-      case 'online':
-        return [
-          { id: "domestic", label: "Domestic Helper", emoji: "🧹", description: "Cleaning, laundry, chores" },
-          { id: "errand", label: "Errand Runner", emoji: "🏃", description: "Shopping, deliveries, tasks" },
-          { id: "tutor", label: "Private Tutor", emoji: "📚", description: "Academic tutoring" },
-          { id: "chef", label: "Private Chef", emoji: "👨‍🍳", description: "Meal preparation" },
-          { id: "beauty", label: "Beauty Specialist", emoji: "💅", description: "Hair, nails, makeup" },
-          { id: "tattoo", label: "Tattoo Artist", emoji: "🖌️", description: "Tattoo design" },
-          { id: "barber", label: "Barber", emoji: "✂️", description: "Haircuts, grooming" },
-          { id: "photography", label: "Photographer", emoji: "📷", description: "Photo sessions" },
-          { id: "baker", label: "Baker", emoji: "🍰", description: "Custom baked goods" },
-        ];
-      case 'events':
-        return [
-          { id: "music", label: "Music", emoji: "🎵", description: "Concerts, festivals" },
-          { id: "sports", label: "Sports", emoji: "⚽", description: "Games, tournaments" },
-          { id: "art", label: "Art & Culture", emoji: "🎨", description: "Exhibitions, shows" },
-          { id: "community", label: "Community", emoji: "🧑‍🤝‍🧑", description: "Meetups, gatherings" },
-          { id: "food", label: "Food & Drink", emoji: "🍔", description: "Food festivals, tastings" },
-        ];
-      default:
-        return [];
+  const serviceTypes = [
+    { value: 'all', label: 'All Services', icon: <WrenchIcon className="w-5 h-5" /> },
+    { value: 'cleaning', label: 'Cleaning', icon: '🧹' },
+    { value: 'maintenance', label: 'Maintenance', icon: '🔧' },
+    { value: 'moving', label: 'Moving', icon: '🚚' },
+    { value: 'landscaping', label: 'Landscaping', icon: '🌿' },
+    { value: 'catering', label: 'Catering', icon: '🍳' }
+  ];
+
+  const helperTypes = [
+    { value: 'all', label: 'All Helpers', icon: <UserIcon className="w-5 h-5" /> },
+    { value: 'domestic', label: 'General Help', icon: '👨‍💼' },
+    { value: 'errand', label: 'Errand Runner', icon: '🛒' },
+    { value: 'tutor', label: 'Tutor', icon: '📚' },
+    { value: 'chef', label: 'Chef', icon: '👨‍🍳' },
+    { value: 'maid', label: 'Maid', icon: '🧹' }
+  ];
+
+  const eventTypes = [
+    { value: 'all', label: 'All Events', icon: <CalendarIcon className="w-5 h-5" /> },
+    { value: 'music', label: 'Music', icon: '🎵' },
+    { value: 'sports', label: 'Sports', icon: '⚽' },
+    { value: 'art', label: 'Art & Culture', icon: '🎨' },
+    { value: 'community', label: 'Community', icon: '👥' },
+    { value: 'food', label: 'Food & Drink', icon: '🍔' }
+  ];
+
+  const getCurrentTypes = () => {
+    switch (searchType) {
+      case 'services': return serviceTypes;
+      case 'helpers': return helperTypes;
+      case 'events': return eventTypes;
+      default: return propertyTypes;
     }
   };
 
-  // Map old search types to new categories for backward compatibility
-  const getCategoryFromOldType = (oldType) => {
-    switch (oldType) {
-      case 'properties': return 'stays';
-      case 'services': return 'experiences';
-      case 'helpers': return 'online';
-      case 'events': return 'events';
-      default: return 'stays';
-    }
-  };
-
-  const getOldTypeFromCategory = (category) => {
-    switch (category) {
-      case 'stays': return 'properties';
-      case 'experiences': return 'services';
-      case 'online': return 'helpers';
-      case 'events': return 'events';
-      default: return 'properties';
-    }
-  };
-
-  // Initialize fade-in effect
-  useEffect(() => {
-    setIsVisible(false);
-    const timer = setTimeout(() => {
-      setIsVisible(true);
-    }, 10);
-    return () => clearTimeout(timer);
-  }, [location.search]);
-
-  // Initialize from URL
+  // Initialize search term from URL
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const searchTermParam = urlParams.get('searchTerm');
-    const categoryParam = urlParams.get('category');
-    const typeParam = urlParams.get('type');
-    const locationParam = urlParams.get('location');
-    const checkInParam = urlParams.get('checkIn');
-    const checkOutParam = urlParams.get('checkOut');
-    const guestsParam = urlParams.get('guests');
-    const priceMinParam = urlParams.get('priceMin');
-    const priceMaxParam = urlParams.get('priceMax');
-    const bedroomsMinParam = urlParams.get('bedroomsMin');
-    const bedroomsMaxParam = urlParams.get('bedroomsMax');
-    
-    const newSearchData = { ...searchData };
     
     if (searchTermParam) {
-      newSearchData.searchTerm = searchTermParam;
+      setSidebarData(prev => ({
+        ...prev,
+        searchTerm: searchTermParam
+      }));
     }
-    
-    if (locationParam) {
-      newSearchData.location = locationParam;
-    }
-    
-    if (checkInParam) {
-      newSearchData.checkIn = checkInParam;
-    }
-    
-    if (checkOutParam) {
-      newSearchData.checkOut = checkOutParam;
-    }
-    
-    if (guestsParam) {
-      newSearchData.guests = parseInt(guestsParam);
-    }
-    
-    if (priceMinParam) {
-      newSearchData.priceMin = priceMinParam;
-    }
-    
-    if (priceMaxParam) {
-      newSearchData.priceMax = priceMaxParam;
-    }
-    
-    if (bedroomsMinParam) {
-      newSearchData.bedroomsMin = bedroomsMinParam;
-    }
-    
-    if (bedroomsMaxParam) {
-      newSearchData.bedroomsMax = bedroomsMaxParam;
-    }
-    
-    // Handle old type param for backward compatibility
-    if (typeParam) {
-      const oldType = typeParam;
-      const category = getCategoryFromOldType(oldType);
-      setSelectedCategory(category);
-      
-      // Try to map old type to new type
-      const types = getTypesByCategory();
-      const matchedType = types.find(t => t.id === oldType);
-      if (matchedType) {
-        setSearchType(matchedType.id);
-      }
-    }
-    
-    if (categoryParam && categories.map(c => c.id).includes(categoryParam)) {
-      setSelectedCategory(categoryParam);
-      
-      // Set default type for category
-      const types = getTypesByCategory();
-      if (types.length > 0) {
-        const urlType = urlParams.get('subType') || types[0].id;
-        const matchedType = types.find(t => t.id === urlType);
-        if (matchedType) {
-          setSearchType(matchedType.id);
-        } else {
-          setSearchType(types[0].id);
-        }
-      }
-    }
-    
-    setSearchData(newSearchData);
   }, [location.search]);
 
-  // Update search type when category changes
-  useEffect(() => {
-    const types = getTypesByCategory();
-    if (types.length > 0 && !types.find(t => t.id === searchType)) {
-      setSearchType(types[0].id);
-    }
-  }, [selectedCategory]);
-
-  // Smart search analysis
-  useEffect(() => {
-    const analyzeQuery = async () => {
-      if (searchData.searchTerm.length < 3) {
-        setAiSuggestions(null);
-        return;
-      }
-
-      setIsAnalyzing(true);
-      
-      // Simulate AI analysis
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const extractedFilters = extractFiltersFromQuery(searchData.searchTerm);
-      setSmartFilters(extractedFilters);
-      
-      if (Object.keys(extractedFilters).length > 0) {
-        setAiSuggestions({
-          searchTerm: searchData.searchTerm,
-          filters: extractedFilters,
-          applied: false
-        });
-      } else {
-        setAiSuggestions(null);
-      }
-      
-      setIsAnalyzing(false);
-    };
-
-    const timer = setTimeout(analyzeQuery, 600);
-    return () => clearTimeout(timer);
-  }, [searchData.searchTerm]);
-
-  // Extract filters from query (simplified version)
-  const extractFiltersFromQuery = (query) => {
-    const filters = {};
-    const lowerQuery = query.toLowerCase();
-
-    // Property type detection
-    if (lowerQuery.includes('apartment') || lowerQuery.includes('flat')) {
-      filters.type = 'rent';
-    }
-    if (lowerQuery.includes('house') || lowerQuery.includes('villa')) {
-      filters.type = 'sale';
-    }
-
-    // Bedroom detection
-    const bedroomMatch = lowerQuery.match(/(\d+)\s*(?:bed|bedroom|beds)/);
-    if (bedroomMatch) {
-      filters.bedroomsMin = parseInt(bedroomMatch[1]);
-    }
-
-    // Price detection
-    const priceMatch = lowerQuery.match(/(?:under|below|up to|max)\s*(?:R|€|£|¥|₹|\$)?\s*(\d+[\d,]*)/);
-    if (priceMatch) {
-      filters.priceMax = parseInt(priceMatch[1].replace(/,/g, ''));
-    }
-
-    return filters;
-  };
-
-  // Fetch data
+  // Fetch listings when search params change
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const fetchData = async () => {
-      if (!urlParams.toString()) return;
-      
       try {
         setLoading(true);
         
-        // Convert to old type for API compatibility
-        const oldType = getOldTypeFromCategory(selectedCategory);
-        const endpoint = getEndpointForType(oldType);
-        
-        // Add category and type to params
-        urlParams.set('category', selectedCategory);
-        urlParams.set('subType', searchType);
-        
-        console.log('Fetching from:', `${endpoint}?${urlParams.toString()}`);
+        // Fetch based on search type
+        let endpoint = '';
+        switch(searchType) {
+          case 'services':
+            endpoint = '/api/service/get';
+            break;
+          case 'helpers':
+            endpoint = '/api/helper/get';
+            break;
+          case 'events':
+            endpoint = '/api/event/get';
+            break;
+          default:
+            endpoint = '/api/listing/get';
+        }
         
         const res = await fetch(`${endpoint}?${urlParams.toString()}`);
         const data = await res.json();
         
-        console.log('Fetched data:', data);
-        
         // Add type to each item
         const typedData = data.map(item => ({
           ...item,
-          itemType: oldType,
-          category: selectedCategory,
-          subType: searchType,
-          price: item.price || item.regularPrice || item.rate || item.ticketPrice || 0
+          itemType: searchType,
+          // Normalize price for all types
+          price: item.price || item.regularPrice || 0
         }));
         
         setListings(typedData);
         setShowMore(typedData.length >= DEFAULT_LISTING_LIMIT);
       } catch (error) {
         console.error('Failed to fetch data:', error);
-        setListings([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [location.search, selectedCategory, searchType]);
+    if (urlParams.toString()) {
+      fetchData();
+    }
+  }, [location.search, searchType]);
 
-  const getEndpointForType = (type) => {
-    switch(type) {
-      case 'services': return '/api/service/get';
-      case 'helpers': return '/api/helper/get';
-      case 'events': return '/api/event/get';
-      default: return '/api/listing/get';
+  // AI analysis effect
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (sidebarData.searchTerm.length > 2) {
+        const suggestions = await analyzeSearchTerm(sidebarData.searchTerm);
+        setAiSuggestions(suggestions);
+      } else {
+        setAiSuggestions(null);
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [sidebarData.searchTerm]);
+
+  // Save recent searches
+  const saveRecentSearch = (params) => {
+    try {
+      const searches = JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY)) || [];
+      const filtered = searches.filter(
+        item => JSON.stringify(item.params) !== JSON.stringify(params)
+      );
+      const score = Object.keys(params).filter(k => params[k] && k !== 'searchTerm').length;
+      const newSearches = [
+        { params, timestamp: new Date().toISOString(), score },
+        ...filtered
+      ].slice(0, MAX_RECENT_SEARCHES);
+      localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(newSearches));
+      return newSearches;
+    } catch (error) {
+      console.error('Failed to save recent search:', error);
+      return [];
     }
   };
 
@@ -387,114 +224,146 @@ const Search = () => {
     }
   }, []);
 
-  // Save to recent searches
-  const saveRecentSearch = useCallback((params) => {
-    try {
-      const searches = JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY)) || [];
-      const existingIndex = searches.findIndex(
-        s => JSON.stringify(s.params) === JSON.stringify(params)
-      );
-      
-      if (existingIndex > -1) {
-        searches.splice(existingIndex, 1);
-      }
-      
-      const newSearch = {
-        params,
-        timestamp: new Date().toISOString(),
-        category: selectedCategory,
-        type: searchType
-      };
-      
-      searches.unshift(newSearch);
-      
-      // Keep only recent searches
-      const limitedSearches = searches.slice(0, MAX_RECENT_SEARCHES);
-      localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(limitedSearches));
-      setRecentSearches(limitedSearches);
-      
-      return limitedSearches;
-    } catch (error) {
-      console.error('Failed to save recent search:', error);
-      return [];
-    }
-  }, [selectedCategory, searchType]);
-
   // Form handlers
   const handleChange = (e) => {
-    const { id, value } = e.target;
-    setSearchData(prev => ({
+    const { id, value, checked, type } = e.target;
+    setSidebarData(prev => ({
       ...prev,
-      [id]: value
+      [id]: type === 'checkbox' ? checked : value
     }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
     const urlParams = new URLSearchParams();
     
-    // Include all non-empty values
-    Object.entries(searchData).forEach(([key, value]) => {
-      if (value !== '' && value !== 0) {
-        urlParams.set(key, value.toString());
+    // Include all non-default values
+    Object.entries(sidebarData).forEach(([key, value]) => {
+      if (value && value !== 'all' && value !== false) {
+        urlParams.set(key, value);
       }
     });
 
-    // Add category and type
-    urlParams.set('category', selectedCategory);
-    urlParams.set('subType', searchType);
+    const updatedSearches = saveRecentSearch(sidebarData);
+    setRecentSearches(updatedSearches);
+    navigate(`/search?${urlParams.toString()}`);
+  };
+
+  // AI analysis simulation
+  const analyzeSearchTerm = async (term) => {
+    if (term.length < 3) return null;
+    setIsAnalyzing(true);
+    await new Promise(resolve => setTimeout(resolve, 800));
     
-    // For backward compatibility, also add old type
-    urlParams.set('type', getOldTypeFromCategory(selectedCategory));
-    
-    // Save to recent searches
-    saveRecentSearch(searchData);
-    
-    // Navigate
-    const urlString = urlParams.toString();
-    console.log('Navigating to:', `/search?${urlString}`);
-    navigate(`/search?${urlString}`);
-    setShowSearchBox(false);
+    const suggestions = { searchTerm: term, filters: {} };
+    let hasSuggestion = false;
+
+    const typePatterns = [
+      { patterns: ['apartment', 'flat', 'studio', 'house'], type: 'properties' },
+      { patterns: ['clean', 'service', 'maintain'], type: 'services' },
+      { patterns: ['helper', 'chef', 'tutor', 'maid'], type: 'helpers' },
+      { patterns: ['event', 'festival', 'concert', 'show'], type: 'events' }
+    ];
+
+    typePatterns.forEach(({ patterns, type }) => {
+      if (patterns.some(p => term.toLowerCase().includes(p))) {
+        suggestions.filters.type = type;
+        hasSuggestion = true;
+      }
+    });
+
+    const locationContexts = [
+      { patterns: ['near beach', 'waterfront', 'ocean view'], filters: { view: true } },
+      { patterns: ['city center', 'downtown'], filters: { furnished: true } },
+      { patterns: ['secure estate', 'gated community'], filters: { security: true } }
+    ];
+
+    locationContexts.forEach(({ patterns, filters }) => {
+      if (patterns.some(p => term.toLowerCase().includes(p))) {
+        Object.assign(suggestions.filters, filters);
+        hasSuggestion = true;
+      }
+    });
+
+    const numberExtractors = [
+      { 
+        regex: /(\d+)\s*(bed|bedroom|beds|bd)/i, 
+        handler: (num) => { suggestions.filters.bedroomsMin = num; }
+      },
+      {
+        regex: /(under|below|up to|max)\s*(R|€|£|¥|₹|\$)?\s*(\d+[\d,]*)/i,
+        handler: (num) => { suggestions.filters.priceMax = num; }
+      }
+    ];
+
+    numberExtractors.forEach(({ regex, handler }) => {
+      const match = term.match(regex);
+      if (match) {
+        const num = parseInt(match[3].replace(/,/g, ''));
+        if (!isNaN(num)) {
+          handler(num);
+          hasSuggestion = true;
+        }
+      }
+    });
+
+    const amenityKeywords = [
+      { patterns: ['wifi', 'internet'], key: 'wifi' },
+      { patterns: ['parking', 'garage'], key: 'parking' },
+      { patterns: ['pool', 'swimming'], key: 'pool' },
+      { patterns: ['furnished'], key: 'furnished' },
+      { patterns: ['pet friendly'], key: 'pets' },
+      { patterns: ['gym', 'fitness'], key: 'gym' },
+      { patterns: ['view', 'scenic'], key: 'view' }
+    ];
+
+    amenityKeywords.forEach(({ patterns, key }) => {
+      if (patterns.some(p => new RegExp(p, 'i').test(term))) {
+        suggestions.filters[key] = true;
+        hasSuggestion = true;
+      }
+    });
+
+    setIsAnalyzing(false);
+    return hasSuggestion ? suggestions : null;
   };
 
   const applyAiSuggestion = () => {
     if (aiSuggestions) {
-      const newData = {
-        ...searchData,
-        ...aiSuggestions.filters
-      };
-      setSearchData(newData);
+      setSidebarData(prev => ({
+        ...prev,
+        ...aiSuggestions.filters,
+        searchTerm: aiSuggestions.searchTerm
+      }));
       setAiSuggestions(prev => ({ ...prev, applied: true }));
-      setSmartFilters(aiSuggestions.filters);
     }
   };
 
-  const clearSearch = () => {
-    setSearchData({
+  const clearFilters = () => {
+    setSidebarData({
       searchTerm: '',
-      location: '',
-      checkIn: '',
-      checkOut: '',
-      guests: 1,
       type: 'all',
-      priceMin: '',
-      priceMax: '',
+      parking: false,
+      furnished: false,
+      wifi: false,
+      pool: false,
+      tv: false,
+      offer: false,
+      sort: 'createdAt',
+      order: 'desc',
       bedroomsMin: '',
-      bedroomsMax: ''
+      bedroomsMax: '',
+      priceMin: 0,
+      priceMax: 100000000,
+      breakfast: false,
+      pets: false,
+      security: false,
+      aircon: false,
+      gym: false,
+      view: false,
+      kitchen: false,
+      laundry: false
     });
-    setSmartFilters({});
-    setAiSuggestions(null);
-    setSelectedCategory('stays');
-    setSearchType('rent');
-    setListings([]);
-    setShowSearchBox(true);
-    navigate('/search');
-  };
-
-  const clearSearchHistory = () => {
-    localStorage.removeItem(RECENT_SEARCHES_KEY);
-    setRecentSearches([]);
   };
 
   const SkeletonCard = () => (
@@ -508,205 +377,358 @@ const Search = () => {
     </div>
   );
 
-  const currentTypes = getTypesByCategory();
-  const currentType = currentTypes.find(t => t.id === searchType);
-
   return (
-    <div 
-      className={`min-h-screen bg-gradient-to-b from-gray-50 to-white transition-all duration-500 ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-      }`}
-    >
-      {/* Hero Section with Search Box */}
-      {showSearchBox && (
-        <div className="relative bg-gradient-to-r from-blue-50 to-purple-50 rounded-3xl overflow-hidden mb-8">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10"></div>
-          <div className="max-w-7xl mx-auto px-4 py-16 relative z-10">
-            <div className="text-center mb-12">
-              <h1 className="text-5xl font-bold mb-4 text-gray-900">Find your perfect stay</h1>
-              <p className="text-xl text-gray-600">Search across properties, services, helpers, and events</p>
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Gradient Hero Section */}
+      <div className="relative bg-gradient-to-r from-rose-50 to-blue-50 rounded-3xl overflow-hidden mb-8">
+        <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-blue-500/10"></div>
+        
+        <div className="relative p-8 md:p-12">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
+              <SparklesIcon className="w-5 h-5 text-rose-500" />
+              <span className="text-sm font-medium text-gray-700">AI-Powered Search</span>
+            </div>
+            
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Find exactly what you <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-600 to-blue-600">need</span>
+            </h1>
+         
+
+            {/* Main Search Input */}
+            <div className="max-w-2xl mx-auto">
+              <form onSubmit={handleSubmit} className="relative">
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="searchTerm"
+                    value={sidebarData.searchTerm}
+                    onChange={handleChange}
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+                    placeholder="Try '2 bed apartment in Cape Town' or 'Cleaning service for office'..."
+                    className="w-full px-6 py-4 text-lg border-0 bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl focus:shadow-2xl focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-rose-600 to-blue-600 text-white p-3.5 rounded-full hover:shadow-lg hover:scale-105 transition-all duration-300"
+                  >
+                    <MagnifyingGlassIcon className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                {/* AI Suggestions */}
+                {aiSuggestions && !aiSuggestions.applied && (
+                  <div className="mt-4 bg-white/90 backdrop-blur-sm p-4 rounded-xl border border-blue-100 shadow-lg">
+                    <div className="flex items-start gap-3">
+                      <LightBulbIcon className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-semibold text-blue-800">AI Suggestions</h3>
+                        <p className="text-sm text-blue-700 mt-1">
+                          Based on your search, we recommend:
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {Object.entries(aiSuggestions.filters).map(([key, value]) => (
+                            <span key={key} className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                              {key}: {value.toString()}
+                            </span>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={applyAiSuggestion}
+                          className="mt-3 text-sm bg-gradient-to-r from-rose-600 to-blue-600 hover:from-rose-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg transition-all duration-300"
+                        >
+                          Apply Suggestions
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Search examples */}
+                <div className="mt-6">
+                  <p className="text-sm text-gray-600 mb-3">Try searching for:</p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {searchExamples.map((example, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => {
+                          setSidebarData(prev => ({ ...prev, searchTerm: example }));
+                          handleSubmit({ preventDefault: () => {} });
+                        }}
+                        className="text-sm px-4 py-2 bg-white/80 backdrop-blur-sm hover:bg-white border border-gray-200 rounded-full transition-all duration-300 hover:shadow-md hover:border-gray-300"
+                      >
+                        {example}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        
+        {/* Decorative elements */}
+        <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-rose-400/20 to-transparent rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-blue-400/20 to-transparent rounded-full translate-x-1/3 translate-y-1/3"></div>
+      </div>
+
+      {/* Search type selector with horizontal scrolling */}
+      <div className="mb-6 overflow-x-auto pb-2 -mx-4 px-4">
+        <div className="flex space-x-4 min-w-max">
+          {['properties', 'services', 'helpers', 'events'].map((type) => (
+            <button
+              key={type}
+              onClick={() => setSearchType(type)}
+              className={`px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
+                searchType === type
+                  ? 'bg-gradient-to-r from-rose-600 to-blue-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-md'
+              }`}
+            >
+              {type.charAt(0).toUpperCase() + type.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Search sidebar */}
+        <div className={`lg:w-80 lg:sticky lg:top-8 h-fit ${showFilters ? 'block' : 'hidden'} lg:block`}>
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Filters</h2>
+              <button 
+                onClick={() => setShowFilters(false)}
+                className="lg:hidden text-gray-500 hover:text-gray-700"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
             </div>
 
-            {/* Main Search Box */}
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-white rounded-2xl shadow-2xl p-2">
-                <form onSubmit={handleSubmit} className="flex flex-col md:flex-row items-center">
-                  {/* Search Term */}
-                  <div className="flex-1 p-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">What are you looking for?</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        id="searchTerm"
-                        value={searchData.searchTerm}
-                        onChange={handleChange}
-                        placeholder="Try '2 bed apartment in Cape Town' or 'Cleaning service'"
-                        className="w-full text-lg border-none focus:ring-0 outline-none placeholder-gray-500"
-                      />
-                      <MagnifyingGlassIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Type dropdown */}
+              <div>
+                <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
+                  {searchType.charAt(0).toUpperCase() + searchType.slice(1)} Type
+                </label>
+                <Menu as="div" className="relative">
+                  <Menu.Button className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left flex items-center justify-between hover:border-gray-400 transition-colors bg-white">
+                    <div className="flex items-center gap-3">
+                      {getCurrentTypes().find(t => t.value === sidebarData.type)?.icon}
+                      <span>{getCurrentTypes().find(t => t.value === sidebarData.type)?.label}</span>
                     </div>
-                  </div>
-
-                  <div className="w-px h-12 bg-gray-200 hidden md:block"></div>
-
-                  {/* Location */}
-                  <div className="flex-1 p-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        id="location"
-                        value={searchData.location}
-                        onChange={handleChange}
-                        placeholder="Search destinations"
-                        className="w-full text-lg border-none focus:ring-0 outline-none placeholder-gray-500"
-                      />
-                      <MapPinIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    </div>
-                  </div>
-
-                  {/* Search Button */}
-                  <div className="p-4">
-                    <button
-                      type="submit"
-                      className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-                    >
-                      <MagnifyingGlassIcon className="w-5 h-5" />
-                      Search
-                    </button>
-                  </div>
-                </form>
+                    <ChevronDownIcon className="w-5 h-5 text-gray-400" />
+                  </Menu.Button>
+                  <Menu.Items className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-lg border border-gray-200 py-1 max-h-60 overflow-auto">
+                    {getCurrentTypes().map((type) => (
+                      <Menu.Item key={type.value}>
+                        {({ active }) => (
+                          <button
+                            type="button"
+                            onClick={() => setSidebarData(prev => ({ ...prev, type: type.value }))}
+                            className={`flex items-center gap-3 w-full px-4 py-2 text-left ${active ? 'bg-gray-100' : ''}`}
+                          >
+                            <span className="text-lg">{type.icon}</span>
+                            <span>{type.label}</span>
+                          </button>
+                        )}
+                      </Menu.Item>
+                    ))}
+                  </Menu.Items>
+                </Menu>
               </div>
 
-              {/* Clear All Button */}
-              <div className="flex justify-end mt-4">
+              {/* Price range */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="priceMin" className="block text-xs text-gray-500 mb-1">Min</label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">R</span>
+                      <input
+                        type="number"
+                        id="priceMin"
+                        value={sidebarData.priceMin}
+                        onChange={handleChange}
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="priceMax" className="block text-xs text-gray-500 mb-1">Max</label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">R</span>
+                      <input
+                        type="number"
+                        id="priceMax"
+                        value={sidebarData.priceMax}
+                        onChange={handleChange}
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                        placeholder="Any"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bedrooms - only for properties */}
+              {searchType === 'properties' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bedrooms</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="bedroomsMin" className="block text-xs text-gray-500 mb-1">Min</label>
+                      <input
+                        type="number"
+                        id="bedroomsMin"
+                        value={sidebarData.bedroomsMin}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="bedroomsMax" className="block text-xs text-gray-500 mb-1">Max</label>
+                      <input
+                        type="number"
+                        id="bedroomsMax"
+                        value={sidebarData.bedroomsMax}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                        placeholder="Any"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Basic amenities checkboxes - only for properties */}
+              {searchType === 'properties' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Basic Features</label>
+                  <div className="space-y-2">
+                    {[
+                      { id: 'wifi', label: 'WiFi', icon: '📶' },
+                      { id: 'parking', label: 'Parking', icon: '🚗' },
+                      { id: 'aircon', label: 'Air Conditioning', icon: '❄️' },
+                      { id: 'pool', label: 'Pool', icon: '🏊' },
+                      { id: 'furnished', label: 'Furnished', icon: '🛋️' },
+                      { id: 'pets', label: 'Pets Allowed', icon: '🐾' },
+                      { id: 'gym', label: 'Gym', icon: '💪' },
+                      { id: 'view', label: 'Great View', icon: '🌄' }
+                    ].map((item) => (
+                      <div key={item.id} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={item.id}
+                          checked={sidebarData[item.id]}
+                          onChange={handleChange}
+                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <label htmlFor={item.id} className="ml-2 text-sm flex items-center gap-1">
+                          <span>{item.icon}</span>
+                          {item.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Form actions */}
+              <div className="space-y-3 pt-4 border-t border-gray-200">
                 <button
-                  onClick={clearSearch}
-                  className="text-gray-600 hover:text-gray-800 text-sm font-medium"
+                  type="submit"
+                  className="w-full py-3 bg-gradient-to-r from-rose-600 to-blue-600 hover:from-rose-700 hover:to-blue-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  Apply Filters
+                </button>
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="w-full py-2 text-gray-600 hover:text-gray-800 text-sm font-medium hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Recent searches panel */}
+          {recentSearches.length > 0 && (
+            <div className="mt-6 bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-medium text-gray-900">Recent Searches</h3>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem(RECENT_SEARCHES_KEY);
+                    setRecentSearches([]);
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
                 >
                   Clear all
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* AI Suggestions */}
-      {aiSuggestions && !aiSuggestions.applied && (
-        <div className="max-w-7xl mx-auto px-4 mb-6">
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl border border-blue-100 animate-fadeIn">
-            <div className="flex items-start gap-3">
-              <LightBulbIcon className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-blue-800">AI Suggestions</h3>
-                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                    Smart Search
-                  </span>
-                </div>
-                <p className="text-sm text-blue-700 mb-3">
-                  We found these patterns in your search:
-                </p>
-                <div className="space-y-2">
-                  {Object.entries(aiSuggestions.filters).map(([key, value]) => (
-                    <div key={key} className="flex items-center gap-2 text-sm">
-                      <span className="font-medium">{key}:</span>
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">
-                        {value.toString()}
-                      </span>
+              <ul className="space-y-3">
+                {recentSearches.map((search, i) => (
+                  <li
+                    key={i}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group"
+                    onClick={() => {
+                      setSidebarData(search.params);
+                      const urlParams = new URLSearchParams();
+                      Object.entries(search.params).forEach(([key, value]) => {
+                        if (value) urlParams.set(key, value);
+                      });
+                      navigate(`/search?${urlParams.toString()}`);
+                    }}
+                  >
+                    <ClockIcon className="w-5 h-5 text-gray-400 flex-shrink-0 group-hover:text-blue-500 transition-colors" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                        {search.params.searchTerm || 'Anywhere'}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {Object.entries(search.params)
+                          .filter(([k, v]) => k !== 'searchTerm' && v)
+                          .map(([k, v]) => `${k}: ${v}`)
+                          .join(', ')}
+                      </p>
                     </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={applyAiSuggestion}
-                  className="mt-4 w-full py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg shadow-sm transition-all"
-                >
-                  Apply Smart Filters
-                </button>
-              </div>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Category selector */}
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => {
-                  setSelectedCategory(category.id);
-                  // Update URL with new category
-                  const urlParams = new URLSearchParams(location.search);
-                  urlParams.set('category', category.id);
-                  navigate(`/search?${urlParams.toString()}`);
-                }}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all ${selectedCategory === category.id
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
-                  }`}
-              >
-                <span className="w-5 h-5">{category.icon}</span>
-                <span className="font-medium">{category.label}</span>
-                {selectedCategory === category.id && (
-                  <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded">
-                    Active
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
+          )}
         </div>
 
-        {/* Type selector */}
-        {currentTypes.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">
-              Select {selectedCategory} Type
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {currentTypes.map((type) => (
-                <button
-                  key={type.id}
-                  onClick={() => {
-                    setSearchType(type.id);
-                    // Update URL with new type
-                    const urlParams = new URLSearchParams(location.search);
-                    urlParams.set('subType', type.id);
-                    navigate(`/search?${urlParams.toString()}`);
-                  }}
-                  className={`flex flex-col items-center justify-center px-4 py-3 rounded-lg transition-all min-w-[120px] ${searchType === type.id
-                      ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-500 text-blue-700 shadow-sm'
-                      : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'
-                    }`}
-                >
-                  <span className="text-2xl mb-1">{type.emoji}</span>
-                  <span className="text-sm font-medium">{type.label}</span>
-                  <span className="text-xs text-gray-500 mt-1 text-center">{type.description}</span>
-                </button>
-              ))}
-            </div>
+        {/* Main content area */}
+        <div className="flex-1">
+          {/* Mobile filters toggle */}
+          <div className="lg:hidden flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-gray-900">
+              {sidebarData.searchTerm ? `Results for "${sidebarData.searchTerm}"` : `All ${searchType}`}
+            </h2>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium hover:bg-gray-50 hover:shadow-md transition-all"
+            >
+              <AdjustmentsHorizontalIcon className="w-5 h-5" />
+              Filters
+            </button>
           </div>
-        )}
 
-        {/* Results Section */}
-        <div>
           {/* Results count */}
           {!loading && listings.length > 0 && (
-            <div className="mb-6 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-              <p className="text-gray-700">
-                Showing <span className="font-bold text-gray-900">{listings.length}</span> {currentType?.label?.toLowerCase() || selectedCategory}
-                {searchData.searchTerm && (
-                  <span> for "<span className="font-semibold">{searchData.searchTerm}</span>"</span>
-                )}
-                {searchData.location && (
-                  <span> in <span className="font-semibold">{searchData.location}</span></span>
-                )}
+            <div className="mb-6">
+              <p className="text-gray-600">
+                Showing <span className="font-medium text-gray-900">{listings.length}</span> {searchType}
+                {sidebarData.searchTerm && ` matching "${sidebarData.searchTerm}"`}
               </p>
             </div>
           )}
@@ -721,12 +743,12 @@ const Search = () => {
           ) : listings.length > 0 ? (
             <>
               {/* Results grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-3">
                 {listings.map((item) => {
-                  switch(item.category) {
-                    case 'experiences':
+                  switch(item.itemType) {
+                    case 'services':
                       return <ServiceItem key={item._id} service={item} />;
-                    case 'online':
+                    case 'helpers':
                       return <HelperItem key={item._id} helper={item} />;
                     case 'events':
                       return <EventItem key={item._id} event={item} />;
@@ -746,61 +768,30 @@ const Search = () => {
                       urlParams.set('startIndex', startIndex);
                       navigate(`/search?${urlParams.toString()}`);
                     }}
-                    className="px-6 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow-md font-medium transition-all"
+                    className="px-6 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow-md font-medium transition-all duration-300"
                   >
                     Load More
                   </button>
                 </div>
               )}
             </>
-          ) : location.search ? (
-            /* Empty state when search has params but no results */
-            <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
-              <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
-                <SparklesIcon className="w-12 h-12 text-blue-600" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                No {currentType?.label?.toLowerCase() || selectedCategory} found
-              </h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                {searchData.searchTerm ? (
-                  `We couldn't find any ${currentType?.label?.toLowerCase() || selectedCategory} matching "${searchData.searchTerm}". Try adjusting your search or try a different category.`
-                ) : (
-                  `No ${currentType?.label?.toLowerCase() || selectedCategory} available with the current search. Try adjusting your search criteria.`
-                )}
-              </p>
-              <div className="flex flex-wrap gap-3 justify-center">
-                <button
-                  onClick={clearSearch}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all"
-                >
-                  Clear Search
-                </button>
-                <button
-                  onClick={() => setShowSearchBox(true)}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-all"
-                >
-                  New Search
-                </button>
-              </div>
-            </div>
           ) : (
-            /* Initial state - no search yet */
-            <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
-              <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
-                <MagnifyingGlassIcon className="w-12 h-12 text-blue-600" />
+            /* Empty state */
+            <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-gray-100">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-rose-50 to-blue-50 rounded-full mb-4">
+                <HomeIcon className="w-10 h-10 text-gray-400" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                Start your search
+              <h3 className="text-xl font-medium text-gray-900 mb-2">
+                No {searchType} found
               </h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Use the search box above to find properties, services, helpers, or events. Select a category and type to refine your search.
+                Try adjusting your search filters or search for a different location
               </p>
               <button
-                onClick={() => setShowSearchBox(true)}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all"
+                onClick={clearFilters}
+                className="px-6 py-3 bg-gradient-to-r from-rose-600 to-blue-600 hover:from-rose-700 hover:to-blue-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                Show Search Box
+                Clear All Filters
               </button>
             </div>
           )}
