@@ -92,7 +92,8 @@ import Trips from './pages/Trips';
 
 import SmartSearchPage from './pages/SmartSearchPage';
 import ExplorePage from "./pages/ExplorePage"; // Single import - REMOVED DUPLICATE
-
+// In your main App.jsx or index.js
+import 'leaflet/dist/leaflet.css';
 export default function App() {
   return (
     <BrowserRouter>
