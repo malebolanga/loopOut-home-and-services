@@ -341,7 +341,7 @@ export default function Header() {
           <FiChevronDown className="w-5 h-5 text-gray-600 rotate-90" />
         </button>
         <div className="flex-1 relative">
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <FiSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             ref={searchInputRef}
             type="text"
