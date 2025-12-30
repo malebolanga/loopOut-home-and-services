@@ -21,1166 +21,28 @@ import {
   HeartIcon as HeartIconSolid,
 } from '@heroicons/react/24/solid';
 import "../styles/ListingDetails.scss";
-import EventItem from "../components/EventItem";
-import ServiceItem from "../components/ServiceItem";
-import ListingItem from "../components/ListingItem";
-import HelperItem from "../components/HelperItem";
 
 // Constants
-const RECENT_SEARCHES_KEY = 'recentSearches';
 const RECENTLY_VIEWED_KEY = 'recentlyViewed';
-const MAX_RECENT_SEARCHES = 5;
 const MAX_RECENTLY_VIEWED = 12;
-const DEFAULT_LISTING_LIMIT = 12;
-const DATA_FETCH_LIMIT = 8; // Number of items to fetch for each category
-
-// Search types configuration
-const SEARCH_TYPES = [
-  { 
-    id: 'properties', 
-    label: 'Homes', 
-    icon: HomeIcon,
-    description: 'Homes, apartments, offices, land',
-    color: 'bg-rose-100 text-rose-800',
-    endpoint: '/api/listing/get'
-  },
-  { 
-    id: 'services', 
-    label: 'Experiences', 
-    icon: SparklesIcon,
-    description: 'Cleaning, maintenance, moving, etc.',
-    color: 'bg-emerald-100 text-emerald-800',
-    endpoint: '/api/service/get'
-  },
-  { 
-    id: 'helpers', 
-    label: 'Helpers', 
-    icon: UserGroupIcon,
-    description: 'Tutors, caregivers, handymen, etc.',
-    color: 'bg-purple-100 text-purple-800',
-    endpoint: '/api/helper/get'
-  },
-  { 
-    id: 'events', 
-    label: 'Events', 
-    icon: CalendarDaysIcon,
-    description: 'Local events and activities',
-    color: 'bg-amber-100 text-amber-800',
-    endpoint: '/api/event/get'
-  }
-];
-
-// Helper functions for property types
-const getPropertyTypeName = (type) => {
-  switch (type) {
-    case 'sale': return 'Sale';
-    case 'rent-short': return 'Short Term';
-    case 'rent-long': return 'Long Term';
-    case 'office': return 'Office';
-    case 'land': return 'Land Plot';
-    default: return 'Property';
-  }
-};
-
-const getPriceLabel = (type) => {
-  switch (type) {
-    case 'sale': return 'for sale';
-    case 'rent-short': return 'night';
-    case 'rent-long': return 'month';
-    case 'office': return 'per hour';
-    case 'land': return 'for sale';
-    default: return 'night';
-  }
-};
-
-const getTypeBadge = (type) => {
-  switch (type) {
-    case 'sale': return { label: 'For Sale', color: 'bg-blue-100 text-blue-800' };
-    case 'rent-short': return { label: 'Short Term', color: 'bg-green-100 text-green-800' };
-    case 'rent-long': return { label: 'Long Term', color: 'bg-emerald-100 text-emerald-800' };
-    case 'office': return { label: 'Office Space', color: 'bg-purple-100 text-purple-800' };
-    case 'land': return { label: 'Land Plot', color: 'bg-amber-100 text-amber-800' };
-    default: return { label: 'Property', color: 'bg-gray-100 text-gray-800' };
-  }
-};
-
-// Initial sidebar data state
-const getInitialSidebarData = () => ({
-  // Common fields
-  searchTerm: '',
-  address: '',
-  name: '',
-  description: '',
-  location: '',
-  priceMin: 0,
-  priceMax: 100000000,
-  sort: 'createdAt',
-  order: 'desc',
-  
-  // Property specific fields
-  type: 'all',
-  parking: false,
-  furnished: false,
-  wifi: false,
-  pool: false,
-  tv: false,
-  offer: false,
-  bedroomsMin: '',
-  bedroomsMax: '',
-  breakfast: false,
-  pets: false,
-  security: false,
-  aircon: false,
-  gym: false,
-  view: false,
-  kitchen: false,
-  laundry: false,
-  
-  // Service specific fields
-  category: 'all',
-  serviceType: 'all',
-  
-  // Helper specific fields
-  helperType: 'all',
-  availability: 'all',
-  
-  // Event specific fields
-  date: '',
-  eventType: 'all'
-});
-
-// ==================== COMPONENTS ====================
+const DATA_FETCH_LIMIT = 8;
 
 // Skeleton Card Component
 const SkeletonCard = () => (
-  <div className="animate-pulse bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300">
-    <div className="aspect-[4/3] bg-gradient-to-r from-gray-200 to-gray-300"></div>
-    <div className="p-4 space-y-3">
+  <div className="animate-pulse bg-white rounded-xl overflow-hidden shadow-sm">
+    <div className="aspect-[3/2] bg-gradient-to-r from-gray-200 to-gray-300"></div>
+    <div className="p-3 space-y-2">
       <div className="flex justify-between">
-        <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-1/2"></div>
-        <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-8"></div>
+        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-2/3"></div>
+        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-8"></div>
       </div>
-      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-3/4"></div>
-      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-1/2"></div>
-      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-1/3"></div>
+      <div className="h-3 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-1/2"></div>
     </div>
   </div>
 );
 
-// Custom Eye Icon for empty state
-const EyeIcon = (props) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    fill="none" 
-    viewBox="0 0 24 24" 
-    strokeWidth={1.5} 
-    stroke="currentColor" 
-    {...props}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
-);
-
-// Recently Viewed Card Component
-const RecentlyViewedCard = ({ item, onClick, onLike }) => {
-  const [isLiked, setIsLiked] = useState(item.isLiked || false);
-  const navigate = useNavigate();
-
-  const handleClick = () => {
-    if (onClick) {
-      onClick(item);
-    }
-    navigate(`/${item.itemType}/${item._id}`);
-  };
-
-  const handleLike = (e) => {
-    e.stopPropagation();
-    setIsLiked(!isLiked);
-    if (onLike) {
-      onLike(item._id, !isLiked);
-    }
-  };
-
-  const getCategoryColor = (itemType) => {
-    switch(itemType) {
-      case 'properties': return 'bg-blue-100 text-blue-800';
-      case 'services': return 'bg-emerald-100 text-emerald-800';
-      case 'helpers': return 'bg-purple-100 text-purple-800';
-      case 'events': return 'bg-amber-100 text-amber-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getCategoryLabel = (itemType) => {
-    switch(itemType) {
-      case 'properties': return 'Property';
-      case 'services': return 'Service';
-      case 'helpers': return 'Helper';
-      case 'events': return 'Event';
-      default: return itemType;
-    }
-  };
-
-  return (
-    <div 
-      className="flex-shrink-0 w-full rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200"
-      onClick={handleClick}
-    >
-      <div className="relative aspect-[4/3] overflow-hidden">
-        <img
-          src={item.imageUrls?.[0] || item.imageUrl || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
-          alt={item.name || item.title}
-          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent"></div>
-        <button
-          onClick={handleLike}
-          className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:scale-110 transition-transform z-10"
-        >
-          {isLiked ? (
-            <HeartIconSolid className="w-5 h-5 text-rose-500" />
-          ) : (
-            <HeartIcon className="w-5 h-5 text-gray-600" />
-          )}
-        </button>
-        <div className="absolute bottom-3 left-3">
-          <span className={`text-xs font-medium px-2 py-1 rounded ${getCategoryColor(item.itemType)}`}>
-            {getCategoryLabel(item.itemType)}
-          </span>
-        </div>
-        <div className="absolute top-3 left-3">
-          {item.offer && (
-            <span className="text-xs font-medium px-2 py-1 rounded bg-red-100 text-red-800">
-              Special Offer
-            </span>
-          )}
-        </div>
-      </div>
-      <div className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <div className="flex-1 min-w-0 mr-2">
-            <h3 className="font-semibold text-gray-900 truncate text-sm md:text-base">{item.name || item.title}</h3>
-            
-          </div>
-          {item.rating !== undefined && (
-            <div className="flex items-center flex-shrink-0">
-              <StarIconSolid className="w-4 h-4 text-yellow-400" />
-              <span className="text-sm font-medium ml-1">{item.rating?.toFixed(1) || '4.5'}</span>
-            </div>
-          )}
-        </div>
-        
-        <div className="flex justify-between items-center mt-0">
-          <div className="flex flex-col">
-            <span className="font-bold text-gray-900 text-sm">
-             R{item.price || item.regularPrice || 'N/A'}
-            </span>
-           
-          </div>
-          <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
-            {item.viewedAt ? new Date(item.viewedAt).toLocaleDateString() : 'Recently'}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Recently Viewed Section Component - Updated with Airbnb-style 3-card carousel
-const RecentlyViewedSection = ({ items = [], onItemClick, onItemLike, refreshRecentlyViewed }) => {
-  const scrollContainerRef = useRef(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const itemsPerView = 3;
-  const totalPages = Math.ceil(items.length / itemsPerView);
-
-  const scrollLeft = () => {
-    if (scrollContainerRef.current) {
-      const newIndex = Math.max(0, currentIndex - 1);
-      setCurrentIndex(newIndex);
-      const cardWidth = scrollContainerRef.current.children[0]?.offsetWidth || 320;
-      const gap = 16;
-      const scrollAmount = (cardWidth + gap) * itemsPerView * newIndex;
-      scrollContainerRef.current.scrollTo({ left: scrollAmount, behavior: 'smooth' });
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollContainerRef.current) {
-      const newIndex = Math.min(totalPages - 1, currentIndex + 1);
-      setCurrentIndex(newIndex);
-      const cardWidth = scrollContainerRef.current.children[0]?.offsetWidth || 320;
-      const gap = 16;
-      const scrollAmount = (cardWidth + gap) * itemsPerView * newIndex;
-      scrollContainerRef.current.scrollTo({ left: scrollAmount, behavior: 'smooth' });
-    }
-  };
-
-  const handleClearAll = () => {
-    localStorage.removeItem(RECENTLY_VIEWED_KEY);
-    refreshRecentlyViewed();
-    setCurrentIndex(0);
-  };
-
-  // Update current index on scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      if (scrollContainerRef.current) {
-        const scrollLeft = scrollContainerRef.current.scrollLeft;
-        const cardWidth = scrollContainerRef.current.children[0]?.offsetWidth || 320;
-        const gap = 16;
-        const scrollWidth = (cardWidth + gap) * itemsPerView;
-        const newIndex = Math.round(scrollLeft / scrollWidth);
-        setCurrentIndex(newIndex);
-      }
-    };
-
-    const container = scrollContainerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, []);
-
-  if (!items || items.length === 0) {
-    return (
-      <div className="mb-12">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Recently viewed</h2>
-            <p className="text-sm text-gray-500">Your recently viewed items will appear here</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl p-8 text-center border border-gray-200">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <EyeIcon className="w-8 h-8 text-gray-400" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No recently viewed items
-          </h3>
-          <p className="text-gray-600 mb-4 text-sm">
-            Start browsing properties, services, helpers, and events to see them here
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mb-12">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-1xl font-bold text-gray-900">Recently viewed</h2>
-          <p className="text-sm text-gray-500">Based on your browsing history</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleClearAll}
-            className="text-sm text-gray-600 hover:text-gray-900 underline"
-          >
-            Clear all
-          </button>
-          <Link
-      to="/recently-viewed"
-      className="text-sm font-medium text-gray-900 hover:underline"
-    >
-      See all →
-    </Link>
-          <div className="flex gap-2">
-            <button
-              onClick={scrollLeft}
-              disabled={currentIndex === 0}
-              className={`p-2 rounded-full border border-gray-300 transition-colors ${
-                currentIndex === 0 
-                  ? 'opacity-50 cursor-not-allowed' 
-                  : 'hover:bg-gray-50 hover:shadow-sm'
-              }`}
-            >
-              <ChevronLeftIcon className="w-5 h-5 text-gray-600" />
-            </button>
-            <button
-              onClick={scrollRight}
-              disabled={currentIndex >= totalPages - 1}
-              className={`p-2 rounded-full border border-gray-300 transition-colors ${
-                currentIndex >= totalPages - 1
-                  ? 'opacity-50 cursor-not-allowed' 
-                  : 'hover:bg-gray-50 hover:shadow-sm'
-              }`}
-            >
-              <ChevronRightIcon className="w-5 h-5 text-gray-600" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="relative">
-        {/* Left gradient fade - only show when not at start */}
-        {currentIndex > 0 && (
-          <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none"></div>
-        )}
-        
-        {/* Right gradient fade - only show when not at end */}
-        {currentIndex < totalPages - 1 && (
-          <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none"></div>
-        )}
-
-        {/* Scrollable container with 3 cards per view */}
-        <div
-          ref={scrollContainerRef}
-          className="flex gap-4 overflow-x-auto scrollbar-hide pb-4"
-          style={{
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-          }}
-        >
-          <style jsx>{`
-            .scrollbar-hide::-webkit-scrollbar {
-              display: none;
-            }
-          `}</style>
-          
-          {items.map((item, index) => (
-            <div 
-              key={`${item._id}-${item.viewedAt}`} 
-              className="flex-shrink-0 w-[calc(33.333%-0.666rem)] min-w-[190px] max-w-[240px]"
-            >
-              <RecentlyViewedCard 
-                item={item} 
-                onClick={onItemClick}
-                onLike={onItemLike}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Dots indicator - Airbnb style */}
-        {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mt-8"> 
-            {Array.from({ length: totalPages }).map((_, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  setCurrentIndex(index);
-                  if (scrollContainerRef.current) {
-                    const cardWidth = scrollContainerRef.current.children[0]?.offsetWidth || 320;
-                    const gap = 16;
-                    const scrollAmount = (cardWidth + gap) * itemsPerView * index;
-                    scrollContainerRef.current.scrollTo({ left: scrollAmount, behavior: 'smooth' });
-                  }
-                }}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === currentIndex 
-                    ? 'bg-gray-900 w-6' 
-                    : 'bg-gray-300 hover:bg-gray-400'
-                }`}
-                aria-label={`Go to page ${index + 1}`}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Item Card Wrapper Component with click tracking
-const ItemCard = ({ item, searchType, onClick }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const handleClick = () => {
-    // Add to recently viewed
-    if (onClick) {
-      onClick(item, searchType);
-    }
-    
-    // Navigate to detail page
-    switch(searchType) {
-      case 'properties':
-        navigate(`/listing/${item._id}`, { state: { from: location.pathname } });
-        break;
-      case 'services':
-        navigate(`/service/${item._id}`, { state: { from: location.pathname } });
-        break;
-      case 'helpers':
-        navigate(`/helper/${item._id}`, { state: { from: location.pathname } });
-        break;
-      case 'events':
-        navigate(`/event/${item._id}`, { state: { from: location.pathname } });
-        break;
-      default:
-        navigate(`/item/${item._id}`, { state: { from: location.pathname } });
-    }
-  };
-
-  switch (searchType) {
-    case 'properties':
-      return (
-        <div onClick={handleClick} className="cursor-pointer">
-          <ListingItem listing={item} className="w-full" />
-        </div>
-      );
-    case 'services':
-      return (
-        <div onClick={handleClick} className="cursor-pointer">
-          <ServiceItem service={item} className="w-full" />
-        </div>
-      );
-    case 'helpers':
-      return (
-        <div onClick={handleClick} className="cursor-pointer">
-          <HelperItem helper={item} className="w-full" />
-        </div>
-      );
-    case 'events':
-      return (
-        <div onClick={handleClick} className="cursor-pointer">
-          <EventItem event={item} className="w-full" />
-        </div>
-      );
-    default:
-      return (
-        <div 
-          className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
-          onClick={handleClick}
-        >
-          <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
-            <img
-              src={item.imageUrls?.[0] || item.image || 'https://images.unsplash.com/photo-1511578314322-379afb476865?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
-              alt={item.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-            <div className="absolute top-3 left-3">
-              <span className={`text-xs font-medium px-2 py-1 rounded ${SEARCH_TYPES.find(t => t.id === searchType)?.color || 'bg-gray-100 text-gray-800'}`}>
-                {SEARCH_TYPES.find(t => t.id === searchType)?.label}
-              </span>
-            </div>
-          </div>
-          <div className="p-4">
-            <h3 className="font-medium text-gray-900 truncate mb-2">{item.name || item.title}</h3>
-            <p className="text-sm text-gray-600 line-clamp-2 mb-3">{item.description || item.location}</p>
-            <div className="flex justify-between items-center">
-              <div className="text-sm font-medium text-gray-900">
-                {item.price ? `R${item.price}` : 'Free'}
-              </div>
-              {item.date && (
-                <div className="text-xs text-gray-500">{new Date(item.date).toLocaleDateString()}</div>
-              )}
-            </div>
-          </div>
-        </div>
-      );
-  }
-};
-
-// Map Component
-const MapView = ({ items, searchType, address = 'Polokwane' }) => {
-  const getStaticMapUrl = () => {
-    return `https://images.unsplash.com/photo-1511895426328-dc8714191300?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80`;
-  };
-
-  const getTypeColor = (type) => {
-    switch(searchType) {
-      case 'properties': return getTypeBadge(type).color;
-      case 'services': return 'bg-blue-500';
-      case 'helpers': return 'bg-purple-500';
-      case 'events': return 'bg-amber-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  return (
-    <div className="relative h-full rounded-2xl overflow-hidden">
-      <img
-        src={getStaticMapUrl()}
-        alt="Map view"
-        className="w-full h-full object-cover"
-      />
-      
-      <div className="absolute inset-0">
-        {items.slice(0, 10).map((item, index) => {
-          const typeColor = getTypeColor(item.type);
-          return (
-            <div 
-              key={item._id}
-              className="absolute transform -translate-x-1/2 -translate-y-1/2"
-              style={{
-                left: `${30 + (index % 5) * 15}%`,
-                top: `${40 + Math.floor(index / 5) * 25}%`
-              }}
-            >
-              <div className="relative">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-125 transition-transform duration-300 cursor-pointer group">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${typeColor}`}>
-                    <span className="text-xs font-bold text-white">{index + 1}</span>
-                  </div>
-                </div>
-                <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-white px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-                  <div className="text-xs font-medium">R{item.price || item.regularPrice}</div>
-                  <div className="text-xs text-gray-500">
-                    {searchType === 'properties' ? getPriceLabel(item.type) : searchType === 'services' ? '/service' : '/work'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      
-      <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-gray-900">{address}</h3>
-            <p className="text-sm text-gray-600">{items.length} {SEARCH_TYPES.find(t => t.id === searchType)?.label?.toLowerCase()} available</p>
-          </div>
-          <button className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
-            Show all on map
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Airbnb-style Search Bar
-const AirbnbSearchBar = ({ onSubmit, searchType, currentLocation = 'South Africa' }) => {
-  const [searchValue, setSearchValue] = useState('');
-  const navigate = useNavigate();
-
-  const handleSubmit = () => {
-    if (searchValue.trim()) {
-      onSubmit(searchValue);
-    }
-  };
-
-  return (
-    <div className="w-full max-w-3xl mx-auto hidden md:block">
-      <div className="bg-white rounded-full shadow-lg p-1 border border-gray-200">
-        <div className="flex items-center">
-          <div className="flex-1 px-4">
-            <div className="text-xs font-medium text-gray-900 mb-1">Search in {currentLocation}</div>
-            <input
-              type="text"
-              placeholder={`Search in ${currentLocation}...`}
-              className="w-full text-sm text-gray-600 outline-none"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-            />
-          </div>
-
-          <div className="h-10 w-px bg-gray-300"></div>
-
-          <div className="px-4">
-            <div className="text-xs font-medium text-gray-900 mb-1">Type</div>
-            <select 
-              className="text-sm text-gray-600 outline-none bg-transparent"
-              defaultValue={searchType}
-              onChange={(e) => navigate(`/search?searchType=${e.target.value}&address=${encodeURIComponent(currentLocation)}`)}
-            >
-              {SEARCH_TYPES.map(type => (
-                <option key={type.id} value={type.id}>{type.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="h-10 w-px bg-gray-300"></div>
-
-          <button 
-            onClick={handleSubmit}
-            className="flex items-center gap-2 bg-rose-500 text-white px-6 py-3 rounded-full ml-2 hover:bg-rose-600 transition-colors"
-          >
-            <MagnifyingGlassIcon className="w-4 h-4" />
-            <span className="text-sm font-medium">Search</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Hero Banner
-const HeroBanner = ({ onSearch, searchType, currentLocation = 'South Africa' }) => {
-  const [searchValue, setSearchValue] = useState('');
-  const navigate = useNavigate();
-
-  const handleSubmit = () => {
-    if (searchValue.trim()) {
-      onSearch(searchValue);
-    }
-  };
-
-  return (
-    <div className="relative bg-gradient-to-r from-rose-50 to-blue-50 rounded-3xl overflow-hidden mb-8">
-      <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-blue-500/10"></div>
-      <div className="relative z-10 px-8 py-12 md:py-16">
-        <div className="flex items-center gap-2 mb-4">
-          <GlobeAltIcon className="w-5 h-5 text-gray-600" />
-          <span className="text-sm font-medium text-gray-700">Currently showing results for: {currentLocation}</span>
-        </div>
-        <h1 className="text-2xl md:text-5xl font-bold text-gray-900 mb-4">
-          Find your perfect space in {currentLocation}
-        </h1>
-        <p className="text-lg text-gray-600 mb-8 max-w-2xl">
-          Discover unique homes, experiences, and services around {currentLocation}
-        </p>
-        <AirbnbSearchBar 
-          onSubmit={onSearch} 
-          searchType={searchType} 
-          currentLocation={currentLocation}
-        />
-      </div>
-    </div>
-  );
-};
-
-// Category Grid - UPDATED WITH AIRBNB-STYLE SLIDING AND NEW CATEGORIES
-const CategoryGrid = ({ onCategoryClick, stats, location = 'South Africa' }) => {
-  const navigate = useNavigate();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const containerRef = useRef(null);
-  
-  const categories = [
- 
-    
-    // Property Categories (Homes/Stays)
-    { 
-      icon: '🏠', 
-      label: 'For Rental', 
-      count: stats?.rental || '400', 
-      color: 'bg-blue-100',
-      searchType: 'properties',
-      category: 'rent',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'For Rental', searchType: 'properties', category: 'rent' }, location)
-    },
-    { 
-      icon: '💰', 
-      label: 'For Sale', 
-      count: stats?.sale || '270', 
-      color: 'bg-yellow-100',
-      searchType: 'properties',
-      category: 'sale',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'For Sale', searchType: 'properties', category: 'sale' }, location)
-    },
-    { 
-      icon: '🛌', 
-      label: 'Guest House', 
-      count: stats?.guestHouse || '180', 
-      color: 'bg-indigo-100',
-      searchType: 'properties',
-      category: 'over',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Guest House', searchType: 'properties', category: 'over' }, location)
-    },
-    { 
-      icon: '🕒', 
-      label: 'Hourly Stay', 
-      count: stats?.hourly || '156', 
-      color: 'bg-purple-100',
-      searchType: 'properties',
-      category: 'office',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Hourly Stay', searchType: 'properties', category: 'office' }, location)
-    },
-    { 
-      icon: '🌳', 
-      label: 'Land', 
-      count: stats?.land || '234', 
-      color: 'bg-green-100',
-      searchType: 'properties',
-      category: 'land',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Land', searchType: 'properties', category: 'land' }, location)
-    },
-
- 
-  
-    { 
-      icon: '🌙', 
-      label: 'Overnight', 
-      count: stats?.overnight || '432', 
-      color: 'bg-indigo-50',
-      searchType: 'services',
-      category: 'overnight',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Overnight', searchType: 'services', category: 'overnight' }, location)
-    },
-
-    // Helper Categories (Services/Online)
-    { 
-      icon: '🧹', 
-      label: 'Domestic Helper', 
-      count: stats?.domestic || '345', 
-      color: 'bg-pink-50',
-      searchType: 'helpers',
-      category: 'domestic',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Domestic Helper', searchType: 'helpers', category: 'domestic' }, location)
-    },
-    { 
-      icon: '📸', 
-      label: 'Photographer', 
-      count: stats?.photography || '210', 
-      color: 'bg-gray-100',
-      searchType: 'helpers',
-      category: 'photography',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Photographer', searchType: 'helpers', category: 'photography' }, location)
-    },
-    { 
-      icon: '✂️', 
-      label: 'Barber', 
-      count: stats?.barber || '178', 
-      color: 'bg-blue-50',
-      searchType: 'helpers',
-      category: 'barber',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Barber', searchType: 'helpers', category: 'barber' }, location)
-    },
-    { 
-      icon: '💅', 
-      label: 'Beauty Specialist', 
-      count: stats?.beauty || '256', 
-      color: 'bg-pink-100',
-      searchType: 'helpers',
-      category: 'beauty',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Beauty Specialist', searchType: 'helpers', category: 'beauty' }, location)
-    },
-    { 
-      icon: '📚', 
-      label: 'Private Tutor', 
-      count: stats?.tutor || '189', 
-      color: 'bg-purple-50',
-      searchType: 'helpers',
-      category: 'tutor',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Private Tutor', searchType: 'helpers', category: 'tutor' }, location)
-    },
-    { 
-      icon: '👨‍🍳', 
-      label: 'Private Chef', 
-      count: stats?.chef || '98', 
-      color: 'bg-red-50',
-      searchType: 'helpers',
-      category: 'chef',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Private Chef', searchType: 'helpers', category: 'chef' }, location)
-    },
-    { 
-      icon: '🏃', 
-      label: 'Errand Runner', 
-      count: stats?.errand || '124', 
-      color: 'bg-orange-100',
-      searchType: 'helpers',
-      category: 'errand',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Errand Runner', searchType: 'helpers', category: 'errand' }, location)
-    },
-    { 
-      icon: '🖌️', 
-      label: 'Tattoo Artist', 
-      count: stats?.tattoo || '76', 
-      color: 'bg-gray-100',
-      searchType: 'helpers',
-      category: 'tattoo',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Tattoo Artist', searchType: 'helpers', category: 'tattoo' }, location)
-    },
-    { 
-      icon: '🍰', 
-      label: 'Baker', 
-      count: stats?.baker || '89', 
-      color: 'bg-amber-100',
-      searchType: 'helpers',
-      category: 'baker',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Baker', searchType: 'helpers', category: 'baker' }, location)
-    },
-
-    // Event Categories
-    { 
-      icon: '🎵', 
-      label: 'Music Events', 
-      count: stats?.music || '145', 
-      color: 'bg-purple-100',
-      searchType: 'events',
-      category: 'music',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Music Events', searchType: 'events', category: 'music' }, location)
-    },
-    { 
-      icon: '⚽', 
-      label: 'Sports Events', 
-      count: stats?.sports || '210', 
-      color: 'bg-green-100',
-      searchType: 'events',
-      category: 'sports',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Sports Events', searchType: 'events', category: 'sports' }, location)
-    },
-    { 
-      icon: '🎨', 
-      label: 'Art & Culture', 
-      count: stats?.art || '98', 
-      color: 'bg-pink-100',
-      searchType: 'events',
-      category: 'art',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Art & Culture', searchType: 'events', category: 'art' }, location)
-    },
-    { 
-      icon: '🧑‍🤝‍🧑', 
-      label: 'Community Events', 
-      count: stats?.community || '167', 
-      color: 'bg-blue-100',
-      searchType: 'events',
-      category: 'community',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Community Events', searchType: 'events', category: 'community' }, location)
-    },
-    { 
-      icon: '🍔', 
-      label: 'Food & Drink', 
-      count: stats?.food || '134', 
-      color: 'bg-amber-100',
-      searchType: 'events',
-      category: 'food',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Food & Drink', searchType: 'events', category: 'food' }, location)
-    },
-    { 
-      icon: '✨', 
-      label: 'Other Events', 
-      count: stats?.other || '89', 
-      color: 'bg-gray-100',
-      searchType: 'events',
-      category: 'other',
-      onClick: () => onCategoryClick && onCategoryClick({ label: 'Other Events', searchType: 'events', category: 'other' }, location)
-    },
-  ];
-
-  const itemsPerView = 8; // Number of categories visible at once
-  const maxIndex = Math.ceil(categories.length / itemsPerView) - 1;
-
-  const handleNext = () => {
-    if (currentIndex < maxIndex) {
-      setCurrentIndex(currentIndex + 1);
-    }
-  };
-
-  const handlePrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
-
-  return (
-    <div className="mb-12">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Explore by category</h2>
-        <div className="flex space-x-2">
-          <button
-            onClick={handlePrev}
-            disabled={currentIndex === 0}
-            className={`p-2 rounded-full ${currentIndex === 0 ? 'text-gray-300' : 'text-gray-700 hover:bg-gray-100'}`}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <button
-            onClick={handleNext}
-            disabled={currentIndex === maxIndex}
-            className={`p-2 rounded-full ${currentIndex === maxIndex ? 'text-gray-300' : 'text-gray-700 hover:bg-gray-100'}`}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Category Carousel */}
-      <div className="relative">
-        <div className="overflow-hidden">
-          <div 
-            ref={containerRef}
-            className="flex transition-transform duration-300 ease-out"
-            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-          >
-            {categories.map((category, index) => (
-              <div key={index} className="w-1/8 flex-shrink-0 px-2">
-                <button
-                  onClick={category.onClick}
-                  className="flex flex-col items-center p-4 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300 group w-full"
-                >
-                  <div className={`w-12 h-12 ${category.color} rounded-full flex items-center justify-center text-2xl mb-2 group-hover:scale-110 transition-transform duration-300`}>
-                    {category.icon}
-                  </div>
-                  <span className="font-medium text-gray-900 text-sm group-hover:text-rose-500 transition-colors text-center">
-                    {category.label}
-                  </span>
-                  <span className="text-xs text-gray-500 mt-1">{category.count}+</span>
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Dots Indicator */}
-      <div className="flex justify-center mt-4 space-x-2">
-        {Array.from({ length: maxIndex + 1 }).map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentIndex(index)}
-            className={`w-2 h-2 rounded-full ${index === currentIndex ? 'bg-rose-500' : 'bg-gray-300'}`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Popular Destinations
-const PopularDestinations = ({ onDestinationClick }) => {
-  const destinations = [
-    { 
-      name: 'Seshego', 
-      image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      propertyCount: 135 
-    },
-    { 
-      name: 'Johannesburg', 
-      image: 'https://plus.unsplash.com/premium_photo-1742457604656-b9feed9543f1?q=80&w=790&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      propertyCount: 289 
-    },
-    { 
-      name: 'Soweto', 
-      image: 'https://images.unsplash.com/photo-1526583547718-e88dc16de312?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      propertyCount: 167 
-    },
-    { 
-      name: 'Pretoria', 
-      image: 'https://images.unsplash.com/photo-1603553224936-a0466e549586?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      propertyCount: 221 
-    },
-    { 
-      name: 'Polokwane', 
-      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      propertyCount: 98 
-    },
-  ];
-
-  const handleShowAll = () => {
-    if (onDestinationClick) {
-      onDestinationClick('all');
-    }
-  };
-
-  const handleDestinationClick = (destination) => {
-    if (onDestinationClick) {
-      onDestinationClick(destination);
-    }
-  };
-
-  return (
-    <div className="mb-12">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Popular destinations</h2>
-        <button 
-          onClick={handleShowAll}
-          className="text-sm font-medium text-gray-900 hover:underline"
-        >
-          Show all →
-        </button>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {destinations.map((dest, index) => (
-          <div 
-            key={index} 
-            className="cursor-pointer"
-            onClick={() => handleDestinationClick(dest.name)}
-          >
-            <div className="relative aspect-square rounded-2xl overflow-hidden mb-2">
-              <img
-                src={dest.image}
-                alt={dest.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-            </div>
-            <h3 className="font-medium text-gray-900 group-hover:text-rose-500 transition-colors">{dest.name}</h3>
-            <p className="text-sm text-gray-500">{dest.propertyCount} properties</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Featured Listings Section with click tracking
-const FeaturedListings = ({ items, searchType, loading, title, showAllLink, onItemClick, location = 'South Africa' }) => {
-  if (loading) {
-    return (
-      <div className="mb-12">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-          <Link 
-            to={`${showAllLink}?location=${encodeURIComponent(location)}`}
-            className="text-sm font-medium text-gray-900 hover:underline"
-          >
-            Show all →
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!items || items.length === 0) return null;
-
-  return (
-    <div className="mb-12">
-      <div className="flex justify-between items-center mb-6 ">
-        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-        <Link 
-          to={`${showAllLink}?location=${encodeURIComponent(location)}`}
-          className="text-sm font-medium text-gray-900 hover:underline"
-        >
-          Show all →
-        </Link>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-3">
-        {items.map((item) => (
-          <ItemCard 
-            key={item._id} 
-            item={item} 
-            searchType={searchType} 
-            onClick={onItemClick}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Navigation Component
-const Navigation = ({ isHomePage, onLogoClick, searchType, onSubmitSearch }) => {
-  const [searchValue, setSearchValue] = useState('');
-  const navigate = useNavigate();
-
-  const handleSubmit = (e) => {
-    e?.preventDefault();
-    if (onSubmitSearch) {
-      onSubmitSearch(searchValue);
-    } else {
-      navigate(`/search?searchTerm=${searchValue}&searchType=${searchType}`);
-    }
-  };
-
-  return (
-    <nav >
-  
-    </nav>
-  );
-};
-
-// Homepage Component
-const Homepage = ({ 
-  onSearch, 
-  onCategoryClick, 
-  searchType, 
-  setSidebarData, 
-  setShowHomePage, 
-  navigate,
+// Mobile App Homepage Component
+const MobileAppHomepage = ({ 
   featuredProperties,
   featuredServices,
   featuredHelpers,
@@ -1193,467 +55,471 @@ const Homepage = ({
   onItemClick,
   recentlyViewedItems,
   onRecentlyViewedLike,
-  refreshRecentlyViewed,
-  currentLocation = 'South Africa'
+  currentLocation = 'South Africa',
+  navigate
 }) => {
-  const handleSearch = (value) => {
-    if (setSidebarData) {
-      setSidebarData(prev => ({ ...prev, searchTerm: value }));
-    }
-    if (setShowHomePage) {
-      setShowHomePage(false);
-    }
-    navigate(`/search?searchTerm=${value}&searchType=${searchType}&address=${encodeURIComponent(currentLocation)}`);
+  const [activeTab, setActiveTab] = useState('home');
+  const [searchVisible, setSearchVisible] = useState(false);
+  const searchInputRef = useRef(null);
+
+  const handleSearchClick = () => {
+    setSearchVisible(true);
+    setTimeout(() => {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    }, 100);
   };
 
-  const handleCategoryClick = (category, location) => {
-    if (onCategoryClick) {
-      onCategoryClick(category, location);
+  const handleSearchSubmit = (value) => {
+    if (value.trim()) {
+      navigate(`/search?searchTerm=${value}&type=all&address=${encodeURIComponent(currentLocation)}`);
+    }
+    setSearchVisible(false);
+  };
+
+  // Mock categories for the grid
+  const categories = [
+    { icon: '🏠', label: 'Homes', color: 'bg-blue-100', type: 'properties' },
+    { icon: '✨', label: 'Services', color: 'bg-emerald-100', type: 'services' },
+    { icon: '👷', label: 'Helpers', color: 'bg-purple-100', type: 'helpers' },
+    { icon: '🎪', label: 'Events', color: 'bg-amber-100', type: 'events' },
+    { icon: '🏨', label: 'Hotels', color: 'bg-rose-100', type: 'properties', category: 'rent-short' },
+    { icon: '🛒', label: 'Shopping', color: 'bg-yellow-100', type: 'services' },
+    { icon: '🍽️', label: 'Food', color: 'bg-red-100', type: 'services' },
+    { icon: '➕', label: 'More', color: 'bg-gray-100', onClick: () => navigate('/categories') }
+  ];
+
+  const getPropertyTypeName = (type) => {
+    switch (type) {
+      case 'sale': return 'Sale';
+      case 'rent-short': return 'Short Term';
+      case 'rent-long': return 'Long Term';
+      case 'office': return 'Office';
+      case 'land': return 'Land Plot';
+      default: return 'Property';
     }
   };
 
-  const handleDestinationClick = (destination) => {
-    if (setShowHomePage) {
-      setShowHomePage(false);
+  const getTypeBadge = (type) => {
+    switch (type) {
+      case 'sale': return { label: 'For Sale', color: 'bg-blue-100 text-blue-800' };
+      case 'rent-short': return { label: 'Short Term', color: 'bg-green-100 text-green-800' };
+      case 'rent-long': return { label: 'Long Term', color: 'bg-emerald-100 text-emerald-800' };
+      case 'office': return { label: 'Office Space', color: 'bg-purple-100 text-purple-800' };
+      case 'land': return { label: 'Land Plot', color: 'bg-amber-100 text-amber-800' };
+      default: return { label: 'Property', color: 'bg-gray-100 text-gray-800' };
     }
-    
-    if (destination === 'all') {
-      navigate(`/search?searchType=properties&address=${encodeURIComponent(currentLocation)}`);
-    } else {
-      navigate(`/search?searchType=properties&address=${encodeURIComponent(destination)}`);
-    }
+  };
+
+  const formatEventDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      weekday: 'short'
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation 
-        isHomePage={true}
-        onLogoClick={() => {}}
-        searchType={searchType}
-        onSubmitSearch={handleSearch}
-      />
-
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <HeroBanner 
-          onSearch={handleSearch}
-          searchType={searchType}
-          currentLocation={currentLocation}
-        />
-
-        {/* Recently Viewed Section */}
-        <RecentlyViewedSection 
-          items={recentlyViewedItems}
-          onItemClick={onItemClick}
-          onItemLike={onRecentlyViewedLike}
-          refreshRecentlyViewed={refreshRecentlyViewed}
-        />
-
-        <CategoryGrid 
-          onCategoryClick={(categoryObj) => {
-            const { label, searchType, category } = categoryObj;
-            if (setShowHomePage) {
-              setShowHomePage(false);
-            }
-            navigate(`/search?searchType=${searchType}&category=${category}&address=${encodeURIComponent(currentLocation)}`);
-          }}
-          stats={stats}
-          location={currentLocation}
-        />
-
-        <PopularDestinations 
-          onDestinationClick={handleDestinationClick}
-        />
-
-        <FeaturedListings 
-          items={featuredProperties}
-          searchType="properties"
-          loading={loadingProperties}
-          title={`Popular homes in ${currentLocation}`}
-          showAllLink="/listing-home-page"
-          onItemClick={onItemClick}
-          location={currentLocation}
-        />
-
-        <FeaturedListings 
-          items={featuredServices}
-          searchType="services"
-          loading={loadingServices}
-          title={`Top experiences in ${currentLocation}`}
-          showAllLink="/service-home-page"
-          onItemClick={onItemClick}
-          location={currentLocation}
-        />
-
-        <FeaturedListings 
-          items={featuredHelpers}
-          searchType="helpers"
-          loading={loadingHelpers}
-          title={`Recommended service providers in ${currentLocation}`}
-          showAllLink="/helper-home-page"
-          onItemClick={onItemClick}
-          location={currentLocation}
-        />
-
-        <FeaturedListings 
-          items={featuredEvents}
-          searchType="events"
-          loading={loadingEvents}
-          title={`Upcoming events in ${currentLocation}`}
-          showAllLink="/event-home-page"
-          onItemClick={onItemClick}
-          location={currentLocation}
-        />
-
-        <div className="bg-gradient-to-r from-rose-500 to-blue-500 rounded-3xl p-8 md:p-12 text-white mb-8">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl font-bold mb-4">Become a Host</h2>
-            <p className="text-lg mb-6">Share your space to earn extra income and meet travelers from around the world.</p>
-            <button className="bg-white text-gray-900 px-6 py-3 rounded-full font-medium hover:bg-gray-100">
-              Learn more
+    <div className="min-h-screen bg-gray-50 pb-0">
+      {/* Main Content */}
+      <main className="px-4 py-0">
+        {/* Quick Search Banner */}
+        <div className="bg-gradient-to-r from-rose-500 to-blue-500 rounded-2xl p-4 mb-6 relative overflow-hidden">
+          <div className="relative z-10">
+            <h2 className="text-xl font-bold text-white mb-2">
+              Find your perfect space
+            </h2>
+            <p className="text-sm text-white/90 mb-4">
+              Discover homes, services, and experiences around you
+            </p>
+            <button 
+              onClick={handleSearchClick}
+              className="flex items-center justify-between w-full bg-white/20 backdrop-blur-sm rounded-xl p-3"
+            >
+              <div className="flex items-center gap-3">
+                <MagnifyingGlassIcon className="w-5 h-5 text-white" />
+                <span className="text-white text-sm">Search anything...</span>
+              </div>
+              <div className="px-3 py-1 bg-white rounded-lg">
+                <span className="text-xs font-medium text-rose-500">Go</span>
+              </div>
             </button>
           </div>
-        </div>
-      </main>
-    </div>
-  );
-};
-
-// Search Results Component
-const SearchResults = ({
-  searchType,
-  sidebarData,
-  filteredItems,
-  loading,
-  showMore,
-  showFilters,
-  isMobile,
-  showMap,
-  setShowMap,
-  setShowFilters,
-  handleChange,
-  handleSubmit,
-  clearFilters,
-  setShowHomePage,
-  navigate,
-  location,
-  onItemClick
-}) => {
-  const loadMore = () => {
-    const startIndex = filteredItems.length;
-    const urlParams = new URLSearchParams(location.search);
-    urlParams.set('startIndex', startIndex);
-    navigate(`/search?${urlParams.toString()}`);
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation 
-        isHomePage={false}
-        onLogoClick={() => setShowHomePage(true)}
-        searchType={searchType}
-        onSubmitSearch={(value) => {
-          navigate(`/search?searchTerm=${value}&searchType=${searchType}`);
-        }}
-      />
-
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-            {sidebarData.address 
-              ? `${SEARCH_TYPES.find(t => t.id === searchType)?.label} in ${sidebarData.address}` 
-              : `Explore ${SEARCH_TYPES.find(t => t.id === searchType)?.label}`}
-          </h1>
-          <p className="text-gray-600 text-sm md:text-base">
-            {filteredItems.length}+ {SEARCH_TYPES.find(t => t.id === searchType)?.label?.toLowerCase()} available • {sidebarData.address || 'All locations'} • Prices include all fees
-          </p>
+          <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full"></div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {!isMobile && (
-            <div className="lg:w-80 flex-shrink-0">
-              <div className="bg-white rounded-2xl p-6 sticky top-24 border border-gray-200">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold text-gray-900">Filters</h2>
-                  <button
-                    onClick={clearFilters}
-                    className="text-sm text-gray-600 hover:text-gray-900 underline"
-                  >
-                    Clear all
-                  </button>
-                </div>
-                
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-4">Price range</h3>
-                    <div className="space-y-4">
-                      <div className="flex gap-3">
-                        <div className="flex-1">
-                          <label className="block text-xs text-gray-500 mb-1">Min price</label>
-                          <div className="relative">
-                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
-                            <input
-                              type="number"
-                              id="priceMin"
-                              value={sidebarData.priceMin}
-                              onChange={handleChange}
-                              className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                              placeholder="0"
-                            />
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <label className="block text-xs text-gray-500 mb-1">Max price</label>
-                          <div className="relative">
-                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
-                            <input
-                              type="number"
-                              id="priceMax"
-                              value={sidebarData.priceMax}
-                              onChange={handleChange}
-                              className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                              placeholder="Any price"
-                            />
-                          </div>
-                        </div>
+        {/* Recently Viewed Section */}
+        {recentlyViewedItems.length > 0 && (
+          <section className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="font-bold text-gray-900 text-lg">Recently viewed</h2>
+              <button
+                onClick={() => navigate('/recently-viewed')}
+                className="text-sm text-gray-600"
+              >
+                See all
+              </button>
+            </div>
+            <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-2">
+              {recentlyViewedItems.slice(0, 5).map((item) => (
+                <div 
+                  key={`${item._id}-${item.viewedAt}`}
+                  className="flex-shrink-0 w-40"
+                  onClick={() => navigate(`/listing/${item._id}`)}
+                >
+                  <div className="rounded-xl overflow-hidden cursor-pointer">
+                    <div className="relative aspect-[3/2]">
+                      <img
+                        src={item.imageUrls?.[0] || item.imageUrl || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                        alt={item.name || item.title}
+                        className="w-full h-full object-cover rounded-xl"
+                      />
+                      <div className="absolute top-2 right-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRecentlyViewedLike && onRecentlyViewedLike(item._id, !item.isLiked);
+                          }}
+                          className="p-1.5 bg-white/70 rounded-full"
+                        >
+                          {item.isLiked ? (
+                            <HeartIconSolid className="w-6 h-6 text-rose-500" />
+                          ) : (
+                            <HeartIcon className="w-6 h-6 text-gray-600" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <h3 className="font-medium text-gray-900 text-sm truncate mb-1">
+                        {item.name || item.title}
+                      </h3>
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-gray-900 text-sm">
+                          R{item.price || item.regularPrice || 'N/A'}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {item.viewedAt ? new Date(item.viewedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recently'}
+                        </span>
                       </div>
                     </div>
                   </div>
-
-                  <button
-                    onClick={handleSubmit}
-                    className="w-full py-3.5 bg-rose-500 text-white font-medium rounded-lg hover:bg-rose-600 transition-colors"
-                  >
-                    Apply filters
-                  </button>
                 </div>
-              </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Categories Grid */}
+        <section className="mb-8">
+          <h2 className="font-bold text-gray-900 text-lg mb-4">Explore categories</h2>
+          <div className="grid grid-cols-4 gap-3">
+            {categories.map((cat, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  if (cat.onClick) {
+                    cat.onClick();
+                  } else if (cat.type && cat.category) {
+                    navigate(`/search?type=${cat.type}&category=${cat.category}&address=${encodeURIComponent(currentLocation)}`);
+                  } else if (cat.type) {
+                    navigate(`/search?type=${cat.type}&address=${encodeURIComponent(currentLocation)}`);
+                  }
+                }}
+                className="flex flex-col items-center p-3 rounded-xl hover:bg-white hover:shadow-sm transition-all active:opacity-80"
+              >
+                <div className={`w-12 h-12 ${cat.color} rounded-full flex items-center justify-center text-xl mb-2`}>
+                  {cat.icon}
+                </div>
+                <span className="text-xs text-gray-700 text-center">{cat.label}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Featured Properties */}
+        <section className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-bold text-gray-900 text-lg">Popular homes</h2>
+            <Link 
+              to="/search?type=properties"
+              className="text-sm text-gray-600"
+            >
+              See all
+            </Link>
+          </div>
+          {loadingProperties ? (
+            <div className="grid grid-cols-2 gap-3">
+              {[...Array(4)].map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {featuredProperties.slice(0, 4).map((property) => (
+                <div 
+                  key={property._id}
+                  onClick={() => navigate(`/listing/${property._id}`)}
+                  className=" rounded-xl overflow-hidden active:opacity-80 cursor-pointer"
+                >
+                  <div className="relative aspect-[3/2]">
+                    <img
+                      src={property.imageUrls?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                      alt={property.name}
+                      className="w-full h-full object-cover rounded-xl"
+                    />
+                    <div className="absolute top-2 left-2">
+                      <span className={`text-xs font-medium px-2 py-1 rounded ${getTypeBadge(property.type)?.color || 'bg-gray-100 text-gray-800'}`}>
+                        {getPropertyTypeName(property.type)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    <h3 className="font-medium text-gray-900 text-sm truncate mb-1">{property.name}</h3>
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-gray-900 text-sm">
+                        R{property.price || property.regularPrice}
+                      </span>
+                      <div className="flex items-center">
+                        <StarIconSolid className="w-3 h-3 text-yellow-400" />
+                        <span className="text-xs text-gray-600 ml-1">{property.rating?.toFixed(1) || '4.5'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
+        </section>
 
-          <div className="flex-1">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <div className="flex items-center gap-3">
-                {isMobile && (
-                  <button
-                    onClick={() => setShowFilters(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400"
-                  >
-                    <FunnelIcon className="w-4 h-4" />
-                    Filters
-                  </button>
-                )}
-                
-                <button
-                  onClick={() => setShowMap(!showMap)}
-                  className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400"
-                >
-                  {showMap ? (
-                    <>
-                      <HomeIcon className="w-4 h-4" />
-                      Show list
-                    </>
-                  ) : (
-                    <>
-                      <MapIcon className="w-4 h-4" />
-                      Show map
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {showMap ? (
-              <div className="h-[600px] rounded-2xl overflow-hidden">
-                <MapView items={filteredItems} searchType={searchType} address={sidebarData.address} />
-              </div>
-            ) : (
-              loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[...Array(6)].map((_, i) => (
-                    <SkeletonCard key={i} />
-                  ))}
-                </div>
-              ) : filteredItems.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredItems.map((item) => (
-                      <ItemCard 
-                        key={item._id} 
-                        item={item} 
-                        searchType={searchType} 
-                        onClick={onItemClick}
-                      />
-                    ))}
-                  </div>
-
-                  {showMore && (
-                    <div className="mt-8 flex justify-center">
-                      <button
-                        onClick={loadMore}
-                        className="px-6 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
-                      >
-                        Show more
-                      </button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="bg-white rounded-2xl p-8 text-center border border-gray-200">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <MagnifyingGlassIcon className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No exact matches
-                  </h3>
-                  <p className="text-gray-600 mb-6 text-sm">
-                    Try adjusting your filters or search term
-                  </p>
-                  <button
-                    onClick={clearFilters}
-                    className="px-6 py-3 bg-rose-500 hover:bg-rose-600 text-white font-medium rounded-lg text-sm"
-                  >
-                    Clear all filters
-                  </button>
-                </div>
-              )
-            )}
+        {/* Services Section */}
+        <section className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-bold text-gray-900 text-lg">Top services</h2>
+            <Link 
+              to="/search?type=services"
+              className="text-sm text-gray-600"
+            >
+              See all
+            </Link>
           </div>
-        </div>
-      </div>
+          {loadingServices ? (
+            <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-2">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex-shrink-0 w-60">
+                  <div className="aspect-[4/3] bg-gray-200 rounded-xl mb-2 animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded mb-1 animate-pulse"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-2">
+              {featuredServices.slice(0, 3).map((service) => (
+                <div 
+                  key={service._id}
+                  onClick={() => navigate(`/service/${service._id}`)}
+                  className="flex-shrink-0 w-60  rounded-xl overflow-hidden active:opacity-80 cursor-pointer"
+                >
+                  <div className="relative aspect-[4/3]">
+                    <img
+                      src={service.imageUrls?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                      alt={service.name}
+                      className="w-full h-full object-cover rounded-xl"
+                    />
+                  </div>
+                  <div className="p-3">
+                    <h3 className="font-medium text-gray-900 text-sm truncate mb-1">{service.name}</h3>
+                    <p className="text-xs text-gray-500 line-clamp-2 mb-0">{service.address}</p>
+                    <span className="font-bold text-gray-900 text-sm">
+                      R{service.price || service.regularPrice}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
 
-      {showFilters && isMobile && (
-        <MobileFilterOverlay 
-          sidebarData={sidebarData}
-          handleChange={handleChange}
-          clearFilters={clearFilters}
-          handleSubmit={handleSubmit}
-          setShowFilters={setShowFilters}
-        />
-      )}
+        {/* Events Section */}
+        <section className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-bold text-gray-900 text-lg">Upcoming events</h2>
+            <Link 
+              to="/search?type=events"
+              className="text-sm text-gray-600"
+            >
+              See all
+            </Link>
+          </div>
+          {loadingEvents ? (
+            <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-2">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex-shrink-0 w-64">
+                  <div className="aspect-[5/3] bg-gray-200 rounded-xl mb-2 animate-pulse"></div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+                  </div>
+                  <div className="h-3 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+          ) : featuredEvents.length > 0 ? (
+            <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-2">
+              {featuredEvents.slice(0, 3).map((event) => (
+                <div 
+                  key={event._id}
+                  onClick={() => navigate(`/event/${event._id}`)}
+                  className="flex-shrink-0 w-60 rounded-xl overflow-hidden active:opacity-80 cursor-pointer "
+                >
+                  <div className="relative aspect-[5/3]">
+                    <img
+                      src={event.imageUrls?.[0] || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                      alt={event.name}
+                      className="w-full h-full object-cover rounded-xl"
+                    />
+                    <div className="absolute top-2 left-2">
+                      <span className="text-xs font-medium px-2 py-1 bg-amber-100 text-amber-800 rounded">
+                        Event
+                      </span>
+                    </div>
+                    <div className="absolute bottom-2 right-2">
+                      <div className="flex items-center bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg">
+                        <CalendarDaysIcon className="w-3 h-3 text-gray-600 mr-1" />
+                        <span className="text-xs font-medium text-gray-700">
+                          {formatEventDate(event.date)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    <h3 className="font-medium text-gray-900 text-sm truncate mb-1">{event.name}</h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center">
+                        <MapIcon className="w-3 h-3 text-gray-400 mr-1" />
+                        <span className="text-xs text-gray-500 truncate">{event.address || 'Various locations'}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-gray-900 text-sm">
+                         R{event.price || event.regularPrice}
+                      </span>
+                      {event.attendingCount !== undefined && (
+                        <div className="flex items-center text-xs text-gray-500">
+                          <UserGroupIcon className="w-3 h-3 mr-1" />
+                          <span>{event.attendingCount} going</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-white rounded-xl">
+              <CalendarDaysIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 text-sm">No upcoming events in your area</p>
+              <button
+                onClick={() => navigate('/search?type=events')}
+                className="mt-3 text-sm text-rose-500 font-medium"
+              >
+                Browse all events
+              </button>
+            </div>
+          )}
+        </section>
 
-      {isMobile && !showFilters && (
-        <div className="fixed bottom-6 right-4 z-40">
-          <button
-            onClick={() => setShowFilters(true)}
-            className="bg-rose-500 text-white p-4 rounded-full shadow-xl hover:bg-rose-600"
-          >
-            <FunnelIcon className="w-5 h-5" />
-          </button>
-        </div>
-      )}
+        {/* Helpers Section */}
+        <section className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-bold text-gray-900 text-lg">Recommended helpers</h2>
+            <Link 
+              to="/search?type=helpers"
+              className="text-sm text-gray-600"
+            >
+              See all
+            </Link>
+          </div>
+          {loadingHelpers ? (
+            <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-2">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex-shrink-0 w-56 animate-pulse">
+                  <div className="aspect-square bg-gray-200 rounded-full mb-2 mx-auto w-20 h-20"></div>
+                  <div className="h-4 bg-gray-200 rounded mb-1 w-3/4 mx-auto"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex overflow-x-auto scrollbar-hide gap-4 pb-2">
+              {featuredHelpers.slice(0, 4).map((helper) => (
+                <div 
+                  key={helper._id}
+                  onClick={() => navigate(`/helper/${helper._id}`)}
+                  className="flex-shrink-0 w-40 flex flex-col items-center p-4 bg-white rounded-xl shadow-sm border border-gray-200 active:opacity-80 cursor-pointer"
+                >
+                  <div className="w-20 h-20 rounded-full overflow-hidden mb-3">
+                    <img
+                      src={helper.imageUrls?.[0] || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
+                      alt={helper.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <h3 className="font-medium text-gray-900 text-sm text-center mb-1">{helper.name}</h3>
+                  <p className="text-xs text-gray-500 text-center mb-2">{helper.type || 'Service Provider'}</p>
+                  <div className="flex items-center">
+                      <span className="font-bold text-gray-900 text-sm">
+                         R{helper.price || helper.regularPrice}
+                      </span>
+                      </div>
+                       <div className="flex right-3">
+                    <StarIconSolid className="w-3 h-3 text-yellow-400" />
+                    <span className="text-xs text-gray-600 ml-1">{helper.rating?.toFixed(1) || '4.8'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Bottom Navigation */}
+        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+          <div className="flex justify-around py-3">
+            {[
+              { icon: HomeIcon, label: 'Home', path: '/' },
+              { icon: MapIcon, label: 'Explore', path: '/explore' },
+              { icon: HeartIcon, label: 'Saved', path: '/wishlist' },
+              { icon: UserIcon, label: 'Profile', path: '/profile' }
+            ].map((item) => (
+              <Link
+                key={item.label}
+                to={item.path}
+                className="flex flex-col items-center active:opacity-80"
+              >
+                <item.icon className={`w-6 h-6 ${location.pathname === item.path ? 'text-rose-500' : 'text-gray-400'}`} />
+                <span className={`text-xs mt-1 ${location.pathname === item.path ? 'text-rose-500' : 'text-gray-400'}`}>
+                  {item.label}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </nav>
+      </main>
+
+      {/* Add some padding for bottom nav */}
+      <div className="h-16"></div>
     </div>
   );
 };
 
-// Mobile Filter Overlay
-const MobileFilterOverlay = ({ 
-  sidebarData, 
-  handleChange, 
-  clearFilters, 
-  handleSubmit, 
-  setShowFilters 
-}) => (
-  <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
-    <div className="sticky top-0 bg-white border-b border-gray-200 p-4 z-10">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Filters</h2>
-        <button
-          onClick={() => setShowFilters(false)}
-          className="p-2 hover:bg-gray-100 rounded-full"
-        >
-          <XMarkIcon className="w-6 h-6" />
-        </button>
-      </div>
-    </div>
-    
-    <div className="p-4 pb-24">
-      <div className="space-y-8">
-        <div>
-          <h3 className="font-bold text-gray-900 mb-4">Price range</h3>
-          <div className="space-y-6">
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="block text-xs text-gray-500 mb-2">Min price</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
-                  <input
-                    type="number"
-                    id="priceMin"
-                    value={sidebarData.priceMin}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-              <div className="flex-1">
-                <label className="block text-xs text-gray-500 mb-2">Max price</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
-                  <input
-                    type="number"
-                    id="priceMax"
-                    value={sidebarData.priceMax}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm"
-                    placeholder="Any price"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg">
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={clearFilters}
-          className="flex-1 py-3.5 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50"
-        >
-          Clear all
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            handleSubmit({ preventDefault: () => {} });
-            setShowFilters(false);
-          }}
-          className="flex-1 py-3.5 bg-rose-500 text-white rounded-lg font-medium hover:bg-rose-600"
-        >
-          Show results
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
 // ==================== MAIN COMPONENT ====================
-const UniversalSearch = () => {
+const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const getInitialSearchType = () => {
-    const urlParams = new URLSearchParams(location.search);
-    const typeFromUrl = urlParams.get('searchType');
-    return SEARCH_TYPES.map(t => t.id).includes(typeFromUrl) 
-      ? typeFromUrl 
-      : 'properties';
-  };
-
-  const [searchType, setSearchType] = useState(getInitialSearchType());
-  const [sidebarData, setSidebarData] = useState(getInitialSidebarData());
-  const [loading, setLoading] = useState(false);
-  const [items, setItems] = useState([]);
-  const [showMore, setShowMore] = useState(false);
-  const [recentSearches, setRecentSearches] = useState([]);
-  const [showFilters, setShowFilters] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [showMap, setShowMap] = useState(false);
-  const [showHomePage, setShowHomePage] = useState(true);
-  const [currentLocation, setCurrentLocation] = useState('South Africa');
 
   // Homepage data states
   const [featuredProperties, setFeaturedProperties] = useState([]);
@@ -1668,6 +534,7 @@ const UniversalSearch = () => {
 
   // Recently viewed items state
   const [recentlyViewedItems, setRecentlyViewedItems] = useState([]);
+  const [currentLocation, setCurrentLocation] = useState('South Africa');
 
   // Load recently viewed items from localStorage
   useEffect(() => {
@@ -1692,7 +559,6 @@ const UniversalSearch = () => {
     const addressFromUrl = urlParams.get('address');
     if (addressFromUrl) {
       setCurrentLocation(decodeURIComponent(addressFromUrl));
-      setSidebarData(prev => ({ ...prev, address: decodeURIComponent(addressFromUrl) }));
     }
   }, [location.search]);
 
@@ -1724,6 +590,9 @@ const UniversalSearch = () => {
       
       // Update state
       setRecentlyViewedItems(items);
+      
+      // Navigate to item details page
+      navigate(`/${itemType}/${item._id}`);
     } catch (error) {
       console.error('Failed to save to recently viewed:', error);
     }
@@ -1746,24 +615,6 @@ const UniversalSearch = () => {
     }
   };
 
-  // Function to refresh recently viewed
-  const refreshRecentlyViewed = () => {
-    const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
-    if (stored) {
-      setRecentlyViewedItems(JSON.parse(stored));
-    } else {
-      setRecentlyViewedItems([]);
-    }
-  };
-
-  // Check if mobile
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
   // Fetch homepage data
   useEffect(() => {
     const fetchHomepageData = async () => {
@@ -1773,10 +624,17 @@ const UniversalSearch = () => {
         const propertiesRes = await fetch(`/api/listing/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc&address=${encodeURIComponent(currentLocation)}`);
         if (propertiesRes.ok) {
           const propertiesData = await propertiesRes.json();
-          setFeaturedProperties(propertiesData.slice(0, 4)); // Show 4 featured properties
+          setFeaturedProperties(propertiesData.slice(0, 4));
         }
       } catch (error) {
         console.error('Failed to fetch properties:', error);
+        // Mock data for demo
+        setFeaturedProperties([
+          { _id: '1', name: 'Modern Apartment', price: 2500, type: 'rent-long', imageUrls: ['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.5 },
+          { _id: '2', name: 'Luxury Villa', price: 8500, type: 'sale', imageUrls: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8 },
+          { _id: '3', name: 'Cozy Studio', price: 1200, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.3 },
+          { _id: '4', name: 'Office Space', price: 500, type: 'office', imageUrls: ['https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.6 }
+        ]);
       } finally {
         setLoadingProperties(false);
       }
@@ -1791,6 +649,12 @@ const UniversalSearch = () => {
         }
       } catch (error) {
         console.error('Failed to fetch services:', error);
+        // Mock data for demo
+        setFeaturedServices([
+          { _id: '1', name: 'Professional Cleaning', price: 200, description: 'Deep cleaning service for your home', imageUrls: ['https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'] },
+          { _id: '2', name: 'Moving Assistance', price: 350, description: 'Help with packing and moving', imageUrls: ['https://images.unsplash.com/photo-1541976590-713941681591?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'] },
+          { _id: '3', name: 'Landscaping', price: 450, description: 'Garden maintenance and design', imageUrls: ['https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'] }
+        ]);
       } finally {
         setLoadingServices(false);
       }
@@ -1805,6 +669,13 @@ const UniversalSearch = () => {
         }
       } catch (error) {
         console.error('Failed to fetch helpers:', error);
+        // Mock data for demo
+        setFeaturedHelpers([
+          { _id: '1', name: 'John Doe', type: 'Tutor', rating: 4.8, imageUrls: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'] },
+          { _id: '2', name: 'Jane Smith', type: 'Caregiver', rating: 4.9, imageUrls: ['https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'] },
+          { _id: '3', name: 'Mike Johnson', type: 'Handyman', rating: 4.7, imageUrls: ['https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'] },
+          { _id: '4', name: 'Sarah Wilson', type: 'Cleaner', rating: 4.6, imageUrls: ['https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'] }
+        ]);
       } finally {
         setLoadingHelpers(false);
       }
@@ -1819,316 +690,46 @@ const UniversalSearch = () => {
         }
       } catch (error) {
         console.error('Failed to fetch events:', error);
+        // Mock data for demo
+        setFeaturedEvents([
+          { _id: '1', name: 'Local Music Festival', price: 50, date: '2024-03-15', location: 'City Park', attendingCount: 120, imageUrls: ['https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'] },
+          { _id: '2', name: 'Art Workshop', price: 30, date: '2024-03-20', location: 'Art Center', attendingCount: 45, imageUrls: ['https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'] },
+          { _id: '3', name: 'Food & Wine Tasting', price: 75, date: '2024-03-25', location: 'Downtown Square', attendingCount: 89, imageUrls: ['https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'] }
+        ]);
       } finally {
         setLoadingEvents(false);
       }
 
-      // Fetch stats
-      try {
-        const statsData = {
-          properties: featuredProperties.length * 100 || 1234,
-          services: featuredServices.length * 50 || 456,
-          helpers: featuredHelpers.length * 75 || 789,
-          events: featuredEvents.length * 40 || 321
-        };
-        setStats(statsData);
-      } catch (error) {
-        console.error('Failed to fetch stats:', error);
-      }
+      // Set mock stats
+      setStats({
+        properties: 1234,
+        services: 456,
+        helpers: 789,
+        events: 321
+      });
     };
 
-    if (showHomePage) {
-      fetchHomepageData();
-    }
-  }, [showHomePage, currentLocation]);
-
-  // Initialize sidebar data from URL params
-  useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const hasSearchParams = Array.from(urlParams.keys()).length > 0;
-    
-    if (hasSearchParams) {
-      setShowHomePage(false);
-    }
-
-    const initialData = { ...sidebarData };
-    
-    urlParams.forEach((value, key) => {
-      if (key in initialData) {
-        if (typeof initialData[key] === 'boolean') {
-          initialData[key] = value === 'true';
-        } else if (typeof initialData[key] === 'number') {
-          initialData[key] = Number(value);
-        } else {
-          initialData[key] = value;
-        }
-      }
-    });
-
-    const q = urlParams.get('q');
-    if (q) {
-      initialData.searchTerm = q;
-      const name = urlParams.get('name');
-      const address = urlParams.get('address');
-      const description = urlParams.get('description');
-      
-      if (name) initialData.name = name;
-      if (address) {
-        initialData.address = address;
-        setCurrentLocation(address);
-      }
-      if (description) initialData.description = description;
-    }
-
-    setSidebarData(initialData);
-  }, [location.search]);
-
-  // Update search type when URL changes
-  useEffect(() => {
-    const newSearchType = getInitialSearchType();
-    setSearchType(newSearchType);
-  }, [location.search]);
-
-  // Fetch search results data
-  useEffect(() => {
-    if (!showHomePage) {
-      const fetchData = async () => {
-        try {
-          setLoading(true);
-          
-          const urlParams = new URLSearchParams(location.search);
-          const cleanParams = new URLSearchParams();
-          
-          urlParams.forEach((value, key) => {
-            if (value && value !== 'false' && value !== '0' && value !== 'all') {
-              cleanParams.set(key, value);
-            }
-          });
-
-          cleanParams.set('searchType', searchType);
-          
-          const q = urlParams.get('q');
-          if (q) {
-            cleanParams.set('searchTerm', q);
-          }
-          
-          const endpoint = SEARCH_TYPES.find(t => t.id === searchType)?.endpoint || '/api/listing/get';
-          const res = await fetch(`${endpoint}?${cleanParams.toString()}`);
-          
-          if (!res.ok) throw new Error('Failed to fetch data');
-          
-          const data = await res.json();
-          const typedData = data.map((item, index) => {
-            let type = '';
-            let mockData = {};
-            
-            switch(searchType) {
-              case 'properties':
-                const propertyTypes = ['sale', 'rent-short', 'rent-long', 'office', 'land'];
-                type = propertyTypes[index % propertyTypes.length];
-                mockData = {
-                  type: type,
-                  price: item.price || item.regularPrice || Math.floor(Math.random() * 5000) + 1000,
-                  imageUrls: item.imageUrls || [item.image] || [],
-                  rating: Math.floor(Math.random() * 2 + 3.5) + Math.random(),
-                  bedrooms: type !== 'land' ? (Math.floor(Math.random() * 4) + 1) : undefined,
-                  bathrooms: type !== 'land' ? (Math.floor(Math.random() * 3) + 1) : undefined,
-                  offer: Math.random() > 0.5
-                };
-                break;
-              case 'services':
-                const serviceTypes = ['cleaning', 'maintenance', 'moving', 'landscaping', 'catering', 'daycare', 'schoolTransport'];
-                type = serviceTypes[index % serviceTypes.length];
-                mockData = {
-                  type: type,
-                  regularPrice: item.regularPrice || item.price || Math.floor(Math.random() * 500) + 50,
-                  imageUrls: item.imageUrls || [item.image] || [],
-                  capacity: type === 'daycare' ? Math.floor(Math.random() * 20) + 5 : undefined,
-                  vehicleType: type === 'schoolTransport' ? ['Bus', 'Van', 'Car'][Math.floor(Math.random() * 3)] : undefined
-                };
-                break;
-              case 'helpers':
-                const helperTypes = ['tutor', 'caregiver', 'handyman', 'cleaner', 'beauty', 'barber', 'photography'];
-                type = helperTypes[index % helperTypes.length];
-                mockData = {
-                  type: type,
-                  regularPrice: item.regularPrice || item.price || Math.floor(Math.random() * 200) + 20,
-                  imageUrls: item.imageUrls || [item.image] || [],
-                  reviews: item.reviews || [],
-                  address: item.address || currentLocation
-                };
-                break;
-              case 'events':
-                const eventTypes = ['concert', 'workshop', 'sports', 'community', 'festival'];
-                type = eventTypes[index % eventTypes.length];
-                mockData = {
-                  type: type,
-                  price: item.price || Math.floor(Math.random() * 500) + 50,
-                  imageUrls: item.imageUrls || [item.image] || [],
-                  date: item.date || new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-                  location: item.location || currentLocation
-                };
-                break;
-            }
-            
-            return {
-              ...item,
-              itemType: searchType,
-              ...mockData,
-              latitude: -26.2041 + (Math.random() - 0.5) * 0.1,
-              longitude: 28.0473 + (Math.random() - 0.5) * 0.1,
-            };
-          });
-          
-          setItems(typedData);
-          setShowMore(typedData.length >= DEFAULT_LISTING_LIMIT);
-        } catch (error) {
-          console.error('Failed to fetch data:', error);
-          // Generate mock data
-          let mockData = [];
-          const count = 12;
-          
-          for (let i = 0; i < count; i++) {
-            let item = {
-              _id: `mock-${searchType}-${i}`,
-              name: `${searchType.charAt(0).toUpperCase() + searchType.slice(1)} Item ${i + 1}`,
-              description: `Premium ${searchType.slice(0, -1)} in ${sidebarData.address || currentLocation}`,
-              address: sidebarData.address || currentLocation,
-              price: Math.floor(Math.random() * 5000) + 1000,
-              regularPrice: Math.floor(Math.random() * 5000) + 1000,
-              imageUrls: [`https://images.unsplash.com/photo-${1566073771259 + i}?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`],
-              latitude: -26.2041 + (Math.random() - 0.5) * 0.1,
-              longitude: 28.0473 + (Math.random() - 0.5) * 0.1,
-            };
-            
-            switch(searchType) {
-              case 'properties':
-                const propertyTypes = ['sale', 'rent-short', 'rent-long', 'office', 'land'];
-                item.type = propertyTypes[i % propertyTypes.length];
-                item.bedrooms = item.type !== 'land' ? Math.floor(Math.random() * 4) + 1 : undefined;
-                item.bathrooms = item.type !== 'land' ? Math.floor(Math.random() * 3) + 1 : undefined;
-                item.offer = Math.random() > 0.5;
-                break;
-              case 'services':
-                const serviceTypes = ['cleaning', 'maintenance', 'moving', 'landscaping', 'catering', 'daycare', 'schoolTransport'];
-                item.type = serviceTypes[i % serviceTypes.length];
-                break;
-              case 'helpers':
-                const helperTypes = ['tutor', 'caregiver', 'handyman', 'cleaner', 'beauty', 'barber', 'photography'];
-                item.type = helperTypes[i % helperTypes.length];
-                break;
-              case 'events':
-                const eventTypes = ['concert', 'workshop', 'sports', 'community', 'festival'];
-                item.type = eventTypes[i % eventTypes.length];
-                item.date = new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString();
-                break;
-            }
-            
-            mockData.push(item);
-          }
-          
-          setItems(mockData);
-          setShowMore(mockData.length >= DEFAULT_LISTING_LIMIT);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchData();
-    }
-  }, [location.search, searchType, showHomePage, currentLocation]);
-
-  const handleChange = (e) => {
-    const { id, value, checked, type } = e.target;
-    setSidebarData(prev => ({
-      ...prev,
-      [id]: type === 'checkbox' ? checked : value
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const urlParams = new URLSearchParams();
-    
-    Object.entries(sidebarData).forEach(([key, value]) => {
-      if (value !== '' && value !== false && value !== 0 && value !== 'all') {
-        if (Array.isArray(value)) {
-          value.forEach(v => urlParams.append(key, v));
-        } else {
-          urlParams.set(key, value.toString());
-        }
-      }
-    });
-
-    urlParams.set('searchType', searchType);
-    setShowHomePage(false);
-    
-    navigate(`/search?${urlParams.toString()}`);
-  };
-
-  const clearFilters = () => {
-    setSidebarData(getInitialSidebarData());
-    setSidebarData(prev => ({ ...prev, address: currentLocation }));
-    
-    if (isMobile) {
-      setShowFilters(false);
-    }
-  };
-
-  const filteredItems = items;
-
-  if (showHomePage) {
-    return (
-      <Homepage 
-        onSearch={setSearchType}
-        onCategoryClick={(category, location) => {
-          const { searchType, category: cat } = category;
-          setShowHomePage(false);
-          navigate(`/search?searchType=${searchType}&category=${cat}&address=${encodeURIComponent(location || currentLocation)}`);
-        }}
-        searchType={searchType}
-        setSidebarData={setSidebarData}
-        setShowHomePage={setShowHomePage}
-        navigate={navigate}
-        featuredProperties={featuredProperties}
-        featuredServices={featuredServices}
-        featuredHelpers={featuredHelpers}
-        featuredEvents={featuredEvents}
-        loadingProperties={loadingProperties}
-        loadingServices={loadingServices}
-        loadingHelpers={loadingHelpers}
-        loadingEvents={loadingEvents}
-        stats={stats}
-        onItemClick={addToRecentlyViewed}
-        recentlyViewedItems={recentlyViewedItems}
-        onRecentlyViewedLike={updateRecentlyViewedLike}
-        refreshRecentlyViewed={refreshRecentlyViewed}
-        currentLocation={currentLocation}
-      />
-    );
-  }
+    fetchHomepageData();
+  }, [currentLocation]);
 
   return (
-    <SearchResults 
-      searchType={searchType}
-      sidebarData={sidebarData}
-      filteredItems={filteredItems}
-      loading={loading}
-      showMore={showMore}
-      showFilters={showFilters}
-      isMobile={isMobile}
-      showMap={showMap}
-      setShowMap={setShowMap}
-      setShowFilters={setShowFilters}
-      handleChange={handleChange}
-      handleSubmit={handleSubmit}
-      clearFilters={clearFilters}
-      setShowHomePage={setShowHomePage}
-      navigate={navigate}
-      location={location}
+    <MobileAppHomepage
+      featuredProperties={featuredProperties}
+      featuredServices={featuredServices}
+      featuredHelpers={featuredHelpers}
+      featuredEvents={featuredEvents}
+      loadingProperties={loadingProperties}
+      loadingServices={loadingServices}
+      loadingHelpers={loadingHelpers}
+      loadingEvents={loadingEvents}
+      stats={stats}
       onItemClick={addToRecentlyViewed}
+      recentlyViewedItems={recentlyViewedItems}
+      onRecentlyViewedLike={updateRecentlyViewedLike}
+      currentLocation={currentLocation}
+      navigate={navigate}
     />
   );
 };
 
-export default UniversalSearch;
+export default Home;

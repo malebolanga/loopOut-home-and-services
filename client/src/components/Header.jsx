@@ -35,20 +35,8 @@ import {
   signOutUserFailure,
 } from "../redux/user/userSlice";
 
-// Import search utilities - Use correct path
-import {
-  getSearchUrl,
-  saveSearchHistory,
-  getSearchHistory,
-  clearSearchHistory as clearSearchHistoryUtil,
-  generateSuggestions,
-  SEARCH_TYPE_CONFIG,
-  getSearchFieldName
-} from "../utils/searchUtils";
-
-export default function Sidebar() {
+export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeType, setActiveType] = useState('all');
   const [suggestions, setSuggestions] = useState([]);
@@ -62,8 +50,10 @@ export default function Sidebar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState('San Francisco');
+  const [activeTab, setActiveTab] = useState('all');
   
-  const sidebarRef = useRef();
   const profileDropdownRef = useRef();
   const searchInputRef = useRef();
   const dispatch = useDispatch();
@@ -75,14 +65,9 @@ export default function Sidebar() {
     fetchNotifications();
   }, [currentUser]);
 
-  // Close sidebar and dropdown when clicking outside
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      // Close sidebar when clicking outside (mobile only)
-      if (isSidebarOpen && sidebarRef.current && !sidebarRef.current.contains(e.target)) {
-        setIsSidebarOpen(false);
-      }
-      
       // Close profile dropdown when clicking outside
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target)) {
         setShowProfileDropdown(false);
@@ -99,24 +84,14 @@ export default function Sidebar() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isSidebarOpen]);
+  }, []);
 
-  // Prevent body scrolling when sidebar is open on mobile
+  // Focus search input when search becomes visible
   useEffect(() => {
-    if (isSidebarOpen) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-    } else {
-      document.body.style.overflow = 'auto';
-      document.body.style.position = 'static';
+    if (searchVisible && searchInputRef.current) {
+      searchInputRef.current.focus();
     }
-    
-    return () => {
-      document.body.style.overflow = 'auto';
-      document.body.style.position = 'static';
-    };
-  }, [isSidebarOpen]);
+  }, [searchVisible]);
 
   // Generate search suggestions
   useEffect(() => {
@@ -125,7 +100,50 @@ export default function Sidebar() {
       return;
     }
 
-    const newSuggestions = generateSuggestions(searchTerm, activeType, searchHistory);
+    const generateSuggestions = () => {
+      const suggestions = [];
+      
+      // Add search history suggestions
+      searchHistory.forEach(item => {
+        if (item.term.toLowerCase().includes(searchTerm.toLowerCase())) {
+          suggestions.push({
+            term: item.term,
+            type: item.type,
+            isHistory: true
+          });
+        }
+      });
+
+      // Add type-based suggestions
+      const typeSuggestions = {
+        properties: ['apartment', 'house', 'villa', 'studio', 'condo'],
+        services: ['cleaning', 'moving', 'repair', 'maintenance'],
+        helpers: ['tutor', 'cleaner', 'chef', 'handyman'],
+        events: ['concert', 'festival', 'workshop', 'party']
+      };
+
+      Object.entries(typeSuggestions).forEach(([type, terms]) => {
+        terms.forEach(term => {
+          if (term.includes(searchTerm.toLowerCase())) {
+            suggestions.push({
+              term: term.charAt(0).toUpperCase() + term.slice(1),
+              type: type,
+              isHistory: false
+            });
+          }
+        });
+      });
+
+      // Remove duplicates
+      const uniqueSuggestions = suggestions.filter(
+        (suggestion, index, self) =>
+          index === self.findIndex((s) => s.term === suggestion.term && s.type === suggestion.type)
+      );
+
+      return uniqueSuggestions.slice(0, 10);
+    };
+
+    const newSuggestions = generateSuggestions();
     setSuggestions(newSuggestions);
     setShowSuggestions(newSuggestions.length > 0);
   }, [searchTerm, activeType, searchHistory]);
@@ -166,7 +184,6 @@ export default function Sidebar() {
       }
       dispatch(signOutUserSuccess(data));
       navigate('/sign-in');
-      setIsSidebarOpen(false);
       setShowProfileDropdown(false);
     } catch (error) {
       dispatch(signOutUserFailure(error.message));
@@ -177,14 +194,39 @@ export default function Sidebar() {
   const handleSignIn = () => {
     navigate('/sign-in');
     setShowProfileDropdown(false);
-    setIsSidebarOpen(false);
   };
 
   // Handle sign up
   const handleSignUp = () => {
     navigate('/sign-up');
     setShowProfileDropdown(false);
-    setIsSidebarOpen(false);
+  };
+
+  // Save search history
+  const saveSearchHistory = (term, type, filters = {}) => {
+    try {
+      const searches = JSON.parse(localStorage.getItem('searchHistory')) || [];
+      const newSearch = { term, type, filters, timestamp: new Date().toISOString() };
+      
+      // Remove duplicates
+      const filtered = searches.filter(item => 
+        item.term !== term || item.type !== type
+      );
+      
+      const updated = [newSearch, ...filtered].slice(0, 10);
+      localStorage.setItem('searchHistory', JSON.stringify(updated));
+      return updated;
+    } catch (error) {
+      console.error('Failed to save search history:', error);
+      return [];
+    }
+  };
+
+  // Clear search history
+  const clearSearchHistory = () => {
+    localStorage.removeItem('searchHistory');
+    setSearchHistory([]);
+    setSuggestions([]);
   };
 
   // Handle search submission
@@ -192,26 +234,14 @@ export default function Sidebar() {
     e.preventDefault();
     if (!searchTerm.trim()) return;
 
-    const searchType = activeType === 'all' ? 'properties' : activeType;
-    const updatedHistory = saveSearchHistory(searchTerm, searchType, {
-      address: searchTerm,
-      name: searchTerm
-    });
+    const searchType = activeType === 'all' ? 'all' : activeType;
+    const updatedHistory = saveSearchHistory(searchTerm, searchType);
     setSearchHistory(updatedHistory);
 
-    // Get the appropriate field name for the search type
-    const searchField = getSearchFieldName(searchType);
-    
-    const searchUrl = getSearchUrl({
-      searchTerm,
-      searchType,
-      [searchField]: searchTerm, // Dynamic field name
-      address: searchTerm
-    });
-
-    navigate(searchUrl);
+    // Navigate to search page with parameters
+    navigate(`/search?searchTerm=${encodeURIComponent(searchTerm)}&type=${searchType}&address=${encodeURIComponent(currentLocation)}`);
     setShowSuggestions(false);
-    setIsSidebarOpen(false);
+    setSearchVisible(false);
   };
 
   // Handle suggestion click
@@ -219,30 +249,29 @@ export default function Sidebar() {
     setSearchTerm(suggestion.term);
     setShowSuggestions(false);
     
-    const searchType = suggestion.type;
-    const searchField = getSearchFieldName(searchType);
-    const updatedHistory = saveSearchHistory(suggestion.term, searchType, {
-      [searchField]: suggestion.term,
-      address: suggestion.term
-    });
+    const updatedHistory = saveSearchHistory(suggestion.term, suggestion.type);
     setSearchHistory(updatedHistory);
 
-    const searchUrl = getSearchUrl({
-      searchTerm: suggestion.term,
-      searchType,
-      [searchField]: suggestion.term,
-      address: suggestion.term
-    });
-
-    navigate(searchUrl);
-    setIsSidebarOpen(false);
+    navigate(`/search?searchTerm=${encodeURIComponent(suggestion.term)}&type=${suggestion.type}&address=${encodeURIComponent(currentLocation)}`);
+    setSearchVisible(false);
   };
 
-  // Clear search history
-  const clearSearchHistory = () => {
-    const clearedHistory = clearSearchHistoryUtil();
-    setSearchHistory(clearedHistory);
-    setSuggestions([]);
+  // Handle search submit from mobile search
+  const handleSearchSubmit = (value) => {
+    if (!value.trim()) return;
+    
+    setSearchTerm(value);
+    const searchType = activeType === 'all' ? 'all' : activeType;
+    const updatedHistory = saveSearchHistory(value, searchType);
+    setSearchHistory(updatedHistory);
+
+    navigate(`/search?searchTerm=${encodeURIComponent(value)}&type=${searchType}&address=${encodeURIComponent(currentLocation)}`);
+    setSearchVisible(false);
+  };
+
+  // Handle search click for mobile
+  const handleSearchClick = () => {
+    setSearchVisible(true);
   };
 
   // Mark notifications as read
@@ -265,7 +294,7 @@ export default function Sidebar() {
     }
   };
 
-  // Navigation menu items with enhanced icons and spacing
+  // Navigation menu items
   const mainMenuItems = [
     { icon: <FiHome className="w-5 h-5" />, label: 'Home', path: '/', color: 'text-blue-600', bgColor: 'bg-blue-50' },
     { icon: <FiCompass className="w-5 h-5" />, label: 'Explore', path: '/explore', color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
@@ -289,11 +318,75 @@ export default function Sidebar() {
     { key: 'events', label: 'Events', icon: <FiClock className="w-4 h-4" /> }
   ];
 
+  const SEARCH_TYPE_CONFIG = {
+    properties: { icon: '🏠' },
+    services: { icon: '🔧' },
+    helpers: { icon: '👨‍💼' },
+    events: { icon: '🎪' },
+    all: { icon: '🔍' }
+  };
+
   return (
     <>
+      {/* Mobile Header - Visible only on small screens */}
+ {/* Mobile Header - Visible only on small screens */}
+<header className="bg-gray-50 md:hidden">
+  <div className="px-4 py-3">
+    {searchVisible ? (
+      <div className="flex items-center gap-2">
+        <button 
+          onClick={() => setSearchVisible(false)}
+          className="p-2"
+        >
+          <FiChevronDown className="w-5 h-5 text-gray-600 rotate-90" />
+        </button>
+        <div className="flex-1 relative">
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            ref={searchInputRef}
+            type="text"
+            placeholder={`Search in ${currentLocation}...`}
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-100 rounded-lg text-sm"
+            onKeyPress={(e) => e.key === 'Enter' && handleSearchSubmit(e.target.value)}
+          />
+        </div>
+      </div>
+    ) : (
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link 
+            to="/" 
+            className="w-8 h-8 rounded-full bg-gradient-to-r from-rose-500 to-blue-500 flex items-center justify-center"
+          >
+            <span className="text-white text-xs font-bold">lO</span>
+          </Link>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Create Listing Button - Only for logged in users */}
+          {currentUser && (
+            <Link 
+              to={`/${currentUser._id}/create-listing`}
+              className="p-2"
+            >
+              <FiPlusCircle className="w-5 h-5 text-gray-600" />
+            </Link>
+          )}
+          <button 
+            onClick={handleSearchClick}
+            className="p-2"
+          >
+            <FiSearch className="w-5 h-5 text-gray-600" />
+          </button>
+        
+        </div>
+      </div>
+    )}
+  </div>
+</header>
+
       {/* Desktop Header - Visible only on md screens and above */}
-      <div className="hidden md:flex fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 px-6 py-4 justify-between items-center">
-        {/* Left side: Logo only */}
+      <div className="hidden md:flex fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 px-6 py-4 justify-between items-center shadow-sm">
+        {/* Left side: Logo */}
         <div className="flex items-center">
           <Link
             to="/"
@@ -353,7 +446,7 @@ export default function Sidebar() {
                 onFocus={() => searchTerm.trim() && setShowSuggestions(true)}
                 className="w-full p-3 pl-12 rounded-full border border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition-all bg-white shadow-sm"
               />
-              <FiSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             </form>
             
             {/* Search Suggestions */}
@@ -382,7 +475,7 @@ export default function Sidebar() {
                       {suggestion.isHistory ? (
                         <FiClock className="w-4 h-4 text-gray-400" />
                       ) : (
-                        <span className="text-lg">{SEARCH_TYPE_CONFIG[suggestion.type]?.icon}</span>
+                        <span className="text-lg">{SEARCH_TYPE_CONFIG[suggestion.type]?.icon || '🔍'}</span>
                       )}
                       <div className="flex-1">
                         <span className="text-gray-700">{suggestion.term}</span>
@@ -400,11 +493,11 @@ export default function Sidebar() {
 
         {/* Right side: Navigation Icons + Profile Dropdown */}
         <div className="flex items-center gap-6" ref={profileDropdownRef}>
-          {/* Explore - For all users */}
-           <Link
-            to="/explore"  // FIXED: Changed '/expore' to '/explore'
+          {/* Explore */}
+          <Link
+            to="/explore"
             className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 ${
-              location.pathname === '/explore'  // FIXED: Changed '/expore' to '/explore'
+              location.pathname === '/explore'
                 ? 'text-emerald-600 bg-emerald-50' 
                 : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-50'
             }`}
@@ -443,22 +536,6 @@ export default function Sidebar() {
             >
               <FiHeart className="w-6 h-6" />
               <span className="text-xs mt-1 font-medium">Wishlist</span>
-            </Link>
-          )}
-
-          {/* Messages - Only for logged in users */}
-          {currentUser && (
-            <Link
-              to="/messages"
-              className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 ${
-                location.pathname === '/messages' 
-                  ? 'text-indigo-600 bg-indigo-50' 
-                  : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
-              }`}
-              title="Messages"
-            >
-              <FiMessageCircle className="w-6 h-6" />
-              <span className="text-xs mt-1 font-medium">Messages</span>
             </Link>
           )}
 
@@ -669,408 +746,13 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Mobile Menu Button - Only on mobile */}
-      <button
-        onClick={() => setIsSidebarOpen(true)}
-        className="fixed top-4 left-4 z-50 p-3 rounded-full bg-white shadow-lg hover:shadow-xl transition-shadow md:hidden"
-        aria-label="Open menu"
-      >
-        <FiMenu className="w-6 h-6 text-gray-700" />
-      </button>
-
-      {/* Mobile Profile Picture on Top Right - Only on mobile */}
-      <div className="fixed top-4 right-4 z-50 md:hidden" ref={profileDropdownRef}>
-        <button
-          onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-          className="flex items-center gap-2 p-2 rounded-full"
-          aria-label="Profile menu"
-        >
-          {currentUser ? (
-            <>
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center text-white font-medium">
-                {currentUser.username?.charAt(0)?.toUpperCase() || 'U'}
-              </div>
-              {showProfileDropdown ? (
-                <FiChevronUp className="w-5 h-5 text-gray-700" />
-              ) : (
-                <FiChevronDown className="w-5 h-5 text-gray-700" />
-              )}
-            </>
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-              <FiUser className="w-6 h-6 text-gray-600" />
-            </div>
-          )}
-        </button>
-
-        {/* Mobile Profile Dropdown Menu */}
-        {showProfileDropdown && (
-          <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
-            {currentUser ? (
-              <>
-                {/* User Info */}
-                <div className="p-4 border-b border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center text-white font-medium text-lg">
-                      {currentUser.username?.charAt(0)?.toUpperCase() || 'U'}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-900 truncate">{currentUser.username}</p>
-                      <p className="text-sm text-gray-500 truncate">{currentUser.email}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Navigation Links */}
-                <div className="p-2 border-b border-gray-100">
-                  <Link
-                    to="/profile"
-                    onClick={() => {
-                      setShowProfileDropdown(false);
-                      setIsSidebarOpen(false);
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
-                  >
-                    <FiUser className="w-5 h-5" />
-                    <span>My Profile</span>
-                  </Link>
-                  
-                  <Link
-                    to="/dashboard"
-                    onClick={() => {
-                      setShowProfileDropdown(false);
-                      setIsSidebarOpen(false);
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
-                  >
-                    <FiSettings className="w-5 h-5" />
-                    <span>Dashboard</span>
-                  </Link>
-                </div>
-                
-                {/* Sign Out Button */}
-                <div className="p-2">
-                  <button
-                    onClick={() => {
-                      handleSignOut();
-                      setShowProfileDropdown(false);
-                    }}
-                    className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:shadow-lg transition-all font-medium"
-                  >
-                    <FiLogOut className="w-5 h-5" />
-                    <span>Sign Out</span>
-                  </button>
-                </div>
-              </>
-            ) : (
-              /* For non-logged in users */
-              <div className="p-4">
-                <p className="text-gray-600 text-center mb-4">Welcome to loopOut</p>
-                
-                <button
-                  onClick={handleSignIn}
-                  className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all font-medium mb-3"
-                >
-                  <FiUser className="w-5 h-5" />
-                  Sign In
-                </button>
-                
-                <button
-                  onClick={handleSignUp}
-                  className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium"
-                >
-                  Create Account
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Sidebar Overlay - Mobile Only */}
-      {isSidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsSidebarOpen(false)} />
-      )}
-
-      {/* Sidebar - Hidden on large screens, only for mobile */}
-      <div
-        ref={sidebarRef}
-        className={`fixed top-0 left-0 h-screen w-full bg-white z-50 transition-transform duration-300 ease-in-out flex flex-col ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:hidden`}
-        style={{ overscrollBehavior: 'contain' }}
-      >
-        {/* Close Button (Mobile Only) */}
-        <button
-          onClick={() => setIsSidebarOpen(false)}
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 z-10"
-          aria-label="Close menu"
-        >
-          <FiX className="w-6 h-6 text-gray-700" />
-        </button>
-
-        {/* Logo Section */}
-        <div className="flex-shrink-0 p-6 border-b border-gray-200">
-          <Link
-            to="/"
-            className="inline-flex items-center hover:opacity-90 transition-opacity"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="text-2xl font-bold inline-flex items-center">
-              <span className="font-extrabold text-xl inline-flex items-center text-[#1877F2]">
-                <span className="inline-flex items-center font-extrabold mr-[-8px]">l</span>
-                <span className="relative w-11 h-11 inline-flex items-center justify-center mr-[-2px]">
-                  <svg
-                    viewBox="0 0 100 100"
-                    className="w-full h-full relative top-[1px] mr-[-8px] text-[#1877F2]"
-                  >
-                    <path
-                      fill="currentColor"
-                      d="M30,50 C30,30 50,30 50,50 C50,70 70,70 70,50 C70,30 50,30 50,50"
-                      stroke="currentColor"
-                      strokeWidth="9"
-                    />
-                    <circle cx="30" cy="50" r="8" fill="currentColor" />
-                    <circle cx="70" cy="50" r="8" fill="currentColor" />
-                  </svg>
-                </span>
-                <span className="inline-flex items-center mr-[-4px]">p</span>
-              </span>
-
-              <svg
-                className="w-6 h-6 relative top-[1px] ml-[-1px] text-rose-600"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 3l5.2 5.2m0 0a8.5 8.5 0 1012 12 8.5 8.5 0 00-12-12z"
-                />
-              </svg>
-
-              <span className="ml-[-1px] font-black text-xl text-rose-600">
-                <strong className="font-extrabold">ut</strong>
-              </span>
-            </span>
-          </Link>
-        </div>
-
-        {/* Search Section - Mobile Only */}
-        <div className="flex-shrink-0 p-6 border-b border-gray-200" ref={searchInputRef}>
-          <div className="space-y-3">
-            {/* Search Types */}
-            <div className="flex gap-1 overflow-x-auto pb-2 hide-scrollbar">
-              {searchTypes.map((type) => (
-                <button
-                  key={type.key}
-                  onClick={() => setActiveType(type.key)}
-                  className={`flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
-                    activeType === type.key
-                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  <span className="text-sm">{type.icon}</span>
-                  {type.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Search Input */}
-            <form onSubmit={handleSearch} className="relative">
-              <input
-                type="text"
-                placeholder={`Search ${activeType === 'all' ? 'everything' : activeType}...`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onFocus={() => searchTerm.trim() && setShowSuggestions(true)}
-                className="w-full p-4 pl-12 rounded-xl border border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition-all bg-white shadow-sm"
-              />
-              <FiSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              
-              {/* Search Suggestions */}
-              {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
-                  <div className="p-3 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white">
-                    <span className="text-sm font-medium text-gray-700">Suggestions</span>
-                    {searchHistory.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={clearSearchHistory}
-                        className="text-xs text-pink-600 hover:text-pink-700 font-medium"
-                      >
-                        Clear history
-                      </button>
-                    )}
-                  </div>
-                  <div className="max-h-64 overflow-y-auto">
-                    {suggestions.map((suggestion, index) => (
-                      <button
-                        type="button"
-                        key={index}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
-                      >
-                        {suggestion.isHistory ? (
-                          <FiClock className="w-4 h-4 text-gray-400" />
-                        ) : (
-                          <span className="text-lg">{SEARCH_TYPE_CONFIG[suggestion.type]?.icon}</span>
-                        )}
-                        <div className="flex-1">
-                          <span className="text-gray-700">{suggestion.term}</span>
-                          {suggestion.type !== 'all' && (
-                            <div className="text-xs text-gray-400 capitalize">{suggestion.type}</div>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </form>
-          </div>
-        </div>
-
-        {/* Main Navigation - Mobile Only */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6 space-y-8">
-            {/* Main Menu */}
-            <div>
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-3">
-                Main Navigation
-              </h3>
-              <div className="space-y-2">
-                {mainMenuItems.map((item) => {
-                  if (item.requiresAuth && !currentUser) return null;
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <Link
-                      key={item.label}
-                      to={item.path}
-                      onClick={() => setIsSidebarOpen(false)}
-                      className={`flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 ${
-                        isActive
-                          ? `${item.bgColor} ${item.color} shadow-sm`
-                          : 'text-gray-700 hover:bg-gray-50 hover:shadow-sm'
-                      }`}
-                    >
-                      <div className={`p-2.5 rounded-lg ${isActive ? 'bg-white/80' : 'bg-gray-100'}`}>
-                        <span className={isActive ? item.color : 'text-gray-600'}>{item.icon}</span>
-                      </div>
-                      <span className="font-medium flex-1">{item.label}</span>
-                      {item.label === 'Notifications' && unreadCount > 0 && (
-                        <span className="ml-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center min-w-[24px]">
-                          {unreadCount}
-                        </span>
-                      )}
-                      {isActive && (
-                        <div className="w-1.5 h-6 bg-current rounded-full ml-2"></div>
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Host Section */}
-            {currentUser && hostMenuItems.length > 0 && (
-              <div>
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-3">
-                  Host Dashboard
-                </h3>
-                <div className="space-y-2">
-                  {hostMenuItems.map((item) => {
-                    const isActive = location.pathname === item.path;
-                    return (
-                      <Link
-                        key={item.label}
-                        to={item.path}
-                        onClick={() => setIsSidebarOpen(false)}
-                        className={`flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 ${
-                          isActive
-                            ? `${item.bgColor} ${item.color} shadow-sm`
-                            : 'text-gray-700 hover:bg-gray-50 hover:shadow-sm'
-                        }`}
-                      >
-                        <div className={`p-2.5 rounded-lg ${isActive ? 'bg-white/80' : 'bg-gray-100'}`}>
-                          <span className={isActive ? item.color : 'text-gray-600'}>{item.icon}</span>
-                        </div>
-                        <span className="font-medium flex-1">{item.label}</span>
-                        {isActive && (
-                          <div className="w-1.5 h-6 bg-current rounded-full ml-2"></div>
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Quick Actions */}
-            <div>
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-3">
-                Quick Actions
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                <Link
-                  to="/help"
-                  onClick={() => setIsSidebarOpen(false)}
-                  className="flex flex-col items-center justify-center p-4 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 transition-all duration-200 text-center border border-gray-200"
-                >
-                  <FiHelpCircle className="w-5 h-5 text-gray-600 mb-2" />
-                  <span className="text-sm font-medium text-gray-700">Help</span>
-                </Link>
-                <Link
-                  to="/language"
-                  onClick={() => setIsSidebarOpen(false)}
-                  className="flex flex-col items-center justify-center p-4 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 transition-all duration-200 text-center border border-gray-200"
-                >
-                  <FiGlobe className="w-5 h-5 text-gray-600 mb-2" />
-                  <span className="text-sm font-medium text-gray-700">Language</span>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Footer */}
-        <div className="flex-shrink-0 p-6 border-t border-gray-200">
-          {currentUser ? (
-            <div className="flex items-center justify-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
-                {currentUser.username?.charAt(0)?.toUpperCase() || 'U'}
-              </div>
-              <span className="text-sm font-medium text-gray-700">{currentUser.username}</span>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <button
-                onClick={handleSignIn}
-                className="block w-full text-center px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all font-medium"
-              >
-                Sign in
-              </button>
-              <button
-                onClick={handleSignUp}
-                className="block w-full text-center px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium"
-              >
-                Sign up
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Add CSS for hide scrollbar */}
       <style jsx>{`
-        .hide-scrollbar {
+        .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
-        .hide-scrollbar::-webkit-scrollbar {
+        .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }
       `}</style>

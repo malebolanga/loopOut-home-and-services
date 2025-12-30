@@ -60,7 +60,7 @@ const SEARCH_TYPE_CONFIG = {
       { value: 'sale', label: 'For Sale', icon: Tag },
       { value: 'office', label: 'Office', icon: Building },
       { value: 'land', label: 'Land', icon: Map },
-      { value: 'guesthouse', label: 'Guest House', icon: Users } // Changed from UserGroup to Users
+      { value: 'guesthouse', label: 'Guest House', icon: Users }
     ]
   },
   services: {
@@ -119,6 +119,7 @@ const Search = () => {
   const [recentSearches, setRecentSearches] = useState([]);
   const [aiSuggestions, setAiSuggestions] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState('South Africa');
 
   const [filters, setFilters] = useState({
     parking: false,
@@ -151,22 +152,21 @@ const Search = () => {
     'Music festival this weekend'
   ];
 
-  // Initialize search term from URL
+  // Initialize search from URL
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    const searchTermParam = urlParams.get('searchTerm');
+    const searchTermParam = urlParams.get('searchTerm') || '';
     const typeParam = urlParams.get('type') || 'all';
     const subTypeParam = urlParams.get('subType') || 'all';
+    const addressParam = urlParams.get('address');
     
-    if (searchTermParam) {
-      setSearchTerm(searchTermParam);
-    }
-    
-    if (['properties', 'services', 'helpers', 'events', 'all'].includes(typeParam)) {
-      setSearchType(typeParam);
-    }
-    
+    setSearchTerm(searchTermParam);
+    setSearchType(typeParam);
     setSelectedSubType(subTypeParam);
+    
+    if (addressParam) {
+      setCurrentLocation(decodeURIComponent(addressParam));
+    }
   }, [location.search]);
 
   // Fetch all listings when search params change
@@ -460,6 +460,7 @@ const Search = () => {
       laundry: false
     });
     setSearchType('all');
+    navigate('/search');
   };
 
   const SkeletonCard = () => (
@@ -479,6 +480,39 @@ const Search = () => {
     navigate(`/search?type=${type}`);
   };
 
+  // Function to add item to recently viewed
+  const addToRecentlyViewed = (item, itemType) => {
+    try {
+      const viewedItem = {
+        ...item,
+        itemType: itemType,
+        viewedAt: new Date().toISOString(),
+        isLiked: false
+      };
+
+      // Get existing items
+      const stored = localStorage.getItem('recentlyViewed');
+      let items = stored ? JSON.parse(stored) : [];
+
+      // Remove if already exists (to update timestamp)
+      items = items.filter(i => i._id !== item._id || i.itemType !== itemType);
+      
+      // Add new item to beginning
+      items.unshift(viewedItem);
+      
+      // Keep only 12 items
+      items = items.slice(0, 12);
+      
+      // Save to localStorage
+      localStorage.setItem('recentlyViewed', JSON.stringify(items));
+      
+      // Navigate to item details page
+      navigate(`/${itemType}/${item._id}`);
+    } catch (error) {
+      console.error('Failed to save to recently viewed:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <SearchHeader
@@ -491,7 +525,7 @@ const Search = () => {
         onToggleMap={() => setShowMap(!showMap)}
         onOpenFilters={() => setShowFilters(true)}
         resultsCount={listings.length}
-        location="South Africa"
+        location={currentLocation}
         aiSuggestions={aiSuggestions}
         onApplyAiSuggestion={applyAiSuggestion}
         searchExamples={searchExamples}
@@ -503,7 +537,7 @@ const Search = () => {
 
       <main className="max-w-7xl mx-auto px-4 py-6">
         {showMap ? (
-          <MapView items={listings} searchType={searchType} location="South Africa" />
+          <MapView items={listings} searchType={searchType} location={currentLocation} />
         ) : loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-3">
             {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
@@ -520,15 +554,20 @@ const Search = () => {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-3">
               {listings.map((item, index) => {
+                const commonProps = {
+                  key: item._id,
+                  onClick: () => addToRecentlyViewed(item, item.itemType)
+                };
+
                 switch(item.itemType) {
                   case 'services':
-                    return <ServiceItem key={item._id} service={item} />;
+                    return <ServiceItem {...commonProps} service={item} />;
                   case 'helpers':
-                    return <HelperItem key={item._id} helper={item} />;
+                    return <HelperItem {...commonProps} helper={item} />;
                   case 'events':
-                    return <EventItem key={item._id} event={item} />;
+                    return <EventItem {...commonProps} event={item} />;
                   default:
-                    return <ListingItem key={item._id} listing={item} />;
+                    return <ListingItem {...commonProps} listing={item} />;
                 }
               })}
             </div>

@@ -1,6 +1,6 @@
 // src/components/Footer.jsx
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import { FiSearch, FiClock, FiX, FiHome, FiUser, FiFileText, FiMap } from "react-icons/fi";
 import { FaBrain } from "react-icons/fa";
@@ -17,6 +17,7 @@ import {
 
 const Footer = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser } = useSelector((state) => state.user);
   const [isNavVisible, setIsNavVisible] = useState(true);
   const [isAtTop, setIsAtTop] = useState(true);
@@ -32,6 +33,11 @@ const Footer = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchHistory, setSearchHistory] = useState(getSearchHistory());
+
+  // Hide footer on home page
+  if (location.pathname === '/') {
+    return null;
+  }
 
   // Search types
   const searchTypes = [
@@ -461,37 +467,7 @@ const Footer = () => {
         </div>
       )}
 
-      {/* Mobile Bottom Navigation */}
-      <nav className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-lg rounded-full shadow-2xl md:hidden z-40 transition-all duration-300 ${!isNavVisible ? 'translate-y-24 opacity-0' : 'translate-y-0 opacity-100'}`}>
-        <div className="flex justify-around items-center h-16 px-6">
-          {getMobileNavItems().map((item, index) => (
-            item.to ? (
-              <Link
-                key={index}
-                to={item.to}
-                onClick={item.onClick}
-                className="flex flex-col items-center p-2 w-14 transition-all"
-              >
-                {item.icon}
-                <span className={`text-xs mt-1 ${item.active ? 'text-pink-600 font-medium' : 'text-gray-500'}`}>
-                  {item.label}
-                </span>
-              </Link>
-            ) : (
-              <button
-                key={index}
-                onClick={item.onClick}
-                className="flex flex-col items-center p-2 w-14 transition-all"
-              >
-                {item.icon}
-                <span className={`text-xs mt-1 text-gray-500`}>
-                  {item.label}
-                </span>
-              </button>
-            )
-          ))}
-        </div>
-      </nav>
+
 
       {/* Scroll to top button */}
       {!isAtTop && (
