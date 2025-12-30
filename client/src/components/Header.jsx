@@ -1,7 +1,7 @@
 // src/components/Header.jsx
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import "../styles/Navbar.scss";
 import "../styles/breakpoints.scss";
@@ -52,18 +52,41 @@ export default function Header() {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [searchVisible, setSearchVisible] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('San Francisco');
-  const [activeTab, setActiveTab] = useState('all');
   
-  const profileDropdownRef = useRef();
-  const searchInputRef = useRef();
+  const profileDropdownRef = useRef(null);
+  const searchInputRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Fetch notifications
+  // Fetch notifications - wrapped in useCallback
+  const fetchNotifications = useCallback(async () => {
+    if (!currentUser) return;
+    
+    try {
+      setIsLoadingNotifications(true);
+      const res = await fetch('/api/notifications', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data.notifications || []);
+        setUnreadCount(data.unreadCount || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  }, [currentUser]);
+
+  // Use the fetchNotifications function
   useEffect(() => {
     fetchNotifications();
-  }, [currentUser]);
+  }, [fetchNotifications]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -146,31 +169,7 @@ export default function Header() {
     const newSuggestions = generateSuggestions();
     setSuggestions(newSuggestions);
     setShowSuggestions(newSuggestions.length > 0);
-  }, [searchTerm, activeType, searchHistory]);
-
-  // Fetch notifications
-  const fetchNotifications = async () => {
-    if (!currentUser) return;
-    
-    try {
-      setIsLoadingNotifications(true);
-      const res = await fetch('/api/notifications', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(data.notifications || []);
-        setUnreadCount(data.unreadCount || 0);
-      }
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setIsLoadingNotifications(false);
-    }
-  };
+  }, [searchTerm, searchHistory]);
 
   // Handle sign out
   const handleSignOut = async () => {
@@ -329,60 +328,58 @@ export default function Header() {
   return (
     <>
       {/* Mobile Header - Visible only on small screens */}
- {/* Mobile Header - Visible only on small screens */}
-<header className="bg-gray-50 md:hidden">
-  <div className="px-4 py-3">
-    {searchVisible ? (
-      <div className="flex items-center gap-2">
-        <button 
-          onClick={() => setSearchVisible(false)}
-          className="p-2"
-        >
-          <FiChevronDown className="w-5 h-5 text-gray-600 rotate-90" />
-        </button>
-        <div className="flex-1 relative">
-          <FiSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder={`Search in ${currentLocation}...`}
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-100 rounded-lg text-sm"
-            onKeyPress={(e) => e.key === 'Enter' && handleSearchSubmit(e.target.value)}
-          />
-        </div>
-      </div>
-    ) : (
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link 
-            to="/" 
-            className="w-8 h-8 rounded-full bg-gradient-to-r from-rose-500 to-blue-500 flex items-center justify-center"
-          >
-            <span className="text-white text-xs font-bold">lO</span>
-          </Link>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Create Listing Button - Only for logged in users */}
-          {currentUser && (
-            <Link 
-              to={`/${currentUser._id}/create-listing`}
-              className="p-2"
-            >
-              <FiPlusCircle className="w-5 h-5 text-gray-600" />
-            </Link>
+      <header className="bg-gray-50 md:hidden">
+        <div className="px-4 py-3">
+          {searchVisible ? (
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setSearchVisible(false)}
+                className="p-2"
+              >
+                <FiChevronDown className="w-5 h-5 text-gray-600 rotate-90" />
+              </button>
+              <div className="flex-1 relative">
+                <FiSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder={`Search in ${currentLocation}...`}
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-100 rounded-lg text-sm"
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearchSubmit(e.target.value)}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Link 
+                  to="/" 
+                  className="w-8 h-8 rounded-full bg-gradient-to-r from-rose-500 to-blue-500 flex items-center justify-center"
+                >
+                  <span className="text-white text-xs font-bold">lO</span>
+                </Link>
+              </div>
+              <div className="flex items-center gap-3">
+                {/* Create Listing Button - Only for logged in users */}
+                {currentUser && (
+                  <Link 
+                    to={`/${currentUser._id}/create-listing`}
+                    className="p-2"
+                  >
+                    <FiPlusCircle className="w-5 h-5 text-gray-600" />
+                  </Link>
+                )}
+                <button 
+                  onClick={handleSearchClick}
+                  className="p-2"
+                >
+                  <FiSearch className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+            </div>
           )}
-          <button 
-            onClick={handleSearchClick}
-            className="p-2"
-          >
-            <FiSearch className="w-5 h-5 text-gray-600" />
-          </button>
-        
         </div>
-      </div>
-    )}
-  </div>
-</header>
+      </header>
 
       {/* Desktop Header - Visible only on md screens and above */}
       <div className="hidden md:flex fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 px-6 py-4 justify-between items-center shadow-sm">
