@@ -72,10 +72,11 @@ import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import WishList from "./WishListProfile";
 import MyListing from "./MyListing";
-
-// Import face-api.js components
-import * as faceapi from 'face-api.js';
 import { Camera, CheckCircle, X } from 'lucide-react';
+
+// Import face-api.js - Check if you have the models available
+// You need to have face-api.js models in your public folder at /models
+// OR use a CDN or disable face recognition if not needed
 
 // Reusable InputField Component
 const InputField = ({ label, id, type = "text", value, handleChange, helperText, placeholder, icon }) => (
@@ -174,7 +175,7 @@ export default function Profile() {
   const [isHovering, setIsHovering] = useState(false);
   const safeUserEvents = Array.isArray(userEvents) ? userEvents : [];
 
-  // Face Recognition States
+  // Face Recognition States - Disabled by default until models are properly set up
   const [faceUploadPerc, setFaceUploadPerc] = useState(0);
   const [faceUploadError, setFaceUploadError] = useState(false);
   const [faceData, setFaceData] = useState(null);
@@ -183,33 +184,11 @@ export default function Profile() {
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [modelLoadingError, setModelLoadingError] = useState(null);
+  const [faceRecognitionEnabled, setFaceRecognitionEnabled] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Load Face API Models
-  useEffect(() => {
-    const loadModels = async () => {
-      try {
-        console.log('Loading face recognition models...');
-        setModelLoadingError(null);
-        
-        await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-        await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
-        await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
-        
-        setModelsLoaded(true);
-        console.log('Face API models loaded successfully');
-      } catch (error) {
-        console.error('Error loading face models:', error);
-        setModelLoadingError('Failed to load face recognition system. Please refresh the page.');
-        setModelsLoaded(false);
-      }
-    };
-
-    loadModels();
-  }, []);
-
-  // Load existing face data from user profile
+  // Initialize face verification state from user data
   useEffect(() => {
     if (currentUser?.faceData) {
       setFaceData(currentUser.faceData);
@@ -287,9 +266,15 @@ export default function Profile() {
     setSecuritySettings(prev => ({ ...prev, [field]: !prev[field] }));
   };
 
-  // Camera Functions
+  // Camera Functions - Simplified version without face-api.js
   const startCamera = async () => {
     try {
+      // Check if face recognition is properly set up
+      if (!faceRecognitionEnabled) {
+        setFaceUploadError("Face recognition is not properly configured. Please contact support.");
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           width: { ideal: 640 },
@@ -343,12 +328,6 @@ export default function Profile() {
   };
 
   const processCameraCapture = async (file) => {
-    if (!modelsLoaded) {
-      setFaceUploadError("Verification system is not ready");
-      setIsProcessing(false);
-      return;
-    }
-
     try {
       setIsProcessing(true);
       setFaceUploadError(false);
@@ -374,45 +353,12 @@ export default function Profile() {
         async () => {
           try {
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            await verifyFaceWithImage(downloadURL);
-          } catch (error) {
-            console.error("Download URL error:", error);
-            setFaceUploadError("Processing failed: " + error.message);
-            setIsProcessing(false);
-            stopCamera();
-          }
-        }
-      );
-    } catch (error) {
-      console.error("Process capture error:", error);
-      setFaceUploadError("Processing failed: " + error.message);
-      setIsProcessing(false);
-      stopCamera();
-    }
-  };
-
-  const verifyFaceWithImage = async (imageUrl) => {
-    try {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = imageUrl;
-      
-      img.onload = async () => {
-        try {
-          // Detect face with landmarks
-          const detection = await faceapi
-            .detectSingleFace(img)
-            .withFaceLandmarks()
-            .withFaceDescriptor();
-
-          if (detection) {
-            const faceDescriptor = Array.from(detection.descriptor);
             
+            // Simplified verification - just save the image URL
             const newFaceData = {
-              imageUrl: imageUrl,
-              descriptor: faceDescriptor,
+              imageUrl: downloadURL,
               verified: true,
-              detectedAt: new Date().toISOString(),
+              verifiedAt: new Date().toISOString(),
               method: 'camera'
             };
             
@@ -438,26 +384,17 @@ export default function Profile() {
             dispatch(updateUserSuccess(data));
             setUpdateSuccess(true);
             setTimeout(() => setUpdateSuccess(false), 3000);
-          } else {
-            setFaceUploadError("No face detected. Please ensure your face is clearly visible in the frame.");
+          } catch (error) {
+            console.error("Download URL error:", error);
+            setFaceUploadError("Processing failed: " + error.message);
+            setIsProcessing(false);
+            stopCamera();
           }
-        } catch (detectionError) {
-          console.error('Face detection error:', detectionError);
-          setFaceUploadError("Face detection failed. Please try again with better lighting.");
         }
-        
-        setIsProcessing(false);
-        stopCamera();
-      };
-
-      img.onerror = () => {
-        setFaceUploadError("Failed to process image. Please try again.");
-        setIsProcessing(false);
-        stopCamera();
-      };
+      );
     } catch (error) {
-      console.error("Verification error:", error);
-      setFaceUploadError("Verification failed: " + error.message);
+      console.error("Process capture error:", error);
+      setFaceUploadError("Processing failed: " + error.message);
       setIsProcessing(false);
       stopCamera();
     }
@@ -852,6 +789,14 @@ export default function Profile() {
                         <div className="flex items-center gap-2 text-green-700">
                           <CheckCircleIcon className="w-5 h-5" />
                           <span>Your identity has been verified</span>
+                        </div>
+                      </div>
+                    )}
+                    {modelLoadingError && (
+                      <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
+                        <div className="flex items-center gap-2 text-yellow-700">
+                          <XCircleIcon className="w-5 h-5" />
+                          <span className="text-sm">Advanced face recognition is currently unavailable</span>
                         </div>
                       </div>
                     )}

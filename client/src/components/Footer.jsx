@@ -1,52 +1,15 @@
-// src/components/Footer.jsx
+// eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from 'react-redux';
-import { FiSearch, FiClock, FiX, FiHome, FiUser, FiFileText, FiMap } from "react-icons/fi";
-import { FaBrain } from "react-icons/fa";
-
-// Import search utilities - Use correct path
-import {
-  getSearchUrl,
-  saveSearchHistory,
-  getSearchHistory,
-  clearSearchHistory as clearSearchHistoryUtil,
-  generateSuggestions,
-  SEARCH_TYPE_CONFIG
-} from "../utils/searchUtils";
 
 const Footer = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { currentUser } = useSelector((state) => state.user);
   const [isNavVisible, setIsNavVisible] = useState(true);
   const [isAtTop, setIsAtTop] = useState(true);
   const lastScroll = useRef(0);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-  const [showCreate, setShowCreate] = useState(false);
-  const mobileSearchRef = useRef();
-
-  // Search states
-  const [activeType, setActiveType] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [searchHistory, setSearchHistory] = useState(getSearchHistory());
-
-  // Hide footer on home page
-  if (location.pathname === '/') {
-    return null;
-  }
-
-  // Search types
-  const searchTypes = [
-    { key: 'all', label: 'All', icon: '🔍' },
-    { key: 'properties', label: 'Properties', icon: <FiHome className="w-4 h-4" /> },
-    { key: 'services', label: 'Services', icon: <FiFileText className="w-4 h-4" /> },
-    { key: 'helpers', label: 'Helpers', icon: <FiUser className="w-4 h-4" /> },
-    { key: 'events', label: 'Events', icon: <FiClock className="w-4 h-4" /> }
-  ];
 
   useEffect(() => {
     if (currentUser) {
@@ -75,400 +38,14 @@ const Footer = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Effect to handle clicks outside of mobile search
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (mobileSearchRef.current && !mobileSearchRef.current.contains(e.target) && showSearch) {
-        setShowSearch(false);
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showSearch]);
-
-  // Effect to generate search suggestions
-  useEffect(() => {
-    if (searchTerm.trim() && showSearch) {
-      const newSuggestions = generateSuggestions(searchTerm, activeType, searchHistory);
-      setSuggestions(newSuggestions);
-      setShowSuggestions(newSuggestions.length > 0);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  }, [searchTerm, activeType, searchHistory, showSearch]);
-
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSearchClick = () => {
-    // Navigate to Search page with fade-in effect
-    navigate('/search', { 
-      state: { fadeIn: true } 
-    });
-  };
-
-  const handleCreateClick = () => {
-    if (!currentUser) {
-      navigate('/login-required');
-      return;
-    }
-    setShowCreate(true);
-  };
-
-  const closeModals = () => {
-    setShowSearch(false);
-    setShowCreate(false);
-    setShowSuggestions(false);
-  };
-
-  // Handle search submission
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (!searchTerm.trim()) return;
-
-    const searchType = activeType === 'all' ? 'properties' : activeType;
-    const updatedHistory = saveSearchHistory(searchTerm, searchType, {
-      address: searchTerm,
-      name: searchTerm
-    });
-    setSearchHistory(updatedHistory);
-
-    const searchUrl = getSearchUrl({
-      searchTerm,
-      searchType,
-      address: searchTerm,
-      name: searchTerm
-    });
-
-    // Navigate to Search page with fade-in effect
-    navigate('/search', { 
-      state: { fadeIn: true } 
-    });
-    
-    // Then update URL with search params after a brief delay
-    setTimeout(() => {
-      window.history.replaceState(null, '', searchUrl);
-    }, 100);
-    
-    setShowSearch(false);
-    setShowSuggestions(false);
-  };
-
-  // Handle suggestion click
-  const handleSuggestionClick = (suggestion) => {
-    setSearchTerm(suggestion.term);
-    setShowSuggestions(false);
-    
-    const searchType = suggestion.type;
-    const updatedHistory = saveSearchHistory(suggestion.term, searchType, {
-      address: suggestion.term,
-      name: suggestion.term
-    });
-    setSearchHistory(updatedHistory);
-
-    const searchUrl = getSearchUrl({
-      searchTerm: suggestion.term,
-      searchType,
-      address: suggestion.term,
-      name: suggestion.term
-    });
-
-    // Navigate to Search page with fade-in effect
-    navigate('/search', { 
-      state: { fadeIn: true } 
-    });
-    
-    // Then update URL with search params after a brief delay
-    setTimeout(() => {
-      window.history.replaceState(null, '', searchUrl);
-    }, 100);
-    
-    setShowSearch(false);
-  };
-
-  // Clear search history
-  const clearSearchHistory = () => {
-    const clearedHistory = clearSearchHistoryUtil();
-    setSearchHistory(clearedHistory);
-    setSuggestions([]);
-  };
-
-  const handleCreateListing = (tab = '') => {
-    if (!currentUser) {
-      navigate('/login-required');
-      return;
-    }
-    
-    let url = `/${currentUser._id}/create-listing`;
-    if (tab) {
-      url += `?tab=${tab}`;
-    }
-    
-    navigate(url);
-    setShowCreate(false);
-  };
-
-  const getMobileNavItems = () => {
-    return [
-      {
-        icon: (
-          <div className="p-2 rounded-full text-gray-600 hover:bg-gray-100">
-            <FiSearch className="w-6 h-6" />
-          </div>
-        ),
-        label: "Search",
-        onClick: handleSearchClick
-      },
-      {
-        to: "/",
-        icon: (
-          <div className={`p-2 rounded-full ${window.location.pathname === '/' ? 'bg-pink-100 text-pink-600' : 'text-gray-600 hover:bg-gray-100'}`}>
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-          </div>
-        ),
-        label: "Home",
-        active: window.location.pathname === '/'
-      },
-      {
-        icon: (
-          <div className="p-2 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-          </div>
-        ),
-        label: "Create",
-        special: true,
-        onClick: handleCreateClick
-      }
-    ];
-  };
+  // Removed getMobileNavItems function as it's no longer needed
 
   return (
     <>
-      {/* Enhanced Floating Search Modal */}
-      {showSearch && (
-        <div className="fixed inset-0 bg-white z-50 md:hidden animate-fadeIn">
-          <div ref={mobileSearchRef} className="p-4">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <button 
-                onClick={closeModals}
-                className="p-2 rounded-full hover:bg-gray-100"
-              >
-                <FiX className="w-5 h-5" />
-              </button>
-              <h3 className="text-lg font-semibold">Search</h3>
-              <div className="w-9"></div> {/* Spacer for balance */}
-            </div>
-
-            {/* Search Types */}
-            <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-              {searchTypes.map((type) => (
-                <button
-                  key={type.key}
-                  onClick={() => setActiveType(type.key)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                    activeType === type.key
-                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <span>{type.icon}</span>
-                  {type.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Search Input */}
-            <form onSubmit={handleSearch} className="relative mb-4">
-              <input
-                type="text"
-                placeholder={`Search ${activeType === 'all' ? 'everything' : activeType}...`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-4 pl-12 rounded-2xl border border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition-all bg-white shadow-sm"
-                autoFocus
-              />
-              <FiSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            </form>
-
-            {/* Search Suggestions */}
-            {showSuggestions && suggestions.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-4">
-                <div className="p-3 border-b border-gray-100 flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-700">Suggestions</span>
-                  {searchHistory.length > 0 && (
-                    <button
-                      onClick={clearSearchHistory}
-                      className="text-xs text-pink-600 hover:text-pink-700 font-medium"
-                    >
-                      Clear history
-                    </button>
-                  )}
-                </div>
-                <div className="max-h-60 overflow-y-auto">
-                  {suggestions.map((suggestion, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSuggestionClick(suggestion)}
-                      className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
-                    >
-                      {suggestion.isHistory ? (
-                        <FiClock className="w-4 h-4 text-gray-400" />
-                      ) : (
-                        <span className="text-lg">{SEARCH_TYPE_CONFIG[suggestion.type]?.icon}</span>
-                      )}
-                      <div className="flex-1">
-                        <div className="text-gray-700">{suggestion.term}</div>
-                        {suggestion.type !== 'all' && (
-                          <div className="text-xs text-gray-400 capitalize">{suggestion.type}</div>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Recent Searches */}
-            {searchHistory.length > 0 && !showSuggestions && (
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                <div className="p-3 border-b border-gray-100 flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-700">Recent searches</span>
-                  <button
-                    onClick={clearSearchHistory}
-                    className="text-xs text-pink-600 hover:text-pink-700 font-medium"
-                  >
-                    Clear all
-                  </button>
-                </div>
-                <div className="max-h-60 overflow-y-auto">
-                  {searchHistory.slice(0, 5).map((item, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSuggestionClick({ term: item.term, type: item.type })}
-                      className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
-                    >
-                      <FiClock className="w-4 h-4 text-gray-400" />
-                      <div className="flex-1">
-                        <div className="text-gray-700">{item.term}</div>
-                        <div className="text-xs text-gray-400 capitalize">{item.type}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Quick Actions */}
-            <div className="mt-6">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Quick actions</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <button 
-                  onClick={() => {
-                    navigate('/plan-trip');
-                    setShowSearch(false);
-                  }}
-                  className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 text-blue-700 hover:shadow-md transition-all text-left"
-                >
-                  <FiMap className="w-5 h-5 mb-2" />
-                  <div className="text-sm font-medium">Plan Trip</div>
-                </button>
-                <button 
-                  onClick={() => {
-                    navigate('/ai-assistant');
-                    setShowSearch(false);
-                  }}
-                  className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 text-purple-700 hover:shadow-md transition-all text-left"
-                >
-                  <FaBrain className="w-5 h-5 mb-2" />
-                  <div className="text-sm font-medium">AI Assistant</div>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Floating Create Modal */}
-      {showCreate && (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col animate-fadeIn">
-          <div className="flex items-center justify-between p-4 border-b">
-            <button 
-              onClick={closeModals}
-              className="p-2 rounded-full hover:bg-gray-100"
-            >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <h2 className="text-lg font-semibold">Create Listing</h2>
-            <div className="w-10"></div> {/* Spacer for balance */}
-          </div>
-          
-          <div className="flex-1 p-4">
-            <div className="max-w-2xl mx-auto">
-              {/* Main Create Listing Button */}
-              <div 
-                className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-pink-400 hover:bg-pink-50 transition-all cursor-pointer mb-8"
-                onClick={() => handleCreateListing()} // No tab specified = default
-              >
-                <span className="text-4xl mb-4 block">🏠</span>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Create New Listing</h3>
-                <p className="text-gray-500">Share your space with travelers around the world</p>
-              </div>
-              
-              {/* Quick Create Options with Emojis */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Properties - House emoji */}
-                <div 
-                  className="border rounded-xl p-4 text-center hover:border-pink-400 hover:bg-pink-50 transition-all cursor-pointer"
-                  onClick={() => handleCreateListing('stays')}
-                >
-                  <span className="text-3xl mb-2 block">🏠</span>
-                  <span className="text-sm font-medium">Properties</span>
-                </div>
-
-                {/* Services - Tools emoji */}
-                <div 
-                  className="border rounded-xl p-4 text-center hover:border-pink-400 hover:bg-pink-50 transition-all cursor-pointer"
-                  onClick={() => handleCreateListing('experiences')}
-                >
-                  <span className="text-3xl mb-2 block">🛠️</span>
-                  <span className="text-sm font-medium">Services</span>
-                </div>
-
-                {/* Helper - Hand helping emoji */}
-                <div 
-                  className="border rounded-xl p-4 text-center hover:border-pink-400 hover:bg-pink-50 transition-all cursor-pointer"
-                  onClick={() => handleCreateListing('online')}
-                >
-                  <span className="text-3xl mb-2 block">👷</span>
-                  <span className="text-sm font-medium">Helper</span>
-                </div>
-
-                {/* Events - Party emoji */}
-                <div 
-                  className="border rounded-xl p-4 text-center hover:border-pink-400 hover:bg-pink-50 transition-all cursor-pointer"
-                  onClick={() => handleCreateListing('events')}
-                >
-                  <span className="text-3xl mb-2 block">🎪</span>
-                  <span className="text-sm font-medium">Events</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-
-
       {/* Scroll to top button */}
       {!isAtTop && (
         <button
@@ -482,50 +59,46 @@ const Footer = () => {
       )}
 
       {/* Main Footer */}
-      <footer className="hidden md:block bg-gradient-to-b from-gray-50 to-white text-gray-700 pt-16 pb-8 mt-24">
+      <footer className="bg-gradient-to-b from-gray-900 to-gray-800 text-gray-300 pt-16 pb-8 mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-            {/* Company Column */}
             <div className="space-y-4">
-              <h5 className="text-gray-900 font-medium text-sm uppercase">Company</h5>
+              <h5 className="text-white font-medium text-sm uppercase">Company</h5>
               <ul className="space-y-3">
-                <li><Link to="/about" className="text-sm hover:text-pink-600 transition-colors">About</Link></li>
-                <li><Link to="/careers" className="text-sm hover:text-pink-600 transition-colors">Careers</Link></li>
-                <li><Link to="/press" className="text-sm hover:text-pink-600 transition-colors">Press</Link></li>
+                <li><Link to="/about" className="text-sm hover:text-white transition-colors">About</Link></li>
+                <li><Link to="/careers" className="text-sm hover:text-white transition-colors">Careers</Link></li>
+                <li><Link to="/press" className="text-sm hover:text-white transition-colors">Press</Link></li>
               </ul>
             </div>
 
-            {/* Support Column */}
             <div className="space-y-4">
-              <h5 className="text-gray-900 font-medium text-sm uppercase">Support</h5>
+              <h5 className="text-white font-medium text-sm uppercase">Support</h5>
               <ul className="space-y-3">
-                <li><Link to="/help" className="text-sm hover:text-pink-600 transition-colors">Help Center</Link></li>
-                <li><Link to="/message" className="text-sm hover:text-pink-600 transition-colors">Message Us</Link></li>
-                <li><Link to="/safety" className="text-sm hover:text-pink-600 transition-colors">Safety</Link></li>
-                <li><Link to="/cancellations" className="text-sm hover:text-pink-600 transition-colors">Cancellations</Link></li>
+                <li><Link to="/help" className="text-sm hover:text-white transition-colors">Help Center</Link></li>
+                <li><Link to="/message" className="text-sm hover:text-white transition-colors">Message Us</Link></li>
+                <li><Link to="/safety" className="text-sm hover:text-white transition-colors">Safety</Link></li>
+                <li><Link to="/cancellations" className="text-sm hover:text-white transition-colors">Cancellations</Link></li>
               </ul>
             </div>
 
-            {/* Legal Column */}
             <div className="space-y-4">
-              <h5 className="text-gray-900 font-medium text-sm uppercase">Legal</h5>
+              <h5 className="text-white font-medium text-sm uppercase">Legal</h5>
               <ul className="space-y-3">
-                <li><Link to="/terms" className="text-sm hover:text-pink-600 transition-colors">Terms</Link></li>
-                <li><Link to="/privacy" className="text-sm hover:text-pink-600 transition-colors">Privacy</Link></li>
-                <li><Link to="/cookies" className="text-sm hover:text-pink-600 transition-colors">Cookies</Link></li>
+                <li><Link to="/terms" className="text-sm hover:text-white transition-colors">Terms</Link></li>
+                <li><Link to="/privacy" className="text-sm hover:text-white transition-colors">Privacy</Link></li>
+                <li><Link to="/cookies" className="text-sm hover:text-white transition-colors">Cookies</Link></li>
               </ul>
             </div>
 
-            {/* Connect Column */}
             <div className="space-y-4">
-              <h5 className="text-gray-900 font-medium text-sm uppercase">Connect</h5>
+              <h5 className="text-white font-medium text-sm uppercase">Connect</h5>
               <div className="flex space-x-4">
-                <a href="#" className="text-gray-500 hover:text-[#1877F2] transition-colors">
+                <a href="#" className="text-gray-400 hover:text-[#1877F2] transition-colors">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z" />
                   </svg>
                 </a>
-                <a href="#" className="text-gray-500 hover:text-black transition-colors">
+                <a href="#" className="text-gray-400 hover:text-black transition-colors">
                   <svg
                     className="w-6 h-6"
                     fill="currentColor"
@@ -535,7 +108,7 @@ const Footer = () => {
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                   </svg>
                 </a>
-                <a href="#" className="text-gray-500 hover:text-[#E1306C] transition-colors">
+                <a href="#" className="text-gray-400 hover:text-[#E1306C] transition-colors">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
                   </svg>
@@ -543,27 +116,25 @@ const Footer = () => {
               </div>
             </div>
           </div>
-          <div className="border-t border-gray-200 pt-8 mt-8">
+
+          <div className="border-t border-gray-700/50 pt-8 mt-8">
             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
               <div className="flex items-center space-x-6">
-                <span className="text-sm text-gray-500">© 2025 loopOut, Inc.</span>
-                <div className="flex space-x-4 text-sm text-gray-500">
-                  <Link to="/terms" className="hover:text-pink-600 transition-colors hover:underline">Terms</Link>
-                  <Link to="/privacy" className="hover:text-pink-600 transition-colors hover:underline">Privacy</Link>
-                  <Link to="/cookies" className="hover:text-pink-600 transition-colors hover:underline">Cookies</Link>
-                  <Link to="/terms" className="hover:text-pink-600 transition-colors hover:underline">Terms</Link>
-                  <Link to="/privacy" className="hover:text-pink-600 transition-colors hover:underline">Privacy</Link>
-                  <Link to="/aboutloop" className="hover:text-pink-600 transition-colors hover:underline">About</Link>
+                <span className="text-sm text-gray-400">© 2025 loopOut, Inc.</span>
+                <div className="flex space-x-4 text-sm text-gray-400">
+                  <Link to="/terms" className="hover:text-white transition-colors hover:underline">Terms</Link>
+                  <Link to="/privacy" className="hover:text-white transition-colors hover:underline">Privacy</Link>
+                  <Link to="/cookies" className="hover:text-white transition-colors hover:underline">Cookies</Link>
                 </div>
               </div>
 
               <div className="flex space-x-6">
-                <a href="#" className="text-gray-500 hover:text-[#1877F2] transition-colors">
+                <a href="#" className="text-gray-400 hover:text-[#1877F2] transition-colors">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z" />
                   </svg>
                 </a>
-                <a href="#" className="text-gray-500 hover:text-black transition-colors">
+                <a href="#" className="text-gray-400 hover:text-black transition-colors">
                   <svg
                     className="w-5 h-5"
                     fill="currentColor"
@@ -573,55 +144,7 @@ const Footer = () => {
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                   </svg>
                 </a>
-                <a href="#" className="text-gray-500 hover:text-[#E1306C] transition-colors">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      {/* Mobile Footer */}
-      <footer className="md:hidden bg-gradient-to-b from-gray-50 to-white text-gray-700 pt-0 pb-8 mt-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="border-t border-gray-200 pt-8 mt-8">
-            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-              <div className="flex mb-0">
-                <span className="text-2xl font-bold text-gray-900">
-                  loop<span className="text-rose-600">Out</span>
-                </span>
-              </div>
-
-              <div className="flex items-center space-x-6">
-                <span className="text-sm text-gray-500">© 2025 loopOut</span>
-                <div className="flex space-x-4 text-sm text-gray-500">
-                  <Link to="/terms" className="hover:text-pink-600 transition-colors hover:underline">Terms</Link>
-                  <Link to="/privacy" className="hover:text-pink-600 transition-colors hover:underline">Privacy</Link>
-                  <Link to="/cookies" className="hover:text-pink-600 transition-colors hover:underline">Cookies</Link>
-                  <Link to="/aboutloop" className="hover:text-pink-600 transition-colors hover:underline">About</Link>
-                </div>
-              </div>
-
-              <div className="flex space-x-6">
-                <a href="#" className="text-gray-500 hover:text-[#1877F2] transition-colors">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z" />
-                  </svg>
-                </a>
-                <a href="#" className="text-gray-500 hover:text-black transition-colors">
-                  <svg
-                    className="w-5 h-5"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-label="X"
-                  >
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                  </svg>
-                </a>
-                <a href="#" className="text-gray-500 hover:text-[#E1306C] transition-colors">
+                <a href="#" className="text-gray-400 hover:text-[#E1306C] transition-colors">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
                   </svg>
