@@ -611,693 +611,698 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold text-gray-900">Account</h1>
-        <p className="text-gray-600 mt-2">Manage your personal information, privacy, and security</p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-semibold text-gray-900">Account</h1>
+          <p className="text-gray-600 mt-2">Manage your personal information, privacy, and security</p>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Left Sidebar Navigation */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-8">
-            {/* Profile Card */}
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="relative">
-                  <img
-                    src={formData.avatar || currentUser?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
-                    alt="Profile"
-                    className="h-20 w-20 rounded-full object-cover"
-                  />
-                  {isFaceVerified && (
-                    <div className="absolute -bottom-1 -right-1 bg-black text-white p-1 rounded-full">
-                      <MdVerifiedUser className="w-5 h-5" />
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <h2 className="font-semibold text-gray-900">{currentUser?.username || 'User'}</h2>
-                  <p className="text-sm text-gray-600">{currentUser?.email || 'user@example.com'}</p>
-                  <button
-                    onClick={() => fileRef.current.click()}
-                    className="text-sm text-gray-600 hover:text-gray-900 mt-1"
-                  >
-                    <input
-                      type="file"
-                      hidden
-                      ref={fileRef}
-                      accept="image/*"
-                      onChange={(e) => setFile(e.target.files[0])}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Left Sidebar Navigation */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-8">
+              {/* Profile Card */}
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="relative">
+                    <img
+                      src={formData.avatar || currentUser?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
+                      alt="Profile"
+                      className="h-20 w-20 rounded-full object-cover"
                     />
-                    Change photo
+                    {isFaceVerified && (
+                      <div className="absolute -bottom-1 -right-1 bg-black text-white p-1 rounded-full">
+                        <MdVerifiedUser className="w-5 h-5" />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="font-semibold text-gray-900">{currentUser?.username || 'User'}</h2>
+                    <p className="text-sm text-gray-600">{currentUser?.email || 'user@example.com'}</p>
+                    <button
+                      onClick={() => fileRef.current.click()}
+                      className="text-sm text-gray-600 hover:text-gray-900 mt-1"
+                    >
+                      <input
+                        type="file"
+                        hidden
+                        ref={fileRef}
+                        accept="image/*"
+                        onChange={(e) => setFile(e.target.files[0])}
+                      />
+                      Change photo
+                    </button>
+                  </div>
+                </div>
+
+                {/* Navigation */}
+                <nav className="space-y-1">
+                  {[
+                    { id: "personal", label: "Personal Info", icon: <UserIcon className="w-5 h-5" /> },
+                    { id: "login", label: "Login & Security", icon: <ShieldCheckIcon className="w-5 h-5" /> },
+                    { id: "notifications", label: "Notifications", icon: <BellIcon className="w-5 h-5" /> },
+                    { id: "privacy", label: "Privacy & Sharing", icon: <FaEye className="w-5 h-5" /> },
+                    { id: "hosting", label: "Host an Experience", icon: <HomeIcon className="w-5 h-5" /> },
+                    { id: "wishlist", label: "Wishlist", icon: <HeartIcon className="w-5 h-5" /> },
+                    { id: "my-listings", label: "My Listings", icon: <ListBulletIcon className="w-5 h-5" /> },
+                    { id: "events", label: "My Events", icon: <MdCalendarToday className="w-5 h-5" /> }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveSection(tab.id)}
+                      className={`flex items-center gap-3 w-full p-3 rounded-lg text-left transition-colors ${activeSection === tab.id
+                          ? "bg-gray-100 text-gray-900 font-medium"
+                          : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                    >
+                      {tab.icon}
+                      <span>{tab.label}</span>
+                    </button>
+                  ))}
+                </nav>
+
+                {/* Sign Out Button */}
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full p-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                  >
+                    Sign out
                   </button>
                 </div>
-              </div>
-
-              {/* Navigation */}
-              <nav className="space-y-1">
-                {[
-                  { id: "personal", label: "Personal Info", icon: <UserIcon className="w-5 h-5" /> },
-                  { id: "login", label: "Login & Security", icon: <ShieldCheckIcon className="w-5 h-5" /> },
-                  { id: "notifications", label: "Notifications", icon: <BellIcon className="w-5 h-5" /> },
-                  { id: "privacy", label: "Privacy & Sharing", icon: <FaEye className="w-5 h-5" /> },
-                  { id: "hosting", label: "Host an Experience", icon: <HomeIcon className="w-5 h-5" /> },
-                  { id: "wishlist", label: "Wishlist", icon: <HeartIcon className="w-5 h-5" /> },
-                  { id: "my-listings", label: "My Listings", icon: <ListBulletIcon className="w-5 h-5" /> },
-                  { id: "events", label: "My Events", icon: <MdCalendarToday className="w-5 h-5" /> }
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveSection(tab.id)}
-                    className={`flex items-center gap-3 w-full p-3 rounded-lg text-left transition-colors ${activeSection === tab.id
-                        ? "bg-gray-100 text-gray-900 font-medium"
-                        : "text-gray-600 hover:bg-gray-50"
-                      }`}
-                  >
-                    {tab.icon}
-                    <span>{tab.label}</span>
-                  </button>
-                ))}
-              </nav>
-
-              {/* Sign Out Button */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <button
-                  onClick={handleSignOut}
-                  className="w-full p-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-left"
-                >
-                  Sign out
-                </button>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Main Content */}
-        <div className="lg:col-span-3">
-          {/* Personal Info Section */}
-          {activeSection === "personal" && (
-            <>
-              <SectionCard title="Personal Information" icon={<UserIcon className="w-6 h-6" />}>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <InputField
-                      label="Username"
-                      id="username"
-                      value={formData.username || currentUser?.username || ''}
-                      handleChange={handleChange}
-                      icon={<FaUser className="w-4 h-4" />}
-                    />
-                    <InputField
-                      label="Email"
-                      type="email"
-                      id="email"
-                      value={formData.email || currentUser?.email || ''}
-                      handleChange={handleChange}
-                      icon={<MdEmail className="w-4 h-4" />}
-                    />
-                    <InputField
-                      label="Location"
-                      id="location"
-                      value={formData.location || currentUser?.location || ''}
-                      handleChange={handleChange}
-                      icon={<MdLocationOn className="w-4 h-4" />}
-                    />
-                    <InputField
-                      label="Phone Number"
-                      type="tel"
-                      id="phone"
-                      value={formData.phone || currentUser?.phone || ''}
-                      handleChange={handleChange}
-                      icon={<MdPhone className="w-4 h-4" />}
-                    />
-                  </div>
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            {/* Personal Info Section */}
+            {activeSection === "personal" && (
+              <>
+                <SectionCard title="Personal Information" icon={<UserIcon className="w-6 h-6" />}>
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <InputField
+                        label="Username"
+                        id="username"
+                        value={formData.username || currentUser?.username || ''}
+                        handleChange={handleChange}
+                        icon={<FaUser className="w-4 h-4" />}
+                      />
+                      <InputField
+                        label="Email"
+                        type="email"
+                        id="email"
+                        value={formData.email || currentUser?.email || ''}
+                        handleChange={handleChange}
+                        icon={<MdEmail className="w-4 h-4" />}
+                      />
+                      <InputField
+                        label="Location"
+                        id="location"
+                        value={formData.location || currentUser?.location || ''}
+                        handleChange={handleChange}
+                        icon={<MdLocationOn className="w-4 h-4" />}
+                      />
+                      <InputField
+                        label="Phone Number"
+                        type="tel"
+                        id="phone"
+                        value={formData.phone || currentUser?.phone || ''}
+                        handleChange={handleChange}
+                        icon={<MdPhone className="w-4 h-4" />}
+                      />
+                    </div>
 
-                  <InputField
-                    label="Bio"
-                    type="textarea"
-                    id="bio"
-                    value={formData.bio || currentUser?.bio || ''}
-                    handleChange={handleChange}
-                    placeholder="Tell us about yourself"
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <InputField
-                      label="Occupation"
-                      id="occupation"
-                      value={formData.occupation || currentUser?.occupation || ''}
+                      label="Bio"
+                      type="textarea"
+                      id="bio"
+                      value={formData.bio || currentUser?.bio || ''}
                       handleChange={handleChange}
+                      placeholder="Tell us about yourself"
                     />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <InputField
+                        label="Occupation"
+                        id="occupation"
+                        value={formData.occupation || currentUser?.occupation || ''}
+                        handleChange={handleChange}
+                      />
+                      <InputField
+                        label="Interests"
+                        id="interests"
+                        value={formData.interests || currentUser?.interests || ''}
+                        handleChange={handleChange}
+                      />
+                    </div>
+
                     <InputField
-                      label="Interests"
-                      id="interests"
-                      value={formData.interests || currentUser?.interests || ''}
+                      label="Website"
+                      type="url"
+                      id="website"
+                      value={formData.website || currentUser?.website || ''}
                       handleChange={handleChange}
+                      icon={<MdLink className="w-4 h-4" />}
                     />
-                  </div>
 
-                  <InputField
-                    label="Website"
-                    type="url"
-                    id="website"
-                    value={formData.website || currentUser?.website || ''}
-                    handleChange={handleChange}
-                    icon={<MdLink className="w-4 h-4" />}
-                  />
-
-                  <div className="pt-6 border-t border-gray-200">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-medium text-gray-900">Identity Verification</h4>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Add a photo to verify your identity
-                        </p>
+                    <div className="pt-6 border-t border-gray-200">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-medium text-gray-900">Identity Verification</h4>
+                          <p className="text-sm text-gray-600 mt-1">
+                            Add a photo to verify your identity
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={startCamera}
+                          className="text-sm font-medium text-gray-900 hover:text-black"
+                        >
+                          {isFaceVerified ? 'Re-verify' : 'Verify now'}
+                        </button>
                       </div>
+                      {isFaceVerified && (
+                        <div className="mt-4 p-4 bg-green-50 rounded-lg">
+                          <div className="flex items-center gap-2 text-green-700">
+                            <CheckCircleIcon className="w-5 h-5" />
+                            <span>Your identity has been verified</span>
+                          </div>
+                        </div>
+                      )}
+                      {modelLoadingError && (
+                        <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
+                          <div className="flex items-center gap-2 text-yellow-700">
+                            <XCircleIcon className="w-5 h-5" />
+                            <span className="text-sm">Advanced face recognition is currently unavailable</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex justify-end pt-6">
                       <button
-                        type="button"
-                        onClick={startCamera}
-                        className="text-sm font-medium text-gray-900 hover:text-black"
+                        type="submit"
+                        disabled={loading}
+                        className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
                       >
-                        {isFaceVerified ? 'Re-verify' : 'Verify now'}
+                        {loading ? "Saving..." : "Save changes"}
                       </button>
                     </div>
-                    {isFaceVerified && (
-                      <div className="mt-4 p-4 bg-green-50 rounded-lg">
-                        <div className="flex items-center gap-2 text-green-700">
-                          <CheckCircleIcon className="w-5 h-5" />
-                          <span>Your identity has been verified</span>
-                        </div>
-                      </div>
-                    )}
-                    {modelLoadingError && (
-                      <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
-                        <div className="flex items-center gap-2 text-yellow-700">
-                          <XCircleIcon className="w-5 h-5" />
-                          <span className="text-sm">Advanced face recognition is currently unavailable</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  </form>
 
-                  <div className="flex justify-end pt-6">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
-                    >
-                      {loading ? "Saving..." : "Save changes"}
-                    </button>
-                  </div>
-                </form>
-
-                {updateSuccess && (
-                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-green-700">Profile updated successfully!</p>
-                  </div>
-                )}
-                {error && (
-                  <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-700">{error}</p>
-                  </div>
-                )}
-              </SectionCard>
-            </>
-          )}
-
-          {/* Login & Security Section */}
-          {activeSection === "login" && (
-            <>
-              <SectionCard title="Login & Security" icon={<ShieldCheckIcon className="w-6 h-6" />}>
-                <div className="space-y-8">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-4">Password</h4>
-                    <div className="space-y-4">
-                      <InputField
-                        label="Current Password"
-                        type="password"
-                        id="currentPassword"
-                        handleChange={handleChange}
-                        icon={<MdLock className="w-4 h-4" />}
-                      />
-                      <InputField
-                        label="New Password"
-                        type="password"
-                        id="newPassword"
-                        handleChange={handleChange}
-                      />
-                      <InputField
-                        label="Confirm New Password"
-                        type="password"
-                        id="confirmNewPassword"
-                        handleChange={handleChange}
-                      />
+                  {updateSuccess && (
+                    <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-green-700">Profile updated successfully!</p>
                     </div>
-                  </div>
-
-                  <div className="pt-6 border-t border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium text-gray-900">Two-factor authentication</h4>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Add an extra layer of security to your account
-                        </p>
-                      </div>
-                      <ToggleSwitch
-                        enabled={twoFactorEnabled}
-                        setEnabled={setTwoFactorEnabled}
-                      />
+                  )}
+                  {error && (
+                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-red-700">{error}</p>
                     </div>
-                  </div>
+                  )}
+                </SectionCard>
+              </>
+            )}
 
-                  <div className="flex justify-end pt-6">
-                    <button className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors">
-                      Save changes
-                    </button>
-                  </div>
-                </div>
-              </SectionCard>
-            </>
-          )}
-
-          {/* Notifications Section */}
-          {activeSection === "notifications" && (
-            <>
-              <SectionCard title="Notifications" icon={<BellIcon className="w-6 h-6" />}>
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-4">Email notifications</h4>
-                    <div className="space-y-1">
-                      <Checkbox
-                        label="Booking updates"
-                        checked={notifications.activity.bookingUpdates}
-                        onChange={() => toggleNotification('activity', 'bookingUpdates')}
-                        helperText="Stay informed about your booking status"
-                      />
-                      <Checkbox
-                        label="Payment receipts"
-                        checked={notifications.activity.paymentReceipts}
-                        onChange={() => toggleNotification('activity', 'paymentReceipts')}
-                        helperText="Receive confirmation for all your payments"
-                      />
-                      <Checkbox
-                        label="Special offers"
-                        checked={notifications.promotions.specialOffers}
-                        onChange={() => toggleNotification('promotions', 'specialOffers')}
-                        helperText="Get exclusive deals and discounts"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-6 border-t border-gray-200">
-                    <h4 className="font-medium text-gray-900 mb-4">Security alerts</h4>
-                    <div className="space-y-1">
-                      <Checkbox
-                        label="Login attempts"
-                        checked={notifications.security.loginAttempts}
-                        onChange={() => toggleNotification('security', 'loginAttempts')}
-                        helperText="Get notified about suspicious login activities"
-                      />
-                      <Checkbox
-                        label="Password changes"
-                        checked={notifications.security.passwordChanges}
-                        onChange={() => toggleNotification('security', 'passwordChanges')}
-                        helperText="Receive alerts for any password modifications"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end pt-6">
-                    <button className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors">
-                      Save preferences
-                    </button>
-                  </div>
-                </div>
-              </SectionCard>
-            </>
-          )}
-
-          {/* Privacy & Sharing Section */}
-          {activeSection === "privacy" && (
-            <>
-              <SectionCard title="Privacy & Sharing" icon={<FaEye className="w-6 h-6" />}>
-                <div className="space-y-8">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-4">Profile visibility</h4>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="font-medium">Public profile</p>
-                          <p className="text-sm text-gray-600">Make your profile visible to other users</p>
-                        </div>
-                        <ToggleSwitch
-                          enabled={profileVisibility}
-                          setEnabled={setProfileVisibility}
+            {/* Login & Security Section */}
+            {activeSection === "login" && (
+              <>
+                <SectionCard title="Login & Security" icon={<ShieldCheckIcon className="w-6 h-6" />}>
+                  <div className="space-y-8">
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-4">Password</h4>
+                      <div className="space-y-4">
+                        <InputField
+                          label="Current Password"
+                          type="password"
+                          id="currentPassword"
+                          handleChange={handleChange}
+                          icon={<MdLock className="w-4 h-4" />}
+                        />
+                        <InputField
+                          label="New Password"
+                          type="password"
+                          id="newPassword"
+                          handleChange={handleChange}
+                        />
+                        <InputField
+                          label="Confirm New Password"
+                          type="password"
+                          id="confirmNewPassword"
+                          handleChange={handleChange}
                         />
                       </div>
                     </div>
-                  </div>
 
-                  <div className="pt-6 border-t border-gray-200">
-                    <h4 className="font-medium text-gray-900 mb-4">Shared information</h4>
-                    <div className="space-y-1">
-                      <Checkbox
-                        label="Show booking history"
-                        checked={sharedInfo.bookingHistory}
-                        onChange={() => toggleSharedInfo('bookingHistory')}
-                        helperText="Display past trips on your profile"
-                      />
-                      <Checkbox
-                        label="Show reviews"
-                        checked={sharedInfo.reviews}
-                        onChange={() => toggleSharedInfo('reviews')}
-                        helperText="Make your written reviews publicly visible"
-                      />
+                    <div className="pt-6 border-t border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium text-gray-900">Two-factor authentication</h4>
+                          <p className="text-sm text-gray-600 mt-1">
+                            Add an extra layer of security to your account
+                          </p>
+                        </div>
+                        <ToggleSwitch
+                          enabled={twoFactorEnabled}
+                          setEnabled={setTwoFactorEnabled}
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="pt-6 border-t border-gray-200">
-                    <h4 className="font-medium text-gray-900 mb-4">Data management</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <button className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                        <div>
-                          <p className="font-medium">Download your data</p>
-                          <p className="text-sm text-gray-600">Get a copy of your personal data</p>
-                        </div>
-                        <ArrowDownTrayIcon className="w-5 h-5 text-gray-400" />
-                      </button>
-                      <button
-                        onClick={handleDeleteUser}
-                        className="flex items-center justify-between p-4 border border-red-200 rounded-lg hover:bg-red-50 transition-colors text-red-600"
-                      >
-                        <div>
-                          <p className="font-medium">Delete account</p>
-                          <p className="text-sm">Permanently remove your account</p>
-                        </div>
-                        <TrashIcon className="w-5 h-5" />
+                    <div className="flex justify-end pt-6">
+                      <button className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors">
+                        Save changes
                       </button>
                     </div>
                   </div>
+                </SectionCard>
+              </>
+            )}
 
-                  <div className="flex justify-end pt-6">
-                    <button className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors">
-                      Save privacy settings
-                    </button>
-                  </div>
-                </div>
-              </SectionCard>
-            </>
-          )}
-
-          {/* Host an Experience Section */}
-          {activeSection === "hosting" && (
-            <>
-              <SectionCard title="Host an Experience" icon={<HomeIcon className="w-6 h-6" />}>
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Ready to host?</h3>
-                    <p className="text-gray-600 mb-6">
-                      Share your space or create unique experiences for travelers from around the world.
-                      Earn money doing what you love while providing memorable stays.
-                    </p>
-                  </div>
-
-                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-6">
-                    <h4 className="font-medium text-blue-900 mb-3">Why host on our platform?</h4>
-                    <ul className="space-y-2 text-blue-800">
-                      <li className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        Earn competitive income
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        Reach millions of travelers
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        24/7 support and protection
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="pt-6 border-t border-gray-200">
-                    <Link
-                      to={`/${currentUser?._id}/create-listing`}
-                      className="inline-flex items-center justify-center bg-gradient-to-r from-rose-500 to-pink-500 text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity shadow-sm"
-                    >
-                      <HomeIcon className="w-5 h-5 mr-2" />
-                      Start hosting
-                    </Link>
-                  </div>
-                </div>
-              </SectionCard>
-            </>
-          )}
-
-          {/* Wishlist Section */}
-          {activeSection === "wishlist" && (
-            <>
-              <SectionCard title="Wishlist" icon={<HeartIcon className="w-6 h-6" />}>
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Saved listings</h3>
-                    <p className="text-gray-600 mb-6">
-                      Your collection of favorite places to stay. Bookmark listings you're interested in
-                      for easy access later.
-                    </p>
-                  </div>
-                  <WishList />
-                </div>
-              </SectionCard>
-            </>
-          )}
-
-          {/* My Listings Section */}
-          {activeSection === "my-listings" && (
-            <>
-              <SectionCard title="My Listings" icon={<ListBulletIcon className="w-6 h-6" />}>
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
+            {/* Notifications Section */}
+            {activeSection === "notifications" && (
+              <>
+                <SectionCard title="Notifications" icon={<BellIcon className="w-6 h-6" />}>
+                  <div className="space-y-6">
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900">Your listings</h3>
-                      <p className="text-gray-600 mt-1">Manage your active properties</p>
+                      <h4 className="font-medium text-gray-900 mb-4">Email notifications</h4>
+                      <div className="space-y-1">
+                        <Checkbox
+                          label="Booking updates"
+                          checked={notifications.activity.bookingUpdates}
+                          onChange={() => toggleNotification('activity', 'bookingUpdates')}
+                          helperText="Stay informed about your booking status"
+                        />
+                        <Checkbox
+                          label="Payment receipts"
+                          checked={notifications.activity.paymentReceipts}
+                          onChange={() => toggleNotification('activity', 'paymentReceipts')}
+                          helperText="Receive confirmation for all your payments"
+                        />
+                        <Checkbox
+                          label="Special offers"
+                          checked={notifications.promotions.specialOffers}
+                          onChange={() => toggleNotification('promotions', 'specialOffers')}
+                          helperText="Get exclusive deals and discounts"
+                        />
+                      </div>
                     </div>
-                    <Link
-                      to={`/${currentUser?._id}/create-listing`}
-                      className="bg-black text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-800 transition-colors"
-                    >
-                      + New listing
-                    </Link>
+
+                    <div className="pt-6 border-t border-gray-200">
+                      <h4 className="font-medium text-gray-900 mb-4">Security alerts</h4>
+                      <div className="space-y-1">
+                        <Checkbox
+                          label="Login attempts"
+                          checked={notifications.security.loginAttempts}
+                          onChange={() => toggleNotification('security', 'loginAttempts')}
+                          helperText="Get notified about suspicious login activities"
+                        />
+                        <Checkbox
+                          label="Password changes"
+                          checked={notifications.security.passwordChanges}
+                          onChange={() => toggleNotification('security', 'passwordChanges')}
+                          helperText="Receive alerts for any password modifications"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end pt-6">
+                      <button className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors">
+                        Save preferences
+                      </button>
+                    </div>
                   </div>
+                </SectionCard>
+              </>
+            )}
 
-                  <button
-                    onClick={handleShowListings}
-                    className="text-gray-700 hover:text-gray-900 font-medium"
-                  >
-                    Show all listings
-                  </button>
-
-                  {userListings && userListings.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {userListings.slice(0, visibleListings).map((listing) => (
-                        <div
-                          key={listing._id}
-                          className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
-                        >
-                          <img
-                            src={listing.imageUrls[0] || "https://via.placeholder.com/300x200"}
-                            alt={listing.name}
-                            className="w-full h-48 object-cover"
+            {/* Privacy & Sharing Section */}
+            {activeSection === "privacy" && (
+              <>
+                <SectionCard title="Privacy & Sharing" icon={<FaEye className="w-6 h-6" />}>
+                  <div className="space-y-8">
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-4">Profile visibility</h4>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                          <div>
+                            <p className="font-medium">Public profile</p>
+                            <p className="text-sm text-gray-600">Make your profile visible to other users</p>
+                          </div>
+                          <ToggleSwitch
+                            enabled={profileVisibility}
+                            setEnabled={setProfileVisibility}
                           />
-                          <div className="p-4">
-                            <div className="flex justify-between items-start mb-2">
-                              <h4 className="font-medium text-gray-900 truncate">{listing.name}</h4>
-                              <span className="text-lg font-semibold text-gray-900">
-                                R{listing.offer ? listing.discountPrice?.toLocaleString() : listing.regularPrice?.toLocaleString()}
-                                {listing.type === 'rent' && '/month'}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
-                              <span className="flex items-center gap-1">
-                                <FaBed className="w-4 h-4" /> {listing.bedrooms}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <FaBath className="w-4 h-4" /> {listing.bathrooms}
-                              </span>
-                            </div>
-                            <div className="flex gap-2">
-                              <Link
-                                to={`/update-listing/${listing._id}`}
-                                className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-center hover:bg-gray-200 transition-colors"
-                              >
-                                Edit
-                              </Link>
-                              <button
-                                onClick={() => handleListingDelete(listing._id)}
-                                className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-lg hover:bg-red-100 transition-colors"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </div>
                         </div>
-                      ))}
+                      </div>
                     </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <HomeIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600">You haven't created any listings yet.</p>
-                    </div>
-                  )}
-                </div>
-              </SectionCard>
-            </>
-          )}
 
-          {/* My Events Section */}
-          {activeSection === "events" && (
-            <>
-              <SectionCard title="My Events" icon={<MdCalendarToday className="w-6 h-6" />}>
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">Your events</h3>
-                      <p className="text-gray-600 mt-1">Manage your upcoming events</p>
+                    <div className="pt-6 border-t border-gray-200">
+                      <h4 className="font-medium text-gray-900 mb-4">Shared information</h4>
+                      <div className="space-y-1">
+                        <Checkbox
+                          label="Show booking history"
+                          checked={sharedInfo.bookingHistory}
+                          onChange={() => toggleSharedInfo('bookingHistory')}
+                          helperText="Display past trips on your profile"
+                        />
+                        <Checkbox
+                          label="Show reviews"
+                          checked={sharedInfo.reviews}
+                          onChange={() => toggleSharedInfo('reviews')}
+                          helperText="Make your written reviews publicly visible"
+                        />
+                      </div>
                     </div>
-                    <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
-                      {postCount} total
-                    </span>
-                  </div>
 
-                  {userEvents.length > 0 ? (
-                    <div className="space-y-4">
-                      {userEvents.slice(0, visibleEvents).map((event) => (
-                        <div
-                          key={event._id}
-                          className="border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-shadow"
+                    <div className="pt-6 border-t border-gray-200">
+                      <h4 className="font-medium text-gray-900 mb-4">Data management</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <button className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                          <div>
+                            <p className="font-medium">Download your data</p>
+                            <p className="text-sm text-gray-600">Get a copy of your personal data</p>
+                          </div>
+                          <ArrowDownTrayIcon className="w-5 h-5 text-gray-400" />
+                        </button>
+                        <button
+                          onClick={handleDeleteUser}
+                          className="flex items-center justify-between p-4 border border-red-200 rounded-lg hover:bg-red-50 transition-colors text-red-600"
                         >
-                          <div className="flex items-start gap-4">
-                            {event.imageUrls?.[0] && (
-                              <img
-                                src={event.imageUrls[0]}
-                                alt={event.name}
-                                className="w-24 h-24 object-cover rounded-lg"
-                              />
-                            )}
-                            <div className="flex-1">
-                              <div className="flex justify-between items-start">
-                                <h4 className="font-medium text-gray-900">{event.name}</h4>
-                                <div className="flex gap-2">
-                                  <Link
-                                    to={`/update-event/${event._id}`}
-                                    className="text-gray-600 hover:text-gray-900"
-                                  >
-                                    Edit
-                                  </Link>
-                                  <button
-                                    onClick={() => handleEventDelete(event._id)}
-                                    className="text-red-600 hover:text-red-800"
-                                  >
-                                    Delete
-                                  </button>
-                                </div>
+                          <div>
+                            <p className="font-medium">Delete account</p>
+                            <p className="text-sm">Permanently remove your account</p>
+                          </div>
+                          <TrashIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end pt-6">
+                      <button className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors">
+                        Save privacy settings
+                      </button>
+                    </div>
+                  </div>
+                </SectionCard>
+              </>
+            )}
+
+            {/* Host an Experience Section */}
+            {activeSection === "hosting" && (
+              <>
+                <SectionCard title="Host an Experience" icon={<HomeIcon className="w-6 h-6" />}>
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">Ready to host?</h3>
+                      <p className="text-gray-600 mb-6">
+                        Share your space or create unique experiences for travelers from around the world.
+                        Earn money doing what you love while providing memorable stays.
+                      </p>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-6">
+                      <h4 className="font-medium text-blue-900 mb-3">Why host on our platform?</h4>
+                      <ul className="space-y-2 text-blue-800">
+                        <li className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          Earn competitive income
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          Reach millions of travelers
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          24/7 support and protection
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="pt-6 border-t border-gray-200">
+                      <Link
+                        to={`/${currentUser?._id}/create-listing`}
+                        className="inline-flex items-center justify-center bg-gradient-to-r from-rose-500 to-pink-500 text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity shadow-sm"
+                      >
+                        <HomeIcon className="w-5 h-5 mr-2" />
+                        Start hosting
+                      </Link>
+                    </div>
+                  </div>
+                </SectionCard>
+              </>
+            )}
+
+            {/* Wishlist Section */}
+            {activeSection === "wishlist" && (
+              <>
+                <SectionCard title="Wishlist" icon={<HeartIcon className="w-6 h-6" />}>
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">Saved listings</h3>
+                      <p className="text-gray-600 mb-6">
+                        Your collection of favorite places to stay. Bookmark listings you're interested in
+                        for easy access later.
+                      </p>
+                    </div>
+                    <WishList />
+                  </div>
+                </SectionCard>
+              </>
+            )}
+
+            {/* My Listings Section */}
+            {activeSection === "my-listings" && (
+              <>
+                <SectionCard title="My Listings" icon={<ListBulletIcon className="w-6 h-6" />}>
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900">Your listings</h3>
+                        <p className="text-gray-600 mt-1">Manage your active properties</p>
+                      </div>
+                      <Link
+                        to={`/${currentUser?._id}/create-listing`}
+                        className="bg-black text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                      >
+                        + New listing
+                      </Link>
+                    </div>
+
+                    <button
+                      onClick={handleShowListings}
+                      className="text-gray-700 hover:text-gray-900 font-medium"
+                    >
+                      Show all listings
+                    </button>
+
+                    {userListings && userListings.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {userListings.slice(0, visibleListings).map((listing) => (
+                          <div
+                            key={listing._id}
+                            className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
+                          >
+                            <img
+                              src={listing.imageUrls[0] || "https://via.placeholder.com/300x200"}
+                              alt={listing.name}
+                              className="w-full h-48 object-cover"
+                            />
+                            <div className="p-4">
+                              <div className="flex justify-between items-start mb-2">
+                                <h4 className="font-medium text-gray-900 truncate">{listing.name}</h4>
+                                <span className="text-lg font-semibold text-gray-900">
+                                  R{listing.offer ? listing.discountPrice?.toLocaleString() : listing.regularPrice?.toLocaleString()}
+                                  {listing.type === 'rent' && '/month'}
+                                </span>
                               </div>
-                              <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
+                              <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
                                 <span className="flex items-center gap-1">
-                                  <MdCalendarToday className="w-4 h-4" /> {event.date}
+                                  <FaBed className="w-4 h-4" /> {listing.bedrooms}
                                 </span>
                                 <span className="flex items-center gap-1">
-                                  <MdLocationOn className="w-4 h-4" /> {event.address}
+                                  <FaBath className="w-4 h-4" /> {listing.bathrooms}
                                 </span>
                               </div>
-                              <p className="text-gray-600 text-sm mt-2 line-clamp-2">
-                                {event.description}
-                              </p>
+                              <div className="flex gap-2">
+                                <Link
+                                  to={`/update-listing/${listing._id}`}
+                                  className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-center hover:bg-gray-200 transition-colors"
+                                >
+                                  Edit
+                                </Link>
+                                <button
+                                  onClick={() => handleListingDelete(listing._id)}
+                                  className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-lg hover:bg-red-100 transition-colors"
+                                >
+                                  Delete
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <MdCalendarToday className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600">You haven't created any events yet.</p>
-                    </div>
-                  )}
-                </div>
-              </SectionCard>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Camera Modal for Face Verification */}
-      {cameraActive && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Verify your identity</h3>
-                <button
-                  onClick={stopCamera}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-              <p className="text-gray-600 text-sm mt-2">
-                Position your face in the frame and ensure good lighting
-              </p>
-            </div>
-            
-            <div className="p-6">
-              <div className="relative mx-auto max-w-md">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full rounded-lg"
-                />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-48 h-48 border-2 border-white rounded-lg opacity-60"></div>
-                </div>
-                <canvas ref={canvasRef} className="hidden" width="640" height="480" />
-              </div>
-              
-              <div className="flex flex-col items-center mt-6 space-y-4">
-                <div className="flex gap-4">
-                  <button
-                    onClick={captureFace}
-                    disabled={isProcessing}
-                    className="bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition-colors font-medium flex items-center gap-2 disabled:opacity-50"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Processing...
-                      </>
+                        ))}
+                      </div>
                     ) : (
-                      <>
-                        <Camera className="w-5 h-5" />
-                        Capture & Verify
-                      </>
+                      <div className="text-center py-12">
+                        <HomeIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600">You haven't created any listings yet.</p>
+                      </div>
                     )}
-                  </button>
+                  </div>
+                </SectionCard>
+              </>
+            )}
+
+            {/* My Events Section */}
+            {activeSection === "events" && (
+              <>
+                <SectionCard title="My Events" icon={<MdCalendarToday className="w-6 h-6" />}>
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900">Your events</h3>
+                        <p className="text-gray-600 mt-1">Manage your upcoming events</p>
+                      </div>
+                      <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                        {postCount} total
+                      </span>
+                    </div>
+
+                    {userEvents.length > 0 ? (
+                      <div className="space-y-4">
+                        {userEvents.slice(0, visibleEvents).map((event) => (
+                          <div
+                            key={event._id}
+                            className="border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-shadow"
+                          >
+                            <div className="flex items-start gap-4">
+                              {event.imageUrls?.[0] && (
+                                <img
+                                  src={event.imageUrls[0]}
+                                  alt={event.name}
+                                  className="w-24 h-24 object-cover rounded-lg"
+                                />
+                              )}
+                              <div className="flex-1">
+                                <div className="flex justify-between items-start">
+                                  <h4 className="font-medium text-gray-900">{event.name}</h4>
+                                  <div className="flex gap-2">
+                                    <Link
+                                      to={`/update-event/${event._id}`}
+                                      className="text-gray-600 hover:text-gray-900"
+                                    >
+                                      Edit
+                                    </Link>
+                                    <button
+                                      onClick={() => handleEventDelete(event._id)}
+                                      className="text-red-600 hover:text-red-800"
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
+                                  <span className="flex items-center gap-1">
+                                    <MdCalendarToday className="w-4 h-4" /> {event.date}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <MdLocationOn className="w-4 h-4" /> {event.address}
+                                  </span>
+                                </div>
+                                <p className="text-gray-600 text-sm mt-2 line-clamp-2">
+                                  {event.description}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <MdCalendarToday className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600">You haven't created any events yet.</p>
+                      </div>
+                    )}
+                  </div>
+                </SectionCard>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Camera Modal for Face Verification */}
+        {cameraActive && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-2xl w-full overflow-hidden">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Verify your identity</h3>
                   <button
                     onClick={stopCamera}
-                    className="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                    className="text-gray-500 hover:text-gray-700"
                   >
-                    Cancel
+                    <X className="w-6 h-6" />
                   </button>
+                </div>
+                <p className="text-gray-600 text-sm mt-2">
+                  Position your face in the frame and ensure good lighting
+                </p>
+              </div>
+              
+              <div className="p-6">
+                <div className="relative mx-auto max-w-md">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full rounded-lg"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-48 h-48 border-2 border-white rounded-lg opacity-60"></div>
+                  </div>
+                  <canvas ref={canvasRef} className="hidden" width="640" height="480" />
+                </div>
+                
+                <div className="flex flex-col items-center mt-6 space-y-4">
+                  <div className="flex gap-4">
+                    <button
+                      onClick={captureFace}
+                      disabled={isProcessing}
+                      className="bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition-colors font-medium flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="w-5 h-5" />
+                          Capture & Verify
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={stopCamera}
+                      className="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      {/* Add bottom padding to account for the Footer's fixed bottom navigation */}
+      <div className="pb-20"></div>
     </div>
   );
 }

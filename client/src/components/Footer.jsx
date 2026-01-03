@@ -2,6 +2,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from 'react-redux';
+import { 
+  HomeIcon, 
+  MapIcon, 
+  HeartIcon, 
+  UserIcon 
+} from '@heroicons/react/24/outline';
 
 const Footer = () => {
   const navigate = useNavigate();
@@ -29,8 +35,18 @@ const Footer = () => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       setIsAtTop(currentScrollY < 100);
-      const isScrollingDown = currentScrollY > lastScroll.current;
-      setIsNavVisible(!isScrollingDown || currentScrollY < 100);
+      
+      const isScrollingUp = currentScrollY < lastScroll.current;
+      
+      // Show nav when at top, hide when scrolling up, show when scrolling down
+      if (currentScrollY < 100) {
+        setIsNavVisible(true); // Always show at top
+      } else if (isScrollingUp) {
+        setIsNavVisible(false); // Hide when scrolling up
+      } else {
+        setIsNavVisible(true); // Show when scrolling down
+      }
+      
       lastScroll.current = currentScrollY;
     };
 
@@ -41,8 +57,6 @@ const Footer = () => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  // Removed getMobileNavItems function as it's no longer needed
 
   return (
     <>
@@ -58,40 +72,40 @@ const Footer = () => {
         </button>
       )}
 
-      {/* Main Footer */}
-      <footer className="bg-gradient-to-b from-gray-900 to-gray-800 text-gray-300 pt-16 pb-8 mt-24">
+      {/* Main Footer - Hidden on small screens, visible on medium and above */}
+      <footer className="hidden md:block bg-gray-50 text-gray-300 pt-16 pb-8 mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div className="space-y-4">
-              <h5 className="text-white font-medium text-sm uppercase">Company</h5>
+              <h5 className="text-gray-900 font-medium text-sm uppercase">Company</h5>
               <ul className="space-y-3">
-                <li><Link to="/about" className="text-sm hover:text-white transition-colors">About</Link></li>
-                <li><Link to="/careers" className="text-sm hover:text-white transition-colors">Careers</Link></li>
-                <li><Link to="/press" className="text-sm hover:text-white transition-colors">Press</Link></li>
+                <li><Link to="/about" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">About</Link></li>
+                <li><Link to="/careers" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Careers</Link></li>
+                <li><Link to="/press" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Press</Link></li>
               </ul>
             </div>
 
             <div className="space-y-4">
-              <h5 className="text-white font-medium text-sm uppercase">Support</h5>
+              <h5 className="text-gray-900 font-medium text-sm uppercase">Support</h5>
               <ul className="space-y-3">
-                <li><Link to="/help" className="text-sm hover:text-white transition-colors">Help Center</Link></li>
-                <li><Link to="/message" className="text-sm hover:text-white transition-colors">Message Us</Link></li>
-                <li><Link to="/safety" className="text-sm hover:text-white transition-colors">Safety</Link></li>
-                <li><Link to="/cancellations" className="text-sm hover:text-white transition-colors">Cancellations</Link></li>
+                <li><Link to="/help" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Help Center</Link></li>
+                <li><Link to="/message" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Message Us</Link></li>
+                <li><Link to="/safety" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Safety</Link></li>
+                <li><Link to="/cancellations" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Cancellations</Link></li>
               </ul>
             </div>
 
             <div className="space-y-4">
-              <h5 className="text-white font-medium text-sm uppercase">Legal</h5>
+              <h5 className="text-gray-900 font-medium text-sm uppercase">Legal</h5>
               <ul className="space-y-3">
-                <li><Link to="/terms" className="text-sm hover:text-white transition-colors">Terms</Link></li>
-                <li><Link to="/privacy" className="text-sm hover:text-white transition-colors">Privacy</Link></li>
-                <li><Link to="/cookies" className="text-sm hover:text-white transition-colors">Cookies</Link></li>
+                <li><Link to="/terms" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Terms</Link></li>
+                <li><Link to="/privacy" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Privacy</Link></li>
+                <li><Link to="/cookies" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Cookies</Link></li>
               </ul>
             </div>
 
             <div className="space-y-4">
-              <h5 className="text-white font-medium text-sm uppercase">Connect</h5>
+              <h5 className="text-gray-900 font-medium text-sm uppercase">Connect</h5>
               <div className="flex space-x-4">
                 <a href="#" className="text-gray-400 hover:text-[#1877F2] transition-colors">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -117,14 +131,14 @@ const Footer = () => {
             </div>
           </div>
 
-          <div className="border-t border-gray-700/50 pt-8 mt-8">
+          <div className="border-t border-gray-300 pt-8 mt-8">
             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
               <div className="flex items-center space-x-6">
-                <span className="text-sm text-gray-400">© 2025 loopOut, Inc.</span>
-                <div className="flex space-x-4 text-sm text-gray-400">
-                  <Link to="/terms" className="hover:text-white transition-colors hover:underline">Terms</Link>
-                  <Link to="/privacy" className="hover:text-white transition-colors hover:underline">Privacy</Link>
-                  <Link to="/cookies" className="hover:text-white transition-colors hover:underline">Cookies</Link>
+                <span className="text-sm text-gray-600">© 2025 loopOut, Inc.</span>
+                <div className="flex space-x-4 text-sm text-gray-600">
+                  <Link to="/terms" className="hover:text-gray-900 transition-colors hover:underline">Terms</Link>
+                  <Link to="/privacy" className="hover:text-gray-900 transition-colors hover:underline">Privacy</Link>
+                  <Link to="/cookies" className="hover:text-gray-900 transition-colors hover:underline">Cookies</Link>
                 </div>
               </div>
 
@@ -154,6 +168,34 @@ const Footer = () => {
           </div>
         </div>
       </footer>
+
+      {/* Bottom Navigation Bar - Always visible on all screen sizes */}
+      <nav 
+        className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 transition-transform duration-300 ${
+          isNavVisible ? 'translate-y-0' : 'translate-y-full'
+        }`}
+      >
+        <div className="flex justify-around py-3">
+          {[
+            { icon: HomeIcon, label: 'Home', path: '/' },
+            { icon: MapIcon, label: 'Explore', path: '/explore' },
+            { icon: HeartIcon, label: 'Saved', path: '/wishlist' },
+            { icon: UserIcon, label: 'Profile', path: '/profile' }
+          ].map((item) => (
+            <Link
+              key={item.label}
+              to={item.path}
+              onClick={item.label === 'Saved' || item.label === 'Profile' ? handleProtectedClick : undefined}
+              className="flex flex-col items-center active:opacity-80"
+            >
+              <item.icon className={`w-6 h-6 ${window.location.pathname === item.path ? 'text-rose-500' : 'text-gray-400'}`} />
+              <span className={`text-xs mt-1 ${window.location.pathname === item.path ? 'text-rose-500' : 'text-gray-400'}`}>
+                {item.label}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </nav>
     </>
   );
 };

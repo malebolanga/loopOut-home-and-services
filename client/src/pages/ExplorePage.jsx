@@ -497,6 +497,9 @@ const ExplorePage = () => {
           </div>
         </main>
       </div>
+
+      {/* Add bottom padding to account for the Footer's fixed bottom navigation */}
+      <div className="pb-20"></div>
     </div>
   );
 };

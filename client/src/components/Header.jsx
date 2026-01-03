@@ -352,12 +352,50 @@ export default function Header() {
           ) : (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Link 
-                  to="/" 
-                  className="w-8 h-8 rounded-full bg-gradient-to-r from-rose-500 to-blue-500 flex items-center justify-center"
-                >
-                  <span className="text-white text-xs font-bold">lO</span>
-                </Link>
+                    <Link
+            to="/"
+            className="inline-flex items-center hover:opacity-90 transition-opacity"
+          >
+            <span className="text-2xl font-bold inline-flex items-center">
+              <span className="font-extrabold text-xl inline-flex items-center text-[#1877F2]">
+                <span className="inline-flex items-center font-extrabold mr-[-8px]">l</span>
+                <span className="relative w-11 h-11 inline-flex items-center justify-center mr-[-2px]">
+                  <svg
+                    viewBox="0 0 100 100"
+                    className="w-full h-full relative top-[1px] mr-[-8px] text-[#1877F2]"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M30,50 C30,30 50,30 50,50 C50,70 70,70 70,50 C70,30 50,30 50,50"
+                      stroke="currentColor"
+                      strokeWidth="9"
+                    />
+                    <circle cx="30" cy="50" r="8" fill="currentColor" />
+                    <circle cx="70" cy="50" r="8" fill="currentColor" />
+                  </svg>
+                </span>
+                <span className="inline-flex items-center mr-[-4px]">p</span>
+              </span>
+
+              <svg
+                className="w-6 h-6 relative top-[1px] ml-[-1px] text-rose-600"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 3l5.2 5.2m0 0a8.5 8.5 0 1012 12 8.5 8.5 0 00-12-12z"
+                />
+              </svg>
+
+              <span className="ml-[-1px] font-black text-xl text-rose-600">
+                <strong className="font-extrabold">ut</strong>
+              </span>
+            </span>
+          </Link>
               </div>
               <div className="flex items-center gap-3">
                 {/* Create Listing Button - Only for logged in users */}

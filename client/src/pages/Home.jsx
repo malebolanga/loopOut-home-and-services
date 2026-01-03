@@ -135,18 +135,7 @@ const MobileAppHomepage = ({
             <p className="text-sm text-white/90 mb-4">
               Discover homes, services, and experiences around you
             </p>
-            <button 
-              onClick={handleSearchClick}
-              className="flex items-center justify-between w-full bg-white/20 backdrop-blur-sm rounded-xl p-3"
-            >
-              <div className="flex items-center gap-3">
-                <MagnifyingGlassIcon className="w-5 h-5 text-white" />
-                <span className="text-white text-sm">Search anything...</span>
-              </div>
-              <div className="px-3 py-1 bg-white rounded-lg">
-                <span className="text-xs font-medium text-rose-500">Go</span>
-              </div>
-            </button>
+          
           </div>
           <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full"></div>
         </div>
@@ -245,7 +234,7 @@ const MobileAppHomepage = ({
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-bold text-gray-900 text-lg">Popular homes</h2>
             <Link 
-              to="/search?type=properties"
+              to="/listing-home-page"
               className="text-sm text-gray-600"
             >
               See all
@@ -300,7 +289,7 @@ const MobileAppHomepage = ({
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-bold text-gray-900 text-lg">Top services</h2>
             <Link 
-              to="/search?type=services"
+              to="/service-home-page"
               className="text-sm text-gray-600"
             >
               See all
@@ -438,7 +427,7 @@ const MobileAppHomepage = ({
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-bold text-gray-900 text-lg">Recommended helpers</h2>
             <Link 
-              to="/search?type=helpers"
+              to="/helper-home-page"
               className="text-sm text-gray-600"
             >
               See all
@@ -487,27 +476,7 @@ const MobileAppHomepage = ({
         </section>
 
         {/* Bottom Navigation */}
-        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
-          <div className="flex justify-around py-3">
-            {[
-              { icon: HomeIcon, label: 'Home', path: '/' },
-              { icon: MapIcon, label: 'Explore', path: '/explore' },
-              { icon: HeartIcon, label: 'Saved', path: '/wishlist' },
-              { icon: UserIcon, label: 'Profile', path: '/profile' }
-            ].map((item) => (
-              <Link
-                key={item.label}
-                to={item.path}
-                className="flex flex-col items-center active:opacity-80"
-              >
-                <item.icon className={`w-6 h-6 ${location.pathname === item.path ? 'text-rose-500' : 'text-gray-400'}`} />
-                <span className={`text-xs mt-1 ${location.pathname === item.path ? 'text-rose-500' : 'text-gray-400'}`}>
-                  {item.label}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </nav>
+    
       </main>
 
       {/* Add some padding for bottom nav */}
