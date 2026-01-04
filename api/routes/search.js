@@ -1,8 +1,8 @@
 import express from 'express';
-import Listing from '../models/Listing.js';
-import Service from '../models/Service.js';
-import Helper from '../models/Helper.js';
-import Event from '../models/Event.js';
+import Listing from '../models/listing.model.js';
+import Service from '../models/service.model.js';
+import Helper from '../models/helper.model.js';
+import Event from '../models/event.model.js';
 
 const router = express.Router();
 

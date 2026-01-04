@@ -1,0 +1,81 @@
+/* userProfile.css */
+.profile-header-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-card {
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.tab-content-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.tab-content-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.avatar-ring {
+  box-shadow: 0 0 0 4px white, 0 0 0 6px #ec4899;
+}
+
+.badge-gradient {
+  background: linear-gradient(135deg, #fce7f3 0%, #f3e8ff 100%);
+}
+
+.contact-info-gradient {
+  background: linear-gradient(135deg, #fdf2f8 0%, #faf5ff 100%);
+}
+
+.listing-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.listing-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Custom scrollbar for reviews */
+.reviews-container {
+  scrollbar-width: thin;
+  scrollbar-color: #ec4899 #f3f4f6;
+}
+
+.reviews-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.reviews-container::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 10px;
+}
+
+.reviews-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #ec4899, #8b5cf6);
+  border-radius: 10px;
+}
+
+/* Loading animation */
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+.loading-shimmer {
+  background: linear-gradient(to right, #f6f7f8 8%, #edeef1 18%, #f6f7f8 33%);
+  background-size: 800px 104px;
+  animation: shimmer 1.5s infinite linear;
+}

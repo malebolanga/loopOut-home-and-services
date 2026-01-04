@@ -1,6 +1,6 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import { 
   HomeIcon, 
@@ -11,6 +11,7 @@ import {
 
 const Footer = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser } = useSelector((state) => state.user);
   const [isNavVisible, setIsNavVisible] = useState(true);
   const [isAtTop, setIsAtTop] = useState(true);
@@ -24,11 +25,23 @@ const Footer = () => {
     }
   }, [currentUser]);
 
-  const handleProtectedClick = (e) => {
+  const handleProtectedClick = (e, path) => {
     if (!currentUser) {
       e.preventDefault();
       navigate('/login-required');
+    } else if (path === '/profile') {
+      // Already logged in, allow navigation to profile
+      navigate('/profile');
     }
+  };
+
+  // 新增：处理 Profile 点击事件
+  const handleProfileClick = (e) => {
+    if (!currentUser) {
+      e.preventDefault();
+      navigate('/login-required'); // 导航到登录页面
+    }
+    // 如果已登录，Link 组件会正常导航到 /profile
   };
 
   useEffect(() => {
@@ -181,19 +194,33 @@ const Footer = () => {
             { icon: MapIcon, label: 'Explore', path: '/explore' },
             { icon: HeartIcon, label: 'Saved', path: '/wishlist' },
             { icon: UserIcon, label: 'Profile', path: '/profile' }
-          ].map((item) => (
-            <Link
-              key={item.label}
-              to={item.path}
-              onClick={item.label === 'Saved' || item.label === 'Profile' ? handleProtectedClick : undefined}
-              className="flex flex-col items-center active:opacity-80"
-            >
-              <item.icon className={`w-6 h-6 ${window.location.pathname === item.path ? 'text-rose-500' : 'text-gray-400'}`} />
-              <span className={`text-xs mt-1 ${window.location.pathname === item.path ? 'text-rose-500' : 'text-gray-400'}`}>
-                {item.label}
-              </span>
-            </Link>
-          ))}
+          ].map((item) => {
+            // 如果是 Profile 且用户未登录，则跳转到登录页面
+            const profilePath = item.label === 'Profile' && !currentUser ? '/sign-in' : item.path;
+            
+            return (
+              <Link
+                key={item.label}
+                to={profilePath}
+                onClick={(e) => {
+                  // 如果是 Profile 且用户未登录，阻止默认行为并导航到登录
+                  if (item.label === 'Profile' && !currentUser) {
+                    e.preventDefault();
+                    navigate('/sign-in');
+                  } else if (item.label === 'Saved' && !currentUser) {
+                    e.preventDefault();
+                    navigate('/sign-in');
+                  }
+                }}
+                className="flex flex-col items-center active:opacity-80"
+              >
+                <item.icon className={`w-6 h-6 ${location.pathname === item.path ? 'text-rose-500' : 'text-gray-400'}`} />
+                <span className={`text-xs mt-1 ${location.pathname === item.path ? 'text-rose-500' : 'text-gray-400'}`}>
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </nav>
     </>

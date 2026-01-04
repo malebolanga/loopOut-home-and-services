@@ -85,6 +85,9 @@ import Wishlist from './pages/WishList';
 import Events from './pages/Events';
 import Private from "./pages/Private";
 
+
+// In App.jsx or your routing file
+import UserProfile from './pages/UserProfile';
 // Trip Components
 import TripSearch from './pages/TripSearch';
 import TripDetail from './pages/TripDetail';
@@ -184,6 +187,10 @@ export default function App() {
         <Route path='/listings/user/:id' element={<UserListings />} />
         <Route path="/recently-viewed" element={<RecentlyViewedPage />} />
         
+
+        // Add this route to your Routes component
+<Route path="/user/:id" element={<UserProfile />} />
+
         {/* Private Routes */}
         <Route element={<PrivateRoute />}>
           <Route path="/sale" element={<Sale />} />
