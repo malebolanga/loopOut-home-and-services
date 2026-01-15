@@ -12,6 +12,11 @@ import {
   TrashIcon,
   XMarkIcon,
   ArrowsUpDownIcon,
+  MapPinIcon,
+  BuildingOfficeIcon,
+  HomeIcon,
+  SparklesIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline';
 import {
   HeartIcon as HeartIconSolid,
@@ -29,6 +34,7 @@ const RecentlyViewedPage = () => {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('recent');
   const [selectedItems, setSelectedItems] = useState(new Set());
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
 
   // Load data on component mount
   useEffect(() => {
@@ -235,6 +241,26 @@ const RecentlyViewedPage = () => {
     }
   };
 
+  const getCategoryColor = (itemType) => {
+    switch(itemType) {
+      case 'properties': return 'bg-blue-100 text-blue-600';
+      case 'services': return 'bg-purple-100 text-purple-600';
+      case 'helpers': return 'bg-green-100 text-green-600';
+      case 'events': return 'bg-pink-100 text-pink-600';
+      default: return 'bg-gray-100 text-gray-600';
+    }
+  };
+
+  const getCategoryLabel = (itemType) => {
+    switch(itemType) {
+      case 'properties': return 'Property';
+      case 'services': return 'Service';
+      case 'helpers': return 'Helper';
+      case 'events': return 'Event';
+      default: return 'Item';
+    }
+  };
+
   const getFormattedPrice = (price) => {
     if (!price || price === 'N/A') return 'N/A';
     if (typeof price === 'number') {
@@ -266,161 +292,288 @@ const RecentlyViewedPage = () => {
 
   const stats = getStats();
 
-  const FilterButton = ({ label, count, active, onClick }) => (
+  const FilterButton = ({ label, count, active, onClick, emoji }) => (
     <button
       onClick={onClick}
-      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
         active
-          ? 'bg-black text-white'
-          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-pink-200'
+          : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:shadow-md'
       }`}
     >
-      {label}
-      <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${
-        active ? 'bg-white/20' : 'bg-white'
+      <span className="text-base">{emoji}</span>
+      <span>{label}</span>
+      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+        active ? 'bg-white/20' : 'bg-gray-100'
       }`}>
         {count}
       </span>
     </button>
   );
 
-  const RecentlyViewedCard = ({ item, isSelected }) => {
+  const GridCard = ({ item }) => {
     const price = item.price || item.regularPrice || 'N/A';
     const imageUrl = item.imageUrls?.[0] || item.image || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
     const name = item.name || item.title || 'Untitled';
-    const categoryIcon = getCategoryIcon(item.itemType);
+    const location = item.address || item.location || 'Location not specified';
     const timeAgo = getTimeAgo(item.viewedAt);
     const formattedPrice = getFormattedPrice(price);
+    const categoryColor = getCategoryColor(item.itemType);
 
     return (
       <div
-        className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer group"
+        className="rounded-2xl overflow-hidden hover:border-gray-300 hover:shadow-2xl transition-all duration-300 cursor-pointer"
         onClick={() => handleItemClick(item)}
       >
-        {/* Selection checkbox */}
-        <button
-          onClick={(e) => handleSelectItem(item._id, e)}
-          className={`flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-            isSelected 
-              ? 'bg-blue-500 border-blue-500' 
-              : 'border-gray-300 hover:border-blue-400'
-          }`}
-        >
-          {isSelected && (
-            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-            </svg>
-          )}
-        </button>
-
-        {/* Small thumbnail */}
-        <div className="relative flex-shrink-0">
-          <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200">
-            <img
-              src={imageUrl}
-              alt={name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-            />
+        {/* Image section */}
+        <div className="relative h-48 overflow-hidden">
+          <img
+            src={imageUrl}
+            alt={name}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 rounded-xl"
+          />
+          
+          {/* Category badge */}
+          <div className="absolute top-3 left-3">
+            <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${categoryColor}`}>
+              {getCategoryLabel(item.itemType)}
+            </span>
           </div>
-          {/* Category icon overlay */}
-          <div className="absolute -top-1 -right-1 bg-white rounded-full p-1 shadow-sm">
-            <span className="text-xs">{categoryIcon}</span>
+          
+          {/* Like button */}
+          <button
+            onClick={(e) => handleLike(item._id, e)}
+            className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-lg"
+          >
+            {item.isLiked ? (
+              <HeartIconSolid className="w-5 h-5 text-rose-500" />
+            ) : (
+              <HeartIcon className="w-5 h-5 text-gray-600" />
+            )}
+          </button>
+          
+          {/* Time indicator */}
+          <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium">
+            <ClockIcon className="w-3 h-3 inline mr-1" />
+            {timeAgo}
           </div>
         </div>
+        
+        {/* Content section */}
+        <div className="p-5">
+          <div className="flex justify-between items-start mb-3">
+            <h3 className="font-bold text-gray-900 text-lg truncate">{name}</h3>
+            <div className="flex items-center gap-1">
+              <StarIconSolid className="w-4 h-4 text-yellow-400" />
+              <span className="font-semibold">{item.rating?.toFixed(1) || '4.5'}</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-1 text-gray-600 mb-3">
+            <MapPinIcon className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm truncate">{location}</span>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <div className="text-2xl font-bold text-gray-900">
+              {formattedPrice}
+              {item.type === 'rent' && <span className="text-sm font-normal text-gray-600">/month</span>}
+            </div>
+            <button className="px-4 py-2 bg-gradient-to-r from-rose-500 to-pink-600 text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity">
+              View Details
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
-        {/* Compact info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <h4 className="font-medium text-gray-900 text-sm truncate">
-                {name}
-              </h4>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs text-gray-500 flex items-center gap-0.5">
-                  <ClockIcon className="w-3 h-3" />
-                  {timeAgo}
-                </span>
-                {item.rating !== undefined && (
-                  <span className="text-xs text-gray-500 flex items-center gap-0.5">
-                    <StarIconSolid className="w-3 h-3 text-yellow-400" />
-                    {item.rating?.toFixed(1) || '4.5'}
+  const ListCard = ({ item, isSelected }) => {
+    const price = item.price || item.regularPrice || 'N/A';
+    const imageUrl = item.imageUrls?.[0] || item.image || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+    const name = item.name || item.title || 'Untitled';
+    const location = item.address || item.location || 'Location not specified';
+    const timeAgo = getTimeAgo(item.viewedAt);
+    const formattedPrice = getFormattedPrice(price);
+    const categoryColor = getCategoryColor(item.itemType);
+
+    return (
+      <div
+        className="bg-white rounded-2xl p-4 border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+        onClick={() => handleItemClick(item)}
+      >
+        <div className="flex gap-4">
+          {/* Selection checkbox */}
+          <button
+            onClick={(e) => handleSelectItem(item._id, e)}
+            className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors self-center ${
+              isSelected 
+                ? 'bg-gradient-to-r from-rose-500 to-pink-600 border-transparent' 
+                : 'border-gray-300 hover:border-rose-400'
+            }`}
+          >
+            {isSelected && (
+              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </button>
+          
+          {/* Image */}
+          <div className="relative flex-shrink-0">
+            <div className="w-32 h-32 rounded-xl overflow-hidden bg-gray-200">
+              <img
+                src={imageUrl}
+                alt={name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+            <div className="absolute -top-2 -right-2 bg-white rounded-full p-2 shadow-lg">
+              <span className="text-xs font-semibold">{getCategoryIcon(item.itemType)}</span>
+            </div>
+          </div>
+          
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`px-2 py-1 rounded-md text-xs font-semibold ${categoryColor}`}>
+                    {getCategoryLabel(item.itemType)}
                   </span>
-                )}
+                  <span className="text-xs text-gray-500 flex items-center gap-1">
+                    <ClockIcon className="w-3 h-3" />
+                    {timeAgo}
+                  </span>
+                </div>
+                <h3 className="font-bold text-gray-900 text-lg mb-1">{name}</h3>
+                <div className="flex items-center gap-1 text-gray-600 text-sm mb-3">
+                  <MapPinIcon className="w-4 h-4" />
+                  <span className="truncate">{location}</span>
+                </div>
+              </div>
+              
+              <div className="flex flex-col items-end">
+                <div className="text-2xl font-bold text-gray-900 mb-1">
+                  {formattedPrice}
+                  {item.type === 'rent' && <span className="text-sm font-normal text-gray-600">/month</span>}
+                </div>
+                <div className="flex items-center gap-1">
+                  <StarIconSolid className="w-4 h-4 text-yellow-400" />
+                  <span className="font-semibold text-sm">{item.rating?.toFixed(1) || '4.5'}</span>
+                  <span className="text-gray-500 text-sm">({item.reviews || 0})</span>
+                </div>
               </div>
             </div>
             
-            <div className="flex flex-col items-end">
-              <div className="text-sm font-semibold text-gray-900">
-                {formattedPrice}
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                {item.bedrooms && (
+                  <span className="flex items-center gap-1 text-sm text-gray-600">
+                    <HomeIcon className="w-4 h-4" /> {item.bedrooms} beds
+                  </span>
+                )}
+                {item.bathrooms && (
+                  <span className="flex items-center gap-1 text-sm text-gray-600">
+                    <BuildingOfficeIcon className="w-4 h-4" /> {item.bathrooms} baths
+                  </span>
+                )}
               </div>
-              {item.type && (
-                <div className="text-xs text-gray-500 capitalize mt-0.5">
-                  {item.type.replace('-', ' ')}
-                </div>
-              )}
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={(e) => handleLike(item._id, e)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  {item.isLiked ? (
+                    <HeartIconSolid className="w-5 h-5 text-rose-500" />
+                  ) : (
+                    <HeartIcon className="w-5 h-5 text-gray-400" />
+                  )}
+                </button>
+                <button className="px-4 py-2 bg-gradient-to-r from-rose-500 to-pink-600 text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity">
+                  View Details
+                </button>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Like button */}
-        <button
-          onClick={(e) => handleLike(item._id, e)}
-          className="flex-shrink-0 p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          {item.isLiked ? (
-            <HeartIconSolid className="w-4 h-4 text-rose-500" />
-          ) : (
-            <HeartIcon className="w-4 h-4 text-gray-400" />
-          )}
-        </button>
       </div>
     );
   };
 
   const EmptyState = ({ filter }) => (
-    <div className="text-center py-12">
-      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <EyeIcon className="w-8 h-8 text-gray-400" />
+    <div className="bg-white rounded-2xl p-12 text-center">
+      <div className="w-24 h-24 bg-gradient-to-r from-rose-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <EyeIcon className="w-12 h-12 text-rose-500" />
       </div>
       
-      <h3 className="font-medium text-gray-900 mb-2">
-        {filter === 'wishlist' ? 'No saved items' : 'No recently viewed'}
+      <h3 className="text-2xl font-bold text-gray-900 mb-3">
+        {filter === 'wishlist' ? 'No saved items yet' : 'No recently viewed items'}
       </h3>
       
-      <p className="text-sm text-gray-600 mb-6 max-w-xs mx-auto">
+      <p className="text-gray-600 mb-8 max-w-md mx-auto">
         {filter === 'wishlist'
-          ? 'Like items to see them here'
-          : 'Start browsing to build your history'}
+          ? 'Start liking items to save them for later. Click the heart icon on any listing.'
+          : 'Start browsing properties, services, helpers, and events to build your history.'}
       </p>
       
-      <Link
-        to="/"
-        className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
-      >
-        Start Browsing
-      </Link>
+      <div className="flex gap-4 justify-center">
+        <Link
+          to="/"
+          className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-pink-200"
+        >
+          Start Browsing
+        </Link>
+        {filter === 'wishlist' && (
+          <Link
+            to="/wishlist"
+            className="px-6 py-3 bg-white border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors"
+          >
+            View Wishlist
+          </Link>
+        )}
+      </div>
     </div>
   );
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-3xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
-            <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          {/* Skeleton Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
+              <div className="space-y-2">
+                <div className="h-6 bg-gray-200 rounded w-40 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+              </div>
+            </div>
+            <div className="h-10 bg-gray-200 rounded-lg w-32 animate-pulse"></div>
           </div>
           
-          <div className="space-y-3">
+          {/* Skeleton Filters */}
+          <div className="flex gap-3 mb-8 overflow-x-auto">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 bg-white rounded-xl animate-pulse">
-                <div className="w-5 h-5 bg-gray-200 rounded"></div>
-                <div className="w-16 h-16 bg-gray-200 rounded-lg"></div>
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              <div key={i} className="w-24 h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+            ))}
+          </div>
+          
+          {/* Skeleton Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden border border-gray-200">
+                <div className="h-48 bg-gray-200 animate-pulse"></div>
+                <div className="p-5 space-y-3">
+                  <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
+                  <div className="flex justify-between">
+                    <div className="h-8 bg-gray-200 rounded w-20 animate-pulse"></div>
+                    <div className="h-8 bg-gray-200 rounded w-24 animate-pulse"></div>
+                  </div>
                 </div>
-                <div className="w-12 h-6 bg-gray-200 rounded"></div>
               </div>
             ))}
           </div>
@@ -430,97 +583,136 @@ const RecentlyViewedPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
-        <div className="max-w-3xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-14">
+      {/* Hero Header */}
+      <div className="bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 text-white">
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
               <Link
                 to="/"
-                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 bg-white/20 backdrop-blur-sm rounded-xl hover:bg-white/30 transition-colors"
               >
-                <ChevronLeftIcon className="w-5 h-5 text-gray-600" />
+                <ChevronLeftIcon className="w-6 h-6" />
               </Link>
               <div>
-                <h1 className="font-bold text-gray-900 text-lg">Recently Viewed</h1>
-                <p className="text-xs text-gray-500">
-                  {viewedItems.length} items • {selectedItems.size} selected
+                <h1 className="text-3xl font-bold mb-2">Recently Viewed</h1>
+                <p className="text-rose-100">
+                  Your personal browsing history • {viewedItems.length} items • {stats.wishlist} saved
                 </p>
               </div>
             </div>
             
-            {selectedItems.size > 0 ? (
-              <button
-                onClick={handleRemoveSelected}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-              >
-                <TrashIcon className="w-4 h-4" />
-                Remove ({selectedItems.size})
-              </button>
-            ) : (
-              <button
-                onClick={handleClearAll}
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                Clear All
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {selectedItems.size > 0 && (
+                <button
+                  onClick={handleRemoveSelected}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white text-rose-600 font-semibold rounded-xl hover:bg-rose-50 transition-colors shadow-lg"
+                >
+                  <TrashIcon className="w-5 h-5" />
+                  Remove {selectedItems.size}
+                </button>
+              )}
+              
+              <div className="flex bg-white/20 backdrop-blur-sm rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`px-4 py-2 transition-colors ${viewMode === 'grid' ? 'bg-white text-rose-600' : 'text-white hover:bg-white/10'}`}
+                >
+                  Grid
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-4 py-2 transition-colors ${viewMode === 'list' ? 'bg-white text-rose-600' : 'text-white hover:bg-white/10'}`}
+                >
+                  List
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+              <div className="text-2xl font-bold">{stats.all}</div>
+              <div className="text-sm text-rose-100">Total Views</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+              <div className="text-2xl font-bold">{stats.today}</div>
+              <div className="text-sm text-rose-100">Today</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+              <div className="text-2xl font-bold">{stats.week}</div>
+              <div className="text-sm text-rose-100">This Week</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+              <div className="text-2xl font-bold">{stats.month}</div>
+              <div className="text-sm text-rose-100">This Month</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+              <div className="text-2xl font-bold">{stats.wishlist}</div>
+              <div className="text-sm text-rose-100">Saved</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <main className="max-w-3xl mx-auto px-4 py-4">
-        {/* Filter Tabs */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <FunnelIcon className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Filter by:</span>
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Filters & Sorting */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200 mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <FunnelIcon className="w-5 h-5 text-gray-600" />
+              <h3 className="font-semibold text-gray-900">Filter by time:</h3>
             </div>
             
-            <div className="flex items-center gap-2">
-              <ArrowsUpDownIcon className="w-4 h-4 text-gray-500" />
+            <div className="flex items-center gap-3">
+              <ArrowsUpDownIcon className="w-5 h-5 text-gray-600" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="text-sm border-0 bg-transparent focus:outline-none focus:ring-0"
+                className="px-4 py-2.5 bg-gray-100 border-0 rounded-xl focus:ring-2 focus:ring-rose-500 focus:outline-none"
               >
-                <option value="recent">Recent first</option>
-                <option value="oldest">Oldest first</option>
+                <option value="recent">Most Recent</option>
+                <option value="oldest">Oldest First</option>
                 <option value="price-high">Price: High to Low</option>
                 <option value="price-low">Price: Low to High</option>
               </select>
             </div>
           </div>
           
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             <FilterButton
               label="All"
+              emoji="📚"
               count={stats.all}
               active={activeFilter === 'all'}
               onClick={() => setActiveFilter('all')}
             />
             <FilterButton
               label="Today"
+              emoji="🌞"
               count={stats.today}
               active={activeFilter === 'today'}
               onClick={() => setActiveFilter('today')}
             />
             <FilterButton
               label="Week"
+              emoji="📅"
               count={stats.week}
               active={activeFilter === 'week'}
               onClick={() => setActiveFilter('week')}
             />
             <FilterButton
               label="Month"
+              emoji="📆"
               count={stats.month}
               active={activeFilter === 'month'}
               onClick={() => setActiveFilter('month')}
             />
             <FilterButton
               label="Saved"
+              emoji="❤️"
               count={stats.wishlist}
               active={activeFilter === 'wishlist'}
               onClick={() => setActiveFilter('wishlist')}
@@ -528,82 +720,129 @@ const RecentlyViewedPage = () => {
           </div>
         </div>
 
-        {/* Select All Bar */}
-        {filteredItems.length > 0 && selectedItems.size < filteredItems.length && (
-          <div className="mb-4">
-            <button
-              onClick={() => setSelectedItems(new Set(filteredItems.map(item => item._id)))}
-              className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1.5"
-            >
-              <div className="w-4 h-4 border border-gray-300 rounded flex items-center justify-center">
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
+        {/* Bulk Actions */}
+        {filteredItems.length > 0 && (
+          <div className="flex items-center justify-between mb-6 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl border border-blue-200">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={selectedItems.size === filteredItems.length && filteredItems.length > 0}
+                onChange={() => {
+                  if (selectedItems.size === filteredItems.length) {
+                    setSelectedItems(new Set());
+                  } else {
+                    setSelectedItems(new Set(filteredItems.map(item => item._id)));
+                  }
+                }}
+                className="w-5 h-5 rounded border-gray-300 text-rose-500 focus:ring-rose-500"
+              />
+              <span className="font-medium text-gray-900">
+                {selectedItems.size === filteredItems.length && filteredItems.length > 0
+                  ? 'All items selected'
+                  : `${selectedItems.size} of ${filteredItems.length} selected`}
+              </span>
+            </div>
+            
+            {selectedItems.size > 0 && (
+              <div className="flex gap-3">
+                <button
+                  onClick={handleRemoveSelected}
+                  className="px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  Remove Selected
+                </button>
+                <button
+                  onClick={() => {
+                    const likedItems = filteredItems.filter(item => selectedItems.has(item._id));
+                    likedItems.forEach(item => handleLike(item._id, { stopPropagation: () => {} }));
+                  }}
+                  className="px-4 py-2 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
+                >
+                  Save All
+                </button>
               </div>
-              Select all {filteredItems.length} items
-            </button>
+            )}
           </div>
         )}
 
-        {/* Items List */}
+        {/* Items Display */}
         {filteredItems.length === 0 ? (
-          <div className="bg-white rounded-xl p-6">
-            <EmptyState filter={activeFilter} />
+          <EmptyState filter={activeFilter} />
+        ) : viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredItems.map((item) => (
+              <GridCard key={`${item._id}-${item.viewedAt}`} item={item} />
+            ))}
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-4">
             {filteredItems.map((item) => (
-              <div key={`${item._id}-${item.viewedAt}`} className="bg-white rounded-xl">
-                <RecentlyViewedCard 
-                  item={item}
-                  isSelected={selectedItems.has(item._id)}
-                />
-              </div>
+              <ListCard
+                key={`${item._id}-${item.viewedAt}`}
+                item={item}
+                isSelected={selectedItems.has(item._id)}
+              />
             ))}
           </div>
         )}
 
-        {/* Quick Stats */}
+        {/* History Management */}
         {viewedItems.length > 0 && (
-          <div className="mt-8">
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-white rounded-xl p-3 text-center">
-                <div className="text-lg font-bold text-gray-900">{stats.all}</div>
-                <div className="text-xs text-gray-500 mt-0.5">Total</div>
+          <div className="mt-12 bg-gradient-to-r from-rose-50 to-pink-50 rounded-2xl p-8 border border-rose-200">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Manage Your History</h3>
+                <p className="text-gray-600">
+                  Your browsing history is private and stored locally. Clear it anytime or continue exploring.
+                </p>
               </div>
-              <div className="bg-white rounded-xl p-3 text-center">
-                <div className="text-lg font-bold text-gray-900">{stats.today}</div>
-                <div className="text-xs text-gray-500 mt-0.5">Today</div>
-              </div>
-              <div className="bg-white rounded-xl p-3 text-center">
-                <div className="text-lg font-bold text-gray-900">{stats.wishlist}</div>
-                <div className="text-xs text-gray-500 mt-0.5">Saved</div>
+              
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleClearAll}
+                  className="px-6 py-3 bg-white border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  Clear All History
+                </button>
+                <Link
+                  to="/"
+                  className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity text-center"
+                >
+                  Continue Exploring
+                </Link>
               </div>
             </div>
           </div>
         )}
 
-        {/* Bottom Actions */}
+        {/* Category Distribution */}
         {viewedItems.length > 0 && (
-          <div className="mt-6">
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4">
-              <p className="text-sm text-gray-700 mb-3">
-                Your browsing history is stored locally and automatically updates as you explore.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleClearAll}
-                  className="flex-1 px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-white transition-colors"
-                >
-                  Clear History
-                </button>
-                <Link
-                  to="/"
-                  className="flex-1 px-4 py-2 text-sm bg-black text-white rounded-lg hover:bg-gray-800 text-center transition-colors"
-                >
-                  Continue Browsing
-                </Link>
-              </div>
+          <div className="mt-8">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Category Breakdown</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {['properties', 'services', 'helpers', 'events'].map((category) => {
+                const count = viewedItems.filter(item => item.itemType === category).length;
+                const percentage = viewedItems.length > 0 ? (count / viewedItems.length * 100).toFixed(0) : 0;
+                
+                return (
+                  <div key={category} className="bg-white rounded-xl p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-2xl">{getCategoryIcon(category)}</span>
+                      <span className="text-lg font-bold text-gray-900">{count}</span>
+                    </div>
+                    <div className="text-sm font-medium text-gray-900 mb-1">
+                      {getCategoryLabel(category)}
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-rose-500 to-pink-600 h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${percentage}%` }}
+                      ></div>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">{percentage}% of views</div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

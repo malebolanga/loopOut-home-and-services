@@ -1455,22 +1455,30 @@ export default function Listing() {
           width: 100%;
           height: 100vh;
           overflow: hidden;
+          margin: 0;
+          padding: 0;
+          top: 0;
+          left: 0;
         }
 
         @media (max-width: 768px) {
           .airbnb-header-container {
-            height: 60vh;
+            height: 80vh;
           }
         }
 
         .airbnb-main-swiper {
           width: 100%;
           height: 100%;
+          margin: 0;
+          padding: 0;
         }
 
         .airbnb-slide {
           width: 100%;
           height: 100%;
+          margin: 0;
+          padding: 0;
         }
 
         .airbnb-main-image {
@@ -1478,6 +1486,8 @@ export default function Listing() {
           height: 100%;
           object-fit: cover;
           display: block;
+          margin: 0;
+          padding: 0;
         }
 
         .airbnb-navigation-btn {
@@ -1733,7 +1743,7 @@ export default function Listing() {
         .main-content-container {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 40px 24px;
+          padding: 4px 24px;
           padding-top: 60px;
         }
 

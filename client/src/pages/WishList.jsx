@@ -576,7 +576,7 @@ export default function WishList() {
             )}
             
             {/* Footer Actions */}
-            <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center">
+            <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center py-14">
               <div className="flex items-center space-x-4 mb-4 sm:mb-0">
                 <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors">
                   <FaEye />
@@ -634,7 +634,7 @@ function WishlistCard({ item, removingId, removeFromWishlist, typeIcons, typeCol
   };
 
   return (
-    <div className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 hover:border-gray-300">
+    <div className="relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 hover:border-gray-300">
       {/* Selection Checkbox */}
       <div className="absolute top-3 left-3 z-20">
         <input
@@ -706,7 +706,7 @@ function WishlistCard({ item, removingId, removeFromWishlist, typeIcons, typeCol
 // Wishlist List Item Component (List View)
 function WishlistListItem({ item, removingId, removeFromWishlist, typeIcons, typeColors, isSelected, onSelect }) {
   return (
-    <div className="group bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+    <div className=" bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
       <div className="flex items-center p-5">
         {/* Selection */}
         <div className="pr-4">

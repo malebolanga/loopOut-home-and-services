@@ -173,7 +173,7 @@ const ListingsHomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-16">
       {/* Hero Section */}
       <div className="relative bg-gradient-to-r from-rose-50 to-blue-50 rounded-3xl overflow-hidden mb-8">
       <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-blue-500/10"></div>

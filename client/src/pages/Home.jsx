@@ -123,7 +123,7 @@ const MobileAppHomepage = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-0">
+    <div className="min-h-screen bg-white pb-0">
       {/* Main Content */}
       <main className="px-4 py-0">
         {/* Quick Search Banner */}

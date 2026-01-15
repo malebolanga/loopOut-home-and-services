@@ -8,25 +8,22 @@ import "../styles/breakpoints.scss";
 
 import {
   FiSearch,
-  FiMessageSquare,
   FiBell,
-  FiMap,
-  FiClock,
-  FiHome,
-  FiUser,
-  FiFileText,
-  FiPlusCircle,
   FiHeart,
+  FiUser,
+  FiPlusCircle,
   FiLogOut,
   FiSettings,
-  FiGlobe,
   FiHelpCircle,
   FiMenu,
   FiX,
-  FiChevronDown,
-  FiChevronUp,
-  FiCompass,
-  FiMessageCircle
+  FiMessageCircle,
+  FiGlobe,
+  FiHome,
+  FiBriefcase,
+  FiCalendar,
+  FiUsers,
+  FiChevronLeft
 } from "react-icons/fi";
 
 import {
@@ -38,9 +35,7 @@ import {
 export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeType, setActiveType] = useState('all');
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [searchHistory, setSearchHistory] = useState(() => {
     const saved = localStorage.getItem('searchHistory');
     return saved ? JSON.parse(saved) : [];
@@ -48,23 +43,23 @@ export default function Header() {
   
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  const [searchVisible, setSearchVisible] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('San Francisco');
   
   const profileDropdownRef = useRef(null);
   const searchInputRef = useRef(null);
+  const mobileMenuRef = useRef(null);
+  const headerRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Fetch notifications - wrapped in useCallback
+  // Fetch notifications
   const fetchNotifications = useCallback(async () => {
     if (!currentUser) return;
     
     try {
-      setIsLoadingNotifications(true);
       const res = await fetch('/api/notifications', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -78,12 +73,9 @@ export default function Header() {
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
-    } finally {
-      setIsLoadingNotifications(false);
     }
   }, [currentUser]);
 
-  // Use the fetchNotifications function
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
@@ -91,14 +83,17 @@ export default function Header() {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      // Close profile dropdown when clicking outside
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target)) {
         setShowProfileDropdown(false);
       }
-      
-      // Close suggestions when clicking outside
-      if (searchInputRef.current && !searchInputRef.current.contains(e.target)) {
-        setShowSuggestions(false);
+
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target) && !e.target.closest('.mobile-menu-button')) {
+        setShowMobileMenu(false);
+      }
+
+      // Close search if clicking outside search area
+      if (showSearch && !e.target.closest('.search-container')) {
+        setShowSearch(false);
       }
     };
     
@@ -107,69 +102,16 @@ export default function Header() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [showSearch]);
 
-  // Focus search input when search becomes visible
+  // Focus search input when opened
   useEffect(() => {
-    if (searchVisible && searchInputRef.current) {
-      searchInputRef.current.focus();
+    if (showSearch && searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
     }
-  }, [searchVisible]);
-
-  // Generate search suggestions
-  useEffect(() => {
-    if (!searchTerm.trim()) {
-      setSuggestions([]);
-      return;
-    }
-
-    const generateSuggestions = () => {
-      const suggestions = [];
-      
-      // Add search history suggestions
-      searchHistory.forEach(item => {
-        if (item.term.toLowerCase().includes(searchTerm.toLowerCase())) {
-          suggestions.push({
-            term: item.term,
-            type: item.type,
-            isHistory: true
-          });
-        }
-      });
-
-      // Add type-based suggestions
-      const typeSuggestions = {
-        properties: ['apartment', 'house', 'villa', 'studio', 'condo'],
-        services: ['cleaning', 'moving', 'repair', 'maintenance'],
-        helpers: ['tutor', 'cleaner', 'chef', 'handyman'],
-        events: ['concert', 'festival', 'workshop', 'party']
-      };
-
-      Object.entries(typeSuggestions).forEach(([type, terms]) => {
-        terms.forEach(term => {
-          if (term.includes(searchTerm.toLowerCase())) {
-            suggestions.push({
-              term: term.charAt(0).toUpperCase() + term.slice(1),
-              type: type,
-              isHistory: false
-            });
-          }
-        });
-      });
-
-      // Remove duplicates
-      const uniqueSuggestions = suggestions.filter(
-        (suggestion, index, self) =>
-          index === self.findIndex((s) => s.term === suggestion.term && s.type === suggestion.type)
-      );
-
-      return uniqueSuggestions.slice(0, 10);
-    };
-
-    const newSuggestions = generateSuggestions();
-    setSuggestions(newSuggestions);
-    setShowSuggestions(newSuggestions.length > 0);
-  }, [searchTerm, searchHistory]);
+  }, [showSearch]);
 
   // Handle sign out
   const handleSignOut = async () => {
@@ -184,40 +126,9 @@ export default function Header() {
       dispatch(signOutUserSuccess(data));
       navigate('/sign-in');
       setShowProfileDropdown(false);
+      setShowMobileMenu(false);
     } catch (error) {
       dispatch(signOutUserFailure(error.message));
-    }
-  };
-
-  // Handle sign in
-  const handleSignIn = () => {
-    navigate('/sign-in');
-    setShowProfileDropdown(false);
-  };
-
-  // Handle sign up
-  const handleSignUp = () => {
-    navigate('/sign-up');
-    setShowProfileDropdown(false);
-  };
-
-  // Save search history
-  const saveSearchHistory = (term, type, filters = {}) => {
-    try {
-      const searches = JSON.parse(localStorage.getItem('searchHistory')) || [];
-      const newSearch = { term, type, filters, timestamp: new Date().toISOString() };
-      
-      // Remove duplicates
-      const filtered = searches.filter(item => 
-        item.term !== term || item.type !== type
-      );
-      
-      const updated = [newSearch, ...filtered].slice(0, 10);
-      localStorage.setItem('searchHistory', JSON.stringify(updated));
-      return updated;
-    } catch (error) {
-      console.error('Failed to save search history:', error);
-      return [];
     }
   };
 
@@ -225,7 +136,6 @@ export default function Header() {
   const clearSearchHistory = () => {
     localStorage.removeItem('searchHistory');
     setSearchHistory([]);
-    setSuggestions([]);
   };
 
   // Handle search submission
@@ -233,291 +143,245 @@ export default function Header() {
     e.preventDefault();
     if (!searchTerm.trim()) return;
 
-    const searchType = activeType === 'all' ? 'all' : activeType;
-    const updatedHistory = saveSearchHistory(searchTerm, searchType);
+    const updatedHistory = [{ term: searchTerm, type: 'all', timestamp: new Date().toISOString() }, ...searchHistory.slice(0, 9)];
+    localStorage.setItem('searchHistory', JSON.stringify(updatedHistory));
     setSearchHistory(updatedHistory);
 
-    // Navigate to search page with parameters
-    navigate(`/search?searchTerm=${encodeURIComponent(searchTerm)}&type=${searchType}&address=${encodeURIComponent(currentLocation)}`);
-    setShowSuggestions(false);
-    setSearchVisible(false);
+    navigate(`/search?searchTerm=${encodeURIComponent(searchTerm)}&type=all&address=${encodeURIComponent(currentLocation)}`);
+    setShowSearch(false);
+    setSearchTerm('');
   };
 
-  // Handle suggestion click
-  const handleSuggestionClick = (suggestion) => {
-    setSearchTerm(suggestion.term);
-    setShowSuggestions(false);
-    
-    const updatedHistory = saveSearchHistory(suggestion.term, suggestion.type);
-    setSearchHistory(updatedHistory);
-
-    navigate(`/search?searchTerm=${encodeURIComponent(suggestion.term)}&type=${suggestion.type}&address=${encodeURIComponent(currentLocation)}`);
-    setSearchVisible(false);
-  };
-
-  // Handle search submit from mobile search
-  const handleSearchSubmit = (value) => {
-    if (!value.trim()) return;
-    
-    setSearchTerm(value);
-    const searchType = activeType === 'all' ? 'all' : activeType;
-    const updatedHistory = saveSearchHistory(value, searchType);
-    setSearchHistory(updatedHistory);
-
-    navigate(`/search?searchTerm=${encodeURIComponent(value)}&type=${searchType}&address=${encodeURIComponent(currentLocation)}`);
-    setSearchVisible(false);
-  };
-
-  // Handle search click for mobile
-  const handleSearchClick = () => {
-    setSearchVisible(true);
-  };
-
-  // Mark notifications as read
-  const markAsRead = async (notificationId = null) => {
-    try {
-      const res = await fetch('/api/notifications/read', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ notificationId })
-      });
-
-      if (res.ok) {
-        fetchNotifications();
-      }
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  };
-
-  // Navigation menu items
-  const mainMenuItems = [
-    { icon: <FiHome className="w-5 h-5" />, label: 'Home', path: '/', color: 'text-blue-600', bgColor: 'bg-blue-50' },
-    { icon: <FiCompass className="w-5 h-5" />, label: 'Explore', path: '/explore', color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
-    { icon: <FiHeart className="w-5 h-5" />, label: 'Wishlist', path: '/wishlist', requiresAuth: true, color: 'text-rose-600', bgColor: 'bg-rose-50' },
-    { icon: <FiMap className="w-5 h-5" />, label: 'Trips', path: '/trips', requiresAuth: true, color: 'text-purple-600', bgColor: 'bg-purple-50' },
-    { icon: <FiMessageCircle className="w-5 h-5" />, label: 'Messages', path: '/messages', requiresAuth: true, color: 'text-indigo-600', bgColor: 'bg-indigo-50' },
-    { icon: <FiBell className="w-5 h-5" />, label: 'Notifications', path: '/notifications', requiresAuth: true, color: 'text-amber-600', bgColor: 'bg-amber-50' },
-    { icon: <FiUser className="w-5 h-5" />, label: 'Profile', path: '/profile', requiresAuth: true, color: 'text-pink-600', bgColor: 'bg-pink-50' },
+  // Search categories
+  const searchCategories = [
+    { key: 'properties', label: 'Homes', icon: '🏠' },
+    { key: 'services', label: 'Services', icon: '🔧' },
+    { key: 'helpers', label: 'Helpers', icon: '👨‍💼' },
+    { key: 'events', label: 'Events', icon: '🎪' }
   ];
-
-  const hostMenuItems = currentUser ? [
-    { icon: <FiPlusCircle className="w-5 h-5" />, label: 'Create Listing', path: `/${currentUser._id}/create-listing`, color: 'text-green-600', bgColor: 'bg-green-50' },
-    { icon: <FiFileText className="w-5 h-5" />, label: 'My Listings', path: '/list', color: 'text-teal-600', bgColor: 'bg-teal-50' },
-  ] : [];
-
-  const searchTypes = [
-    { key: 'all', label: 'All', icon: '🔍' },
-    { key: 'properties', label: 'Properties', icon: <FiHome className="w-4 h-4" /> },
-    { key: 'services', label: 'Services', icon: <FiFileText className="w-4 h-4" /> },
-    { key: 'helpers', label: 'Helpers', icon: <FiUser className="w-4 h-4" /> },
-    { key: 'events', label: 'Events', icon: <FiClock className="w-4 h-4" /> }
-  ];
-
-  const SEARCH_TYPE_CONFIG = {
-    properties: { icon: '🏠' },
-    services: { icon: '🔧' },
-    helpers: { icon: '👨‍💼' },
-    events: { icon: '🎪' },
-    all: { icon: '🔍' }
-  };
 
   return (
     <>
-      {/* Mobile Header - Visible only on small screens */}
-      <header className="bg-gray-50 md:hidden">
-        <div className="px-4 py-3">
-          {searchVisible ? (
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setSearchVisible(false)}
-                className="p-2"
+      {/* Instagram-style Header */}
+      <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-white ">
+        {/* Main Header Bar */}
+        <div className="px-4">
+          <div className="flex justify-between items-center h-14">
+            
+            {/* Left: Plus Button (Create) */}
+            <div className="flex items-center">
+              {currentUser && (
+                <Link
+                  to={`/${currentUser._id}/create-listing`}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  aria-label="Create listing"
+                >
+                  <FiPlusCircle className="w-6 h-6 text-gray-900" />
+                </Link>
+              )}
+            </div>
+
+            {/* Center: Logo */}
+            <div className="flex items-center justify-center flex-1">
+              <Link to="/" className="flex items-center">
+                <span className="text-xl font-bold text-red-400 tracking-tight">
+                  <span className="font-black">loop</span>
+                  <span className="font-bold text-blue-500">Out</span>
+                </span>
+              </Link>
+            </div>
+
+            {/* Right: Search and Profile */}
+            <div className="flex items-center space-x-2" ref={profileDropdownRef}>
+              {/* Search Button */}
+              <button
+                onClick={() => setShowSearch(true)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                aria-label="Search"
               >
-                <FiChevronDown className="w-5 h-5 text-gray-600 rotate-90" />
+                <FiSearch className="w-5 h-5 text-gray-900" />
               </button>
-              <div className="flex-1 relative">
-                <FiSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+
+           
+
+              {/* Profile Menu */}
+              <div className="relative">
+              
+
+                {/* Profile Dropdown */}
+                {showProfileDropdown && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50">
+                    {currentUser ? (
+                      <>
+                        {/* User Info */}
+                      
+
+                        {/* Menu Items */}
+                        <div className="py-1">
+                         
+                       
+                          <Link
+                            to="/trips"
+                            onClick={() => setShowProfileDropdown(false)}
+                            className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 text-sm"
+                          >
+                            <FiBriefcase className="w-4 h-4 text-gray-600" />
+                            <span>Trips</span>
+                          </Link>
+                          <Link
+                            to="/messages"
+                            onClick={() => setShowProfileDropdown(false)}
+                            className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 text-sm"
+                          >
+                            <FiMessageCircle className="w-4 h-4 text-gray-600" />
+                            <span>Messages</span>
+                          </Link>
+                          <Link
+                            to="/dashboard"
+                            onClick={() => setShowProfileDropdown(false)}
+                            className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 text-sm"
+                          >
+                            <FiSettings className="w-4 h-4 text-gray-600" />
+                            <span>Settings</span>
+                          </Link>
+                        </div>
+
+                        {/* Bottom Section */}
+                        <div className="border-t border-gray-100 py-1">
+                          <Link
+                            to="/help"
+                            onClick={() => setShowProfileDropdown(false)}
+                            className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 text-sm"
+                          >
+                            <FiHelpCircle className="w-4 h-4 text-gray-600" />
+                            <span>Help</span>
+                          </Link>
+                          <button
+                            onClick={handleSignOut}
+                            className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 text-sm w-full text-left"
+                          >
+                            <FiLogOut className="w-4 h-4 text-gray-600" />
+                            <span>Log Out</span>
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="p-4">
+                          <div className="space-y-2">
+                            <button
+                              onClick={() => {
+                                navigate('/sign-in');
+                                setShowProfileDropdown(false);
+                              }}
+                              className="w-full py-2.5 bg-black text-white text-sm font-medium rounded-md"
+                            >
+                              Log In
+                            </button>
+                            <button
+                              onClick={() => {
+                                navigate('/sign-up');
+                                setShowProfileDropdown(false);
+                              }}
+                              className="w-full py-2.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-md"
+                            >
+                              Sign Up
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search Overlay - Instagram Style */}
+        <div className={`search-container fixed inset-0 z-50 bg-white transition-transform duration-300 ease-in-out ${
+          showSearch ? 'translate-x-0' : 'translate-x-full'
+        }`}>
+          {/* Search Header */}
+          <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
+            <div className="flex items-center justify-between px-4 h-14">
+              <button
+                onClick={() => setShowSearch(false)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <FiChevronLeft className="w-5 h-5 text-gray-900" />
+              </button>
+              <h2 className="font-semibold text-gray-900">Search</h2>
+              <div className="w-10"></div> {/* Spacer for centering */}
+            </div>
+          </div>
+
+          {/* Search Content */}
+          <div className="p-4">
+            {/* Search Input */}
+            <form onSubmit={handleSearch} className="mb-6">
+              <div className="relative">
+                <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder={`Search in ${currentLocation}...`}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-100 rounded-lg text-sm"
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearchSubmit(e.target.value)}
+                  placeholder="Search homes, services, helpers..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 bg-gray-100 rounded-lg border-none focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                    <Link
-            to="/"
-            className="inline-flex items-center hover:opacity-90 transition-opacity"
-          >
-            <span className="text-2xl font-bold inline-flex items-center">
-              <span className="font-extrabold text-xl inline-flex items-center text-[#1877F2]">
-                <span className="inline-flex items-center font-extrabold mr-[-8px]">l</span>
-                <span className="relative w-11 h-11 inline-flex items-center justify-center mr-[-2px]">
-                  <svg
-                    viewBox="0 0 100 100"
-                    className="w-full h-full relative top-[1px] mr-[-8px] text-[#1877F2]"
-                  >
-                    <path
-                      fill="currentColor"
-                      d="M30,50 C30,30 50,30 50,50 C50,70 70,70 70,50 C70,30 50,30 50,50"
-                      stroke="currentColor"
-                      strokeWidth="9"
-                    />
-                    <circle cx="30" cy="50" r="8" fill="currentColor" />
-                    <circle cx="70" cy="50" r="8" fill="currentColor" />
-                  </svg>
-                </span>
-                <span className="inline-flex items-center mr-[-4px]">p</span>
-              </span>
-
-              <svg
-                className="w-6 h-6 relative top-[1px] ml-[-1px] text-rose-600"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 3l5.2 5.2m0 0a8.5 8.5 0 1012 12 8.5 8.5 0 00-12-12z"
-                />
-              </svg>
-
-              <span className="ml-[-1px] font-black text-xl text-rose-600">
-                <strong className="font-extrabold">ut</strong>
-              </span>
-            </span>
-          </Link>
-              </div>
-              <div className="flex items-center gap-3">
-                {/* Create Listing Button - Only for logged in users */}
-                {currentUser && (
-                  <Link 
-                    to={`/${currentUser._id}/create-listing`}
-                    className="p-2"
-                  >
-                    <FiPlusCircle className="w-5 h-5 text-gray-600" />
-                  </Link>
-                )}
-                <button 
-                  onClick={handleSearchClick}
-                  className="p-2"
-                >
-                  <FiSearch className="w-5 h-5 text-gray-600" />
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* Desktop Header - Visible only on md screens and above */}
-      <div className="hidden md:flex fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 px-6 py-4 justify-between items-center shadow-sm">
-        {/* Left side: Logo */}
-        <div className="flex items-center">
-          <Link
-            to="/"
-            className="inline-flex items-center hover:opacity-90 transition-opacity"
-          >
-            <span className="text-2xl font-bold inline-flex items-center">
-              <span className="font-extrabold text-xl inline-flex items-center text-[#1877F2]">
-                <span className="inline-flex items-center font-extrabold mr-[-8px]">l</span>
-                <span className="relative w-11 h-11 inline-flex items-center justify-center mr-[-2px]">
-                  <svg
-                    viewBox="0 0 100 100"
-                    className="w-full h-full relative top-[1px] mr-[-8px] text-[#1877F2]"
-                  >
-                    <path
-                      fill="currentColor"
-                      d="M30,50 C30,30 50,30 50,50 C50,70 70,70 70,50 C70,30 50,30 50,50"
-                      stroke="currentColor"
-                      strokeWidth="9"
-                    />
-                    <circle cx="30" cy="50" r="8" fill="currentColor" />
-                    <circle cx="70" cy="50" r="8" fill="currentColor" />
-                  </svg>
-                </span>
-                <span className="inline-flex items-center mr-[-4px]">p</span>
-              </span>
-
-              <svg
-                className="w-6 h-6 relative top-[1px] ml-[-1px] text-rose-600"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 3l5.2 5.2m0 0a8.5 8.5 0 1012 12 8.5 8.5 0 00-12-12z"
-                />
-              </svg>
-
-              <span className="ml-[-1px] font-black text-xl text-rose-600">
-                <strong className="font-extrabold">ut</strong>
-              </span>
-            </span>
-          </Link>
-        </div>
-
-        {/* Center: Search Bar */}
-        <div className="flex-1 max-w-2xl mx-8" ref={searchInputRef}>
-          <div className="relative">
-            <form onSubmit={handleSearch}>
-              <input
-                type="text"
-                placeholder="Search properties, services, helpers, events..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onFocus={() => searchTerm.trim() && setShowSuggestions(true)}
-                className="w-full p-3 pl-12 rounded-full border border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition-all bg-white shadow-sm"
-              />
-              <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             </form>
-            
-            {/* Search Suggestions */}
-            {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
-                <div className="p-3 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white">
-                  <span className="text-sm font-medium text-gray-700">Suggestions</span>
-                  {searchHistory.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={clearSearchHistory}
-                      className="text-xs text-pink-600 hover:text-pink-700 font-medium"
-                    >
-                      Clear history
-                    </button>
-                  )}
+
+            {/* Search Categories */}
+            <div className="mb-8">
+              <h3 className="font-semibold text-gray-900 mb-3">Browse Categories</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {searchCategories.map((category) => (
+                  <button
+                    key={category.key}
+                    onClick={() => {
+                      navigate(`/search?type=${category.key}&address=${encodeURIComponent(currentLocation)}`);
+                      setShowSearch(false);
+                    }}
+                    className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 active:scale-95 transition-all"
+                  >
+                    <span className="text-2xl mb-2">{category.icon}</span>
+                    <span className="font-medium text-gray-900">{category.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Searches */}
+            {searchHistory.length > 0 && (
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-semibold text-gray-900">Recent</h3>
+                  <button
+                    onClick={clearSearchHistory}
+                    className="text-sm text-blue-600 font-medium"
+                  >
+                    Clear all
+                  </button>
                 </div>
-                <div className="max-h-64 overflow-y-auto">
-                  {suggestions.map((suggestion, index) => (
+                <div className="space-y-2">
+                  {searchHistory.slice(0, 5).map((item, index) => (
                     <button
-                      type="button"
                       key={index}
-                      onClick={() => handleSuggestionClick(suggestion)}
-                      className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
+                      onClick={() => {
+                        navigate(`/search?searchTerm=${encodeURIComponent(item.term)}&type=${item.type}&address=${encodeURIComponent(currentLocation)}`);
+                        setShowSearch(false);
+                      }}
+                      className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors"
                     >
-                      {suggestion.isHistory ? (
-                        <FiClock className="w-4 h-4 text-gray-400" />
-                      ) : (
-                        <span className="text-lg">{SEARCH_TYPE_CONFIG[suggestion.type]?.icon || '🔍'}</span>
-                      )}
-                      <div className="flex-1">
-                        <span className="text-gray-700">{suggestion.term}</span>
-                        {suggestion.type !== 'all' && (
-                          <div className="text-xs text-gray-400 capitalize">{suggestion.type}</div>
-                        )}
+                      <div className="flex items-center space-x-3">
+                        <FiSearch className="w-4 h-4 text-gray-400" />
+                        <span className="text-gray-900">{item.term}</span>
                       </div>
+                      <span className="text-xs text-gray-500 capitalize px-2 py-1 bg-gray-100 rounded">
+                        {item.type}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -525,272 +389,188 @@ export default function Header() {
             )}
           </div>
         </div>
+      </header>
 
-        {/* Right side: Navigation Icons + Profile Dropdown */}
-        <div className="flex items-center gap-6" ref={profileDropdownRef}>
-          {/* Explore */}
+      {/* Mobile Bottom Navigation */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200">
+        <div className="flex justify-around items-center py-2 px-4">
+          <Link
+            to="/"
+            className={`flex flex-col items-center p-2 ${
+              location.pathname === '/' ? 'text-black' : 'text-gray-500'
+            }`}
+          >
+            <div className="p-1">
+              <FiHome className="w-6 h-6" />
+            </div>
+            <span className="text-xs mt-1">Home</span>
+          </Link>
           <Link
             to="/explore"
-            className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 ${
-              location.pathname === '/explore'
-                ? 'text-emerald-600 bg-emerald-50' 
-                : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-50'
+            className={`flex flex-col items-center p-2 ${
+              location.pathname === '/explore' ? 'text-black' : 'text-gray-500'
             }`}
-            title="Explore"
           >
-            <FiCompass className="w-6 h-6" />
-            <span className="text-xs mt-1 font-medium">Explore</span>
+            <div className="p-1">
+              <FiSearch className="w-6 h-6" />
+            </div>
+            <span className="text-xs mt-1">Explore</span>
           </Link>
-
-          {/* Trips - Only for logged in users */}
-          {currentUser && (
-            <Link
-              to="/trips"
-              className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 ${
-                location.pathname === '/trips' 
-                  ? 'text-purple-600 bg-purple-50' 
-                  : 'text-gray-600 hover:text-purple-600 hover:bg-gray-50'
-              }`}
-              title="Trips"
-            >
-              <FiMap className="w-6 h-6" />
-              <span className="text-xs mt-1 font-medium">Trips</span>
-            </Link>
-          )}
-
-          {/* Wishlist - Only for logged in users */}
-          {currentUser && (
-            <Link
-              to="/wishlist"
-              className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 ${
-                location.pathname === '/wishlist' 
-                  ? 'text-rose-600 bg-rose-50' 
-                  : 'text-gray-600 hover:text-rose-600 hover:bg-gray-50'
-              }`}
-              title="Wishlist"
-            >
-              <FiHeart className="w-6 h-6" />
-              <span className="text-xs mt-1 font-medium">Wishlist</span>
-            </Link>
-          )}
-
-          {/* Notifications - Only for logged in users */}
-          {currentUser && (
-            <Link
-              to="/notifications"
-              className={`relative flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 ${
-                location.pathname === '/notifications' 
-                  ? 'text-amber-600 bg-amber-50' 
-                  : 'text-gray-600 hover:text-amber-600 hover:bg-gray-50'
-              }`}
-              title="Notifications"
-              onClick={() => markAsRead()}
-            >
-              <FiBell className="w-6 h-6" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-              <span className="text-xs mt-1 font-medium">Notifications</span>
-            </Link>
-          )}
-
-          {/* Become a Host Button - Only for logged in users */}
           {currentUser && (
             <Link
               to={`/${currentUser._id}/create-listing`}
-              className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:shadow-lg transition-all font-medium text-sm"
+              className="flex flex-col items-center p-2"
             >
-              <FiPlusCircle className="w-4 h-4" />
-              <span>Become a Host</span>
+              <div className="p-1">
+                <FiPlusCircle className="w-6 h-6 text-gray-500" />
+              </div>
+              <span className="text-xs mt-1 text-gray-500">Create</span>
             </Link>
           )}
-
-          {/* Profile Dropdown Button */}
-          <button
-            onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-            className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label="Profile menu"
+          <Link
+            to="/wishlist"
+            className={`flex flex-col items-center p-2 ${
+              location.pathname === '/wishlist' ? 'text-black' : 'text-gray-500'
+            }`}
           >
-            {currentUser ? (
-              <>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center text-white font-medium">
-                  {currentUser.username?.charAt(0)?.toUpperCase() || 'U'}
-                </div>
-                {showProfileDropdown ? (
-                  <FiChevronUp className="w-5 h-5 text-gray-700" />
-                ) : (
-                  <FiChevronDown className="w-5 h-5 text-gray-700" />
-                )}
-              </>
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                <FiUser className="w-6 h-6 text-gray-600" />
-              </div>
-            )}
-          </button>
-
-          {/* Profile Dropdown Menu */}
-          {showProfileDropdown && (
-            <div className="absolute top-full right-6 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
-              {currentUser ? (
-                <>
-                  {/* User Info */}
-                  <div className="p-4 border-b border-gray-100">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center text-white font-medium text-lg">
-                        {currentUser.username?.charAt(0)?.toUpperCase() || 'U'}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-900 truncate">{currentUser.username}</p>
-                        <p className="text-sm text-gray-500 truncate">{currentUser.email}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Navigation Links */}
-                  <div className="p-2 border-b border-gray-100">
-                    <Link
-                      to="/profile"
-                      onClick={() => {
-                        setShowProfileDropdown(false);
-                      }}
-                      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
-                    >
-                      <FiUser className="w-5 h-5" />
-                      <span>My Profile</span>
-                    </Link>
-                    
-                    <Link
-                      to="/dashboard"
-                      onClick={() => {
-                        setShowProfileDropdown(false);
-                      }}
-                      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
-                    >
-                      <FiSettings className="w-5 h-5" />
-                      <span>Dashboard</span>
-                    </Link>
-                  </div>
-                  
-                  {/* Host Actions */}
-                  {currentUser && hostMenuItems.length > 0 && (
-                    <div className="p-2 border-b border-gray-100">
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-3">
-                        Host
-                      </p>
-                      {hostMenuItems.map((item) => (
-                        <Link
-                          key={item.label}
-                          to={item.path}
-                          onClick={() => {
-                            setShowProfileDropdown(false);
-                          }}
-                          className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
-                        >
-                          <span className="text-gray-600">{item.icon}</span>
-                          <span>{item.label}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {/* Quick Actions */}
-                  <div className="p-2 border-b border-gray-100">
-                    <Link
-                      to="/help"
-                      onClick={() => {
-                        setShowProfileDropdown(false);
-                      }}
-                      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
-                    >
-                      <FiHelpCircle className="w-5 h-5" />
-                      <span>Help Center</span>
-                    </Link>
-                    
-                    <Link
-                      to="/language"
-                      onClick={() => {
-                        setShowProfileDropdown(false);
-                      }}
-                      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
-                    >
-                      <FiGlobe className="w-5 h-5" />
-                      <span>Language</span>
-                    </Link>
-                  </div>
-                  
-                  {/* Sign Out Button */}
-                  <div className="p-2">
-                    <button
-                      onClick={() => {
-                        handleSignOut();
-                        setShowProfileDropdown(false);
-                      }}
-                      className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:shadow-lg transition-all font-medium"
-                    >
-                      <FiLogOut className="w-5 h-5" />
-                      <span>Sign Out</span>
-                    </button>
-                  </div>
-                </>
-              ) : (
-                /* For non-logged in users */
-                <div className="p-4">
-                  <p className="text-gray-600 text-center mb-4">Welcome to loopOut</p>
-                  
-                  <button
-                    onClick={handleSignIn}
-                    className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all font-medium mb-3"
-                  >
-                    <FiUser className="w-5 h-5" />
-                    Sign In
-                  </button>
-                  
-                  <button
-                    onClick={handleSignUp}
-                    className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium"
-                  >
-                    Create Account
-                  </button>
-                  
-                  {/* Quick Links for non-logged in */}
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <Link
-                      to="/help"
-                      onClick={() => setShowProfileDropdown(false)}
-                      className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 py-2"
-                    >
-                      <FiHelpCircle className="w-4 h-4" />
-                      Help Center
-                    </Link>
-                    <Link
-                      to="/language"
-                      onClick={() => setShowProfileDropdown(false)}
-                      className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 py-2"
-                    >
-                      <FiGlobe className="w-4 h-4" />
-                      Language
-                    </Link>
-                  </div>
-                </div>
-              )}
+            <div className="p-1">
+              <FiHeart className="w-6 h-6" />
             </div>
-          )}
+            <span className="text-xs mt-1">Saved</span>
+          </Link>
+          <button
+            onClick={() => setShowMobileMenu(true)}
+            className="flex flex-col items-center p-2 text-gray-500 mobile-menu-button"
+          >
+            <div className="p-1">
+              <FiMenu className="w-6 h-6" />
+            </div>
+            <span className="text-xs mt-1">More</span>
+          </button>
         </div>
       </div>
 
-      {/* Add CSS for hide scrollbar */}
-      <style jsx>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
+      {/* Mobile Menu */}
+      {showMobileMenu && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowMobileMenu(false)} />
+          <div ref={mobileMenuRef} className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl">
+            <div className="p-6">
+              {/* Menu Header */}
+              <div className="flex items-center justify-center mb-6">
+                <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
+              </div>
+
+              {/* User Info */}
+              {currentUser && (
+                <div className="flex items-center space-x-3 mb-6 p-3 bg-gray-50 rounded-xl">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <span className="text-white font-medium">
+                      {currentUser.username?.charAt(0)?.toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">{currentUser.username}</p>
+                    <p className="text-sm text-gray-500">View profile</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Menu Items */}
+              <div className="space-y-1">
+                {!currentUser ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        navigate('/sign-in');
+                        setShowMobileMenu(false);
+                      }}
+                      className="w-full p-4 text-center bg-black text-white font-medium rounded-lg mb-2"
+                    >
+                      Log In
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate('/sign-up');
+                        setShowMobileMenu(false);
+                      }}
+                      className="w-full p-4 text-center border border-gray-300 text-gray-700 font-medium rounded-lg"
+                    >
+                      Sign Up
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/profile"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg"
+                    >
+                      <span className="font-medium text-gray-900">Profile</span>
+                      <FiUser className="w-5 h-5 text-gray-400" />
+                    </Link>
+                    <Link
+                      to="/trips"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg"
+                    >
+                      <span className="font-medium text-gray-900">Trips</span>
+                      <FiBriefcase className="w-5 h-5 text-gray-400" />
+                    </Link>
+                    <Link
+                      to="/messages"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg"
+                    >
+                      <span className="font-medium text-gray-900">Messages</span>
+                      <FiMessageCircle className="w-5 h-5 text-gray-400" />
+                    </Link>
+                    <Link
+                      to="/notifications"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg"
+                    >
+                      <span className="font-medium text-gray-900">Notifications</span>
+                      <FiBell className="w-5 h-5 text-gray-400" />
+                      {unreadCount > 0 && (
+                        <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                    <Link
+                      to="/settings"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg"
+                    >
+                      <span className="font-medium text-gray-900">Settings</span>
+                      <FiSettings className="w-5 h-5 text-gray-400" />
+                    </Link>
+                    <Link
+                      to="/help"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg"
+                    >
+                      <span className="font-medium text-gray-900">Help</span>
+                      <FiHelpCircle className="w-5 h-5 text-gray-400" />
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full p-4 text-center text-red-600 font-medium border-t border-gray-200 mt-4"
+                    >
+                      Log Out
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Spacer for fixed header */}
+      <div className="h-14"></div>
+      <div className="lg:hidden h-16"></div>
     </>
   );
 }

@@ -1208,8 +1208,8 @@ export default function CreateListing() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6 sm:py-8 md:py-12">
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-6 sm:py-2 md:py-2">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-2">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
