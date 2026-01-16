@@ -754,7 +754,7 @@ function AirbnbWishlistCard({ item, removingId, removeFromWishlist, isSelected, 
   };
 
   return (
-    <div className="group relative bg-white rounded-xl overflow-hidden hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-gray-300">
+    <div className="relative bg-white rounded-xl overflow-hidden hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-gray-300">
       {/* Selection Checkbox */}
       <div className="absolute top-3 left-3 z-10">
         <input
