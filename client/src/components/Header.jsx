@@ -393,7 +393,7 @@ export default function Header() {
       </header>
 
       {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40  bg-white">
         <div className="flex justify-around items-center py-2 px-4">
           <Link
             to="/"

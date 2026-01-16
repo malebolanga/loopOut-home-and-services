@@ -1676,12 +1676,14 @@ export default function CreateListing() {
               </div>
             )}
 
-            {/* Step 4: Amenities */}
+            {/* Step 4: Amenities - UPDATED with hidden scrollbar */}
             {currentStep === 4 && (
               <div className="space-y-4 sm:space-y-6">
                 <SectionCard title="Amenities & Features">
+                  {/* Container with hidden scrollbar */}
                   <div className="overflow-x-auto pb-2">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 min-w-max">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 min-w-max pb-4 -mb-4
+                      [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                       {getAmenitiesByCategory().map((amenity) => (
                         <AmenityCard
                           key={amenity.id}
@@ -1874,7 +1876,7 @@ export default function CreateListing() {
               </div>
             )}
 
-            {/* Step 5: Images & Media */}
+            {/* Step 5: Images & Media - UPDATED with hidden scrollbar */}
             {currentStep === 5 && (
               <div className="space-y-4 sm:space-y-6">
                 <SectionCard title="Photos & Media">
@@ -1895,23 +1897,27 @@ export default function CreateListing() {
                   {listingForm.imageUrls.length > 0 && (
                     <div className="mt-4 sm:mt-6">
                       <h3 className="font-medium text-gray-700 mb-3 sm:mb-4">Uploaded photos ({listingForm.imageUrls.length})</h3>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                        {listingForm.imageUrls.map((url, index) => (
-                          <div key={url} className="relative aspect-square rounded-lg sm:rounded-xl overflow-hidden group">
-                            <img
-                              src={url}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveImage(index)}
-                              className="absolute top-1 sm:top-2 right-1 sm:right-2 bg-white p-1 sm:p-1.5 rounded-md sm:rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                            >
-                              <XMarkIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
-                            </button>
-                          </div>
-                        ))}
+                      {/* Container with hidden scrollbar for images */}
+                      <div className="overflow-x-auto pb-2">
+                        <div className="flex gap-3 sm:gap-4 pb-4 -mb-4 min-w-max
+                          [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                          {listingForm.imageUrls.map((url, index) => (
+                            <div key={url} className="relative aspect-square rounded-lg sm:rounded-xl overflow-hidden group flex-shrink-0" style={{width: '200px'}}>
+                              <img
+                                src={url}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(index)}
+                                className="absolute top-1 sm:top-2 right-1 sm:right-2 bg-white p-1 sm:p-1.5 rounded-md sm:rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                              >
+                                <XMarkIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}
