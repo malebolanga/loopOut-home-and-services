@@ -16,6 +16,7 @@ import {
   FiSettings,
   FiHelpCircle,
   FiMenu,
+  FiMap,
   FiX,
   FiMessageCircle,
   FiGlobe,
@@ -392,7 +393,7 @@ export default function Header() {
       </header>
 
       {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white">
         <div className="flex justify-around items-center py-2 px-4">
           <Link
             to="/"
@@ -412,7 +413,7 @@ export default function Header() {
             }`}
           >
             <div className="p-1">
-              <FiSearch className="w-6 h-6" />
+              <FiMap className="w-6 h-6" />
             </div>
             <span className="text-xs mt-1">Explore</span>
           </Link>

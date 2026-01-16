@@ -183,46 +183,7 @@ const Footer = () => {
       </footer>
 
       {/* Bottom Navigation Bar - Always visible on all screen sizes */}
-      <nav 
-        className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 transition-transform duration-300 ${
-          isNavVisible ? 'translate-y-0' : 'translate-y-full'
-        }`}
-      >
-        <div className="flex justify-around py-3">
-          {[
-            { icon: HomeIcon, label: 'Home', path: '/' },
-            { icon: MapIcon, label: 'Explore', path: '/explore' },
-            { icon: HeartIcon, label: 'Saved', path: '/wishlist' },
-            { icon: UserIcon, label: 'Profile', path: '/profile' }
-          ].map((item) => {
-            // 如果是 Profile 且用户未登录，则跳转到登录页面
-            const profilePath = item.label === 'Profile' && !currentUser ? '/sign-in' : item.path;
-            
-            return (
-              <Link
-                key={item.label}
-                to={profilePath}
-                onClick={(e) => {
-                  // 如果是 Profile 且用户未登录，阻止默认行为并导航到登录
-                  if (item.label === 'Profile' && !currentUser) {
-                    e.preventDefault();
-                    navigate('/sign-in');
-                  } else if (item.label === 'Saved' && !currentUser) {
-                    e.preventDefault();
-                    navigate('/sign-in');
-                  }
-                }}
-                className="flex flex-col items-center active:opacity-80"
-              >
-                <item.icon className={`w-6 h-6 ${location.pathname === item.path ? 'text-rose-500' : 'text-gray-400'}`} />
-                <span className={`text-xs mt-1 ${location.pathname === item.path ? 'text-rose-500' : 'text-gray-400'}`}>
-                  {item.label}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+     
     </>
   );
 };
