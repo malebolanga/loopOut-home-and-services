@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
@@ -95,7 +96,7 @@ const MobileAppHomepage = ({
       case 'sale': return 'Sale';
       case 'rent-short': return 'Short Term';
       case 'rent-long': return 'Long Term';
-      case 'office': return 'Office';
+      case 'office': return 'Office Space';
       case 'land': return 'Land Plot';
       default: return 'Property';
     }
@@ -152,7 +153,17 @@ const MobileAppHomepage = ({
                 See all
               </button>
             </div>
-            <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-2">
+            <div className="flex overflow-x-auto gap-3 pb-2 -mx-1 px-1"
+                 style={{
+                   scrollbarWidth: 'none', /* Firefox */
+                   msOverflowStyle: 'none', /* IE and Edge */
+                 }}
+            >
+              <style>{`
+                .overflow-x-auto::-webkit-scrollbar {
+                  display: none; /* Chrome, Safari and Opera */
+                }
+              `}</style>
               {recentlyViewedItems.slice(0, 5).map((item) => (
                 <div 
                   key={`${item._id}-${item.viewedAt}`}
@@ -296,7 +307,17 @@ const MobileAppHomepage = ({
             </Link>
           </div>
           {loadingServices ? (
-            <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-2">
+            <div className="flex overflow-x-auto gap-3 pb-2 -mx-1 px-1"
+                 style={{
+                   scrollbarWidth: 'none',
+                   msOverflowStyle: 'none',
+                 }}
+            >
+              <style>{`
+                .overflow-x-auto::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="flex-shrink-0 w-60">
                   <div className="aspect-[4/3] bg-gray-200 rounded-xl mb-2 animate-pulse"></div>
@@ -306,7 +327,17 @@ const MobileAppHomepage = ({
               ))}
             </div>
           ) : (
-            <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-2">
+            <div className="flex overflow-x-auto gap-3 pb-2 -mx-1 px-1"
+                 style={{
+                   scrollbarWidth: 'none',
+                   msOverflowStyle: 'none',
+                 }}
+            >
+              <style>{`
+                .overflow-x-auto::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
               {featuredServices.slice(0, 3).map((service) => (
                 <div 
                   key={service._id}
@@ -345,7 +376,17 @@ const MobileAppHomepage = ({
             </Link>
           </div>
           {loadingEvents ? (
-            <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-2">
+            <div className="flex overflow-x-auto gap-3 pb-2 -mx-1 px-1"
+                 style={{
+                   scrollbarWidth: 'none',
+                   msOverflowStyle: 'none',
+                 }}
+            >
+              <style>{`
+                .overflow-x-auto::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="flex-shrink-0 w-64">
                   <div className="aspect-[5/3] bg-gray-200 rounded-xl mb-2 animate-pulse"></div>
@@ -358,7 +399,17 @@ const MobileAppHomepage = ({
               ))}
             </div>
           ) : featuredEvents.length > 0 ? (
-            <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-2">
+            <div className="flex overflow-x-auto gap-3 pb-2 -mx-1 px-1"
+                 style={{
+                   scrollbarWidth: 'none',
+                   msOverflowStyle: 'none',
+                 }}
+            >
+              <style>{`
+                .overflow-x-auto::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
               {featuredEvents.slice(0, 3).map((event) => (
                 <div 
                   key={event._id}
@@ -434,7 +485,17 @@ const MobileAppHomepage = ({
             </Link>
           </div>
           {loadingHelpers ? (
-            <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-2">
+            <div className="flex overflow-x-auto gap-4 pb-2 -mx-1 px-1"
+                 style={{
+                   scrollbarWidth: 'none',
+                   msOverflowStyle: 'none',
+                 }}
+            >
+              <style>{`
+                .overflow-x-auto::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="flex-shrink-0 w-56 animate-pulse">
                   <div className="aspect-square bg-gray-200 rounded-full mb-2 mx-auto w-20 h-20"></div>
@@ -444,7 +505,17 @@ const MobileAppHomepage = ({
               ))}
             </div>
           ) : (
-            <div className="flex overflow-x-auto scrollbar-hide gap-4 pb-2">
+            <div className="flex overflow-x-auto gap-4 pb-2 -mx-1 px-1"
+                 style={{
+                   scrollbarWidth: 'none',
+                   msOverflowStyle: 'none',
+                 }}
+            >
+              <style>{`
+                .overflow-x-auto::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
               {featuredHelpers.slice(0, 4).map((helper) => (
                 <div 
                   key={helper._id}
