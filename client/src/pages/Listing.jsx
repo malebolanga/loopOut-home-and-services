@@ -1776,7 +1776,7 @@ export default function Listing() {
           padding: 24px;
           max-width: 500px;
           width: 100%;
-          max-height: 90vh;
+          max-height: 70vh;
           overflow-y: auto;
         }
 
