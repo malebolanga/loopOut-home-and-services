@@ -2,7 +2,7 @@
 /* eslint-disable react/prop-types */
 
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Zoom, Thumbs } from "swiper/modules";
 import { useSelector } from "react-redux";
@@ -51,8 +51,8 @@ import {
   FaThumbsUp,
   FaThumbsDown,
   FaPaperPlane,
-  FaExternalLinkAlt, 
-  FaUserFriends, 
+  FaExternalLinkAlt,
+  FaUserFriends,
   FaFacebook,
   FaTwitter,
   FaInstagram,
@@ -62,6 +62,7 @@ import {
   FaTimes,
   FaHeart,
   FaEnvelope,
+  FaCamera,
 } from "react-icons/fa";
 
 // Styles
@@ -247,6 +248,7 @@ const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
 
 export default function Listing() {
   const { listingId } = useParams();
+  const location = useLocation();
   const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
@@ -954,21 +956,47 @@ export default function Listing() {
     }
   }, []);
 
+  // Validate listingId before fetching
+  const isValidListingId = (id) => {
+    if (!id || id === "undefined" || id === "null" || id.trim() === "") {
+      return false;
+    }
+    // Basic MongoDB ObjectId validation (24 hex characters)
+    return /^[0-9a-fA-F]{24}$/.test(id);
+  };
+
   // Fetch listing data
   useEffect(() => {
     const fetchListing = async () => {
+      // Validate listingId first
+      if (!isValidListingId(listingId)) {
+        console.error('Invalid listingId:', listingId);
+        setUiState(prev => ({ ...prev, loading: false, error: true }));
+        alert('Invalid property listing ID. Please check the URL and try again.');
+        navigate('/listings'); // Redirect to listings page
+        return;
+      }
+
       try {
         setUiState({ loading: true, error: false, submitting: false, showAllReviews: false, newReviewsAvailable: false });
-        const response = await fetch(`/api/listing/get/${listingId}`);
+        console.log('Fetching listing with ID:', listingId);
+        
+        const response = await fetch(`/api/listing/get/${listingId}`, {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to fetch listing');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Failed to fetch listing (Status: ${response.status})`);
         }
 
         const listingData = await response.json();
+        console.log('Received listing data:', listingData);
+        
         if (!listingData._id || !listingData.name || !listingData.imageUrls || listingData.imageUrls.length === 0) {
-          throw new Error('Invalid listing data');
+          throw new Error('Invalid listing data received from server');
         }
 
         setListing(listingData);
@@ -976,10 +1004,17 @@ export default function Listing() {
       } catch (error) {
         console.error("Fetch error:", error);
         setUiState(prev => ({ ...prev, loading: false, error: true }));
+        alert(`Error loading property: ${error.message}`);
       }
     };
-    fetchListing();
-  }, [listingId]);
+    
+    if (listingId) {
+      fetchListing();
+    } else {
+      console.error('No listingId found in URL parameters');
+      setUiState(prev => ({ ...prev, loading: false, error: true }));
+    }
+  }, [listingId, navigate]);
 
   // Social media verification and Facebook check
   useEffect(() => {
@@ -1009,6 +1044,11 @@ export default function Listing() {
   // Fetch comment count
   useEffect(() => {
     const fetchCommentCount = async () => {
+      if (!listingId || !isValidListingId(listingId)) {
+        setCommentCount(0);
+        return;
+      }
+
       try {
         const response = await fetch(`/api/comment/get/${listingId}`);
         if (response.ok) {
@@ -1407,7 +1447,7 @@ export default function Listing() {
                 </button>
               </div>
               <p className="text-center text-sm text-gray-500 mt-3">
-                Youll be redirected to WhatsApp to complete your booking
+                You'll be redirected to WhatsApp to complete your booking
               </p>
             </div>
           </div>
@@ -1449,48 +1489,53 @@ export default function Listing() {
           animation: slideUp 0.4s ease-out;
         }
 
-        /* Airbnb Style Header - Full Cover */
-        .airbnb-header-container {
+        /* Airbnb Style Header - Full Top Cover */
+        .airbnb-header {
           position: relative;
           width: 100%;
-          height: 100vh;
-          overflow: hidden;
+          height: 70vh;
+          min-height: 600px;
+          max-height: 800px;
           margin: 0;
           padding: 0;
-          top: 0;
-          left: 0;
+          background: #000;
+          overflow: hidden;
         }
 
         @media (max-width: 768px) {
-          .airbnb-header-container {
-            height: 80vh;
+          .airbnb-header {
+            height: 60vh;
+            min-height: 500px;
           }
         }
 
-        .airbnb-main-swiper {
+        @media (max-width: 480px) {
+          .airbnb-header {
+            height: 50vh;
+            min-height: 400px;
+          }
+        }
+
+        .airbnb-header-slider {
           width: 100%;
           height: 100%;
-          margin: 0;
-          padding: 0;
         }
 
         .airbnb-slide {
           width: 100%;
           height: 100%;
-          margin: 0;
-          padding: 0;
+          position: relative;
         }
 
-        .airbnb-main-image {
+        .airbnb-slide-image {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          display: block;
-          margin: 0;
-          padding: 0;
+          border-radius: 0 0 24px 24px;
         }
 
-        .airbnb-navigation-btn {
+        /* Navigation buttons */
+        .airbnb-nav-btn {
           position: absolute;
           top: 50%;
           transform: translateY(-50%);
@@ -1508,19 +1553,21 @@ export default function Listing() {
           transition: all 0.2s ease;
         }
 
-        .airbnb-navigation-btn:hover {
+        .airbnb-nav-btn:hover {
           background: #f7f7f7;
           box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+          transform: translateY(-50%) scale(1.05);
         }
 
-        .airbnb-navigation-btn.prev {
+        .airbnb-nav-btn.prev {
           left: 20px;
         }
 
-        .airbnb-navigation-btn.next {
+        .airbnb-nav-btn.next {
           right: 20px;
         }
 
+        /* Image counter */
         .airbnb-image-counter {
           position: absolute;
           bottom: 20px;
@@ -1532,46 +1579,38 @@ export default function Listing() {
           font-size: 14px;
           font-weight: 500;
           z-index: 10;
+          display: flex;
+          align-items: center;
+          gap: 4px;
         }
 
-        /* Header Overlay Content */
-        .airbnb-header-content {
-          position: absolute;
+        /* Header Overlay - Fixed to top */
+        .airbnb-header-overlay {
+          position: fixed;
           top: 0;
           left: 0;
           right: 0;
           padding: 20px 40px;
-          z-index: 10;
+          z-index: 100;
+          background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);
+          pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+          .airbnb-header-overlay {
+            padding: 16px 20px;
+          }
+        }
+
+        .airbnb-header-top {
           display: flex;
           justify-content: space-between;
-          align-items: flex-start;
-          background: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent);
+          align-items: center;
+          margin-bottom: 20px;
+          pointer-events: auto;
         }
 
-        .airbnb-header-left {
-          color: white;
-        }
-
-        .airbnb-header-title {
-          font-size: 28px;
-          font-weight: 600;
-          margin-bottom: 8px;
-          text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .airbnb-header-subtitle {
-          font-size: 16px;
-          opacity: 0.9;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
-
-        .airbnb-header-right {
-          display: flex;
-          gap: 10px;
-        }
-
-        .airbnb-share-btn,
-        .airbnb-save-btn {
+        .airbnb-back-btn {
           width: 40px;
           height: 40px;
           background: white;
@@ -1583,27 +1622,123 @@ export default function Listing() {
           cursor: pointer;
           box-shadow: 0 2px 8px rgba(0,0,0,0.15);
           transition: all 0.2s ease;
+          pointer-events: auto;
         }
 
-        .airbnb-share-btn:hover,
-        .airbnb-save-btn:hover {
+        .airbnb-back-btn:hover {
+          background: #f7f7f7;
           transform: scale(1.05);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        /* Airbnb Info Bar - Floating */
-        .airbnb-info-bar {
-          position: fixed;
-          bottom: 20px;
-          left: 50%;
-          transform: translateX(-50%);
+        .airbnb-action-buttons {
+          display: flex;
+          gap: 10px;
+          pointer-events: auto;
+        }
+
+        .airbnb-action-btn {
+          width: 40px;
+          height: 40px;
+          background: rgba(255,255,255,0.9);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: none;
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          transition: all 0.2s ease;
+        }
+
+        .airbnb-action-btn:hover {
           background: white;
-          border-radius: 12px;
+          transform: scale(1.05);
+        }
+
+        .airbnb-favorite-btn {
+          width: 40px;
+          height: 40px;
+          background: rgba(255,255,255,0.9);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: none;
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          transition: all 0.2s ease;
+        }
+
+        .airbnb-favorite-btn:hover {
+          background: white;
+          transform: scale(1.05);
+        }
+
+        .airbnb-header-title {
+          color: white;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+          max-width: 600px;
+          pointer-events: auto;
+          position: absolute;
+          bottom: 80px;
+          left: 40px;
+        }
+
+        @media (max-width: 768px) {
+          .airbnb-header-title {
+            left: 20px;
+            right: 20px;
+            bottom: 60px;
+          }
+        }
+
+        .airbnb-header-title h1 {
+          font-size: 32px;
+          font-weight: 700;
+          margin-bottom: 8px;
+          line-height: 1.2;
+        }
+
+        .airbnb-header-title p {
+          font-size: 16px;
+          opacity: 0.9;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+          .airbnb-header-title h1 {
+            font-size: 24px;
+          }
+          .airbnb-header-title p {
+            font-size: 14px;
+          }
+        }
+
+        /* Floating Booking Bar */
+        .airbnb-booking-bar {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: white;
+          border-top: 1px solid #e5e5e5;
           padding: 16px 24px;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.2);
           z-index: 100;
-          width: 90%;
-          max-width: 800px;
+          box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+        }
+
+        @media (max-width: 768px) {
+          .airbnb-booking-bar {
+            padding: 12px 16px;
+          }
+        }
+
+        .airbnb-booking-content {
+          max-width: 1200px;
+          margin: 0 auto;
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -1611,43 +1746,14 @@ export default function Listing() {
         }
 
         @media (max-width: 768px) {
-          .airbnb-info-bar {
-            width: calc(100% - 32px);
-            left: 16px;
-            transform: none;
-            bottom: 16px;
+          .airbnb-booking-content {
             flex-direction: column;
             gap: 12px;
             align-items: stretch;
           }
-
-          .airbnb-info-content {
-            flex-direction: column;
-            gap: 12px;
-            align-items: stretch;
-          }
-
-          .airbnb-price-info {
-            text-align: center;
-          }
-
-          .airbnb-whatsapp-btn,
-          .airbnb-contact-host-btn,
-          .airbnb-book-now-btn {
-            width: 100%;
-            justify-content: center;
-          }
         }
 
-        .airbnb-info-content {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 20px;
-          width: 100%;
-        }
-
-        .airbnb-price-info {
+        .airbnb-booking-price {
           flex: 1;
         }
 
@@ -1657,101 +1763,90 @@ export default function Listing() {
           color: #222;
         }
 
+        @media (max-width: 768px) {
+          .airbnb-price-unit {
+            font-size: 18px;
+          }
+        }
+
         .airbnb-price-total {
           font-size: 16px;
           color: #717171;
           margin-top: 4px;
         }
 
-        .airbnb-listing-title {
+        .airbnb-booking-info {
           font-size: 14px;
           color: #717171;
           margin-top: 2px;
         }
 
-        .airbnb-whatsapp-btn {
+        .airbnb-booking-btn {
           background: #FF385C;
           color: white;
           border: none;
           border-radius: 8px;
-          padding: 14px 28px;
+          padding: 14px 32px;
           font-size: 16px;
           font-weight: 600;
           cursor: pointer;
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 8px;
-          transition: background 0.2s ease;
+          transition: all 0.2s ease;
+          min-width: 180px;
           white-space: nowrap;
-          min-width: 200px;
         }
 
-        .airbnb-contact-host-btn {
-          background: #4285F4;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          padding: 14px 28px;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          transition: background 0.2s ease;
-          white-space: nowrap;
-          min-width: 200px;
+        @media (max-width: 768px) {
+          .airbnb-booking-btn {
+            width: 100%;
+            padding: 16px 24px;
+          }
         }
 
-        .airbnb-book-now-btn {
-          background: #34A853;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          padding: 14px 28px;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          transition: background 0.2s ease;
-          white-space: nowrap;
-          min-width: 200px;
-        }
-
-        .airbnb-whatsapp-btn:hover {
+        .airbnb-booking-btn:hover {
           background: #E31C5F;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(255, 56, 92, 0.2);
         }
 
-        .airbnb-contact-host-btn:hover {
-          background: #3367D6;
-        }
-
-        .airbnb-book-now-btn:hover {
-          background: #2E7D32;
-        }
-
-        .airbnb-whatsapp-btn:disabled,
-        .airbnb-contact-host-btn:disabled,
-        .airbnb-book-now-btn:disabled {
+        .airbnb-booking-btn:disabled {
           background: #cccccc;
           cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
         }
 
-        /* Content Spacing */
+        /* Content Container */
         .main-content-container {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 4px 24px;
-          padding-top: 60px;
+          padding: 32px 24px;
+          padding-bottom: 100px; /* Space for floating booking bar */
+          margin-top: 70vh; /* Push content below the header */
+          position: relative;
+          z-index: 1;
+          background: white;
+          border-radius: 24px 24px 0 0;
+          transform: translateY(-24px);
         }
 
         @media (max-width: 768px) {
           .main-content-container {
             padding: 24px 16px;
-            padding-top: 40px;
-            padding-bottom: 120px; /* Extra space for floating bar */
+            padding-bottom: 140px;
+            margin-top: 60vh;
+            transform: translateY(-16px);
+            border-radius: 16px 16px 0 0;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .main-content-container {
+            margin-top: 50vh;
+            border-radius: 12px 12px 0 0;
           }
         }
 
@@ -1800,35 +1895,13 @@ export default function Listing() {
           cursor: pointer;
           color: #666;
         }
-
-        .form-group {
-          margin-bottom: 20px;
-        }
-
-        .form-group label {
-          display: block;
-          margin-bottom: 8px;
-          font-weight: 500;
-          color: #333;
-        }
       `}</style>
 
-      {/* Airbnb Style Header Gallery - Full Cover */}
-      <div className="airbnb-header-container">
-        {/* Header Overlay Content */}
-        <div className="airbnb-header-content">
-          <div className="airbnb-header-left">
-            <h1 className="airbnb-header-title">{listing.name}</h1>
-            <p className="airbnb-header-subtitle">
-              {listing.bedrooms} {listing.bedrooms === 1 ? 'bedroom' : 'bedrooms'} · 
-              {listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'} · 
-              {listing.kind || 'Serviced Apartment'}
-            </p>
-          </div>
-          <div className="airbnb-header-right">
-            
-           
-            <button 
+      {/* Fixed Header Overlay (Buttons & Title) */}
+      <div className="airbnb-header-overlay">
+        <div className="airbnb-header-top">
+          <button
+            className="airbnb-back-btn"
             onClick={() => {
               const routeMap = {
                 rent: '/for-rent',
@@ -1840,30 +1913,40 @@ export default function Listing() {
               };
               navigate(routeMap[listing.type?.toLowerCase()] || routeMap.default);
             }}
-           
-            className="airbnb-share-btn" title="Share"
-            >
-               <FaArrowLeft className="text-xl" />
-              
-            </button>
-            <button
-            onClick={toggleFavorite}
-            className="airbnb-save-btn" title="Save"
-               aria-label={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
-            >
-            
+            title="Go back"
+          >
+            <FaArrowLeft className="text-xl text-gray-800" />
+          </button>
 
-               {isFavorite ? (
-                            <FaHeart className="w-5 h-5 text-rose-600" />
-                          ) : (
-                            <FaRegHeart className="w-5 h-5 text-gray-700 group-hover/favorite:text-rose-600" />
-                          )}
+          <div className="airbnb-action-buttons">
+            <button className="airbnb-action-btn" title="Share">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
+                <polyline points="16 6 12 2 8 6" />
+                <line x1="12" y1="2" x2="12" y2="15" />
+              </svg>
+            </button>
+            
+            <button
+              onClick={toggleFavorite}
+              className="airbnb-favorite-btn"
+              title={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
+            >
+              {isFavorite ? (
+                <FaHeart className="w-5 h-5 text-rose-600" />
+              ) : (
+                <FaRegHeart className="w-5 h-5 text-gray-700" />
+              )}
             </button>
           </div>
         </div>
+      </div>
 
+      {/* Image Gallery - Full Top Cover */}
+      <div className="airbnb-header">
+        {/* Main Image Slider */}
         <Swiper
-          className="airbnb-main-swiper"
+          className="airbnb-header-slider"
           modules={[Navigation]}
           navigation={{
             nextEl: '.airbnb-next-btn',
@@ -1877,7 +1960,7 @@ export default function Listing() {
               <img
                 src={img}
                 alt={`Property view ${index + 1}`}
-                className="airbnb-main-image"
+                className="airbnb-slide-image"
                 onError={(e) => { 
                   e.target.onerror = null; 
                   e.target.src = '/placeholder-image.jpg'; 
@@ -1888,12 +1971,12 @@ export default function Listing() {
         </Swiper>
         
         {/* Navigation buttons */}
-        <button className="airbnb-navigation-btn airbnb-prev-btn prev">
+        <button className="airbnb-nav-btn airbnb-prev-btn prev">
           <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor">
             <path d="M20.6667 24.6667L12 16L20.6667 7.33334L22 8.66668L14.6667 16L22 23.3333L20.6667 24.6667Z" />
           </svg>
         </button>
-        <button className="airbnb-navigation-btn airbnb-next-btn next">
+        <button className="airbnb-nav-btn airbnb-next-btn next">
           <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor">
             <path d="M11.3333 7.33334L20 16L11.3333 24.6667L10 23.3333L17.3333 16L10 8.66668L11.3333 7.33334Z" />
           </svg>
@@ -1901,14 +1984,29 @@ export default function Listing() {
         
         {/* Image counter */}
         <div className="airbnb-image-counter">
-          {listing.imageUrls.length} photos
+          <FaCamera />
+          <span>{listing.imageUrls.length} photos</span>
+        </div>
+
+        {/* Title Overlay on Image */}
+        <div className="airbnb-header-title">
+          <h1>{listing.name}</h1>
+          <p>
+            <span>★ {Number(aiRating.average).toFixed(1)}</span>
+            <span>·</span>
+            <span>{commentCount} reviews</span>
+            <span>·</span>
+            <span>{listing.bedrooms} {listing.bedrooms === 1 ? 'bedroom' : 'bedrooms'}</span>
+            <span>·</span>
+            <span>{listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'}</span>
+          </p>
         </div>
       </div>
 
-      {/* Floating Booking Info Bar */}
-      <div className="airbnb-info-bar">
-        <div className="airbnb-info-content">
-          <div className="airbnb-price-info">
+      {/* Floating Booking Bar */}
+      <div className="airbnb-booking-bar">
+        <div className="airbnb-booking-content">
+          <div className="airbnb-booking-price">
             <div className="airbnb-price-unit">
               {listing.type === 'sale' && (
                 <>R{listing.regularPrice.toLocaleString('en-ZA')} for sale</>
@@ -1930,10 +2028,9 @@ export default function Listing() {
               </div>
             )}
             
-            <div className="airbnb-listing-title">
+            <div className="airbnb-booking-info">
               {listing.bedrooms} {listing.bedrooms === 1 ? 'bedroom' : 'bedrooms'} · 
-              {listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'} · 
-              Free cancellation
+              {listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'} · Free cancellation
             </div>
           </div>
           
@@ -1941,7 +2038,7 @@ export default function Listing() {
           {listing.type === 'over' || !listing.type ? (
             // Reserve button for overnight stays
             <button
-              className="airbnb-whatsapp-btn"
+              className="airbnb-booking-btn"
               onClick={() => setShowBookingModal(true)}
               disabled={!listing?.contact}
             >
@@ -1951,13 +2048,12 @@ export default function Listing() {
           ) : listing.type === 'office' ? (
             // Book Now button for office spaces
             <button
-              className="airbnb-book-now-btn"
+              className="airbnb-booking-btn"
               onClick={() => {
                 if (!currentUser) {
                   navigate('/sign-in');
                   return;
                 }
-                // Scroll to office booking section
                 document.getElementById('office-booking-section')?.scrollIntoView({ behavior: 'smooth' });
               }}
               disabled={!listing?.contact}
@@ -1968,7 +2064,7 @@ export default function Listing() {
           ) : (
             // Contact Host button for sale/rent listings
             <button
-              className="airbnb-contact-host-btn"
+              className="airbnb-booking-btn"
               onClick={() => setShowContactModal(true)}
               disabled={!listing?.contact && !listing?.email}
             >
@@ -1992,25 +2088,8 @@ export default function Listing() {
 
       {/* Main Content */}
       <main className="main-content-container">
-        {/* Floating Action Buttons */}
-        <div className="fixed bottom-28 right-4 flex gap-2 z-50">
-          <button
-            onClick={() => {
-              const routeMap = {
-                rent: '/for-rent',
-                sale: '/for-sale',
-                office: '/office',
-                over: '/overnight',
-                land: '/land',
-                default: '/listings'
-              };
-              navigate(routeMap[listing.type?.toLowerCase()] || routeMap.default);
-            }}
-            className="bg-white text-gray-800 p-3 rounded-full shadow-lg hover:bg-gray-100 transition-colors border border-gray-200"
-            title="Go back to listings"
-          >
-            <FaArrowLeft className="text-xl" />
-          </button>
+        {/* Quick Action Buttons (Optional) */}
+        <div className="fixed bottom-28 right-4 flex flex-col gap-2 z-50">
           {listing?.contact && (
             <a
               href={`tel:${listing.contact}`}
@@ -2026,12 +2105,9 @@ export default function Listing() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Property Details */}
           <div className="lg:col-span-2">
-            {/* Property Type & Rating */}
+            {/* Property Info Card */}
             <div className="mb-6">
-              <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-2">
-                {listing.name}
-              </h1>
-              <div className="flex flex-wrap items-center gap-4 text-gray-600">
+              <div className="flex flex-wrap items-center gap-4 text-gray-600 mb-4">
                 <div className="flex items-center">
                   <FaStar className="text-yellow-400 mr-1" />
                   <span className="font-semibold">{Number(aiRating.average).toFixed(1)}</span>
@@ -2043,7 +2119,7 @@ export default function Listing() {
                   <span>{listing.address}</span>
                 </div>
                 {listing.kind && (
-                  <div className="px-3 py-1 bg-gray-100 rounded-full text-sm">
+                  <div className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium">
                     {listing.kind}
                   </div>
                 )}
@@ -2492,7 +2568,7 @@ export default function Listing() {
                           {/* WhatsApp Booking Button */}
                           <div className="pt-2">
                             <div className="mb-3 text-center text-sm text-gray-600">
-                              <p>You ll complete your booking via WhatsApp</p>
+                              <p>You'll complete your booking via WhatsApp</p>
                             </div>
                             <button
                               className="w-full bg-green-500 text-white py-2.5 px-4 rounded-md hover:bg-green-600 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-md hover:shadow-sm"
@@ -2724,7 +2800,7 @@ export default function Listing() {
                           {/* WhatsApp Booking Button */}
                           <div className="pt-2">
                             <div className="mb-3 text-center text-sm text-gray-600">
-                              <p>Youll complete your booking via WhatsApp</p>
+                              <p>You'll complete your booking via WhatsApp</p>
                             </div>
                             <button
                               className="w-full bg-green-500 text-white py-2.5 px-4 rounded-md hover:bg-green-600 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-md hover:shadow-sm"
@@ -2754,7 +2830,7 @@ export default function Listing() {
 
             {/* Location */}
             <section className="mb-8">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold mb-4">Location</h2>
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 text-gray-700">
