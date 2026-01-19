@@ -268,6 +268,7 @@ export default function Listing() {
   const [guestContact, setGuestContact] = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
   const [listing, setListing] = useState(null);
+  const [thumbsSwiper, setThumbsSwiper] = useState(null);
 
   const [mealPlan, setMealPlan] = useState('breakfast');
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -1489,59 +1490,119 @@ export default function Listing() {
           animation: slideUp 0.4s ease-out;
         }
 
-        /* Airbnb Style Header - Full Top Cover */
-        .airbnb-header {
+        /* Enhanced Responsive Image Gallery */
+        .image-gallery-container {
           position: relative;
           width: 100%;
           height: 70vh;
-          min-height: 600px;
-          max-height: 800px;
-          margin: 0;
-          padding: 0;
-          background: #000;
+          max-height: 700px;
+          min-height: 400px;
+          background: #fff;
           overflow: hidden;
+          border-radius: 0 0 24px 24px;
         }
 
         @media (max-width: 768px) {
-          .airbnb-header {
+          .image-gallery-container {
             height: 60vh;
             min-height: 500px;
+            border-radius: 0 0 16px 16px;
           }
         }
 
         @media (max-width: 480px) {
-          .airbnb-header {
-            height: 50vh;
-            min-height: 400px;
+          .image-gallery-container {
+            height: 45vh;
+            min-height: 250px;
           }
         }
 
-        .airbnb-header-slider {
+        /* Main Image Swiper */
+        .main-image-swiper {
           width: 100%;
           height: 100%;
         }
 
-        .airbnb-slide {
+        .main-image-slide {
           width: 100%;
           height: 100%;
           position: relative;
         }
 
-        .airbnb-slide-image {
+        .main-image {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          border-radius: 0 0 24px 24px;
+          transition: transform 0.3s ease;
+        }
+
+        .main-image:hover {
+          transform: scale(1.02);
+        }
+
+        /* Thumbnail Gallery */
+        .thumbnail-gallery {
+          position: absolute;
+          bottom: 20px;
+          left: 0;
+          right: 0;
+          z-index: 10;
+          padding: 0 40px;
+          pointer-events: none;
+        }
+
+        .thumbnail-swiper {
+          padding: 10px 0;
+          pointer-events: auto;
+        }
+
+        .thumbnail-slide {
+          width: 80px;
+          height: 60px;
+          opacity: 0.5;
+          transition: all 0.3s ease;
+          cursor: pointer;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        .thumbnail-slide:hover {
+          opacity: 0.8;
+          transform: translateY(-2px);
+        }
+
+        .thumbnail-slide-active {
+          opacity: 1;
+          border: 2px solid white;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+          transform: translateY(-4px);
+        }
+
+        .thumbnail-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        @media (max-width: 768px) {
+          .thumbnail-gallery {
+            padding: 0 20px;
+          }
+          
+          .thumbnail-slide {
+            width: 60px;
+            height: 45px;
+          }
         }
 
         /* Navigation buttons */
-        .airbnb-nav-btn {
+        .gallery-nav-btn {
           position: absolute;
           top: 50%;
           transform: translateY(-50%);
           width: 40px;
           height: 40px;
-          background: white;
+          background: rgba(255, 255, 255, 0.9);
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -1553,22 +1614,37 @@ export default function Listing() {
           transition: all 0.2s ease;
         }
 
-        .airbnb-nav-btn:hover {
-          background: #f7f7f7;
+        .gallery-nav-btn:hover {
+          background: white;
           box-shadow: 0 4px 12px rgba(0,0,0,0.2);
           transform: translateY(-50%) scale(1.05);
         }
 
-        .airbnb-nav-btn.prev {
+        .gallery-nav-btn.prev {
           left: 20px;
         }
 
-        .airbnb-nav-btn.next {
+        .gallery-nav-btn.next {
           right: 20px;
         }
 
+        @media (max-width: 768px) {
+          .gallery-nav-btn {
+            width: 32px;
+            height: 32px;
+          }
+          
+          .gallery-nav-btn.prev {
+            left: 10px;
+          }
+          
+          .gallery-nav-btn.next {
+            right: 10px;
+          }
+        }
+
         /* Image counter */
-        .airbnb-image-counter {
+        .image-counter {
           position: absolute;
           bottom: 20px;
           right: 20px;
@@ -1584,9 +1660,17 @@ export default function Listing() {
           gap: 4px;
         }
 
-        /* Header Overlay - Fixed to top */
-        .airbnb-header-overlay {
-          position: fixed;
+        @media (max-width: 768px) {
+          .image-counter {
+            bottom: 100px;
+            right: 20px;
+            font-size: 12px;
+          }
+        }
+
+        /* Header Overlay */
+        .header-overlay {
+          position: absolute;
           top: 0;
           left: 0;
           right: 0;
@@ -1597,12 +1681,12 @@ export default function Listing() {
         }
 
         @media (max-width: 768px) {
-          .airbnb-header-overlay {
+          .header-overlay {
             padding: 16px 20px;
           }
         }
 
-        .airbnb-header-top {
+        .header-top {
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -1610,7 +1694,7 @@ export default function Listing() {
           pointer-events: auto;
         }
 
-        .airbnb-back-btn {
+        .back-btn {
           width: 40px;
           height: 40px;
           background: white;
@@ -1625,18 +1709,25 @@ export default function Listing() {
           pointer-events: auto;
         }
 
-        .airbnb-back-btn:hover {
+        .back-btn:hover {
           background: #f7f7f7;
           transform: scale(1.05);
         }
 
-        .airbnb-action-buttons {
+        @media (max-width: 768px) {
+          .back-btn {
+            width: 36px;
+            height: 36px;
+          }
+        }
+
+        .action-buttons {
           display: flex;
           gap: 10px;
           pointer-events: auto;
         }
 
-        .airbnb-action-btn {
+        .action-btn {
           width: 40px;
           height: 40px;
           background: rgba(255,255,255,0.9);
@@ -1650,12 +1741,12 @@ export default function Listing() {
           transition: all 0.2s ease;
         }
 
-        .airbnb-action-btn:hover {
+        .action-btn:hover {
           background: white;
           transform: scale(1.05);
         }
 
-        .airbnb-favorite-btn {
+        .favorite-btn {
           width: 40px;
           height: 40px;
           background: rgba(255,255,255,0.9);
@@ -1669,12 +1760,20 @@ export default function Listing() {
           transition: all 0.2s ease;
         }
 
-        .airbnb-favorite-btn:hover {
+        .favorite-btn:hover {
           background: white;
           transform: scale(1.05);
         }
 
-        .airbnb-header-title {
+        @media (max-width: 768px) {
+          .action-btn, .favorite-btn {
+            width: 36px;
+            height: 36px;
+          }
+        }
+
+        /* Title Overlay */
+        .title-overlay {
           color: white;
           text-shadow: 0 2px 4px rgba(0,0,0,0.4);
           max-width: 600px;
@@ -1682,24 +1781,25 @@ export default function Listing() {
           position: absolute;
           bottom: 80px;
           left: 40px;
+          right: 40px;
         }
 
         @media (max-width: 768px) {
-          .airbnb-header-title {
+          .title-overlay {
             left: 20px;
             right: 20px;
-            bottom: 60px;
+            bottom: 140px;
           }
         }
 
-        .airbnb-header-title h1 {
+        .title-overlay h1 {
           font-size: 32px;
           font-weight: 700;
           margin-bottom: 8px;
           line-height: 1.2;
         }
 
-        .airbnb-header-title p {
+        .title-overlay p {
           font-size: 16px;
           opacity: 0.9;
           display: flex;
@@ -1709,16 +1809,16 @@ export default function Listing() {
         }
 
         @media (max-width: 768px) {
-          .airbnb-header-title h1 {
+          .title-overlay h1 {
             font-size: 24px;
           }
-          .airbnb-header-title p {
+          .title-overlay p {
             font-size: 14px;
           }
         }
 
         /* Floating Booking Bar */
-        .airbnb-booking-bar {
+        .floating-booking-bar {
           position: fixed;
           bottom: 0;
           left: 0;
@@ -1731,12 +1831,12 @@ export default function Listing() {
         }
 
         @media (max-width: 768px) {
-          .airbnb-booking-bar {
+          .floating-booking-bar {
             padding: 12px 16px;
           }
         }
 
-        .airbnb-booking-content {
+        .booking-content {
           max-width: 1200px;
           margin: 0 auto;
           display: flex;
@@ -1746,42 +1846,42 @@ export default function Listing() {
         }
 
         @media (max-width: 768px) {
-          .airbnb-booking-content {
+          .booking-content {
             flex-direction: column;
             gap: 12px;
             align-items: stretch;
           }
         }
 
-        .airbnb-booking-price {
+        .booking-price {
           flex: 1;
         }
 
-        .airbnb-price-unit {
+        .price-unit {
           font-size: 22px;
           font-weight: 600;
           color: #222;
         }
 
         @media (max-width: 768px) {
-          .airbnb-price-unit {
+          .price-unit {
             font-size: 18px;
           }
         }
 
-        .airbnb-price-total {
+        .price-total {
           font-size: 16px;
           color: #717171;
           margin-top: 4px;
         }
 
-        .airbnb-booking-info {
+        .booking-info {
           font-size: 14px;
           color: #717171;
           margin-top: 2px;
         }
 
-        .airbnb-booking-btn {
+        .booking-btn {
           background: #FF385C;
           color: white;
           border: none;
@@ -1800,19 +1900,19 @@ export default function Listing() {
         }
 
         @media (max-width: 768px) {
-          .airbnb-booking-btn {
+          .booking-btn {
             width: 100%;
             padding: 16px 24px;
           }
         }
 
-        .airbnb-booking-btn:hover {
+        .booking-btn:hover {
           background: #E31C5F;
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(255, 56, 92, 0.2);
         }
 
-        .airbnb-booking-btn:disabled {
+        .booking-btn:disabled {
           background: #cccccc;
           cursor: not-allowed;
           transform: none;
@@ -1824,29 +1924,31 @@ export default function Listing() {
           max-width: 1200px;
           margin: 0 auto;
           padding: 32px 24px;
-          padding-bottom: 100px; /* Space for floating booking bar */
-          margin-top: 70vh; /* Push content below the header */
+          padding-bottom: 100px;
+          margin-top: 0;
           position: relative;
           z-index: 1;
           background: white;
-          border-radius: 24px 24px 0 0;
-          transform: translateY(-24px);
         }
 
         @media (max-width: 768px) {
           .main-content-container {
             padding: 24px 16px;
             padding-bottom: 140px;
-            margin-top: 60vh;
-            transform: translateY(-16px);
-            border-radius: 16px 16px 0 0;
           }
         }
 
-        @media (max-width: 480px) {
-          .main-content-container {
-            margin-top: 50vh;
-            border-radius: 12px 12px 0 0;
+        /* Responsive Grid */
+        .responsive-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 32px;
+        }
+
+        @media (min-width: 1024px) {
+          .responsive-grid {
+            grid-template-columns: 2fr 1fr;
+            gap: 48px;
           }
         }
 
@@ -1897,99 +1999,125 @@ export default function Listing() {
         }
       `}</style>
 
-      {/* Fixed Header Overlay (Buttons & Title) */}
-      <div className="airbnb-header-overlay">
-        <div className="airbnb-header-top">
-          <button
-            className="airbnb-back-btn"
-            onClick={() => {
-              const routeMap = {
-                rent: '/for-rent',
-                sale: '/for-sale',
-                office: '/office',
-                over: '/overnight',
-                land: '/land',
-                default: '/listings'
-              };
-              navigate(routeMap[listing.type?.toLowerCase()] || routeMap.default);
-            }}
-            title="Go back"
-          >
-            <FaArrowLeft className="text-xl text-gray-800" />
-          </button>
-
-          <div className="airbnb-action-buttons">
-            <button className="airbnb-action-btn" title="Share">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
-                <polyline points="16 6 12 2 8 6" />
-                <line x1="12" y1="2" x2="12" y2="15" />
-              </svg>
-            </button>
-            
+      {/* Enhanced Image Gallery */}
+      <div className="image-gallery-container">
+        {/* Header Overlay */}
+        <div className="header-overlay">
+          <div className="header-top">
             <button
-              onClick={toggleFavorite}
-              className="airbnb-favorite-btn"
-              title={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
+              className="back-btn"
+              onClick={() => {
+                const routeMap = {
+                  rent: '/for-rent',
+                  sale: '/for-sale',
+                  office: '/office',
+                  over: '/overnight',
+                  land: '/land',
+                  default: '/listings'
+                };
+                navigate(routeMap[listing.type?.toLowerCase()] || routeMap.default);
+              }}
+              title="Go back"
             >
-              {isFavorite ? (
-                <FaHeart className="w-5 h-5 text-rose-600" />
-              ) : (
-                <FaRegHeart className="w-5 h-5 text-gray-700" />
-              )}
+              <FaArrowLeft className="text-xl text-gray-800" />
             </button>
+
+            <div className="action-buttons">
+              <button className="action-btn" title="Share">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
+                  <polyline points="16 6 12 2 8 6" />
+                  <line x1="12" y1="2" x2="12" y2="15" />
+                </svg>
+              </button>
+              
+              <button
+                onClick={toggleFavorite}
+                className="favorite-btn"
+                title={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
+              >
+                {isFavorite ? (
+                  <FaHeart className="w-5 h-5 text-rose-600" />
+                ) : (
+                  <FaRegHeart className="w-5 h-5 text-gray-700" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Image Gallery - Full Top Cover */}
-      <div className="airbnb-header">
-        {/* Main Image Slider */}
+        {/* Main Image Swiper */}
         <Swiper
-          className="airbnb-header-slider"
-          modules={[Navigation]}
+          className="main-image-swiper"
+          modules={[Navigation, Thumbs]}
           navigation={{
-            nextEl: '.airbnb-next-btn',
-            prevEl: '.airbnb-prev-btn',
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
           }}
+          thumbs={{ swiper: thumbsSwiper }}
           loop={true}
           spaceBetween={0}
         >
           {listing.imageUrls.map((img, index) => (
-            <SwiperSlide key={`airbnb-${index}`} className="airbnb-slide">
+            <SwiperSlide key={`main-${index}`} className="main-image-slide">
               <img
                 src={img}
                 alt={`Property view ${index + 1}`}
-                className="airbnb-slide-image"
+                className="main-image"
                 onError={(e) => { 
                   e.target.onerror = null; 
-                  e.target.src = '/placeholder-image.jpg'; 
+                  e.target.src = 'https://via.placeholder.com/800x600?text=Property+Image'; 
                 }}
+                loading="lazy"
               />
             </SwiperSlide>
           ))}
         </Swiper>
         
         {/* Navigation buttons */}
-        <button className="airbnb-nav-btn airbnb-prev-btn prev">
+        <button className="gallery-nav-btn swiper-button-prev prev">
           <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor">
             <path d="M20.6667 24.6667L12 16L20.6667 7.33334L22 8.66668L14.6667 16L22 23.3333L20.6667 24.6667Z" />
           </svg>
         </button>
-        <button className="airbnb-nav-btn airbnb-next-btn next">
+        <button className="gallery-nav-btn swiper-button-next next">
           <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor">
             <path d="M11.3333 7.33334L20 16L11.3333 24.6667L10 23.3333L17.3333 16L10 8.66668L11.3333 7.33334Z" />
           </svg>
         </button>
         
+        {/* Thumbnail Gallery */}
+        <div className="thumbnail-gallery">
+          <Swiper
+            className="thumbnail-swiper"
+            modules={[Thumbs]}
+            watchSlidesProgress
+            onSwiper={setThumbsSwiper}
+            spaceBetween={10}
+            slidesPerView="auto"
+            freeMode={true}
+          >
+            {listing.imageUrls.map((img, index) => (
+              <SwiperSlide key={`thumb-${index}`} className="thumbnail-slide">
+                <img
+                  src={img}
+                  alt={`Thumbnail ${index + 1}`}
+                  className="thumbnail-image"
+                  loading="lazy"
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+        
         {/* Image counter */}
-        <div className="airbnb-image-counter">
-          <FaCamera />
+        <div className="image-counter">
+          <FaCamera className="mr-1" />
           <span>{listing.imageUrls.length} photos</span>
         </div>
 
-        {/* Title Overlay on Image */}
-        <div className="airbnb-header-title">
+        {/* Title Overlay */}
+        <div className="title-overlay">
           <h1>{listing.name}</h1>
           <p>
             <span>★ {Number(aiRating.average).toFixed(1)}</span>
@@ -2004,10 +2132,10 @@ export default function Listing() {
       </div>
 
       {/* Floating Booking Bar */}
-      <div className="airbnb-booking-bar">
-        <div className="airbnb-booking-content">
-          <div className="airbnb-booking-price">
-            <div className="airbnb-price-unit">
+      <div className="floating-booking-bar">
+        <div className="booking-content">
+          <div className="booking-price">
+            <div className="price-unit">
               {listing.type === 'sale' && (
                 <>R{listing.regularPrice.toLocaleString('en-ZA')} for sale</>
               )}
@@ -2023,12 +2151,12 @@ export default function Listing() {
             </div>
             
             {dateRange[0] && dateRange[1] && (listing.type === 'over' || !listing.type) && (
-              <div className="airbnb-price-total">
+              <div className="price-total">
                 R{(listing.regularPrice * nights).toLocaleString('en-ZA')} for {nights} night{nights > 1 ? 's' : ''}
               </div>
             )}
             
-            <div className="airbnb-booking-info">
+            <div className="booking-info">
               {listing.bedrooms} {listing.bedrooms === 1 ? 'bedroom' : 'bedrooms'} · 
               {listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'} · Free cancellation
             </div>
@@ -2038,7 +2166,7 @@ export default function Listing() {
           {listing.type === 'over' || !listing.type ? (
             // Reserve button for overnight stays
             <button
-              className="airbnb-booking-btn"
+              className="booking-btn"
               onClick={() => setShowBookingModal(true)}
               disabled={!listing?.contact}
             >
@@ -2048,7 +2176,7 @@ export default function Listing() {
           ) : listing.type === 'office' ? (
             // Book Now button for office spaces
             <button
-              className="airbnb-booking-btn"
+              className="booking-btn"
               onClick={() => {
                 if (!currentUser) {
                   navigate('/sign-in');
@@ -2064,7 +2192,7 @@ export default function Listing() {
           ) : (
             // Contact Host button for sale/rent listings
             <button
-              className="airbnb-booking-btn"
+              className="booking-btn"
               onClick={() => setShowContactModal(true)}
               disabled={!listing?.contact && !listing?.email}
             >
@@ -2088,23 +2216,10 @@ export default function Listing() {
 
       {/* Main Content */}
       <main className="main-content-container">
-        {/* Quick Action Buttons (Optional) */}
-        <div className="fixed bottom-28 right-4 flex flex-col gap-2 z-50">
-          {listing?.contact && (
-            <a
-              href={`tel:${listing.contact}`}
-              className="bg-white text-gray-800 p-3 rounded-full shadow-lg hover:bg-gray-100 transition-colors border border-gray-200"
-              title={`Call ${listing.contact}`}
-            >
-              <FaPhone className="text-xl" />
-            </a>
-          )}
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Responsive Grid Layout */}
+        <div className="responsive-grid">
           {/* Left Column - Property Details */}
-          <div className="lg:col-span-2">
+          <div>
             {/* Property Info Card */}
             <div className="mb-6">
               <div className="flex flex-wrap items-center gap-4 text-gray-600 mb-4">
@@ -2132,10 +2247,10 @@ export default function Listing() {
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     <img
-                      src={listing.userRef?.avatar || '/default-avatar.png'}
+                      src={listing.userRef?.avatar || 'https://via.placeholder.com/64?text=Host'}
                       alt={listing.userRef?.username || 'Host'}
                       className="w-16 h-16 rounded-full object-cover border-2 border-red-500"
-                      onError={(e) => { e.target.onerror = null; e.target.src = '/default-avatar.png'; }}
+                      onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/64?text=Host'; }}
                     />
                     {aiRating.verified && (
                       <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
@@ -2934,7 +3049,7 @@ export default function Listing() {
           </div>
 
           {/* Right Column - Sidebar */}
-          <div className="lg:col-span-1">
+          <div>
             {/* Advertising Section */}
             <section className="mb-8">
               <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
