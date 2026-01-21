@@ -465,7 +465,7 @@ const SmartRecommendations = ({ recommendations, insights, loading, onItemClick 
           <img
             src={item.imageUrls?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
             alt={item.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full rounded-xl object-cover"
           />
           <div className="absolute top-1 left-1">
             <span className="text-[10px] font-medium px-1 py-0.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded">
@@ -775,7 +775,7 @@ const MobileAppHomepage = ({
                       <img
                         src={item.imageUrls?.[0] || item.imageUrl || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                         alt={item.name || item.title}
-                        className="w-full h-full object-cover rounded-t-xl hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover rounded-xl hover:scale-105 transition-transform duration-300"
                       />
                  
                       <div className="absolute top-2 right-2">
@@ -886,13 +886,13 @@ const MobileAppHomepage = ({
                 <div 
                   key={property._id}
                   onClick={() => navigate(`/listing/${property._id}`)}
-                  className="rounded-xl overflow-hidden active:opacity-80 cursor-pointer shadow-sm  hover:border-gray-300 hover:shadow-md transition-all duration-200 group"
+                  className="rounded-xl overflow-hidden active:opacity-80 cursor-pointer shadow-sm  hover:border-gray-300 hover:shadow-md transition-all duration-200"
                 >
                   <div className="relative aspect-[3/2]">
                     <img
                       src={property.imageUrls?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                       alt={property.name}
-                      className="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-300"
                     />
                     {/* AI Value Indicator */}
                     {property.price < 2000 && (
@@ -903,7 +903,7 @@ const MobileAppHomepage = ({
                         </span>
                       </div>
                     )}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-3">
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 rounded-xl to-transparent p-3">
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-white text-sm md:text-base">
                           R{property.price || property.regularPrice}
@@ -963,7 +963,7 @@ const MobileAppHomepage = ({
                     <img
                       src={service.imageUrls?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                       alt={service.name}
-                      className="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-300"
                     />
                     {/* AI Value Indicator */}
                     {service.price < 2000 && (
@@ -974,7 +974,7 @@ const MobileAppHomepage = ({
                         </span>
                       </div>
                     )}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-3">
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 rounded-xl to-transparent p-3">
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-white text-sm md:text-base">
                           R{service.price || service.regularPrice}
@@ -1039,7 +1039,7 @@ const MobileAppHomepage = ({
                     <img
                       src={event.imageUrls?.[0] || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                       alt={event.name}
-                      className="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute top-2 left-2">
                       <span className="text-xs font-medium px-2 py-1 bg-amber-100 text-amber-800 rounded">
