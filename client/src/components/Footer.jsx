@@ -73,17 +73,7 @@ const Footer = () => {
 
   return (
     <>
-      {/* Scroll to top button */}
-      {!isAtTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-24 right-4 bg-gradient-to-br from-pink-500 to-purple-600 text-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all z-50"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-          </svg>
-        </button>
-      )}
+  
 
       {/* Main Footer - Hidden on small screens, visible on medium and above */}
       <footer className="hidden md:block bg-gray-50 text-gray-300 pt-16 pb-8 mt-24">

@@ -85,7 +85,6 @@ import Wishlist from './pages/WishList';
 import Events from './pages/Events';
 import Private from "./pages/Private";
 
-
 // In App.jsx or your routing file
 import UserProfile from './pages/UserProfile';
 // Trip Components
@@ -95,8 +94,13 @@ import Trips from './pages/Trips';
 
 import SmartSearchPage from './pages/SmartSearchPage';
 import ExplorePage from "./pages/ExplorePage"; // Single import - REMOVED DUPLICATE
+
+// ADDED: Import the Categories page
+import Categories from './pages/Categories';
+
 // In your main App.jsx or index.js
 import 'leaflet/dist/leaflet.css';
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -109,10 +113,15 @@ export default function App() {
         <Route path="/search" element={<Search />} />
         <Route path="/message" element={<Message />} />
         <Route path="/smart-search" element={<SmartSearchPage />} />
+        
         {/* Dashboard Route */}
         <Route path="/dashboard" element={<DashBoard />} />
+        
         {/* Explore Page Route */}
         <Route path="/explore" element={<ExplorePage />} />
+        
+        {/* ADDED: Categories Route */}
+        <Route path="/categories" element={<Categories />} />
         
         {/* Listing Routes */}
         <Route path="/list" element={<List />} />
@@ -188,8 +197,8 @@ export default function App() {
         <Route path="/recently-viewed" element={<RecentlyViewedPage />} />
         
 
-        // Add this route to your Routes component
-<Route path="/user/:id" element={<UserProfile />} />
+        {/* User Profile Route */}
+        <Route path="/user/:id" element={<UserProfile />} />
 
         {/* Private Routes */}
         <Route element={<PrivateRoute />}>

@@ -555,7 +555,7 @@ export default function Header() {
             <div className="p-1">
               <FiHome className="w-6 h-6" />
             </div>
-            <span className="text-xs mt-1">Home</span>
+          
           </Link>
           <Link
             to="/explore"
@@ -564,7 +564,7 @@ export default function Header() {
             <div className="p-1">
               <FiMap className="w-6 h-6" />
             </div>
-            <span className="text-xs mt-1">Explore</span>
+          
           </Link>
           {currentUser && (
             <Link
@@ -574,7 +574,7 @@ export default function Header() {
               <div className="p-1">
                 <FiPlusCircle className="w-6 h-6 text-gray-500" />
               </div>
-              <span className="text-xs mt-1 text-gray-500">Create</span>
+          
             </Link>
           )}
           <Link
@@ -584,7 +584,7 @@ export default function Header() {
             <div className="p-1">
               <FiHeart className="w-6 h-6" />
             </div>
-            <span className="text-xs mt-1">Saved</span>
+
           </Link>
           <button
             onClick={() => setShowMobileMenu(true)}
@@ -593,7 +593,7 @@ export default function Header() {
             <div className="p-1">
               <FiMenu className="w-6 h-6" />
             </div>
-            <span className="text-xs mt-1">More</span>
+         
           </button>
         </div>
       </div>

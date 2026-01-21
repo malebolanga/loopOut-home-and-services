@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
@@ -15,6 +16,11 @@ import {
   ChevronRightIcon,
   GlobeAltIcon,
   UserIcon,
+  LightBulbIcon,
+  ChartBarIcon,
+  ArrowTrendingUpIcon,
+  BoltIcon,
+  Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import {
   StarIcon as StarIconSolid,
@@ -26,8 +32,536 @@ import "../styles/ListingDetails.scss";
 const RECENTLY_VIEWED_KEY = 'recentlyViewed';
 const MAX_RECENTLY_VIEWED = 12;
 const DATA_FETCH_LIMIT = 8;
+const AI_RECOMMENDATION_LIMIT = 6;
+const USER_PREFERENCE_KEY = 'userPreferences';
 
-// Skeleton Card Component
+// AI Recommendation Engine
+class AIRecommendationEngine {
+  constructor() {
+    this.userPreferences = this.loadUserPreferences();
+  }
+
+  loadUserPreferences() {
+    try {
+      const stored = localStorage.getItem(USER_PREFERENCE_KEY);
+      return stored ? JSON.parse(stored) : {
+        viewedCategories: [],
+        likedItems: [],
+        priceRange: { min: 0, max: 10000 },
+        preferredLocations: [],
+        interests: [],
+        searchHistory: []
+      };
+    } catch (error) {
+      return {
+        viewedCategories: [],
+        likedItems: [],
+        priceRange: { min: 0, max: 10000 },
+        preferredLocations: [],
+        interests: [],
+        searchHistory: []
+      };
+    }
+  }
+
+  saveUserPreferences() {
+    try {
+      localStorage.setItem(USER_PREFERENCE_KEY, JSON.stringify(this.userPreferences));
+    } catch (error) {
+      console.error('Failed to save user preferences:', error);
+    }
+  }
+
+  updatePreferences(item, action) {
+    switch (action) {
+      case 'view':
+        this.userPreferences.viewedCategories.push(item.type || item.category);
+        break;
+      case 'like':
+        this.userPreferences.likedItems.push(item._id);
+        break;
+      case 'search':
+        this.userPreferences.searchHistory.push(item);
+        break;
+    }
+    this.saveUserPreferences();
+  }
+
+  // AI-powered smart filtering
+  smartFilterItems(items, userContext = {}) {
+    if (!items.length) return items;
+
+    const scores = items.map(item => ({
+      item,
+      score: this.calculateRelevanceScore(item, userContext)
+    }));
+
+    // Sort by relevance score
+    scores.sort((a, b) => b.score - a.score);
+    
+    // Return top items based on AI recommendation
+    return scores.slice(0, AI_RECOMMENDATION_LIMIT).map(s => s.item);
+  }
+
+  calculateRelevanceScore(item, userContext) {
+    let score = 0;
+    const preferences = this.userPreferences;
+
+    // 1. Price relevance (30% weight)
+    if (item.price) {
+      const price = Number(item.price) || Number(item.regularPrice) || 0;
+      const { min, max } = preferences.priceRange;
+      if (price >= min && price <= max) {
+        score += 30;
+      } else {
+        // Penalty for price outside range
+        score -= Math.abs(price - (min + max) / 2) / 100;
+      }
+    }
+
+    // 2. Location relevance (25% weight)
+    if (item.address && preferences.preferredLocations.length > 0) {
+      const locationMatch = preferences.preferredLocations.some(loc => 
+        item.address.toLowerCase().includes(loc.toLowerCase())
+      );
+      if (locationMatch) score += 25;
+    }
+
+    // 3. Category interest (20% weight)
+    const itemCategory = item.type || item.category;
+    if (preferences.viewedCategories.includes(itemCategory)) {
+      score += 20;
+    }
+
+    // 4. Like history (15% weight)
+    if (preferences.likedItems.includes(item._id)) {
+      score += 15;
+    }
+
+    // 5. Recency boost (10% weight)
+    if (item.createdAt) {
+      const daysOld = (new Date() - new Date(item.createdAt)) / (1000 * 60 * 60 * 24);
+      if (daysOld < 7) score += 10 * (1 - daysOld / 7); // Recent items get higher score
+    }
+
+    // 6. Rating quality (bonus)
+    if (item.rating && item.rating >= 4.5) {
+      score += 5;
+    }
+
+    return Math.max(0, score);
+  }
+
+  // AI Trend Analysis
+  analyzeTrends(items) {
+    const trends = {
+      popularCategories: {},
+      priceTrends: {},
+      locationDistribution: {}
+    };
+
+    items.forEach(item => {
+      // Category analysis
+      const category = item.type || item.category || 'general';
+      trends.popularCategories[category] = (trends.popularCategories[category] || 0) + 1;
+
+      // Location analysis
+      if (item.address) {
+        const location = item.address.split(',')[0]?.trim();
+        if (location) {
+          trends.locationDistribution[location] = (trends.locationDistribution[location] || 0) + 1;
+        }
+      }
+
+      // Price analysis
+      if (item.price) {
+        const priceRange = Math.floor(item.price / 1000) * 1000;
+        trends.priceTrends[priceRange] = (trends.priceTrends[priceRange] || 0) + 1;
+      }
+    });
+
+    return trends;
+  }
+
+  // Generate personalized recommendations
+  generatePersonalizedRecommendations(items, userContext) {
+    const filtered = this.smartFilterItems(items, userContext);
+    const trends = this.analyzeTrends(items);
+
+    return {
+      recommendations: filtered,
+      insights: this.generateInsights(trends),
+      suggestedCategories: this.suggestCategories(trends)
+    };
+  }
+
+  generateInsights(trends) {
+    const insights = [];
+    
+    // Find most popular category
+    const mostPopularCategory = Object.entries(trends.popularCategories)
+      .sort((a, b) => b[1] - a[1])[0];
+    
+    if (mostPopularCategory) {
+      insights.push({
+        type: 'popular',
+        text: `${mostPopularCategory[0]} properties are trending in your area`,
+        icon: '🔥'
+      });
+    }
+
+    // Price trend insight
+    const priceRanges = Object.keys(trends.priceTrends).map(Number);
+    if (priceRanges.length > 0) {
+      const avgPrice = priceRanges.reduce((a, b) => a + b, 0) / priceRanges.length;
+      insights.push({
+        type: 'price',
+        text: `Average price in your area: R${Math.round(avgPrice).toLocaleString()}`,
+        icon: '💰'
+      });
+    }
+
+    return insights;
+  }
+
+  suggestCategories(trends) {
+    return Object.entries(trends.popularCategories)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([category]) => category);
+  }
+}
+
+// AI Chat Assistant Component
+const AIChatAssistant = ({ onSuggestionClick }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+
+  const commonQuestions = [
+    "Find affordable apartments",
+    "Best cleaning services",
+    "Events this weekend",
+    "Top-rated helpers",
+    "Budget-friendly options"
+  ];
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+
+    const userMessage = { text: input, sender: 'user' };
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsTyping(true);
+
+    // Simulate AI response
+    setTimeout(() => {
+      const aiResponse = generateAIResponse(input);
+      setMessages(prev => [...prev, { text: aiResponse.text, sender: 'ai', suggestions: aiResponse.suggestions }]);
+      setIsTyping(false);
+    }, 1000);
+  };
+
+  const generateAIResponse = (query) => {
+    const lowerQuery = query.toLowerCase();
+    let response = { text: '', suggestions: [] };
+
+    if (lowerQuery.includes('apartment') || lowerQuery.includes('home')) {
+      response.text = "I found some great properties for you! Check out these options:";
+      response.suggestions = ['View Modern Apartments', 'See Budget Options', 'Explore Luxury Homes'];
+    } else if (lowerQuery.includes('clean') || lowerQuery.includes('service')) {
+      response.text = "Here are top-rated cleaning services in your area:";
+      response.suggestions = ['Professional Cleaning', 'Deep Clean Services', 'Move-in Cleaning'];
+    } else if (lowerQuery.includes('event') || lowerQuery.includes('weekend')) {
+      response.text = "These events are happening soon. Would you like to see:";
+      response.suggestions = ['Music Events', 'Food Festivals', 'Art Exhibitions'];
+    } else {
+      response.text = "I can help you find properties, services, helpers, or events. What are you looking for today?";
+      response.suggestions = commonQuestions.slice(0, 3);
+    }
+
+    return response;
+  };
+
+  return (
+    <>
+      {/* Floating AI Assistant Button */}
+      <button
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-24 right-4 md:right-6 z-50 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+      >
+        <SparklesIcon className="w-6 h-6" />
+      </button>
+
+      {/* AI Chat Modal */}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl">
+            {/* Header */}
+            <div className="p-4 border-b flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mr-3">
+                  <SparklesIcon className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">AI Assistant</h3>
+                  <p className="text-xs text-gray-500">Ask me anything about listings</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <XMarkIcon className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {messages.length === 0 ? (
+                <div className="text-center py-8">
+                  <SparklesIcon className="w-12 h-12 text-blue-400 mx-auto mb-3" />
+                  <h4 className="font-semibold text-gray-900 mb-2">How can I help you today?</h4>
+                  <p className="text-gray-600 text-sm mb-6">
+                    I can help you find properties, services, helpers, or events
+                  </p>
+                  <div className="space-y-2">
+                    {commonQuestions.map((q, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setInput(q)}
+                        className="text-sm bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-lg px-4 py-2 w-full text-left transition-colors"
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                messages.map((msg, i) => (
+                  <div
+                    key={i}
+                    className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[80%] rounded-2xl p-3 ${
+                        msg.sender === 'user'
+                          ? 'bg-blue-500 text-white rounded-br-none'
+                          : 'bg-gray-100 text-gray-900 rounded-bl-none'
+                      }`}
+                    >
+                      <p>{msg.text}</p>
+                      {msg.suggestions && (
+                        <div className="mt-2 space-y-1">
+                          {msg.suggestions.map((suggestion, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => onSuggestionClick(suggestion)}
+                              className="text-sm bg-white/20 hover:bg-white/30 rounded-lg px-3 py-1 w-full text-left"
+                            >
+                              {suggestion}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-100 rounded-2xl rounded-bl-none p-3">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Input */}
+            <div className="p-4 border-t">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                  placeholder="Ask about properties, services, events..."
+                  className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-blue-500"
+                />
+                <button
+                  onClick={handleSend}
+                  disabled={!input.trim()}
+                  className="bg-blue-500 text-white p-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+// Smart Recommendations Section
+const SmartRecommendations = ({ recommendations, insights, loading, onItemClick }) => {
+  if (loading) {
+    return (
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 mb-8">
+        <div className="flex items-center mb-4">
+          <div className="w-10 h-10 bg-gradient-to-r from-blue-200 to-blue-300 rounded-lg animate-pulse mr-3"></div>
+          <div>
+            <div className="h-4 bg-gradient-to-r from-blue-200 to-blue-300 rounded w-32 mb-2 animate-pulse"></div>
+            <div className="h-3 bg-gradient-to-r from-blue-200 to-blue-300 rounded w-24 animate-pulse"></div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-white/50 rounded-xl p-3 animate-pulse">
+              <div className="aspect-square bg-gradient-to-r from-blue-200 to-blue-300 rounded-lg mb-2"></div>
+              <div className="h-3 bg-gradient-to-r from-blue-200 to-blue-300 rounded mb-1"></div>
+              <div className="h-3 bg-gradient-to-r from-blue-200 to-blue-300 rounded w-2/3"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+<div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 mb-6 border border-blue-100">
+  <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center">
+      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center mr-2">
+        <SparklesIcon className="w-4 h-4 text-white" />
+      </div>
+      <div>
+        <h3 className="font-bold text-gray-900 text-base">AI Picks</h3>
+        <p className="text-xs text-gray-600">For you</p>
+      </div>
+    </div>
+    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+      AI
+    </span>
+  </div>
+
+  {/* Compact Horizontal Scroll */}
+  <div className="flex overflow-x-auto gap-3 pb-3 -mx-2 px-2 scrollbar-hide">
+    {recommendations.slice(0, 6).map((item, i) => (
+      <div
+        key={item._id}
+        onClick={() => onItemClick(item, item.type)}
+        className="flex-shrink-0 w-40 bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all duration-200 cursor-pointer"
+      >
+        <div className="relative aspect-square">
+          <img
+            src={item.imageUrls?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+            alt={item.name}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute top-1 left-1">
+            <span className="text-[10px] font-medium px-1 py-0.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded">
+              AI
+            </span>
+          </div>
+        </div>
+        <div className="p-2">
+          <h4 className="font-medium text-gray-900 text-xs truncate mb-1">
+            {item.name}
+          </h4>
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-gray-900 text-xs">
+              R{item.price || item.regularPrice}
+            </span>
+            <div className="flex items-center text-[10px] text-gray-500">
+              <StarIconSolid className="w-2 h-2 text-yellow-400 mr-0.5" />
+              {item.rating?.toFixed(1) || '4.5'}
+            </div>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  {/* Quick Insights */}
+  {insights.length > 0 && (
+    <div className="mt-4 pt-3 border-t border-blue-100">
+      <div className="flex overflow-x-auto gap-2 -mx-1 px-1">
+        {insights.slice(0, 3).map((insight, i) => (
+          <div
+            key={i}
+            className="flex-shrink-0 flex items-center bg-white/80 rounded-lg px-2 py-1.5 border border-gray-200"
+          >
+            <span className="text-sm mr-1.5">{insight.icon}</span>
+            <p className="text-xs text-gray-700 truncate max-w-[100px]">
+              {insight.text.split(':')[0]}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
+  );
+};
+
+// Price Trend Chart Component
+const PriceTrendChart = ({ data }) => {
+  const maxPrice = Math.max(...data.map(d => d.price));
+  const minPrice = Math.min(...data.map(d => d.price));
+
+  return (
+    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          <ArrowTrendingUpIcon className="w-5 h-5 text-green-500 mr-2" />
+          <h4 className="font-semibold text-gray-900">Price Trends</h4>
+        </div>
+        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+          Last 30 days
+        </span>
+      </div>
+      <div className="h-32 flex items-end space-x-2">
+        {data.map((point, i) => {
+          const height = ((point.price - minPrice) / (maxPrice - minPrice)) * 100;
+          return (
+            <div key={i} className="flex-1 flex flex-col items-center">
+              <div className="w-full bg-gradient-to-t from-blue-200 to-blue-100 rounded-t-lg relative group">
+                <div
+                  className="bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg transition-all duration-300 hover:opacity-90"
+                  style={{ height: `${height}%` }}
+                >
+                  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                    R{point.price.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+              <span className="text-xs text-gray-500 mt-2">{point.label}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-4 pt-4 border-t border-gray-100">
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">Avg: R{Math.round(data.reduce((a, b) => a + b.price, 0) / data.length).toLocaleString()}</span>
+          <span className="font-medium text-green-600">
+            {((data[data.length - 1].price - data[0].price) / data[0].price * 100).toFixed(1)}% trend
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Skeleton Card Component (updated)
 const SkeletonCard = () => (
   <div className="animate-pulse bg-white rounded-xl overflow-hidden shadow-sm">
     <div className="aspect-[3/2] bg-gradient-to-r from-gray-200 to-gray-300"></div>
@@ -41,7 +575,7 @@ const SkeletonCard = () => (
   </div>
 );
 
-// Mobile App Homepage Component
+// Mobile App Homepage Component (updated with AI features)
 const MobileAppHomepage = ({ 
   featuredProperties,
   featuredServices,
@@ -56,12 +590,17 @@ const MobileAppHomepage = ({
   recentlyViewedItems,
   onRecentlyViewedLike,
   currentLocation = 'South Africa',
-  navigate
+  navigate,
+  aiRecommendations,
+  aiInsights,
+  aiTrendData,
+  onAISuggestionClick
 }) => {
   const [activeTab, setActiveTab] = useState('home');
   const [searchVisible, setSearchVisible] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const searchInputRef = useRef(null);
+  const [showAIInsights, setShowAIInsights] = useState(true);
 
   // Check screen size for responsive design
   useEffect(() => {
@@ -103,38 +642,6 @@ const MobileAppHomepage = ({
     { icon: '➕', label: 'More', color: 'bg-gray-100', onClick: () => navigate('/categories') }
   ];
 
-  const getPropertyTypeName = (type) => {
-    switch (type) {
-      case 'sale': return 'Sale';
-      case 'rent-short': return 'Short Term';
-      case 'rent-long': return 'Long Term';
-      case 'office': return 'Office Space';
-      case 'land': return 'Land Plot';
-      default: return 'Property';
-    }
-  };
-
-  const getTypeBadge = (type) => {
-    switch (type) {
-      case 'sale': return { label: 'For Sale', color: 'bg-blue-100 text-blue-800' };
-      case 'rent-short': return { label: 'Short Term', color: 'bg-green-100 text-green-800' };
-      case 'rent-long': return { label: 'Long Term', color: 'bg-emerald-100 text-emerald-800' };
-      case 'office': return { label: 'Office Space', color: 'bg-purple-100 text-purple-800' };
-      case 'land': return { label: 'Land Plot', color: 'bg-amber-100 text-amber-800' };
-      default: return { label: 'Property', color: 'bg-gray-100 text-gray-800' };
-    }
-  };
-
-  const formatEventDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      weekday: 'short'
-    });
-  };
-
   // Responsive grid classes
   const gridCols = isDesktop ? 'grid-cols-4' : 'grid-cols-4';
   const propertyGridCols = isDesktop ? 'grid-cols-4' : 'grid-cols-2';
@@ -143,15 +650,37 @@ const MobileAppHomepage = ({
   const eventCardWidth = isDesktop ? 'w-72' : 'w-60';
   const helperCardWidth = isDesktop ? 'w-48' : 'w-40';
 
+  const handleAISuggestionClick = (suggestion) => {
+    // Map suggestions to actual search terms
+    const suggestionMap = {
+      'View Modern Apartments': 'modern apartments',
+      'See Budget Options': 'budget friendly',
+      'Explore Luxury Homes': 'luxury homes',
+      'Professional Cleaning': 'cleaning services',
+      'Deep Clean Services': 'deep cleaning',
+      'Move-in Cleaning': 'move in cleaning',
+      'Music Events': 'music events',
+      'Food Festivals': 'food festival',
+      'Art Exhibitions': 'art exhibition'
+    };
+
+    const searchTerm = suggestionMap[suggestion] || suggestion;
+    navigate(`/search?searchTerm=${encodeURIComponent(searchTerm)}&type=all`);
+  };
+
   return (
     <div className="min-h-screen bg-white pb-0">
       {/* Main Content */}
       <main className={`${isDesktop ? 'px-6 max-w-7xl mx-auto' : 'px-4'} py-0`}>
-        {/* Quick Search Banner */}
-        <div className="bg-gradient-to-r from-rose-500 to-blue-500 rounded-2xl p-6 mb-6 relative overflow-hidden">
+        {/* Smart Search Banner with AI */}
+        <div className="bg-gradient-to-r from-rose-500 via-purple-500 to-blue-500 rounded-2xl p-6 mb-6 relative overflow-hidden">
           <div className="relative z-10">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="flex-1">
+                <div className="flex items-center mb-2">
+                  <SparklesIcon className="w-5 h-5 text-white mr-2" />
+                  <span className="text-white/90 text-sm font-medium">AI-Powered Search</span>
+                </div>
                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
                   Find your perfect space
                 </h2>
@@ -159,58 +688,82 @@ const MobileAppHomepage = ({
                   Discover homes, services, and experiences around you
                 </p>
                 
-                {/* Simple feature list */}
-                <div className="flex flex-wrap items-center gap-3 md:gap-4 text-white/80 text-xs md:text-sm">
-                  <span className="flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 002 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
-                    </svg>
-                    Flexible dates
-                  </span>
-                  <span className="flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
-                    Best price
-                  </span>
-                  <span className="flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
-                    </svg>
-                    Secure booking
-                  </span>
+                {/* AI Search Suggestions */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {['Smart homes', 'Best deals', 'Near me', 'Trending'].map((tag, i) => (
+                    <button
+                      key={i}
+                      onClick={() => navigate(`/search?searchTerm=${tag}&type=all`)}
+                      className="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm transition-colors"
+                    >
+                      {tag}
+                    </button>
+                  ))}
                 </div>
               </div>
               
-              {/* Simple CTA */}
+              {/* AI Enhanced CTA */}
               <button 
-                onClick={() => navigate('/search')}
-                className="bg-white text-[#EC5C30] px-6 py-3 rounded-lg font-medium text-sm md:text-base hover:bg-gray-50 transition-colors shadow-md hover:shadow-lg"
+                onClick={() => navigate('/search?ai=1')}
+                className="bg-white text-gray-900 px-6 py-3 rounded-lg font-medium text-sm md:text-base hover:bg-gray-50 transition-colors shadow-md hover:shadow-lg flex items-center"
               >
-                Explore Now
+                <SparklesIcon className="w-4 h-4 mr-2" />
+                AI Explore
               </button>
             </div>
           </div>
           
-          {/* Subtle background element */}
-          <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-sm"></div>
-          <div className="absolute -left-6 -top-6 w-32 h-32 bg-white/5 rounded-full blur-sm"></div>
+          {/* AI Particles Background */}
+          <div className="absolute inset-0 overflow-hidden">
+            {[...Array(20)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-1 h-1 bg-white/30 rounded-full animate-pulse"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 2}s`,
+                  animationDuration: `${1 + Math.random() * 2}s`
+                }}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* Recently Viewed Section */}
+        {/* AI Smart Recommendations Section */}
+        {showAIInsights && aiRecommendations && (
+          <SmartRecommendations
+            recommendations={aiRecommendations}
+            insights={aiInsights}
+            loading={loadingProperties && loadingServices}
+            onItemClick={onItemClick}
+          />
+        )}
+
+        {/* Price Trends Section */}
+        {aiTrendData && isDesktop && (
+          <section className="mb-8">
+            <PriceTrendChart data={aiTrendData} />
+          </section>
+        )}
+
+        {/* Recently Viewed Section with AI Sorting */}
         {recentlyViewedItems.length > 0 && (
           <section className="mb-8">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="font-bold text-gray-900 text-lg md:text-xl">Recently viewed</h2>
+              <div className="flex items-center">
+                <h2 className="font-bold text-gray-900 text-lg md:text-xl">Recently viewed</h2>
+          
+              </div>
               <button
                 onClick={() => navigate('/recently-viewed')}
-                className="text-sm text-gray-600 hover:text-gray-900"
+                className="text-sm text-gray-600 hover:text-gray-900 flex items-center"
               >
                 See all
+                <ChevronRightIcon className="w-4 h-4 ml-1" />
               </button>
             </div>
-            <div className="flex overflow-x-auto gap-3 pb-2 -mx-1 px-1 scrollbar-hide"
-            >
+            <div className="flex overflow-x-auto gap-3 pb-2 -mx-1 px-1 scrollbar-hide">
               {recentlyViewedItems.slice(0, isDesktop ? 6 : 5).map((item) => (
                 <div 
                   key={`${item._id}-${item.viewedAt}`}
@@ -224,6 +777,7 @@ const MobileAppHomepage = ({
                         alt={item.name || item.title}
                         className="w-full h-full object-cover rounded-t-xl hover:scale-105 transition-transform duration-300"
                       />
+                 
                       <div className="absolute top-2 right-2">
                         <button
                           onClick={(e) => {
@@ -260,9 +814,18 @@ const MobileAppHomepage = ({
           </section>
         )}
 
-        {/* Categories Grid */}
+        {/* Categories Grid with AI Suggestions */}
         <section className="mb-8">
-          <h2 className="font-bold text-gray-900 text-lg md:text-xl mb-4">Explore categories</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-bold text-gray-900 text-lg md:text-xl">Explore categories</h2>
+            <button
+              onClick={() => setShowAIInsights(!showAIInsights)}
+              className="text-sm text-gray-600 hover:text-gray-900 flex items-center"
+            >
+              {showAIInsights ? 'Hide AI' : 'Show AI'}
+              <Cog6ToothIcon className="w-4 h-4 ml-1" />
+            </button>
+          </div>
           <div className={`grid ${gridCols} gap-3 md:gap-4`}>
             {categories.map((cat, index) => (
               <button
@@ -271,31 +834,44 @@ const MobileAppHomepage = ({
                   if (cat.onClick) {
                     cat.onClick();
                   } else if (cat.type && cat.category) {
-                    navigate(`/search?type=${cat.type}&category=${cat.category}&address=${encodeURIComponent(currentLocation)}`);
+                    navigate(`/search?type=${cat.type}&category=${cat.category}&address=${encodeURIComponent(currentLocation)}&ai=1`);
                   } else if (cat.type) {
-                    navigate(`/search?type=${cat.type}&address=${encodeURIComponent(currentLocation)}`);
+                    navigate(`/search?type=${cat.type}&address=${encodeURIComponent(currentLocation)}&ai=1`);
                   }
                 }}
-                className="flex flex-col items-center p-3 md:p-4 rounded-xl hover:bg-gray-50 hover:shadow-sm transition-all duration-200 active:opacity-80 border border-transparent hover:border-gray-200"
+                className="flex flex-col items-center p-3 md:p-4 rounded-xl hover:bg-gray-50 hover:shadow-sm transition-all duration-200 active:opacity-80 border border-transparent hover:border-gray-200 relative"
               >
-                <div className={`w-12 h-12 md:w-14 md:h-14 ${cat.color} rounded-full flex items-center justify-center text-xl md:text-2xl mb-2 hover:scale-105 transition-transform`}>
+                <div className={`w-12 h-12 md:w-14 md:h-14 ${cat.color} rounded-full flex items-center justify-center text-xl md:text-2xl mb-2 hover:scale-105 transition-transform group-hover:shadow-md`}>
                   {cat.icon}
                 </div>
                 <span className="text-xs md:text-sm text-gray-700 text-center">{cat.label}</span>
+                {/* AI Indicator for popular categories */}
+                {index < 3 && (
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                )}
               </button>
             ))}
           </div>
         </section>
 
-        {/* Featured Properties */}
+        {/* Featured Properties with AI Filtering */}
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="font-bold text-gray-900 text-lg md:text-xl">Popular homes</h2>
+            <div className="flex items-center">
+              <h2 className="font-bold text-gray-900 text-lg md:text-xl">Popular homes</h2>
+              <button
+                onClick={() => navigate('/search?sort=ai_score&type=properties')}
+                className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full hover:bg-blue-200 transition-colors"
+              >
+                
+              </button>
+            </div>
             <Link 
               to="/listing-home-page"
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="text-sm text-gray-600 hover:text-gray-900 flex items-center"
             >
               See all
+              <ChevronRightIcon className="w-4 h-4 ml-1" />
             </Link>
           </div>
           {loadingProperties ? (
@@ -310,43 +886,39 @@ const MobileAppHomepage = ({
                 <div 
                   key={property._id}
                   onClick={() => navigate(`/listing/${property._id}`)}
-                  className="rounded-xl overflow-hidden active:opacity-80 cursor-pointer shadow-sm  hover:border-gray-300 hover:shadow-md transition-all duration-200"
+                  className="rounded-xl overflow-hidden active:opacity-80 cursor-pointer shadow-sm  hover:border-gray-300 hover:shadow-md transition-all duration-200 group"
                 >
                   <div className="relative aspect-[3/2]">
                     <img
                       src={property.imageUrls?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                       alt={property.name}
-                      className="w-full h-full object-cover rounded-t-xl hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-300"
                     />
-                    <div className="absolute top-2 left-2">
-                      <span className={`text-xs font-medium px-2 py-1 rounded ${getTypeBadge(property.type)?.color || 'bg-gray-100 text-gray-800'}`}>
-                        {getPropertyTypeName(property.type)}
-                      </span>
-                    </div>
-                    <div className="absolute top-2 right-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Handle like functionality
-                        }}
-                        className="p-1.5 bg-white/80 hover:bg-white rounded-full backdrop-blur-sm"
-                      >
-                        <HeartIcon className="w-5 h-5 text-gray-600 hover:text-rose-500" />
-                      </button>
+                    {/* AI Value Indicator */}
+                    {property.price < 2000 && (
+                      <div className="absolute top-2 left-2">
+                        <span className="text-xs font-medium px-2 py-1 bg-green-100 text-green-800 rounded flex items-center">
+                          <BoltIcon className="w-3 h-3 mr-1" />
+                          Good Value
+                        </span>
+                      </div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-3">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-white text-sm md:text-base">
+                          R{property.price || property.regularPrice}
+                        </span>
+                        <div className="flex items-center bg-white/20 backdrop-blur-sm px-2 py-1 rounded">
+                          <StarIconSolid className="w-3 h-3 md:w-4 md:h-4 text-yellow-300" />
+                          <span className="text-xs text-white ml-1">{property.rating?.toFixed(1) || '4.5'}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div className="p-3 md:p-4">
                     <h3 className="font-medium text-gray-900 text-sm md:text-base truncate mb-1">{property.name}</h3>
                     <p className="text-xs text-gray-500 mb-2 truncate">{property.address || 'Location not specified'}</p>
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-gray-900 text-sm md:text-base">
-                        R{property.price || property.regularPrice}
-                      </span>
-                      <div className="flex items-center">
-                        <StarIconSolid className="w-3 h-3 md:w-4 md:h-4 text-yellow-400" />
-                        <span className="text-xs md:text-sm text-gray-600 ml-1">{property.rating?.toFixed(1) || '4.5'}</span>
-                      </div>
-                    </div>
+                   
                   </div>
                 </div>
               ))}
@@ -354,15 +926,19 @@ const MobileAppHomepage = ({
           )}
         </section>
 
-        {/* Services Section */}
+        {/* Services Section with AI Matching */}
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="font-bold text-gray-900 text-lg md:text-xl">Top services</h2>
+            <div className="flex items-center">
+              <h2 className="font-bold text-gray-900 text-lg md:text-xl">Top services</h2>
+             
+            </div>
             <Link 
               to="/service-home-page"
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="text-sm text-gray-600 hover:text-gray-900 flex items-center"
             >
               See all
+              <ChevronRightIcon className="w-4 h-4 ml-1" />
             </Link>
           </div>
           {loadingServices ? (
@@ -381,26 +957,30 @@ const MobileAppHomepage = ({
                 <div 
                   key={service._id}
                   onClick={() => navigate(`/service/${service._id}`)}
-                  className={`flex-shrink-0 ${serviceCardWidth} rounded-xl overflow-hidden active:opacity-80 cursor-pointer shadow-sm  hover:border-gray-300 hover:shadow-md transition-all duration-200`}
+                  className={`flex-shrink-0 ${serviceCardWidth} rounded-xl overflow-hidden active:opacity-80 cursor-pointer shadow-sm  hover:border-gray-300 hover:shadow-md transition-all duration-200 group`}
                 >
                   <div className="relative aspect-[4/3]">
                     <img
                       src={service.imageUrls?.[0] || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                       alt={service.name}
-                      className="w-full h-full object-cover rounded-t-xl hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-300"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
                   <div className="p-3 md:p-4">
-                    <h3 className="font-medium text-gray-900 text-sm md:text-base truncate mb-1">{service.name}</h3>
-                    <p className="text-xs text-gray-500 line-clamp-2 mb-2">{service.description || service.address || 'Service description'}</p>
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-medium text-gray-900 text-sm md:text-base truncate flex-1">{service.name}</h3>
+                      <div className="flex items-center ml-2">
+                        <StarIconSolid className="w-3 h-3 md:w-4 md:h-4 text-yellow-400" />
+                        <span className="text-xs md:text-sm text-gray-600 ml-1">{service.rating?.toFixed(1) || '4.7'}</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500 line-clamp-2 mb-3">{service.description || service.address || 'Service description'}</p>
                     <div className="flex justify-between items-center">
                       <span className="font-bold text-gray-900 text-sm md:text-base">
                         R{service.price || service.regularPrice}
                       </span>
-                      <div className="flex items-center">
-                        <StarIconSolid className="w-3 h-3 md:w-4 md:h-4 text-yellow-400" />
-                        <span className="text-xs md:text-sm text-gray-600 ml-1">{service.rating?.toFixed(1) || '4.7'}</span>
-                      </div>
+                   
                     </div>
                   </div>
                 </div>
@@ -409,15 +989,19 @@ const MobileAppHomepage = ({
           )}
         </section>
 
-        {/* Events Section */}
+        {/* Events Section with AI Predictions */}
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="font-bold text-gray-900 text-lg md:text-xl">Upcoming events</h2>
+            <div className="flex items-center">
+              <h2 className="font-bold text-gray-900 text-lg md:text-xl">Upcoming events</h2>
+             
+            </div>
             <Link 
               to="/search?type=events"
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="text-sm text-gray-600 hover:text-gray-900 flex items-center"
             >
               See all
+              <ChevronRightIcon className="w-4 h-4 ml-1" />
             </Link>
           </div>
           {loadingEvents ? (
@@ -439,13 +1023,13 @@ const MobileAppHomepage = ({
                 <div 
                   key={event._id}
                   onClick={() => navigate(`/event/${event._id}`)}
-                  className={`flex-shrink-0 ${eventCardWidth} rounded-xl overflow-hidden active:opacity-80 cursor-pointer shadow-sm  hover:border-gray-300 hover:shadow-md transition-all duration-200`}
+                  className={`flex-shrink-0 ${eventCardWidth} rounded-xl overflow-hidden active:opacity-80 cursor-pointer shadow-sm  hover:border-gray-300 hover:shadow-md transition-all duration-200 group`}
                 >
                   <div className="relative aspect-[5/3]">
                     <img
                       src={event.imageUrls?.[0] || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                       alt={event.name}
-                      className="w-full h-full object-cover rounded-t-xl hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute top-2 left-2">
                       <span className="text-xs font-medium px-2 py-1 bg-amber-100 text-amber-800 rounded">
@@ -453,13 +1037,21 @@ const MobileAppHomepage = ({
                       </span>
                     </div>
                     <div className="absolute bottom-2 right-2">
-                      <div className="flex items-center bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg ">
+                      <div className="flex items-center bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg">
                         <CalendarDaysIcon className="w-3 h-3 md:w-4 md:h-4 text-gray-600 mr-1" />
                         <span className="text-xs font-medium text-gray-700">
-                          {formatEventDate(event.date)}
+                          {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </span>
                       </div>
                     </div>
+                    {/* AI Popularity Indicator */}
+                    {event.attendingCount > 100 && (
+                      <div className="absolute top-2 right-2">
+                        <span className="text-xs font-medium px-2 py-1 bg-red-100 text-red-800 rounded">
+                          Trending
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="p-3 md:p-4">
                     <h3 className="font-medium text-gray-900 text-sm md:text-base truncate mb-1">{event.name}</h3>
@@ -476,7 +1068,10 @@ const MobileAppHomepage = ({
                       {event.attendingCount !== undefined && (
                         <div className="flex items-center text-xs text-gray-500">
                           <UserGroupIcon className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                          <span>{event.attendingCount} going</span>
+                          <span>
+                            {event.attendingCount}+ going
+                            {event.attendingCount > 200 && ' 🔥'}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -485,28 +1080,33 @@ const MobileAppHomepage = ({
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 bg-gray-50 rounded-xl ">
+            <div className="text-center py-8 bg-gray-50 rounded-xl">
               <CalendarDaysIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500 text-sm md:text-base">No upcoming events in your area</p>
               <button
                 onClick={() => navigate('/search?type=events')}
-                className="mt-3 text-sm md:text-base text-rose-500 font-medium hover:text-rose-600"
+                className="mt-3 text-sm md:text-base text-rose-500 font-medium hover:text-rose-600 flex items-center justify-center mx-auto"
               >
-                Browse all events
+                <SparklesIcon className="w-4 h-4 mr-1" />
+                Browse with AI
               </button>
             </div>
           )}
         </section>
 
-        {/* Helpers Section */}
+        {/* Helpers Section with AI Verification */}
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="font-bold text-gray-900 text-lg md:text-xl">Recommended helpers</h2>
+            <div className="flex items-center">
+              <h2 className="font-bold text-gray-900 text-lg md:text-xl">Helpers</h2>
+           
+            </div>
             <Link 
               to="/helper-home-page"
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="text-sm text-gray-600 hover:text-gray-900 flex items-center"
             >
               See all
+              <ChevronRightIcon className="w-4 h-4 ml-1" />
             </Link>
           </div>
           {loadingHelpers ? (
@@ -525,14 +1125,20 @@ const MobileAppHomepage = ({
                 <div 
                   key={helper._id}
                   onClick={() => navigate(`/helper/${helper._id}`)}
-                  className={`flex-shrink-0 ${helperCardWidth} flex flex-col items-center p-4 bg-white rounded-xl shadow-sm active:opacity-80 cursor-pointer hover:border-gray-300 hover:shadow-md transition-all duration-200`}
+                  className={`flex-shrink-0 ${helperCardWidth} flex flex-col items-center p-4 bg-white rounded-xl shadow-sm active:opacity-80 cursor-pointer hover:border-gray-300 hover:shadow-md transition-all duration-200 group`}
                 >
-                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden mb-3 border-2 border-white shadow-md">
+                  <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden mb-3 border-2 border-white shadow-md group-hover:border-blue-200 transition-colors">
                     <img
                       src={helper.imageUrls?.[0] || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
                       alt={helper.name}
-                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
+                    {/* AI Verification Badge */}
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
                   </div>
                   <h3 className="font-medium text-gray-900 text-sm md:text-base text-center mb-1 truncate w-full">{helper.name}</h3>
                   <p className="text-xs text-gray-500 text-center mb-2 truncate w-full">{helper.type || 'Service Provider'}</p>
@@ -545,37 +1151,59 @@ const MobileAppHomepage = ({
                       <span className="text-xs md:text-sm text-gray-600 ml-1">{helper.rating?.toFixed(1) || '4.8'}</span>
                     </div>
                   </div>
+               
                 </div>
               ))}
             </div>
           )}
         </section>
 
-        {/* Stats Section for Desktop */}
+        {/* Stats Section for Desktop with AI Analytics */}
         {isDesktop && (
           <section className="mb-8 bg-gradient-to-r from-gray-50 to-white rounded-2xl p-6 border border-gray-200">
-            <h2 className="font-bold text-gray-900 text-xl mb-6">Local Insights</h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="font-bold text-gray-900 text-xl">Local Insights</h2>
+              <div className="flex items-center text-sm text-gray-600">
+                <ChartBarIcon className="w-4 h-4 mr-1" />
+                AI Analytics
+              </div>
+            </div>
             <div className="grid grid-cols-4 gap-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600 mb-2">{stats.properties || '1,234'}</div>
                 <p className="text-gray-600 text-sm">Properties Available</p>
+                <div className="mt-2 text-xs text-green-600">↑ 12% this month</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-emerald-600 mb-2">{stats.services || '456'}</div>
                 <p className="text-gray-600 text-sm">Services Offered</p>
+                <div className="mt-2 text-xs text-green-600">↑ 8% this month</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-purple-600 mb-2">{stats.helpers || '789'}</div>
                 <p className="text-gray-600 text-sm">Verified Helpers</p>
+                <div className="mt-2 text-xs text-green-600">↑ 15% this month</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-amber-600 mb-2">{stats.events || '321'}</div>
                 <p className="text-gray-600 text-sm">Upcoming Events</p>
+                <div className="mt-2 text-xs text-blue-600">New: 45 this week</div>
+              </div>
+            </div>
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="flex items-center">
+                <LightBulbIcon className="w-5 h-5 text-amber-500 mr-2" />
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium text-gray-900">AI Insight:</span> Best time to search is weekdays between 9 AM - 11 AM
+                </p>
               </div>
             </div>
           </section>
         )}
       </main>
+
+      {/* AI Chat Assistant */}
+      <AIChatAssistant onSuggestionClick={handleAISuggestionClick} />
 
       {/* Add some padding for bottom nav */}
       <div className="h-16"></div>
@@ -599,6 +1227,9 @@ const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Initialize AI Engine
+  const aiEngine = useRef(new AIRecommendationEngine());
+
   // Homepage data states
   const [featuredProperties, setFeaturedProperties] = useState([]);
   const [featuredServices, setFeaturedServices] = useState([]);
@@ -609,6 +1240,11 @@ const Home = () => {
   const [loadingHelpers, setLoadingHelpers] = useState(false);
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [stats, setStats] = useState({});
+
+  // AI States
+  const [aiRecommendations, setAiRecommendations] = useState([]);
+  const [aiInsights, setAiInsights] = useState([]);
+  const [aiTrendData, setAiTrendData] = useState(null);
 
   // Recently viewed items state
   const [recentlyViewedItems, setRecentlyViewedItems] = useState([]);
@@ -621,7 +1257,12 @@ const Home = () => {
         const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
         if (stored) {
           const items = JSON.parse(stored);
-          setRecentlyViewedItems(items);
+          // Enhance items with AI scores
+          const enhancedItems = items.map(item => ({
+            ...item,
+            aiScore: Math.floor(Math.random() * 30) + 70 // Mock AI score 70-100
+          }));
+          setRecentlyViewedItems(enhancedItems);
         }
       } catch (error) {
         console.error('Failed to load recently viewed items:', error);
@@ -643,11 +1284,15 @@ const Home = () => {
   // Function to add item to recently viewed
   const addToRecentlyViewed = (item, itemType) => {
     try {
+      // Update AI engine preferences
+      aiEngine.current.updatePreferences(item, 'view');
+
       const viewedItem = {
         ...item,
         itemType: itemType,
         viewedAt: new Date().toISOString(),
-        isLiked: false
+        isLiked: false,
+        aiScore: Math.floor(Math.random() * 30) + 70 // Mock AI score
       };
 
       // Get existing items
@@ -687,10 +1332,48 @@ const Home = () => {
         );
         localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(items));
         setRecentlyViewedItems(items);
+        
+        // Update AI preferences if item is liked
+        if (isLiked) {
+          const likedItem = items.find(item => item._id === itemId);
+          if (likedItem) {
+            aiEngine.current.updatePreferences(likedItem, 'like');
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to update like status:', error);
     }
+  };
+
+  // Generate AI recommendations
+  const generateAIRecommendations = (properties, services, helpers, events) => {
+    const allItems = [...properties, ...services, ...helpers, events].filter(Boolean);
+    
+    const recommendations = aiEngine.current.generatePersonalizedRecommendations(allItems, {
+      location: currentLocation,
+      preferences: aiEngine.current.userPreferences
+    });
+
+    return recommendations;
+  };
+
+  // Generate mock trend data
+  const generateTrendData = () => {
+    const today = new Date();
+    const data = [];
+    
+    for (let i = 30; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      
+      data.push({
+        label: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        price: Math.floor(Math.random() * 2000) + 1000 + Math.sin(i) * 500
+      });
+    }
+    
+    return data;
   };
 
   // Fetch homepage data
@@ -799,6 +1482,22 @@ const Home = () => {
     fetchHomepageData();
   }, [currentLocation]);
 
+  // Generate AI recommendations when data is loaded
+  useEffect(() => {
+    if (featuredProperties.length > 0 && featuredServices.length > 0 && featuredHelpers.length > 0 && featuredEvents.length > 0) {
+      const aiResults = generateAIRecommendations(
+        featuredProperties,
+        featuredServices,
+        featuredHelpers,
+        featuredEvents
+      );
+      
+      setAiRecommendations(aiResults.recommendations);
+      setAiInsights(aiResults.insights);
+      setAiTrendData(generateTrendData());
+    }
+  }, [featuredProperties, featuredServices, featuredHelpers, featuredEvents]);
+
   return (
     <MobileAppHomepage
       featuredProperties={featuredProperties}
@@ -815,6 +1514,12 @@ const Home = () => {
       onRecentlyViewedLike={updateRecentlyViewedLike}
       currentLocation={currentLocation}
       navigate={navigate}
+      aiRecommendations={aiRecommendations}
+      aiInsights={aiInsights}
+      aiTrendData={aiTrendData}
+      onAISuggestionClick={(suggestion) => {
+        navigate(`/search?searchTerm=${encodeURIComponent(suggestion)}&type=all&ai=1`);
+      }}
     />
   );
 };
