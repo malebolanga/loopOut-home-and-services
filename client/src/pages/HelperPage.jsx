@@ -2615,7 +2615,7 @@ export default function HelperPage() {
       <div className={`sticky bottom-0 left-0 right-0  bg-white border-t border-gray-200 shadow-2xl z-50 transition-transform duration-500 ${
         showBookingBelt ? 'translate-y-0' : 'translate-y-full'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-2 py-2">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4 flex-1 min-w-0">
               <img
