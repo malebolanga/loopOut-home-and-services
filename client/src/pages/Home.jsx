@@ -959,30 +959,40 @@ const MobileAppHomepage = ({
                   onClick={() => navigate(`/service/${service._id}`)}
                   className={`flex-shrink-0 ${serviceCardWidth} rounded-xl overflow-hidden active:opacity-80 cursor-pointer shadow-sm  hover:border-gray-300 hover:shadow-md transition-all duration-200 group`}
                 >
-                  <div className="relative aspect-[4/3]">
+                          <div className="relative aspect-[3/2]">
                     <img
-                      src={service.imageUrls?.[0] || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                      src={service.imageUrls?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                       alt={service.name}
                       className="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-300"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </div>
-                  <div className="p-3 md:p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-medium text-gray-900 text-sm md:text-base truncate flex-1">{service.name}</h3>
-                      <div className="flex items-center ml-2">
-                        <StarIconSolid className="w-3 h-3 md:w-4 md:h-4 text-yellow-400" />
-                        <span className="text-xs md:text-sm text-gray-600 ml-1">{service.rating?.toFixed(1) || '4.7'}</span>
+                    {/* AI Value Indicator */}
+                    {service.price < 2000 && (
+                      <div className="absolute top-2 left-2">
+                        <span className="text-xs font-medium px-2 py-1 bg-green-100 text-green-800 rounded flex items-center">
+                          <BoltIcon className="w-3 h-3 mr-1" />
+                          Good Value
+                        </span>
+                      </div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-3">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-white text-sm md:text-base">
+                          R{service.price || service.regularPrice}
+                        </span>
+                        <div className="flex items-center bg-white/20 backdrop-blur-sm px-2 py-1 rounded">
+                          <StarIconSolid className="w-3 h-3 md:w-4 md:h-4 text-yellow-300" />
+                          <span className="text-xs text-white ml-1">{service.rating?.toFixed(1) || '4.5'}</span>
+                        </div>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-500 line-clamp-2 mb-3">{service.description || service.address || 'Service description'}</p>
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-gray-900 text-sm md:text-base">
-                        R{service.price || service.regularPrice}
-                      </span>
-                   
-                    </div>
                   </div>
+                   <div className="p-3 md:p-4">
+                  <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-medium text-gray-900 text-sm md:text-base truncate flex-1">{service.name}</h3>
+                     
+                    </div>
+                    <p className="text-xs text-gray-500 line-clamp-2 mb-3">{service.address || 'Service description'}</p>
+                </div>
                 </div>
               ))}
             </div>
