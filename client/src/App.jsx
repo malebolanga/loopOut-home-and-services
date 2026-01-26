@@ -11,6 +11,7 @@ import Profile from "./pages/Profile";
 import Search from "./pages/Search";
 import Message from "./pages/Message";
 
+
 // Dashboard Page
 import DashBoard from "./pages/DashBoard";
 
@@ -85,20 +86,23 @@ import Wishlist from './pages/WishList';
 import Events from './pages/Events';
 import Private from "./pages/Private";
 
-// In App.jsx or your routing file
+// User Profile
 import UserProfile from './pages/UserProfile';
+
+// Photography Helper Page - CORRECTED IMPORT
+import PhotographyHelperPage from './pages/PhotographyHelperPage';
+
 // Trip Components
 import TripSearch from './pages/TripSearch';
 import TripDetail from './pages/TripDetail';
 import Trips from './pages/Trips';
 
 import SmartSearchPage from './pages/SmartSearchPage';
-import ExplorePage from "./pages/ExplorePage"; // Single import - REMOVED DUPLICATE
+import ExplorePage from "./pages/ExplorePage";
 
-// ADDED: Import the Categories page
+// Categories page
 import Categories from './pages/Categories';
 
-// In your main App.jsx or index.js
 import 'leaflet/dist/leaflet.css';
 
 export default function App() {
@@ -106,24 +110,22 @@ export default function App() {
     <BrowserRouter>
       <Header />
       <Routes>
-        {/* Core Routes */}
+        {/* Core Routes - Specific paths first */}
         <Route path="/" element={<Home />} />
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/search" element={<Search />} />
         <Route path="/message" element={<Message />} />
         <Route path="/smart-search" element={<SmartSearchPage />} />
-        
-        {/* Dashboard Route */}
+      
         <Route path="/dashboard" element={<DashBoard />} />
-        
-        {/* Explore Page Route */}
         <Route path="/explore" element={<ExplorePage />} />
-        
-        {/* ADDED: Categories Route */}
         <Route path="/categories" element={<Categories />} />
         
-        {/* Listing Routes */}
+        {/* User Profile - Specific before dynamic */}
+        <Route path="/user/:id" element={<UserProfile />} />
+        
+        {/* Specific Listing Routes */}
         <Route path="/list" element={<List />} />
         <Route path="/listings/:type" element={<ListingsPage />} />
         <Route path="/for-rent" element={<ForRent />} />
@@ -144,17 +146,24 @@ export default function App() {
         
         {/* Service Routes */}
         <Route path="/helper/:id" element={<HelperPage />} />
+
+        {/* Photography Helper Route - CORRECTED */}
+        <Route path="/photography/:id" element={<PhotographyHelperPage />} />
+        
         <Route path="/event/:id" element={<EventPage />} />
         <Route path="/privatetutor/:privatetutorId" element={<PrivateTutor />} />
         <Route path="/service/:serviceId" element={<Services />} />
         <Route path="/update-helper/:helperId" element={<UpdateHelper />} />
         
-        {/* User Routes */}
-        <Route path="/:userId/list" element={<MyListing />} />
+        {/* User Routes - Keep these after more specific routes */}
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/users" element={<Users />} />
-        <Route path="/:userId/listings" element={<UserListings />} />
         <Route path="/events/:id" element={<Events />} />
+        
+        {/* Dynamic User Routes - These come last to avoid conflict */}
+        <Route path="/:userId/list" element={<MyListing />} />
+        <Route path="/:userId/listings" element={<UserListings />} />
+        <Route path="/listings/user/:id" element={<UserListings />} />
         
         {/* Content & AI Routes */}
         <Route path="/ai" element={<Ai />} />
@@ -193,14 +202,9 @@ export default function App() {
         <Route path="/diversity-belonging" element={<DiversityPage />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/newsroom" element={<Newsroom />} />
-        <Route path='/listings/user/:id' element={<UserListings />} />
         <Route path="/recently-viewed" element={<RecentlyViewedPage />} />
         
-
-        {/* User Profile Route */}
-        <Route path="/user/:id" element={<UserProfile />} />
-
-        {/* Private Routes */}
+        {/* Private Routes - Protected by authentication */}
         <Route element={<PrivateRoute />}>
           <Route path="/sale" element={<Sale />} />
           <Route path="/profile" element={<Profile />} />
@@ -210,15 +214,11 @@ export default function App() {
         
         {/* Additional Routes */}
         <Route path="/private" element={<Private />} />
+        
+        {/* Fallback/404 Route - You might want to add this */}
+        {/* <Route path="*" element={<NotFound />} /> */}
       </Routes>
       <Footer />
     </BrowserRouter>
   );
 }
-
-
-
-
-
-
-                    

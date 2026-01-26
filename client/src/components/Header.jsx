@@ -686,14 +686,7 @@ export default function Header() {
                         </span>
                       )}
                     </Link>
-                    <Link
-                      to="/settings"
-                      onClick={() => setShowMobileMenu(false)}
-                      className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg"
-                    >
-                      <span className="font-medium text-gray-900">Settings</span>
-                      <FiSettings className="w-5 h-5 text-gray-400" />
-                    </Link>
+                 
                     <Link
                       to="/help"
                       onClick={() => setShowMobileMenu(false)}
