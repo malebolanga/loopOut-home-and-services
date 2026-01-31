@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
@@ -345,11 +344,10 @@ const AIChatAssistant = ({ onSuggestionClick }) => {
                     className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[80%] rounded-2xl p-3 ${
-                        msg.sender === 'user'
-                          ? 'bg-blue-500 text-white rounded-br-none'
-                          : 'bg-gray-100 text-gray-900 rounded-bl-none'
-                      }`}
+                      className={`max-w-[80%] rounded-2xl p-3 ${msg.sender === 'user'
+                        ? 'bg-blue-500 text-white rounded-br-none'
+                        : 'bg-gray-100 text-gray-900 rounded-bl-none'
+                        }`}
                     >
                       <p>{msg.text}</p>
                       {msg.suggestions && (
@@ -437,79 +435,79 @@ const SmartRecommendations = ({ recommendations, insights, loading, onItemClick 
   }
 
   return (
-<div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 mb-6 border border-blue-100">
-  <div className="flex items-center justify-between mb-4">
-    <div className="flex items-center">
-      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center mr-2">
-        <SparklesIcon className="w-4 h-4 text-white" />
-      </div>
-      <div>
-        <h3 className="font-bold text-gray-900 text-base">AI Picks</h3>
-        <p className="text-xs text-gray-600">For you</p>
-      </div>
-    </div>
-    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-      AI
-    </span>
-  </div>
-
-  {/* Compact Horizontal Scroll */}
-  <div className="flex overflow-x-auto gap-3 pb-3 -mx-2 px-2 scrollbar-hide">
-    {recommendations.slice(0, 6).map((item, i) => (
-      <div
-        key={item._id}
-        onClick={() => onItemClick(item, item.type)}
-        className="flex-shrink-0 w-40 bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all duration-200 cursor-pointer"
-      >
-        <div className="relative aspect-square">
-          <img
-            src={item.imageUrls?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
-            alt={item.name}
-            className="w-full h-full rounded-xl object-cover"
-          />
-          <div className="absolute top-1 left-1">
-            <span className="text-[10px] font-medium px-1 py-0.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded">
-              AI
-            </span>
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 mb-6 border border-blue-100">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center mr-2">
+            <SparklesIcon className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900 text-base">AI Picks</h3>
+            <p className="text-xs text-gray-600">For you</p>
           </div>
         </div>
-        <div className="p-2">
-          <h4 className="font-medium text-gray-900 text-xs truncate mb-1">
-            {item.name}
-          </h4>
-          <div className="flex justify-between items-center">
-            <span className="font-bold text-gray-900 text-xs">
-              R{item.price || item.regularPrice}
-            </span>
-            <div className="flex items-center text-[10px] text-gray-500">
-              <StarIconSolid className="w-2 h-2 text-yellow-400 mr-0.5" />
-              {item.rating?.toFixed(1) || '4.5'}
-            </div>
-          </div>
-        </div>
+        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+          AI
+        </span>
       </div>
-    ))}
-  </div>
 
-  {/* Quick Insights */}
-  {insights.length > 0 && (
-    <div className="mt-4 pt-3 border-t border-blue-100">
-      <div className="flex overflow-x-auto gap-2 -mx-1 px-1">
-        {insights.slice(0, 3).map((insight, i) => (
+      {/* Compact Horizontal Scroll */}
+      <div className="flex overflow-x-auto gap-3 pb-3 -mx-2 px-2 scrollbar-hide">
+        {recommendations.slice(0, 6).map((item, i) => (
           <div
-            key={i}
-            className="flex-shrink-0 flex items-center bg-white/80 rounded-lg px-2 py-1.5 border border-gray-200"
+            key={item._id}
+            onClick={() => onItemClick(item, item.type)}
+            className="flex-shrink-0 w-40 bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all duration-200 cursor-pointer"
           >
-            <span className="text-sm mr-1.5">{insight.icon}</span>
-            <p className="text-xs text-gray-700 truncate max-w-[100px]">
-              {insight.text.split(':')[0]}
-            </p>
+            <div className="relative aspect-square">
+              <img
+                src={item.imageUrls?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                alt={item.name}
+                className="w-full h-full rounded-xl object-cover"
+              />
+              <div className="absolute top-1 left-1">
+                <span className="text-[10px] font-medium px-1 py-0.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded">
+                  AI
+                </span>
+              </div>
+            </div>
+            <div className="p-2">
+              <h4 className="font-medium text-gray-900 text-xs truncate mb-1">
+                {item.name}
+              </h4>
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-gray-900 text-xs">
+                  R{item.price || item.regularPrice}
+                </span>
+                <div className="flex items-center text-[10px] text-gray-500">
+                  <StarIconSolid className="w-2 h-2 text-yellow-400 mr-0.5" />
+                  {item.rating?.toFixed(1) || '4.5'}
+                </div>
+              </div>
+            </div>
           </div>
         ))}
       </div>
+
+      {/* Quick Insights */}
+      {insights.length > 0 && (
+        <div className="mt-4 pt-3 border-t border-blue-100">
+          <div className="flex overflow-x-auto gap-2 -mx-1 px-1">
+            {insights.slice(0, 3).map((insight, i) => (
+              <div
+                key={i}
+                className="flex-shrink-0 flex items-center bg-white/80 rounded-lg px-2 py-1.5 border border-gray-200"
+              >
+                <span className="text-sm mr-1.5">{insight.icon}</span>
+                <p className="text-xs text-gray-700 truncate max-w-[100px]">
+                  {insight.text.split(':')[0]}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
-  )}
-</div>
   );
 };
 
@@ -561,7 +559,7 @@ const PriceTrendChart = ({ data }) => {
   );
 };
 
-// Skeleton Card Component (updated)
+// Skeleton Card Component
 const SkeletonCard = () => (
   <div className="animate-pulse bg-white rounded-xl overflow-hidden shadow-sm">
     <div className="aspect-[3/2] bg-gradient-to-r from-gray-200 to-gray-300"></div>
@@ -575,8 +573,170 @@ const SkeletonCard = () => (
   </div>
 );
 
-// Mobile App Homepage Component (updated with AI features)
-const MobileAppHomepage = ({ 
+// Desktop Hero Search Component
+const DesktopHeroSearch = ({ searchTerm, setSearchTerm, handleSearchSubmit, navigate, currentLocation }) => {
+  const searchCategories = [
+    { key: 'properties', label: 'Rent', icon: '🏠', subtext: 'over 1,000+ options' },
+    { key: 'properties', label: 'Long stays', icon: '⏳', subtext: '30+ days minimum' },
+    { key: 'helpers', label: 'Helpers', icon: '👷', subtext: 'Professional services' },
+    { key: 'services', label: 'Services', icon: '✨', subtext: 'Various offerings' },
+  ];
+
+  return (
+    <div className="relative bg-gradient-to-r from-blue-900 via-purple-800 to-pink-700">
+      <div className="absolute inset-0 bg-black/30"></div>
+      <div className="relative max-w-7xl mx-auto px-8 py-16">
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-bold text-white mb-4">See the world for less</h1>
+          <p className="text-xl text-white/90 max-w-3xl mx-auto">
+            Discover affordable rentals, professional services, and local helpers all in one place
+          </p>
+        </div>
+
+        <div className="max-w-4xl mx-auto">
+          <form onSubmit={handleSearchSubmit} className="relative">
+            <div className="bg-white rounded-2xl shadow-2xl p-2">
+              <div className="flex items-center">
+                <div className="flex-1 pl-4">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Enter a destination or property"
+                    className="w-full text-lg py-4 outline-none placeholder-gray-400"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Begin typing property name or keyword to search, use arrow keys or tab key to navigate, press Enter to select
+                  </p>
+                </div>
+                <button
+                  type="submit"
+                  className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-8 py-4 rounded-xl font-semibold hover:opacity-90 transition-opacity ml-4"
+                >
+                  Search
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <div className="grid grid-cols-4 gap-4 mt-8">
+            {searchCategories.map((category) => (
+              <button
+                key={category.label}
+                onClick={() => navigate(`/search?type=${category.key}&address=${encodeURIComponent(currentLocation)}`)}
+                className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-white hover:bg-white/20 transition-colors group"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-2xl">{category.icon}</span>
+                  <div className="text-left">
+                    <div className="font-semibold text-lg">{category.label}</div>
+                    <div className="text-sm opacity-75">{category.subtext}</div>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Desktop Popular Destinations Component
+const DesktopPopularDestinations = ({ navigate }) => {
+  const popularDestinations = [
+    { name: 'Johannesburg', image: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
+    { name: 'Cape Town', image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
+    { name: 'Durban', image: 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
+    { name: 'Pretoria', image: 'https://images.unsplash.com/photo-1592210454359-9043f067919b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
+    { name: 'Port Elizabeth', image: 'https://images.unsplash.com/photo-1590841609987-4ac211afdde1?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
+  ];
+
+  return (
+    <section className="mb-16">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Popular destinations</h2>
+          <p className="text-gray-600 mt-2">Find properties and services in top cities</p>
+        </div>
+        <button
+          onClick={() => navigate('/explore')}
+          className="text-blue-600 font-semibold hover:text-blue-700 flex items-center"
+        >
+          View all destinations
+          <ChevronRightIcon className="w-5 h-5 ml-1" />
+        </button>
+      </div>
+      <div className="grid grid-cols-5 gap-6">
+        {popularDestinations.map((destination) => (
+          <div
+            key={destination.name}
+            onClick={() => navigate(`/search?address=${encodeURIComponent(destination.name)}`)}
+            className=" cursor-pointer"
+          >
+            <div className="relative overflow-hidden rounded-2xl mb-3">
+              <img
+                src={destination.image}
+                alt={destination.name}
+                className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <h3 className="text-white font-bold text-lg">{destination.name}</h3>
+              </div>
+            </div>
+            <div className="text-center">
+              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                Explore properties →
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+// Desktop Property Card Component
+const DesktopPropertyCard = ({ property, navigate }) => (
+  <div
+    onClick={() => navigate(`/listing/${property._id}`)}
+    className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 cursor-pointer "
+  >
+    <div className="relative h-56">
+      <img
+        src={property.imageUrls?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+        alt={property.name}
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+      />
+      <div className="absolute top-3 left-3">
+        <span className="bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-semibold px-3 py-1 rounded-full">
+          {property.type === 'rent-long' ? 'Long Term' : property.type === 'rent-short' ? 'Short Stay' : property.type}
+        </span>
+      </div>
+      <button className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white">
+        <HeartIcon className="w-5 h-5 text-gray-600" />
+      </button>
+    </div>
+    <div className="p-5">
+      <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-1">{property.name}</h3>
+      <p className="text-gray-600 text-sm mb-3 line-clamp-2">{property.address}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-2xl font-bold text-gray-900">R{property.price || property.regularPrice}</div>
+          {property.type.includes('rent') && <div className="text-gray-500 text-sm">per month</div>}
+        </div>
+        <div className="flex items-center">
+          <StarIconSolid className="w-5 h-5 text-yellow-400" />
+          <span className="ml-1 font-semibold">{property.rating?.toFixed(1) || '4.5'}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// Mobile App Homepage Component
+const MobileAppHomepage = ({
   featuredProperties,
   featuredServices,
   featuredHelpers,
@@ -599,18 +759,19 @@ const MobileAppHomepage = ({
   const [activeTab, setActiveTab] = useState('home');
   const [searchVisible, setSearchVisible] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef(null);
   const [showAIInsights, setShowAIInsights] = useState(true);
 
   // Check screen size for responsive design
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsDesktop(window.innerWidth >= 768);
+      setIsDesktop(window.innerWidth >= 1024);
     };
-    
+
     checkScreenSize();
     window.addEventListener('resize', checkScreenSize);
-    
+
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
@@ -623,11 +784,13 @@ const MobileAppHomepage = ({
     }, 100);
   };
 
-  const handleSearchSubmit = (value) => {
-    if (value.trim()) {
-      navigate(`/search?searchTerm=${value}&type=all&address=${encodeURIComponent(currentLocation)}`);
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (searchTerm.trim()) {
+      navigate(`/search?searchTerm=${encodeURIComponent(searchTerm)}&type=all&address=${encodeURIComponent(currentLocation)}`);
+      setSearchVisible(false);
+      setSearchTerm('');
     }
-    setSearchVisible(false);
   };
 
   // Mock categories for the grid - responsive columns
@@ -668,6 +831,346 @@ const MobileAppHomepage = ({
     navigate(`/search?searchTerm=${encodeURIComponent(searchTerm)}&type=all`);
   };
 
+  // If desktop, render desktop layout
+  if (isDesktop) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Desktop Hero Search */}
+        <DesktopHeroSearch
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          handleSearchSubmit={handleSearchSubmit}
+          navigate={navigate}
+          currentLocation={currentLocation}
+        />
+
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-8 py-12">
+          {/* Popular Destinations */}
+          <DesktopPopularDestinations navigate={navigate} />
+
+          {/* Featured Properties */}
+          <section className="mb-16">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">Featured properties</h2>
+                <p className="text-gray-600 mt-2">Top-rated homes, apartments, and commercial spaces</p>
+              </div>
+              <Link
+                to="/listing-home-page"
+                className="text-blue-600 font-semibold hover:text-blue-700 flex items-center"
+              >
+                View all properties
+                <ChevronRightIcon className="w-5 h-5 ml-1" />
+              </Link>
+            </div>
+
+            {loadingProperties ? (
+              <div className="grid grid-cols-4 gap-6">
+                {[...Array(8)].map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-4 gap-6">
+                {featuredProperties.slice(0, 8).map((property) => (
+                  <DesktopPropertyCard
+                    key={property._id}
+                    property={property}
+                    navigate={navigate}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Services Section */}
+          <section className="mb-16">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">Professional services</h2>
+                <p className="text-gray-600 mt-2">Find trusted service providers</p>
+              </div>
+              <Link
+                to="/service-home-page"
+                className="text-blue-600 font-semibold hover:text-blue-700 flex items-center"
+              >
+                View all services
+                <ChevronRightIcon className="w-5 h-5 ml-1" />
+              </Link>
+            </div>
+
+            {loadingServices ? (
+              <div className="grid grid-cols-4 gap-6">
+                {[...Array(4)].map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-4 gap-6">
+                {featuredServices.slice(0, 4).map((service) => (
+                  <div
+                    key={service._id}
+                    onClick={() => navigate(`/service/${service._id}`)}
+                    className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 cursor-pointer"
+                  >
+                    <div className="relative h-48">
+                      <img
+                        src={service.imageUrls?.[0] || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                        alt={service.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <div className="p-5">
+                      <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-1">{service.name}</h3>
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">{service.description}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="text-xl font-bold text-gray-900">R{service.price || service.regularPrice}</div>
+                        <div className="flex items-center">
+                          <StarIconSolid className="w-5 h-5 text-yellow-400" />
+                          <span className="ml-1 font-semibold">{service.rating?.toFixed(1) || '4.5'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Helpers Section */}
+          <section className="mb-16">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">Verified helpers</h2>
+                <p className="text-gray-600 mt-2">Professional assistance available</p>
+              </div>
+              <Link
+                to="/helper-home-page"
+                className="text-blue-600 font-semibold hover:text-blue-700 flex items-center"
+              >
+                View all helpers
+                <ChevronRightIcon className="w-5 h-5 ml-1" />
+              </Link>
+            </div>
+
+            {loadingHelpers ? (
+              <div className="grid grid-cols-4 gap-6">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-2xl p-6 animate-pulse">
+                    <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-4 gap-6">
+                {featuredHelpers.slice(0, 4).map((helper) => (
+                  <div
+                    key={helper._id}
+                    onClick={() => navigate(`/helper/${helper._id}`)}
+                    className="bg-white rounded-2xl p-6 text-center hover:shadow-2xl transition-shadow duration-300 cursor-pointer "
+                  >
+                    <div className="relative inline-block mb-4">
+                      <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg mx-auto">
+                        <img
+                          src={helper.imageUrls?.[0] || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
+                          alt={helper.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-lg mb-1">{helper.name}</h3>
+                    <p className="text-gray-600 text-sm mb-3">{helper.type || 'Service Provider'}</p>
+                    <div className="flex items-center justify-center">
+                      <StarIconSolid className="w-5 h-5 text-yellow-400" />
+                      <span className="ml-1 font-semibold text-gray-900">{helper.rating?.toFixed(1) || '4.8'}</span>
+                      <span className="mx-2">•</span>
+                      <span className="font-bold text-gray-900">R{helper.price || helper.regularPrice}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Events Section */}
+          <section className="mb-16">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">Upcoming events</h2>
+                <p className="text-gray-600 mt-2">Don't miss out on local happenings</p>
+              </div>
+              <Link
+                to="/search?type=events"
+                className="text-blue-600 font-semibold hover:text-blue-700 flex items-center"
+              >
+                View all events
+                <ChevronRightIcon className="w-5 h-5 ml-1" />
+              </Link>
+            </div>
+
+            {loadingEvents ? (
+              <div className="grid grid-cols-4 gap-6">
+                {[...Array(4)].map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-4 gap-6">
+                {featuredEvents.slice(0, 4).map((event) => (
+                  <div
+                    key={event._id}
+                    onClick={() => navigate(`/event/${event._id}`)}
+                    className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 cursor-pointer "
+                  >
+                    <div className="relative h-48">
+                      <img
+                        src={event.imageUrls?.[0] || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                        alt={event.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-3 left-3">
+                        <span className="bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-semibold px-3 py-1 rounded-full">
+                          {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                      {event.attendingCount > 100 && (
+                        <div className="absolute top-3 right-3">
+                          <span className="bg-red-100 text-red-800 text-xs font-semibold px-3 py-1 rounded-full">
+                            🔥 Trending
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-5">
+                      <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-1">{event.name}</h3>
+                      <div className="flex items-center text-gray-600 text-sm mb-3">
+                        <MapIcon className="w-4 h-4 mr-1" />
+                        <span className="line-clamp-1">{event.address || 'Various locations'}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-xl font-bold text-gray-900">R{event.price || event.regularPrice}</div>
+                        {event.attendingCount !== undefined && (
+                          <div className="flex items-center text-gray-600">
+                            <UserGroupIcon className="w-4 h-4 mr-1" />
+                            <span className="text-sm">{event.attendingCount}+ going</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* AI Recommendations Section */}
+          {aiRecommendations && aiRecommendations.length > 0 && (
+            <section className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8 mb-16">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center mr-4">
+                    <SparklesIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900">AI recommendations</h2>
+                    <p className="text-gray-600">Personalized picks based on your interests</p>
+                  </div>
+                </div>
+                <span className="bg-blue-100 text-blue-700 font-semibold px-4 py-2 rounded-full">
+                  Powered by AI
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-6">
+                {aiRecommendations.slice(0, 6).map((item, index) => (
+                  <div
+                    key={item._id}
+                    onClick={() => onItemClick(item, item.type)}
+                    className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer "
+                  >
+                    <div className="relative h-40">
+                      <img
+                        src={item.imageUrls?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                        alt={item.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-3 left-3">
+                        <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                          AI PICK
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-semibold text-gray-900 line-clamp-1">{item.name}</h3>
+                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded capitalize">
+                          {item.type || item.category}
+                        </span>
+                      </div>
+                      <p className="text-gray-600 text-sm line-clamp-2 mb-3">{item.address || item.description}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-gray-900">R{item.price || item.regularPrice}</span>
+                        <div className="flex items-center">
+                          <StarIconSolid className="w-4 h-4 text-yellow-400" />
+                          <span className="ml-1 text-sm font-medium">{item.rating?.toFixed(1) || '4.5'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Stats Section */}
+          <section className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-8 text-white">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold">LoopOut by the numbers</h2>
+                <p className="text-gray-300 mt-2">Connecting people with spaces, services, and experiences</p>
+              </div>
+              <div className="flex items-center">
+                <ChartBarIcon className="w-6 h-6 mr-2" />
+                <span>Live statistics</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 gap-8">
+              <div className="text-center">
+                <div className="text-5xl font-bold mb-2">{stats.properties || '1,234'}+</div>
+                <div className="text-gray-300">Properties listed</div>
+                <div className="text-green-400 text-sm mt-1">↑ 12% this month</div>
+              </div>
+              <div className="text-center">
+                <div className="text-5xl font-bold mb-2">{stats.services || '456'}+</div>
+                <div className="text-gray-300">Services offered</div>
+                <div className="text-green-400 text-sm mt-1">↑ 8% this month</div>
+              </div>
+              <div className="text-center">
+                <div className="text-5xl font-bold mb-2">{stats.helpers || '789'}+</div>
+                <div className="text-gray-300">Verified helpers</div>
+                <div className="text-green-400 text-sm mt-1">↑ 15% this month</div>
+              </div>
+              <div className="text-center">
+                <div className="text-5xl font-bold mb-2">{stats.events || '321'}+</div>
+                <div className="text-gray-300">Events hosted</div>
+                <div className="text-blue-400 text-sm mt-1">45+ new this week</div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  // Mobile layout (existing code)
   return (
     <div className="min-h-screen bg-white pb-0">
       {/* Main Content */}
@@ -687,7 +1190,7 @@ const MobileAppHomepage = ({
                 <p className="text-white/90 mb-4 md:mb-6 text-sm md:text-base">
                   Discover homes, services, and experiences around you
                 </p>
-                
+
                 {/* AI Search Suggestions */}
                 <div className="flex flex-wrap gap-2 mb-4">
                   {['Smart homes', 'Best deals', 'Near me', 'Trending'].map((tag, i) => (
@@ -701,9 +1204,9 @@ const MobileAppHomepage = ({
                   ))}
                 </div>
               </div>
-              
+
               {/* AI Enhanced CTA */}
-              <button 
+              <button
                 onClick={() => navigate('/search?ai=1')}
                 className="bg-white text-gray-900 px-6 py-3 rounded-lg font-medium text-sm md:text-base hover:bg-gray-50 transition-colors shadow-md hover:shadow-lg flex items-center"
               >
@@ -712,7 +1215,7 @@ const MobileAppHomepage = ({
               </button>
             </div>
           </div>
-          
+
           {/* AI Particles Background */}
           <div className="absolute inset-0 overflow-hidden">
             {[...Array(20)].map((_, i) => (
@@ -753,7 +1256,7 @@ const MobileAppHomepage = ({
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center">
                 <h2 className="font-bold text-gray-900 text-lg md:text-xl">Recently viewed</h2>
-          
+
               </div>
               <button
                 onClick={() => navigate('/recently-viewed')}
@@ -765,7 +1268,7 @@ const MobileAppHomepage = ({
             </div>
             <div className="flex overflow-x-auto gap-3 pb-2 -mx-1 px-1 scrollbar-hide">
               {recentlyViewedItems.slice(0, isDesktop ? 6 : 5).map((item) => (
-                <div 
+                <div
                   key={`${item._id}-${item.viewedAt}`}
                   className={`flex-shrink-0 ${cardWidth}`}
                   onClick={() => navigate(`/listing/${item._id}`)}
@@ -777,7 +1280,7 @@ const MobileAppHomepage = ({
                         alt={item.name || item.title}
                         className="w-full h-full object-cover rounded-xl hover:scale-105 transition-transform duration-300"
                       />
-                 
+
                       <div className="absolute top-2 right-2">
                         <button
                           onClick={(e) => {
@@ -863,10 +1366,10 @@ const MobileAppHomepage = ({
                 onClick={() => navigate('/search?sort=ai_score&type=properties')}
                 className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full hover:bg-blue-200 transition-colors"
               >
-                
+
               </button>
             </div>
-            <Link 
+            <Link
               to="/listing-home-page"
               className="text-sm text-gray-600 hover:text-gray-900 flex items-center"
             >
@@ -883,7 +1386,7 @@ const MobileAppHomepage = ({
           ) : (
             <div className={`grid ${propertyGridCols} gap-3 md:gap-4`}>
               {featuredProperties.slice(0, isDesktop ? 8 : 4).map((property) => (
-                <div 
+                <div
                   key={property._id}
                   onClick={() => navigate(`/listing/${property._id}`)}
                   className="rounded-xl overflow-hidden active:opacity-80 cursor-pointer shadow-sm  hover:border-gray-300 hover:shadow-md transition-all duration-200"
@@ -918,7 +1421,7 @@ const MobileAppHomepage = ({
                   <div className="p-3 md:p-4">
                     <h3 className="font-medium text-gray-900 text-sm md:text-base truncate mb-1">{property.name}</h3>
                     <p className="text-xs text-gray-500 mb-2 truncate">{property.address || 'Location not specified'}</p>
-                   
+
                   </div>
                 </div>
               ))}
@@ -931,9 +1434,9 @@ const MobileAppHomepage = ({
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center">
               <h2 className="font-bold text-gray-900 text-lg md:text-xl">Top services</h2>
-             
+
             </div>
-            <Link 
+            <Link
               to="/service-home-page"
               className="text-sm text-gray-600 hover:text-gray-900 flex items-center"
             >
@@ -954,12 +1457,12 @@ const MobileAppHomepage = ({
           ) : (
             <div className="flex overflow-x-auto gap-3 md:gap-4 pb-2 -mx-1 px-1 scrollbar-hide">
               {featuredServices.slice(0, isDesktop ? 4 : 3).map((service) => (
-                <div 
+                <div
                   key={service._id}
                   onClick={() => navigate(`/service/${service._id}`)}
                   className={`flex-shrink-0 ${serviceCardWidth} rounded-xl overflow-hidden active:opacity-80 cursor-pointer shadow-sm  hover:border-gray-300 hover:shadow-md transition-all duration-200 group`}
                 >
-                          <div className="relative aspect-[3/2]">
+                  <div className="relative aspect-[3/2]">
                     <img
                       src={service.imageUrls?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                       alt={service.name}
@@ -986,13 +1489,13 @@ const MobileAppHomepage = ({
                       </div>
                     </div>
                   </div>
-                   <div className="p-3 md:p-4">
-                  <div className="flex justify-between items-start mb-2">
+                  <div className="p-3 md:p-4">
+                    <div className="flex justify-between items-start mb-2">
                       <h3 className="font-medium text-gray-900 text-sm md:text-base truncate flex-1">{service.name}</h3>
-                     
+
                     </div>
                     <p className="text-xs text-gray-500 line-clamp-2 mb-3">{service.address || 'Service description'}</p>
-                </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1004,9 +1507,9 @@ const MobileAppHomepage = ({
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center">
               <h2 className="font-bold text-gray-900 text-lg md:text-xl">Upcoming events</h2>
-             
+
             </div>
-            <Link 
+            <Link
               to="/search?type=events"
               className="text-sm text-gray-600 hover:text-gray-900 flex items-center"
             >
@@ -1030,7 +1533,7 @@ const MobileAppHomepage = ({
           ) : featuredEvents.length > 0 ? (
             <div className="flex overflow-x-auto gap-3 md:gap-4 pb-2 -mx-1 px-1 scrollbar-hide">
               {featuredEvents.slice(0, isDesktop ? 4 : 3).map((event) => (
-                <div 
+                <div
                   key={event._id}
                   onClick={() => navigate(`/event/${event._id}`)}
                   className={`flex-shrink-0 ${eventCardWidth} rounded-xl overflow-hidden active:opacity-80 cursor-pointer shadow-sm  hover:border-gray-300 hover:shadow-md transition-all duration-200 group`}
@@ -1073,7 +1576,7 @@ const MobileAppHomepage = ({
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-bold text-gray-900 text-sm md:text-base">
-                         R{event.price || event.regularPrice}
+                        R{event.price || event.regularPrice}
                       </span>
                       {event.attendingCount !== undefined && (
                         <div className="flex items-center text-xs text-gray-500">
@@ -1109,9 +1612,9 @@ const MobileAppHomepage = ({
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center">
               <h2 className="font-bold text-gray-900 text-lg md:text-xl">Helpers</h2>
-           
+
             </div>
-            <Link 
+            <Link
               to="/helper-home-page"
               className="text-sm text-gray-600 hover:text-gray-900 flex items-center"
             >
@@ -1132,7 +1635,7 @@ const MobileAppHomepage = ({
           ) : (
             <div className="flex overflow-x-auto gap-4 md:gap-6 pb-2 -mx-1 px-1 scrollbar-hide">
               {featuredHelpers.slice(0, isDesktop ? 6 : 4).map((helper) => (
-                <div 
+                <div
                   key={helper._id}
                   onClick={() => navigate(`/helper/${helper._id}`)}
                   className={`flex-shrink-0 ${helperCardWidth} flex flex-col items-center p-4 bg-white rounded-xl shadow-sm active:opacity-80 cursor-pointer hover:border-gray-300 hover:shadow-md transition-all duration-200 group`}
@@ -1154,14 +1657,14 @@ const MobileAppHomepage = ({
                   <p className="text-xs text-gray-500 text-center mb-2 truncate w-full">{helper.type || 'Service Provider'}</p>
                   <div className="flex items-center justify-between w-full">
                     <span className="font-bold text-gray-900 text-sm md:text-base">
-                       R{helper.price || helper.regularPrice}
+                      R{helper.price || helper.regularPrice}
                     </span>
                     <div className="flex items-center">
                       <StarIconSolid className="w-3 h-3 md:w-4 md:h-4 text-yellow-400" />
                       <span className="text-xs md:text-sm text-gray-600 ml-1">{helper.rating?.toFixed(1) || '4.8'}</span>
                     </div>
                   </div>
-               
+
                 </div>
               ))}
             </div>
@@ -1226,6 +1729,18 @@ const MobileAppHomepage = ({
         }
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
+        }
+        .line-clamp-1 {
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+        }
+        .line-clamp-2 {
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
         }
       `}</style>
     </div>
@@ -1311,19 +1826,19 @@ const Home = () => {
 
       // Remove if already exists (to update timestamp)
       items = items.filter(i => i._id !== item._id || i.itemType !== itemType);
-      
+
       // Add new item to beginning
       items.unshift(viewedItem);
-      
+
       // Keep only MAX_RECENTLY_VIEWED items
       items = items.slice(0, MAX_RECENTLY_VIEWED);
-      
+
       // Save to localStorage
       localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(items));
-      
+
       // Update state
       setRecentlyViewedItems(items);
-      
+
       // Navigate to item details page
       navigate(`/${itemType}/${item._id}`);
     } catch (error) {
@@ -1337,12 +1852,12 @@ const Home = () => {
       const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
       if (stored) {
         let items = JSON.parse(stored);
-        items = items.map(item => 
+        items = items.map(item =>
           item._id === itemId ? { ...item, isLiked } : item
         );
         localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(items));
         setRecentlyViewedItems(items);
-        
+
         // Update AI preferences if item is liked
         if (isLiked) {
           const likedItem = items.find(item => item._id === itemId);
@@ -1358,8 +1873,8 @@ const Home = () => {
 
   // Generate AI recommendations
   const generateAIRecommendations = (properties, services, helpers, events) => {
-    const allItems = [...properties, ...services, ...helpers, events].filter(Boolean);
-    
+    const allItems = [...properties, ...services, ...helpers, ...events].filter(Boolean);
+
     const recommendations = aiEngine.current.generatePersonalizedRecommendations(allItems, {
       location: currentLocation,
       preferences: aiEngine.current.userPreferences
@@ -1372,17 +1887,17 @@ const Home = () => {
   const generateTrendData = () => {
     const today = new Date();
     const data = [];
-    
+
     for (let i = 30; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
-      
+
       data.push({
         label: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         price: Math.floor(Math.random() * 2000) + 1000 + Math.sin(i) * 500
       });
     }
-    
+
     return data;
   };
 
@@ -1501,7 +2016,7 @@ const Home = () => {
         featuredHelpers,
         featuredEvents
       );
-      
+
       setAiRecommendations(aiResults.recommendations);
       setAiInsights(aiResults.insights);
       setAiTrendData(generateTrendData());

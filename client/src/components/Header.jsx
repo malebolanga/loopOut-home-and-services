@@ -172,22 +172,24 @@ export default function Header() {
             {/* Left: Logo for desktop, Plus for mobile */}
             <div className="flex items-center">
               {/* Logo for large screens */}
-              <Link to="/" className="hidden lg:flex items-center mr-8">
+              <Link to="/" className="hidden lg:flex items-center">
                 <span className="text-2xl xl:text-3xl font-bold text-red-400 tracking-tight">
                   <span className="font-black">loop</span>
                   <span className="font-bold text-blue-500">Out</span>
                 </span>
               </Link>
               
-              {/* Plus button */}
+              {/* Plus button - only show on mobile */}
               {currentUser && (
-                <Link
-                  to={`/${currentUser._id}/create-listing`}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                  aria-label="Create listing"
-                >
-                  <FiPlusCircle className="w-6 h-6 text-gray-900" />
-                </Link>
+                <div className="lg:hidden">
+                  <Link
+                    to={`/${currentUser._id}/create-listing`}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    aria-label="Create listing"
+                  >
+                    <FiPlusCircle className="w-6 h-6 text-gray-900" />
+                  </Link>
+                </div>
               )}
             </div>
 
@@ -201,19 +203,7 @@ export default function Header() {
                 </span>
               </Link>
               
-              {/* Desktop search bar */}
-              <div className="hidden lg:block w-full max-w-xl 2xl:max-w-2xl ml-4">
-                <form onSubmit={handleSearch} className="relative">
-                  <FiSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    placeholder="Search homes, services, helpers..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-2.5 bg-gray-50 rounded-full border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  />
-                </form>
-              </div>
+              {/* Desktop search bar - Removed as per requirement */}
             </div>
 
             {/* Right: Desktop navigation and profile */}
@@ -264,6 +254,14 @@ export default function Header() {
                     </Link>
                   </>
                 )}
+                
+                {/* Become a Host button - only show on desktop */}
+                <Link
+                 to={`/${currentUser._id}/create-listing`}
+                  className="text-sm font-medium px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-sm hover:shadow"
+                >
+                  Become a Host
+                </Link>
               </div>
 
               {/* Mobile search button */}
@@ -382,6 +380,14 @@ export default function Header() {
                             <FiHeart className="w-4 h-4 text-gray-600" />
                             <span>Saved</span>
                           </Link>
+                          <Link
+                            to={`/${currentUser._id}/create-listing`}
+                            onClick={() => setShowProfileDropdown(false)}
+                            className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 text-sm"
+                          >
+                            <FiPlusCircle className="w-4 h-4 text-gray-600" />
+                            <span>Become a Host</span>
+                          </Link>
                         </div>
 
                         {/* Bottom Section */}
@@ -436,7 +442,7 @@ export default function Header() {
                         <div className="mt-4 pt-4 border-t border-gray-100">
                           <p className="text-xs text-gray-500 mb-2">List your property or service</p>
                           <Link
-                            to="/host"
+                            to={`/${currentUser._id}/create-listing`}
                             onClick={() => setShowProfileDropdown(false)}
                             className="block text-center py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg"
                           >
@@ -686,7 +692,14 @@ export default function Header() {
                         </span>
                       )}
                     </Link>
-                 
+                    <Link
+                      to={`/${currentUser._id}/create-listing`}
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg"
+                    >
+                      <span className="font-medium text-gray-900">Become a Host</span>
+                      <FiPlusCircle className="w-5 h-5 text-gray-400" />
+                    </Link>
                     <Link
                       to="/help"
                       onClick={() => setShowMobileMenu(false)}

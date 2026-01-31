@@ -2075,7 +2075,7 @@ export default function HelperPage() {
                       ) : (
                         <div className="flex items-center justify-center gap-4">
                           <FaWhatsapp className="text-2xl" />
-                          <span>Book Now via WhatsApp</span>
+                          <span>Book Now</span>
                         </div>
                       )}
                     </button>
