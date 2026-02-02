@@ -1970,16 +1970,23 @@ export default function Listing() {
           box-shadow: none;
         }
 
-        /* Content Container */
+        /* Content Container - Enhanced for big screens */
         .main-content-container {
-          max-width: 1200px;
+          max-width: 1400px;
           margin: 0 auto;
-          padding: 32px 24px;
-          padding-bottom: 100px;
+          padding: 40px 32px;
+          padding-bottom: 120px;
           margin-top: 0;
           position: relative;
           z-index: 1;
           background: white;
+        }
+
+        @media (min-width: 1536px) {
+          .main-content-container {
+            max-width: 1600px;
+            padding: 48px 40px;
+          }
         }
 
         @media (max-width: 768px) {
@@ -1989,7 +1996,7 @@ export default function Listing() {
           }
         }
 
-        /* Responsive Grid */
+        /* Responsive Grid - Enhanced for big screens */
         .responsive-grid {
           display: grid;
           grid-template-columns: 1fr;
@@ -2000,6 +2007,13 @@ export default function Listing() {
           .responsive-grid {
             grid-template-columns: 2fr 1fr;
             gap: 48px;
+          }
+        }
+
+        @media (min-width: 1536px) {
+          .responsive-grid {
+            grid-template-columns: 3fr 1fr;
+            gap: 56px;
           }
         }
 
@@ -2047,6 +2061,41 @@ export default function Listing() {
           font-size: 1.5rem;
           cursor: pointer;
           color: #666;
+        }
+
+        /* Big screen optimizations */
+        @media (min-width: 1536px) {
+          .title-overlay h1 {
+            font-size: 40px;
+          }
+          
+          .title-overlay p {
+            font-size: 18px;
+          }
+          
+          .booking-content {
+            max-width: 1400px;
+          }
+          
+          .price-unit {
+            font-size: 26px;
+          }
+          
+          .booking-btn {
+            font-size: 18px;
+            padding: 16px 40px;
+          }
+        }
+
+        @media (min-width: 1920px) {
+          .main-content-container {
+            max-width: 1800px;
+          }
+          
+          .image-gallery-container {
+            height: 80vh;
+            max-height: 900px;
+          }
         }
       `}</style>
 
@@ -2475,7 +2524,7 @@ export default function Listing() {
             {/* Amenities Section */}
             <section className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
               <h2 className="text-xl md:text-2xl font-semibold mb-6 text-gray-800">What this place offers</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {AMENITIES.map(({ icon: Icon, label, key }) => (
                   <div key={key} className="flex items-center gap-3 p-3">
                     <Icon className="text-gray-600 text-lg" />
@@ -2491,7 +2540,7 @@ export default function Listing() {
                 Additional Information
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="flex items-start">
                   <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
                     <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

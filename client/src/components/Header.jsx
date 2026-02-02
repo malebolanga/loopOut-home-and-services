@@ -24,7 +24,10 @@ import {
   FiBriefcase,
   FiCalendar,
   FiUsers,
-  FiChevronLeft
+  FiChevronLeft,
+  FiChevronDown,
+  FiDollarSign,
+  FiCheck
 } from "react-icons/fi";
 
 import {
@@ -48,13 +51,48 @@ export default function Header() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('San Francisco');
   
+  // Currency and Language states
+  const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState(() => {
+    return localStorage.getItem('preferredCurrency') || 'ZAR';
+  });
+  const [selectedLanguage, setSelectedLanguage] = useState(() => {
+    return localStorage.getItem('preferredLanguage') || 'English';
+  });
+  
   const profileDropdownRef = useRef(null);
   const searchInputRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const headerRef = useRef(null);
+  const currencyDropdownRef = useRef(null);
+  const languageDropdownRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Available currencies and languages
+  const currencies = [
+    { code: 'ZAR', name: 'South African Rand', symbol: 'R' },
+    { code: 'USD', name: 'US Dollar', symbol: '$' },
+    { code: 'EUR', name: 'Euro', symbol: '€' },
+    { code: 'GBP', name: 'British Pound', symbol: '£' },
+    { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+    { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
+    { code: 'JPY', name: 'Japanese Yen', symbol: '¥' }
+  ];
+
+  const languages = [
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'af', name: 'Afrikaans', flag: '🇿🇦' },
+    { code: 'zu', name: 'Zulu', flag: '🇿🇦' },
+    { code: 'xh', name: 'Xhosa', flag: '🇿🇦' },
+    { code: 'es', name: 'Spanish', flag: '🇪🇸' },
+    { code: 'fr', name: 'French', flag: '🇫🇷' },
+    { code: 'de', name: 'German', flag: '🇩🇪' },
+    { code: 'pt', name: 'Portuguese', flag: '🇵🇹' },
+    { code: 'ar', name: 'Arabic', flag: '🇸🇦' }
+  ];
 
   // Fetch notifications
   const fetchNotifications = useCallback(async () => {
@@ -81,7 +119,7 @@ export default function Header() {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target)) {
@@ -90,6 +128,14 @@ export default function Header() {
 
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target) && !e.target.closest('.mobile-menu-button')) {
         setShowMobileMenu(false);
+      }
+
+      if (currencyDropdownRef.current && !currencyDropdownRef.current.contains(e.target) && !e.target.closest('.currency-button')) {
+        setShowCurrencyDropdown(false);
+      }
+
+      if (languageDropdownRef.current && !languageDropdownRef.current.contains(e.target) && !e.target.closest('.language-button')) {
+        setShowLanguageDropdown(false);
       }
 
       // Close search if clicking outside search area
@@ -153,6 +199,41 @@ export default function Header() {
     setSearchTerm('');
   };
 
+  // Handle currency change
+  const handleCurrencyChange = (currencyCode) => {
+    setSelectedCurrency(currencyCode);
+    localStorage.setItem('preferredCurrency', currencyCode);
+    setShowCurrencyDropdown(false);
+    
+    // Dispatch currency change to Redux store if you have currency slice
+    // dispatch(setCurrency(currencyCode));
+    
+    // Refresh page data with new currency
+    window.dispatchEvent(new CustomEvent('currencyChanged', { detail: currencyCode }));
+  };
+
+  // Handle language change
+  const handleLanguageChange = (languageCode, languageName) => {
+    setSelectedLanguage(languageName);
+    localStorage.setItem('preferredLanguage', languageCode);
+    setShowLanguageDropdown(false);
+    
+    // Dispatch language change to Redux store if you have language slice
+    // dispatch(setLanguage(languageCode));
+    
+    // Refresh page data with new language
+    window.dispatchEvent(new CustomEvent('languageChanged', { detail: languageCode }));
+    
+    // Show success message
+    alert(`Language changed to ${languageName}`);
+  };
+
+  // Get current currency symbol
+  const getCurrencySymbol = () => {
+    const currency = currencies.find(c => c.code === selectedCurrency);
+    return currency ? currency.symbol : 'R';
+  };
+
   // Search categories
   const searchCategories = [
     { key: 'properties', label: 'Homes', icon: '🏠' },
@@ -208,6 +289,80 @@ export default function Header() {
 
             {/* Right: Desktop navigation and profile */}
             <div className="flex items-center space-x-2 lg:space-x-4" ref={profileDropdownRef}>
+              {/* Currency Selector - Desktop */}
+              <div className="hidden lg:block relative" ref={currencyDropdownRef}>
+                <button
+                  onClick={() => setShowCurrencyDropdown(!showCurrencyDropdown)}
+                  className="currency-button flex items-center space-x-1 px-3 py-2 hover:bg-gray-100 rounded-full transition-colors text-sm font-medium text-gray-700"
+                >
+                  <FiDollarSign className="w-4 h-4" />
+                  <span>{selectedCurrency}</span>
+                  <FiChevronDown className={`w-3 h-3 transition-transform ${showCurrencyDropdown ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {showCurrencyDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
+                    <div className="p-3 border-b border-gray-100">
+                      <h3 className="font-semibold text-gray-900 text-sm">Select Currency</h3>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {currencies.map((currency) => (
+                        <button
+                          key={currency.code}
+                          onClick={() => handleCurrencyChange(currency.code)}
+                          className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 text-sm text-left"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <span className="font-medium">{currency.code}</span>
+                            <span className="text-gray-500 text-xs">{currency.name}</span>
+                          </div>
+                          {selectedCurrency === currency.code && (
+                            <FiCheck className="w-4 h-4 text-blue-600" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Language Selector - Desktop */}
+              <div className="hidden lg:block relative" ref={languageDropdownRef}>
+                <button
+                  onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
+                  className="language-button flex items-center space-x-1 px-3 py-2 hover:bg-gray-100 rounded-full transition-colors text-sm font-medium text-gray-700"
+                >
+                  <FiGlobe className="w-4 h-4" />
+                  <span className="max-w-[60px] truncate">{selectedLanguage}</span>
+                  <FiChevronDown className={`w-3 h-3 transition-transform ${showLanguageDropdown ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {showLanguageDropdown && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
+                    <div className="p-3 border-b border-gray-100">
+                      <h3 className="font-semibold text-gray-900 text-sm">Select Language</h3>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {languages.map((language) => (
+                        <button
+                          key={language.code}
+                          onClick={() => handleLanguageChange(language.code, language.name)}
+                          className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 text-sm text-left"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <span className="text-lg">{language.flag}</span>
+                            <span className="font-medium">{language.name}</span>
+                          </div>
+                          {selectedLanguage === language.name && (
+                            <FiCheck className="w-4 h-4 text-blue-600" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Desktop navigation links (hidden on mobile) */}
               <div className="hidden lg:flex items-center space-x-6">
                 <Link
@@ -257,7 +412,7 @@ export default function Header() {
                 
                 {/* Become a Host button - only show on desktop */}
                 <Link
-                 to={`/${currentUser._id}/create-listing`}
+                  to="/host"
                   className="text-sm font-medium px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-sm hover:shadow"
                 >
                   Become a Host
@@ -381,13 +536,43 @@ export default function Header() {
                             <span>Saved</span>
                           </Link>
                           <Link
-                            to={`/${currentUser._id}/create-listing`}
+                            to="/host"
                             onClick={() => setShowProfileDropdown(false)}
                             className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 text-sm"
                           >
                             <FiPlusCircle className="w-4 h-4 text-gray-600" />
                             <span>Become a Host</span>
                           </Link>
+                        </div>
+
+                        {/* Currency & Language Settings */}
+                        <div className="border-t border-gray-100 py-2">
+                          <button
+                            onClick={() => {
+                              setShowCurrencyDropdown(!showCurrencyDropdown);
+                              setShowProfileDropdown(false);
+                            }}
+                            className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 text-sm text-left"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <FiDollarSign className="w-4 h-4 text-gray-600" />
+                              <span>Currency: {selectedCurrency}</span>
+                            </div>
+                            <FiChevronDown className="w-4 h-4 text-gray-400" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowLanguageDropdown(!showLanguageDropdown);
+                              setShowProfileDropdown(false);
+                            }}
+                            className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 text-sm text-left"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <FiGlobe className="w-4 h-4 text-gray-600" />
+                              <span>Language: {selectedLanguage}</span>
+                            </div>
+                            <FiChevronDown className="w-4 h-4 text-gray-400" />
+                          </button>
                         </div>
 
                         {/* Bottom Section */}
@@ -442,7 +627,7 @@ export default function Header() {
                         <div className="mt-4 pt-4 border-t border-gray-100">
                           <p className="text-xs text-gray-500 mb-2">List your property or service</p>
                           <Link
-                            to={`/${currentUser._id}/create-listing`}
+                            to="/host"
                             onClick={() => setShowProfileDropdown(false)}
                             className="block text-center py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg"
                           >
@@ -630,6 +815,58 @@ export default function Header() {
                 </div>
               )}
 
+              {/* Currency Selector - Mobile */}
+              <div className="mb-4">
+                <h3 className="font-semibold text-gray-900 mb-2">Currency</h3>
+                <div className="flex flex-wrap gap-2">
+                  {currencies.slice(0, 4).map((currency) => (
+                    <button
+                      key={currency.code}
+                      onClick={() => {
+                        handleCurrencyChange(currency.code);
+                        setShowMobileMenu(false);
+                      }}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        selectedCurrency === currency.code
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {currency.code} ({currency.symbol})
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Language Selector - Mobile */}
+              <div className="mb-6">
+                <h3 className="font-semibold text-gray-900 mb-2">Language</h3>
+                <div className="space-y-2">
+                  {languages.slice(0, 4).map((language) => (
+                    <button
+                      key={language.code}
+                      onClick={() => {
+                        handleLanguageChange(language.code, language.name);
+                        setShowMobileMenu(false);
+                      }}
+                      className={`w-full flex items-center justify-between p-3 rounded-lg text-left ${
+                        selectedLanguage === language.name
+                          ? 'bg-blue-50 text-blue-600'
+                          : 'hover:bg-gray-50 text-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <span className="text-lg">{language.flag}</span>
+                        <span className="font-medium">{language.name}</span>
+                      </div>
+                      {selectedLanguage === language.name && (
+                        <FiCheck className="w-5 h-5 text-blue-600" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Menu Items */}
               <div className="space-y-1">
                 {!currentUser ? (
@@ -693,7 +930,7 @@ export default function Header() {
                       )}
                     </Link>
                     <Link
-                      to={`/${currentUser._id}/create-listing`}
+                      to="/host"
                       onClick={() => setShowMobileMenu(false)}
                       className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg"
                     >
