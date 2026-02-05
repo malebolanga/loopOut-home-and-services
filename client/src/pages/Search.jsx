@@ -539,7 +539,7 @@ const Search = () => {
         {showMap ? (
           <MapView items={listings} searchType={searchType} location={currentLocation} />
         ) : loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 p-3">
             {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : listings.length > 0 ? (
@@ -552,7 +552,7 @@ const Search = () => {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 p-3">
               {listings.map((item, index) => {
                 const commonProps = {
                   key: item._id,

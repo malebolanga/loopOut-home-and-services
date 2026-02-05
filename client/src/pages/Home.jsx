@@ -1251,71 +1251,102 @@ const MobileAppHomepage = ({
         )}
 
         {/* Recently Viewed Section with AI Sorting */}
-        {recentlyViewedItems.length > 0 && (
-          <section className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center">
-                <h2 className="font-bold text-gray-900 text-lg md:text-xl">Recently viewed</h2>
+      {/* Recently Viewed Section with AI Sorting */}
+{recentlyViewedItems.length > 0 && (
+  <section className="mb-8">
+    <div className="flex justify-between items-center mb-4">
+      <div className="flex items-center">
+        <h2 className="font-bold text-gray-900 text-lg md:text-xl">Recently viewed</h2>
+      </div>
+      <button
+        onClick={() => navigate('/recently-viewed')}
+        className="text-sm text-gray-600 hover:text-gray-900 flex items-center"
+      >
+        See all
+        <ChevronRightIcon className="w-4 h-4 ml-1" />
+      </button>
+    </div>
+    <div className="flex overflow-x-auto gap-3 pb-2 -mx-1 px-1 scrollbar-hide">
+      {recentlyViewedItems.slice(0, isDesktop ? 6 : 5).map((item) => {
+        // Determine the route based on item type
+        const getItemRoute = () => {
+          // Check if item has helper-specific data or type
+          if (item.helperCategory || item.skills || item.type === 'helper') {
+            return `/helper/${item._id}`;
+          }
+          // Check if item has service-specific data
+          else if (item.serviceCategory || item.duration || item.type === 'service') {
+            return `/service/${item._id}`;
+          }
+          // Check if item has event-specific data
+          else if (item.eventDate || item.eventLocation || item.type === 'event') {
+            return `/event/${item._id}`;
+          }
+          // Default to listing (assuming it has listing-specific data)
+          else {
+            return `/listing/${item._id}`;
+          }
+        };
 
-              </div>
-              <button
-                onClick={() => navigate('/recently-viewed')}
-                className="text-sm text-gray-600 hover:text-gray-900 flex items-center"
-              >
-                See all
-                <ChevronRightIcon className="w-4 h-4 ml-1" />
-              </button>
-            </div>
-            <div className="flex overflow-x-auto gap-3 pb-2 -mx-1 px-1 scrollbar-hide">
-              {recentlyViewedItems.slice(0, isDesktop ? 6 : 5).map((item) => (
-                <div
-                  key={`${item._id}-${item.viewedAt}`}
-                  className={`flex-shrink-0 ${cardWidth}`}
-                  onClick={() => navigate(`/listing/${item._id}`)}
-                >
-                  <div className="rounded-xl overflow-hidden cursor-pointer shadow-sm  hover:border-gray-300 hover:shadow-md transition-all duration-200">
-                    <div className="relative aspect-[3/2]">
-                      <img
-                        src={item.imageUrls?.[0] || item.imageUrl || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
-                        alt={item.name || item.title}
-                        className="w-full h-full object-cover rounded-xl hover:scale-105 transition-transform duration-300"
-                      />
+        return (
+          <div
+            key={`${item._id}-${item.viewedAt}`}
+            className={`flex-shrink-0 ${cardWidth}`}
+            onClick={() => navigate(getItemRoute())}
+          >
+            <div className="rounded-xl overflow-hidden cursor-pointer shadow-sm hover:border-gray-300 hover:shadow-md transition-all duration-200">
+              <div className="relative aspect-[3/2]">
+                <img
+                  src={item.imageUrls?.[0] || item.imageUrl || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                  alt={item.name || item.title}
+                  className="w-full h-full object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+                />
 
-                      <div className="absolute top-2 right-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onRecentlyViewedLike && onRecentlyViewedLike(item._id, !item.isLiked);
-                          }}
-                          className="p-1.5 bg-white/80 hover:bg-white rounded-full backdrop-blur-sm transition-colors"
-                        >
-                          {item.isLiked ? (
-                            <HeartIconSolid className="w-5 h-5 md:w-6 md:h-6 text-rose-500" />
-                          ) : (
-                            <HeartIcon className="w-5 h-5 md:w-6 md:h-6 text-gray-600 hover:text-rose-500" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                    <div className="p-3">
-                      <h3 className="font-medium text-gray-900 text-sm truncate mb-1">
-                        {item.name || item.title}
-                      </h3>
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-gray-900 text-sm">
-                          R{item.price || item.regularPrice || 'N/A'}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {item.viewedAt ? new Date(item.viewedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recently'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                <div className="absolute top-2 right-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRecentlyViewedLike && onRecentlyViewedLike(item._id, !item.isLiked);
+                    }}
+                    className="p-1.5 bg-white/80 hover:bg-white rounded-full backdrop-blur-sm transition-colors"
+                  >
+                    {item.isLiked ? (
+                      <HeartIconSolid className="w-5 h-5 md:w-6 md:h-6 text-rose-500" />
+                    ) : (
+                      <HeartIcon className="w-5 h-5 md:w-6 md:h-6 text-gray-600 hover:text-rose-500" />
+                    )}
+                  </button>
                 </div>
-              ))}
+              </div>
+              <div className="p-3">
+                <h3 className="font-medium text-gray-900 text-sm truncate mb-1">
+                  {item.name || item.title}
+                </h3>
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-gray-900 text-sm">
+                    {item.price || item.regularPrice ? `R${item.price || item.regularPrice}` : 'Free'}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {item.viewedAt ? new Date(item.viewedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recently'}
+                  </span>
+                </div>
+                {/* Optional: Add a type badge for clarity */}
+                <div className="mt-1">
+                  <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">
+                    {item.helperCategory ? 'Helper' : 
+                     item.serviceCategory ? 'Service' : 
+                     item.eventDate ? 'Event' : 
+                     'Listing'}
+                  </span>
+                </div>
+              </div>
             </div>
-          </section>
-        )}
+          </div>
+        );
+      })}
+    </div>
+  </section>
+)}
 
         {/* Categories Grid with AI Suggestions */}
         <section className="mb-8">
@@ -1460,7 +1491,7 @@ const MobileAppHomepage = ({
                 <div
                   key={service._id}
                   onClick={() => navigate(`/service/${service._id}`)}
-                  className={`flex-shrink-0 ${serviceCardWidth} rounded-xl overflow-hidden active:opacity-80 cursor-pointer shadow-sm  hover:border-gray-300 hover:shadow-md transition-all duration-200 group`}
+                  className={`flex-shrink-0 ${serviceCardWidth} rounded-xl overflow-hidden active:opacity-80 cursor-pointer shadow-sm  hover:border-gray-300 hover:shadow-md transition-all duration-200`}
                 >
                   <div className="relative aspect-[3/2]">
                     <img

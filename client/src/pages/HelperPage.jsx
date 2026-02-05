@@ -20,7 +20,11 @@ import {
   FaBrush, FaSprayCan, FaSmile, FaUtensils, FaShoppingBasket, FaCookie,
   FaInstagram, FaFacebook, FaCheck, FaTimes as FaTimesCircle, FaSpinner,
   FaLinkedin, FaTwitter, FaCamera, FaHome,
-  FaExpand, FaCompress, FaChevronLeft, FaChevronRight,FaArrowRight
+  FaExpand, FaCompress, FaChevronLeft, FaChevronRight, FaArrowRight,
+  FaUtensilSpoon, FaMugHot, FaWineGlassAlt, FaConciergeBell, FaLeaf, FaSnowflake,
+  FaBoxOpen, FaShippingFast, FaRecycle, FaSeedling, FaFish, FaDrumstickBite,
+  FaPepperHot, FaCheese, FaBreadSlice, FaIceCream, FaCoffee, FaWineBottle,
+  FaWater, FaWind, FaSun, FaCloudRain, FaTemperatureHigh, FaTemperatureLow
 } from 'react-icons/fa';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Zoom, Thumbs, Pagination, FreeMode } from 'swiper/modules';
@@ -145,7 +149,13 @@ export default function HelperPage() {
     sessionDuration: '',
     numberOfPeople: '',
     photographyRequirements: '',
-    deliveryFormat: ''
+    deliveryFormat: '',
+    // Service provider fields
+    addressProvided: '',
+    foodProvided: 'no',
+    cleaningArrengement: 'no',
+    equipmentProvided: 'no',
+    otherDetails: ''
   });
 
   // Helper function to get professional title
@@ -312,6 +322,56 @@ export default function HelperPage() {
     { id: 'bbq', name: 'BBQ & Grilling' },
     { id: 'custom', name: 'Custom Menu' }
   ];
+
+  // Equipment options for different services
+  const equipmentOptions = {
+    chef: [
+      'Professional knives',
+      'Cooking utensils',
+      'Portable stove',
+      'Baking equipment',
+      'Serving platters',
+      'Kitchen thermometer',
+      'Mixer/blender',
+      'Food processor'
+    ],
+    barber: [
+      'Professional clippers',
+      'Hair scissors',
+      'Beard trimmers',
+      'Sterilization equipment',
+      'Hair styling tools',
+      'Barber cape',
+      'Shaving supplies',
+      'Sanitizing spray'
+    ],
+    beauty: [
+      'Makeup kit',
+      'Skincare tools',
+      'Sterilization equipment',
+      'Nail care tools',
+      'Facial steamer',
+      'Beauty lights',
+      'Professional chair',
+      'Sanitation supplies'
+    ],
+    photography: [
+      'Professional camera',
+      'Lighting equipment',
+      'Tripod',
+      'Backdrops',
+      'Lens selection',
+      'Editing laptop',
+      'Memory cards',
+      'Battery packs'
+    ],
+    default: [
+      'Basic tools',
+      'Cleaning supplies',
+      'Protective gear',
+      'Portable equipment'
+    ]
+  };
 
   // Get theme color based on helper type
   const getThemeColor = (type) => {
@@ -744,8 +804,11 @@ export default function HelperPage() {
   };
 
   const handleBookingChange = (e) => {
-    const { name, value } = e.target;
-    setBookingData({ ...bookingData, [name]: value });
+    const { name, value, type, checked } = e.target;
+    setBookingData({ 
+      ...bookingData, 
+      [name]: type === 'checkbox' ? checked : value 
+    });
   };
 
   // Handle service selection
@@ -761,6 +824,23 @@ export default function HelperPage() {
       }
       
       return { ...prev, selectedServices };
+    });
+  };
+
+  // Handle equipment selection
+  const handleEquipmentSelection = (equipment) => {
+    const currentEquipment = bookingData.cookingEquipment ? bookingData.cookingEquipment.split(',') : [];
+    const index = currentEquipment.indexOf(equipment);
+    
+    if (index > -1) {
+      currentEquipment.splice(index, 1);
+    } else {
+      currentEquipment.push(equipment);
+    }
+    
+    setBookingData({
+      ...bookingData,
+      cookingEquipment: currentEquipment.join(',')
     });
   };
 
@@ -882,8 +962,8 @@ export default function HelperPage() {
     }
 
     const clientPhone = formatContactForWhatsApp(bookingData.phone);
-    const acceptMessage = `Hi ${bookingData.name}, I accept your booking for ${helper.name}. See you then!`;
-    const declineMessage = `Hi ${bookingData.name}, I'm unable to accept this booking. Can we try another time?`;
+    const acceptMessage = `Accept the service ${bookingData.name}, I accept your booking for ${helper.name}. See you then!`;
+    const declineMessage = `Decline the service ${bookingData.name}, I'm unable to accept this booking. Can we try another time?`;
 
     const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
     const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
@@ -985,17 +1065,27 @@ export default function HelperPage() {
       message += `• Delivery Format: ${bookingData.deliveryFormat}%0A`;
     }
 
-    // Add baker-specific details to quick booking
-    if ((helper.type === 'baker') && bookingData.bakeryItems && bookingData.bakeryItems.length > 0) {
-      message += `• Bakery Items: ${bookingData.bakeryItems.join(', ')}%0A`;
+    // Add service provider details to quick booking
+    message += `%0A*🏠 Service Provider Details*%0A`;
+    
+    if (bookingData.addressProvided) {
+      message += `• Address Provided: ${bookingData.addressProvided}%0A`;
     }
-
-    if ((helper.type === 'baker') && bookingData.containerSize) {
-      message += `• Container Size: ${bookingData.containerSize}%0A`;
+    
+    if (bookingData.foodProvided) {
+      message += `• Food Provided: ${bookingData.foodProvided === 'yes' ? 'Yes' : 'No'}%0A`;
     }
-
-    if ((helper.type === 'baker') && bookingData.packagingOption) {
-      message += `• Packaging: ${bookingData.packagingOption}%0A`;
+    
+    if (bookingData.cleaningProvided) {
+      message += `• Cleaning Provided: ${bookingData.cleaningProvided === 'yes' ? 'Yes' : 'No'}%0A`;
+    }
+    
+    if (bookingData.equipmentProvided) {
+      message += `• Equipment Provided: ${bookingData.equipmentProvided === 'yes' ? 'Yes' : 'No'}%0A`;
+    }
+    
+    if (bookingData.otherDetails) {
+      message += `• Other Details: ${bookingData.otherDetails}%0A`;
     }
 
     if (bookingData.specialRequirements) {
@@ -1127,8 +1217,8 @@ export default function HelperPage() {
     const clientPhone = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
 
     // Define the accept and decline messages and their corresponding links
-    const acceptMessage = `Hi ${bookingData.name}, I accept your booking for ${helper.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
-    const declineMessage = `Hi ${bookingData.name}, I'm unable to accept ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
+    const acceptMessage = `Accept the service ${bookingData.name}, I accept your booking for ${helper.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
+    const declineMessage = `Decline the service ${bookingData.name}, I'm unable to accept ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
 
     const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
     const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
@@ -1217,17 +1307,31 @@ export default function HelperPage() {
       message += `• Delivery Format: ${bookingData.deliveryFormat}%0A`;
     }
 
-    // Add baker-specific details
-    if ((helper.type === 'baker') && bookingData.bakeryItems && bookingData.bakeryItems.length > 0) {
-      message += `• Bakery Items: ${bookingData.bakeryItems.join(', ')}%0A`;
+    // Add service provider details
+    message += `%0A*🏠 SERVICE PROVIDER DETAILS*%0A`;
+    
+    if (bookingData.addressProvided) {
+      message += `• Address Provided: ${bookingData.addressProvided}%0A`;
     }
-
-    if ((helper.type === 'baker') && bookingData.containerSize) {
-      message += `• Container Size: ${bookingData.containerSize}%0A`;
+    
+    if (bookingData.foodProvided) {
+      message += `• Food Provided: ${bookingData.foodProvided === 'yes' ? 'Yes' : 'No'}%0A`;
     }
-
-    if ((helper.type === 'baker') && bookingData.packagingOption) {
-      message += `• Packaging: ${bookingData.packagingOption}%0A`;
+    
+    if (bookingData.cleaningProvided) {
+      message += `• Cleaning Provided: ${bookingData.cleaningProvided === 'yes' ? 'Yes' : 'No'}%0A`;
+    }
+    
+    if (bookingData.equipmentProvided) {
+      message += `• Equipment Provided: ${bookingData.equipmentProvided === 'yes' ? 'Yes' : 'No'}%0A`;
+    }
+    
+    if (bookingData.cookingEquipment) {
+      message += `• Equipment Details: ${bookingData.cookingEquipment}%0A`;
+    }
+    
+    if (bookingData.otherDetails) {
+      message += `• Other Details: ${bookingData.otherDetails}%0A`;
     }
     
     if (locationInfo.travelFee > 0) {
@@ -1500,6 +1604,7 @@ export default function HelperPage() {
     : description.slice(0, 300) + (description.length > 300 ? "..." : "");
 
   const serviceOptions = getServiceOptions(helper.type);
+  const serviceEquipmentOptions = equipmentOptions[helper.type] || equipmentOptions.default;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-x-hidden">
@@ -1931,6 +2036,213 @@ export default function HelperPage() {
                     </div>
                   </div>
 
+                  {/* Address Section */}
+                  <div className="space-y-6">
+                    <h4 className="font-bold text-gray-900 text-2xl border-b pb-4">Address Details</h4>
+                    
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700">
+                          Your Address for Home Service *
+                        </label>
+                        <textarea
+                          name="address"
+                          value={bookingData.address}
+                          onChange={handleBookingChange}
+                          required
+                          rows="3"
+                          className="w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/30 focus:border-blue-500 text-lg transition-all"
+                          placeholder="Please provide your complete address including street, city, and postal code"
+                        />
+                        <p className="text-sm text-gray-500">Full address is required for home service</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700">
+                          Additional Address Details (Optional)
+                        </label>
+                        <textarea
+                          name="addressProvided"
+                          value={bookingData.addressProvided}
+                          onChange={handleBookingChange}
+                          rows="2"
+                          className="w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/30 focus:border-blue-500 text-lg transition-all"
+                          placeholder="Any additional location details, landmarks, or access instructions"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Service Provider Details */}
+                  <div className="space-y-6">
+                    <h4 className="font-bold text-gray-900 text-2xl border-b pb-4">Service Provider Details</h4>
+                    
+                    <div className="space-y-6">
+                      {/* Food Provided */}
+                      <div className="space-y-3">
+                        <label className="block text-sm font-semibold text-gray-700">
+                          Will you provide food for the service provider?
+                        </label>
+                        <div className="flex flex-wrap gap-4">
+                          <label className="flex items-center space-x-3 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="foodProvided"
+                              value="yes"
+                              checked={bookingData.foodProvided === 'yes'}
+                              onChange={handleBookingChange}
+                              className="w-5 h-5 text-blue-600"
+                            />
+                            <span className="text-gray-700">Yes, I will provide food</span>
+                          </label>
+                          <label className="flex items-center space-x-3 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="foodProvided"
+                              value="no"
+                              checked={bookingData.foodProvided === 'no'}
+                              onChange={handleBookingChange}
+                              className="w-5 h-5 text-blue-600"
+                            />
+                            <span className="text-gray-700">No food will be provided</span>
+                          </label>
+                          <label className="flex items-center space-x-3 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="foodProvided"
+                              value="arrange"
+                              checked={bookingData.foodProvided === 'arrange'}
+                              onChange={handleBookingChange}
+                              className="w-5 h-5 text-blue-600"
+                            />
+                            <span className="text-gray-700">Can arrange if needed</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Cleaning Provided */}
+                      <div className="space-y-3">
+                        <label className="block text-sm font-semibold text-gray-700">
+                          Will you provide cleaning services/area preparation?
+                        </label>
+                        <div className="flex flex-wrap gap-4">
+                          <label className="flex items-center space-x-3 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="cleaningProvided"
+                              value="yes"
+                              checked={bookingData.cleaningProvided === 'yes'}
+                              onChange={handleBookingChange}
+                              className="w-5 h-5 text-blue-600"
+                            />
+                            <span className="text-gray-700">Yes, area will be cleaned/prepared</span>
+                          </label>
+                          <label className="flex items-center space-x-3 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="cleaningProvided"
+                              value="no"
+                              checked={bookingData.cleaningProvided === 'no'}
+                              onChange={handleBookingChange}
+                              className="w-5 h-5 text-blue-600"
+                            />
+                            <span className="text-gray-700">No cleaning/preparation provided</span>
+                          </label>
+                          <label className="flex items-center space-x-3 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="cleaningProvided"
+                              value="partial"
+                              checked={bookingData.cleaningProvided === 'partial'}
+                              onChange={handleBookingChange}
+                              className="w-5 h-5 text-blue-600"
+                            />
+                            <span className="text-gray-700">Partial cleaning/preparation</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Equipment Provided */}
+                      <div className="space-y-3">
+                        <label className="block text-sm font-semibold text-gray-700">
+                          Will you provide equipment for the service?
+                        </label>
+                        <div className="flex flex-wrap gap-4">
+                          <label className="flex items-center space-x-3 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="equipmentProvided"
+                              value="yes"
+                              checked={bookingData.equipmentProvided === 'yes'}
+                              onChange={handleBookingChange}
+                              className="w-5 h-5 text-blue-600"
+                            />
+                            <span className="text-gray-700">Yes, I have necessary equipment</span>
+                          </label>
+                          <label className="flex items-center space-x-3 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="equipmentProvided"
+                              value="no"
+                              checked={bookingData.equipmentProvided === 'no'}
+                              onChange={handleBookingChange}
+                              className="w-5 h-5 text-blue-600"
+                            />
+                            <span className="text-gray-700">No equipment, provider must bring</span>
+                          </label>
+                          <label className="flex items-center space-x-3 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="equipmentProvided"
+                              value="some"
+                              checked={bookingData.equipmentProvided === 'some'}
+                              onChange={handleBookingChange}
+                              className="w-5 h-5 text-blue-600"
+                            />
+                            <span className="text-gray-700">Some equipment available</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Equipment Selection for Chefs */}
+                      {(helper.type === 'chef' || helper.type === 'cooking') && (
+                        <div className="space-y-3">
+                          <label className="block text-sm font-semibold text-gray-700">
+                            Available Cooking Equipment
+                          </label>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {serviceEquipmentOptions.map((equipment, index) => (
+                              <label key={index} className="flex items-center space-x-2 cursor-pointer p-2 border rounded-lg hover:bg-blue-50">
+                                <input
+                                  type="checkbox"
+                                  checked={bookingData.cookingEquipment?.includes(equipment) || false}
+                                  onChange={() => handleEquipmentSelection(equipment)}
+                                  className="w-4 h-4 text-blue-600"
+                                />
+                                <span className="text-gray-700 text-sm">{equipment}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Other Details */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700">
+                          Other Important Details
+                        </label>
+                        <textarea
+                          name="otherDetails"
+                          value={bookingData.otherDetails}
+                          onChange={handleBookingChange}
+                          rows="3"
+                          className="w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/30 focus:border-blue-500 text-lg transition-all"
+                          placeholder="Any other important details, special instructions, or requirements for the service provider"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Service Selection */}
                   {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography') && (
                     <div className="space-y-6">
@@ -2075,7 +2387,7 @@ export default function HelperPage() {
                       ) : (
                         <div className="flex items-center justify-center gap-4">
                           <FaWhatsapp className="text-2xl" />
-                          <span>Book Now</span>
+                          <span>Book Now via WhatsApp</span>
                         </div>
                       )}
                     </button>
