@@ -141,6 +141,14 @@ export default function CreateListing() {
     vehicleType: "",
     routeAreas: "",
     
+    // CAR WASH SPECIFIC FIELDS
+    carWashPackages: "", // Basic, Premium, Detailing, Ceramic
+    vehicleTypes: "", // Sedan, SUV, Van, Truck, Motorcycle
+    additionalServices: "", // Engine cleaning, Interior shampooing, Waxing, etc.
+    serviceDuration: "", // 30min, 1hr, 2hrs, etc.
+    mobileService: false, // Come to customer's location
+    ecoFriendly: false, // Eco-friendly products
+    
     // Helper specific
     specializations: '',
     equipment: '',
@@ -197,6 +205,7 @@ export default function CreateListing() {
       case 'experiences':
         if (type === 'daycare') return "Your experience with childcare, certifications, training...";
         if (type === 'schoolTransport') return "Your driving experience, safety certifications...";
+        if (type === 'carwash') return "Your car wash experience, certifications, eco-friendly products...";
         return "Your experience and qualifications in this service";
       case 'online':
         if (type === 'tutor') return "Subjects you teach, teaching methods, qualifications...";
@@ -345,6 +354,22 @@ export default function CreateListing() {
         }
       }
       
+      // CAR WASH validation
+      if (selectedCategory === 'experiences' && selectedType === 'carwash') {
+        if (!listingForm.carWashPackages) {
+          setError("Please select at least one car wash package");
+          return;
+        }
+        if (!listingForm.vehicleTypes) {
+          setError("Please select which vehicle types you service");
+          return;
+        }
+        if (!listingForm.serviceDuration) {
+          setError("Please enter the service duration");
+          return;
+        }
+      }
+      
       // near field is required for ALL categories
       if (!listingForm.near.trim()) {
         setError(`Please provide ${getNearLabel(selectedCategory, selectedType)}`);
@@ -376,6 +401,7 @@ export default function CreateListing() {
       case 'experiences':
         if (type === 'daycare') return "your experience and qualifications";
         if (type === 'schoolTransport') return "your driving experience and certifications";
+        if (type === 'carwash') return "your car wash experience and specialties";
         return "your experience and qualifications";
       case 'online':
         if (type === 'tutor') return "subjects and teaching approach";
@@ -690,6 +716,19 @@ export default function CreateListing() {
       }
     }
     
+    // CAR WASH validation
+    if (selectedCategory === 'experiences' && selectedType === 'carwash') {
+      if (!listingForm.carWashPackages) {
+        return setError("Please select at least one car wash package");
+      }
+      if (!listingForm.vehicleTypes) {
+        return setError("Please select which vehicle types you service");
+      }
+      if (!listingForm.serviceDuration) {
+        return setError("Please enter the service duration");
+      }
+    }
+    
     // Ensure near field is filled for all categories
     if (!listingForm.near.trim()) {
       return setError(`${getNearLabel(selectedCategory, selectedType)} is required`);
@@ -803,6 +842,17 @@ export default function CreateListing() {
           { id: "party", label: "No Parties", emoji: "🔇", checked: listingForm.party },
         ];
       case 'experiences':
+        // Add car wash specific amenities
+        if (selectedType === 'carwash') {
+          return [
+            { id: "mobileService", label: "Mobile Service", emoji: "🚗💨", checked: listingForm.mobileService },
+            { id: "ecoFriendly", label: "Eco-Friendly", emoji: "🌱", checked: listingForm.ecoFriendly },
+            { id: "security", label: "Background Check", emoji: "✅", checked: listingForm.security },
+            { id: "pets", label: "Pet Friendly", emoji: "🐾", checked: listingForm.pets },
+            { id: "parking", label: "On-Site Parking", emoji: "🅿️", checked: listingForm.parking },
+            { id: "wifi", label: "Free WiFi", emoji: "📶", checked: listingForm.wifi },
+          ];
+        }
         return [
           { id: "security", label: "Background Check", emoji: "✅", checked: listingForm.security },
           { id: "pets", label: "Pet Friendly", emoji: "🐾", checked: listingForm.pets },
@@ -842,6 +892,7 @@ export default function CreateListing() {
           { id: "catering", label: "Catering", emoji: "🍽️", description: "Food & catering" },
           { id: "daycare", label: "Day Care", emoji: "👶", description: "Child care services" },
           { id: "schoolTransport", label: "Transport", emoji: "🚌", description: "School transport" },
+          { id: "carwash", label: "Car Wash", emoji: "🚗💦", description: "Professional car cleaning & detailing" },
           { id: "other", label: "Other", emoji: "✨", description: "Other services" },
         ];
       case 'online':
@@ -972,6 +1023,17 @@ export default function CreateListing() {
           required={required}
           className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent transition-all duration-200"
         />
+      ) : type === "select" ? (
+        <select
+          id={id}
+          value={value}
+          onChange={onChange}
+          required={required}
+          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent transition-all duration-200"
+        >
+          {placeholder && <option value="">{placeholder}</option>}
+          {children}
+        </select>
       ) : (
         <input
           type={type}
@@ -1293,6 +1355,7 @@ export default function CreateListing() {
                       onChange={handleFormChange}
                       placeholder={
                         selectedCategory === 'stays' ? "Cozy mountain cabin with amazing views" :
+                        selectedCategory === 'experiences' && selectedType === 'carwash' ? "Premium Car Wash & Detailing Service" :
                         selectedCategory === 'experiences' ? "Professional Cleaning Service" :
                         selectedCategory === 'online' ? "John's Tutoring Services" :
                         "Summer Music Festival"
@@ -1307,6 +1370,7 @@ export default function CreateListing() {
                       onChange={handleFormChange}
                       placeholder={
                         selectedCategory === 'stays' ? "123 Main Street, City" :
+                        selectedCategory === 'experiences' && selectedType === 'carwash' ? "123 Auto Plaza, City (or Mobile Service Available)" :
                         "Service area or venue address"
                       }
                       required
@@ -1320,6 +1384,7 @@ export default function CreateListing() {
                         onChange={handleFormChange}
                         placeholder={
                           selectedCategory === 'stays' ? "Describe what makes your place special..." :
+                          selectedCategory === 'experiences' && selectedType === 'carwash' ? "Professional car wash and detailing services. We use eco-friendly products and premium wax. Services include exterior wash, interior cleaning, waxing, polishing, and full detailing packages. Satisfaction guaranteed!" :
                           selectedCategory === 'experiences' ? "Describe your service in detail..." :
                           selectedCategory === 'online' ? "Describe your skills and experience..." :
                           "Describe the event, activities, and what attendees can expect..."
@@ -1369,6 +1434,139 @@ export default function CreateListing() {
                           placeholder="e.g., Immediate, 1st December 2024"
                           required
                         />
+                      </>
+                    )}
+                    
+                    {/* CAR WASH SPECIFIC FIELDS */}
+                    {selectedCategory === 'experiences' && selectedType === 'carwash' && (
+                      <>
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Car Wash Packages <span className="text-red-500">*</span>
+                          </label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {[
+                              { id: "basic", label: "Basic Wash", desc: "Exterior wash, windows, tires" },
+                              { id: "premium", label: "Premium Wash", desc: "Exterior wash + interior vacuuming" },
+                              { id: "detailing", label: "Full Detailing", desc: "Complete interior/exterior detailing" },
+                              { id: "ceramic", label: "Ceramic Coating", desc: "Ceramic coating protection" },
+                            ].map((pkg) => (
+                              <label key={pkg.id} className={`
+                                p-3 border rounded-xl cursor-pointer transition-all duration-200
+                                ${listingForm.carWashPackages?.includes(pkg.id) 
+                                  ? 'border-[#FF5A5F] bg-[#FF5A5F]/5' 
+                                  : 'border-gray-200 hover:border-gray-300'}
+                              `}>
+                                <input
+                                  type="checkbox"
+                                  value={pkg.id}
+                                  checked={listingForm.carWashPackages?.includes(pkg.id)}
+                                  onChange={(e) => {
+                                    const current = listingForm.carWashPackages ? listingForm.carWashPackages.split(',') : [];
+                                    if (e.target.checked) {
+                                      current.push(pkg.id);
+                                    } else {
+                                      const index = current.indexOf(pkg.id);
+                                      if (index > -1) current.splice(index, 1);
+                                    }
+                                    setListingForm({
+                                      ...listingForm,
+                                      carWashPackages: current.join(',')
+                                    });
+                                  }}
+                                  className="hidden"
+                                />
+                                <div className="flex items-start gap-2">
+                                  <div className={`
+                                    w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 mt-0.5
+                                    ${listingForm.carWashPackages?.includes(pkg.id) 
+                                      ? 'bg-[#FF5A5F] border-[#FF5A5F]' 
+                                      : 'bg-white border-gray-300'}
+                                  `}>
+                                    {listingForm.carWashPackages?.includes(pkg.id) && 
+                                      <CheckCircleIcon className="w-4 h-4 text-white" />}
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-gray-900 text-sm">{pkg.label}</p>
+                                    <p className="text-xs text-gray-500">{pkg.desc}</p>
+                                  </div>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Vehicle Types <span className="text-red-500">*</span>
+                          </label>
+                          <select
+                            id="vehicleTypes"
+                            value={listingForm.vehicleTypes}
+                            onChange={handleFormChange}
+                            required
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
+                          >
+                            <option value="">Select vehicle types</option>
+                            <option value="sedan">Sedan</option>
+                            <option value="suv">SUV</option>
+                            <option value="van">Van</option>
+                            <option value="truck">Truck</option>
+                            <option value="motorcycle">Motorcycle</option>
+                            <option value="all">All vehicles</option>
+                          </select>
+                        </div>
+
+                        <FormInput
+                          label="Service Duration"
+                          icon={ClockIcon}
+                          id="serviceDuration"
+                          value={listingForm.serviceDuration}
+                          onChange={handleFormChange}
+                          placeholder="e.g., 30-45 mins, 1-2 hours, 3+ hours"
+                          required
+                        />
+
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Additional Services
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {[
+                              "Engine Cleaning",
+                              "Interior Shampooing",
+                              "Waxing",
+                              "Headlight Restoration",
+                              "Odor Removal",
+                              "Paint Protection",
+                              "Undercarriage Wash",
+                              "Tire Shine"
+                            ].map((service) => (
+                              <label key={service} className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg">
+                                <input
+                                  type="checkbox"
+                                  value={service}
+                                  checked={listingForm.additionalServices?.includes(service)}
+                                  onChange={(e) => {
+                                    const current = listingForm.additionalServices ? listingForm.additionalServices.split(',') : [];
+                                    if (e.target.checked) {
+                                      current.push(service);
+                                    } else {
+                                      const index = current.indexOf(service);
+                                      if (index > -1) current.splice(index, 1);
+                                    }
+                                    setListingForm({
+                                      ...listingForm,
+                                      additionalServices: current.join(',')
+                                    });
+                                  }}
+                                  className="h-4 w-4 text-[#FF5A5F] rounded focus:ring-[#FF5A5F]"
+                                />
+                                <span className="text-sm text-gray-700">{service}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
                       </>
                     )}
                     
@@ -1593,6 +1791,8 @@ export default function CreateListing() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         {selectedCategory === 'stays' 
                           ? `Price per ${selectedType === "rent" ? "month" : selectedType === "over" ? "night" : "hour"}`
+                          : selectedCategory === 'experiences' && selectedType === 'carwash'
+                          ? "Starting price for Basic Wash"
                           : selectedCategory === 'events' ? "Ticket price" : "Service rate"}
                       </label>
                       <div className="relative">
@@ -1611,6 +1811,7 @@ export default function CreateListing() {
                           {selectedCategory === 'stays' && selectedType === 'rent' && '/month'}
                           {selectedCategory === 'stays' && selectedType === 'over' && '/night'}
                           {selectedCategory === 'stays' && selectedType === 'office' && '/hour'}
+                          {selectedCategory === 'experiences' && selectedType === 'carwash' && ' (starting)'}
                         </span>
                       </div>
                     </div>
@@ -1651,6 +1852,23 @@ export default function CreateListing() {
                             </div>
                           </div>
                         )}
+                      </div>
+                    )}
+
+                    {/* CAR WASH ADDITIONAL PRICING */}
+                    {selectedCategory === 'experiences' && selectedType === 'carwash' && (
+                      <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Package Pricing Details (Optional)
+                        </label>
+                        <textarea
+                          id="additionalPricing"
+                          value={listingForm.additionalPricing}
+                          onChange={handleFormChange}
+                          placeholder="Premium Wash: R150, Full Detailing: R350, Ceramic Coating: R800, SUV/Truck extra: +R50, etc."
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
+                          rows={3}
+                        />
                       </div>
                     )}
                     
@@ -1731,7 +1949,7 @@ export default function CreateListing() {
                       </>
                     )}
                     
-                    {selectedCategory === 'experiences' && (
+                    {selectedCategory === 'experiences' && selectedType !== 'carwash' && (
                       <>
                         <FormInput
                           label="Service Category"
@@ -1748,6 +1966,28 @@ export default function CreateListing() {
                           value={listingForm.period}
                           onChange={handleFormChange}
                           placeholder="e.g., Weekdays 9am-5pm, Weekends available"
+                        />
+                      </>
+                    )}
+
+                    {/* CAR WASH ADDITIONAL DETAILS */}
+                    {selectedCategory === 'experiences' && selectedType === 'carwash' && (
+                      <>
+                        <FormInput
+                          label="Years of Experience"
+                          icon={ClockIcon}
+                          id="period"
+                          value={listingForm.period}
+                          onChange={handleFormChange}
+                          placeholder="e.g., 5+ years"
+                        />
+                        <FormInput
+                          label="Certifications"
+                          icon={ShieldCheckIcon}
+                          id="licenseNumber"
+                          value={listingForm.licenseNumber}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Certified Detailer, Eco-Friendly Certified"
                         />
                       </>
                     )}
@@ -1885,7 +2125,7 @@ export default function CreateListing() {
                     onChange={handleFileChange}
                     onSubmit={handleImageSubmit}
                     filesCount={files.length}
-                    label={`Upload ${selectedCategory} photos`}
+                    label={`Upload ${selectedCategory === 'experiences' && selectedType === 'carwash' ? 'car wash' : selectedCategory} photos`}
                   />
                   
                   {imageUploadError && (
@@ -1930,7 +2170,7 @@ export default function CreateListing() {
                       onSubmit={handleVideoUpload}
                       filesCount={videoFile ? 1 : 0}
                       maxFiles={1}
-                      label={`Upload ${selectedCategory} video`}
+                      label={`Upload ${selectedCategory === 'experiences' && selectedType === 'carwash' ? 'car wash' : selectedCategory} video`}
                     />
                     {videoUploadError && (
                       <div className="mt-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl">
@@ -1974,6 +2214,28 @@ export default function CreateListing() {
                           <p className="text-sm text-gray-500">Description</p>
                           <p className="font-medium text-gray-900">{listingForm.description.substring(0, 100)}...</p>
                         </div>
+                        
+                        {/* CAR WASH SUMMARY */}
+                        {selectedCategory === 'experiences' && selectedType === 'carwash' && (
+                          <>
+                            <div>
+                              <p className="text-sm text-gray-500">Packages</p>
+                              <p className="font-medium text-gray-900">{listingForm.carWashPackages || 'Not specified'}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">Vehicle Types</p>
+                              <p className="font-medium text-gray-900">{listingForm.vehicleTypes || 'Not specified'}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">Duration</p>
+                              <p className="font-medium text-gray-900">{listingForm.serviceDuration || 'Not specified'}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">Mobile Service</p>
+                              <p className="font-medium text-gray-900">{listingForm.mobileService ? 'Yes' : 'No'}</p>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
 

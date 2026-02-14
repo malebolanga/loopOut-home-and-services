@@ -39,6 +39,9 @@ import EventPage from './pages/EventPage';
 import PrivateTutor from './pages/PrivateTutor';
 import UpdateHelper from './pages/UpdateHelper';
 
+// Car Wash Page
+import CarWashPage from './pages/CarWashPage';
+
 // AI & Content Pages
 import Ai from "./pages/Ai";
 import Content from "./pages/Content";
@@ -89,7 +92,7 @@ import Private from "./pages/Private";
 // User Profile
 import UserProfile from './pages/UserProfile';
 
-// Photography Helper Page - CORRECTED IMPORT
+// Photography Helper Page
 import PhotographyHelperPage from './pages/PhotographyHelperPage';
 
 // Trip Components
@@ -144,12 +147,10 @@ export default function App() {
         <Route path="/trip/:id" element={<TripDetail />} />
         <Route path="/plan-trip" element={<TripSearch />} />
         
-        {/* Service Routes */}
-        <Route path="/helper/:id" element={<HelperPage />} />
-
-        {/* Photography Helper Route - CORRECTED */}
+        {/* Service Routes - IMPORTANT: Order matters! More specific routes first */}
+        <Route path="/carwash/:id" element={<CarWashPage />} />
         <Route path="/photography/:id" element={<PhotographyHelperPage />} />
-        
+        <Route path="/helper/:id" element={<HelperPage />} />
         <Route path="/event/:id" element={<EventPage />} />
         <Route path="/privatetutor/:privatetutorId" element={<PrivateTutor />} />
         <Route path="/service/:serviceId" element={<Services />} />
@@ -215,7 +216,7 @@ export default function App() {
         {/* Additional Routes */}
         <Route path="/private" element={<Private />} />
         
-        {/* Fallback/404 Route - You might want to add this */}
+        {/* Fallback/404 Route - Uncomment if you have a NotFound component */}
         {/* <Route path="*" element={<NotFound />} /> */}
       </Routes>
       <Footer />

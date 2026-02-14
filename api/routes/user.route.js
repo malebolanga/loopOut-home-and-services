@@ -36,6 +36,8 @@ router.get('/services/:id', verifyToken, getUserServices);
 
 router.get('/helpers/:id', verifyToken, getUserHelpers);
 
+
+
 // Add these new routes
 router.get('/events/:id', verifyToken, getUserEvents);
 router.get('/post-count/:id', verifyToken, getUserPostCount);

@@ -7,6 +7,7 @@ import listingRouter from './routes/listing.route.js';
 import commentRouter from './routes/comment.route.js'; // Add this line
 import serviceRouter from './routes/service.route.js'; // Add this line
 import helperRouter from './routes/helper.route.js'; // ADD THIS LINE
+import carwashRoutes from './routes/carwash.route.js'; // Add this import
 import serviceCommentRouter from './routes/service-comment.route.js';
 import eventRouter from './routes/event.route.js';
 import cookieParser from 'cookie-parser';
@@ -40,6 +41,7 @@ app.use('/api/comment', commentRouter); // Add this line
 app.use('/api/comments', commentRouter); // Add this line
 app.use('/api/helper', helperRouter); // ADD THIS LINE
 app.use('/api/event', eventRouter);
+app.use('/api/carwash', carwashRoutes); // Add this line
 app.use('/api/service-comments', serviceCommentRouter);
 // Add to your routes:
 

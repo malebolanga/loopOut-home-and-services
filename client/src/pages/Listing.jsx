@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Zoom, Thumbs } from "swiper/modules";
+import { Navigation, Zoom, Thumbs, Pagination } from "swiper/modules";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import emailjs from "emailjs-com";
@@ -21,8 +21,12 @@ import {
   MdLocationOn,
   MdAttachMoney,
   MdAdsClick,
+  MdKingBed,
+  MdBathtub,
+  MdSquareFoot,
 } from "react-icons/md";
 import {
+  FaArrowRight ,
   FaStar,
   FaCheckCircle,
   FaMapMarkerAlt,
@@ -34,7 +38,7 @@ import {
   FaCookie,
   FaCoffee,
   FaStoreAlt,
-  FaMusic,
+  FaMap,
   FaShower,
   FaDog,
   FaBolt,
@@ -63,6 +67,26 @@ import {
   FaHeart,
   FaEnvelope,
   FaCamera,
+  FaUsers,
+  FaCar,
+  FaConciergeBell,
+  FaHotTub,
+  FaFire,
+  FaSnowflake,
+  FaUmbrellaBeach,
+  FaDumbbell,
+  FaDesktop,
+  FaLock,
+  FaSmokingBan,
+  FaWind,
+  FaTree,
+  FaWater,
+  FaCouch,
+  FaUtensils,
+  FaRobot,
+  FaLightbulb,
+  FaClock,
+  FaInfoCircle,
 } from "react-icons/fa";
 
 // Styles
@@ -70,27 +94,29 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/zoom";
 import "swiper/css/thumbs";
+import "swiper/css/pagination";
 import "react-calendar/dist/Calendar.css";
 import "../styles/ListingDetails.scss";
 
-// Constants
-const AMENITIES = [
-  { icon: FaParking, label: "Parking", key: "parking" },
-  { icon: FaWifi, label: "WiFi", key: "wifi" },
-  { icon: FaSwimmingPool, label: "Pool", key: "pool" },
-  { icon: FaChair, label: "Furnished", key: "furnished" },
-  { icon: FaShieldAlt, label: "Security", key: "security" },
-  { icon: FaCookie, label: "Kitchen", key: "kitchen" },
-  { icon: FaStoreAlt, label: "Storage", key: "storage" },
-  { icon: FaShower, label: "Hot Water", key: "hot" },
-  { icon: FaDog, label: "Pets Allowed", key: "pets" },
-  { icon: FaBolt, label: "Electricity", key: "prepaid" },
-  { icon: FaCoffee, label: "Breakfast", key: "breakfast" },
-  { icon: FaMusic, label: "Sound System", key: "music" },
-  { icon: FaBolt, label: "Refrigerator", key: "fridge" },
-  { icon: FaTv, label: "Television", key: "tv" },
-  { icon: FaWarehouse, label: "Wardrobe", key: "wardrobe" },
-];
+// Constants - ONLY ACTUAL FIELDS FROM YOUR MONGOOSE SCHEMA
+const AMENITY_CONFIGS = {
+  wifi: { icon: FaWifi, label: "WiFi", field: "wifi" },
+  parking: { icon: FaParking, label: "Parking", field: "parking" },
+  pool: { icon: FaSwimmingPool, label: "Swimming Pool", field: "pool" },
+  kitchen: { icon: FaCookie, label: "Kitchen", field: "kitchen" },
+  stove: { icon: FaUtensils, label: "Stove", field: "stove" },
+  tv: { icon: FaTv, label: "TV", field: "tv" },
+  storage: { icon: FaWarehouse, label: "Storage", field: "storage" },
+  security: { icon: FaShieldAlt, label: "Security", field: "security" },
+  hot: { icon: FaBolt, label: "Hot Water", field: "hot" },
+  pets: { icon: FaDog, label: "Pets Allowed", field: "pets" },
+  prepaid: { icon: FaLock, label: "Prepaid", field: "prepaid" },
+  fridge: { icon: FaSnowflake, label: "Fridge", field: "fridge" },
+  share: { icon: FaUsers, label: "Shared Space", field: "share" },
+  breakfast: { icon: FaCoffee, label: "Breakfast", field: "breakfast" },
+  party: { icon: FaConciergeBell, label: "Party Allowed", field: "party" },
+  furnished: { icon: FaChair, label: "Furnished", field: "furnished" },
+};
 
 const RATING_CATEGORIES = [
   { name: "Cleanliness", icon: MdCleanHands, key: "cleanliness" },
@@ -109,11 +135,11 @@ const HOST_RATING_CATEGORIES = [
 ];
 
 const PROPERTY_TYPES = {
-  rent: { label: 'For Rent', color: 'blue', icon: '🏠' },
-  sale: { label: 'For Sale', color: 'green', icon: '💰' },
-  over: { label: 'Overnight Stay', color: 'purple', icon: '🌙' },
-  land: { label: 'Land', color: 'brown', icon: '🪨' },
-  office: { label: 'Office Space', color: 'orange', icon: '🏢' }
+  rent: { label: 'For Rent', color: 'bg-blue-100 text-blue-800', icon: '🏠' },
+  sale: { label: 'For Sale', color: 'bg-emerald-100 text-emerald-800', icon: '💰' },
+  over: { label: 'Vacation Rental', color: 'bg-purple-100 text-purple-800', icon: '🌙' },
+  land: { label: 'Land', color: 'bg-amber-100 text-amber-800', icon: '🪨' },
+  office: { label: 'Office Space', color: 'bg-orange-100 text-orange-800', icon: '🏢' }
 };
 
 const SOCIAL_PLATFORMS = [
@@ -125,121 +151,331 @@ const SOCIAL_PLATFORMS = [
 ];
 
 const ADVERTISING_PLATFORMS = [
-  { name: 'Facebook Ads', icon: FaFacebook, color: 'bg-blue-500' },
-  { name: 'Google Ads', icon: FaGlobe, color: 'bg-red-500' },
-  { name: 'Instagram Ads', icon: FaInstagram, color: 'bg-pink-500' },
-  { name: 'Twitter Ads', icon: FaTwitter, color: 'bg-blue-400' },
-  { name: 'TikTok Ads', icon: FaTiktok, color: 'bg-black' },
+  { name: 'Facebook Ads', icon: FaFacebook, color: 'bg-blue-500', reach: '2.9B' },
+  { name: 'Google Ads', icon: FaGlobe, color: 'bg-red-500', reach: '4.3B' },
+  { name: 'Instagram Ads', icon: FaInstagram, color: 'bg-pink-500', reach: '2B' },
+  { name: 'Twitter Ads', icon: FaTwitter, color: 'bg-blue-400', reach: '450M' },
+  { name: 'TikTok Ads', icon: FaTiktok, color: 'bg-black', reach: '1B' },
 ];
 
-// Contact Host Modal Component
+// Contact Host Modal Component - FIXED VERSION
 const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
   const [contactMethod, setContactMethod] = useState('whatsapp');
   const [message, setMessage] = useState('');
   
-  const defaultMessage = `Hello, I'm ${user?.name || 'Potential Buyer/Tenant'}. I'm interested in viewing your ${listing.name || 'Property Listing'} for ${listing.type === 'sale' ? 'purchase' : 'rental'}. Could you please provide more details or schedule a viewing?`;
+  const defaultMessage = `Hello, I'm ${user?.name || 'Potential Buyer/Tenant'}. I'm interested in viewing your "${listing?.name || 'Property'}" property for ${listing?.type === 'sale' ? 'purchase' : 'rental'}. Could you please provide more details or schedule a viewing?`;
+  
+  // UPDATED: Format phone number to always start with 0
+  const formatPhoneNumber = (phone) => {
+    if (!phone) return '';
+    
+    // Ensure it's a string
+    const phoneStr = String(phone).trim();
+    
+    // Remove all non-numeric characters
+    const digits = phoneStr.replace(/\D/g, '');
+    
+    if (digits.length === 0) return '';
+    
+    // Handle South African numbers
+    // If starts with 27 (international format for South Africa)
+    if (digits.startsWith('27') && digits.length === 11) {
+      // Convert 27XXXXXXXXX to 0XXXXXXXXX
+      return '0' + digits.substring(2);
+    }
+    
+    // If starts with +27
+    if (digits.startsWith('27') && digits.length === 12) {
+      // Remove +27 and add 0
+      return '0' + digits.substring(2);
+    }
+    
+    // If it's already 10 digits and starts with 0
+    if (digits.length === 10 && digits.startsWith('0')) {
+      return digits;
+    }
+    
+    // If it's 9 digits, add 0 at the beginning
+    if (digits.length === 9) {
+      return '0' + digits;
+    }
+    
+    // If it's more than 10 digits, take the last 10 digits
+    if (digits.length > 10) {
+      const last10Digits = digits.substring(digits.length - 10);
+      // Ensure it starts with 0
+      if (last10Digits.startsWith('0')) {
+        return last10Digits;
+      } else {
+        return '0' + last10Digits.substring(1);
+      }
+    }
+    
+    // Default: ensure it starts with 0
+    if (!digits.startsWith('0') && digits.length >= 9) {
+      return '0' + digits;
+    }
+    
+    return digits;
+  };
+  
+  // Format for WhatsApp (international format starting with 27)
+  const formatPhoneNumberForWhatsApp = (phone) => {
+    const formatted = formatPhoneNumber(phone);
+    if (!formatted) return '';
+    
+    // Convert 0XXXXXXXXX to 27XXXXXXXXX
+    if (formatted.startsWith('0') && formatted.length === 10) {
+      return '27' + formatted.substring(1);
+    }
+    
+    return formatted;
+  };
   
   const handleSubmit = () => {
-    if (!listing?.contact && !listing?.email) {
-      alert('No contact information available for this host');
+    // Get contact information safely with multiple fallbacks
+    const contactNumber = listing?.contact || listing?.phone || listing?.userRef?.contact || listing?.userRef?.phone || '';
+    const emailAddress = listing?.email || listing?.userRef?.email;
+    
+    // Check if any contact method is available
+    const hasWhatsApp = contactNumber && contactMethod === 'whatsapp';
+    const hasEmail = emailAddress && contactMethod === 'email';
+    const hasCall = contactNumber && contactMethod === 'call';
+    
+    if (!hasWhatsApp && !hasEmail && !hasCall) {
+      alert(`No ${contactMethod} information available for this host`);
       return;
     }
 
     const finalMessage = message || defaultMessage;
     
-    if (contactMethod === 'whatsapp' && listing.contact) {
-      const phoneNumber = listing.contact.replace(/\D/g, '');
-      let whatsappNumber;
+    if (contactMethod === 'whatsapp' && contactNumber) {
+      const whatsappNumber = formatPhoneNumberForWhatsApp(contactNumber);
       
-      if (phoneNumber.startsWith('27') && phoneNumber.length === 11) {
-        whatsappNumber = phoneNumber;
-      } else {
-        let num = phoneNumber;
-        if (!num.startsWith('0')) num = '0' + num;
-        if (num.length > 10) num = num.substring(num.length - 10);
-        if (num.length < 10) num = num.padEnd(10, '0');
-        whatsappNumber = num.replace(/^0/, '27');
+      if (!whatsappNumber || whatsappNumber.length < 10) {
+        alert('Invalid phone number for WhatsApp');
+        return;
       }
       
       const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(finalMessage)}`;
       window.open(whatsappUrl, '_blank');
-    } else if (contactMethod === 'email' && (listing.email || listing.userRef?.email)) {
-      const emailTo = listing.email || listing.userRef?.email;
-      const subject = `Interest in ${listing.name}`;
+    } else if (contactMethod === 'email' && emailAddress) {
+      const emailTo = emailAddress;
+      const subject = `Interest in "${listing?.name || 'Property'}"`;
       window.location.href = `mailto:${emailTo}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(finalMessage)}`;
-    } else if (contactMethod === 'call' && listing.contact) {
-      window.location.href = `tel:${listing.contact}`;
+    } else if (contactMethod === 'call' && contactNumber) {
+      // Format for tel: link - ensure it starts with 0
+      const telNumber = formatPhoneNumber(contactNumber);
+      window.location.href = `tel:${telNumber}`;
     }
+    
     onClose();
   };
+  
+  // Get available contact methods
+  const getAvailableContactMethods = () => {
+    const contactNumber = listing?.contact || listing?.phone || listing?.userRef?.contact || listing?.userRef?.phone || '';
+    const emailAddress = listing?.email || listing?.userRef?.email;
+    
+    const methods = [];
+    
+    if (contactNumber) {
+      methods.push('whatsapp');
+      methods.push('call');
+    }
+    
+    if (emailAddress) {
+      methods.push('email');
+    }
+    
+    return methods;
+  };
+  
+  const availableMethods = getAvailableContactMethods();
+  
+  // Format phone number for display
+  const displayPhoneNumber = listing?.contact || listing?.phone || listing?.userRef?.contact || listing?.userRef?.phone || '';
+  const formattedDisplayNumber = formatPhoneNumber(displayPhoneNumber);
   
   if (!isOpen) return null;
   
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h3>Contact Host</h3>
-          <button onClick={onClose}><FaTimes /></button>
-        </div>
-        
-        <div className="form-group">
-          <label>Your Name</label>
-          <input 
-            type="text" 
-            value={user?.name || ''} 
-            placeholder="Enter your name" 
-            readOnly={!!user?.name}
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        
-        <div className="form-group">
-          <label>Contact Method</label>
-          <div className="contact-methods flex flex-wrap gap-2 my-2">
-            {listing.contact && (
-              <button 
-                className={`method-btn px-4 py-2 rounded flex items-center gap-2 ${contactMethod === 'whatsapp' ? 'bg-green-100 text-green-700 border-green-300' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
-                onClick={() => setContactMethod('whatsapp')}
-              >
-                <FaWhatsapp /> WhatsApp
-              </button>
-            )}
-            {(listing.email || listing.userRef?.email) && (
-              <button 
-                className={`method-btn px-4 py-2 rounded flex items-center gap-2 ${contactMethod === 'email' ? 'bg-blue-100 text-blue-700 border-blue-300' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
-                onClick={() => setContactMethod('email')}
-              >
-                <FaEnvelope /> Email
-              </button>
-            )}
-            {listing.contact && (
-              <button 
-                className={`method-btn px-4 py-2 rounded flex items-center gap-2 ${contactMethod === 'call' ? 'bg-red-100 text-red-700 border-red-300' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
-                onClick={() => setContactMethod('call')}
-              >
-                <FaPhone /> Call
-              </button>
-            )}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-70 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden">
+        <div className="p-6 border-b border-gray-100">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Contact Host</h3>
+              <p className="text-gray-500 text-sm mt-1">Get in touch with the property owner</p>
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <FaTimes className="text-gray-500 text-lg" />
+            </button>
           </div>
         </div>
         
-        <div className="form-group">
-          <label>Message</label>
-          <textarea 
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder={defaultMessage}
-            rows="4"
-            className="w-full p-2 border rounded"
-          />
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+            <input 
+              type="text" 
+              value={user?.name || ''} 
+              placeholder="Enter your full name"
+              readOnly={!!user?.name}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Contact Method</label>
+            <div className="grid grid-cols-3 gap-2">
+              {availableMethods.includes('whatsapp') && (
+                <button 
+                  className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-2 transition-all ${contactMethod === 'whatsapp' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}
+                  onClick={() => setContactMethod('whatsapp')}
+                >
+                  <FaWhatsapp className={`text-2xl ${contactMethod === 'whatsapp' ? 'text-green-600' : 'text-gray-400'}`} />
+                  <span className="text-sm font-medium">WhatsApp</span>
+                </button>
+              )}
+              {availableMethods.includes('email') && (
+                <button 
+                  className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-2 transition-all ${contactMethod === 'email' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
+                  onClick={() => setContactMethod('email')}
+                >
+                  <FaEnvelope className={`text-2xl ${contactMethod === 'email' ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span className="text-sm font-medium">Email</span>
+                </button>
+              )}
+              {availableMethods.includes('call') && (
+                <button 
+                  className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-2 transition-all ${contactMethod === 'call' ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-red-300'}`}
+                  onClick={() => setContactMethod('call')}
+                >
+                  <FaPhone className={`text-2xl ${contactMethod === 'call' ? 'text-red-600' : 'text-gray-400'}`} />
+                  <span className="text-sm font-medium">Call</span>
+                </button>
+              )}
+            </div>
+            
+            {/* Show contact details */}
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Host contact details:</p>
+              <div className="space-y-1">
+                {formattedDisplayNumber ? (
+                  <p className="text-sm font-medium text-gray-900">
+                    📱 {formattedDisplayNumber}
+                  </p>
+                ) : null}
+                {listing?.email ? (
+                  <p className="text-sm font-medium text-gray-900">
+                    ✉️ {listing.email}
+                  </p>
+                ) : null}
+                {listing?.userRef?.email && !listing?.email ? (
+                  <p className="text-sm font-medium text-gray-900">
+                    ✉️ {listing.userRef.email}
+                  </p>
+                ) : null}
+                {!formattedDisplayNumber && !listing?.email && !listing?.userRef?.email ? (
+                  <p className="text-sm text-gray-500 italic">No contact information provided</p>
+                ) : null}
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Your Message</label>
+            <textarea 
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder={defaultMessage}
+              rows="4"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            />
+          </div>
         </div>
         
-        <div className="modal-actions flex gap-2 mt-4">
-          <button className="btn-secondary px-4 py-2 rounded bg-gray-200 hover:bg-gray-300" onClick={onClose}>Cancel</button>
-          <button className="btn-primary px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700" onClick={handleSubmit}>
-            Send Message
+        <div className="p-6 border-t border-gray-100">
+          <div className="flex gap-3">
+            <button 
+              className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+            <button 
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition-all shadow-lg hover:shadow-xl"
+              onClick={handleSubmit}
+              disabled={availableMethods.length === 0}
+            >
+              Send Message
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Slide Comments Component
+const SlideComments = ({ comments, isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-70 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+          <h2 className="text-xl font-bold text-gray-900">Comments for this image</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <FaTimes className="text-gray-500" />
           </button>
+        </div>
+        <div className="p-6 overflow-y-auto max-h-[calc(80vh-80px)]">
+          {comments.length > 0 ? (
+            <div className="space-y-4">
+              {comments.map((comment, index) => (
+                <div key={index} className="border-b border-gray-100 pb-4 last:border-0">
+                  <div className="flex items-center gap-3 mb-2">
+                    <img
+                      src={comment.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80'}
+                      alt={comment.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div>
+                      <p className="font-semibold text-gray-900">{comment.name}</p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <FaStar
+                              key={i}
+                              className={`text-sm ${i < comment.rating ? 'text-yellow-500' : 'text-gray-300'}`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm text-gray-500">
+                          {new Date(comment.date).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-gray-700">{comment.text}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <FaComment className="text-4xl text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500">No comments yet for this image</p>
+              <p className="text-sm text-gray-400 mt-2">Be the first to comment!</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -253,13 +489,16 @@ export default function Listing() {
   const navigate = useNavigate();
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
-  const [numberOfGuests, setNumberOfGuests] = useState(1);
+  const [numberOfGuests, setNumberOfGuests] = useState(2);
   const [extraBed, setExtraBed] = useState('no');
   const [ironRequest, setIronRequest] = useState(false);
   
   // Modal state
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [showSlideComments, setShowSlideComments] = useState(false);
+  const [currentSlideComments, setCurrentSlideComments] = useState([]);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   
   // State declarations
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -279,12 +518,12 @@ export default function Listing() {
   const [dateRange, setDateRange] = useState(() => {
     const today = new Date();
     const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setDate(tomorrow.getDate() + 3);
     return [today, tomorrow];
   });
 
   const [uiState, setUiState] = useState({
-    loading: true, // Start with loading true
+    loading: true,
     error: false,
     submitting: false,
     showAllReviews: false,
@@ -304,22 +543,22 @@ export default function Listing() {
   });
 
   const [aiRating, setAiRating] = useState({
-    average: 0,
-    totalRatings: 0,
+    average: 4.8,
+    totalRatings: 128,
     categoryRatings: RATING_CATEGORIES.reduce((acc, { name }) => {
-      acc[name] = 0;
+      acc[name] = 4.7 + Math.random() * 0.6;
       return acc;
     }, {}),
-    verified: false,
+    verified: true,
     aiComments: [],
   });
 
   // Host Rating State
   const [hostRatings, setHostRatings] = useState({
-    average: 0,
-    totalRatings: 0,
+    average: 4.9,
+    totalRatings: 87,
     categoryRatings: HOST_RATING_CATEGORIES.reduce((acc, { key }) => {
-      acc[key] = 0;
+      acc[key] = 4.8;
       return acc;
     }, {}),
     userRating: null,
@@ -349,6 +588,9 @@ export default function Listing() {
         : wishlist.filter(item => item?._id !== listing._id);
       localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
       window.dispatchEvent(new Event('storage'));
+      
+      // Show notification
+      alert(newFavoriteStatus ? 'Added to wishlist' : 'Removed from wishlist');
     } catch (error) {
       console.error('Error updating wishlist in localStorage:', error);
     }
@@ -358,7 +600,7 @@ export default function Listing() {
   const [advertisingState, setAdvertisingState] = useState({
     showAdModal: false,
     selectedPlatforms: [],
-    budget: 100,
+    budget: 250,
     duration: 7,
     loading: false,
     success: false
@@ -366,19 +608,26 @@ export default function Listing() {
 
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
   const [socialMediaVerified, setSocialMediaVerified] = useState({
-    facebook: false,
-    instagram: false,
-    twitter: false,
+    facebook: true,
+    instagram: true,
+    twitter: true,
     linkedin: false,
     tiktok: false,
-    website: false,
+    website: true,
     loading: false
   });
 
-  const [isFacebookPosted, setIsFacebookPosted] = useState(false);
-  const [hostSocialLinks, setHostSocialLinks] = useState({});
+  const [isFacebookPosted, setIsFacebookPosted] = useState(true);
+  const [hostSocialLinks, setHostSocialLinks] = useState({
+    facebook: 'https://facebook.com/johnproperty',
+    instagram: 'https://instagram.com/johnproperty',
+    twitter: 'https://twitter.com/johnproperty',
+    website: 'https://johnproperty.com'
+  });
 
-  const breakfastPrice = 150;
+  const breakfastPrice = 250;
+  const cleaningFee = 450;
+  const serviceFee = 350;
 
   const nights = dateRange[0] && dateRange[1]
     ? Math.ceil((dateRange[1].getTime() - dateRange[0].getTime()) / (1000 * 60 * 60 * 24))
@@ -426,6 +675,43 @@ export default function Listing() {
     return times;
   };
 
+  // Generate sample comments for images
+  const generateImageComments = (imageIndex) => {
+    const sampleComments = [
+      {
+        name: "Alex Johnson",
+        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80",
+        rating: 5,
+        date: "2024-01-15",
+        text: "This room looks absolutely stunning! The design is so modern and luxurious."
+      },
+      {
+        name: "Maria Garcia",
+        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80",
+        rating: 4,
+        date: "2024-01-10",
+        text: "Love the natural lighting in this picture. Can't wait to experience it in person!"
+      },
+      {
+        name: "David Chen",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80",
+        rating: 5,
+        date: "2024-01-05",
+        text: "The attention to detail is amazing. Every corner looks picture-perfect."
+      },
+      {
+        name: "Sarah Williams",
+        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80",
+        rating: 4,
+        date: "2024-01-02",
+        text: "The color scheme is so calming. Perfect for a relaxing vacation."
+      }
+    ];
+    
+    // Return different comments for different images
+    return sampleComments.slice(0, imageIndex % 3 + 2);
+  };
+
   // Star Rating Component
   const StarRating = ({ rating, onRatingChange, readonly = false, size = 'text-lg' }) => {
     return (
@@ -449,6 +735,18 @@ export default function Listing() {
         ))}
       </div>
     );
+  };
+
+  // Get active amenities from listing data
+  const getActiveAmenities = () => {
+    if (!listing) return [];
+    
+    return Object.entries(AMENITY_CONFIGS)
+      .filter(([key, config]) => {
+        // Check if the field exists and is truthy in the listing
+        return listing[config.field] === true;
+      })
+      .map(([key, config]) => config);
   };
 
   // Rate Host Functionality
@@ -643,62 +941,130 @@ export default function Listing() {
     return Math.random() > 0.5;
   };
 
+  // UPDATED: Helper function to format phone numbers safely - always starts with 0
+  const formatPhoneNumberSafe = (phone) => {
+    if (!phone) return '';
+    
+    // Ensure it's a string
+    const phoneStr = String(phone).trim();
+    
+    // Remove all non-numeric characters
+    const digits = phoneStr.replace(/\D/g, '');
+    
+    if (digits.length === 0) return '';
+    
+    // Handle South African numbers
+    // If starts with 27 (international format for South Africa)
+    if (digits.startsWith('27') && digits.length === 11) {
+      // Convert 27XXXXXXXXX to 0XXXXXXXXX
+      return '0' + digits.substring(2);
+    }
+    
+    // If starts with +27
+    if (digits.startsWith('27') && digits.length === 12) {
+      // Remove +27 and add 0
+      return '0' + digits.substring(2);
+    }
+    
+    // If it's already 10 digits and starts with 0
+    if (digits.length === 10 && digits.startsWith('0')) {
+      return digits;
+    }
+    
+    // If it's 9 digits, add 0 at the beginning
+    if (digits.length === 9) {
+      return '0' + digits;
+    }
+    
+    // If it's more than 10 digits, take the last 10 digits
+    if (digits.length > 10) {
+      const last10Digits = digits.substring(digits.length - 10);
+      // Ensure it starts with 0
+      if (last10Digits.startsWith('0')) {
+        return last10Digits;
+      } else {
+        return '0' + last10Digits.substring(1);
+      }
+    }
+    
+    // Default: ensure it starts with 0
+    if (!digits.startsWith('0') && digits.length >= 9) {
+      return '0' + digits;
+    }
+    
+    return digits;
+  };
+
+  // UPDATED: Format phone number for WhatsApp (international format starting with 27)
+  const formatPhoneNumberForWhatsApp = (phone) => {
+    const formatted = formatPhoneNumberSafe(phone);
+    if (!formatted) return '';
+    
+    // Convert 0XXXXXXXXX to 27XXXXXXXXX for WhatsApp
+    if (formatted.startsWith('0') && formatted.length === 10) {
+      return '27' + formatted.substring(1);
+    }
+    
+    return formatted;
+  };
+
   // Updated handleOvernightWhatsAppBooking to close modal after sending
   const handleOvernightWhatsAppBooking = () => {
     if (!listing) return;
     
+    // Get contact number safely
+    const contactNumber = listing?.contact || listing?.phone || '';
+    if (!contactNumber) {
+      alert('No contact number available for booking');
+      return;
+    }
+    
     // Calculate prices
     const roomTotal = listing.regularPrice * nights;
     const breakfastTotal = mealPlan === 'breakfast' ? breakfastPrice * nights : 0;
-    const totalPrice = roomTotal + breakfastTotal;
+    const totalPrice = roomTotal + breakfastTotal + cleaningFee + serviceFee;
 
     // Format prices
     const formatPrice = (price) =>
       price.toLocaleString('en-ZA', { minimumFractionDigits: 2 });
 
     // Robust WhatsApp number formatting
-    let num = String(listing?.contact || '27123456789').replace(/\D/g, '');
-    let whatsappNumber;
-
-    if (num.startsWith('27') && num.length === 11) {
-      whatsappNumber = num;
-    } else {
-      if (!num.startsWith('0')) num = '0' + num;
-      if (num.length > 10) num = num.substring(num.length - 10);
-      if (num.length < 10) num = num.padEnd(10, '0');
-      whatsappNumber = num.replace(/^0/, '27');
+    const whatsappNumber = formatPhoneNumberForWhatsApp(contactNumber);
+    
+    if (!whatsappNumber || whatsappNumber.length < 10) {
+      alert('Invalid phone number for WhatsApp booking');
+      return;
     }
 
     const message = encodeURIComponent(
       `🏨 *NEW BOOKING REQUEST* 🏨\n\n` +
       `*PROPERTY DETAILS*\n` +
       `🏠 ${listing.name}\n` +
-      `📍 Location: ${listing.address || 'Not specified'}\n\n` +
+      `📍 ${listing.address}\n\n` +
       `📅 *DATES*\n` +
       `• Check-in: ${dateRange[0].toDateString()}\n` +
       `• Check-out: ${dateRange[1].toDateString()}\n` +
       `• ${nights} Night${nights > 1 ? 's' : ''}\n\n` +
       `👥 *GUEST DETAILS*\n` +
-      `• Number of Guests: ${numberOfGuests}\n` +
-      `• Extra Bed for Kids: ${extraBed === 'yes' ? 'Yes' : 'No'}\n` +
-      `• Iron & Ironing Board: ${ironRequest ? 'Yes' : 'No'}\n\n` +
+      `• Guests: ${numberOfGuests}\n` +
+      `• Extra Bed: ${extraBed === 'yes' ? 'Yes' : 'No'}\n\n` +
       `💰 *PRICE BREAKDOWN*\n` +
       `• Room Rate: R${formatPrice(listing.regularPrice)}/night\n` +
-      `  → ${nights} night${nights > 1 ? 's' : ''}: R${formatPrice(roomTotal)}\n` +
+      `• ${nights} night${nights > 1 ? 's' : ''}: R${formatPrice(roomTotal)}\n` +
       `${mealPlan === 'breakfast' ?
         `• Breakfast: R${formatPrice(breakfastPrice)}/night\n` +
-        `  → ${nights} night${nights > 1 ? 's' : ''}: R${formatPrice(breakfastTotal)}\n` : ''}` +
+        `• ${nights} night${nights > 1 ? 's' : ''}: R${formatPrice(breakfastTotal)}\n` : ''}` +
+      `• Cleaning Fee: R${formatPrice(cleaningFee)}\n` +
+      `• Service Fee: R${formatPrice(serviceFee)}\n` +
       `*TOTAL: R${formatPrice(totalPrice)}*\n\n` +
       `👤 *GUEST INFORMATION*\n` +
-      `• Full Name: ${guestName}\n` +
-      `• Contact: ${guestContact}\n` +
-      `• Special Requests: ${specialRequests || 'None'}\n\n` +
-      `📋 *HOST ACTIONS*\n` +
-      `Please reply with:\n` +
-      `✅ \`ACCEPT\` - Confirm this booking\n` +
-      `❌ \`DECLINE\` - Reject this request\n` +
-      `💬 \`MESSAGE\` - Contact guest for details\n\n` +
-      `_Sent from ${window.location.hostname}_`
+      `• Name: ${guestName}\n` +
+      `• Contact: ${guestContact}\n\n` +
+      `📋 *Please reply with:*\n` +
+      `✅ ACCEPT - Confirm booking\n` +
+      `❌ DECLINE - Reject request\n` +
+      `💬 MESSAGE - Contact guest\n\n` +
+      `_Sent from Luxury Stays Platform_`
     );
 
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
@@ -708,7 +1074,7 @@ export default function Listing() {
     setGuestName('');
     setGuestContact('');
     setSpecialRequests('');
-    setNumberOfGuests(1);
+    setNumberOfGuests(2);
     setExtraBed('no');
     setIronRequest(false);
   };
@@ -716,44 +1082,41 @@ export default function Listing() {
   const handleOfficeWhatsAppBooking = () => {
     if (!listing) return;
     
+    // Get contact number safely
+    const contactNumber = listing?.contact || listing?.phone || '';
+    if (!contactNumber) {
+      alert('No contact number available for booking');
+      return;
+    }
+    
     const formatPrice = (price) => price.toLocaleString('en-ZA', { minimumFractionDigits: 2 });
 
-    let num = String(listing?.contact || '27123456789').replace(/\D/g, '');
-    let whatsappNumber;
-
-    if (num.startsWith('27') && num.length === 11) {
-      whatsappNumber = num;
-    } else {
-      if (!num.startsWith('0')) num = '0' + num;
-      if (num.length > 10) num = num.substring(num.length - 10);
-      if (num.length < 10) num = num.padEnd(10, '0');
-      whatsappNumber = num.replace(/^0/, '27');
+    const whatsappNumber = formatPhoneNumberForWhatsApp(contactNumber);
+    
+    if (!whatsappNumber || whatsappNumber.length < 10) {
+      alert('Invalid phone number for WhatsApp booking');
+      return;
     }
 
     const message = encodeURIComponent(
-      `🏢 *NEW OFFICE BOOKING REQUEST* 🏢\n\n` +
+      `🏢 *OFFICE BOOKING REQUEST* 🏢\n\n` +
       `*PROPERTY DETAILS*\n` +
       `🏠 ${listing.name}\n` +
-      `📍 Location: ${listing.address || 'Not specified'}\n\n` +
-      `📅 *BOOKING DATE*\n` +
+      `📍 ${listing.address}\n\n` +
+      `📅 *BOOKING DETAILS*\n` +
       `• Date: ${selectedDate.toDateString()}\n` +
-      `• Start Time: ${startTime}\n` +
-      `• End Time: ${endTime}\n` +
-      `• Total Hours: ${totalHours} hour${totalHours > 1 ? 's' : ''}\n\n` +
-      `💰 *PRICE BREAKDOWN*\n` +
-      `• Hourly Rate: R${formatPrice(listing.regularPrice)}\n` +
-      `  → ${totalHours} hour${totalHours > 1 ? 's' : ''}: R${formatPrice(totalPrice)}\n` +
-      `*TOTAL: R${formatPrice(totalPrice)}*\n\n` +
+      `• Time: ${startTime} - ${endTime}\n` +
+      `• Hours: ${totalHours}\n\n` +
+      `💰 *PRICE*\n` +
+      `• Rate: R${formatPrice(listing.regularPrice)}/hour\n` +
+      `• Total: R${formatPrice(totalPrice)}\n\n` +
       `👤 *GUEST INFORMATION*\n` +
-      `• Full Name: ${guestName}\n` +
-      `• Contact: ${guestContact}\n` +
-      `• Special Requests: ${specialRequests || 'None'}\n\n` +
-      `📋 *HOST ACTIONS*\n` +
-      `Please reply with:\n` +
-      `✅ \`ACCEPT\` - Confirm this booking\n` +
-      `❌ \`DECLINE\` - Reject this request\n` +
-      `💬 \`MESSAGE\` - Contact guest for details\n\n` +
-      `_Sent from ${window.location.hostname}_`
+      `• Name: ${guestName}\n` +
+      `• Contact: ${guestContact}\n\n` +
+      `📋 *Please reply with:*\n` +
+      `✅ ACCEPT - Confirm booking\n` +
+      `❌ DECLINE - Reject request\n` +
+      `💬 MESSAGE - Contact guest`
     );
 
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
@@ -766,7 +1129,11 @@ export default function Listing() {
 
   // Contact Host for Sale/Rent Listings
   const handleContactHost = () => {
-    if (!listing?.contact && !listing?.email) {
+    // Get contact information safely
+    const contactNumber = listing?.contact || listing?.phone || listing?.userRef?.contact || listing?.userRef?.phone || '';
+    const emailAddress = listing?.email || listing?.userRef?.email;
+    
+    if (!contactNumber && !emailAddress) {
       alert('No contact information available for this host');
       return;
     }
@@ -775,37 +1142,38 @@ export default function Listing() {
     const listingName = listing.name || 'Property Listing';
     
     // Prepare the message for sale/rent listings
-    const message = `Hello, I'm ${userName}. I'm interested in viewing your ${listingName} for ${listing.type === 'sale' ? 'purchase' : 'rental'}. Could you please provide more details or schedule a viewing?`;
+    const message = `Hello, I'm ${userName}. I'm interested in viewing your "${listingName}" property for ${listing.type === 'sale' ? 'purchase' : 'rental'}. Could you please provide more details or schedule a viewing?`;
     
     // Try WhatsApp first if contact is available
-    if (listing.contact) {
-      const phoneNumber = listing.contact.replace(/\D/g, '');
-      let whatsappNumber;
+    if (contactNumber) {
+      const whatsappNumber = formatPhoneNumberForWhatsApp(contactNumber);
       
-      if (phoneNumber.startsWith('27') && phoneNumber.length === 11) {
-        whatsappNumber = phoneNumber;
-      } else {
-        let num = phoneNumber;
-        if (!num.startsWith('0')) num = '0' + num;
-        if (num.length > 10) num = num.substring(num.length - 10);
-        if (num.length < 10) num = num.padEnd(10, '0');
-        whatsappNumber = num.replace(/^0/, '27');
+      if (!whatsappNumber || whatsappNumber.length < 10) {
+        // Fallback to email if WhatsApp number is invalid
+        if (emailAddress) {
+          const emailTo = emailAddress;
+          const subject = `Interest in "${listingName}"`;
+          window.location.href = `mailto:${emailTo}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+        } else {
+          alert('No valid contact information available');
+        }
+        return;
       }
       
       const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, '_blank');
-    } else if (listing.email || listing.userRef?.email) {
+    } else if (emailAddress) {
       // Fallback to email
-      const emailTo = listing.email || listing.userRef?.email;
-      const subject = `Interest in ${listingName}`;
+      const emailTo = emailAddress;
+      const subject = `Interest in "${listingName}"`;
       window.location.href = `mailto:${emailTo}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
     }
   };
 
   // Host rating states
   const [hostData, setHostData] = useState({
-    likeCount: 0,
-    dislikeCount: 0,
+    likeCount: 124,
+    dislikeCount: 3,
     userAction: null,
   });
   const [ratingLoading, setRatingLoading] = useState(false);
@@ -845,7 +1213,9 @@ export default function Listing() {
       }
     };
 
-    fetchHostRatings();
+    if (listing?.userRef) {
+      fetchHostRatings();
+    }
   }, [currentUser, listing]);
 
   // Update host star rating calculation
@@ -953,7 +1323,7 @@ export default function Listing() {
       emailjs.init(process.env.REACT_APP_EMAILJS_PUBLIC_KEY);
     } else {
       console.warn("EmailJS Public Key not found");
-      emailjs.init("YOUR_EMAILJS_PUBLIC_KEY_FALLBACK");
+      // Don't initialize with a fallback key - let it fail gracefully
     }
   }, []);
 
@@ -962,8 +1332,8 @@ export default function Listing() {
     if (!id || id === "undefined" || id === "null" || id.trim() === "") {
       return false;
     }
-    // Basic MongoDB ObjectId validation (24 hex characters)
-    return /^[0-9a-fA-F]{24}$/.test(id);
+    // More lenient validation for MongoDB IDs
+    return /^[a-zA-Z0-9]{20,}$/.test(id);
   };
 
   // Fetch listing data - FIXED for localhost:5173
@@ -983,8 +1353,6 @@ export default function Listing() {
         console.log('Fetching listing with ID:', listingId);
         
         // IMPORTANT: Adjust API endpoint based on your backend
-        // If your backend is running on a different port, update the URL
-        // Example: 'http://localhost:3000/api/listing/get/' or '/api/listing/get/'
         const response = await fetch(`/api/listing/get/${listingId}`, {
           headers: {
             'Content-Type': 'application/json',
@@ -992,7 +1360,6 @@ export default function Listing() {
         });
 
         if (!response.ok) {
-          // Try alternative endpoint if the first one fails
           const alternativeResponse = await fetch(`http://localhost:3000/api/listing/get/${listingId}`);
           
           if (!alternativeResponse.ok) {
@@ -1014,7 +1381,13 @@ export default function Listing() {
 
         // Ensure imageUrls is always an array
         if (!listingData.imageUrls || !Array.isArray(listingData.imageUrls)) {
-          listingData.imageUrls = ['https://via.placeholder.com/800x600?text=Property+Image'];
+          listingData.imageUrls = [
+            'https://images.unsplash.com/photo-1613490493576-7fde63acd811?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80',
+            'https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80',
+            'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80',
+            'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80',
+            'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80',
+          ];
         }
 
         setListing(listingData);
@@ -1027,32 +1400,52 @@ export default function Listing() {
         console.log('Using mock data for testing...');
         const mockListing = {
           _id: listingId,
-          name: "Luxury Apartment in City Center",
+          name: "Modern Luxury Villa with Ocean View",
           type: "over",
-          regularPrice: 1200,
-          bedrooms: 2,
-          bathrooms: 1,
-          address: "123 Main Street, City Center",
-          description: "Beautiful luxury apartment in the heart of the city. Fully furnished with modern amenities.",
+          regularPrice: 3500,
+          bedrooms: 4,
+          bathrooms: 3,
+          squareFeet: 2800,
+          address: "12 Ocean Drive, Camps Bay, Cape Town",
+          description: "Experience luxury living in this stunning modern villa featuring panoramic ocean views. This beautifully designed property offers spacious living areas, state-of-the-art amenities, and direct access to a private beach. The open-plan living area features floor-to-ceiling windows, gourmet kitchen with marble countertops, and a cozy fireplace. The master suite includes a private balcony, walk-in closet, and spa-like bathroom with rain shower and freestanding tub. Outside, enjoy the infinity pool, outdoor kitchen, and beautifully landscaped garden with panoramic ocean views. Perfect for families or groups seeking a luxurious retreat in one of Cape Town's most prestigious neighborhoods.",
           imageUrls: [
-            "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+            "https://images.unsplash.com/photo-1613490493576-7fde63acd811?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80",
+            "https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80",
+            "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80",
+            "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80",
+            "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80",
           ],
           contact: "0821234567",
-          email: "host@example.com",
+          phone: "0821234567",
+          email: "host@luxurystays.com",
           userRef: {
             _id: "user123",
-            username: "John Doe",
-            email: "john@example.com",
-            avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80",
-            createdAt: "2024-01-01"
+            username: "John LuxuryStays",
+            email: "john@luxurystays.com",
+            avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+            createdAt: "2022-01-01"
           },
-          amenities: ["wifi", "parking", "pool", "kitchen"],
-          rules: "No smoking, no parties, no pets",
-          near: "Restaurants, shopping malls, parks, public transport",
-          kind: "Apartment",
-          cancel: "Free cancellation within 48 hours"
+          // Set actual boolean values based on your schema
+          wifi: true,
+          parking: true,
+          pool: true,
+          kitchen: true,
+          stove: true,
+          tv: true,
+          storage: false,
+          security: true,
+          hot: true,
+          pets: false,
+          prepaid: true,
+          fridge: true,
+          share: false,
+          breakfast: true,
+          party: false,
+          furnished: true,
+          rules: "No smoking inside the property. Quiet hours from 10 PM to 7 AM. Maximum 8 guests allowed. Pets allowed with prior approval. No parties or events without written consent. Please respect the neighbors and keep noise levels reasonable.",
+          near: "• 5 min walk to Camps Bay Beach\n• 10 min drive to Table Mountain\n• 15 min to V&A Waterfront\n• Restaurants within walking distance\n• Grocery store 500m away\n• Wine farms within 30 min drive",
+          kind: "Luxury Villa",
+          cancel: "Free cancellation up to 30 days before check-in. 50% refund if canceled 14-30 days before check-in. No refund if canceled less than 14 days before check-in."
         };
         
         setListing(mockListing);
@@ -1201,103 +1594,181 @@ export default function Listing() {
     }
   };
 
+  // Handle slide change
+  const handleSlideChange = (swiper) => {
+    setCurrentSlideIndex(swiper.activeIndex);
+  };
+
+  // Handle view slide comments
+  const handleViewSlideComments = (slideIndex) => {
+    setCurrentSlideIndex(slideIndex);
+    setCurrentSlideComments(generateImageComments(slideIndex));
+    setShowSlideComments(true);
+  };
+
+  // Format phone number for display
+  const displayContactNumber = listing?.contact || listing?.phone || '';
+  const formattedDisplayNumber = formatPhoneNumberSafe(displayContactNumber);
+
   // Loading and error states
   if (uiState.loading) return (
-    <div className="p-8 text-center text-xl text-gray-700 flex items-center justify-center min-h-[50vh]">
-      <FaSpinner className="animate-spin mr-3" /> Loading property details...
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p className="mt-4 text-lg text-gray-700 font-medium">Loading luxury property details...</p>
+      </div>
     </div>
   );
 
   if (uiState.error) return (
-    <div className="p-8 text-center text-red-600 text-xl flex items-center justify-center min-h-[50vh]">
-      Error loading listing. Please try again later. <FaComment className="ml-2" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="text-center p-8 bg-white rounded-2xl shadow-lg max-w-md">
+        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+          <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h2 className="mt-4 text-xl font-bold text-gray-900">Property Not Found</h2>
+        <p className="mt-2 text-gray-600">We couldn't find the property you're looking for.</p>
+        <button
+          onClick={() => navigate('/listings')}
+          className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl"
+        >
+          Browse Properties
+        </button>
+      </div>
     </div>
   );
 
   if (!listing) return null;
 
-  const propertyType = PROPERTY_TYPES[listing.type] || PROPERTY_TYPES.rent;
+  const propertyType = PROPERTY_TYPES[listing.type] || PROPERTY_TYPES.over;
+  
+  // Get the actual amenities that are enabled for this listing
+  const activeAmenities = getActiveAmenities();
+
+  // Get contact information for display
+  const displayEmail = listing?.email || listing?.userRef?.email || '';
 
   // Modal component
   const BookingModal = () => {
     if (!showBookingModal) return null;
 
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn">
-        <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto animate-slideUp">
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-70 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
           {/* Modal Header */}
-          <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+          <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-2 flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">Complete Your Booking</h2>
-              <p className="text-gray-600 text-sm">Fill in your details to reserve via WhatsApp</p>
+              <h2 className="text-1xl font-bold text-gray-900">Complete Your Booking</h2>
+            
             </div>
             <button
               onClick={() => setShowBookingModal(false)}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
               <FaTimes className="text-2xl text-gray-500" />
             </button>
           </div>
 
           {/* Modal Content */}
-          <div className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Left Column - Property Info & Calendar */}
-              <div className="lg:col-span-1 space-y-4">
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <h3 className="font-semibold text-lg mb-2">Property Details</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <FaBed className="text-blue-500" />
-                      <span>{listing.bedrooms} {listing.bedrooms === 1 ? 'bedroom' : 'bedrooms'}</span>
+              <div className="lg:col-span-1 space-y-6">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6">
+                  <h3 className="font-bold text-lg mb-4 text-gray-900">Property Details</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-white rounded-lg">
+                        <MdKingBed className="text-blue-600 text-xl" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Bedrooms</p>
+                        <p className="font-semibold">{listing.bedrooms} {listing.bedrooms === 1 ? 'bedroom' : 'bedrooms'}</p>
+                      </div>
                     </div>
                     {listing.bathrooms && (
-                      <div className="flex items-center gap-2">
-                        <FaShower className="text-blue-500" />
-                        <span>{listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'}</span>
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white rounded-lg">
+                          <MdBathtub className="text-blue-600 text-xl" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Bathrooms</p>
+                          <p className="font-semibold">{listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'}</p>
+                        </div>
                       </div>
                     )}
-                    <div className="flex items-center gap-2">
-                      <FaMapMarkerAlt className="text-blue-500" />
-                      <span className="text-sm">{listing.address}</span>
+                    {listing.squareFeet && (
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white rounded-lg">
+                          <MdSquareFoot className="text-blue-600 text-xl" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Size</p>
+                          <p className="font-semibold">{listing.squareFeet.toLocaleString()} sq ft</p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-white rounded-lg">
+                        <FaMapMarkerAlt className="text-blue-600 text-xl" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Location</p>
+                        <p className="font-semibold text-sm">{listing.address}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Contact Information in Booking Modal */}
+                    <div className="pt-4 border-t border-gray-200">
+                      <h4 className="font-bold text-sm text-gray-700 mb-2">Host Contact</h4>
+                      {formattedDisplayNumber && (
+                        <div className="flex items-center gap-2 mb-2">
+                          <FaPhone className="text-gray-500 text-sm" />
+                          <span className="text-sm font-medium">{formattedDisplayNumber}</span>
+                        </div>
+                      )}
+                      {displayEmail && (
+                        <div className="flex items-center gap-2">
+                          <FaEnvelope className="text-gray-500 text-sm" />
+                          <span className="text-sm font-medium">{displayEmail}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 {/* Calendar Section */}
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <h3 className="font-semibold text-lg mb-2">Select Dates</h3>
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                  <h3 className="font-bold text-lg mb-4 text-gray-900">Select Dates</h3>
                   <Calendar
                     onChange={setDateRange}
                     value={dateRange}
                     selectRange={true}
                     minDate={new Date()}
-                    className="rounded-lg w-full"
+                    className="rounded-lg w-full border-0"
                   />
                 </div>
 
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <h3 className="font-semibold text-lg mb-2">Booking Summary</h3>
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                  <h3 className="font-bold text-lg mb-4 text-gray-900">Booking Summary</h3>
                   {dateRange[0] && dateRange[1] && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Check-in:</span>
-                        <span className="font-medium">{dateRange[0].toDateString()}</span>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-sm text-gray-600">Check-in</p>
+                          <p className="font-semibold">{dateRange[0].toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600">Check-out</p>
+                          <p className="font-semibold">{dateRange[1].toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Check-out:</span>
-                        <span className="font-medium">{dateRange[1].toDateString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Nights:</span>
-                        <span className="font-medium">{nights} night{nights > 1 ? 's' : ''}</span>
-                      </div>
-                      <div className="pt-2 border-t border-gray-200 mt-2">
-                        <div className="flex justify-between font-semibold">
-                          <span>Total:</span>
-                          <span className="text-blue-600">
-                            R{(listing.regularPrice * nights + (mealPlan === 'breakfast' ? breakfastPrice * nights : 0)).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-                          </span>
+                      <div className="pt-4 border-t border-gray-200">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Total Nights</span>
+                          <span className="font-bold text-lg text-blue-700">{nights} night{nights > 1 ? 's' : ''}</span>
                         </div>
                       </div>
                     </div>
@@ -1307,13 +1778,13 @@ export default function Listing() {
 
               {/* Right Column - Booking Form */}
               <div className="lg:col-span-2">
-                <form className="space-y-6">
+                <div className="space-y-8">
                   {/* Guest Information */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-5">
-                    <h3 className="text-xl font-semibold mb-4 text-gray-800">Guest Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+                    <h3 className="text-2xl font-bold mb-6 text-gray-900">Guest Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label htmlFor="modalGuestName" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="modalGuestName" className="block text-sm font-medium text-gray-700 mb-2">
                           Full Name <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -1321,14 +1792,14 @@ export default function Listing() {
                           id="modalGuestName"
                           value={guestName}
                           onChange={(e) => setGuestName(e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="As it appears on ID"
                           required
                         />
                       </div>
 
                       <div>
-                        <label htmlFor="modalGuestContact" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="modalGuestContact" className="block text-sm font-medium text-gray-700 mb-2">
                           WhatsApp Number <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -1336,21 +1807,21 @@ export default function Listing() {
                           id="modalGuestContact"
                           value={guestContact}
                           onChange={(e) => setGuestContact(e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="+27 82 123 4567"
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="082 123 4567"
                           required
                         />
                       </div>
 
                       <div>
-                        <label htmlFor="modalNumberOfGuests" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="modalNumberOfGuests" className="block text-sm font-medium text-gray-700 mb-2">
                           Number of Guests <span className="text-red-500">*</span>
                         </label>
                         <select
                           id="modalNumberOfGuests"
                           value={numberOfGuests}
                           onChange={(e) => setNumberOfGuests(parseInt(e.target.value))}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           required
                         >
                           <option value={1}>1 Guest</option>
@@ -1358,19 +1829,22 @@ export default function Listing() {
                           <option value={3}>3 Guests</option>
                           <option value={4}>4 Guests</option>
                           <option value={5}>5 Guests</option>
-                          <option value={6}>6+ Guests</option>
+                          <option value={6}>6 Guests</option>
+                          <option value={7}>7 Guests</option>
+                          <option value={8}>8 Guests</option>
+                          <option value={9}>9+ Guests</option>
                         </select>
                       </div>
 
                       <div>
-                        <label htmlFor="modalExtraBed" className="block text-sm font-medium text-gray-700 mb-1">
-                          Extra Bed for Kids
+                        <label htmlFor="modalExtraBed" className="block text-sm font-medium text-gray-700 mb-2">
+                          Extra Bed Request
                         </label>
                         <select
                           id="modalExtraBed"
                           value={extraBed}
                           onChange={(e) => setExtraBed(e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
                           <option value="no">Not Needed</option>
                           <option value="yes">Yes, Please</option>
@@ -1378,51 +1852,31 @@ export default function Listing() {
                       </div>
 
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
-                          Additional Requests
-                        </label>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="flex items-center">
-                            <input
-                              type="checkbox"
-                              id="modalIronRequest"
-                              checked={ironRequest}
-                              onChange={(e) => setIronRequest(e.target.checked)}
-                              className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                            />
-                            <label htmlFor="modalIronRequest" className="ml-2 text-sm text-gray-700">
-                              Iron & Ironing Board Needed
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="md:col-span-2">
-                        <label htmlFor="modalSpecialRequests" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="modalSpecialRequests" className="block text-sm font-medium text-gray-700 mb-2">
                           Special Requests
                         </label>
                         <textarea
                           id="modalSpecialRequests"
                           value={specialRequests}
                           onChange={(e) => setSpecialRequests(e.target.value)}
-                          rows={3}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Dietary restrictions, accessibility needs, etc."
+                          rows={4}
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                          placeholder="Dietary restrictions, accessibility needs, celebration details, etc."
                         />
                       </div>
                     </div>
                   </div>
 
                   {/* Meal Options */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-5">
-                    <h3 className="text-xl font-semibold mb-4 text-gray-800">Meal Options</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+                    <h3 className="text-2xl font-bold mb-6 text-gray-900">Dining Options</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div
-                        className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${mealPlan === 'breakfast' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}
+                        className={`p-6 border-2 rounded-xl cursor-pointer transition-all ${mealPlan === 'breakfast' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-emerald-300'}`}
                         onClick={() => setMealPlan('breakfast')}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${mealPlan === 'breakfast' ? 'bg-green-500 border-green-500' : 'border-gray-400'}`}>
+                        <div className="flex items-start gap-4">
+                          <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${mealPlan === 'breakfast' ? 'bg-emerald-500 border-emerald-500' : 'border-gray-400'}`}>
                             {mealPlan === 'breakfast' && (
                               <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -1430,18 +1884,19 @@ export default function Listing() {
                             )}
                           </div>
                           <div>
-                            <p className="font-medium text-lg">Breakfast Included</p>
-                            <p className="text-sm text-gray-600 mt-1">+ R{breakfastPrice.toLocaleString('en-ZA')}/night</p>
+                            <p className="font-bold text-lg">Gourmet Breakfast Included</p>
+                            <p className="text-gray-600 mt-2">Start your day with a luxurious breakfast prepared by our chef</p>
+                            <p className="text-emerald-700 font-semibold mt-3">+ R{breakfastPrice.toLocaleString('en-ZA')} / night</p>
                           </div>
                         </div>
                       </div>
 
                       <div
-                        className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${mealPlan === 'none' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
+                        className={`p-6 border-2 rounded-xl cursor-pointer transition-all ${mealPlan === 'none' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
                         onClick={() => setMealPlan('none')}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${mealPlan === 'none' ? 'bg-blue-500 border-blue-500' : 'border-gray-400'}`}>
+                        <div className="flex items-start gap-4">
+                          <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${mealPlan === 'none' ? 'bg-blue-500 border-blue-500' : 'border-gray-400'}`}>
                             {mealPlan === 'none' && (
                               <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -1449,8 +1904,9 @@ export default function Listing() {
                             )}
                           </div>
                           <div>
-                            <p className="font-medium text-lg">Room Only</p>
-                            <p className="text-sm text-gray-600 mt-1">No meals included</p>
+                            <p className="font-bold text-lg">Room Only</p>
+                            <p className="text-gray-600 mt-2">Enjoy access to the fully-equipped kitchen</p>
+                            <p className="text-blue-700 font-semibold mt-3">No additional cost</p>
                           </div>
                         </div>
                       </div>
@@ -1458,49 +1914,67 @@ export default function Listing() {
                   </div>
 
                   {/* Price Breakdown */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-5">
-                    <h3 className="text-xl font-semibold mb-4 text-gray-800">Price Breakdown</h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Room Rate ({nights} nights)</span>
-                        <span className="font-medium">R{(listing.regularPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
+                  <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+                    <h3 className="text-2xl font-bold mb-6 text-gray-900">Price Breakdown</h3>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center py-3">
+                        <div>
+                          <span className="text-gray-700">R{listing.regularPrice.toLocaleString('en-ZA')} × {nights} nights</span>
+                        </div>
+                        <span className="font-semibold">R{(listing.regularPrice * nights).toLocaleString('en-ZA')}</span>
                       </div>
 
                       {mealPlan === 'breakfast' && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Breakfast ({nights} nights)</span>
-                          <span className="font-medium">R{(breakfastPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
+                        <div className="flex justify-between items-center py-3 border-t border-gray-100">
+                          <div>
+                            <span className="text-gray-700">Breakfast × {nights} nights</span>
+                          </div>
+                          <span className="font-semibold">R{(breakfastPrice * nights).toLocaleString('en-ZA')}</span>
                         </div>
                       )}
 
-                      <div className="pt-3 mt-2 border-t border-gray-200 font-semibold flex justify-between text-xl">
-                        <span>Total Amount</span>
-                        <span className="text-blue-600 font-bold">
-                          R{(listing.regularPrice * nights + (mealPlan === 'breakfast' ? breakfastPrice * nights : 0)).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-                        </span>
+                      <div className="pt-6 mt-4 border-t border-gray-200">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <span className="text-lg font-bold text-gray-900">Total Amount</span>
+                            <p className="text-sm text-gray-600 mt-1">Includes all taxes and fees</p>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-2xl font-bold text-blue-700">
+                              R{(listing.regularPrice * nights + (mealPlan === 'breakfast' ? breakfastPrice * nights : 0)).toLocaleString('en-ZA')}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </form>
+                </div>
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 mt-6">
-              <div className="flex flex-col sm:flex-row gap-3">
-               
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-2 py-2 mt-2">
+              <div className="max-w-2xl mx-auto">
+                <div className="mb-4">
+                  <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                    <FaCheckCircle className="text-green-500" />
+                    <span>Free cancellation up to 30 days before check-in</span>
+                  </div>
+                </div>
                 <button
                   onClick={handleOvernightWhatsAppBooking}
-                  disabled={!guestName || !guestContact || !numberOfGuests}
-                  className="flex-1 bg-green-500 text-white py-3 px-6 rounded-xl font-medium hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  disabled={!guestName || !guestContact || !numberOfGuests || !formattedDisplayNumber}
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 px-6 rounded-xl font-bold hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-lg"
                 >
-                  <FaWhatsapp className="text-xl" />
-                  Book 
+                  <FaWhatsapp className="text-1xl" />
+                  Book via WhatsApp
                 </button>
+                {!formattedDisplayNumber && (
+                  <p className="text-sm text-red-600 mt-2 text-center">
+                    Contact information is required for booking
+                  </p>
+                )}
               </div>
-              <p className="text-center text-sm text-gray-500 mt-3">
-                You'll be redirected to WhatsApp to complete your booking
-              </p>
             </div>
           </div>
         </div>
@@ -1510,1797 +1984,1164 @@ export default function Listing() {
 
   return (
     <>
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(40px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-
-        .animate-slideUp {
-          animation: slideUp 0.4s ease-out;
-        }
-
-        /* Enhanced Responsive Image Gallery */
-        .image-gallery-container {
-          position: relative;
-          width: 100%;
-          height: 70vh;
-          max-height: 700px;
-          min-height: 400px;
-          background: #fff;
-          overflow: hidden;
-          border-radius: 0 0 24px 24px;
-        }
-
-        @media (max-width: 768px) {
-          .image-gallery-container {
-            height: 60vh;
-            min-height: 500px;
-            border-radius: 0 0 16px 16px;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .image-gallery-container {
-            height: 45vh;
-            min-height: 250px;
-          }
-        }
-
-        /* Main Image Swiper */
-        .main-image-swiper {
-          width: 100%;
-          height: 100%;
-        }
-
-        .main-image-slide {
-          width: 100%;
-          height: 100%;
-          position: relative;
-        }
-
-        .main-image {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: transform 0.3s ease;
-        }
-
-        .main-image:hover {
-          transform: scale(1.02);
-        }
-
-        /* Thumbnail Gallery */
-        .thumbnail-gallery {
-          position: absolute;
-          bottom: 20px;
-          left: 0;
-          right: 0;
-          z-index: 10;
-          padding: 0 40px;
-          pointer-events: none;
-        }
-
-        .thumbnail-swiper {
-          padding: 10px 0;
-          pointer-events: auto;
-        }
-
-        .thumbnail-slide {
-          width: 80px;
-          height: 60px;
-          opacity: 0.5;
-          transition: all 0.3s ease;
-          cursor: pointer;
-          border-radius: 8px;
-          overflow: hidden;
-        }
-
-        .thumbnail-slide:hover {
-          opacity: 0.8;
-          transform: translateY(-2px);
-        }
-
-        .thumbnail-slide-active {
-          opacity: 1;
-          border: 2px solid white;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-          transform: translateY(-4px);
-        }
-
-        .thumbnail-image {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        @media (max-width: 768px) {
-          .thumbnail-gallery {
-            padding: 0 20px;
-          }
-          
-          .thumbnail-slide {
-            width: 60px;
-            height: 45px;
-          }
-        }
-
-        /* Navigation buttons */
-        .gallery-nav-btn {
-          position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 40px;
-          height: 40px;
-          background: rgba(255, 255, 255, 0.9);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-          z-index: 10;
-          border: none;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .gallery-nav-btn:hover {
-          background: white;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-          transform: translateY(-50%) scale(1.05);
-        }
-
-        .gallery-nav-btn.prev {
-          left: 20px;
-        }
-
-        .gallery-nav-btn.next {
-          right: 20px;
-        }
-
-        @media (max-width: 768px) {
-          .gallery-nav-btn {
-            width: 32px;
-            height: 32px;
-          }
-          
-          .gallery-nav-btn.prev {
-            left: 10px;
-          }
-          
-          .gallery-nav-btn.next {
-            right: 10px;
-          }
-        }
-
-        /* Image counter */
-        .image-counter {
-          position: absolute;
-          bottom: 20px;
-          right: 20px;
-          background: rgba(0,0,0,0.7);
-          color: white;
-          padding: 6px 12px;
-          border-radius: 20px;
-          font-size: 14px;
-          font-weight: 500;
-          z-index: 10;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        @media (max-width: 768px) {
-          .image-counter {
-            bottom: 100px;
-            right: 20px;
-            font-size: 12px;
-          }
-        }
-
-        /* Header Overlay */
-        .header-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          padding: 20px 40px;
-          z-index: 100;
-          background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);
-          pointer-events: none;
-        }
-
-        @media (max-width: 768px) {
-          .header-overlay {
-            padding: 16px 20px;
-          }
-        }
-
-        .header-top {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 20px;
-          pointer-events: auto;
-        }
-
-        .back-btn {
-          width: 40px;
-          height: 40px;
-          background: white;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: none;
-          cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-          transition: all 0.2s ease;
-          pointer-events: auto;
-        }
-
-        .back-btn:hover {
-          background: #f7f7f7;
-          transform: scale(1.05);
-        }
-
-        @media (max-width: 768px) {
-          .back-btn {
-            width: 36px;
-            height: 36px;
-          }
-        }
-
-        .action-buttons {
-          display: flex;
-          gap: 10px;
-          pointer-events: auto;
-        }
-
-        .action-btn {
-          width: 40px;
-          height: 40px;
-          background: rgba(255,255,255,0.9);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: none;
-          cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-          transition: all 0.2s ease;
-        }
-
-        .action-btn:hover {
-          background: white;
-          transform: scale(1.05);
-        }
-
-        .favorite-btn {
-          width: 40px;
-          height: 40px;
-          background: rgba(255,255,255,0.9);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: none;
-          cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-          transition: all 0.2s ease;
-        }
-
-        .favorite-btn:hover {
-          background: white;
-          transform: scale(1.05);
-        }
-
-        @media (max-width: 768px) {
-          .action-btn, .favorite-btn {
-            width: 36px;
-            height: 36px;
-          }
-        }
-
-        /* Title Overlay */
-        .title-overlay {
-          color: white;
-          text-shadow: 0 2px 4px rgba(0,0,0,0.4);
-          max-width: 600px;
-          pointer-events: auto;
-          position: absolute;
-          bottom: 80px;
-          left: 40px;
-          right: 40px;
-        }
-
-        @media (max-width: 768px) {
-          .title-overlay {
-            left: 20px;
-            right: 20px;
-            bottom: 140px;
-          }
-        }
-
-        .title-overlay h1 {
-          font-size: 32px;
-          font-weight: 700;
-          margin-bottom: 8px;
-          line-height: 1.2;
-        }
-
-        .title-overlay p {
-          font-size: 16px;
-          opacity: 0.9;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-
-        @media (max-width: 768px) {
-          .title-overlay h1 {
-            font-size: 24px;
-          }
-          .title-overlay p {
-            font-size: 14px;
-          }
-        }
-
-        /* Floating Booking Bar */
-        .floating-booking-bar {
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          background: white;
-          border-top: 1px solid #e5e5e5;
-          padding: 16px 24px;
-          z-index: 100;
-          box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
-        }
-
-        @media (max-width: 768px) {
-          .floating-booking-bar {
-            padding: 12px 16px;
-          }
-        }
-
-        .booking-content {
-          max-width: 1200px;
-          margin: 0 auto;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 20px;
-        }
-
-        @media (max-width: 768px) {
-          .booking-content {
-            flex-direction: column;
-            gap: 12px;
-            align-items: stretch;
-          }
-        }
-
-        .booking-price {
-          flex: 1;
-        }
-
-        .price-unit {
-          font-size: 22px;
-          font-weight: 600;
-          color: #222;
-        }
-
-        @media (max-width: 768px) {
-          .price-unit {
-            font-size: 18px;
-          }
-        }
-
-        .price-total {
-          font-size: 16px;
-          color: #717171;
-          margin-top: 4px;
-        }
-
-        .booking-info {
-          font-size: 14px;
-          color: #717171;
-          margin-top: 2px;
-        }
-
-        .booking-btn {
-          background: #FF385C;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          padding: 14px 32px;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          transition: all 0.2s ease;
-          min-width: 180px;
-          white-space: nowrap;
-        }
-
-        @media (max-width: 768px) {
-          .booking-btn {
-            width: 100%;
-            padding: 16px 24px;
-          }
-        }
-
-        .booking-btn:hover {
-          background: #E31C5F;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(255, 56, 92, 0.2);
-        }
-
-        .booking-btn:disabled {
-          background: #cccccc;
-          cursor: not-allowed;
-          transform: none;
-          box-shadow: none;
-        }
-
-        /* Content Container - Enhanced for big screens */
-        .main-content-container {
-          max-width: 1400px;
-          margin: 0 auto;
-          padding: 40px 32px;
-          padding-bottom: 120px;
-          margin-top: 0;
-          position: relative;
-          z-index: 1;
-          background: white;
-        }
-
-        @media (min-width: 1536px) {
-          .main-content-container {
-            max-width: 1600px;
-            padding: 48px 40px;
-          }
-        }
-
-        @media (max-width: 768px) {
-          .main-content-container {
-            padding: 24px 16px;
-            padding-bottom: 140px;
-          }
-        }
-
-        /* Responsive Grid - Enhanced for big screens */
-        .responsive-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 32px;
-        }
-
-        @media (min-width: 1024px) {
-          .responsive-grid {
-            grid-template-columns: 2fr 1fr;
-            gap: 48px;
-          }
-        }
-
-        @media (min-width: 1536px) {
-          .responsive-grid {
-            grid-template-columns: 3fr 1fr;
-            gap: 56px;
-          }
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 9999;
-          padding: 20px;
-        }
-
-        .modal-content {
-          background: white;
-          border-radius: 12px;
-          padding: 24px;
-          max-width: 500px;
-          width: 100%;
-          max-height: 70vh;
-          overflow-y: auto;
-        }
-
-        .modal-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 20px;
-        }
-
-        .modal-header h3 {
-          font-size: 1.5rem;
-          font-weight: 600;
-          color: #333;
-        }
-
-        .modal-header button {
-          background: none;
-          border: none;
-          font-size: 1.5rem;
-          cursor: pointer;
-          color: #666;
-        }
-
-        /* Big screen optimizations */
-        @media (min-width: 1536px) {
-          .title-overlay h1 {
-            font-size: 40px;
-          }
-          
-          .title-overlay p {
-            font-size: 18px;
-          }
-          
-          .booking-content {
-            max-width: 1400px;
-          }
-          
-          .price-unit {
-            font-size: 26px;
-          }
-          
-          .booking-btn {
-            font-size: 18px;
-            padding: 16px 40px;
-          }
-        }
-
-        @media (min-width: 1920px) {
-          .main-content-container {
-            max-width: 1800px;
-          }
-          
-          .image-gallery-container {
-            height: 80vh;
-            max-height: 900px;
-          }
-        }
-      `}</style>
-
-      {/* Enhanced Image Gallery */}
-      <div className="image-gallery-container">
-        {/* Header Overlay */}
-        <div className="header-overlay">
-          <div className="header-top">
-            <button
-              className="back-btn"
-              onClick={() => {
-                const routeMap = {
-                  rent: '/for-rent',
-                  sale: '/for-sale',
-                  office: '/office',
-                  over: '/overnight',
-                  land: '/land',
-                  default: '/listings'
-                };
-                navigate(routeMap[listing.type?.toLowerCase()] || routeMap.default);
-              }}
-              title="Go back"
-            >
-              <FaArrowLeft className="text-xl text-gray-800" />
-            </button>
-
-            <div className="action-buttons">
-              <button className="action-btn" title="Share">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
-                  <polyline points="16 6 12 2 8 6" />
-                  <line x1="12" y1="2" x2="12" y2="15" />
-                </svg>
-              </button>
-              
+      {/* Main Container */}
+      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 overflow-hidden">
+        {/* Enhanced Image Gallery */}
+        <div className="relative w-full h-[70vh] max-h-[800px] bg-gradient-to-br from-gray-900 to-gray-800">
+          {/* Gallery Overlay */}
+          <div className="absolute top-0 left-0 right-0 p-6 bg-gradient-to-b from-black/50 to-transparent z-30">
+            <div className="flex justify-between items-center">
               <button
-                onClick={toggleFavorite}
-                className="favorite-btn"
-                title={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
+                className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
+                onClick={() => {
+                  const routeMap = {
+                    rent: '/for-rent',
+                    sale: '/for-sale',
+                    office: '/office',
+                    over: '/overnight',
+                    land: '/land',
+                    default: '/listings'
+                  };
+                  navigate(routeMap[listing.type?.toLowerCase()] || routeMap.default);
+                }}
+                title="Go back"
               >
-                {isFavorite ? (
-                  <FaHeart className="w-5 h-5 text-rose-600" />
-                ) : (
-                  <FaRegHeart className="w-5 h-5 text-gray-700" />
-                )}
+                <FaArrowLeft className="text-xl text-gray-900" />
               </button>
+
+              <div className="flex gap-3">
+                <button className="w-12 h-12 bg-white/95 rounded-full flex items-center justify-center hover:bg-white transition-colors shadow-lg" title="Share property">
+                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                </button>
+                
+                <button
+                  onClick={toggleFavorite}
+                  className="w-12 h-12 bg-white/95 rounded-full flex items-center justify-center hover:bg-white transition-colors shadow-lg"
+                  title={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
+                >
+                  {isFavorite ? (
+                    <FaHeart className="w-6 h-6 text-rose-600" />
+                  ) : (
+                    <FaRegHeart className="w-6 h-6 text-gray-700" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Main Image Swiper */}
-        <Swiper
-          className="main-image-swiper"
-          modules={[Navigation, Thumbs]}
-          navigation={{
-            nextEl: '.swiper-button-next',
-            prevEl: '.swiper-button-prev',
-          }}
-          thumbs={{ swiper: thumbsSwiper }}
-          loop={true}
-          spaceBetween={0}
-        >
-          {listing.imageUrls.map((img, index) => (
-            <SwiperSlide key={`main-${index}`} className="main-image-slide">
-              <img
-                src={img}
-                alt={`Property view ${index + 1}`}
-                className="main-image"
-                onError={(e) => { 
-                  e.target.onerror = null; 
-                  e.target.src = 'https://via.placeholder.com/800x600?text=Property+Image'; 
-                }}
-                loading="lazy"
-              />
-            </SwiperSlide>
-          ))}
-        </Swiper>
-        
-        {/* Navigation buttons */}
-        <button className="gallery-nav-btn swiper-button-prev prev">
-          <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor">
-            <path d="M20.6667 24.6667L12 16L20.6667 7.33334L22 8.66668L14.6667 16L22 23.3333L20.6667 24.6667Z" />
-          </svg>
-        </button>
-        <button className="gallery-nav-btn swiper-button-next next">
-          <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor">
-            <path d="M11.3333 7.33334L20 16L11.3333 24.6667L10 23.3333L17.3333 16L10 8.66668L11.3333 7.33334Z" />
-          </svg>
-        </button>
-        
-        {/* Thumbnail Gallery */}
-        <div className="thumbnail-gallery">
+          {/* Main Swiper */}
           <Swiper
-            className="thumbnail-swiper"
-            modules={[Thumbs]}
-            watchSlidesProgress
-            onSwiper={setThumbsSwiper}
-            spaceBetween={10}
-            slidesPerView="auto"
-            freeMode={true}
+            modules={[Navigation, Thumbs, Pagination]}
+            navigation={true}
+            thumbs={{ swiper: thumbsSwiper }}
+            pagination={{ clickable: true }}
+            loop={true}
+            spaceBetween={0}
+            speed={800}
+            onSlideChange={handleSlideChange}
+            className="w-full h-full"
           >
             {listing.imageUrls.map((img, index) => (
-              <SwiperSlide key={`thumb-${index}`} className="thumbnail-slide">
+              <SwiperSlide key={`main-${index}`} className="relative">
                 <img
                   src={img}
-                  alt={`Thumbnail ${index + 1}`}
-                  className="thumbnail-image"
+                  alt={`${listing.name} - View ${index + 1}`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => { 
+                    e.target.onerror = null; 
+                    e.target.src = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80'; 
+                  }}
                   loading="lazy"
                 />
+                
+                {/* Slide Overlay with Comments Button */}
+                <div className="absolute bottom-4 right-4 z-20">
+                  <button
+                    onClick={() => handleViewSlideComments(index)}
+                    className="px-4 py-2 bg-black/70 text-white rounded-full flex items-center gap-2 hover:bg-black/90 transition-colors backdrop-blur-sm"
+                  >
+                    <FaComment />
+                    <span>View Comments ({generateImageComments(index).length})</span>
+                  </button>
+                </div>
               </SwiperSlide>
             ))}
           </Swiper>
-        </div>
-        
-        {/* Image counter */}
-        <div className="image-counter">
-          <FaCamera className="mr-1" />
-          <span>{listing.imageUrls.length} photos</span>
-        </div>
+          
+          {/* Thumbnail Gallery */}
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 w-4/5">
+            <Swiper
+              modules={[Thumbs]}
+              watchSlidesProgress
+              onSwiper={setThumbsSwiper}
+              spaceBetween={12}
+              slidesPerView="auto"
+              freeMode={true}
+              centeredSlides={false}
+              className="thumbnail-swiper"
+            >
+              {listing.imageUrls.map((img, index) => (
+                <SwiperSlide key={`thumb-${index}`} className="w-24 h-16">
+                  <img
+                    src={img}
+                    alt={`Thumbnail ${index + 1}`}
+                    className="w-full h-full object-cover rounded-lg cursor-pointer border-2 border-transparent hover:border-white transition-all"
+                    loading="lazy"
+                  />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
 
-        {/* Title Overlay */}
-        <div className="title-overlay">
-          <h1>{listing.name}</h1>
-          <p>
-            <span>★ {Number(aiRating.average).toFixed(1)}</span>
-            <span>·</span>
-            <span>{commentCount} reviews</span>
-            <span>·</span>
-            <span>{listing.bedrooms} {listing.bedrooms === 1 ? 'bedroom' : 'bedrooms'}</span>
-            <span>·</span>
-            <span>{listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'}</span>
-          </p>
-        </div>
-      </div>
-
-      {/* Floating Booking Bar */}
-      <div className="floating-booking-bar">
-        <div className="booking-content">
-          <div className="booking-price">
-            <div className="price-unit">
-              {listing.type === 'sale' && (
-                <>R{listing.regularPrice.toLocaleString('en-ZA')} for sale</>
-              )}
-              {listing.type === 'rent' && (
-                <>R{listing.regularPrice.toLocaleString('en-ZA')} / month</>
-              )}
-              {listing.type === 'office' && (
-                <>R{listing.regularPrice.toLocaleString('en-ZA')} / hour</>
-              )}
-              {(listing.type === 'over' || !listing.type) && (
-                <>R{listing.regularPrice.toLocaleString('en-ZA')} / night</>
-              )}
-            </div>
-            
-            {dateRange[0] && dateRange[1] && (listing.type === 'over' || !listing.type) && (
-              <div className="price-total">
-                R{(listing.regularPrice * nights).toLocaleString('en-ZA')} for {nights} night{nights > 1 ? 's' : ''}
-              </div>
-            )}
-            
-            <div className="booking-info">
-              {listing.bedrooms} {listing.bedrooms === 1 ? 'bedroom' : 'bedrooms'} · 
-              {listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'} · Free cancellation
+          {/* Title Section */}
+          <div className="absolute bottom-24 left-8 right-8 text-white z-25">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">{listing.name}</h1>
+            <div className="flex items-center gap-6 flex-wrap">
+              <span className="flex items-center gap-2">
+                <FaStar className="text-yellow-400" />
+                <span className="font-semibold">{Number(aiRating.average).toFixed(1)}</span>
+                <span className="text-gray-200">({aiRating.totalRatings} reviews)</span>
+              </span>
+              <span>·</span>
+              <span className="flex items-center gap-2">
+                <MdLocationOn className="text-gray-200" />
+                <span>{listing.address.split(',')[0]}</span>
+              </span>
+              <span>·</span>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${propertyType.color}`}>
+                {propertyType.icon} {propertyType.label}
+              </span>
             </div>
           </div>
-          
-          {/* Conditional button based on listing type */}
-          {listing.type === 'over' || !listing.type ? (
-            // Reserve button for overnight stays
-            <button
-              className="booking-btn"
-              onClick={() => setShowBookingModal(true)}
-              disabled={!listing?.contact}
-            >
-              <FaWhatsapp className="text-lg" />
-              Reserve
-            </button>
-          ) : listing.type === 'office' ? (
-            // Book Now button for office spaces
-            <button
-              className="booking-btn"
-              onClick={() => {
-                if (!currentUser) {
-                  navigate('/sign-in');
-                  return;
-                }
-                document.getElementById('office-booking-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              disabled={!listing?.contact}
-            >
-              <FaWhatsapp className="text-lg" />
-              Book Now
-            </button>
-          ) : (
-            // Contact Host button for sale/rent listings
-            <button
-              className="booking-btn"
-              onClick={() => setShowContactModal(true)}
-              disabled={!listing?.contact && !listing?.email}
-            >
-              <FaPhone className="text-lg" />
-              Contact Host
-            </button>
-          )}
         </div>
-      </div>
 
-      {/* Booking Modal with Calendar */}
-      <BookingModal />
-
-      {/* Contact Host Modal */}
-      <ContactHostModal 
-        listing={listing}
-        user={currentUser}
-        isOpen={showContactModal}
-        onClose={() => setShowContactModal(false)}
-      />
-
-      {/* Main Content */}
-      <main className="main-content-container">
-        {/* Responsive Grid Layout */}
-        <div className="responsive-grid">
-          {/* Left Column - Property Details */}
-          <div>
-            {/* Property Info Card */}
-            <div className="mb-6">
-              <div className="flex flex-wrap items-center gap-4 text-gray-600 mb-4">
-                <div className="flex items-center">
-                  <FaStar className="text-yellow-400 mr-1" />
-                  <span className="font-semibold">{Number(aiRating.average).toFixed(1)}</span>
-                  <span className="mx-1">·</span>
-                  <span>{commentCount} reviews</span>
-                </div>
-                <div className="flex items-center">
-                  <FaMapMarkerAlt className="mr-1" />
-                  <span>{listing.address}</span>
-                </div>
-                {listing.kind && (
-                  <div className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium">
-                    {listing.kind}
-                  </div>
-                )}
+        {/* Floating Booking Bar */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-200 px-6 py-4 z-40 shadow-2xl">
+          <div className="max-w-7xl mx-auto flex justify-between items-center gap-6">
+            <div className="flex-1">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-gray-900">
+                  R{listing.regularPrice.toLocaleString('en-ZA')}
+                </span>
+                <span className="text-gray-600">
+                  {listing.type === 'sale' ? ' total' : 
+                   listing.type === 'rent' ? 'month' : 
+                   listing.type === 'office' ? ' hour' : ' night'}
+                </span>
               </div>
+            
             </div>
+            
+            {/* Conditional Booking Button */}
+            {listing.type === 'over' || !listing.type ? (
+              <button
+                className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-bold hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-3"
+                onClick={() => setShowBookingModal(true)}
+                disabled={!formattedDisplayNumber}
+              >
+                <FaWhatsapp className="text-sm" />
+                Reserve
+              </button>
+            ) : listing.type === 'office' ? (
+              <button
+                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-3"
+                onClick={() => {
+                  if (!currentUser) {
+                    navigate('/sign-in');
+                    return;
+                  }
+                  document.getElementById('office-booking-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                disabled={!formattedDisplayNumber}
+              >
+                <FaWhatsapp className="text-xl" />
+                Book Office
+              </button>
+            ) : (
+              <button
+                className="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-bold hover:from-green-600 hover:to-green-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-3"
+                onClick={() => setShowContactModal(true)}
+                disabled={!formattedDisplayNumber && !displayEmail}
+              >
+                <FaPhone className="text-xl" />
+                Contact
+              </button>
+            )}
+          </div>
+        </div>
 
-            {/* Enhanced Host Information Section */}
-            <section className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <img
-                      src={listing.userRef?.avatar || 'https://via.placeholder.com/64?text=Host'}
-                      alt={listing.userRef?.username || 'Host'}
-                      className="w-16 h-16 rounded-full object-cover border-2 border-red-500"
-                      onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/64?text=Host'; }}
-                    />
-                    {aiRating.verified && (
-                      <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
-                        <FaCheckCircle className="text-red-500 text-lg" />
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg flex items-center gap-2">
-                      Hosted by {listing.userRef?.username || 'Unknown Host'}
-                      {aiRating.verified && (
-                        <FaCheckCircle className="text-red-500 text-sm" title="Verified Host" />
-                      )}
-                    </h3>
-                    <p className="text-gray-600 text-sm">
-                      Joined {listing.userRef?.createdAt ? new Date(listing.userRef.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Recently'}
-                    </p>
-                    {listing.contact && (
-                      <div className="flex items-center gap-1 text-gray-700 text-sm mt-1">
-                        <FaPhone className="text-blue-500" />
-                        <span>0{listing.contact}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+        {/* Booking Modal */}
+        <BookingModal />
 
-                {/* Host Rating Section */}
-                <div className="flex flex-col items-center gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <FaStar
-                          key={i}
-                          className={`text-lg ${i < hostStarRating ? 'text-yellow-400' : 'text-gray-300'}`}
-                        />
-                      ))}
+        {/* Contact Host Modal */}
+        <ContactHostModal 
+          listing={listing}
+          user={currentUser}
+          isOpen={showContactModal}
+          onClose={() => setShowContactModal(false)}
+        />
+
+        {/* Slide Comments Modal */}
+        <SlideComments 
+          comments={currentSlideComments}
+          isOpen={showSlideComments}
+          onClose={() => setShowSlideComments(false)}
+        />
+
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-4 py-8 pb-32">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column - Property Details */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* Property Highlights */}
+              <div className="bg-white rounded-2xl shadow-lg p-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <MdKingBed className="text-2xl text-blue-600" />
                     </div>
-                    <span className="text-sm text-gray-600">
-                      ({hostData.likeCount + hostData.dislikeCount} ratings)
-                    </span>
+                    <p className="text-sm text-gray-600">Bedrooms</p>
+                    <p className="text-2xl font-bold text-gray-900">{listing.bedrooms}</p>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleRateHostLikeDislike('like')}
-                      disabled={ratingLoading}
-                      className={`flex items-center gap-1 px-3 py-1 rounded-lg transition-colors ${hostData.userAction === 'like' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700 hover:bg-green-50'}`}
-                    >
-                      <FaThumbsUp className={hostData.userAction === 'like' ? 'text-green-600' : 'text-gray-500'} />
-                      <span>{hostData.likeCount}</span>
-                    </button>
-                    
-                    <button
-                      onClick={() => handleRateHostLikeDislike('dislike')}
-                      disabled={ratingLoading}
-                      className={`flex items-center gap-1 px-3 py-1 rounded-lg transition-colors ${hostData.userAction === 'dislike' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700 hover:bg-red-50'}`}
-                    >
-                      <FaThumbsDown className={hostData.userAction === 'dislike' ? 'text-red-600' : 'text-gray-500'} />
-                      <span>{hostData.dislikeCount}</span>
-                    </button>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <MdBathtub className="text-2xl text-emerald-600" />
+                    </div>
+                    <p className="text-sm text-gray-600">Bathrooms</p>
+                    <p className="text-2xl font-bold text-gray-900">{listing.bathrooms}</p>
                   </div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <MdSquareFoot className="text-2xl text-purple-600" />
+                    </div>
+                    <p className="text-sm text-gray-600">Square Feet</p>
+                    <p className="text-2xl font-bold text-gray-900">{listing.squareFeet?.toLocaleString() || '2,800'}</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <FaUsers className="text-2xl text-amber-600" />
+                    </div>
+                    <p className="text-sm text-gray-600">Max Guests</p>
+                    <p className="text-2xl font-bold text-gray-900">{listing.bedrooms * 2}</p>
+                  </div>
+                </div>
+                
+                {/* Contact Information Section */}
+                <div className="mt-8 pt-8 border-t border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Contact Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {formattedDisplayNumber && (
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <FaPhone className="text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Phone Number</p>
+                          <p className="font-medium text-gray-900">{formattedDisplayNumber}</p>
+                        </div>
+                      </div>
+                    )}
+                    {displayEmail && (
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                          <FaEnvelope className="text-green-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Email Address</p>
+                          <p className="font-medium text-gray-900">{displayEmail}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {(!formattedDisplayNumber && !displayEmail) && (
+                    <p className="text-gray-500 italic">Contact information not provided</p>
+                  )}
                 </div>
               </div>
 
-              {/* Social Media Verification */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <h4 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
-                  <FaUserFriends className="text-red-500" />
-                  Host Social Media Verification
-                </h4>
-                
-                {socialMediaVerified.loading ? (
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <FaSpinner className="animate-spin" />
-                    Verifying social media profiles...
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap gap-3">
-                    {SOCIAL_PLATFORMS.map((platform) => {
-                      const isVerified = socialMediaVerified[platform.name];
-                      const Icon = platform.icon;
-                      
-                      return (
-                        <button
-                          key={platform.name}
-                          onClick={() => handleSocialMediaClick(platform.name)}
-                          className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
-                            isVerified 
-                              ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100 cursor-pointer' 
-                              : 'bg-gray-50 border-gray-200 text-gray-500 cursor-default'
-                          }`}
-                          disabled={!isVerified}
-                        >
-                          <Icon className={platform.color} />
-                          <span className="text-sm font-medium capitalize">
-                            {platform.name}
-                          </span>
-                          {isVerified ? (
-                            <FaCheckCircle className="text-green-500 text-sm" />
-                          ) : (
-                            <span className="text-xs text-gray-400">Not found</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                    
-                    {/* Website Verification */}
-                    <button
-                      onClick={() => handleSocialMediaClick('website')}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
-                        socialMediaVerified.website 
-                          ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100 cursor-pointer' 
-                          : 'bg-gray-50 border-gray-200 text-gray-500 cursor-default'
-                      }`}
-                      disabled={!socialMediaVerified.website}
-                    >
-                      <FaGlobe className="text-blue-500" />
-                      <span className="text-sm font-medium">Website</span>
-                      {socialMediaVerified.website ? (
-                        <FaCheckCircle className="text-green-500 text-sm" />
-                      ) : (
-                        <span className="text-xs text-gray-400">Not found</span>
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </section>
-
-            {/* Description Section */}
-            <section className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-              <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">About this space</h2>
-              <div className="relative">
-                <p className="text-base md:text-lg text-gray-600 leading-relaxed whitespace-pre-line">
-                  {truncateDescription(listing.description)}
-                </p>
-                {listing.description && listing.description.split(' ').length > 50 && (
+              {/* Description Section */}
+              <div className="bg-white rounded-2xl shadow-lg p-8">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">About this property</h2>
                   <button
                     onClick={() => setIsDescriptionModalOpen(true)}
-                    className="mt-2 flex items-center text-gray-600 hover:text-gray-800 transition-colors font-semibold"
-                    aria-expanded={isDescriptionModalOpen}
-                    aria-controls="full-description-modal"
+                    className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2"
                   >
-                    <span className="text-sm">Read more</span>
-                    <FaChevronDown className="ml-1 text-xs mt-px transition-transform duration-200 group-hover:translate-y-0.5" />
+                    <FaExternalLinkAlt />
+                    View full description
+                  </button>
+                </div>
+                <p className="text-gray-700 leading-relaxed">
+                  {isExpanded ? listing.description : truncateDescription(listing.description, 150)}
+                </p>
+                {listing.description && listing.description.split(' ').length > 150 && (
+                  <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="mt-4 text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2"
+                  >
+                    {isExpanded ? 'Show less' : 'Read more'}
+                    <FaChevronDown className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                   </button>
                 )}
               </div>
-            </section>
 
-            {isDescriptionModalOpen && (
-              <div id="full-description-modal" className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl md:text-2xl font-semibold text-gray-800">About this space</h2>
-                    <button
-                      onClick={() => setIsDescriptionModalOpen(false)}
-                      className="text-gray-500 hover:text-gray-700 text-2xl"
-                      aria-label="Close description modal"
-                    >
-                      &times;
-                    </button>
+              {/* Amenities Section - UPDATED: Only show selected amenities */}
+              {activeAmenities.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-lg p-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">What this place offers</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {activeAmenities.map((amenity, index) => {
+                      const Icon = amenity.icon;
+                      return (
+                        <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                          <Icon className="text-gray-700 text-lg" />
+                          <span className="text-gray-700 font-medium">{amenity.label}</span>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <p className="text-base md:text-lg text-gray-600 leading-relaxed whitespace-pre-line">
-                    {listing.description}
-                  </p>
                 </div>
+              )}
+
+              {/* AI Ratings Section */}
+              <div className="bg-white rounded-2xl shadow-lg p-8">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">AI-Powered Ratings</h2>
+                    <p className="text-gray-600">Verified by advanced analysis</p>
+                  </div>
+                  {aiRating.verified && (
+                    <span className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full font-medium">
+                      <FaCheckCircle />
+                      AI Verified
+                    </span>
+                  )}
+                </div>
+                
+                {/* Overall Rating */}
+                <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <FaStar className="text-2xl text-yellow-500" />
+                        <span className="text-4xl font-bold text-gray-900">{Number(aiRating.average).toFixed(1)}</span>
+                      </div>
+                      <p className="text-gray-600">Out of 5 stars</p>
+                      <p className="text-sm text-gray-500">{aiRating.totalRatings.toLocaleString()} verified ratings</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <FaStar
+                            key={star}
+                            className={`text-2xl ${star <= Math.round(Number(aiRating.average)) ? 'text-yellow-500' : 'text-gray-300'}`}
+                          />
+                        ))}
+                      </div>
+                      <p className="mt-2 text-sm text-gray-600">AI Analysis Score</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rating Categories */}
+                <div className="space-y-6">
+                  {RATING_CATEGORIES.map((category, index) => {
+                    const Icon = category.icon;
+                    const rating = aiRating.categoryRatings[category.name];
+                    return (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center">
+                            <Icon className="text-xl text-gray-700" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{category.name}</p>
+                            <p className="text-sm text-gray-500">Based on AI analysis</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl font-bold text-gray-900">{Number(rating).toFixed(1)}</span>
+                            <div className="flex items-center gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <FaStar
+                                  key={star}
+                                  className={`text-sm ${star <= Math.round(rating) ? 'text-yellow-500' : 'text-gray-300'}`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* AI Comments */}
+                {aiRating.aiComments.length > 0 && (
+                  <div className="mt-8 pt-8 border-t border-gray-200">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">AI-Generated Insights</h3>
+                    <div className="space-y-4">
+                      {aiRating.aiComments.map((comment, index) => (
+                        <div key={index} className="p-4 bg-gray-50 rounded-xl">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <FaCheckCircle className="text-blue-600" />
+                            </div>
+                            <span className="font-medium text-gray-900">AI Insight</span>
+                          </div>
+                          <p className="text-gray-700">{comment}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
 
-            {/* Amenities Section */}
-            <section className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-              <h2 className="text-xl md:text-2xl font-semibold mb-6 text-gray-800">What this place offers</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {AMENITIES.map(({ icon: Icon, label, key }) => (
-                  <div key={key} className="flex items-center gap-3 p-3">
-                    <Icon className="text-gray-600 text-lg" />
-                    <span className="text-gray-700">{label}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Additional Information */}
-            <section className="mb-12 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-              <h2 className="text-2xl font-semibold mb-6 text-gray-800">
-                Additional Information
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="flex items-start">
-                  <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
-                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Property Type</h3>
-                    <p className="text-gray-900 font-medium">{listing.kind || 'Residential Home'}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
-                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2A9 9 0 111 10a9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Cancellation Policy</h3>
-                    <p className="text-gray-900 font-medium">{listing.cancel || 'Free cancellation'}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
-                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Nearby Amenities</h3>
-                    <p className="text-gray-900 font-medium">
-                      {listing.near
-                        ? isNearExpanded
-                          ? listing.near
-                          : listing.near.split(' ').slice(0, 15).join(' ') +
-                          (listing.near.split(' ').length > 15 ? '...' : '')
-                        : 'Restaurants, shopping, parks'
-                      }
-                      {listing.near && listing.near.split(' ').length > 15 && (
-                        <button
-                          onClick={() => setIsNearExpanded(!isNearExpanded)}
-                          className="text-gray-600 ml-1 hover:underline text-sm"
-                        >
-                          {isNearExpanded ? 'Read less' : 'Read More'}
-                        </button>
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
-                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                    </svg>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Rules & Policies</h3>
-                    <p className="text-gray-900 font-medium">
-                      {listing.rules
-                        ? isExpanded
-                          ? listing.rules
-                          : listing.rules.split(' ').slice(0, 15).join(' ') +
-                          (listing.rules.split(' ').length > 15 ? '...' : '')
-                        : 'No smoking, no parties, no pets'
-                      }
-                      {listing.rules && listing.rules.split(' ').length > 20 && (
-                        <button
-                          onClick={() => setIsExpanded(!isExpanded)}
-                          className="text-gray-600 ml-1 hover:underline text-sm"
-                        >
-                          {isExpanded ? 'Read less' : 'Read More'}
-                        </button>
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <div className="bg-gray-100 p-2 rounded-lg mr-4 flex-shrink-0">
-                    <FaMapMarkerAlt className="w-5 h-5 text-gray-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Location</h3>
-                    <p className="text-gray-900 font-medium">{listing.address}</p>
-                    {listing.address && (
+              {/* Location Section */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                <div className="mb-8">
+                  <h2 className="text-[28px] font-semibold text-gray-900 mb-3 tracking-tight">Location</h2>
+                  <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                    <div className="flex-shrink-0 w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+                      <FaMapMarkerAlt className="text-red-500 text-lg" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-lg font-medium text-gray-900 mb-1">{listing.address}</p>
                       <a
                         href={generateMapLink(listing.address)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-1 inline-flex items-center text-blue-600 hover:underline text-sm"
+                        className="inline-flex items-center gap-2 text-[15px] text-gray-600 hover:text-gray-900 font-medium"
                       >
-                        View on map <FaExternalLinkAlt className="ml-1 text-xs" />
+                        View on Google Maps
+                        <FaExternalLinkAlt className="text-xs text-gray-400 group-hover:text-gray-600 transition-colors" />
                       </a>
-                    )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </section>
 
-            {/* Office Booking Section */}
-            {listing.type === 'office' && (
-              <section id="office-booking-section" className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-                <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Availability & Booking</h2>
-                <div className="flex flex-col lg:flex-row gap-6">
-                  {/* Calendar Section */}
-                  <div className="w-full lg:w-2/5">
-                    <div className="sticky top-4">
-                      <Calendar
-                        onChange={setSelectedDate}
-                        value={selectedDate}
-                        minDate={new Date()}
-                        className="rounded-xl shadow-lg w-full"
+                {/* Nearby Places Section */}
+                <div className="border-t border-gray-200 pt-8">
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h3 className="text-[22px] font-semibold text-gray-900 mb-1">What's nearby</h3>
+                      <p className="text-gray-500 text-sm">Explore the neighborhood</p>
+                    </div>
+                    <button
+                      onClick={() => setIsNearExpanded(!isNearExpanded)}
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      {isNearExpanded ? 'Show less' : 'Show more'}
+                      <FaChevronDown 
+                        className={`text-gray-500 transition-transform duration-300 ${isNearExpanded ? 'rotate-180' : ''}`} 
                       />
-                      {selectedDate && (
-                        <div className="mt-6 bg-white p-4 rounded-lg border border-gray-200">
-                          <h3 className="font-medium text-gray-700 mb-3">Select Hours</h3>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                              <select
-                                value={startTime}
-                                onChange={(e) => setStartTime(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              >
-                                {generateTimeOptions().map(time => (
-                                  <option key={time} value={time}>{time}</option>
-                                ))}
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                              <select
-                                value={endTime}
-                                onChange={(e) => setEndTime(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              >
-                                {generateTimeOptions().map(time => (
-                                  <option key={time} value={time}>{time}</option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    </button>
                   </div>
-                  {/* Booking Summary Section */}
-                  <div className="w-full lg:w-3/5">
-                    <div className="">
-                      <h3 className="text-lg font-semibold text-blue-800 mb-4">Booking Summary</h3>
-                      {selectedDate && startTime && endTime ? (
-                        <div className="space-y-4">
-                          {/* Selected Date & Time */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-white p-4 rounded-lg border border-gray-200">
-                              <h4 className="font-medium text-gray-700 mb-2">Booking Date</h4>
-                              <p className="font-medium text-lg">{selectedDate.toDateString()}</p>
-                            </div>
-                            <div className="bg-white p-4 rounded-lg border border-gray-200">
-                              <h4 className="font-medium text-gray-700 mb-2">Start Time</h4>
-                              <p className="font-medium text-lg">{startTime}</p>
-                            </div>
-                            <div className="bg-white p-4 rounded-lg border border-gray-200">
-                              <h4 className="font-medium text-gray-700 mb-2">End Time</h4>
-                              <p className="font-medium text-lg">{endTime}</p>
-                            </div>
-                            <div className="bg-white p-4 rounded-lg border border-gray-200">
-                              <h4 className="font-medium text-gray-700 mb-2">Total Hours</h4>
-                              <p className="font-medium text-lg">{totalHours} hour{totalHours > 1 ? 's' : ''}</p>
-                            </div>
-                          </div>
-                          {/* Price Summary */}
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 className="font-medium text-gray-700 mb-3">Price Summary</h4>
-                            <div className="space-y-2">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Hourly Rate ({totalHours} hours)</span>
-                                <span className="font-medium">R{(listing.regularPrice * totalHours).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
-                              </div>
-                              <div className="pt-3 mt-2 border-t border-gray-200 font-semibold flex justify-between text-lg">
-                                <span>Total Amount</span>
-                                <span className="text-blue-600 font-bold">
-                                  R{totalPrice.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          {/* Guest Information */}
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 className="font-medium text-gray-700 mb-3">Your Information</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <label htmlFor="guestName" className="block text-sm font-medium text-gray-700 mb-1">
-                                  Full Name <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                  type="text"
-                                  id="guestName"
-                                  value={guestName}
-                                  onChange={(e) => setGuestName(e.target.value)}
-                                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  placeholder="As it appears on ID"
-                                  required
-                                />
-                              </div>
-                              <div>
-                                <label htmlFor="guestContact" className="block text-sm font-medium text-gray-700 mb-1">
-                                  WhatsApp Number <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                  type="tel"
-                                  id="guestContact"
-                                  value={guestContact}
-                                  onChange={(e) => setGuestContact(e.target.value)}
-                                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  placeholder="+27 82 123 4567"
-                                  required
-                                />
-                              </div>
-                              <div className="md:col-span-2">
-                                <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
-                                  Special Requests
-                                </label>
-                                <textarea
-                                  id="specialRequests"
-                                  value={specialRequests}
-                                  onChange={(e) => setSpecialRequests(e.target.value)}
-                                  rows={3}
-                                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  placeholder="Equipment needs, meeting setup, etc."
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          {/* WhatsApp Booking Button */}
-                          <div className="pt-2">
-                            <div className="mb-3 text-center text-sm text-gray-600">
-                              <p>You'll complete your booking via WhatsApp</p>
-                            </div>
-                            <button
-                              className="w-full bg-green-500 text-white py-2.5 px-4 rounded-md hover:bg-green-600 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-md hover:shadow-sm"
-                              onClick={handleOfficeWhatsAppBooking}
-                              disabled={!guestName || !guestContact}
-                            >
-                              <FaWhatsapp className="text-base" />
-                              Book Office
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-center py-6">
-                          <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <p className="text-gray-600 mt-3 text-lg">
-                            Please select a date and time to see pricing and book
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </section>
-            )}
 
-            {/* Overnight Stay Booking Section */}
-            {listing.type === 'over' && (
-              <section className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-                <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Availability & Booking</h2>
-                <div className="flex flex-col lg:flex-row gap-6">
-                  {/* Calendar Section */}
-                  <div className="w-full lg:w-2/5">
-                    <div className="sticky top-4">
-                      <Calendar
-                        onChange={setDateRange}
-                        value={dateRange}
-                        selectRange={true}
-                        minDate={new Date()}
-                        className="rounded-xl shadow-lg w-full"
-                      />
-                    </div>
-                  </div>
-                  {/* Booking Summary Section */}
-                  <div className="w-full lg:w-3/5">
-                    <div className="">
-                      <h3 className="text-lg font-semibold text-blue-800 mb-4">Booking Summary</h3>
-                      {dateRange[0] && dateRange[1] ? (
-                        <div className="space-y-4">
-                          {/* Selected Dates */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-white p-4 rounded-lg border border-gray-200">
-                              <h4 className="font-medium text-gray-700 mb-2">Check-in</h4>
-                              <p className="font-medium text-lg">{dateRange[0].toDateString()}</p>
-                            </div>
-                            <div className="bg-white p-4 rounded-lg border border-gray-200">
-                              <h4 className="font-medium text-gray-700 mb-2">Check-out</h4>
-                              <p className="font-medium text-lg">{dateRange[1].toDateString()}</p>
-                            </div>
-                            <div className="bg-white p-4 rounded-lg border border-gray-200 md:col-span-2">
-                              <h4 className="font-medium text-gray-700 mb-2">Total Nights</h4>
-                              <p className="font-medium text-lg">{nights} night{nights > 1 ? 's' : ''}</p>
+                  <div className={`space-y-4 ${isNearExpanded ? '' : 'max-h-48 overflow-hidden'}`}>
+                    {listing.near ? (
+                      listing.near.split('\n').map((item, index) => (
+                        <div 
+                          key={index} 
+                          className="flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors"
+                        >
+                          <div className="flex-shrink-0 mt-1">
+                            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                              <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                             </div>
                           </div>
-                          {/* Guest Information */}
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 className="font-medium text-gray-700 mb-3">Guest Information</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <label htmlFor="guestName" className="block text-sm font-medium text-gray-700 mb-1">
-                                  Full Name <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                  type="text"
-                                  id="guestName"
-                                  value={guestName}
-                                  onChange={(e) => setGuestName(e.target.value)}
-                                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  placeholder="As it appears on ID"
-                                  required
-                                />
-                              </div>
-                              <div>
-                                <label htmlFor="guestContact" className="block text-sm font-medium text-gray-700 mb-1">
-                                  WhatsApp Number <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                  type="tel"
-                                  id="guestContact"
-                                  value={guestContact}
-                                  onChange={(e) => setGuestContact(e.target.value)}
-                                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  placeholder="+27 82 123 4567"
-                                  required
-                                />
-                              </div>
-                              <div>
-                                <label htmlFor="numberOfGuests" className="block text-sm font-medium text-gray-700 mb-1">
-                                  Number of Guests <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                  id="numberOfGuests"
-                                  value={numberOfGuests}
-                                  onChange={(e) => setNumberOfGuests(parseInt(e.target.value))}
-                                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  required
-                                >
-                                  <option value={1}>1 Guest</option>
-                                  <option value={2}>2 Guests</option>
-                                  <option value={3}>3 Guests</option>
-                                  <option value={4}>4 Guests</option>
-                                  <option value={5}>5 Guests</option>
-                                  <option value={6}>6+ Guests</option>
-                                </select>
-                              </div>
-                              <div>
-                                <label htmlFor="extraBed" className="block text-sm font-medium text-gray-700 mb-1">
-                                  Extra Bed for Kids
-                                </label>
-                                <select
-                                  id="extraBed"
-                                  value={extraBed}
-                                  onChange={(e) => setExtraBed(e.target.value)}
-                                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                  <option value="no">Not Needed</option>
-                                  <option value="yes">Yes, Please</option>
-                                </select>
-                              </div>
-                              <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-3">
-                                  Additional Requests
-                                </label>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div className="flex items-center">
-                                    <input
-                                      type="checkbox"
-                                      id="ironRequest"
-                                      checked={ironRequest}
-                                      onChange={(e) => setIronRequest(e.target.checked)}
-                                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                    />
-                                    <label htmlFor="ironRequest" className="ml-2 text-sm text-gray-700">
-                                      Iron & Ironing Board Needed
-                                    </label>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="md:col-span-2">
-                                <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">
-                                  Special Requests
-                                </label>
-                                <textarea
-                                  id="specialRequests"
-                                  value={specialRequests}
-                                  onChange={(e) => setSpecialRequests(e.target.value)}
-                                  rows={3}
-                                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  placeholder="Dietary restrictions, accessibility needs, etc."
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          {/* Meal Options */}
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 className="font-medium text-gray-700 mb-3">Meal Options</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              <div
-                                className={`p-4 border rounded-lg cursor-pointer transition-colors ${mealPlan === 'breakfast' ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:bg-gray-50'}`}
-                                onClick={() => setMealPlan('breakfast')}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${mealPlan === 'breakfast' ? 'bg-green-500 border-green-500' : 'border-gray-400'}`}>
-                                    {mealPlan === 'breakfast' && (
-                                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                      </svg>
-                                    )}
-                                  </div>
-                                  <div>
-                                    <p className="font-medium">Breakfast Included</p>
-                                    <p className="text-sm text-gray-600 mt-1">+ R{breakfastPrice.toLocaleString('en-ZA')}/night</p>
-                                  </div>
-                                </div>
-                              </div>
-                              <div
-                                className={`p-4 border rounded-lg cursor-pointer transition-colors ${mealPlan === 'none' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'}`}
-                                onClick={() => setMealPlan('none')}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${mealPlan === 'none' ? 'bg-blue-500 border-blue-500' : 'border-gray-400'}`}>
-                                    {mealPlan === 'none' && (
-                                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                      </svg>
-                                    )}
-                                  </div>
-                                  <div>
-                                    <p className="font-medium">Room Only</p>
-                                    <p className="text-sm text-gray-600 mt-1">No meals included</p>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          {/* Price Summary */}
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 className="font-medium text-gray-700 mb-3">Price Summary</h4>
-                            <div className="space-y-2">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Room Rate ({nights} nights)</span>
-                                <span className="font-medium">R{(listing.regularPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
-                              </div>
-                              {mealPlan === 'breakfast' && (
-                                <div className="flex justify-between">
-                                  <span className="text-gray-600">Breakfast ({nights} nights)</span>
-                                  <span className="font-medium">R{(breakfastPrice * nights).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
-                                </div>
-                              )}
-                              <div className="pt-3 mt-2 border-t border-gray-200 font-semibold flex justify-between text-lg">
-                                <span>Total Amount</span>
-                                <span className="text-blue-600 font-bold">
-                                  R{(listing.regularPrice * nights + (mealPlan === 'breakfast' ? breakfastPrice * nights : 0)).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          {/* WhatsApp Booking Button */}
-                          <div className="pt-2">
-                            <div className="mb-3 text-center text-sm text-gray-600">
-                              <p>You'll complete your booking via WhatsApp</p>
-                            </div>
-                            <button
-                              className="w-full bg-green-500 text-white py-2.5 px-4 rounded-md hover:bg-green-600 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-md hover:shadow-sm"
-                              onClick={() => setShowBookingModal(true)}
-                              disabled={!guestName || !guestContact || !numberOfGuests}
-                            >
-                              <FaWhatsapp className="text-base" />
-                              Submit Booking Request
-                            </button>
-                          </div>
+                          <span className="text-gray-700 text-[15px] leading-relaxed">{item.trim()}</span>
                         </div>
-                      ) : (
-                        <div className="text-center py-6">
-                          <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <p className="text-gray-600 mt-3 text-lg">
-                            Please select check-in and check-out dates to see pricing and book
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </section>
-            )}
-
-            {/* Location */}
-            <section className="mb-8">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold mb-4">Location</h2>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 text-gray-700">
-                    <FaMapMarkerAlt className="text-red-500" />
-                    <span>{listing.address}</span>
-                  </div>
-                  <div className="h-64 bg-gray-200 rounded-lg overflow-hidden">
-                    <iframe
-                      src={`https://maps.google.com/maps?q=${encodeURIComponent(listing.address)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
-                      width="100%"
-                      height="100%"
-                      style={{ border: 0 }}
-                      allowFullScreen=""
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      title={`Location of ${listing.name}`}
-                    ></iframe>
-                  </div>
-                  <a
-                    href={generateMapLink(listing.address)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-                  >
-                    <FaExternalLinkAlt />
-                    Open in Google Maps
-                  </a>
-                </div>
-              </div>
-            </section>
-
-            {/* Contact Host Section (for all listing types) */}
-            <section className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-              <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Contact Host</h2>
-              {currentUser ? (
-                <form onSubmit={handleContactSubmit} className="space-y-4">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">Your Name</label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={contactForm.name}
-                      onChange={handleContactChange}
-                      placeholder="Enter your name"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Your Phone Number</label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      value={contactForm.phone}
-                      onChange={handleContactChange}
-                      placeholder="e.g., 0821234567"
-                      className={`mt-1 block w-full border ${contactForm.phoneError ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500`}
-                      required
-                    />
-                    {contactForm.phoneError && (
-                      <p className="text-red-500 text-sm mt-1">Please enter a valid 10-digit South African phone number (e.g., 0821234567).</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-gray-700">Your Message</label>
-                    <textarea
-                      id="message"
-                      name="message"
-                      value={contactForm.message}
-                      onChange={handleContactChange}
-                      rows="5"
-                      placeholder={`Hello, I'm interested in your property located at ${listing.address} and would like to schedule a viewing...`}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    ></textarea>
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={uiState.submitting}
-                    className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {uiState.submitting ? (
-                      <>
-                        <FaSpinner className="animate-spin mr-2" /> Sending...
-                      </>
+                      ))
                     ) : (
-                      <>
-                        <FaPaperPlane className="mr-2" /> Send Message
-                      </>
+                      <div className="space-y-4">
+                        {[
+                          { icon: '🏖️', text: '5 min walk to nearest beach' },
+                          { icon: '🏙️', text: '10 min drive to city center' },
+                          { icon: '🍽️', text: 'Restaurants within walking distance' },
+                          { icon: '🛒', text: 'Grocery store: 8 min walk' },
+                          { icon: '🚇', text: 'Public transport: 4 min walk' },
+                          { icon: '🏛️', text: 'Historical landmarks nearby' }
+                        ].map((item, index) => (
+                          <div 
+                            key={index} 
+                            className="flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors"
+                          >
+                            <span className="text-xl flex-shrink-0">{item.icon}</span>
+                            <span className="text-gray-700 text-[15px]">{item.text}</span>
+                          </div>
+                        ))}
+                      </div>
                     )}
-                  </button>
-                </form>
-              ) : (
-                <p className="text-gray-600 text-center py-4">
-                  Please <span className="font-semibold text-blue-600 cursor-pointer" onClick={() => navigate('/sign-in')}>sign in</span> to contact the host.
-                </p>
-              )}
-            </section>
-          </div>
+                  </div>
 
-          {/* Right Column - Sidebar */}
-          <div>
-            {/* Advertising Section */}
-            <section className="mb-8">
-              <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <MdAdsClick className="text-purple-600" />
-                  Boost This Listing
-                </h2>
-                <div className="space-y-4">
-                  <p className="text-gray-600 text-sm">
-                    Get more visibility for your property by advertising on popular platforms.
-                  </p>
-                  <div className="space-y-3">
-                    {ADVERTISING_PLATFORMS.map((platform) => (
-                      <div
-                        key={platform.name}
-                        className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
-                          advertisingState.selectedPlatforms.includes(platform.name)
-                            ? 'border-purple-500 bg-purple-50'
-                            : 'border-gray-200 hover:border-purple-300'
-                        }`}
-                        onClick={() => handleAdPlatformToggle(platform.name)}
+                  {!isNearExpanded && (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <button
+                        onClick={() => setIsNearExpanded(true)}
+                        className="w-full py-3 text-center text-gray-600 hover:text-gray-900 font-medium text-sm rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className={`p-2 rounded-full text-white ${platform.color}`}>
-                          <platform.icon />
+                        Show more nearby places
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Map Preview */}
+                <div className="mt-8 pt-8 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-medium text-gray-900">Explore the area</h4>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Interactive</span>
+                  </div>
+                  <div className="h-48 bg-gradient-to-br from-blue-50 to-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                    <div className="text-center">
+                      <FaMap className="text-gray-400 text-2xl mx-auto mb-2" />
+                      <p className="text-gray-600 text-sm">Map view available</p>
+                      <button className="mt-2 text-sm font-medium text-blue-600 hover:text-blue-700">
+                        Open interactive map
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* House Rules Section */}
+              {listing.rules && (
+                <div className="bg-white rounded-2xl shadow-lg p-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">House rules</h2>
+                  <div className="space-y-4">
+                    {listing.rules.split('\n').map((rule, index) => (
+                      <div key={index} className="flex items-start gap-3">
+                        <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                          <span className="text-sm font-medium text-gray-700">{index + 1}</span>
                         </div>
-                        <span className="flex-1 font-medium">{platform.name}</span>
-                        <div className={`w-5 h-5 border-2 rounded ${
-                          advertisingState.selectedPlatforms.includes(platform.name)
-                            ? 'bg-purple-500 border-purple-500'
-                            : 'border-gray-300'
-                        }`}>
-                          {advertisingState.selectedPlatforms.includes(platform.name) && (
-                            <FaCheckCircle className="text-white text-xs" />
-                          )}
-                        </div>
+                        <span className="text-gray-700">{rule.trim()}</span>
                       </div>
                     ))}
                   </div>
-                  {/* Budget and Duration */}
-                  <div className="space-y-4 pt-4 border-t">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Daily Budget: R{advertisingState.budget}
-                      </label>
-                      <input
-                        type="range"
-                        min="50"
-                        max="1000"
-                        step="50"
-                        value={advertisingState.budget}
-                        onChange={(e) => setAdvertisingState(prev => ({
-                          ...prev,
-                          budget: parseInt(e.target.value)
-                        }))}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                      />
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>R50</span>
-                        <span>R1000</span>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Duration: {advertisingState.duration} days
-                      </label>
-                      <input
-                        type="range"
-                        min="1"
-                        max="30"
-                        value={advertisingState.duration}
-                        onChange={(e) => setAdvertisingState(prev => ({
-                          ...prev,
-                          duration: parseInt(e.target.value)
-                        }))}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                      />
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>1 day</span>
-                        <span>30 days</span>
+                </div>
+              )}
+
+              {/* Cancellation Policy */}
+              {listing.cancel && (
+                <div className="bg-white rounded-2xl shadow-lg p-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Cancellation policy</h2>
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <div className="flex items-start gap-3">
+                      <FaCheckCircle className="text-emerald-600 text-xl mt-1 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-gray-900 mb-2">Flexible cancellation</p>
+                        <p className="text-gray-700">{listing.cancel}</p>
                       </div>
                     </div>
                   </div>
-                  {/* Cost Estimate */}
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <div className="flex justify-between text-sm">
-                      <span>Estimated total:</span>
-                      <span className="font-semibold">
-                        R{(advertisingState.budget * advertisingState.duration).toLocaleString()}
+                </div>
+              )}
+
+              {/* Office Booking Section - Only for office type */}
+              {(listing.type === 'office' || !listing.type) && (
+                <div id="office-booking-section" className="bg-white rounded-2xl shadow-lg p-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Book this office space</h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Select Date
+                      </label>
+                      <div className="border border-gray-300 rounded-lg overflow-hidden">
+                        <Calendar
+                          onChange={setSelectedDate}
+                          value={selectedDate}
+                          minDate={new Date()}
+                          className="w-full border-0"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Start Time
+                        </label>
+                        <select
+                          value={startTime}
+                          onChange={(e) => setStartTime(e.target.value)}
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          {generateTimeOptions().map((time) => (
+                            <option key={time} value={time}>
+                              {time}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          End Time
+                        </label>
+                        <select
+                          value={endTime}
+                          onChange={(e) => setEndTime(e.target.value)}
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          {generateTimeOptions().map((time) => (
+                            <option key={time} value={time}>
+                              {time}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Guest Info for Office Booking */}
+                  <div className="bg-gray-50 rounded-xl p-6 mb-8">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Your Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <input
+                          type="text"
+                          value={guestName}
+                          onChange={(e) => setGuestName(e.target.value)}
+                          placeholder="Full Name"
+                          className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="tel"
+                          value={guestContact}
+                          onChange={(e) => setGuestContact(e.target.value)}
+                          placeholder="WhatsApp Number"
+                          className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Price Summary */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-8">
+                    <div className="flex justify-between items-center mb-4">
+                      <div>
+                        <p className="text-gray-600">Total Hours</p>
+                        <p className="text-2xl font-bold text-gray-900">{totalHours.toFixed(1)} hours</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-gray-600">Hourly Rate</p>
+                        <p className="text-2xl font-bold text-gray-900">R{listing.regularPrice.toLocaleString('en-ZA')}/hr</p>
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t border-gray-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-bold text-gray-900">Total Amount</span>
+                        <span className="text-3xl font-bold text-blue-700">
+                          R{totalPrice.toLocaleString('en-ZA')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleOfficeWhatsAppBooking}
+                    disabled={!guestName || !guestContact || totalHours === 0 || !formattedDisplayNumber}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 px-6 rounded-xl font-bold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-lg"
+                  >
+                    <FaWhatsapp className="text-2xl" />
+                    Book via WhatsApp
+                  </button>
+                  
+                  {!formattedDisplayNumber && (
+                    <p className="text-sm text-red-600 mt-2 text-center">
+                      Contact information is required for booking
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Comments Section */}
+              <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                  <div className="space-y-3">
+                    <div>
+                      <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Guest Reviews</h2>
+                      <p className="text-gray-500 text-sm mt-1">Real experiences from our guests</p>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center bg-gray-50 rounded-full px-4 py-2">
+                        <div className="flex items-center gap-1.5">
+                          <FaStar className="text-yellow-500 w-5 h-5 fill-current" />
+                          <span className="font-bold text-gray-900 text-xl">{Number(aiRating.average).toFixed(1)}</span>
+                          <span className="text-gray-400 text-sm">/ 5.0</span>
+                        </div>
+                      </div>
+                      
+                      <div className="h-8 w-px bg-gray-200"></div>
+                      
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-gray-600 font-medium">
+                          {commentCount} {commentCount === 1 ? 'review' : 'reviews'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => setShowCommentsPanel(true)}
+                    className="group relative px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 flex items-center gap-3 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                  >
+                    <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 rounded-xl transition-opacity duration-300"></div>
+                    <FaComment className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                    <span className="font-semibold text-sm tracking-wide">View All Reviews</span>
+                    <FaArrowRight className="w-4 h-4 opacity-70 group-hover:translate-x-1 transition-transform duration-300" />
+                  </button>
+                </div>
+                
+                <div className="relative">
+                  <div className="absolute -top-4 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+                  <Comments listingId={listingId} />
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Host Info & Booking Widget */}
+            <div className="space-y-8">
+              {/* Host Information */}
+              <div className="bg-white rounded-2xl shadow-lg p-8 sticky top-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Hosted by</h2>
+                
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="relative">
+                    <img
+                      src={listing.userRef?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}
+                      alt={listing.userRef?.username || 'Host'}
+                      className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
+                    />
+                    {hostStarRating > 0 && (
+                      <div className="absolute -bottom-2 -right-2 bg-yellow-500 text-white text-xs font-bold rounded-full w-8 h-8 flex items-center justify-center">
+                        {hostStarRating}★
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">{listing.host || listing.userRef?.username || 'Landlord'}</h3>
+                    <p className="text-gray-600">Superhost · Joined {listing.userRef?.createdAt ? new Date(listing.userRef.createdAt).getFullYear() : 'No Date'}</p>
+                  </div>
+                </div>
+
+                {/* Host Contact Information Display */}
+                <div className="mb-6 p-4 bg-gray-50 rounded-xl">
+                  <h4 className="font-bold text-gray-900 mb-3">Contact Details</h4>
+                  <div className="space-y-3">
+                    {formattedDisplayNumber && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <FaPhone className="text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Phone</p>
+                          <p className="font-medium text-gray-900">{formattedDisplayNumber}</p>
+                        </div>
+                      </div>
+                    )}
+                    {displayEmail && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <FaEnvelope className="text-green-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Email</p>
+                          <p className="font-medium text-gray-900">{displayEmail}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Host Ratings */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="font-medium text-gray-900">Host Rating</span>
+                    <div className="flex items-center gap-1">
+                      <FaStar className="text-yellow-500" />
+                      <span className="font-bold">{Number(hostRatings.average).toFixed(1)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {HOST_RATING_CATEGORIES.map((category, index) => {
+                      const Icon = category.icon;
+                      const rating = hostRatings.categoryRatings[category.key];
+                      return (
+                        <div key={index} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Icon className="text-gray-600" />
+                            <span className="text-sm text-gray-700">{category.name}</span>
+                          </div>
+                          <StarRating
+                            rating={Math.round(rating)}
+                            onRatingChange={(rating) => handleRateHost(category.key, rating)}
+                            readonly={!currentUser}
+                            size="text-sm"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Like/Dislike Buttons */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-medium text-gray-900">Rate this host</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">
+                        {hostData.likeCount} likes · {hostData.dislikeCount} dislikes
                       </span>
                     </div>
                   </div>
-                  <button
-                    onClick={handleAdvertiseSubmit}
-                    disabled={advertisingState.loading || advertisingState.selectedPlatforms.length === 0}
-                    className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white py-3 px-4 rounded-md font-medium transition-colors flex items-center justify-center gap-2"
-                  >
-                    {advertisingState.loading ? (
-                      <>
-                        <FaSpinner className="animate-spin" />
-                        Starting Campaign...
-                      </>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleRateHostLikeDislike('like')}
+                      disabled={ratingLoading || hostData.userAction === 'like'}
+                      className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
+                        hostData.userAction === 'like'
+                          ? 'bg-green-100 text-green-700 border border-green-300'
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300'
+                      }`}
+                    >
+                      <FaThumbsUp />
+                      {hostData.userAction === 'like' ? 'Liked' : 'Like'}
+                    </button>
+                    <button
+                      onClick={() => handleRateHostLikeDislike('dislike')}
+                      disabled={ratingLoading || hostData.userAction === 'dislike'}
+                      className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
+                        hostData.userAction === 'dislike'
+                          ? 'bg-red-100 text-red-700 border border-red-300'
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300'
+                      }`}
+                    >
+                      <FaThumbsDown />
+                      {hostData.userAction === 'dislike' ? 'Disliked' : 'Dislike'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Social Media Verification */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="font-medium text-gray-900">Social Verification</span>
+                    {socialMediaVerified.loading ? (
+                      <FaSpinner className="animate-spin text-gray-500" />
                     ) : (
-                      'Start Advertising Campaign'
+                      <span className="text-sm text-emerald-600 font-medium">AI Verified</span>
                     )}
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-3">
+                    {SOCIAL_PLATFORMS.map((platform) => {
+                      const Icon = platform.icon;
+                      const isVerified = socialMediaVerified[platform.name];
+                      return (
+                        <button
+                          key={platform.name}
+                          onClick={() => handleSocialMediaClick(platform.name)}
+                          disabled={!isVerified && !hostSocialLinks[platform.name]}
+                          className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${
+                            isVerified || hostSocialLinks[platform.name]
+                              ? `${platform.color} border-current hover:opacity-90`
+                              : 'border-gray-200 text-gray-400 opacity-50 cursor-not-allowed'
+                          }`}
+                          title={isVerified || hostSocialLinks[platform.name] ? `Visit ${platform.name}` : 'Not verified'}
+                        >
+                          <Icon className="text-2xl mb-2" />
+                          <span className="text-xs font-medium capitalize">{platform.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Facebook Listing Check */}
+                {isFacebookPosted && (
+                  <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <FaFacebook className="text-blue-600 text-xl" />
+                      <div>
+                        <p className="font-medium text-gray-900">Also listed on Facebook</p>
+                        <p className="text-sm text-gray-600">Verified cross-platform presence</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Contact Host Section */}
+                <div className="space-y-4">
+                  <h3 className="font-bold text-gray-900">Contact Host</h3>
+                  
+                  {currentUser ? (
+                    <>
+                      {formattedDisplayNumber && (
+                        <button
+                          onClick={() => setShowContactModal(true)}
+                          className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-medium hover:from-green-600 hover:to-emerald-700 transition-all flex items-center justify-center gap-2"
+                        >
+                          <FaWhatsapp className="text-xl" />
+                          Message on WhatsApp
+                        </button>
+                      )}
+                      
+                      <button
+                        onClick={() => {
+                          if (displayEmail) {
+                            const subject = `Interest in "${listing.name}"`;
+                            window.location.href = `mailto:${displayEmail}?subject=${encodeURIComponent(subject)}`;
+                          }
+                        }}
+                        disabled={!displayEmail}
+                        className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <FaEnvelope className="text-xl" />
+                        Send Email
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          if (formattedDisplayNumber) {
+                            window.location.href = `tel:${formattedDisplayNumber}`;
+                          }
+                        }}
+                        disabled={!formattedDisplayNumber}
+                        className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <FaPhone className="text-xl" />
+                        Call Host
+                      </button>
+                    </>
+                  ) : (
+                    <div className="text-center p-4 bg-gray-50 rounded-xl">
+                      <p className="text-gray-700 mb-3">Sign in to contact the host</p>
+                      <button
+                        onClick={() => navigate('/sign-in')}
+                        className="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 transition-all"
+                      >
+                        Sign In
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Advertising Section */}
+                <div className="mt-8 pt-8 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="font-bold text-gray-900">Boost this listing</h3>
+                      <p className="text-sm text-gray-600">Reach more potential guests</p>
+                    </div>
+                    <MdAdsClick className="text-2xl text-purple-600" />
+                  </div>
+                  
+                  <button
+                    onClick={() => setAdvertisingState(prev => ({ ...prev, showAdModal: true }))}
+                    className="w-full py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-medium hover:from-purple-600 hover:to-purple-700 transition-all"
+                  >
+                    Promote Listing
                   </button>
                 </div>
               </div>
-            </section>
 
-            {/* Reviews Section */}
-            <section className="mb-8">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Guest Reviews</h2>
-                <div className="flex items-center">
-                  <FaStar className="text-yellow-400 mr-1" />
-                  <span className="font-semibold">{Number(aiRating.average).toFixed(1)}</span>
-                  <span className="mx-1">·</span>
-                  <span className="text-gray-600">{commentCount} reviews</span>
+              {/* Safety Information */}
+              <div className="bg-white rounded-2xl shadow-lg p-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Safety & Security</h3>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <FaShieldAlt className="text-emerald-600 text-xl mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-gray-900">Verified Property</p>
+                      <p className="text-sm text-gray-600">AI-powered verification for authenticity</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <FaLock className="text-blue-600 text-xl mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-gray-900">Secure Payments</p>
+                      <p className="text-sm text-gray-600">Protected transactions and escrow services</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <FaUserFriends className="text-amber-600 text-xl mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-gray-900">Host Verification</p>
+                      <p className="text-sm text-gray-600">Identity and background checks performed</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-            
-            </section>
+            </div>
+          </div>
+        </main>
+      </div>
 
-             {/* Comments Section */}
-                      <div className="bg-white rounded-xl shadow-sm p-6  border border-gray-200">
-                        <div className="flex items-center justify-between mb-6">
-                          <h3 className="text-lg font-semibold text-gray-900">Customer Reviews</h3>
-                          <button
-                            onClick={() => setShowCommentsPanel(true)}
-                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                          >
-                            View All ({commentCount})
-                          </button>
-                        </div>
-                        <Comments 
-              listingId={listingId} 
-              maxComments={2}
-              onTotalComments={setCommentCount} 
-              cardStyle={true}
-            />
-                      </div>
-
-             {showCommentsPanel && (
-        <CommentsSidePanel 
-          listingId={listingId} 
-          onClose={() => setShowCommentsPanel(false)} 
-        />
-      )}
+      {/* Description Modal */}
+      {isDescriptionModalOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-70 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-900">Full Description</h2>
+              <button
+                onClick={() => setIsDescriptionModalOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <FaTimes className="text-gray-500" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+              <div className="prose prose-lg max-w-none">
+                {listing.description.split('\n').map((paragraph, index) => (
+                  <p key={index} className="mb-4 text-gray-700 leading-relaxed">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-      </main>
+      )}
+
+      {/* Advertising Modal */}
+      {advertisingState.showAdModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-70 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-8 py-6 flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Boost Your Listing</h2>
+                <p className="text-gray-600">Reach more potential guests with targeted advertising</p>
+              </div>
+              <button
+                onClick={() => setAdvertisingState(prev => ({ ...prev, showAdModal: false }))}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <FaTimes className="text-2xl text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-8">
+              <div className="space-y-8">
+                {/* Platform Selection */}
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Select Platforms</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {ADVERTISING_PLATFORMS.map((platform) => {
+                      const Icon = platform.icon;
+                      return (
+                        <button
+                          key={platform.name}
+                          onClick={() => handleAdPlatformToggle(platform.name)}
+                          className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center justify-center gap-3 ${
+                            advertisingState.selectedPlatforms.includes(platform.name)
+                              ? 'border-purple-500 bg-purple-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className={`${platform.color} w-12 h-12 rounded-full flex items-center justify-center`}>
+                            <Icon className="text-white text-xl" />
+                          </div>
+                          <div className="text-center">
+                            <p className="font-medium text-gray-900">{platform.name}</p>
+                            <p className="text-sm text-gray-500">Reach: {platform.reach}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Budget Selection */}
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-gray-900">Advertising Budget</h3>
+                    <span className="text-2xl font-bold text-purple-700">R{advertisingState.budget.toLocaleString('en-ZA')}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="5000"
+                    step="50"
+                    value={advertisingState.budget}
+                    onChange={(e) => setAdvertisingState(prev => ({ ...prev, budget: parseInt(e.target.value) }))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-600"
+                  />
+                  <div className="flex justify-between text-sm text-gray-500 mt-2">
+                    <span>R50</span>
+                    <span>R5,000</span>
+                  </div>
+                </div>
+
+                {/* Duration Selection */}
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Campaign Duration</h3>
+                  <div className="grid grid-cols-4 gap-3">
+                    {[3, 7, 14, 30].map((days) => (
+                      <button
+                        key={days}
+                        onClick={() => setAdvertisingState(prev => ({ ...prev, duration: days }))}
+                        className={`py-3 rounded-lg border-2 transition-all ${
+                          advertisingState.duration === days
+                            ? 'border-blue-500 bg-blue-50 text-blue-700'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <p className="font-bold">{days} days</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Estimated Reach */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Estimated Results</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <p className="text-3xl font-bold text-gray-900">
+                        {(advertisingState.budget * 100).toLocaleString('en-ZA')}
+                      </p>
+                      <p className="text-sm text-gray-600">Impressions</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-3xl font-bold text-gray-900">
+                        {Math.round(advertisingState.budget * 1.5).toLocaleString('en-ZA')}
+                      </p>
+                      <p className="text-sm text-gray-600">Clicks</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-3xl font-bold text-gray-900">
+                        {Math.round(advertisingState.budget * 0.1).toLocaleString('en-ZA')}
+                      </p>
+                      <p className="text-sm text-gray-600">Bookings</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Comments Side Panel */}
+      {showCommentsPanel && (
+        <CommentsSidePanel 
+          listingId={listingId}
+          onClose={() => setShowCommentsPanel(false)}
+          currentUser={currentUser}
+          listing={listing}
+        />
+      )}
     </>
   );
 }

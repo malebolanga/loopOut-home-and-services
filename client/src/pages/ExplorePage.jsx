@@ -26,6 +26,112 @@ import {
 } from "react-icons/fi";
 import { TbBuilding, TbTools, TbUsers, TbCalendarEvent } from "react-icons/tb";
 
+// Mock data generators
+const generateMockItems = (count, type) => {
+  const types = ['properties', 'services', 'helpers', 'events'];
+  const itemType = type || types[Math.floor(Math.random() * types.length)];
+  
+  const baseItem = {
+    _id: Math.random().toString(36).substr(2, 9),
+    itemType,
+    title: '',
+    description: '',
+    price: 0,
+    rating: 0,
+    reviewCount: 0,
+    image: ''
+  };
+
+  const propertyTitles = [
+    'Modern Apartment in City Center',
+    'Luxury Villa with Ocean View',
+    'Cozy Studio Near University',
+    'Spacious Family House',
+    'Penthouse with Rooftop Terrace'
+  ];
+
+  const serviceTitles = [
+    'Professional Cleaning Service',
+    'Home Renovation Experts',
+    'Personal Chef for Events',
+    'Gardening & Landscaping',
+    'Plumbing & Electrical Services'
+  ];
+
+  const helperTitles = [
+    'Experienced Babysitter',
+    'Senior Care Companion',
+    'Personal Fitness Trainer',
+    'Home Tutor for Mathematics',
+    'Pet Sitter & Walker'
+  ];
+
+  const eventTitles = [
+    'Weekend Music Festival',
+    'Food & Wine Tasting',
+    'Yoga Retreat Workshop',
+    'Business Networking Event',
+    'Art Exhibition Opening'
+  ];
+
+  const images = [
+    'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w-800&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=800&auto=format&fit=crop'
+  ];
+
+  const items = [];
+  
+  for (let i = 0; i < count; i++) {
+    let title, price, rating;
+    
+    switch(itemType) {
+      case 'properties':
+        title = propertyTitles[Math.floor(Math.random() * propertyTitles.length)];
+        price = Math.floor(Math.random() * 5000) + 1000;
+        rating = (Math.random() * 2 + 3).toFixed(1);
+        break;
+      case 'services':
+        title = serviceTitles[Math.floor(Math.random() * serviceTitles.length)];
+        price = Math.floor(Math.random() * 200) + 50;
+        rating = (Math.random() * 2 + 3).toFixed(1);
+        break;
+      case 'helpers':
+        title = helperTitles[Math.floor(Math.random() * helperTitles.length)];
+        price = Math.floor(Math.random() * 100) + 20;
+        rating = (Math.random() * 2 + 3).toFixed(1);
+        break;
+      case 'events':
+        title = eventTitles[Math.floor(Math.random() * eventTitles.length)];
+        price = Math.floor(Math.random() * 150) + 10;
+        rating = (Math.random() * 2 + 3).toFixed(1);
+        break;
+      default:
+        title = propertyTitles[Math.floor(Math.random() * propertyTitles.length)];
+        price = Math.floor(Math.random() * 5000) + 1000;
+        rating = (Math.random() * 2 + 3).toFixed(1);
+    }
+
+    items.push({
+      ...baseItem,
+      _id: `${itemType}_${i}_${Math.random().toString(36).substr(2, 9)}`,
+      title: `${title} ${i + 1}`,
+      description: `This is a wonderful ${itemType} that offers great value and quality service. Perfect for your needs.`,
+      price,
+      rating: parseFloat(rating),
+      reviewCount: Math.floor(Math.random() * 200) + 10,
+      image: images[Math.floor(Math.random() * images.length)],
+      location: 'Cape Town, South Africa',
+      isFeatured: i < 2,
+      isTrending: i < 3
+    });
+  }
+  
+  return items;
+};
+
 const ExplorePage = () => {
   const { currentUser } = useSelector((state) => state.user);
   const [featuredItems, setFeaturedItems] = useState([]);
@@ -78,6 +184,7 @@ const ExplorePage = () => {
   const getUserLocation = () => {
     if (!navigator.geolocation) {
       setLocationError('Geolocation is not supported by your browser');
+      fetchGenericNearbyItems();
       return;
     }
 
@@ -149,18 +256,44 @@ const ExplorePage = () => {
   const fetchExploreData = async () => {
     setIsLoading(true);
     try {
-      // Fetch featured items
-      const featuredRes = await fetch(`/api/explore/featured?category=${activeCategory}&limit=6`);
-      const featuredData = await featuredRes.json();
-      setFeaturedItems(featuredData.data || []);
+      // For development: Use mock data if API is not available
+      if (process.env.NODE_ENV === 'development') {
+        // Generate mock data based on active category
+        const mockFeatured = generateMockItems(6, activeCategory === 'all' ? null : activeCategory);
+        const mockTrending = generateMockItems(6, activeCategory === 'all' ? null : activeCategory);
+        
+        // Mark some items as featured/trending
+        const featuredData = mockFeatured.map((item, index) => ({
+          ...item,
+          isFeatured: true,
+          title: `Featured: ${item.title}`
+        }));
+        
+        const trendingData = mockTrending.map((item, index) => ({
+          ...item,
+          isTrending: true,
+          title: `Trending: ${item.title}`
+        }));
+        
+        setFeaturedItems(featuredData);
+        setTrendingItems(trendingData);
+      } else {
+        // Production: Fetch from API
+        const featuredRes = await fetch(`/api/explore/featured?category=${activeCategory}&limit=6`);
+        const featuredData = await featuredRes.json();
+        setFeaturedItems(featuredData.data || []);
 
-      // Fetch trending items
-      const trendingRes = await fetch(`/api/explore/trending?category=${activeCategory}&limit=6`);
-      const trendingData = await trendingRes.json();
-      setTrendingItems(trendingData.data || []);
-
+        const trendingRes = await fetch(`/api/explore/trending?category=${activeCategory}&limit=6`);
+        const trendingData = await trendingRes.json();
+        setTrendingItems(trendingData.data || []);
+      }
     } catch (error) {
       console.error('Error fetching explore data:', error);
+      // Fallback to mock data on error
+      const mockFeatured = generateMockItems(6, activeCategory === 'all' ? null : activeCategory);
+      const mockTrending = generateMockItems(6, activeCategory === 'all' ? null : activeCategory);
+      setFeaturedItems(mockFeatured);
+      setTrendingItems(mockTrending);
     } finally {
       setIsLoading(false);
     }
@@ -169,6 +302,19 @@ const ExplorePage = () => {
   // Fetch nearby items based on user's location
   const fetchNearbyItems = async (latitude, longitude, city) => {
     try {
+      // For development: Use mock data if API is not available
+      if (process.env.NODE_ENV === 'development') {
+        const mockNearby = generateMockItems(6, activeCategory === 'all' ? null : activeCategory);
+        const nearbyData = mockNearby.map((item, index) => ({
+          ...item,
+          location: city || 'Nearby Location',
+          title: `Nearby: ${item.title}`
+        }));
+        setNearbyItems(nearbyData);
+        return;
+      }
+      
+      // Production: Fetch from API
       let url = `/api/explore/nearby?category=${activeCategory}&limit=6`;
       
       if (latitude && longitude) {
@@ -191,12 +337,27 @@ const ExplorePage = () => {
   // Fetch generic nearby items when location is not available
   const fetchGenericNearbyItems = async () => {
     try {
+      // For development: Use mock data
+      if (process.env.NODE_ENV === 'development') {
+        const mockNearby = generateMockItems(6, activeCategory === 'all' ? null : activeCategory);
+        const nearbyData = mockNearby.map((item, index) => ({
+          ...item,
+          location: 'General Location',
+          title: `Recommended: ${item.title}`
+        }));
+        setNearbyItems(nearbyData);
+        return;
+      }
+      
+      // Production: Fetch from API
       const nearbyRes = await fetch(`/api/explore/nearby?category=${activeCategory}&limit=6`);
       const nearbyData = await nearbyRes.json();
       setNearbyItems(nearbyData.data || []);
     } catch (error) {
       console.error('Error fetching generic nearby items:', error);
-      setNearbyItems([]);
+      // Ultimate fallback: use mock data
+      const mockNearby = generateMockItems(6, activeCategory === 'all' ? null : activeCategory);
+      setNearbyItems(mockNearby);
     }
   };
 
@@ -238,12 +399,12 @@ const ExplorePage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Add padding top to account for fixed header */}
-      <div className="pt-20 md:pt-24">
+      <div className="pt-2 md:pt-4">
         <main className="pt-4 pb-4">
           {/* Hero Section */}
-    <div className="relative bg-gradient-to-r from-rose-50 to-blue-50 rounded-3xl overflow-hidden mb-8">
-      <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-blue-500/10"></div>
-      <div className="relative z-10 px-8 py-12 md:py-16">
+          <div className="relative bg-gradient-to-r from-rose-50 to-blue-50 rounded-3xl overflow-hidden mb-8">
+            <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-blue-500/10"></div>
+            <div className="relative z-10 px-8 py-12 md:py-16">
               <div className="text-center max-w-3xl mx-auto">
                 <h1 className="text-2xl md:text-5xl font-bold text-gray-900 mb-4">
                   Discover Amazing Places & Services

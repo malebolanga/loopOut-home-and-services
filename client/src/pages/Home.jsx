@@ -26,7 +26,8 @@ import {
   HeartIcon as HeartIconSolid,
 } from '@heroicons/react/24/solid';
 import "../styles/ListingDetails.scss";
-
+import {
+  FaCar} from "react-icons/fa";
 // Constants
 const RECENTLY_VIEWED_KEY = 'recentlyViewed';
 const MAX_RECENTLY_VIEWED = 12;
@@ -452,7 +453,7 @@ const SmartRecommendations = ({ recommendations, insights, loading, onItemClick 
       </div>
 
       {/* Compact Horizontal Scroll */}
-      <div className="flex overflow-x-auto gap-3 pb-3 -mx-2 px-2 scrollbar-hide">
+      <div className="flex overflow-x-auto gap-3 pb-3 -mx-2 px-2 hide-scrollbar">
         {recommendations.slice(0, 6).map((item, i) => (
           <div
             key={item._id}
@@ -492,7 +493,7 @@ const SmartRecommendations = ({ recommendations, insights, loading, onItemClick 
       {/* Quick Insights */}
       {insights.length > 0 && (
         <div className="mt-4 pt-3 border-t border-blue-100">
-          <div className="flex overflow-x-auto gap-2 -mx-1 px-1">
+          <div className="flex overflow-x-auto gap-2 -mx-1 px-1 hide-scrollbar">
             {insights.slice(0, 3).map((insight, i) => (
               <div
                 key={i}
@@ -1266,13 +1267,21 @@ const MobileAppHomepage = ({
         <ChevronRightIcon className="w-4 h-4 ml-1" />
       </button>
     </div>
-    <div className="flex overflow-x-auto gap-3 pb-2 -mx-1 px-1 scrollbar-hide">
+    <div className="flex overflow-x-auto gap-3 pb-2 -mx-1 px-1 hide-scrollbar">
       {recentlyViewedItems.slice(0, isDesktop ? 6 : 5).map((item) => {
         // Determine the route based on item type
         const getItemRoute = () => {
           // Check if item has helper-specific data or type
           if (item.helperCategory || item.skills || item.type === 'helper') {
             return `/helper/${item._id}`;
+          }
+
+           if (item.carwashCategory || item.skills || item.type === 'carwash') {
+            return `/carwash/${item._id}`;
+          }
+
+           if (item.photographyCategory || item.skills || item.type === 'photography') {
+            return `/photography/${item._id}`;
           }
           // Check if item has service-specific data
           else if (item.serviceCategory || item.duration || item.type === 'service') {
@@ -1335,6 +1344,8 @@ const MobileAppHomepage = ({
                   <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">
                     {item.helperCategory ? 'Helper' : 
                      item.serviceCategory ? 'Service' : 
+                      item.photographyCategory ? 'Photography' : 
+                       item.carwashCategory ? 'Carwash' : 
                      item.eventDate ? 'Event' : 
                      'Listing'}
                   </span>
@@ -1476,61 +1487,92 @@ const MobileAppHomepage = ({
             </Link>
           </div>
           {loadingServices ? (
-            <div className="flex overflow-x-auto gap-3 md:gap-4 pb-2 -mx-1 px-1 scrollbar-hide">
-              {[...Array(isDesktop ? 4 : 3)].map((_, i) => (
-                <div key={i} className={`flex-shrink-0 ${serviceCardWidth}`}>
-                  <div className="aspect-[4/3] bg-gray-200 rounded-xl mb-2 animate-pulse"></div>
-                  <div className="h-4 bg-gray-200 rounded mb-1 animate-pulse"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse"></div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex overflow-x-auto gap-3 md:gap-4 pb-2 -mx-1 px-1 scrollbar-hide">
-              {featuredServices.slice(0, isDesktop ? 4 : 3).map((service) => (
-                <div
-                  key={service._id}
-                  onClick={() => navigate(`/service/${service._id}`)}
-                  className={`flex-shrink-0 ${serviceCardWidth} rounded-xl overflow-hidden active:opacity-80 cursor-pointer shadow-sm  hover:border-gray-300 hover:shadow-md transition-all duration-200`}
-                >
-                  <div className="relative aspect-[3/2]">
-                    <img
-                      src={service.imageUrls?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
-                      alt={service.name}
-                      className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-300"
-                    />
-                    {/* AI Value Indicator */}
-                    {service.price < 2000 && (
-                      <div className="absolute top-2 left-2">
-                        <span className="text-xs font-medium px-2 py-1 bg-green-100 text-green-800 rounded flex items-center">
-                          <BoltIcon className="w-3 h-3 mr-1" />
-                          Good Value
-                        </span>
-                      </div>
-                    )}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 rounded-xl to-transparent p-3">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-white text-sm md:text-base">
-                          R{service.price || service.regularPrice}
-                        </span>
-                        <div className="flex items-center bg-white/20 backdrop-blur-sm px-2 py-1 rounded">
-                          <StarIconSolid className="w-3 h-3 md:w-4 md:h-4 text-yellow-300" />
-                          <span className="text-xs text-white ml-1">{service.rating?.toFixed(1) || '4.5'}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-3 md:p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-medium text-gray-900 text-sm md:text-base truncate flex-1">{service.name}</h3>
+  <div className="flex overflow-x-auto gap-3 md:gap-4 pb-2 -mx-1 px-1 hide-scrollbar">
+    {[...Array(isDesktop ? 4 : 3)].map((_, i) => (
+      <div key={i} className={`flex-shrink-0 ${serviceCardWidth}`}>
+        <div className="aspect-[4/3] bg-gray-200 rounded-xl mb-2 animate-pulse"></div>
+        <div className="h-4 bg-gray-200 rounded mb-1 animate-pulse"></div>
+        <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+      </div>
+    ))}
+  </div>
+) : (
+  <div className="flex overflow-x-auto gap-3 md:gap-4 pb-2 -mx-1 px-1 hide-scrollbar">
+    {featuredServices.slice(0, isDesktop ? 4 : 3).map((service) => {
+      // Check if this service is a car wash
+      const isCarWash = service.type === 'carwash' || 
+                        service.serviceType === 'carwash' || 
+                        service.category === 'carwash' ||
+                        (service.name && service.name.toLowerCase().includes('car wash')) ||
+                        (service.description && service.description.toLowerCase().includes('car wash'));
 
-                    </div>
-                    <p className="text-xs text-gray-500 line-clamp-2 mb-3">{service.address || 'Service description'}</p>
-                  </div>
+      return (
+        <div
+          key={service._id}
+          onClick={() => {
+            if (isCarWash) {
+              navigate(`/carwash/${service._id}`);
+            } else {
+              navigate(`/service/${service._id}`);
+            }
+          }}
+          className={`flex-shrink-0 ${serviceCardWidth} rounded-xl overflow-hidden active:opacity-80 cursor-pointer shadow-sm hover:border-gray-300 hover:shadow-md transition-all duration-200`}
+        >
+          <div className="relative aspect-[3/2]">
+            <img
+              src={service.imageUrls?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+              alt={service.name}
+              className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-300"
+            />
+            {/* AI Value Indicator */}
+            {service.price < 2000 && (
+              <div className="absolute top-2 left-2">
+                <span className="text-xs font-medium px-2 py-1 bg-green-100 text-green-800 rounded flex items-center">
+                  <BoltIcon className="w-3 h-3 mr-1" />
+                  Good Value
+                </span>
+              </div>
+            )}
+            
+            {/* Car Wash Badge */}
+            {isCarWash && (
+              <div className="absolute top-2 right-2">
+                <span className="text-xs font-medium px-2 py-1 bg-blue-500 text-white rounded flex items-center">
+                  <FaCar className="w-3 h-3 mr-1" />
+                  Car Wash
+                </span>
+              </div>
+            )}
+            
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 rounded-xl to-transparent p-3">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-white text-sm md:text-base">
+                  R{service.price || service.regularPrice}
+                </span>
+                <div className="flex items-center bg-white/20 backdrop-blur-sm px-2 py-1 rounded">
+                  <StarIconSolid className="w-3 h-3 md:w-4 md:h-4 text-yellow-300" />
+                  <span className="text-xs text-white ml-1">{service.rating?.toFixed(1) || '4.5'}</span>
                 </div>
-              ))}
+              </div>
             </div>
-          )}
+          </div>
+          <div className="p-3 md:p-4">
+            <div className="flex justify-between items-start mb-2">
+              <h3 className="font-medium text-gray-900 text-sm md:text-base truncate flex-1">{service.name}</h3>
+              {/* Optional: Add a small indicator */}
+              {isCarWash && (
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full ml-2 flex-shrink-0">
+                  Car Wash
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 line-clamp-2 mb-3">{service.address || service.description || (isCarWash ? 'Professional car wash service' : 'Service description')}</p>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+)}
         </section>
 
         {/* Events Section with AI Predictions */}
@@ -1549,7 +1591,7 @@ const MobileAppHomepage = ({
             </Link>
           </div>
           {loadingEvents ? (
-            <div className="flex overflow-x-auto gap-3 md:gap-4 pb-2 -mx-1 px-1 scrollbar-hide">
+            <div className="flex overflow-x-auto gap-3 md:gap-4 pb-2 -mx-1 px-1 hide-scrollbar">
               {[...Array(isDesktop ? 4 : 3)].map((_, i) => (
                 <div key={i} className={`flex-shrink-0 ${eventCardWidth}`}>
                   <div className="aspect-[5/3] bg-gray-200 rounded-xl mb-2 animate-pulse"></div>
@@ -1562,7 +1604,7 @@ const MobileAppHomepage = ({
               ))}
             </div>
           ) : featuredEvents.length > 0 ? (
-            <div className="flex overflow-x-auto gap-3 md:gap-4 pb-2 -mx-1 px-1 scrollbar-hide">
+            <div className="flex overflow-x-auto gap-3 md:gap-4 pb-2 -mx-1 px-1 hide-scrollbar">
               {featuredEvents.slice(0, isDesktop ? 4 : 3).map((event) => (
                 <div
                   key={event._id}
@@ -1654,7 +1696,7 @@ const MobileAppHomepage = ({
             </Link>
           </div>
           {loadingHelpers ? (
-            <div className="flex overflow-x-auto gap-4 md:gap-6 pb-2 -mx-1 px-1 scrollbar-hide">
+            <div className="flex overflow-x-auto gap-4 md:gap-6 pb-2 -mx-1 px-1 hide-scrollbar">
               {[...Array(isDesktop ? 6 : 3)].map((_, i) => (
                 <div key={i} className="flex-shrink-0 w-56 animate-pulse">
                   <div className="aspect-square bg-gray-200 rounded-full mb-2 mx-auto w-20 h-20"></div>
@@ -1664,7 +1706,7 @@ const MobileAppHomepage = ({
               ))}
             </div>
           ) : (
-            <div className="flex overflow-x-auto gap-4 md:gap-6 pb-2 -mx-1 px-1 scrollbar-hide">
+            <div className="flex overflow-x-auto gap-4 md:gap-6 pb-2 -mx-1 px-1 hide-scrollbar">
               {featuredHelpers.slice(0, isDesktop ? 6 : 4).map((helper) => (
                 <div
                   key={helper._id}
@@ -1751,29 +1793,6 @@ const MobileAppHomepage = ({
 
       {/* Add some padding for bottom nav */}
       <div className="h-16"></div>
-
-      {/* Add custom CSS for scrollbar hiding */}
-      <style jsx>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .line-clamp-1 {
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 1;
-          -webkit-box-orient: vertical;
-        }
-        .line-clamp-2 {
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-      `}</style>
     </div>
   );
 };

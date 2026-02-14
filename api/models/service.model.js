@@ -64,8 +64,9 @@ const serviceSchema = new mongoose.Schema(
         'landscaping', 
         'catering', 
         'other',
-        'daycare',        // New service type
-        'schoolTransport' // New service type
+        'daycare',
+        'schoolTransport',
+        'carwash' // ✅ NEW: Car wash service type
       ]
     },
     offer: {
@@ -91,7 +92,7 @@ const serviceSchema = new mongoose.Schema(
       ref: 'ServiceComment'
     },
     
-    // New fields for daycare services
+    // Daycare fields
     ageGroup: {
       type: String,
       required: function() { return this.type === 'daycare'; }
@@ -109,7 +110,7 @@ const serviceSchema = new mongoose.Schema(
       required: function() { return this.type === 'daycare'; }
     },
     
-    // New fields for school transport
+    // School transport fields
     vehicleType: {
       type: String,
       required: function() { return this.type === 'schoolTransport'; }
@@ -121,6 +122,38 @@ const serviceSchema = new mongoose.Schema(
     childSeats: {
       type: Boolean,
       required: function() { return this.type === 'schoolTransport'; }
+    },
+    
+    // ✅ NEW: Car Wash specific fields
+    carWashPackages: {
+      type: String, // Comma-separated: basic,premium,detailing,ceramic
+      required: function() { return this.type === 'carwash'; }
+    },
+    vehicleTypes: {
+      type: String, // sedan, suv, van, truck, motorcycle, all
+      required: function() { return this.type === 'carwash'; }
+    },
+    additionalServices: {
+      type: String, // Comma-separated additional services
+      required: false
+    },
+    serviceDuration: {
+      type: String, // e.g., "30-45 mins", "1-2 hours"
+      required: function() { return this.type === 'carwash'; }
+    },
+    mobileService: {
+      type: Boolean,
+      default: false,
+      required: function() { return this.type === 'carwash'; }
+    },
+    ecoFriendly: {
+      type: Boolean,
+      default: false,
+      required: false
+    },
+    additionalPricing: {
+      type: String, // Detailed pricing for different packages
+      required: false
     }
   },
   { timestamps: true }

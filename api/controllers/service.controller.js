@@ -24,6 +24,17 @@ export const createService = async (req, res, next) => {
       serviceData.childSeats = undefined;
     }
 
+    // ✅ NEW: Handle car wash conditional fields
+    if (req.body.type !== 'carwash') {
+      serviceData.carWashPackages = undefined;
+      serviceData.vehicleTypes = undefined;
+      serviceData.additionalServices = undefined;
+      serviceData.serviceDuration = undefined;
+      serviceData.mobileService = undefined;
+      serviceData.ecoFriendly = undefined;
+      serviceData.additionalPricing = undefined;
+    }
+
     const service = await Service.create(serviceData);
     return res.status(201).json(service);
   } catch (error) {
@@ -82,6 +93,17 @@ export const updateService = async (req, res, next) => {
       updateData.childSeats = undefined;
     }
 
+    // ✅ NEW: Handle car wash conditional fields for update
+    if (req.body.type !== 'carwash') {
+      updateData.carWashPackages = undefined;
+      updateData.vehicleTypes = undefined;
+      updateData.additionalServices = undefined;
+      updateData.serviceDuration = undefined;
+      updateData.mobileService = undefined;
+      updateData.ecoFriendly = undefined;
+      updateData.additionalPricing = undefined;
+    }
+
     const updatedService = await Service.findByIdAndUpdate(
       req.params.id,
       updateData,
@@ -119,10 +141,10 @@ export const getServices = async (req, res, next) => {
 
     let type = req.query.type;
     if (type === undefined || type === 'all') {
-      // Include new service types in default filter
+      // ✅ UPDATED: Include carwash in default filter
       type = { $in: [
         'cleaning', 'maintenance', 'moving', 'landscaping', 
-        'catering', 'other', 'daycare', 'schoolTransport'
+        'catering', 'other', 'daycare', 'schoolTransport', 'carwash'
       ] };
     }
 
@@ -140,16 +162,23 @@ export const getServices = async (req, res, next) => {
       ...(req.query.near && { near: req.query.near }),
       ...(req.query.userRef && { userRef: req.query.userRef }),
       
-      // Add filters for new daycare fields
+      // Daycare filters
       ...(req.query.ageGroup && { ageGroup: req.query.ageGroup }),
       ...(req.query.licenseNumber && { licenseNumber: req.query.licenseNumber }),
       ...(req.query.capacity && { capacity: req.query.capacity }),
       ...(req.query.meals && { meals: req.query.meals === 'true' }),
       
-      // Add filters for new transport fields
+      // School transport filters
       ...(req.query.vehicleType && { vehicleType: req.query.vehicleType }),
       ...(req.query.routeAreas && { routeAreas: req.query.routeAreas }),
       ...(req.query.childSeats && { childSeats: req.query.childSeats === 'true' }),
+      
+      // ✅ NEW: Car wash filters
+      ...(req.query.carWashPackages && { carWashPackages: { $regex: req.query.carWashPackages, $options: 'i' } }),
+      ...(req.query.vehicleTypes && { vehicleTypes: req.query.vehicleTypes }),
+      ...(req.query.serviceDuration && { serviceDuration: { $regex: req.query.serviceDuration, $options: 'i' } }),
+      ...(req.query.mobileService && { mobileService: req.query.mobileService === 'true' }),
+      ...(req.query.ecoFriendly && { ecoFriendly: req.query.ecoFriendly === 'true' }),
     };
 
     const services = await Service.find(query)
