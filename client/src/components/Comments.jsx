@@ -32,6 +32,29 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
     { name: 'Staff', icon: FaUserFriends },
   ];
 
+  // Helper function to get token from localStorage or session
+  const getToken = () => {
+    // Try to get token from localStorage (common pattern)
+    const tokenFromStorage = localStorage.getItem('token') || 
+                            localStorage.getItem('access_token') || 
+                            localStorage.getItem('jwt');
+    
+    if (tokenFromStorage) {
+      return tokenFromStorage;
+    }
+
+    // Try from sessionStorage
+    const tokenFromSession = sessionStorage.getItem('token') || 
+                            sessionStorage.getItem('access_token') || 
+                            sessionStorage.getItem('jwt');
+    
+    if (tokenFromSession) {
+      return tokenFromSession;
+    }
+
+    return null;
+  };
+
   const fetchComments = useCallback(async () => {
     setLoading(prev => ({ ...prev, comments: true }));
     setError(null);
@@ -92,28 +115,42 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
     try {
       setLoading(prev => ({ ...prev, submitting: true }));
       
+      // Get token from storage
+      const token = getToken();
+      
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Only add Authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch('/api/comment', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentUser.token}`
-        },
+        headers: headers,
         body: JSON.stringify({
           content: commentContent,
           listingId,
-          userName: currentUser.username,
-          userAvatar: currentUser.avatar || '/default-avatar.jpg'
-        })
+          userName: currentUser.username || currentUser.name || currentUser.displayName || 'User',
+          userAvatar: currentUser.avatar || currentUser.picture || '/default-avatar.jpg'
+        }),
+        credentials: 'include'
       });
 
       const responseData = await res.json();
       
       if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error('Session expired. Please log in again.');
+        }
         throw new Error(responseData.message || 'Failed to post comment');
       }
 
       setCommentContent('');
       setRefreshTrigger(prev => prev + 1);
+      setError(null);
     } catch (err) {
       setError(err.message || 'Failed to post comment');
       console.error('Post comment error:', err);
@@ -122,54 +159,61 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
     }
   };
 
-// Example for handleLikeComment - apply similar pattern to others
-const handleLikeComment = async (commentId) => {
-  if (!currentUser) {
-    setError('You must be logged in to like comments');
-    return;
-  }
-
-  try {
-    setLoading(prev => ({ ...prev, liking: true }));
-    
-    const res = await fetch(`/api/comment/like/${commentId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${currentUser.token}`
-      }
-    });
-
-    if (!res.ok) {
-      let errorMessage = 'Failed to like comment';
-      try {
-        const errorData = await res.json();
-        errorMessage = errorData.message || errorMessage;
-      } catch (parseError) {
-        errorMessage = res.statusText || errorMessage;
-      }
-      throw new Error(errorMessage);
+  const handleLikeComment = async (commentId) => {
+    if (!currentUser) {
+      setError('You must be logged in to like comments');
+      return;
     }
 
-    // Optimistic update for likes
-    setComments(prev => prev.map(comment => {
-      if (comment._id === commentId) {
-        const isLiked = comment.likes?.includes(currentUser._id);
-        return {
-          ...comment,
-          likes: isLiked 
-            ? comment.likes.filter(id => id !== currentUser._id)
-            : [...(comment.likes || []), currentUser._id]
-        };
+    try {
+      setLoading(prev => ({ ...prev, liking: true }));
+      
+      const token = getToken();
+      
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
-      return comment;
-    }));
-  } catch (err) {
-    setError(err.message);
-  } finally {
-    setLoading(prev => ({ ...prev, liking: false }));
-  }
-};
+
+      const res = await fetch(`/api/comment/like/${commentId}`, {
+        method: 'PUT',
+        headers: headers,
+        credentials: 'include'
+      });
+
+      if (!res.ok) {
+        let errorMessage = 'Failed to like comment';
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (parseError) {
+          errorMessage = res.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Optimistic update for likes
+      setComments(prev => prev.map(comment => {
+        if (comment._id === commentId) {
+          const isLiked = comment.likes?.includes(currentUser._id);
+          return {
+            ...comment,
+            likes: isLiked 
+              ? comment.likes.filter(id => id !== currentUser._id)
+              : [...(comment.likes || []), currentUser._id]
+          };
+        }
+        return comment;
+      }));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(prev => ({ ...prev, liking: false }));
+    }
+  };
 
   const handleSubmitReply = async (commentId) => {
     setError(null);
@@ -186,28 +230,40 @@ const handleLikeComment = async (commentId) => {
     try {
       setLoading(prev => ({ ...prev, replying: true }));
       
+      const token = getToken();
+      
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`/api/comment/reply/${commentId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentUser.token}`
-        },
+        headers: headers,
+        credentials: 'include',
         body: JSON.stringify({
           content: replyContent,
-          userName: currentUser.username,
-          userAvatar: currentUser.avatar || '/default-avatar.jpg'
+          userName: currentUser.username || currentUser.name || currentUser.displayName || 'User',
+          userAvatar: currentUser.avatar || currentUser.picture || '/default-avatar.jpg'
         })
       });
 
       const responseData = await res.json();
       
       if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error('Session expired. Please log in again.');
+        }
         throw new Error(responseData.message || 'Failed to post reply');
       }
 
       setReplyingTo(null);
       setReplyContent('');
       setRefreshTrigger(prev => prev + 1);
+      setError(null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -225,11 +281,17 @@ const handleLikeComment = async (commentId) => {
     try {
       setLoading(prev => ({ ...prev, deleting: true }));
       
+      const token = getToken();
+      
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`/api/comment/${commentId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${currentUser.token}`
-        }
+        headers: headers,
+        credentials: 'include'
       });
 
       if (!res.ok) {
@@ -349,8 +411,8 @@ const handleLikeComment = async (commentId) => {
         <form onSubmit={handleSubmitComment} className="mb-6">
           <div className="flex items-start gap-3">
             <img 
-              src={currentUser.avatar || '/default-avatar.jpg'} 
-              alt={currentUser.username}
+              src={currentUser.avatar || currentUser.picture || '/default-avatar.jpg'} 
+              alt={currentUser.username || currentUser.name || 'User'}
               className="w-9 h-9 rounded-full object-cover flex-shrink-0"
               onError={(e) => {
                 e.target.src = '/default-avatar.jpg';
@@ -397,8 +459,8 @@ const handleLikeComment = async (commentId) => {
           <form onSubmit={handleSubmitComment}>
             <div className="flex items-start gap-3">
               <img 
-                src={currentUser.avatar || '/default-avatar.jpg'} 
-                alt={currentUser.username}
+                src={currentUser.avatar || currentUser.picture || '/default-avatar.jpg'} 
+                alt={currentUser.username || currentUser.name || 'User'}
                 className="w-9 h-9 rounded-full object-cover flex-shrink-0"
                 onError={(e) => {
                   e.target.src = '/default-avatar.jpg';
@@ -566,8 +628,8 @@ const handleLikeComment = async (commentId) => {
                       <div className="mt-3 ml-2">
                         <div className="flex items-start gap-2">
                           <img 
-                            src={currentUser?.avatar || '/default-avatar.jpg'} 
-                            alt={currentUser?.username}
+                            src={currentUser?.avatar || currentUser?.picture || '/default-avatar.jpg'} 
+                            alt={currentUser?.username || currentUser?.name || 'User'}
                             className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                             onError={(e) => {
                               e.target.src = '/default-avatar.jpg';

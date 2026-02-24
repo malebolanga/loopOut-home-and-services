@@ -1,4 +1,3 @@
-
 /* eslint-disable react/prop-types */
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
@@ -34,24 +33,23 @@ import {
   MdPeople,
   MdShare,
   MdSecurity,
-  MdLogout
+  MdLogout,
+  MdEdit,
+  MdArrowForward,
+  MdAdd,
+  MdDelete,
+  MdCameraAlt
 } from 'react-icons/md';
 import { 
   FaBath, 
   FaBed, 
-  FaArrowRight, 
-  FaEdit, 
-  FaCalendarAlt,
-  FaUser,
   FaShieldAlt,
   FaBell,
-  FaEye,
   FaHome,
   FaHeart,
   FaList,
   FaCog,
   FaShareAlt,
-  FaDownload,
   FaTrash,
   FaCamera,
   FaWhatsapp,
@@ -75,169 +73,136 @@ import {
   FaTools,
   FaClipboardCheck
 } from "react-icons/fa";
-import {
-  AddCircle,
-} from "@mui/icons-material";
-import {
-  ShareIcon,
-  LockClosedIcon,
-  ArrowDownTrayIcon,
-  TrashIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  CameraIcon,
-  CogIcon,
-  BellIcon,
-  ShieldCheckIcon,
-  UserIcon,
-  HomeIcon,
-  HeartIcon,
-  ListBulletIcon,
-  ChatBubbleLeftRightIcon,
-  UserGroupIcon,
-  GiftIcon,
-  HandRaisedIcon,
-  ScaleIcon,
-  UserPlusIcon,
-  StarIcon,
-  BookOpenIcon,
-  QuestionMarkCircleIcon,
-  BuildingOfficeIcon,
-  ChartBarIcon,
-  CreditCardIcon,
-  WrenchScrewdriverIcon,
-  ClipboardDocumentCheckIcon
-} from '@heroicons/react/24/outline';
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import WishList from "./WishListProfile";
 import MyListing from "./MyListing";
-import { Camera, CheckCircle, X, MessageCircle, Mail, Phone } from 'lucide-react';
+import { Camera, CheckCircle, X, MessageCircle, Mail, Phone, ChevronRight, Globe, Shield, Bell, User, Home, Heart, List, Settings, LogOut, Plus, Trash2, Edit3, MapPin, Calendar, Star, Award, HelpCircle, Download, ChartBarIcon, Gift } from 'lucide-react';
+// Airbnb Color Palette
+const colors = {
+  primary: '#FF5A5F',      // Airbnb Rausch
+  primaryDark: '#E00B41',
+  secondary: '#00A699',    // Teal
+  dark: '#484848',         // Dark gray
+  gray: '#767676',         // Medium gray
+  lightGray: '#DDDDDD',    // Light gray
+  lighterGray: '#F7F7F7',  // Background gray
+  white: '#FFFFFF',
+  success: '#00A699',
+  error: '#FC642D',
+};
 
-// Reusable InputField Component
-const InputField = ({ label, id, type = "text", value, handleChange, helperText, placeholder, icon }) => (
-  <div>
-    <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-2">
+// Reusable InputField Component - Airbnb Style
+const InputField = ({ label, id, type = "text", value, handleChange, helperText, placeholder, icon: Icon }) => (
+  <div className="mb-6">
+    <label htmlFor={id} className="block text-sm font-semibold text-[#484848] mb-2">
       {label}
     </label>
     <div className="relative">
-      {icon && (
-        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-          {icon}
+      {Icon && (
+        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#767676]">
+          <Icon size={18} />
         </div>
       )}
       <input
         type={type}
         id={id}
-        className={`w-full px-4 py-3 border ${icon ? 'pl-10' : ''} border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all`}
+        className={`w-full px-4 py-3 border border-[#DDDDDD] rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F] transition-all outline-none text-[#484848] placeholder-[#767676] ${Icon ? 'pl-10' : ''}`}
         value={value || ''}
         onChange={handleChange}
         placeholder={placeholder || `Enter your ${label.toLowerCase()}`}
       />
     </div>
-    {helperText && <p className="mt-2 text-sm text-gray-500">{helperText}</p>}
+    {helperText && <p className="mt-2 text-sm text-[#767676]">{helperText}</p>}
   </div>
 );
 
-// Reusable ToggleSwitch Component
+// Airbnb Toggle Switch
 const ToggleSwitch = ({ enabled, setEnabled }) => (
   <button
     type="button"
     onClick={() => setEnabled(!enabled)}
-    className={`${enabled ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gray-300'
-      } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2`}
+    className={`${enabled ? 'bg-[#FF5A5F]' : 'bg-[#DDDDDD]'
+      } relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
     role="switch"
     aria-checked={enabled}
   >
     <span
       aria-hidden="true"
       className={`${enabled ? 'translate-x-5' : 'translate-x-0'
-        } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+        } pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
     />
   </button>
 );
 
-// Reusable Checkbox Component
+// Airbnb Checkbox
 const Checkbox = ({ label, checked, onChange, helperText }) => (
-  <label className="flex items-start gap-3 cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors">
+  <label className="flex items-start gap-3 cursor-pointer p-3 hover:bg-[#F7F7F7] rounded-lg transition-colors">
     <input
       type="checkbox"
-      className="form-checkbox h-5 w-5 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
+      className="form-checkbox h-5 w-5 text-[#FF5A5F] rounded border-[#DDDDDD] focus:ring-[#FF5A5F]"
       checked={checked}
       onChange={onChange}
     />
     <div className="flex-1">
-      <span className="text-gray-900 font-medium">{label}</span>
-      {helperText && <p className="text-sm text-gray-500 mt-1">{helperText}</p>}
+      <span className="text-[#484848] font-medium text-sm">{label}</span>
+      {helperText && <p className="text-sm text-[#767676] mt-1">{helperText}</p>}
     </div>
   </label>
 );
 
-// Section Card Component
-const SectionCard = ({ children, title, icon, emoji }) => (
-  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6">
+// Airbnb Section Card
+const SectionCard = ({ children, title, icon: Icon }) => (
+  <div className="bg-white rounded-xl border border-[#DDDDDD] shadow-sm p-6 mb-6">
     {title && (
-      <div className="flex items-center gap-3 mb-6">
-        {icon && <div className="text-purple-600">{icon}</div>}
-        <h3 className="text-xl font-semibold text-gray-900">{emoji && <span className="mr-2">{emoji}</span>}{title}</h3>
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-[#DDDDDD]">
+        {Icon && <Icon className="text-[#FF5A5F]" size={24} />}
+        <h3 className="text-xl font-bold text-[#484848]">{title}</h3>
       </div>
     )}
     {children}
   </div>
 );
 
-// Connection Card Component
-const ConnectionCard = ({ icon, emoji, title, description, onClick, buttonText = "Connect", color = "blue" }) => {
-  const colorClasses = {
-    blue: 'from-blue-50 to-blue-100 text-blue-600',
-    green: 'from-green-50 to-green-100 text-green-600',
-    purple: 'from-purple-50 to-purple-100 text-purple-600',
-    orange: 'from-orange-50 to-orange-100 text-orange-600',
-    pink: 'from-pink-50 to-pink-100 text-pink-600',
-    yellow: 'from-yellow-50 to-yellow-100 text-yellow-600',
-  };
-
-  return (
-    <div className={`border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-${color}-300`}>
-      <div className="flex items-start gap-4">
-        <div className="flex-shrink-0">
-          <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center`}>
-            {icon && <div className={colorClasses[color].split(' ')[2]}>{icon}</div>}
-            {emoji && <span className="text-2xl">{emoji}</span>}
-          </div>
-        </div>
-        <div className="flex-1">
-          <h4 className="font-semibold text-gray-900 mb-1">{title}</h4>
-          <p className="text-gray-600 text-sm mb-3">{description}</p>
-          <button
-            onClick={onClick}
-            className={`inline-flex items-center gap-2 ${colorClasses[color].split(' ')[2]} hover:opacity-80 font-medium text-sm transition-colors`}
-          >
-            {buttonText} <FaArrowRight className="w-3 h-3" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Settings Option Component
-const SettingsOption = ({ icon, title, description, onClick, isLast = false, emoji }) => (
+// Airbnb Menu Item
+const MenuItem = ({ icon: Icon, label, active, onClick, badge }) => (
   <button
     onClick={onClick}
-    className={`flex items-start gap-4 w-full p-4 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 transition-all duration-200 text-left ${!isLast ? 'border-b border-gray-100' : ''}`}
+    className={`flex items-center justify-between w-full p-3 rounded-lg text-left transition-all duration-200 ${active
+        ? "bg-[#F7F7F7] text-[#FF5A5F] font-semibold"
+        : "text-[#484848] hover:bg-[#F7F7F7]"
+      }`}
   >
-    <div className="flex-shrink-0">
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-        {emoji && <span className="text-lg">{emoji}</span>}
-        {!emoji && icon}
+    <div className="flex items-center gap-3">
+      <Icon size={20} />
+      <span>{label}</span>
+    </div>
+    {badge ? (
+      <span className="bg-[#FF5A5F] text-white text-xs px-2 py-1 rounded-full">
+        {badge}
+      </span>
+    ) : (
+      <ChevronRight size={16} className={`${active ? 'text-[#FF5A5F]' : 'text-[#767676]'}`} />
+    )}
+  </button>
+);
+
+// Airbnb Settings Row
+const SettingsRow = ({ icon: Icon, title, description, onClick, danger }) => (
+  <button
+    onClick={onClick}
+    className={`flex items-center justify-between w-full p-4 hover:bg-[#F7F7F7] transition-colors border-b border-[#DDDDDD] last:border-b-0`}
+  >
+    <div className="flex items-center gap-4">
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${danger ? 'bg-red-50' : 'bg-[#F7F7F7]'}`}>
+        <Icon size={20} className={danger ? 'text-red-500' : 'text-[#484848]'} />
+      </div>
+      <div className="text-left">
+        <h4 className={`font-medium ${danger ? 'text-red-500' : 'text-[#484848]'}`}>{title}</h4>
+        <p className="text-sm text-[#767676]">{description}</p>
       </div>
     </div>
-    <div className="flex-1">
-      <h4 className="font-medium text-gray-900 mb-1">{title}</h4>
-      <p className="text-sm text-gray-600">{description}</p>
-    </div>
-    <FaArrowRight className="w-5 h-5 text-purple-400 flex-shrink-0" />
+    <ChevronRight size={20} className="text-[#767676]" />
   </button>
 );
 
@@ -811,668 +776,505 @@ export default function Profile() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-purple-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-              <span className="text-2xl">👤</span>
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">My Account</h1>
-              <p className="text-gray-600 mt-2 flex items-center gap-2">
-                <span className="text-purple-500">✨</span> Manage your personal information, privacy, and security
-              </p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-white">
+      {/* Airbnb-style Header */}
+      <div className="border-b border-[#DDDDDD] sticky top-0 bg-white z-40">
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <h1 className="text-2xl font-bold text-[#484848]">Account</h1>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Left Sidebar Navigation */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-8">
-              {/* Profile Card */}
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 mb-6">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="relative">
-                    <img
-                      src={formData.avatar || currentUser?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
-                      alt="Profile"
-                      className="h-20 w-20 rounded-full object-cover border-4 border-gradient-to-r from-purple-200 to-pink-200"
-                    />
-                    {isFaceVerified && (
-                      <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-green-400 to-emerald-500 text-white p-1.5 rounded-full shadow-lg">
-                        <MdVerifiedUser className="w-4 h-4" />
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <h2 className="font-bold text-gray-900 text-lg">{currentUser?.username || 'User'}</h2>
-                    <p className="text-sm text-gray-600">{currentUser?.email || 'user@example.com'}</p>
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        onClick={() => fileRef.current.click()}
-                        className="text-sm text-purple-600 hover:text-purple-800 hover:underline transition-colors"
-                      >
-                        <input
-                          type="file"
-                          hidden
-                          ref={fileRef}
-                          accept="image/*"
-                          onChange={(e) => setFile(e.target.files[0])}
-                        />
-                        📸 Change photo
-                      </button>
-                      <span className="text-gray-400">•</span>
-                      <button
-                        onClick={() => setShowViewProfile(true)}
-                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                      >
-                        👁️ View profile
-                      </button>
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Left Sidebar - Airbnb Style */}
+          <div className="lg:col-span-3">
+            <div className="sticky top-24">
+              {/* Profile Summary Card */}
+              <div className="bg-white rounded-xl border border-[#DDDDDD] p-6 mb-6 text-center">
+                <div className="relative inline-block mb-4">
+                  <img
+                    src={formData.avatar || currentUser?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
+                    alt="Profile"
+                    className="h-24 w-24 rounded-full object-cover border-2 border-[#DDDDDD]"
+                  />
+                  {isFaceVerified && (
+                    <div className="absolute -bottom-1 -right-1 bg-[#00A699] text-white p-1.5 rounded-full border-2 border-white">
+                      <Shield size={14} />
                     </div>
+                  )}
+                  <button
+                    onClick={() => fileRef.current.click()}
+                    className="absolute bottom-0 right-0 bg-white border border-[#DDDDDD] p-1.5 rounded-full shadow-sm hover:bg-[#F7F7F7] transition-colors"
+                  >
+                    <Camera size={14} className="text-[#484848]" />
+                  </button>
+                  <input
+                    type="file"
+                    hidden
+                    ref={fileRef}
+                    accept="image/*"
+                    onChange={(e) => setFile(e.target.files[0])}
+                  />
+                </div>
+                <h2 className="font-bold text-lg text-[#484848]">{currentUser?.username || 'User'}</h2>
+                <p className="text-sm text-[#767676] mt-1">{currentUser?.email || 'user@example.com'}</p>
+                
+                {isFaceVerified && (
+                  <div className="mt-3 inline-flex items-center gap-1 text-sm text-[#00A699] font-medium bg-[#00A699]/10 px-3 py-1 rounded-full">
+                    <Shield size={14} />
+                    Identity verified
                   </div>
+                )}
+              </div>
+
+              {/* Navigation Menu */}
+              <div className="bg-white rounded-xl border border-[#DDDDDD] overflow-hidden">
+                <div className="p-2">
+                  <MenuItem
+                    icon={User}
+                    label="Personal info"
+                    active={activeSection === "personal"}
+                    onClick={() => setActiveSection("personal")}
+                  />
+                  <MenuItem
+                    icon={Shield}
+                    label="Login & security"
+                    active={activeSection === "login"}
+                    onClick={() => setActiveSection("login")}
+                  />
+                  <MenuItem
+                    icon={Bell}
+                    label="Notifications"
+                    active={activeSection === "notifications"}
+                    onClick={() => setActiveSection("notifications")}
+                  />
+                  <MenuItem
+                    icon={Globe}
+                    label="Privacy & sharing"
+                    active={activeSection === "privacy"}
+                    onClick={() => setActiveSection("privacy")}
+                  />
+                  <MenuItem
+                    icon={Home}
+                    label="Host dashboard"
+                    active={activeSection === "host-account"}
+                    onClick={() => setActiveSection("host-account")}
+                  />
+                  <MenuItem
+                    icon={Heart}
+                    label="Wishlists"
+                    active={activeSection === "wishlist"}
+                    onClick={() => setActiveSection("wishlist")}
+                  />
+                  <MenuItem
+                    icon={List}
+                    label="My listings"
+                    active={activeSection === "my-listings"}
+                    onClick={() => setActiveSection("my-listings")}
+                    badge={userListings?.length || 0}
+                  />
+                  <MenuItem
+                    icon={Calendar}
+                    label="My events"
+                    active={activeSection === "events"}
+                    onClick={() => setActiveSection("events")}
+                    badge={postCount || 0}
+                  />
                 </div>
-
-                {/* Navigation */}
-                <nav className="space-y-1">
-                  {[
-                    { id: "personal", label: "Personal Info", icon: <UserIcon className="w-5 h-5" />, emoji: "👤" },
-                    { id: "login", label: "Login & Security", icon: <ShieldCheckIcon className="w-5 h-5" />, emoji: "🔐" },
-                    { id: "notifications", label: "Notifications", icon: <BellIcon className="w-5 h-5" />, emoji: "🔔" },
-                    { id: "privacy", label: "Privacy & Sharing", icon: <FaEye className="w-5 h-5" />, emoji: "👁️" },
-                    { id: "hosting", label: "Host an Experience", icon: <HomeIcon className="w-5 h-5" />, emoji: "🏠" },
-                    { id: "host-account", label: "Host Account", icon: <FaUserTie className="w-5 h-5" />, emoji: "👔" },
-                    { id: "wishlist", label: "Wishlist", icon: <HeartIcon className="w-5 h-5" />, emoji: "❤️" },
-                    { id: "my-listings", label: "My Listings", icon: <ListBulletIcon className="w-5 h-5" />, emoji: "📋" },
-                    { id: "events", label: "My Events", icon: <MdCalendarToday className="w-5 h-5" />, emoji: "📅" },
-                    { id: "connections", label: "Connections", icon: <UserGroupIcon className="w-5 h-5" />, emoji: "🔗" }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveSection(tab.id)}
-                      className={`flex items-center gap-3 w-full p-3 rounded-xl text-left transition-all duration-200 ${activeSection === tab.id
-                          ? "bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 font-semibold border border-purple-200 shadow-sm"
-                          : "text-gray-600 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-gray-900"
-                        }`}
-                    >
-                      <span className="text-lg">{tab.emoji}</span>
-                      <span>{tab.label}</span>
-                    </button>
-                  ))}
-                </nav>
-
-                {/* Account Settings Footer */}
-                <div className="mt-6 pt-6 border-t border-gray-200 space-y-2">
-                  <SettingsOption
-                    emoji="❓"
-                    title="Get Help"
-                    description="Find answers and contact support"
-                    onClick={handleNavigateToHelp}
-                  />
-                  <SettingsOption
-                    emoji="🎁"
-                    title="Refer a Host"
-                    description="Earn rewards for inviting hosts"
-                    onClick={handleNavigateToReferrals}
-                  />
-                  <SettingsOption
-                    emoji="🤝"
-                    title="Find a Co-host"
-                    description="Partner with other hosts"
-                    onClick={handleNavigateToCoHost}
-                  />
-                  <SettingsOption
-                    emoji="⚖️"
-                    title="Legal"
-                    description="Terms, policies, and disclosures"
-                    onClick={handleNavigateToLegal}
-                    isLast={true}
-                  />
-                </div>
-
-                {/* Sign Out Button */}
-                <div className="mt-6 pt-6 border-t border-gray-200">
+                
+                <div className="border-t border-[#DDDDDD] p-2">
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center gap-3 w-full p-3 text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 rounded-xl transition-all duration-200 hover:scale-[1.02]"
+                    className="flex items-center gap-3 w-full p-3 rounded-lg text-left text-[#484848] hover:bg-[#F7F7F7] transition-colors"
                   >
-                    <span className="text-lg">🚪</span>
-                    <span className="font-medium">Log out</span>
+                    <LogOut size={20} />
+                    <span>Log out</span>
                   </button>
                 </div>
+              </div>
+
+              {/* Help Section */}
+              <div className="mt-6 bg-white rounded-xl border border-[#DDDDDD] overflow-hidden">
+                <SettingsRow
+                  icon={HelpCircle}
+                  title="Get help"
+                  description="Contact support"
+                  onClick={handleNavigateToHelp}
+                />
+                <SettingsRow
+  icon={Gift}  // Gift was not imported
+  title="Refer a friend"
+  description="Earn travel credits"
+  onClick={handleNavigateToReferrals}
+/>
               </div>
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-3">
+          {/* Main Content - Airbnb Style */}
+          <div className="lg:col-span-9">
             {/* Personal Info Section */}
             {activeSection === "personal" && (
               <>
-                <SectionCard title="Personal Information" emoji="👤">
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <SectionCard title="Personal info" icon={User}>
+                  <div className="max-w-2xl">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <InputField
+                          label="Legal name"
+                          id="username"
+                          value={formData.username || currentUser?.username || ''}
+                          handleChange={handleChange}
+                          icon={User}
+                        />
+                        <InputField
+                          label="Email address"
+                          type="email"
+                          id="email"
+                          value={formData.email || currentUser?.email || ''}
+                          handleChange={handleChange}
+                          icon={Mail}
+                        />
+                      </div>
+
                       <InputField
-                        label="Username"
-                        id="username"
-                        value={formData.username || currentUser?.username || ''}
-                        handleChange={handleChange}
-                        icon={<FaUser className="w-4 h-4" />}
-                      />
-                      <InputField
-                        label="Email"
-                        type="email"
-                        id="email"
-                        value={formData.email || currentUser?.email || ''}
-                        handleChange={handleChange}
-                        icon={<MdEmail className="w-4 h-4" />}
-                      />
-                      <InputField
-                        label="Location"
-                        id="location"
-                        value={formData.location || currentUser?.location || ''}
-                        handleChange={handleChange}
-                        icon={<MdLocationOn className="w-4 h-4" />}
-                      />
-                      <InputField
-                        label="Phone Number"
+                        label="Phone number"
                         type="tel"
                         id="phone"
                         value={formData.phone || currentUser?.phone || ''}
                         handleChange={handleChange}
-                        icon={<MdPhone className="w-4 h-4" />}
+                        icon={Phone}
                       />
-                    </div>
 
-                    <InputField
-                      label="Bio"
-                      type="textarea"
-                      id="bio"
-                      value={formData.bio || currentUser?.bio || ''}
-                      handleChange={handleChange}
-                      placeholder="Tell us about yourself ✨"
-                    />
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <InputField
-                        label="Occupation"
-                        id="occupation"
-                        value={formData.occupation || currentUser?.occupation || ''}
+                        label="Where you live"
+                        id="location"
+                        value={formData.location || currentUser?.location || ''}
                         handleChange={handleChange}
+                        icon={MapPin}
                       />
-                      <InputField
-                        label="Interests"
-                        id="interests"
-                        value={formData.interests || currentUser?.interests || ''}
-                        handleChange={handleChange}
-                      />
-                    </div>
 
-                    <InputField
-                      label="Website"
-                      type="url"
-                      id="website"
-                      value={formData.website || currentUser?.website || ''}
-                      handleChange={handleChange}
-                      icon={<MdLink className="w-4 h-4" />}
-                    />
-
-                    {/* WhatsApp Integration */}
-                    <div className="pt-6 border-t border-gray-200">
-                      <div className="flex justify-between items-center mb-4">
-                        <div>
-                          <h4 className="font-medium text-gray-900 flex items-center gap-2">
-                            <span className="text-xl">💬</span>
-                            WhatsApp Connection
-                          </h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Connect your WhatsApp for booking notifications
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setShowWhatsAppModal(true)}
-                          className="text-sm font-medium text-green-600 hover:text-green-800"
-                        >
-                          {whatsappConnected ? 'Manage' : 'Connect'}
-                        </button>
+                      <div className="pt-4 border-t border-[#DDDDDD]">
+                        <label className="block text-sm font-semibold text-[#484848] mb-2">About</label>
+                        <textarea
+                          id="bio"
+                          rows={4}
+                          className="w-full px-4 py-3 border border-[#DDDDDD] rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F] transition-all outline-none text-[#484848] resize-none"
+                          value={formData.bio || currentUser?.bio || ''}
+                          onChange={handleChange}
+                          placeholder="Tell guests about yourself..."
+                        />
                       </div>
-                      {whatsappConnected && (
-                        <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full flex items-center justify-center">
-                              <FaWhatsapp className="w-5 h-5 text-green-600" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900">WhatsApp Connected</p>
-                              <p className="text-sm text-gray-600">{whatsappNumber}</p>
-                            </div>
+
+                      {/* Identity Verification Section */}
+                      <div className="pt-6 border-t border-[#DDDDDD]">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h4 className="font-semibold text-[#484848]">Identity verification</h4>
+                            <p className="text-sm text-[#767676] mt-1">
+                              Show others you're really you with identity verification
+                            </p>
                           </div>
-                          {whatsappVerified ? (
-                            <div className="flex items-center gap-2 text-green-700">
-                              <CheckCircleIcon className="w-5 h-5" />
-                              <span className="text-sm font-medium">✅ Verified</span>
-                            </div>
-                          ) : (
+                          {!isFaceVerified ? (
                             <button
-                              onClick={handleVerifyWhatsApp}
-                              className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                              type="button"
+                              onClick={startCamera}
+                              className="px-4 py-2 border border-[#484848] rounded-lg text-[#484848] font-medium hover:bg-[#F7F7F7] transition-colors"
                             >
-                              Verify now 🔐
+                              Verify
                             </button>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[#00A699] font-medium">
+                              <CheckCircle size={18} />
+                              Verified
+                            </span>
                           )}
                         </div>
-                      )}
-                    </div>
+                      </div>
 
-                    {/* Identity Verification */}
-                    <div className="pt-6 border-t border-gray-200">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-medium text-gray-900 flex items-center gap-2">
-                            <span className="text-xl">🆔</span>
-                            Identity Verification
-                          </h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Add a photo to verify your identity
-                          </p>
+                      {/* WhatsApp Section */}
+                      <div className="pt-6 border-t border-[#DDDDDD]">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h4 className="font-semibold text-[#484848]">WhatsApp</h4>
+                            <p className="text-sm text-[#767676] mt-1">
+                              Receive booking updates via WhatsApp
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setShowWhatsAppModal(true)}
+                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${whatsappConnected ? 'text-[#00A699] border border-[#00A699] hover:bg-[#00A699]/10' : 'border border-[#484848] text-[#484848] hover:bg-[#F7F7F7]'}`}
+                          >
+                            {whatsappConnected ? 'Manage' : 'Connect'}
+                          </button>
                         </div>
+                      </div>
+
+                      <div className="pt-6 flex justify-end">
                         <button
-                          type="button"
-                          onClick={startCamera}
-                          className="text-sm font-medium text-purple-600 hover:text-purple-800 hover:underline"
+                          type="submit"
+                          disabled={loading}
+                          className="bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors disabled:opacity-50 flex items-center gap-2"
                         >
-                          {isFaceVerified ? '🔄 Re-verify' : '🔍 Verify now'}
+                          {loading ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Saving...
+                            </>
+                          ) : (
+                            'Save changes'
+                          )}
                         </button>
                       </div>
-                      {isFaceVerified && (
-                        <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
-                          <div className="flex items-center gap-2 text-green-700">
-                            <CheckCircleIcon className="w-5 h-5" />
-                            <span>✅ Your identity has been verified</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    </form>
 
-                    <div className="flex justify-end pt-6">
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center gap-2"
-                      >
-                        {loading ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Saving...
-                          </>
-                        ) : (
-                          <>
-                            💾 Save changes
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </form>
-
-                  {updateSuccess && (
-                    <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
-                      <p className="text-green-700 flex items-center gap-2">
-                        <span>✅</span> Profile updated successfully!
-                      </p>
-                    </div>
-                  )}
-                  {error && (
-                    <div className="mt-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-lg">
-                      <p className="text-red-700 flex items-center gap-2">
-                        <span>❌</span> {error}
-                      </p>
-                    </div>
-                  )}
+                    {updateSuccess && (
+                      <div className="mt-4 p-4 bg-[#00A699]/10 border border-[#00A699] rounded-lg">
+                        <p className="text-[#00A699] flex items-center gap-2 font-medium">
+                          <CheckCircle size={18} />
+                          Profile updated successfully
+                        </p>
+                      </div>
+                    )}
+                    {error && (
+                      <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-red-600 flex items-center gap-2">
+                          <X size={18} />
+                          {error}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </SectionCard>
               </>
             )}
 
             {/* Login & Security Section */}
             {activeSection === "login" && (
-              <>
-                <SectionCard title="Login & Security" emoji="🔐">
-                  <div className="space-y-8">
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                        <span>🔑</span> Password
-                      </h4>
-                      <div className="space-y-4">
-                        <InputField
-                          label="Current Password"
-                          type="password"
-                          id="currentPassword"
-                          handleChange={handleChange}
-                          icon={<MdLock className="w-4 h-4" />}
-                        />
-                        <InputField
-                          label="New Password"
-                          type="password"
-                          id="newPassword"
-                          handleChange={handleChange}
-                        />
-                        <InputField
-                          label="Confirm New Password"
-                          type="password"
-                          id="confirmNewPassword"
-                          handleChange={handleChange}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="pt-6 border-t border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium text-gray-900 flex items-center gap-2">
-                            <span>🛡️</span> Two-factor authentication
-                          </h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Add an extra layer of security to your account
-                          </p>
-                        </div>
-                        <ToggleSwitch
-                          enabled={twoFactorEnabled}
-                          setEnabled={setTwoFactorEnabled}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end pt-6">
-                      <button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2">
-                        💾 Save changes
-                      </button>
+              <SectionCard title="Login & security" icon={Shield}>
+                <div className="max-w-2xl space-y-8">
+                  <div>
+                    <h4 className="font-semibold text-[#484848] mb-4">Password</h4>
+                    <div className="space-y-4">
+                      <InputField
+                        label="Current password"
+                        type="password"
+                        id="currentPassword"
+                        handleChange={handleChange}
+                      />
+                      <InputField
+                        label="New password"
+                        type="password"
+                        id="newPassword"
+                        handleChange={handleChange}
+                      />
                     </div>
                   </div>
-                </SectionCard>
-              </>
+
+                  <div className="pt-6 border-t border-[#DDDDDD]">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold text-[#484848]">Two-factor authentication</h4>
+                        <p className="text-sm text-[#767676] mt-1">
+                          Add an extra layer of security
+                        </p>
+                      </div>
+                      <ToggleSwitch enabled={twoFactorEnabled} setEnabled={setTwoFactorEnabled} />
+                    </div>
+                  </div>
+
+                  <div className="pt-6 flex justify-end">
+                    <button className="bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors">
+                      Save changes
+                    </button>
+                  </div>
+                </div>
+              </SectionCard>
             )}
 
             {/* Notifications Section */}
             {activeSection === "notifications" && (
-              <>
-                <SectionCard title="Notifications" emoji="🔔">
-                  <div className="space-y-6">
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                        <span>📧</span> Email notifications
-                      </h4>
-                      <div className="space-y-1">
-                        <Checkbox
-                          label="Booking updates"
-                          checked={notifications.activity.bookingUpdates}
-                          onChange={() => toggleNotification('activity', 'bookingUpdates')}
-                          helperText="Stay informed about your booking status"
-                        />
-                        <Checkbox
-                          label="Payment receipts"
-                          checked={notifications.activity.paymentReceipts}
-                          onChange={() => toggleNotification('activity', 'paymentReceipts')}
-                          helperText="Receive confirmation for all your payments"
-                        />
-                        <Checkbox
-                          label="Special offers"
-                          checked={notifications.promotions.specialOffers}
-                          onChange={() => toggleNotification('promotions', 'specialOffers')}
-                          helperText="Get exclusive deals and discounts 🎉"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="pt-6 border-t border-gray-200">
-                      <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                        <span>🚨</span> Security alerts
-                      </h4>
-                      <div className="space-y-1">
-                        <Checkbox
-                          label="Login attempts"
-                          checked={notifications.security.loginAttempts}
-                          onChange={() => toggleNotification('security', 'loginAttempts')}
-                          helperText="Get notified about suspicious login activities"
-                        />
-                        <Checkbox
-                          label="Password changes"
-                          checked={notifications.security.passwordChanges}
-                          onChange={() => toggleNotification('security', 'passwordChanges')}
-                          helperText="Receive alerts for any password modifications"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end pt-6">
-                      <button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2">
-                        💾 Save preferences
-                      </button>
+              <SectionCard title="Notifications" icon={Bell}>
+                <div className="max-w-2xl space-y-6">
+                  <div>
+                    <h4 className="font-semibold text-[#484848] mb-4">Email notifications</h4>
+                    <div className="space-y-2">
+                      <Checkbox
+                        label="Booking updates"
+                        checked={notifications.activity.bookingUpdates}
+                        onChange={() => toggleNotification('activity', 'bookingUpdates')}
+                        helperText="Stay informed about your booking status"
+                      />
+                      <Checkbox
+                        label="Payment receipts"
+                        checked={notifications.activity.paymentReceipts}
+                        onChange={() => toggleNotification('activity', 'paymentReceipts')}
+                        helperText="Receive confirmation for all your payments"
+                      />
+                      <Checkbox
+                        label="Promotions and offers"
+                        checked={notifications.promotions.specialOffers}
+                        onChange={() => toggleNotification('promotions', 'specialOffers')}
+                        helperText="Get exclusive deals and discounts"
+                      />
                     </div>
                   </div>
-                </SectionCard>
-              </>
+
+                  <div className="pt-6 border-t border-[#DDDDDD]">
+                    <h4 className="font-semibold text-[#484848] mb-4">Security alerts</h4>
+                    <div className="space-y-2">
+                      <Checkbox
+                        label="Login attempts"
+                        checked={notifications.security.loginAttempts}
+                        onChange={() => toggleNotification('security', 'loginAttempts')}
+                        helperText="Get notified about suspicious login activities"
+                      />
+                      <Checkbox
+                        label="Password changes"
+                        checked={notifications.security.passwordChanges}
+                        onChange={() => toggleNotification('security', 'passwordChanges')}
+                        helperText="Receive alerts for any password modifications"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-6 flex justify-end">
+                    <button className="bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors">
+                      Save preferences
+                    </button>
+                  </div>
+                </div>
+              </SectionCard>
             )}
 
-            {/* Privacy & Sharing Section */}
+            {/* Privacy Section */}
             {activeSection === "privacy" && (
-              <>
-                <SectionCard title="Privacy & Sharing" emoji="👁️">
-                  <div className="space-y-8">
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                        <span>👤</span> Profile visibility
-                      </h4>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-purple-50 rounded-lg border border-purple-100">
-                          <div>
-                            <p className="font-medium">Public profile</p>
-                            <p className="text-sm text-gray-600">Make your profile visible to other users</p>
+              <SectionCard title="Privacy & sharing" icon={Globe}>
+                <div className="max-w-2xl space-y-8">
+                  <div>
+                    <h4 className="font-semibold text-[#484848] mb-4">Profile visibility</h4>
+                    <div className="flex items-center justify-between p-4 bg-[#F7F7F7] rounded-lg">
+                      <div>
+                        <p className="font-medium text-[#484848]">Make my profile public</p>
+                        <p className="text-sm text-[#767676]">Allow others to see your profile</p>
+                      </div>
+                      <ToggleSwitch enabled={profileVisibility} setEnabled={setProfileVisibility} />
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-[#DDDDDD]">
+                    <h4 className="font-semibold text-[#484848] mb-4">Data management</h4>
+                    <div className="space-y-3">
+                      <button className="flex items-center justify-between w-full p-4 border border-[#DDDDDD] rounded-lg hover:bg-[#F7F7F7] transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-[#F7F7F7] flex items-center justify-center">
+                            <Download size={20} className="text-[#484848]" />
                           </div>
-                          <ToggleSwitch
-                            enabled={profileVisibility}
-                            setEnabled={setProfileVisibility}
-                          />
+                          <div className="text-left">
+                            <p className="font-medium text-[#484848]">Download your data</p>
+                            <p className="text-sm text-[#767676]">Get a copy of your personal information</p>
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                        <ChevronRight size={20} className="text-[#767676]" />
+                      </button>
 
-                    <div className="pt-6 border-t border-gray-200">
-                      <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                        <span>🔗</span> Shared information
-                      </h4>
-                      <div className="space-y-1">
-                        <Checkbox
-                          label="Show booking history"
-                          checked={sharedInfo.bookingHistory}
-                          onChange={() => toggleSharedInfo('bookingHistory')}
-                          helperText="Display past trips on your profile ✈️"
-                        />
-                        <Checkbox
-                          label="Show reviews"
-                          checked={sharedInfo.reviews}
-                          onChange={() => toggleSharedInfo('reviews')}
-                          helperText="Make your written reviews publicly visible ⭐"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="pt-6 border-t border-gray-200">
-                      <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                        <span>💾</span> Data management
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <button className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:border-blue-300 transition-all duration-200 group">
-                          <div>
-                            <p className="font-medium">📥 Download your data</p>
-                            <p className="text-sm text-gray-600">Get a copy of your personal data</p>
+                      <button
+                        onClick={handleDeleteUser}
+                        className="flex items-center justify-between w-full p-4 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+                            <Trash2 size={20} className="text-red-500" />
                           </div>
-                          <ArrowDownTrayIcon className="w-5 h-5 text-blue-400 group-hover:text-blue-600" />
-                        </button>
-                        <button
-                          onClick={handleDeleteUser}
-                          className="flex items-center justify-between p-4 border border-red-200 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 transition-all duration-200 text-red-600 group"
-                        >
-                          <div>
-                            <p className="font-medium">🗑️ Delete account</p>
-                            <p className="text-sm">Permanently remove your account</p>
+                          <div className="text-left">
+                            <p className="font-medium text-red-600">Delete account</p>
+                            <p className="text-sm text-red-400">Permanently remove your account</p>
                           </div>
-                          <TrashIcon className="w-5 h-5 group-hover:text-red-700" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end pt-6">
-                      <button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2">
-                        💾 Save privacy settings
+                        </div>
+                        <ChevronRight size={20} className="text-red-400" />
                       </button>
                     </div>
                   </div>
-                </SectionCard>
-              </>
+                </div>
+              </SectionCard>
             )}
 
-            {/* Host an Experience Section */}
-            {activeSection === "hosting" && (
-              <>
-                <SectionCard title="Host an Experience" emoji="🏠">
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
-                        <span>🚀</span> Ready to host?
-                      </h3>
-                      <p className="text-gray-600 mb-6">
-                        Share your space or create unique experiences for travelers from around the world 🌍.
-                        Earn money 💰 doing what you love while providing memorable stays.
-                      </p>
-                    </div>
-
-                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-6">
-                      <h4 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
-                        <span>⭐</span> Why host on our platform?
-                      </h4>
-                      <ul className="space-y-2 text-blue-800">
-                        <li className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          💰 Earn competitive income
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          🌍 Reach millions of travelers
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          🛡️ 24/7 support and protection
-                        </li>
-                      </ul>
-                    </div>
-
-                    <div className="pt-6 border-t border-gray-200">
-                      <Link
-                        to={`/${currentUser?._id}/create-listing`}
-                        className="inline-flex items-center justify-center bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500 text-white px-8 py-4 rounded-xl font-semibold hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02]"
-                      >
-                        <HomeIcon className="w-6 h-6 mr-2" />
-                        🚀 Start hosting
-                      </Link>
-                    </div>
-                  </div>
-                </SectionCard>
-              </>
-            )}
-
-            {/* Host Account Section */}
+            {/* Host Dashboard Section */}
             {activeSection === "host-account" && (
               <>
-                <SectionCard title="Host Account" emoji="👔">
-                  <div className="space-y-8">
-                    <div className="bg-gradient-to-r from-purple-100 via-pink-100 to-blue-100 border border-purple-200 rounded-2xl p-8">
-                      <div className="flex items-start justify-between">
+                {/* Stats Overview */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-white rounded-xl border border-[#DDDDDD] p-6">
+                    <p className="text-sm text-[#767676] mb-1">Total listings</p>
+                    <p className="text-3xl font-bold text-[#484848]">{userListings?.length || 0}</p>
+                  </div>
+                  <div className="bg-white rounded-xl border border-[#DDDDDD] p-6">
+                    <p className="text-sm text-[#767676] mb-1">Total earnings</p>
+                    <p className="text-3xl font-bold text-[#484848]">R0</p>
+                  </div>
+                  <div className="bg-white rounded-xl border border-[#DDDDDD] p-6">
+                    <p className="text-sm text-[#767676] mb-1">Rating</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-3xl font-bold text-[#484848]">0.0</p>
+                      <Star size={20} className="text-[#FF5A5F] fill-[#FF5A5F]" />
+                    </div>
+                  </div>
+                </div>
+
+                <SectionCard title="Hosting tools" icon={Home}>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button
+                      onClick={handleNavigateToHostDashboard}
+                      className="p-6 border border-[#DDDDDD] rounded-xl hover:border-[#FF5A5F] hover:shadow-md transition-all text-left group"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-[#F7F7F7] flex items-center justify-center mb-4 group-hover:bg-[#FF5A5F]/10">
+                        <ChartBarIcon size={24} className="text-[#FF5A5F]" />
+                      </div>
+                      <h4 className="font-semibold text-[#484848] mb-1">Dashboard</h4>
+                      <p className="text-sm text-[#767676]">View performance insights</p>
+                    </button>
+
+                    <button
+                      onClick={handleNavigateToEarnings}
+                      className="p-6 border border-[#DDDDDD] rounded-xl hover:border-[#FF5A5F] hover:shadow-md transition-all text-left group"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-[#F7F7F7] flex items-center justify-center mb-4 group-hover:bg-[#FF5A5F]/10">
+                        <Wallet size={24} className="text-[#FF5A5F]" />
+                      </div>
+                      <h4 className="font-semibold text-[#484848] mb-1">Earnings</h4>
+                      <p className="text-sm text-[#767676]">Track income & payments</p>
+                    </button>
+
+                    <button
+                      onClick={handleNavigateToHostTools}
+                      className="p-6 border border-[#DDDDDD] rounded-xl hover:border-[#FF5A5F] hover:shadow-md transition-all text-left group"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-[#F7F7F7] flex items-center justify-center mb-4 group-hover:bg-[#FF5A5F]/10">
+                        <FaTools size={24} className="text-[#FF5A5F]" />
+                      </div>
+                      <h4 className="font-semibold text-[#484848] mb-1">Tools</h4>
+                      <p className="text-sm text-[#767676]">Manage listings & bookings</p>
+                    </button>
+                  </div>
+
+                  <div className="mt-6 pt-6 border-t border-[#DDDDDD]">
+                    <div className="flex items-center justify-between p-4 bg-[#F7F7F7] rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
+                          <Award size={24} className="text-[#FF5A5F]" />
+                        </div>
                         <div>
-                          <h3 className="text-2xl font-bold text-gray-900 mb-3 flex items-center gap-3">
-                            👑 Welcome to your Host Dashboard
-                          </h3>
-                          <p className="text-gray-600 mb-6 text-lg">Manage your hosting business, earnings, and tools</p>
-                          <div className="flex items-center gap-6">
-                            <div className="bg-white px-6 py-4 rounded-xl shadow-lg border border-purple-100">
-                              <p className="text-sm text-gray-600">📊 Total Listings</p>
-                              <p className="text-3xl font-bold text-purple-700">{userListings?.length || 0}</p>
-                            </div>
-                            <div className="bg-white px-6 py-4 rounded-xl shadow-lg border border-pink-100">
-                              <p className="text-sm text-gray-600">💰 Total Earnings</p>
-                              <p className="text-3xl font-bold text-pink-700">R0</p>
-                            </div>
-                            <div className="bg-white px-6 py-4 rounded-xl shadow-lg border border-blue-100">
-                              <p className="text-sm text-gray-600">⭐ Rating</p>
-                              <p className="text-3xl font-bold text-blue-700">0.0</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="bg-gradient-to-r from-yellow-400 to-orange-400 p-4 rounded-full shadow-xl">
-                          <FaCrown className="w-12 h-12 text-white" />
+                          <p className="font-semibold text-[#484848]">Become a Superhost</p>
+                          <p className="text-sm text-[#767676]">Complete verification to start hosting</p>
                         </div>
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       <button
-                        onClick={handleNavigateToHostDashboard}
-                        className="flex flex-col items-center justify-center p-8 border-2 border-purple-200 rounded-2xl hover:border-purple-400 hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 transition-all duration-300 group hover:shadow-xl"
+                        onClick={handleNavigateToVerification}
+                        className="px-4 py-2 bg-[#FF5A5F] text-white rounded-lg font-medium hover:bg-[#E00B41] transition-colors"
                       >
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 flex items-center justify-center mb-6 group-hover:from-purple-200 group-hover:to-pink-200 shadow-lg">
-                          <FaChartLine className="w-8 h-8 text-purple-600" />
-                        </div>
-                        <h4 className="font-bold text-gray-900 mb-3 text-lg">📈 Host Dashboard</h4>
-                        <p className="text-sm text-gray-600 text-center">View performance & insights</p>
+                        Get started
                       </button>
-
-                      <button
-                        onClick={handleNavigateToEarnings}
-                        className="flex flex-col items-center justify-center p-8 border-2 border-green-200 rounded-2xl hover:border-green-400 hover:bg-gradient-to-br hover:from-green-50 hover:to-emerald-50 transition-all duration-300 group hover:shadow-xl"
-                      >
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-r from-green-100 to-emerald-100 flex items-center justify-center mb-6 group-hover:from-green-200 group-hover:to-emerald-200 shadow-lg">
-                          <FaWallet className="w-8 h-8 text-green-600" />
-                        </div>
-                        <h4 className="font-bold text-gray-900 mb-3 text-lg">💰 Earnings</h4>
-                        <p className="text-sm text-gray-600 text-center">Track income & payments</p>
-                      </button>
-
-                      <button
-                        onClick={handleNavigateToHostTools}
-                        className="flex flex-col items-center justify-center p-8 border-2 border-blue-200 rounded-2xl hover:border-blue-400 hover:bg-gradient-to-br hover:from-blue-50 hover:to-cyan-50 transition-all duration-300 group hover:shadow-xl"
-                      >
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 flex items-center justify-center mb-6 group-hover:from-blue-200 group-hover:to-cyan-200 shadow-lg">
-                          <FaTools className="w-8 h-8 text-blue-600" />
-                        </div>
-                        <h4 className="font-bold text-gray-900 mb-3 text-lg">🛠️ Host Tools</h4>
-                        <p className="text-sm text-gray-600 text-center">Manage listings & bookings</p>
-                      </button>
-                    </div>
-
-                    <div className="pt-6 border-t border-gray-200">
-                      <h4 className="font-medium text-gray-900 mb-6 text-xl flex items-center gap-3">
-                        <span>✅</span> Host Verification
-                      </h4>
-                      <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl p-6 border border-blue-200">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 flex items-center justify-center shadow-lg">
-                              <FaClipboardCheck className="w-7 h-7 text-blue-600" />
-                            </div>
-                            <div>
-                              <p className="font-bold text-gray-900 text-lg">Complete Host Verification</p>
-                              <p className="text-gray-600">Verify your identity to start hosting 🏠</p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={handleNavigateToVerification}
-                            className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 shadow-lg hover:shadow-xl text-lg font-semibold"
-                          >
-                            🚀 Get Verified
-                          </button>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </SectionCard>
@@ -1481,581 +1283,361 @@ export default function Profile() {
 
             {/* Wishlist Section */}
             {activeSection === "wishlist" && (
-              <>
-                <SectionCard title="Wishlist" emoji="❤️">
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
-                        <span>⭐</span> Saved listings
-                      </h3>
-                      <p className="text-gray-600 mb-6">
-                        Your collection of favorite places to stay 🏡. Bookmark listings you're interested in
-                        for easy access later.
-                      </p>
-                    </div>
-                    <WishList />
-                  </div>
-                </SectionCard>
-              </>
+              <SectionCard title="Wishlists" icon={Heart}>
+                <p className="text-[#767676] mb-6">Places you've saved for future trips</p>
+                <WishList />
+              </SectionCard>
             )}
 
             {/* My Listings Section */}
             {activeSection === "my-listings" && (
-              <>
-                <SectionCard title="My Listings" emoji="📋">
-                  <div className="space-y-6">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-                          <span>🏠</span> Your listings
-                        </h3>
-                        <p className="text-gray-600 mt-1">Manage your active properties</p>
-                      </div>
-                      <Link
-                        to={`/${currentUser?._id}/create-listing`}
-                        className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2"
+              <SectionCard title="My listings" icon={List}>
+                <div className="flex justify-between items-center mb-6">
+                  <p className="text-[#767676]">Manage your properties</p>
+                  <Link
+                    to={`/${currentUser?._id}/create-listing`}
+                    className="flex items-center gap-2 bg-[#FF5A5F] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#E00B41] transition-colors"
+                  >
+                    <Plus size={18} />
+                    Create listing
+                  </Link>
+                </div>
+
+                {userListings && userListings.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {userListings.slice(0, visibleListings).map((listing) => (
+                      <div
+                        key={listing._id}
+                        className="border border-[#DDDDDD] rounded-xl overflow-hidden hover:shadow-md transition-shadow"
                       >
-                        <span>➕</span> New listing
-                      </Link>
-                    </div>
-
-                    <button
-                      onClick={handleShowListings}
-                      className="text-purple-600 hover:text-purple-800 font-medium flex items-center gap-2 hover:underline"
+                        <div className="relative h-48">
+                          <img
+                            src={listing.imageUrls[0] || "https://via.placeholder.com/400x300"}
+                            alt={listing.name}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-[#484848]">
+                            {listing.type === 'rent' ? 'For rent' : 'For sale'}
+                          </div>
+                        </div>
+                        <div className="p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-semibold text-[#484848] line-clamp-1">{listing.name}</h4>
+                            <span className="font-bold text-[#484848]">
+                              R{listing.offer ? listing.discountPrice?.toLocaleString() : listing.regularPrice?.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-[#767676] mb-4">
+                            <span className="flex items-center gap-1">
+                              <FaBed size={14} /> {listing.bedrooms} bd
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <FaBath size={14} /> {listing.bathrooms} ba
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Link
+                              to={`/update-listing/${listing._id}`}
+                              className="flex-1 flex items-center justify-center gap-2 py-2 border border-[#DDDDDD] rounded-lg text-[#484848] hover:bg-[#F7F7F7] transition-colors font-medium"
+                            >
+                              <Edit3 size={16} />
+                              Edit
+                            </Link>
+                            <button
+                              onClick={() => handleListingDelete(listing._id)}
+                              className="flex-1 flex items-center justify-center gap-2 py-2 border border-red-200 rounded-lg text-red-600 hover:bg-red-50 transition-colors font-medium"
+                            >
+                              <Trash2 size={16} />
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-[#F7F7F7] rounded-xl">
+                    <Home size={48} className="mx-auto text-[#DDDDDD] mb-4" />
+                    <h4 className="text-lg font-semibold text-[#484848] mb-2">No listings yet</h4>
+                    <p className="text-[#767676] mb-6">Start hosting and earn income</p>
+                    <Link
+                      to={`/${currentUser?._id}/create-listing`}
+                      className="inline-flex items-center gap-2 bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors"
                     >
-                      👁️ Show all listings
-                    </button>
+                      <Plus size={18} />
+                      Create your first listing
+                    </Link>
+                  </div>
+                )}
+              </SectionCard>
+            )}
 
-                    {userListings && userListings.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {userListings.slice(0, visibleListings).map((listing) => (
-                          <div
-                            key={listing._id}
-                            className="border-2 border-gray-200 rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:border-purple-300 hover:scale-[1.02]"
-                          >
-                            <div className="relative h-48 overflow-hidden">
-                              <img
-                                src={listing.imageUrls[0] || "https://via.placeholder.com/300x200"}
-                                alt={listing.name}
-                                className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-                              />
-                              <div className="absolute top-3 right-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                                {listing.type === 'rent' ? '🏠 Rent' : '💰 Sale'}
+            {/* Events Section */}
+            {activeSection === "events" && (
+              <SectionCard title="My events" icon={Calendar}>
+                <div className="flex justify-between items-center mb-6">
+                  <p className="text-[#767676]">Manage your upcoming events</p>
+                  <span className="bg-[#F7F7F7] text-[#484848] px-3 py-1 rounded-full text-sm font-medium">
+                    {postCount} events
+                  </span>
+                </div>
+
+                {userEvents.length > 0 ? (
+                  <div className="space-y-4">
+                    {userEvents.slice(0, visibleEvents).map((event) => (
+                      <div
+                        key={event._id}
+                        className="border border-[#DDDDDD] rounded-xl p-4 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex gap-4">
+                          {event.imageUrls?.[0] && (
+                            <img
+                              src={event.imageUrls[0]}
+                              alt={event.name}
+                              className="w-24 h-24 object-cover rounded-lg"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-semibold text-[#484848]">{event.name}</h4>
+                                <div className="flex items-center gap-4 text-sm text-[#767676] mt-2">
+                                  <span className="flex items-center gap-1">
+                                    <Calendar size={14} /> {event.date}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <MapPin size={14} /> {event.address}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                            <div className="p-4">
-                              <div className="flex justify-between items-start mb-2">
-                                <h4 className="font-bold text-gray-900 truncate">{listing.name}</h4>
-                                <span className="text-lg font-bold text-gray-900">
-                                  R{listing.offer ? listing.discountPrice?.toLocaleString() : listing.regularPrice?.toLocaleString()}
-                                  {listing.type === 'rent' && '/month'}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
-                                <span className="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full">
-                                  <FaBed className="w-4 h-4 text-purple-500" /> {listing.bedrooms}
-                                </span>
-                                <span className="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full">
-                                  <FaBath className="w-4 h-4 text-blue-500" /> {listing.bathrooms}
-                                </span>
-                              </div>
-                              <div className="flex gap-3">
+                              <div className="flex gap-2">
                                 <Link
-                                  to={`/update-listing/${listing._id}`}
-                                  className="flex-1 bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 px-4 py-3 rounded-xl text-center hover:from-purple-100 hover:to-pink-100 transition-all duration-200 font-medium border border-purple-200"
+                                  to={`/update-event/${event._id}`}
+                                  className="p-2 text-[#484848] hover:bg-[#F7F7F7] rounded-lg transition-colors"
                                 >
-                                  ✏️ Edit
+                                  <Edit3 size={18} />
                                 </Link>
                                 <button
-                                  onClick={() => handleListingDelete(listing._id)}
-                                  className="flex-1 bg-gradient-to-r from-red-50 to-pink-50 text-red-600 px-4 py-3 rounded-xl hover:from-red-100 hover:to-pink-100 transition-all duration-200 font-medium border border-red-200"
+                                  onClick={() => handleEventDelete(event._id)}
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                 >
-                                  🗑️ Delete
+                                  <Trash2 size={18} />
                                 </button>
                               </div>
                             </div>
+                            <p className="text-[#767676] mt-3 line-clamp-2">{event.description}</p>
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-purple-50 rounded-2xl border-2 border-dashed border-gray-300">
-                        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 flex items-center justify-center">
-                          <HomeIcon className="w-12 h-12 text-purple-400" />
                         </div>
-                        <h4 className="text-xl font-semibold text-gray-900 mb-3">No listings yet 🏡</h4>
-                        <p className="text-gray-600 mb-6">You haven't created any listings yet.</p>
-                        <Link
-                          to={`/${currentUser?._id}/create-listing`}
-                          className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg"
-                        >
-                          🚀 Create your first listing
-                        </Link>
                       </div>
-                    )}
+                    ))}
                   </div>
-                </SectionCard>
-              </>
-            )}
-
-            {/* My Events Section */}
-            {activeSection === "events" && (
-              <>
-                <SectionCard title="My Events" emoji="📅">
-                  <div className="space-y-6">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-                          <span>🎉</span> Your events
-                        </h3>
-                        <p className="text-gray-600 mt-1">Manage your upcoming events</p>
-                      </div>
-                      <span className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 px-4 py-2 rounded-full text-sm font-semibold border border-purple-200">
-                        🎯 {postCount} total
-                      </span>
-                    </div>
-
-                    {userEvents.length > 0 ? (
-                      <div className="space-y-4">
-                        {userEvents.slice(0, visibleEvents).map((event) => (
-                          <div
-                            key={event._id}
-                            className="border-2 border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 hover:border-purple-300 bg-white"
-                          >
-                            <div className="flex items-start gap-6">
-                              {event.imageUrls?.[0] && (
-                                <div className="relative flex-shrink-0">
-                                  <img
-                                    src={event.imageUrls[0]}
-                                    alt={event.name}
-                                    className="w-32 h-32 object-cover rounded-xl border-2 border-purple-100"
-                                  />
-                                  <div className="absolute -top-2 -left-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1 rounded-full text-xs font-bold">
-                                    🎉 EVENT
-                                  </div>
-                                </div>
-                              )}
-                              <div className="flex-1">
-                                <div className="flex justify-between items-start">
-                                  <div>
-                                    <h4 className="font-bold text-gray-900 text-lg">{event.name}</h4>
-                                    <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
-                                      <span className="flex items-center gap-1 bg-purple-50 px-3 py-1 rounded-full">
-                                        <MdCalendarToday className="w-4 h-4 text-purple-500" /> {event.date}
-                                      </span>
-                                      <span className="flex items-center gap-1 bg-blue-50 px-3 py-1 rounded-full">
-                                        <MdLocationOn className="w-4 h-4 text-blue-500" /> {event.address}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-3">
-                                    <Link
-                                      to={`/update-event/${event._id}`}
-                                      className="text-purple-600 hover:text-purple-800 font-medium hover:underline"
-                                    >
-                                      ✏️ Edit
-                                    </Link>
-                                    <button
-                                      onClick={() => handleEventDelete(event._id)}
-                                      className="text-red-600 hover:text-red-800 font-medium hover:underline"
-                                    >
-                                      🗑️ Delete
-                                    </button>
-                                  </div>
-                                </div>
-                                <p className="text-gray-600 mt-4 line-clamp-2 bg-gray-50 p-4 rounded-xl">
-                                  {event.description}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-16 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl border-2 border-dashed border-blue-300">
-                        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 flex items-center justify-center">
-                          <MdCalendarToday className="w-12 h-12 text-blue-400" />
-                        </div>
-                        <h4 className="text-xl font-semibold text-gray-900 mb-3">No events yet 🎉</h4>
-                        <p className="text-gray-600 mb-6">You haven't created any events yet.</p>
-                        <button className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg">
-                          🚀 Create your first event
-                        </button>
-                      </div>
-                    )}
+                ) : (
+                  <div className="text-center py-12 bg-[#F7F7F7] rounded-xl">
+                    <Calendar size={48} className="mx-auto text-[#DDDDDD] mb-4" />
+                    <h4 className="text-lg font-semibold text-[#484848] mb-2">No events yet</h4>
+                    <p className="text-[#767676] mb-6">Create events to connect with your community</p>
+                    <button className="inline-flex items-center gap-2 bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors">
+                      <Plus size={18} />
+                      Create event
+                    </button>
                   </div>
-                </SectionCard>
-              </>
-            )}
-
-            {/* Connections Section */}
-            {activeSection === "connections" && (
-              <>
-                <SectionCard title="Connections" emoji="🔗">
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-3">
-                        <span>🌐</span> Stay Connected
-                      </h3>
-                      <p className="text-gray-600 mb-6">
-                        Connect your accounts for a seamless experience across platforms 🤝
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      <ConnectionCard
-                        emoji="💬"
-                        title="WhatsApp"
-                        description="Get booking notifications and messages"
-                        onClick={() => setShowWhatsAppModal(true)}
-                        buttonText={whatsappConnected ? "Manage" : "Connect"}
-                        color="green"
-                      />
-
-                      <ConnectionCard
-                        emoji="📅"
-                        title="Booking Calendar"
-                        description="Sync your booking schedule"
-                        onClick={handleNavigateToBookings}
-                        color="blue"
-                      />
-
-                      <ConnectionCard
-                        emoji="⭐"
-                        title="Reviews"
-                        description="View and manage your reviews"
-                        onClick={handleNavigateToReviews}
-                        color="yellow"
-                      />
-
-                      <ConnectionCard
-                        emoji="💌"
-                        title="Messages"
-                        description="Check your inbox"
-                        onClick={handleNavigateToMessages}
-                        color="pink"
-                      />
-
-                      <ConnectionCard
-                        emoji="📚"
-                        title="Host Resources"
-                        description="Learn about hosting"
-                        onClick={() => window.open('/host-resources', '_blank')}
-                        color="purple"
-                      />
-
-                      <ConnectionCard
-                        emoji="🤝"
-                        title="Co-host Network"
-                        description="Find hosting partners"
-                        onClick={handleNavigateToCoHost}
-                        color="orange"
-                      />
-                    </div>
-
-                    <div className="pt-6 border-t border-gray-200">
-                      <h4 className="font-medium text-gray-900 mb-6 text-xl flex items-center gap-3">
-                        <span>🌍</span> Social Connections
-                      </h4>
-                      <div className="flex gap-4">
-                        {[
-                          { icon: "📘", label: "Facebook", color: "bg-blue-600 hover:bg-blue-700" },
-                          { icon: "📸", label: "Instagram", color: "bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 hover:opacity-90" },
-                          { icon: "🐦", label: "Twitter", color: "bg-blue-400 hover:bg-blue-500" },
-                          { icon: "💼", label: "LinkedIn", color: "bg-blue-700 hover:bg-blue-800" },
-                          { icon: "👥", label: "TikTok", color: "bg-black hover:bg-gray-800" }
-                        ].map((social) => (
-                          <button
-                            key={social.label}
-                            className={`w-14 h-14 rounded-full ${social.color} flex items-center justify-center text-white transition-all duration-300 hover:scale-110 hover:shadow-lg`}
-                            title={`Connect ${social.label}`}
-                          >
-                            <span className="text-2xl">{social.icon}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </SectionCard>
-              </>
+                )}
+              </SectionCard>
             )}
           </div>
         </div>
       </div>
 
-      {/* Camera Modal for Face Verification */}
+      {/* Camera Modal - Airbnb Style */}
       {cameraActive && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-gradient-to-br from-white to-gray-50 rounded-3xl max-w-2xl w-full overflow-hidden border-2 border-purple-200 shadow-2xl">
-            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50">
-              <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-                    <span className="text-white">📸</span>
-                  </div>
-                  <span>Verify your identity</span>
-                </h3>
-                <button
-                  onClick={stopCamera}
-                  className="text-gray-500 hover:text-gray-700 transition-colors bg-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-              <p className="text-gray-600 text-sm mt-3 ml-14">
-                Position your face in the frame and ensure good lighting ✨
-              </p>
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden">
+            <div className="p-6 border-b border-[#DDDDDD] flex justify-between items-center">
+              <h3 className="text-xl font-bold text-[#484848]">Verify your identity</h3>
+              <button onClick={stopCamera} className="p-2 hover:bg-[#F7F7F7] rounded-full transition-colors">
+                <X size={24} className="text-[#484848]" />
+              </button>
             </div>
             
-            <div className="p-8">
-              <div className="relative mx-auto max-w-md">
+            <div className="p-6">
+              <div className="relative mx-auto max-w-sm mb-6">
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
                   muted
-                  className="w-full rounded-2xl border-4 border-purple-300 shadow-xl"
+                  className="w-full rounded-xl border-2 border-[#DDDDDD]"
                 />
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-64 h-64 border-4 border-white/50 rounded-2xl opacity-40"></div>
+                  <div className="w-48 h-48 border-2 border-white/50 rounded-full"></div>
                 </div>
                 <canvas ref={canvasRef} className="hidden" width="640" height="480" />
               </div>
               
-              <div className="flex flex-col items-center mt-10 space-y-6">
-                <div className="flex gap-6">
-                  <button
-                    onClick={captureFace}
-                    disabled={isProcessing}
-                    className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-10 py-4 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl font-bold text-lg flex items-center gap-3 disabled:opacity-50"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <Camera className="w-6 h-6" />
-                        📸 Capture & Verify
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={stopCamera}
-                    className="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 px-8 py-4 rounded-xl hover:from-gray-400 hover:to-gray-500 transition-all duration-300 shadow-lg font-semibold text-lg"
-                  >
-                    ❌ Cancel
-                  </button>
-                </div>
-                <p className="text-sm text-gray-500 text-center">
-                  💡 Tip: Make sure your face is well-lit and centered in the frame
-                </p>
+              <p className="text-center text-[#767676] mb-6">
+                Position your face in the circle and ensure good lighting
+              </p>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={captureFace}
+                  disabled={isProcessing}
+                  className="flex-1 bg-[#FF5A5F] text-white py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isProcessing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Camera size={20} />
+                      Capture photo
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={stopCamera}
+                  className="px-6 py-3 border border-[#484848] text-[#484848] rounded-lg font-medium hover:bg-[#F7F7F7] transition-colors"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* View Profile Modal */}
+      {/* View Profile Modal - Airbnb Style */}
       {showViewProfile && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-gradient-to-br from-white via-purple-50 to-pink-50 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-purple-200 shadow-2xl">
-            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-purple-100 to-pink-100">
-              <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-                    <span className="text-white">👁️</span>
-                  </div>
-                  <span>Your Public Profile</span>
-                </h3>
-                <button
-                  onClick={() => setShowViewProfile(false)}
-                  className="text-gray-500 hover:text-gray-700 transition-colors bg-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-[#DDDDDD] flex justify-between items-center sticky top-0 bg-white">
+              <h3 className="text-xl font-bold text-[#484848]">Profile preview</h3>
+              <button onClick={() => setShowViewProfile(false)} className="p-2 hover:bg-[#F7F7F7] rounded-full transition-colors">
+                <X size={24} className="text-[#484848]" />
+              </button>
             </div>
             
-            <div className="p-8">
-              <div className="flex flex-col items-center mb-10">
-                <div className="relative mb-6">
-                  <img
-                    src={formData.avatar || currentUser?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
-                    alt="Profile"
-                    className="w-40 h-40 rounded-full object-cover border-8 border-gradient-to-r from-purple-300 via-pink-300 to-blue-300 shadow-2xl"
-                  />
-                  {isFaceVerified && (
-                    <div className="absolute bottom-4 right-4 bg-gradient-to-r from-green-400 to-emerald-500 text-white p-3 rounded-full shadow-xl">
-                      <MdVerifiedUser className="w-6 h-6" />
-                    </div>
-                  )}
-                </div>
-                <h2 className="text-3xl font-bold text-gray-900 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{currentUser?.username || 'User'}</h2>
-                <p className="text-gray-600 mt-3 flex items-center gap-2">
-                  <span>📍</span> {currentUser?.location || 'No location set'}
-                </p>
-                {currentUser?.occupation && (
-                  <p className="text-gray-600 mt-2 flex items-center gap-2">
-                    <span>💼</span> {currentUser.occupation}
-                  </p>
+            <div className="p-6 text-center">
+              <div className="relative inline-block mb-4">
+                <img
+                  src={formData.avatar || currentUser?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
+                  alt="Profile"
+                  className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+                />
+                {isFaceVerified && (
+                  <div className="absolute bottom-2 right-2 bg-[#00A699] text-white p-2 rounded-full border-4 border-white shadow-md">
+                    <Shield size={20} />
+                  </div>
                 )}
               </div>
               
+              <h2 className="text-2xl font-bold text-[#484848] mb-1">{currentUser?.username || 'User'}</h2>
+              <div className="flex items-center justify-center gap-2 text-[#767676] mb-4">
+                <MapPin size={16} />
+                {currentUser?.location || 'No location set'}
+              </div>
+              
               {currentUser?.bio && (
-                <div className="mb-8 p-6 bg-gradient-to-r from-gray-50 to-purple-50 rounded-2xl border border-purple-100">
-                  <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2 text-lg">
-                    <span>📝</span> About
-                  </h4>
-                  <p className="text-gray-600 leading-relaxed">{currentUser.bio}</p>
-                </div>
+                <p className="text-[#484848] mb-6 text-left bg-[#F7F7F7] p-4 rounded-lg">
+                  {currentUser.bio}
+                </p>
               )}
               
-              <div className="grid grid-cols-2 gap-6 mb-10">
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-2xl border border-purple-200">
-                  <p className="text-sm text-gray-600 mb-2 flex items-center gap-2">
-                    <span>🏠</span> Listings
-                  </p>
-                  <p className="text-4xl font-bold text-purple-700">{userListings?.length || 0}</p>
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-[#F7F7F7] p-4 rounded-lg">
+                  <p className="text-2xl font-bold text-[#484848]">{userListings?.length || 0}</p>
+                  <p className="text-sm text-[#767676]">Listings</p>
                 </div>
-                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-2xl border border-blue-200">
-                  <p className="text-sm text-gray-600 mb-2 flex items-center gap-2">
-                    <span>⭐</span> Reviews
-                  </p>
-                  <p className="text-4xl font-bold text-blue-700">0</p>
+                <div className="bg-[#F7F7F7] p-4 rounded-lg">
+                  <p className="text-2xl font-bold text-[#484848]">0</p>
+                  <p className="text-sm text-[#767676]">Reviews</p>
                 </div>
               </div>
               
-              <div className="flex justify-center gap-6">
-                <button
-                  onClick={() => window.open(`/user/${currentUser?._id}`, '_blank')}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-4 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-xl hover:shadow-2xl font-bold text-lg flex items-center gap-3"
-                >
-                  👁️ View Full Profile
-                </button>
-                <button
-                  onClick={() => setShowViewProfile(false)}
-                  className="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 px-8 py-4 rounded-xl hover:from-gray-400 hover:to-gray-500 transition-all duration-300 shadow-lg font-semibold text-lg"
-                >
-                  ❌ Close
-                </button>
-              </div>
+              <button
+                onClick={() => setShowViewProfile(false)}
+                className="w-full bg-[#FF5A5F] text-white py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors"
+              >
+                Close preview
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* WhatsApp Connection Modal */}
+      {/* WhatsApp Modal - Airbnb Style */}
       {showWhatsAppModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-gradient-to-br from-white to-green-50 rounded-3xl max-w-md w-full border-2 border-green-200 shadow-2xl">
-            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
-              <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center">
-                    <FaWhatsapp className="w-6 h-6 text-white" />
-                  </div>
-                  <span>WhatsApp Connection</span>
-                </h3>
-                <button
-                  onClick={() => setShowWhatsAppModal(false)}
-                  className="text-gray-500 hover:text-gray-700 transition-colors bg-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100"
-                >
-                  <X className="w-6 h-6" />
-                </button>
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full">
+            <div className="p-6 border-b border-[#DDDDDD] flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                  <FaWhatsapp size={24} className="text-green-600" />
+                </div>
+                <h3 className="text-xl font-bold text-[#484848]">WhatsApp</h3>
               </div>
+              <button onClick={() => setShowWhatsAppModal(false)} className="p-2 hover:bg-[#F7F7F7] rounded-full transition-colors">
+                <X size={24} className="text-[#484848]" />
+              </button>
             </div>
             
-            <div className="p-8">
-              <div className="mb-8">
-                <p className="text-gray-600 mb-6 text-center flex items-center justify-center gap-2">
-                  <span>💬</span> Connect your WhatsApp to receive booking notifications, messages, and updates directly.
-                </p>
-                
-                <div className="space-y-6">
-                  <InputField
-                    label="WhatsApp Number"
-                    type="tel"
-                    id="whatsappNumber"
-                    value={whatsappNumber}
-                    handleChange={(e) => setWhatsappNumber(e.target.value)}
-                    placeholder="+27 82 123 4567"
-                    icon={<FaWhatsapp className="w-4 h-4 text-green-600" />}
-                  />
-                  
-                  {!whatsappConnected ? (
-                    <button
-                      onClick={handleConnectWhatsApp}
-                      className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl font-bold text-lg flex items-center justify-center gap-3"
-                    >
-                      <FaWhatsapp className="w-6 h-6" />
-                      🔗 Connect WhatsApp
-                    </button>
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6">
-                        <div className="flex items-center gap-3 text-green-700 mb-2">
-                          <CheckCircleIcon className="w-6 h-6" />
-                          <span className="font-bold">✅ WhatsApp Connected</span>
-                        </div>
-                        <p className="text-sm text-gray-600 ml-9">{whatsappNumber}</p>
-                      </div>
-                      
-                      <div className="flex gap-4">
-                        <button
-                          onClick={handleVerifyWhatsApp}
-                          className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-600 text-white py-4 rounded-xl hover:from-blue-600 hover:to-cyan-700 transition-all duration-300 shadow-lg font-bold disabled:opacity-50"
-                          disabled={whatsappVerified}
-                        >
-                          {whatsappVerified ? '✅ Verified' : '🔐 Verify Number'}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setWhatsappConnected(false);
-                            setWhatsappVerified(false);
-                            setWhatsappNumber('');
-                          }}
-                          className="flex-1 bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 py-4 rounded-xl hover:from-gray-400 hover:to-gray-500 transition-all duration-300 shadow-lg font-bold"
-                        >
-                          🚫 Disconnect
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+            <div className="p-6">
+              <p className="text-[#767676] mb-6">
+                Connect your WhatsApp to receive instant booking notifications and guest messages.
+              </p>
               
-              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border-2 border-blue-200">
-                <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-3">
-                  <FaBell className="w-5 h-5 text-blue-600" />
-                  <span>🔔 What you'll receive:</span>
-                </h4>
-                <ul className="text-gray-600 space-y-3">
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    📲 Instant booking notifications
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    💬 Guest messages and inquiries
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    ⏰ Booking reminders
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    💰 Payment confirmations
-                  </li>
-                </ul>
-              </div>
+              <InputField
+                label="WhatsApp number"
+                type="tel"
+                id="whatsappNumber"
+                value={whatsappNumber}
+                handleChange={(e) => setWhatsappNumber(e.target.value)}
+                placeholder="+27 82 123 4567"
+                icon={Phone}
+              />
+              
+              {!whatsappConnected ? (
+                <button
+                  onClick={handleConnectWhatsApp}
+                  className="w-full bg-[#FF5A5F] text-white py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors flex items-center justify-center gap-2"
+                >
+                  <FaWhatsapp size={20} />
+                  Connect WhatsApp
+                </button>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
+                    <CheckCircle size={20} />
+                    <span className="font-medium">Connected: {whatsappNumber}</span>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleVerifyWhatsApp}
+                      disabled={whatsappVerified}
+                      className="flex-1 py-3 border border-[#484848] text-[#484848] rounded-lg font-medium hover:bg-[#F7F7F7] transition-colors disabled:opacity-50"
+                    >
+                      {whatsappVerified ? 'Verified' : 'Verify number'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setWhatsappConnected(false);
+                        setWhatsappVerified(false);
+                        setWhatsappNumber('');
+                      }}
+                      className="flex-1 py-3 border border-red-200 text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors"
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
-
-      {/* Add bottom padding to account for the Footer's fixed bottom navigation */}
-      <div className="pb-20"></div>
     </div>
   );
 }
