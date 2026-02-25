@@ -1869,7 +1869,7 @@ export default function HelperPage() {
                   {serviceOptions.map((service) => (
                     <div key={service.id} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
                       <div className="text-xl">{service.icon}</div>
-                      <span className="font-medium text-gray-900">{service.name}</span>
+                      <span className="font-medium text-gray-900">{helper.name}</span>
                     </div>
                   ))}
                 </div>
