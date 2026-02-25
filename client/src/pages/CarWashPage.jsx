@@ -18,8 +18,9 @@ import {
   FaHeart, FaShare, FaHome, FaUtensils, FaLeaf,
   FaFlag, FaBaby, FaSnowflake, FaUserFriends,
   FaCertificate, FaGraduationCap, FaGlobe,
-  FaComment, FaLock, FaMobileAlt, FaMapPin
+  FaComment, FaLock, FaMobileAlt, FaMapPin, FaSpinner
 } from 'react-icons/fa';
+import { FiHeart, FiShare2 } from 'react-icons/fi';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, FreeMode } from 'swiper/modules';
 import 'swiper/css';
@@ -45,6 +46,10 @@ export default function CarWashPage() {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Full page overlay state for booking form
+  const [showBookingFormOverlay, setShowBookingFormOverlay] = useState(false);
 
   const [bookingData, setBookingData] = useState({
     name: '',
@@ -64,6 +69,15 @@ export default function CarWashPage() {
 
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // Scroll detection for navigation transparency
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Car wash service options - Airbnb style cards
   const carWashServices = [
@@ -164,19 +178,166 @@ export default function CarWashPage() {
     return digitsOnly;
   };
 
-  const handleQuickBooking = () => {
+  // Function to open full-page booking form overlay
+  const openBookingFormOverlay = () => {
+    setShowBookingFormOverlay(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  // Function to close full-page booking form overlay
+  const closeBookingFormOverlay = () => {
+    setShowBookingFormOverlay(false);
+    document.body.style.overflow = 'auto';
+  };
+
+  // Handle file attachments
+  const handleAttachmentChange = (e) => {
+    const files = Array.from(e.target.files);
+    const validFiles = files.filter(file => {
+      const isImage = file.type.startsWith('image/');
+      const isPDF = file.type === 'application/pdf';
+      const isSizeValid = file.size <= 5 * 1024 * 1024; // 5MB
+      return (isImage || isPDF) && isSizeValid;
+    });
+    const newAttachments = [...attachments, ...validFiles].slice(0, 2);
+    setAttachments(newAttachments);
+  };
+
+  // Remove attachment
+  const removeAttachment = (index) => {
+    setAttachments(attachments.filter((_, i) => i !== index));
+  };
+
+  // Upload files to cloud storage (mock implementation)
+  const uploadFilesToCloud = async (files) => {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    return files.map(file => ({
+      name: file.name,
+      url: `https://example.com/uploads/${Date.now()}_${file.name}`,
+      type: file.type.startsWith('image/') ? 'image' : 'pdf',
+      size: file.size
+    }));
+  };
+
+  // Enhanced WhatsApp booking function with all form data
+  const handleBookingSubmit = async (e) => {
+    e.preventDefault();
+
     if (!carWash?.contact) {
       alert("Contact information is missing.");
       return;
     }
+
+    // Basic validation
     if (!bookingData.name || !bookingData.phone) {
       alert("Please fill in your name and phone number.");
       return;
     }
+
+    if (!bookingData.address) {
+      alert("Please provide your address for mobile service.");
+      return;
+    }
+
+    if (selectedServices.length === 0) {
+      alert("Please select at least one service.");
+      return;
+    }
+
+    let uploadedFiles = [];
+
+    if (attachments.length > 0) {
+      setIsUploading(true);
+      try {
+        uploadedFiles = await uploadFilesToCloud(attachments);
+      } catch (error) {
+        console.error("File upload failed:", error);
+        alert("Failed to upload attachments. Please try again.");
+        setIsUploading(false);
+        return;
+      }
+      setIsUploading(false);
+    }
+
+    // Format the client's phone number for the reply link
+    const clientPhone = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
+
+    // Define accept and decline messages
+    const acceptMessage = `I accept your car wash booking for ${bookingData.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
+    const declineMessage = `I'm unable to accept your booking for ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
+
+    const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
+    const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
+
+    // Get selected service details
+    const selectedServiceDetails = selectedServices.map(serviceId => {
+      const service = carWashServices.find(s => s.id === serviceId);
+      return service ? `${service.name} (R${service.price})` : serviceId;
+    }).join(', ');
+
+    // Get vehicle type details
+    const vehicleTypeDetails = bookingData.vehicleType 
+      ? vehicleTypes.find(v => v.id === bookingData.vehicleType)?.name 
+      : 'Not specified';
+
+    // Build the main WhatsApp message
+    let message = `*🚗 New Car Wash Booking Request*%0A%0A`;
+
+    message += `*🛎️ SERVICE DETAILS*%0A`;
+    message += `• Selected Services: ${selectedServiceDetails}%0A`;
+    message += `• Vehicle Type: ${vehicleTypeDetails}%0A`;
+    message += `• Total Price: R${totalPrice}%0A%0A`;
+
+    message += `*👤 CLIENT DETAILS*%0A`;
+    message += `• Name: ${bookingData.name}%0A`;
+    message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
+    message += `• Date: ${bookingData.date}%0A`;
+    message += `• Time: ${bookingData.time}%0A`;
     
-    const message = `*New Car Wash Booking*%0A%0A*Client:* ${bookingData.name}%0A*Phone:* ${bookingData.phone}%0A*Service:* ${selectedServices.length > 0 ? 'Selected services' : 'General inquiry'}%0A*Total:* R${totalPrice}`;
+    message += `*📍 SERVICE LOCATION*%0A`;
+    message += `• Address: ${bookingData.address}%0A`;
+    
+    if (bookingData.vehicleMake) {
+      message += `• Vehicle Make/Model: ${bookingData.vehicleMake} ${bookingData.vehicleModel || ''}%0A`;
+    }
+    
+    if (bookingData.specialRequirements) {
+      message += `• Special Requirements: ${bookingData.specialRequirements}%0A`;
+    }
+    
+    message += `• Water Source: ${bookingData.waterSource === 'client' ? 'Client provides' : 'Service provider brings'}%0A`;
+    message += `• Electricity Access: ${bookingData.electricityAccess === 'yes' ? 'Yes' : 'No'}%0A`;
+    message += `• Parking Available: ${bookingData.parkingAvailable === 'yes' ? 'Yes' : 'No'}%0A`;
+    
+    message += `%0A`;
+
+    // Add attachments if they exist
+    if (uploadedFiles.length > 0) {
+      message += `*📎 ATTACHMENTS*%0A`;
+      uploadedFiles.forEach((file) => {
+        message += `• ${file.type === 'image' ? '🖼️' : '📄'} ${file.name}%0A`;
+      });
+      message += `%0A`;
+    }
+
+    // Add action links
+    message += `*ACTION REQUIRED*%0A`;
+    message += `Please respond to this booking request:%0A%0A`;
+    if (acceptLink) {
+      message += `✅ Accept: ${acceptLink}%0A`;
+    }
+    if (declineLink) {
+      message += `❌ Decline: ${declineLink}%0A%0A`;
+    }
+
+    message += `_Sent via loopOut Car Wash Booking_`;
+
     const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(carWash.contact)}?text=${message}`;
     window.open(whatsappUrl, '_blank');
+
+    // Close the booking form overlay
+    closeBookingFormOverlay();
+    setAttachments([]);
   };
 
   const handleShare = async () => {
@@ -238,31 +399,31 @@ export default function CarWashPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation Header */}
-      <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-sm' : 'bg-transparent'}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <button 
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+              className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}
             >
-              <FaArrowLeft className="text-lg" />
-              <span className="font-medium hidden sm:inline">Back</span>
+              <FaArrowLeft className={`text-lg ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
             </button>
             
             <div className="flex items-center gap-2">
               <button 
                 onClick={handleShare}
-                className="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-gray-100 transition-colors text-gray-700 font-medium"
+                className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}
               >
-                <FaShare className="text-sm" />
-                <span className="hidden sm:inline">Share</span>
+                <FiShare2 className={`text-lg ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
               </button>
               <button 
                 onClick={() => setIsSaved(!isSaved)}
-                className="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-gray-100 transition-colors text-gray-700 font-medium"
+                className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}
               >
-                <FaHeart className={`text-sm ${isSaved ? 'fill-rose-500 text-rose-500' : ''}`} />
-                <span className="hidden sm:inline">Save</span>
+                {isSaved ? 
+                  <FaHeart className="text-lg text-rose-500" /> : 
+                  <FiHeart className={`text-lg ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
+                }
               </button>
             </div>
           </div>
@@ -270,7 +431,7 @@ export default function CarWashPage() {
       </nav>
 
       {/* Image Gallery Section - Airbnb Style */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[300px] md:h-[400px] rounded-xl overflow-hidden">
           {/* Main Large Image */}
           <div 
@@ -638,7 +799,7 @@ export default function CarWashPage() {
                   </div>
                 </div>
 
-                {/* Booking Form */}
+                {/* Quick Booking Form */}
                 <div className="border border-gray-300 rounded-lg overflow-hidden mb-4">
                   <div className="grid grid-cols-2 border-b border-gray-300">
                     <div className="p-3 border-r border-gray-300">
@@ -674,25 +835,13 @@ export default function CarWashPage() {
                       className="w-full text-sm text-gray-700 outline-none"
                     />
                   </div>
-                  <div className="p-3 border-t border-gray-300">
-                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Phone</label>
-                    <input 
-                      type="tel"
-                      name="phone"
-                      value={bookingData.phone}
-                      onChange={handleBookingChange}
-                      placeholder="Phone number"
-                      className="w-full text-sm text-gray-700 outline-none"
-                    />
-                  </div>
                 </div>
 
                 <button 
-                  onClick={handleQuickBooking}
-                  className="w-full py-3.5 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-colors mb-4 flex items-center justify-center gap-2"
+                  onClick={openBookingFormOverlay}
+                  className="w-full py-3.5 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-colors mb-4"
                 >
-                  <FaWhatsapp className="text-lg" />
-                  Book via WhatsApp
+                  Check availability
                 </button>
 
                 <div className="text-center text-gray-500 text-sm mb-4">
@@ -796,6 +945,305 @@ export default function CarWashPage() {
         </div>
       )}
 
+      {/* Full Page Booking Form Overlay */}
+      {showBookingFormOverlay && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+              <button
+                onClick={closeBookingFormOverlay}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <FaTimes className="text-xl" />
+              </button>
+              <h2 className="text-lg font-semibold">Complete your car wash booking</h2>
+              <div className="w-10" />
+            </div>
+            
+            <form onSubmit={handleBookingSubmit} className="p-6 space-y-6">
+              {/* Personal Information */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Your information</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Full name *</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={bookingData.name}
+                      onChange={handleBookingChange}
+                      required
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone number *</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={bookingData.phone}
+                      onChange={handleBookingChange}
+                      required
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      placeholder="071 234 5678"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Vehicle Details */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Vehicle details</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle type *</label>
+                    <select
+                      name="vehicleType"
+                      value={bookingData.vehicleType}
+                      onChange={handleBookingChange}
+                      required
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    >
+                      <option value="">Select vehicle type</option>
+                      {vehicleTypes.map(v => (
+                        <option key={v.id} value={v.id}>{v.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle make (optional)</label>
+                    <input
+                      type="text"
+                      name="vehicleMake"
+                      value={bookingData.vehicleMake}
+                      onChange={handleBookingChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      placeholder="e.g. Toyota"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle model (optional)</label>
+                    <input
+                      type="text"
+                      name="vehicleModel"
+                      value={bookingData.vehicleModel}
+                      onChange={handleBookingChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      placeholder="e.g. Corolla"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Service Location */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Service location</h3>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                  <textarea
+                    name="address"
+                    value={bookingData.address}
+                    onChange={handleBookingChange}
+                    required
+                    rows="3"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    placeholder="Enter your full address for mobile service"
+                  />
+                </div>
+              </div>
+
+              {/* Service Requirements */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Service requirements</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Water source</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="waterSource"
+                          value="client"
+                          checked={bookingData.waterSource === 'client'}
+                          onChange={handleBookingChange}
+                          className="mr-2"
+                        />
+                        Client provides
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="waterSource"
+                          value="provider"
+                          checked={bookingData.waterSource === 'provider'}
+                          onChange={handleBookingChange}
+                          className="mr-2"
+                        />
+                        Provider brings
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Electricity access</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="electricityAccess"
+                          value="yes"
+                          checked={bookingData.electricityAccess === 'yes'}
+                          onChange={handleBookingChange}
+                          className="mr-2"
+                        />
+                        Yes
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="electricityAccess"
+                          value="no"
+                          checked={bookingData.electricityAccess === 'no'}
+                          onChange={handleBookingChange}
+                          className="mr-2"
+                        />
+                        No
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Safe parking available</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="parkingAvailable"
+                          value="yes"
+                          checked={bookingData.parkingAvailable === 'yes'}
+                          onChange={handleBookingChange}
+                          className="mr-2"
+                        />
+                        Yes
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="parkingAvailable"
+                          value="no"
+                          checked={bookingData.parkingAvailable === 'no'}
+                          onChange={handleBookingChange}
+                          className="mr-2"
+                        />
+                        No
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Special Requirements */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Special requirements</h3>
+                <div>
+                  <textarea
+                    name="specialRequirements"
+                    value={bookingData.specialRequirements}
+                    onChange={handleBookingChange}
+                    rows="3"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    placeholder="Any special requests or instructions for the service provider..."
+                  />
+                </div>
+              </div>
+
+              {/* Attachments */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Attachments (optional)</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        onChange={handleAttachmentChange}
+                        accept="image/*,.pdf"
+                        className="hidden"
+                        multiple
+                      />
+                      <div className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors">
+                        Choose files
+                      </div>
+                    </label>
+                    <span className="text-sm text-gray-500">Max 2 files (5MB each)</span>
+                  </div>
+                  
+                  {attachments.length > 0 && (
+                    <div className="space-y-2">
+                      {attachments.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            {file.type.startsWith('image/') ? (
+                              <FaFileImage className="text-blue-500" />
+                            ) : (
+                              <FaFilePdf className="text-red-500" />
+                            )}
+                            <span className="text-sm text-gray-700 truncate max-w-[200px]">
+                              {file.name}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeAttachment(index)}
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            <FaTimes className="text-sm" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Price Summary */}
+              {totalPrice > 0 && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-600">Total estimate</span>
+                    <span className="text-xl font-bold text-gray-900">R{totalPrice}</span>
+                  </div>
+                  <p className="text-xs text-gray-500">Final price may vary based on vehicle condition and additional requests.</p>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isUploading}
+                className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isUploading ? (
+                  <>
+                    <FaSpinner className="animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <FaWhatsapp className="text-xl" />
+                    Send booking request via WhatsApp
+                  </>
+                )}
+              </button>
+
+              <p className="text-xs text-center text-gray-500">
+                By submitting this form, you agree to our terms of service and privacy policy.
+              </p>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Comments Side Panel */}
       {showCommentsPanel && (
         <CommentsSidePanelHelper
@@ -812,7 +1260,7 @@ export default function CarWashPage() {
             <span className="text-gray-600 text-sm"> / service</span>
           </div>
           <button 
-            onClick={handleQuickBooking}
+            onClick={openBookingFormOverlay}
             className="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-colors"
           >
             Book Now

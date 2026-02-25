@@ -15,7 +15,8 @@ import {
   FaHome, FaCar, FaSprayCan, FaBroom, FaTruck,
   FaMotorcycle, FaCookie, FaGlassCheers, FaRing,
   FaPalette, FaTrophy, FaCommentDots, FaArrowRight,
-  FaSpinner
+  FaSpinner, FaChild, FaTree, FaWrench, FaBus,
+  FaLeaf, FaHome as FaHomeIcon, FaFileImage, FaFilePdf
 } from 'react-icons/fa';
 import { FiShare2, FiMessageSquare } from 'react-icons/fi';
 import CommentsSidePanelService from '../components/CommentsSidePanelService';
@@ -29,6 +30,169 @@ import 'swiper/css/thumbs';
 import 'swiper/css/autoplay';
 import 'swiper/css/free-mode';
 
+// ==========================================
+// SERVICE TYPE CONFIGURATION
+// ==========================================
+
+const SERVICE_CONFIG = {
+  // Cleaning Services
+  cleaning: {
+    title: 'Cleaning Service',
+    icon: <FaBroom />,
+    description: `Professional cleaning service using eco-friendly products. Background-checked staff following strict safety protocols.`,
+    options: [
+      { id: 'house-cleaning', name: 'Standard Cleaning', description: 'Complete cleaning of living areas', duration: '2-4 hours', price: 'R450', popular: true, icon: <FaBroom /> },
+      { id: 'deep-cleaning', name: 'Deep Cleaning', description: 'Intensive detailed cleaning', duration: '4-6 hours', price: 'R850', popular: false, icon: <FaSprayCan /> },
+      { id: 'office-cleaning', name: 'Office Cleaning', description: 'Commercial space cleaning', duration: '3-5 hours', price: 'R650', popular: true, icon: <FaBriefcase /> },
+      { id: 'carpet-cleaning', name: 'Carpet Cleaning', description: 'Professional steam cleaning', duration: '2-3 hours', price: 'R350', popular: false, icon: <FaTools /> }
+    ],
+    highlights: [
+      { icon: <FaShieldAlt />, title: 'Background Checked', desc: 'All staff verified' },
+      { icon: <FaLeaf />, title: 'Eco-Friendly', desc: 'Green cleaning products' }
+    ]
+  },
+
+  // Catering Services
+  catering: {
+    title: 'Chef & Catering',
+    icon: <FaUtensils />,
+    description: `From intimate gatherings to grand celebrations, crafting memorable dining experiences with custom menus using fresh, locally sourced ingredients.`,
+    options: [
+      { id: 'corporate-catering', name: 'Corporate Events', description: 'Business meetings & lunches', duration: 'Custom', price: 'R150/person', popular: true, icon: <FaBriefcase /> },
+      { id: 'wedding-catering', name: 'Wedding Catering', description: 'Full wedding service', duration: 'Custom', price: 'R350/person', popular: false, icon: <FaRing /> },
+      { id: 'private-events', name: 'Private Events', description: 'Personal celebrations', duration: 'Custom', price: 'R200/person', popular: true, icon: <FaGlassCheers /> },
+      { id: 'meal-prep', name: 'Meal Preparation', description: 'Weekly meal preparation', duration: 'Weekly', price: 'R800/week', popular: false, icon: <FaUtensils /> }
+    ],
+    highlights: [
+      { icon: <FaUtensils />, title: 'Custom Menus', desc: 'Tailored to your taste' },
+      { icon: <FaLeaf />, title: 'Fresh Ingredients', desc: 'Locally sourced produce' }
+    ]
+  },
+
+  // Moving Services
+  moving: {
+    title: 'Moving Service',
+    icon: <FaTruck />,
+    description: `Stress-free moving with professional packing, furniture handling, and transportation. Experienced team with proper equipment.`,
+    options: [
+      { id: 'local-moving', name: 'Local Moving', description: 'Within 50km radius', duration: '4-8 hours', price: 'R1800', popular: true, icon: <FaTruck /> },
+      { id: 'long-distance', name: 'Long Distance', description: 'Cross-province moves', duration: 'Custom', price: 'Custom Quote', popular: false, icon: <FaCar /> },
+      { id: 'office-moving', name: 'Office Moving', description: 'Business relocation', duration: '1-3 days', price: 'R5000+', popular: false, icon: <FaBriefcase /> },
+      { id: 'packing-service', name: 'Packing Service', description: 'Full packing assistance', duration: '4-6 hours', price: 'R1200', popular: true, icon: <FaTools /> }
+    ],
+    highlights: [
+      { icon: <FaShieldAlt />, title: 'Insured', desc: 'Full goods insurance' },
+      { icon: <FaTools />, title: 'Equipment', desc: 'Professional tools' }
+    ]
+  },
+
+  // Landscaping Services
+  landscaping: {
+    title: 'Landscaping',
+    icon: <FaTree />,
+    description: `Transform your outdoor space with professional landscaping, garden design, lawn care, and maintenance services.`,
+    options: [
+      { id: 'lawn-care', name: 'Lawn Care', description: 'Mowing, edging, fertilizing', duration: '2-3 hours', price: 'R400', popular: true, icon: <FaLeaf /> },
+      { id: 'garden-design', name: 'Garden Design', description: 'Full landscape design', duration: 'Custom', price: 'R2500+', popular: false, icon: <FaPalette /> },
+      { id: 'tree-service', name: 'Tree Services', description: 'Trimming and removal', duration: '3-5 hours', price: 'R800', popular: false, icon: <FaTree /> },
+      { id: 'maintenance', name: 'Regular Maintenance', description: 'Weekly/bi-weekly care', duration: 'Ongoing', price: 'R600/visit', popular: true, icon: <FaTools /> }
+    ],
+    highlights: [
+      { icon: <FaTree />, title: 'Expert Design', desc: 'Certified landscapers' },
+      { icon: <FaLeaf />, title: 'Sustainable', desc: 'Eco-friendly practices' }
+    ]
+  },
+
+  // Daycare Services
+  daycare: {
+    title: 'Child Care',
+    icon: <FaChild />,
+    description: `Professional child care services providing a safe, nurturing environment with qualified caregivers and educational activities.`,
+    options: [
+      { id: 'full-day', name: 'Full Day Care', description: '8 hours of supervised care', duration: '8 hours', price: 'R350/day', popular: true, icon: <FaChild /> },
+      { id: 'half-day', name: 'Half Day Care', description: '4 hours morning or afternoon', duration: '4 hours', price: 'R200/day', popular: false, icon: <FaClock /> },
+      { id: 'after-school', name: 'After School Care', description: 'School pickup included', duration: '4 hours', price: 'R250/day', popular: true, icon: <FaGraduationCap /> },
+      { id: 'emergency', name: 'Emergency Care', description: 'Short notice booking', duration: 'Flexible', price: 'R400/day', popular: false, icon: <FaShieldAlt /> }
+    ],
+    highlights: [
+      { icon: <FaShieldAlt />, title: 'CPR Certified', desc: 'Emergency trained staff' },
+      { icon: <FaGraduationCap />, title: 'Educational', desc: 'Learning activities' }
+    ]
+  },
+
+  // School Transport Services
+  schoolTransport: {
+    title: 'Transport Service',
+    icon: <FaBus />,
+    description: `Safe and reliable school transportation with vetted drivers, GPS tracking, and comfortable vehicles for your peace of mind.`,
+    options: [
+      { id: 'daily-route', name: 'Daily School Route', description: 'Morning and afternoon pickup', duration: 'Daily', price: 'R1200/month', popular: true, icon: <FaBus /> },
+      { id: 'one-way', name: 'One Way Service', description: 'Morning OR afternoon', duration: 'Daily', price: 'R700/month', popular: false, icon: <FaCar /> },
+      { id: 'extracurricular', name: 'Activity Transport', description: 'Sports and activities', duration: 'Per trip', price: 'R80/trip', popular: true, icon: <FaCalendarAlt /> },
+      { id: 'special-needs', name: 'Special Needs Transport', description: 'Wheelchair accessible', duration: 'Custom', price: 'R1500/month', popular: false, icon: <FaShieldAlt /> }
+    ],
+    highlights: [
+      { icon: <FaShieldAlt />, title: 'Vetted Drivers', desc: 'Background checked' },
+      { icon: <FaMapMarkerAlt />, title: 'GPS Tracked', desc: 'Real-time monitoring' }
+    ]
+  },
+
+  // Maintenance Services
+  maintenance: {
+    title: 'Home Repair',
+    icon: <FaWrench />,
+    description: `Expert home maintenance and repair services including plumbing, electrical, painting, and general handyman work.`,
+    options: [
+      { id: 'plumbing', name: 'Plumbing Services', description: 'Repairs and installations', duration: '1-3 hours', price: 'R450', popular: true, icon: <FaTools /> },
+      { id: 'electrical', name: 'Electrical Work', description: 'Certified electrician services', duration: '1-4 hours', price: 'R550', popular: true, icon: <FaTools /> },
+      { id: 'painting', name: 'Painting', description: 'Interior and exterior', duration: 'Custom', price: 'R35/sqm', popular: false, icon: <FaPalette /> },
+      { id: 'handyman', name: 'General Handyman', description: 'Odd jobs and repairs', duration: 'Hourly', price: 'R300/hour', popular: true, icon: <FaWrench /> }
+    ],
+    highlights: [
+      { icon: <FaShieldAlt />, title: 'Licensed', desc: 'Certified professionals' },
+      { icon: <FaTools />, title: 'Equipped', desc: 'Tools provided' }
+    ]
+  },
+
+  // Car Wash Services
+  carWash: {
+    title: 'Car Detailing',
+    icon: <FaCar />,
+    description: `Premium car wash and detailing using high-quality, eco-friendly products. From sedans to trucks - exterior wash, interior detailing, waxing, and paint protection.`,
+    options: [
+      { id: 'basic-wash', name: 'Basic Wash', description: 'Exterior wash, wheels, windows', duration: '30-45 min', price: 'R150', popular: true, icon: <FaCar /> },
+      { id: 'full-detail', name: 'Full Detail', description: 'Complete interior & exterior', duration: '2-3 hours', price: 'R550', popular: true, icon: <FaSprayCan /> },
+      { id: 'interior-only', name: 'Interior Detail', description: 'Deep interior cleaning', duration: '1-2 hours', price: 'R350', popular: false, icon: <FaBroom /> },
+      { id: 'exterior-only', name: 'Exterior Detail', description: 'Wash, wax, polish', duration: '1-2 hours', price: 'R300', popular: false, icon: <FaSprayCan /> },
+      { id: 'premium-package', name: 'Premium Package', description: 'Full detail + ceramic coating', duration: '4-5 hours', price: 'R1200', popular: false, icon: <FaTrophy /> }
+    ],
+    highlights: [
+      { icon: <FaShieldAlt />, title: 'Paint Safe', desc: 'Premium products' },
+      { icon: <FaLeaf />, title: 'Eco-Friendly', desc: 'Water-wise washing' }
+    ],
+    requiresVehicleType: true
+  }
+};
+
+// Vehicle types configuration (for car wash)
+const VEHICLE_TYPES = [
+  { id: 'sedan', name: 'Sedan', icon: <FaCar />, priceMultiplier: 1.0 },
+  { id: 'suv', name: 'SUV', icon: <FaCar />, priceMultiplier: 1.3 },
+  { id: 'van', name: 'Van', icon: <FaTruck />, priceMultiplier: 1.5 },
+  { id: 'truck', name: 'Truck', icon: <FaTruck />, priceMultiplier: 1.8 },
+  { id: 'motorcycle', name: 'Motorcycle', icon: <FaMotorcycle />, priceMultiplier: 0.6 }
+];
+
+// Helper functions
+const getServiceConfig = (type) => SERVICE_CONFIG[type] || SERVICE_CONFIG.cleaning;
+const getProfessionalTitle = (type) => getServiceConfig(type).title;
+const getServiceOptions = (type) => getServiceConfig(type).options;
+const getServiceDescription = (type, serviceData) => {
+  const base = serviceData?.description || '';
+  const configDesc = getServiceConfig(type).description;
+  return base || configDesc;
+};
+
 const ServicePage = () => {
   const { currentUser } = useSelector((state) => state.user);
   const { serviceId } = useParams();
@@ -36,22 +200,19 @@ const ServicePage = () => {
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [thumbsSwiper, setThumbsSwiper] = useState(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showAllServices, setShowAllServices] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [attachments, setAttachments] = useState([]);
   
-  // Full screen gallery states
   const [showFullScreenGallery, setShowFullScreenGallery] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
   
-  // Booking modal state
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
 
@@ -72,7 +233,7 @@ const ServicePage = () => {
     licensePlate: ''
   });
 
-  const [enhancedServiceData, setEnhancedServiceData] = useState({
+  const [enhancedServiceData] = useState({
     yearsExperience: 5,
     teamSize: 'Individual Professional',
     certifications: ['Certified Professional', 'Safety Certified'],
@@ -92,7 +253,10 @@ const ServicePage = () => {
     awards: ['Service Excellence 2023', 'Top Rated Provider']
   });
 
-  // Calculate total price
+  // Get current service configuration
+  const currentServiceConfig = service ? getServiceConfig(service.type) : null;
+  const requiresVehicleType = currentServiceConfig?.requiresVehicleType || false;
+
   useEffect(() => {
     if (service) {
       const basePrice = parseInt(service.regularPrice) || 0;
@@ -102,80 +266,6 @@ const ServicePage = () => {
     }
   }, [service]);
 
-  const getProfessionalTitle = (type) => {
-    const titles = {
-      cleaning: 'Cleaning Service',
-      catering: 'Chef & Catering',
-      moving: 'Moving Service',
-      landscaping: 'Landscaping',
-      daycare: 'Child Care',
-      schoolTransport: 'Transport Service',
-      maintenance: 'Home Repair',
-      carWash: 'Car Detailing',
-      default: 'Professional Service'
-    };
-    return titles[type] || titles.default;
-  };
-
-  const getServiceDescription = (type, serviceData) => {
-    const baseDescription = serviceData.description || 'Professional service provider with years of experience.';
-    const additionalInfo = {
-      cleaning: `Professional cleaning service using eco-friendly products. Background-checked staff following strict safety protocols.`,
-      catering: `From intimate gatherings to grand celebrations, crafting memorable dining experiences with custom menus using fresh, locally sourced ingredients.`,
-      moving: `Stress-free moving with professional packing, furniture handling, and transportation. Experienced team with proper equipment.`,
-      carWash: `Premium car wash and detailing using high-quality, eco-friendly products. From sedans to trucks - exterior wash, interior detailing, waxing, and paint protection.`,
-      default: `Professional service with attention to detail and customer satisfaction as top priority.`
-    };
-    return baseDescription + (additionalInfo[type] || additionalInfo.default);
-  };
-
-  const getServiceOptions = (type) => {
-    const cleaningOptions = [
-      { id: 'house-cleaning', name: 'Standard Cleaning', description: 'Complete cleaning of living areas', duration: '2-4 hours', price: 'R450', popular: true, icon: <FaBroom /> },
-      { id: 'deep-cleaning', name: 'Deep Cleaning', description: 'Intensive detailed cleaning', duration: '4-6 hours', price: 'R850', popular: false, icon: <FaBroom /> },
-      { id: 'office-cleaning', name: 'Office Cleaning', description: 'Commercial space cleaning', duration: '3-5 hours', price: 'R650', popular: true, icon: <FaBriefcase /> },
-      { id: 'carpet-cleaning', name: 'Carpet Cleaning', description: 'Professional steam cleaning', duration: '2-3 hours', price: 'R350', popular: false, icon: <FaTools /> }
-    ];
-
-    const cateringOptions = [
-      { id: 'corporate-catering', name: 'Corporate Events', description: 'Business meetings & lunches', duration: 'Custom', price: 'R150/person', popular: true, icon: <FaBriefcase /> },
-      { id: 'wedding-catering', name: 'Wedding Catering', description: 'Full wedding service', duration: 'Custom', price: 'R350/person', popular: false, icon: <FaRing /> },
-      { id: 'private-events', name: 'Private Events', description: 'Personal celebrations', duration: 'Custom', price: 'R200/person', popular: true, icon: <FaGlassCheers /> },
-      { id: 'meal-prep', name: 'Meal Preparation', description: 'Weekly meal preparation', duration: 'Weekly', price: 'R800/week', popular: false, icon: <FaUtensils /> }
-    ];
-
-    const movingOptions = [
-      { id: 'local-moving', name: 'Local Moving', description: 'Within 50km radius', duration: '4-8 hours', price: 'R1800', popular: true, icon: <FaTruck /> },
-      { id: 'long-distance', name: 'Long Distance', description: 'Cross-province moves', duration: 'Custom', price: 'Custom Quote', popular: false, icon: <FaCar /> },
-      { id: 'office-moving', name: 'Office Moving', description: 'Business relocation', duration: '1-3 days', price: 'R5000+', popular: false, icon: <FaBriefcase /> },
-      { id: 'packing-service', name: 'Packing Service', description: 'Full packing assistance', duration: '4-6 hours', price: 'R1200', popular: true, icon: <FaTools /> }
-    ];
-
-    const carWashOptions = [
-      { id: 'basic-wash', name: 'Basic Wash', description: 'Exterior wash, wheels, windows', duration: '30-45 min', price: 'R150', popular: true, icon: <FaCar /> },
-      { id: 'full-detail', name: 'Full Detail', description: 'Complete interior & exterior', duration: '2-3 hours', price: 'R550', popular: true, icon: <FaSprayCan /> },
-      { id: 'interior-only', name: 'Interior Detail', description: 'Deep interior cleaning', duration: '1-2 hours', price: 'R350', popular: false, icon: <FaBroom /> },
-      { id: 'exterior-only', name: 'Exterior Detail', description: 'Wash, wax, polish', duration: '1-2 hours', price: 'R300', popular: false, icon: <FaSprayCan /> },
-      { id: 'premium-package', name: 'Premium Package', description: 'Full detail + ceramic coating', duration: '4-5 hours', price: 'R1200', popular: false, icon: <FaTrophy /> }
-    ];
-
-    switch (type) {
-      case 'cleaning': return cleaningOptions;
-      case 'catering': return cateringOptions;
-      case 'moving': return movingOptions;
-      case 'carWash': return carWashOptions;
-      default: return cleaningOptions;
-    }
-  };
-
-  const vehicleTypeOptions = [
-    { id: 'sedan', name: 'Sedan', icon: <FaCar />, priceMultiplier: 1.0 },
-    { id: 'suv', name: 'SUV', icon: <FaCar />, priceMultiplier: 1.3 },
-    { id: 'van', name: 'Van', icon: <FaTruck />, priceMultiplier: 1.5 },
-    { id: 'truck', name: 'Truck', icon: <FaTruck />, priceMultiplier: 1.8 },
-    { id: 'motorcycle', name: 'Motorcycle', icon: <FaMotorcycle />, priceMultiplier: 0.6 }
-  ];
-
   useEffect(() => {
     const fetchService = async () => {
       try {
@@ -184,15 +274,6 @@ const ServicePage = () => {
         if (!res.ok) throw new Error('Failed to fetch service details');
         const data = await res.json();
         setService(data);
-        
-        if (data) {
-          setEnhancedServiceData(prev => ({
-            ...prev,
-            yearsExperience: data.host || 5,
-            languages: data.cancel ? [data.cancel, 'English'] : ['English', 'Afrikaans']
-          }));
-        }
-        
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -214,60 +295,37 @@ const ServicePage = () => {
   }, [service]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 100);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 100);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const formatContactForWhatsApp = (contact) => {
     if (!contact) return null;
-    const contactStr = String(contact);
-    const digitsOnly = contactStr.replace(/\D/g, '');
-    if (digitsOnly.startsWith('0')) return '27' + digitsOnly.substring(1);
-    return digitsOnly;
+    const digitsOnly = String(contact).replace(/\D/g, '');
+    return digitsOnly.startsWith('0') ? '27' + digitsOnly.substring(1) : digitsOnly;
   };
 
   const handleBookingChange = (e) => {
     const { name, value } = e.target;
-    setBookingData({ ...bookingData, [name]: value });
-  };
-
-  const handleServiceSelection = (serviceId) => {
-    setBookingData(prev => {
-      const selectedServices = [...prev.selectedServices];
-      const serviceIndex = selectedServices.indexOf(serviceId);
-      if (serviceIndex > -1) selectedServices.splice(serviceIndex, 1);
-      else selectedServices.push(serviceId);
-      return { ...prev, selectedServices };
-    });
+    setBookingData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleVehicleTypeSelect = (vehicleTypeId) => {
-    setBookingData({ ...bookingData, vehicleType: vehicleTypeId });
-  };
-
-  const calculatePriceWithMultiplier = (basePrice) => {
-    const selectedVehicle = vehicleTypeOptions.find(v => v.id === bookingData.vehicleType);
-    if (!selectedVehicle) return basePrice;
-    const numericPrice = parseFloat(basePrice.replace(/[^0-9.]/g, ''));
-    if (isNaN(numericPrice)) return basePrice;
-    const calculatedPrice = numericPrice * selectedVehicle.priceMultiplier;
-    return `R${Math.round(calculatedPrice)}`;
+    setBookingData(prev => ({ ...prev, vehicleType: vehicleTypeId }));
   };
 
   const toggleFavorite = (e) => {
     e.preventDefault();
     if (!service?._id) return;
-    const newFavoriteStatus = !isFavorite;
-    setIsFavorite(newFavoriteStatus);
+    const newStatus = !isFavorite;
+    setIsFavorite(newStatus);
     try {
       const wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
-      const updatedWishlist = newFavoriteStatus
+      const updated = newStatus
         ? [...wishlist, service]
         : wishlist.filter(item => item?._id !== service._id);
-      localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+      localStorage.setItem('wishlist', JSON.stringify(updated));
       window.dispatchEvent(new Event('storage'));
     } catch (error) {
       console.error('Error updating wishlist:', error);
@@ -299,41 +357,172 @@ const ServicePage = () => {
   };
 
   const nextImage = () => {
-    if (service.imageUrls && service.imageUrls.length > 0) {
-      setModalImageIndex((prevIndex) => 
-        prevIndex === service.imageUrls.length - 1 ? 0 : prevIndex + 1
-      );
+    if (service?.imageUrls?.length > 0) {
+      setModalImageIndex(prev => prev === service.imageUrls.length - 1 ? 0 : prev + 1);
     }
   };
 
   const prevImage = () => {
-    if (service.imageUrls && service.imageUrls.length > 0) {
-      setModalImageIndex((prevIndex) => 
-        prevIndex === 0 ? service.imageUrls.length - 1 : prevIndex - 1
-      );
+    if (service?.imageUrls?.length > 0) {
+      setModalImageIndex(prev => prev === 0 ? service.imageUrls.length - 1 : prev - 1);
     }
   };
 
+  // Function to open full-page booking form overlay
   const openBookingModal = (serviceOption = null) => {
     setSelectedService(serviceOption);
     setShowBookingModal(true);
     document.body.style.overflow = 'hidden';
   };
 
+  // Function to close full-page booking form overlay
   const closeBookingModal = () => {
     setShowBookingModal(false);
     setSelectedService(null);
+    setAttachments([]);
     document.body.style.overflow = 'auto';
   };
 
-  const handleQuickBooking = () => {
+  // Handle file attachments
+  const handleAttachmentChange = (e) => {
+    const files = Array.from(e.target.files);
+    const validFiles = files.filter(file => {
+      const isImage = file.type.startsWith('image/');
+      const isPDF = file.type === 'application/pdf';
+      const isSizeValid = file.size <= 5 * 1024 * 1024; // 5MB
+      return (isImage || isPDF) && isSizeValid;
+    });
+    const newAttachments = [...attachments, ...validFiles].slice(0, 2);
+    setAttachments(newAttachments);
+  };
+
+  // Remove attachment
+  const removeAttachment = (index) => {
+    setAttachments(attachments.filter((_, i) => i !== index));
+  };
+
+  // Upload files to cloud storage (mock implementation)
+  const uploadFilesToCloud = async (files) => {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    return files.map(file => ({
+      name: file.name,
+      url: `https://example.com/uploads/${Date.now()}_${file.name}`,
+      type: file.type.startsWith('image/') ? 'image' : 'pdf',
+      size: file.size
+    }));
+  };
+
+  const buildWhatsAppMessage = async (isQuick = false) => {
+    const whatsappNumber = formatContactForWhatsApp(service.contact);
+    if (!whatsappNumber) return null;
+
+    let uploadedFiles = [];
+    if (attachments.length > 0) {
+      uploadedFiles = await uploadFilesToCloud(attachments);
+    }
+
+    // Format the client's phone number for the reply link
+    const clientPhone = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
+
+    // Define accept and decline messages
+    const acceptMessage = `I accept your booking for ${bookingData.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
+    const declineMessage = `I'm unable to accept your booking for ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
+
+    const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
+    const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
+
+    let message = isQuick 
+      ? `*📅 Quick Booking Request for ${service.name}*%0A%0A`
+      : `*${currentServiceConfig?.icon ? '🛎️' : ''} New ${getProfessionalTitle(service.type)} Booking Request*%0A%0A`;
+    
+    message += `*👤 CLIENT DETAILS*%0A`;
+    message += `• Name: ${bookingData.name}%0A`;
+    message += `• Phone: ${bookingData.phone}%0A`;
+    message += `• Date: ${bookingData.date}%0A`;
+    message += `• Time: ${bookingData.time}%0A`;
+    
+    if (requiresVehicleType && bookingData.vehicleType) {
+      message += `%0A*🚗 VEHICLE DETAILS*%0A`;
+      message += `• Type: ${VEHICLE_TYPES.find(v => v.id === bookingData.vehicleType)?.name}%0A`;
+      if (bookingData.vehicleMake) message += `• Make: ${bookingData.vehicleMake}%0A`;
+      if (bookingData.vehicleModel) message += `• Model: ${bookingData.vehicleModel}%0A`;
+      if (bookingData.licensePlate) message += `• License Plate: ${bookingData.licensePlate}%0A`;
+    }
+    
+    if (selectedService) {
+      message += `%0A*📋 SELECTED SERVICE*%0A`;
+      message += `• ${selectedService.name} (${selectedService.price})%0A`;
+    }
+    
+    if (bookingData.address) {
+      message += `%0A*📍 SERVICE LOCATION*%0A`;
+      message += `• ${bookingData.address}%0A`;
+    }
+    
+    if (bookingData.specialRequirements) {
+      message += `%0A*📝 SPECIAL REQUESTS*%0A`;
+      message += `• ${bookingData.specialRequirements}%0A`;
+    }
+    
+    if (bookingData.numberOfGuests && bookingData.numberOfGuests !== '1') {
+      message += `• Number of Guests: ${bookingData.numberOfGuests}%0A`;
+    }
+
+    // Add attachments if they exist
+    if (uploadedFiles.length > 0) {
+      message += `%0A*📎 ATTACHMENTS*%0A`;
+      uploadedFiles.forEach((file) => {
+        message += `• ${file.type === 'image' ? '🖼️' : '📄'} ${file.name}%0A`;
+        message += `  ${file.url}%0A`;
+      });
+    }
+    
+    message += `%0A*💰 Total: R${totalPrice}*%0A%0A`;
+
+    // Add action links for the provider to respond
+    message += `*ACTION REQUIRED*%0A`;
+    message += `Please respond to this booking request:%0A%0A`;
+    if (acceptLink) {
+      message += `✅ Accept: ${acceptLink}%0A`;
+    }
+    if (declineLink) {
+      message += `❌ Decline: ${declineLink}%0A%0A`;
+    }
+    message += `💬 You can also reply directly to this message.%0A%0A`;
+    message += `_Sent via loopOut${isQuick ? ' Quick Booking' : ' Booking System'}_`;
+
+    return `https://wa.me/${whatsappNumber}?text=${message}`;
+  };
+
+  const handleQuickBooking = async () => {
+    if (!service?.contact) {
+      alert("Service contact information is missing.");
+      return;
+    }
+    if (!bookingData.name || !bookingData.phone) {
+      alert("Please fill in your name and phone number first.");
+      return;
+    }
+    if (!bookingData.date || !bookingData.time) {
+      alert("Please select date and time for your booking.");
+      return;
+    }
+
+    const url = await buildWhatsAppMessage(true);
+    if (url) window.open(url, '_blank');
+  };
+
+  const handleBookingSubmit = async (e) => {
+    e.preventDefault();
+    
     if (!service?.contact) {
       alert("Service contact information is missing.");
       return;
     }
 
+    // Basic validation
     if (!bookingData.name || !bookingData.phone) {
-      alert("Please fill in your name and phone number first.");
+      alert("Please fill in your name and phone number.");
       return;
     }
 
@@ -342,67 +531,15 @@ const ServicePage = () => {
       return;
     }
 
-    const whatsappNumber = formatContactForWhatsApp(service.contact);
-    
-    let message = `*📅 Quick Booking Request for ${service.name}*%0A%0A`;
-    message += `*👤 Client Details*%0A`;
-    message += `• Name: ${bookingData.name}%0A`;
-    message += `• Phone: ${bookingData.phone}%0A`;
-    message += `• Date: ${bookingData.date}%0A`;
-    message += `• Time: ${bookingData.time}%0A`;
-    
-    if (service.type === 'carWash' && bookingData.vehicleType) {
-      message += `%0A*🚗 Vehicle Details*%0A`;
-      message += `• Type: ${vehicleTypeOptions.find(v => v.id === bookingData.vehicleType)?.name}%0A`;
+    if (!bookingData.address) {
+      alert("Please provide your address for service.");
+      return;
     }
-    
-    if (bookingData.address) {
-      message += `%0A*📍 Service Location*%0A`;
-      message += `• Address: ${bookingData.address}%0A`;
-    }
-    
-    if (bookingData.specialRequirements) {
-      message += `%0A*📝 Special Requests*%0A`;
-      message += `• ${bookingData.specialRequirements}%0A`;
-    }
-    
-    message += `%0A*💰 Total: R${totalPrice}*%0A%0A`;
-    message += `_Sent via loopOut Quick Booking_`;
 
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
-  const handleBookingSubmit = async (e) => {
-    e.preventDefault();
     setIsUploading(true);
     
-    const whatsappNumber = formatContactForWhatsApp(service.contact);
-    let message = `*New Booking Request*%0A%0A`;
-    message += `*Service:* ${service.name}%0A`;
-    message += `*Client:* ${bookingData.name}%0A`;
-    message += `*Phone:* ${bookingData.phone}%0A`;
-    message += `*Date:* ${bookingData.date}%0A`;
-    message += `*Time:* ${bookingData.time}%0A`;
-    
-    if (service.type === 'carWash' && bookingData.vehicleType) {
-      message += `%0A*Vehicle:* ${vehicleTypeOptions.find(v => v.id === bookingData.vehicleType)?.name}%0A`;
-      if (bookingData.vehicleMake) message += `*Make:* ${bookingData.vehicleMake}%0A`;
-      if (bookingData.licensePlate) message += `*Plate:* ${bookingData.licensePlate}%0A`;
-    }
-    
-    if (selectedService) {
-      message += `%0A*Selected:* ${selectedService.name}%0A`;
-    }
-    
-    if (bookingData.address) message += `*Address:* ${bookingData.address}%0A`;
-    if (bookingData.specialRequirements) message += `*Notes:* ${bookingData.specialRequirements}%0A`;
-    
-    message += `%0A*💰 Total: R${totalPrice}*%0A%0A`;
-    message += `_Sent via loopOut_`;
-    
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
-    window.open(whatsappUrl, '_blank');
+    const url = await buildWhatsAppMessage(false);
+    if (url) window.open(url, '_blank');
     
     setIsUploading(false);
     closeBookingModal();
@@ -446,6 +583,7 @@ const ServicePage = () => {
   const serviceOptions = getServiceOptions(service.type);
   const displayedServices = showAllServices ? serviceOptions : serviceOptions.slice(0, 4);
   const whatsappNumber = formatContactForWhatsApp(service.contact);
+  const serviceHighlights = currentServiceConfig?.highlights || [];
 
   return (
     <div className="min-h-screen bg-white pb-20 lg:pb-0">
@@ -482,11 +620,10 @@ const ServicePage = () => {
         </div>
       </nav>
 
-      {/* Hero Image Gallery - Airbnb Style */}
+      {/* Hero Image Gallery */}
       <div className="relative h-[50vh] md:h-[60vh] bg-gray-900">
-        {service.imageUrls && service.imageUrls.length > 0 ? (
+        {service.imageUrls?.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-full p-2">
-            {/* Main Large Image */}
             <div 
               className="md:col-span-2 md:row-span-2 relative rounded-xl overflow-hidden cursor-pointer group"
               onClick={() => openFullScreenGallery(0)}
@@ -502,7 +639,6 @@ const ServicePage = () => {
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
             </div>
             
-            {/* Side Images */}
             {service.imageUrls.slice(1, 5).map((url, index) => (
               <div 
                 key={index}
@@ -521,7 +657,6 @@ const ServicePage = () => {
               </div>
             ))}
             
-            {/* Show All Photos Button */}
             <button
               onClick={() => openFullScreenGallery(0)}
               className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 hover:bg-white transition-colors shadow-lg"
@@ -540,7 +675,7 @@ const ServicePage = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Left Column - Main Info */}
+          {/* Left Column */}
           <div className="lg:col-span-2 space-y-8">
             {/* Header Info */}
             <div className="border-b border-gray-200 pb-6">
@@ -557,11 +692,14 @@ const ServicePage = () => {
                   {service.address || 'Available in your area'}
                 </span>
                 <span>•</span>
-                <span className="font-medium">{getProfessionalTitle(service.type)}</span>
+                <span className="font-medium flex items-center gap-1">
+                  {currentServiceConfig?.icon}
+                  {getProfessionalTitle(service.type)}
+                </span>
               </div>
             </div>
 
-            {/* Provider Info Card */}
+            {/* Provider Info */}
             <div className="flex items-start gap-4 py-6 border-b border-gray-200">
               <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                 <img
@@ -608,15 +746,17 @@ const ServicePage = () => {
                 </div>
               </div>
 
-              <div className="flex items-start gap-4">
-                <div className="p-2 bg-gray-100 rounded-lg">
-                  <FaShieldAlt className="text-xl text-gray-700" />
+              {serviceHighlights.map((highlight, idx) => (
+                <div key={idx} className="flex items-start gap-4">
+                  <div className="p-2 bg-gray-100 rounded-lg">
+                    {highlight.icon}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{highlight.title}</h3>
+                    <p className="text-gray-600 text-sm">{highlight.desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">Insured & Certified</h3>
-                  <p className="text-gray-600 text-sm">Background checked professionals</p>
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* Description */}
@@ -638,11 +778,11 @@ const ServicePage = () => {
               )}
             </div>
 
-            {/* What You'll Get - Service Options */}
+            {/* Service Options */}
             <div className="py-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Service options</h2>
               <div className="space-y-4">
-                {displayedServices.map((option, index) => (
+                {displayedServices.map((option) => (
                   <div 
                     key={option.id}
                     className="flex items-start justify-between p-4 border border-gray-200 rounded-xl hover:border-gray-300 transition-colors cursor-pointer"
@@ -650,6 +790,7 @@ const ServicePage = () => {
                   >
                     <div className="flex-1 pr-4">
                       <div className="flex items-center gap-2 mb-1">
+                        <span className="text-gray-500">{option.icon}</span>
                         <h3 className="font-semibold text-gray-900">{option.name}</h3>
                         {option.popular && (
                           <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs font-medium rounded">
@@ -747,7 +888,6 @@ const ServicePage = () => {
           {/* Right Column - Booking Card */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-6">
-              {/* Price Card */}
               <div className="border border-gray-200 rounded-xl shadow-lg p-6 bg-white">
                 <div className="flex items-end justify-between mb-6">
                   <div>
@@ -767,6 +907,7 @@ const ServicePage = () => {
                         type="date" 
                         className="w-full text-sm text-gray-600 outline-none"
                         min={new Date().toISOString().split('T')[0]}
+                        onChange={(e) => setBookingData(prev => ({...prev, date: e.target.value}))}
                       />
                     </div>
                     <div className="p-3">
@@ -774,16 +915,20 @@ const ServicePage = () => {
                       <input 
                         type="time" 
                         className="w-full text-sm text-gray-600 outline-none"
+                        onChange={(e) => setBookingData(prev => ({...prev, time: e.target.value}))}
                       />
                     </div>
                   </div>
                   <div className="p-3">
                     <label className="block text-xs font-bold text-gray-900 uppercase">Guests</label>
-                    <select className="w-full text-sm text-gray-600 outline-none bg-transparent">
-                      <option>1 guest</option>
-                      <option>2 guests</option>
-                      <option>3 guests</option>
-                      <option>4+ guests</option>
+                    <select 
+                      className="w-full text-sm text-gray-600 outline-none bg-transparent"
+                      onChange={(e) => setBookingData(prev => ({...prev, numberOfGuests: e.target.value}))}
+                    >
+                      <option value="1">1 guest</option>
+                      <option value="2">2 guests</option>
+                      <option value="3">3 guests</option>
+                      <option value="4">4+ guests</option>
                     </select>
                   </div>
                 </div>
@@ -815,7 +960,6 @@ const ServicePage = () => {
                 </div>
               </div>
 
-              {/* Contact Card */}
               <div className="border border-gray-200 rounded-xl p-6 bg-white">
                 <h3 className="font-semibold text-gray-900 mb-4">Contact provider</h3>
                 <div className="space-y-3">
@@ -842,7 +986,6 @@ const ServicePage = () => {
                 </div>
               </div>
 
-              {/* Protection Notice */}
               <div className="flex items-start gap-3 text-sm text-gray-600">
                 <FaShieldAlt className="text-2xl flex-shrink-0" />
                 <p>To help protect your payment, always communicate and pay through our platform.</p>
@@ -851,7 +994,7 @@ const ServicePage = () => {
           </div>
         </div>
 
-        {/* Things to Know Section */}
+        {/* Things to Know */}
         <div className="mt-12 pt-12 border-t border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Things to know</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -907,10 +1050,10 @@ const ServicePage = () => {
         </div>
       )}
 
-      {/* Booking Modal */}
+      {/* Booking Modal - Full Page Form */}
       {showBookingModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Complete your booking</h2>
               <button onClick={closeBookingModal} className="p-2 hover:bg-gray-100 rounded-full">
@@ -918,44 +1061,57 @@ const ServicePage = () => {
               </button>
             </div>
             
-            <div className="p-6 space-y-6">
+            <form onSubmit={handleBookingSubmit} className="p-6 space-y-6">
               {selectedService && (
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-gray-900">{selectedService.name}</h3>
-                  <p className="text-gray-600 text-sm">{selectedService.price}</p>
+                <div className="bg-rose-50 p-4 rounded-lg border border-rose-200">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{selectedService.name}</h3>
+                      <p className="text-gray-600 text-sm">{selectedService.duration}</p>
+                    </div>
+                    <span className="font-semibold text-gray-900">{selectedService.price}</span>
+                  </div>
                 </div>
               )}
 
-              <form onSubmit={handleBookingSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={bookingData.name}
-                    onChange={handleBookingChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                    placeholder="John Doe"
-                  />
-                </div>
+              {/* Personal Information */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Your information</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Full name *</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={bookingData.name}
+                      onChange={handleBookingChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      placeholder="John Doe"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={bookingData.phone}
-                    onChange={handleBookingChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                    placeholder="071 234 5678"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone number *</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={bookingData.phone}
+                      onChange={handleBookingChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      placeholder="071 234 5678"
+                    />
+                  </div>
                 </div>
+              </div>
 
+              {/* Date & Time */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Date & time</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
                     <input
                       type="date"
                       name="date"
@@ -967,7 +1123,7 @@ const ServicePage = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Time *</label>
                     <input
                       type="time"
                       name="time"
@@ -978,73 +1134,205 @@ const ServicePage = () => {
                     />
                   </div>
                 </div>
+              </div>
 
-                {service.type === 'carWash' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Vehicle type</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {vehicleTypeOptions.map((vehicle) => (
-                        <button
-                          key={vehicle.id}
-                          type="button"
-                          onClick={() => handleVehicleTypeSelect(vehicle.id)}
-                          className={`p-3 border rounded-lg text-center transition-colors ${
-                            bookingData.vehicleType === vehicle.id
-                              ? 'border-rose-500 bg-rose-50 text-rose-700'
-                              : 'border-gray-300 hover:border-gray-400'
-                          }`}
-                        >
-                          <div className="text-2xl mb-1">{vehicle.icon}</div>
-                          <div className="text-xs font-medium">{vehicle.name}</div>
-                        </button>
-                      ))}
+              {/* Vehicle Details (if required) */}
+              {requiresVehicleType && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Vehicle details</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Vehicle type *</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {VEHICLE_TYPES.map((vehicle) => (
+                          <button
+                            key={vehicle.id}
+                            type="button"
+                            onClick={() => handleVehicleTypeSelect(vehicle.id)}
+                            className={`p-3 border rounded-lg text-center transition-colors ${
+                              bookingData.vehicleType === vehicle.id
+                                ? 'border-rose-500 bg-rose-50 text-rose-700'
+                                : 'border-gray-300 hover:border-gray-400'
+                            }`}
+                          >
+                            <div className="text-2xl mb-1">{vehicle.icon}</div>
+                            <div className="text-xs font-medium">{vehicle.name}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Make (optional)</label>
+                        <input
+                          type="text"
+                          name="vehicleMake"
+                          value={bookingData.vehicleMake}
+                          onChange={handleBookingChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                          placeholder="e.g. Toyota"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Model (optional)</label>
+                        <input
+                          type="text"
+                          name="vehicleModel"
+                          value={bookingData.vehicleModel}
+                          onChange={handleBookingChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                          placeholder="e.g. Corolla"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">License plate (optional)</label>
+                      <input
+                        type="text"
+                        name="licensePlate"
+                        value={bookingData.licensePlate}
+                        onChange={handleBookingChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        placeholder="e.g. ABC 123 GP"
+                      />
                     </div>
                   </div>
-                )}
+                </div>
+              )}
 
+              {/* Number of Guests (if applicable) */}
+              {!requiresVehicleType && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Number of guests</label>
+                  <select
+                    name="numberOfGuests"
+                    value={bookingData.numberOfGuests}
+                    onChange={handleBookingChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                  >
+                    <option value="1">1 guest</option>
+                    <option value="2">2 guests</option>
+                    <option value="3">3 guests</option>
+                    <option value="4">4 guests</option>
+                    <option value="5">5+ guests</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Service Location */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Service location</h3>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
                   <textarea
                     name="address"
                     value={bookingData.address}
                     onChange={handleBookingChange}
-                    rows={3}
+                    required
+                    rows="3"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                    placeholder="Enter your address..."
+                    placeholder="Enter your full address for service..."
                   />
                 </div>
+              </div>
 
+              {/* Special Requirements */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Special requests</h3>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Special requests (optional)</label>
                   <textarea
                     name="specialRequirements"
                     value={bookingData.specialRequirements}
                     onChange={handleBookingChange}
-                    rows={2}
+                    rows="3"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                    placeholder="Any special requirements..."
+                    placeholder="Any special requirements or instructions for the service provider..."
                   />
                 </div>
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={isUploading}
-                  className="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isUploading ? (
-                    <>
-                      <FaSpinner className="animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <FaWhatsapp />
-                      Send booking request
-                    </>
+              {/* Attachments */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Attachments (optional)</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        onChange={handleAttachmentChange}
+                        accept="image/*,.pdf"
+                        className="hidden"
+                        multiple
+                      />
+                      <div className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors">
+                        Choose files
+                      </div>
+                    </label>
+                    <span className="text-sm text-gray-500">Max 2 files (5MB each)</span>
+                  </div>
+                  
+                  {attachments.length > 0 && (
+                    <div className="space-y-2">
+                      {attachments.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            {file.type.startsWith('image/') ? (
+                              <FaFileImage className="text-blue-500" />
+                            ) : (
+                              <FaFilePdf className="text-red-500" />
+                            )}
+                            <span className="text-sm text-gray-700 truncate max-w-[200px]">
+                              {file.name}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeAttachment(index)}
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            <FaTimes className="text-sm" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   )}
-                </button>
-              </form>
-            </div>
+                </div>
+              </div>
+
+              {/* Price Summary */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">Total estimate</span>
+                  <span className="text-xl font-bold text-gray-900">R{totalPrice}</span>
+                </div>
+                <p className="text-xs text-gray-500">Final price may vary based on specific requirements.</p>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isUploading}
+                className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isUploading ? (
+                  <>
+                    <FaSpinner className="animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <FaWhatsapp className="text-xl" />
+                    Send booking request via WhatsApp
+                  </>
+                )}
+              </button>
+
+              <p className="text-xs text-center text-gray-500">
+                By submitting this form, you agree to our terms of service and privacy policy.
+              </p>
+            </form>
           </div>
         </div>
       )}
@@ -1066,7 +1354,7 @@ const ServicePage = () => {
             <span className="text-gray-600 text-sm"> / service</span>
           </div>
           <button 
-            onClick={handleQuickBooking}
+            onClick={openBookingModal}
             className="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-colors"
           >
             Book Now

@@ -37,6 +37,14 @@ import {
   ArrowLeftIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  StarIcon,
+  HomeModernIcon,
+  BuildingOfficeIcon,
+  MapIcon,
+  CurrencyDollarIcon,
+  InformationCircleIcon,
+  PlusIcon,
+  MinusIcon,
 } from "@heroicons/react/24/outline";
 
 // Custom paw icon
@@ -108,11 +116,11 @@ export default function CreateListing() {
     category: "",
     
     // Property specific - ALL REQUIRED FIELDS
-    near: "", // This field is required for ALL categories
+    near: "",
     rules: "",
-    kind: "apartment", // Default value
-    period: "Immediate", // Default value
-    cancel: "Flexible - Free cancellation 48 hours before check-in", // Default value
+    kind: "apartment",
+    period: "Immediate",
+    cancel: "Flexible - Free cancellation 48 hours before check-in",
     bedrooms: 1,
     bathrooms: 1,
     discountPrice: 0,
@@ -142,12 +150,12 @@ export default function CreateListing() {
     routeAreas: "",
     
     // CAR WASH SPECIFIC FIELDS
-    carWashPackages: "", // Basic, Premium, Detailing, Ceramic
-    vehicleTypes: "", // Sedan, SUV, Van, Truck, Motorcycle
-    additionalServices: "", // Engine cleaning, Interior shampooing, Waxing, etc.
-    serviceDuration: "", // 30min, 1hr, 2hrs, etc.
-    mobileService: false, // Come to customer's location
-    ecoFriendly: false, // Eco-friendly products
+    carWashPackages: "",
+    vehicleTypes: "",
+    additionalServices: "",
+    serviceDuration: "",
+    mobileService: false,
+    ecoFriendly: false,
     
     // Helper specific
     specializations: '',
@@ -179,9 +187,7 @@ export default function CreateListing() {
         ...prev,
         category: selectedCategory,
         type: selectedType,
-        // Set default kind based on type for stays
         kind: selectedCategory === 'stays' ? getDefaultKind(selectedType) : prev.kind,
-        // Set default near placeholder based on category
         near: prev.near || getDefaultNearPlaceholder(selectedCategory, selectedType),
       }));
     }
@@ -224,7 +230,7 @@ export default function CreateListing() {
     const tabFromUrl = searchParams.get('tab');
     if (tabFromUrl) {
       setSelectedCategory(tabFromUrl);
-      setCurrentStep(2); // Skip to step 2 if category is in URL
+      setCurrentStep(2);
     }
   }, [searchParams]);
 
@@ -291,19 +297,16 @@ export default function CreateListing() {
   const handleNextStep = () => {
     setDirection('next');
     
-    // Validation for step 1
     if (currentStep === 1 && !selectedCategory) {
       setError("Please select a category");
       return;
     }
     
-    // Validation for step 2
     if (currentStep === 2 && !selectedType) {
       setError("Please select a type");
       return;
     }
     
-    // Validation for step 3 (Details)
     if (currentStep === 3) {
       if (!listingForm.name.trim()) {
         setError("Please enter a name");
@@ -326,10 +329,9 @@ export default function CreateListing() {
         return;
       }
       
-      // Additional validation for stays category
       if (selectedCategory === 'stays') {
         if (!listingForm.kind.trim()) {
-          setError("Please enter the property type (e.g., Apartment, House)");
+          setError("Please enter the property type");
           return;
         }
         if (!listingForm.period.trim()) {
@@ -342,7 +344,6 @@ export default function CreateListing() {
         }
       }
       
-      // Additional validation for events
       if (selectedCategory === 'events') {
         if (!listingForm.date) {
           setError("Please select an event date");
@@ -354,7 +355,6 @@ export default function CreateListing() {
         }
       }
       
-      // CAR WASH validation
       if (selectedCategory === 'experiences' && selectedType === 'carwash') {
         if (!listingForm.carWashPackages) {
           setError("Please select at least one car wash package");
@@ -370,14 +370,12 @@ export default function CreateListing() {
         }
       }
       
-      // near field is required for ALL categories
       if (!listingForm.near.trim()) {
         setError(`Please provide ${getNearLabel(selectedCategory, selectedType)}`);
         return;
       }
     }
     
-    // Validation for step 5 (Images)
     if (currentStep === 5) {
       if (listingForm.imageUrls.length < 1) {
         setError("You must upload at least one image");
@@ -422,7 +420,6 @@ export default function CreateListing() {
     setError(null);
   };
 
-  // Image compression function
   const compressImage = async (file) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -694,7 +691,6 @@ export default function CreateListing() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Final validation before submission
     if (listingForm.imageUrls.length < 1) {
       return setError("You must upload at least one image");
     }
@@ -703,7 +699,6 @@ export default function CreateListing() {
       return setError("Discount price must be lower than regular price");
     }
     
-    // Ensure required fields for stays are filled
     if (selectedCategory === 'stays') {
       if (!listingForm.kind.trim()) {
         return setError("Property type is required");
@@ -716,7 +711,6 @@ export default function CreateListing() {
       }
     }
     
-    // CAR WASH validation
     if (selectedCategory === 'experiences' && selectedType === 'carwash') {
       if (!listingForm.carWashPackages) {
         return setError("Please select at least one car wash package");
@@ -729,7 +723,6 @@ export default function CreateListing() {
       }
     }
     
-    // Ensure near field is filled for all categories
     if (!listingForm.near.trim()) {
       return setError(`${getNearLabel(selectedCategory, selectedType)} is required`);
     }
@@ -738,26 +731,22 @@ export default function CreateListing() {
     setError(null);
 
     try {
-      // DON'T create _id on client side - let MongoDB generate it
       const endpoint = selectedCategory === 'stays' ? '/api/listing/create' :
                       selectedCategory === 'experiences' ? '/api/service/create' :
                       selectedCategory === 'online' ? '/api/helper/create' :
                       '/api/event/create';
 
-      // Prepare the request body WITHOUT _id field
       const requestBody = {
         ...listingForm,
         userRef: currentUser._id,
         type: selectedType,
         category: selectedCategory,
         listingType: selectedCategory === 'stays' ? 'property' : selectedCategory,
-        // Ensure all required fields are included
         kind: listingForm.kind || "apartment",
         cancel: listingForm.cancel || "Flexible - Free cancellation 48 hours before check-in",
         period: listingForm.period || "Immediate",
         near: listingForm.near || "",
         rules: listingForm.rules || "",
-        // Remove any undefined values
         imageUrls: listingForm.imageUrls || [],
         videoUrl: listingForm.videoUrl || "",
         name: listingForm.name || "",
@@ -769,7 +758,6 @@ export default function CreateListing() {
         discountPrice: listingForm.discountPrice || 0,
       };
 
-      // Log what we're sending for debugging
       console.log("Submitting to:", endpoint);
       console.log("Request body:", JSON.stringify(requestBody, null, 2));
 
@@ -794,10 +782,8 @@ export default function CreateListing() {
       }
 
       if (data.success === false) {
-        // Show user-friendly error message
         let errorMessage = data.message || "Failed to create listing. Please check all required fields.";
         
-        // Parse MongoDB validation errors
         if (data.errors) {
           const errorList = Object.values(data.errors).map(err => err.message).join(', ');
           errorMessage = `Validation errors: ${errorList}`;
@@ -842,7 +828,6 @@ export default function CreateListing() {
           { id: "party", label: "No Parties", emoji: "🔇", checked: listingForm.party },
         ];
       case 'experiences':
-        // Add car wash specific amenities
         if (selectedType === 'carwash') {
           return [
             { id: "mobileService", label: "Mobile Service", emoji: "🚗💨", checked: listingForm.mobileService },
@@ -892,7 +877,7 @@ export default function CreateListing() {
           { id: "catering", label: "Catering", emoji: "🍽️", description: "Food & catering" },
           { id: "daycare", label: "Day Care", emoji: "👶", description: "Child care services" },
           { id: "schoolTransport", label: "Transport", emoji: "🚌", description: "School transport" },
-          { id: "carwash", label: "Car Wash", emoji: "🚗💦", description: "Professional car cleaning & detailing" },
+          { id: "carwash", label: "Car Wash", emoji: "🚗💦", description: "Professional car cleaning" },
           { id: "other", label: "Other", emoji: "✨", description: "Other services" },
         ];
       case 'online':
@@ -985,23 +970,23 @@ export default function CreateListing() {
     setSelectedPaymentMethod(method);
   };
 
-  // UI Components
+  // Airbnb-style UI Components
   const SectionCard = ({ title, children, className = "" }) => (
-    <div className={`bg-white rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6 md:p-8 ${className}`}>
-      <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
-        <div className="w-1.5 h-6 bg-[#FF5A5F] rounded-full"></div>
-        {title}
-      </h2>
+    <div className={`bg-white rounded-2xl border border-gray-200 p-6 md:p-8 ${className}`}>
+      {title && (
+        <h2 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-6 md:mb-8">
+          {title}
+        </h2>
+      )}
       {children}
     </div>
   );
 
   const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, placeholder, required = false, className = "", rows = 4, helpText = "" }) => (
     <div className={className}>
-      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-        {Icon && <Icon className="w-4 h-4" />}
+      <label className="block text-base font-medium text-gray-900 mb-2">
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-[#FF5A5F] ml-1">*</span>}
       </label>
       {type === "textarea" ? (
         <textarea
@@ -1010,7 +995,7 @@ export default function CreateListing() {
           onChange={onChange}
           placeholder={placeholder}
           required={required}
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent transition-all duration-200 resize-none"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 resize-none hover:border-gray-400"
           rows={rows}
         />
       ) : type === "number" ? (
@@ -1021,7 +1006,7 @@ export default function CreateListing() {
           onChange={onChange}
           placeholder={placeholder}
           required={required}
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent transition-all duration-200"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 hover:border-gray-400"
         />
       ) : type === "select" ? (
         <select
@@ -1029,7 +1014,7 @@ export default function CreateListing() {
           value={value}
           onChange={onChange}
           required={required}
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent transition-all duration-200"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 bg-white hover:border-gray-400"
         >
           {placeholder && <option value="">{placeholder}</option>}
           {children}
@@ -1042,11 +1027,11 @@ export default function CreateListing() {
           onChange={onChange}
           placeholder={placeholder}
           required={required}
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent transition-all duration-200"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 hover:border-gray-400"
         />
       )}
       {helpText && (
-        <p className="mt-1 text-xs text-gray-500">{helpText}</p>
+        <p className="mt-2 text-sm text-gray-500">{helpText}</p>
       )}
     </div>
   );
@@ -1056,27 +1041,24 @@ export default function CreateListing() {
       type="button"
       onClick={() => setSelectedCategory(id)}
       className={`
-        flex flex-col items-center p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl transition-all duration-300 w-full min-h-[180px] sm:min-h-[220px]
+        flex flex-col p-6 rounded-xl border-2 transition-all duration-200 w-full text-left
         ${selected 
-          ? 'bg-white border-2 sm:border-3 border-[#FF5A5F] shadow-lg sm:shadow-xl shadow-red-100 scale-[1.02]' 
-          : 'bg-gray-50 border border-gray-200 hover:bg-white hover:border-gray-300 hover:shadow-lg'
+          ? 'border-black bg-gray-50' 
+          : 'border-gray-200 hover:border-gray-400 bg-white'
         }
       `}
     >
       <div className={`
-        p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl mb-4 sm:mb-6 transition-all duration-300
-        ${selected 
-          ? 'bg-[#FF5A5F]/10 text-[#FF5A5F]' 
-          : 'bg-gray-100 text-gray-600'
-        }
+        p-3 rounded-full mb-4 w-fit
+        ${selected ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}
       `}>
-        <Icon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" />
+        <Icon className="w-6 h-6" />
       </div>
-      <h3 className="font-bold text-base sm:text-lg md:text-xl text-gray-900 mb-2 text-center">{label}</h3>
-      <p className="text-gray-500 text-center text-xs sm:text-sm leading-relaxed hidden sm:block">{description}</p>
+      <h3 className="font-semibold text-lg text-gray-900 mb-1">{label}</h3>
+      <p className="text-gray-500 text-sm leading-relaxed">{description}</p>
       {selected && (
-        <div className="mt-4 flex items-center gap-2 text-[#FF5A5F] font-medium text-sm">
-          <CheckCircleIcon className="w-4 h-4" />
+        <div className="mt-4 flex items-center gap-2 text-black font-medium text-sm">
+          <CheckCircleIcon className="w-5 h-5" />
           Selected
         </div>
       )}
@@ -1088,19 +1070,19 @@ export default function CreateListing() {
       type="button"
       onClick={() => setSelectedType(id)}
       className={`
-        text-left p-4 sm:p-6 md:p-8 border-2 rounded-2xl sm:rounded-3xl transition-all duration-300 w-full min-h-[140px] sm:min-h-[160px]
+        p-6 border-2 rounded-xl transition-all duration-200 w-full text-left
         ${selected 
-          ? 'border-[#FF5A5F] bg-[#FF5A5F]/5 shadow-md' 
-          : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+          ? 'border-black bg-gray-50' 
+          : 'border-gray-200 hover:border-gray-400 bg-white'
         }
       `}
     >
-      <span className="text-3xl sm:text-4xl mb-3 sm:mb-4 block">{emoji}</span>
-      <h4 className="font-bold text-sm sm:text-base md:text-lg text-gray-900 mb-1 sm:mb-2">{label}</h4>
-      <p className="text-gray-500 text-xs sm:text-sm hidden sm:block">{description}</p>
+      <span className="text-3xl mb-3 block">{emoji}</span>
+      <h4 className="font-semibold text-lg text-gray-900 mb-1">{label}</h4>
+      <p className="text-gray-500 text-sm">{description}</p>
       {selected && (
-        <div className="mt-2 sm:mt-4 flex items-center gap-2 text-[#FF5A5F] text-xs sm:text-sm font-medium">
-          <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+        <div className="mt-4 flex items-center gap-2 text-black font-medium text-sm">
+          <CheckCircleIcon className="w-5 h-5" />
           Selected
         </div>
       )}
@@ -1109,10 +1091,10 @@ export default function CreateListing() {
 
   const AmenityCard = ({ id, label, emoji, checked, onChange }) => (
     <label className={`
-      flex items-center gap-3 p-3 sm:p-4 border border-gray-200 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] min-w-[140px]
+      flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all duration-200
       ${checked 
-        ? 'border-[#FF5A5F] bg-[#FF5A5F]/5 shadow-sm' 
-        : 'hover:border-gray-300'
+        ? 'border-black bg-gray-50' 
+        : 'border-gray-200 hover:border-gray-400 bg-white'
       }
     `}>
       <input
@@ -1122,23 +1104,23 @@ export default function CreateListing() {
         onChange={onChange}
         className="hidden"
       />
-      <span className="text-xl sm:text-2xl">{emoji}</span>
-      <span className="font-medium text-gray-700 text-sm sm:text-base flex-1">{label}</span>
+      <span className="text-2xl">{emoji}</span>
+      <span className="font-medium text-gray-900 flex-1">{label}</span>
       <div className={`
-        w-5 h-5 sm:w-6 sm:h-6 rounded-full border flex items-center justify-center transition-all duration-300
+        w-6 h-6 rounded border-2 flex items-center justify-center transition-all duration-200
         ${checked 
-          ? 'bg-[#FF5A5F] border-[#FF5A5F]' 
+          ? 'bg-black border-black' 
           : 'bg-white border-gray-300'
         }
       `}>
-        {checked && <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />}
+        {checked && <CheckCircleIcon className="w-4 h-4 text-white" />}
       </div>
     </label>
   );
 
   const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFiles = 10, label }) => (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+      <div className="flex flex-col gap-4">
         <input
           type="file"
           id={`${type}-upload`}
@@ -1151,84 +1133,84 @@ export default function CreateListing() {
         <label
           htmlFor={`${type}-upload`}
           className={`
-            flex-1 p-6 sm:p-8 md:p-12 border-2 border-dashed rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center 
-            cursor-pointer transition-all duration-300 hover:border-[#FF5A5F]/50 min-h-[140px]
-            ${uploading ? 'border-gray-200 bg-gray-50' : 'border-gray-300'}
+            p-8 md:p-12 border-2 border-dashed rounded-xl flex flex-col items-center justify-center 
+            cursor-pointer transition-all duration-200 min-h-[200px]
+            ${uploading ? 'border-gray-200 bg-gray-50' : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'}
           `}
         >
           {type === 'image' ? (
             <>
-              <CameraIcon className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-gray-400 mb-2 sm:mb-3 md:mb-4" />
-              <span className="text-gray-600 font-semibold text-sm sm:text-base md:text-lg text-center">{label || "Select photos"}</span>
-              <span className="text-gray-500 mt-1 text-xs sm:text-sm text-center">PNG, JPG or WebP (max 2MB each)</span>
-              <span className="text-gray-400 mt-2 text-xs">{filesCount || 0} of {maxFiles} photos</span>
+              <div className="p-4 bg-gray-100 rounded-full mb-4">
+                <CameraIcon className="w-8 h-8 text-gray-600" />
+              </div>
+              <span className="text-gray-900 font-medium text-lg mb-1">{label || "Add photos"}</span>
+              <span className="text-gray-500 text-sm">Drag and drop or click to upload</span>
+              <span className="text-gray-400 text-xs mt-2">PNG, JPG up to 2MB each</span>
             </>
           ) : (
             <>
-              <VideoCameraIcon className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-gray-400 mb-2 sm:mb-3 md:mb-4" />
-              <span className="text-gray-600 font-semibold text-sm sm:text-base md:text-lg text-center">{label || "Select video"}</span>
-              <span className="text-gray-500 mt-1 text-xs sm:text-sm text-center">MP4 or MOV (max 50MB)</span>
+              <div className="p-4 bg-gray-100 rounded-full mb-4">
+                <VideoCameraIcon className="w-8 h-8 text-gray-600" />
+              </div>
+              <span className="text-gray-900 font-medium text-lg mb-1">{label || "Add a video"}</span>
+              <span className="text-gray-500 text-sm">MP4 or MOV up to 50MB</span>
             </>
           )}
         </label>
-        <button
-          type="button"
-          onClick={onSubmit}
-          className={`
-            px-6 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl font-semibold text-sm sm:text-base md:text-lg transition-all duration-300 whitespace-nowrap
-            ${filesCount > 0 
-              ? 'bg-[#FF5A5F] text-white hover:bg-[#E14E50] hover:scale-[1.02]' 
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }
-          `}
-          disabled={uploading || filesCount === 0}
-        >
-          {uploading ? "Uploading..." : "Upload"}
-        </button>
+        {filesCount > 0 && (
+          <button
+            type="button"
+            onClick={onSubmit}
+            className="w-full py-3 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
+            disabled={uploading}
+          >
+            {uploading ? `Uploading ${Math.round(uploadProgress)}%...` : `Upload ${filesCount} file${filesCount > 1 ? 's' : ''}`}
+          </button>
+        )}
       </div>
     </div>
   );
 
   const StepProgress = () => (
-    <div className="mb-8 sm:mb-12 overflow-x-auto">
-      <div className="flex items-center justify-between min-w-[400px]">
-        {[1, 2, 3, 4, 5, 6].map((step) => (
-          <div key={step} className="flex items-center">
+    <div className="mb-8 md:mb-12">
+      <div className="flex items-center justify-between max-w-2xl mx-auto">
+        {[1, 2, 3, 4, 5, 6].map((step, index) => (
+          <div key={step} className="flex items-center flex-1">
             <div className={`
-              w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-sm sm:text-base md:text-lg transition-all duration-500
-              ${step < currentStep ? 'bg-[#FF5A5F] text-white' :
-                step === currentStep ? 'bg-[#FF5A5F] text-white ring-2 sm:ring-4 ring-[#FF5A5F]/20' :
-                'bg-gray-100 text-gray-400'
+              w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300
+              ${step < currentStep ? 'bg-black text-white' :
+                step === currentStep ? 'bg-black text-white ring-4 ring-gray-200' :
+                'bg-white border-2 border-gray-300 text-gray-400'
               }
             `}>
-              {step < currentStep ? <CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" /> : step}
+              {step < currentStep ? <CheckCircleIcon className="w-5 h-5" /> : step}
             </div>
             {step < 6 && (
               <div className={`
-                h-1 w-8 sm:w-10 md:w-12 lg:w-14 transition-all duration-500
-                ${step < currentStep ? 'bg-[#FF5A5F]' : 'bg-gray-200'}
+                h-0.5 flex-1 mx-2 transition-all duration-300
+                ${step < currentStep ? 'bg-black' : 'bg-gray-200'}
               `} />
             )}
           </div>
         ))}
       </div>
-      <div className="flex justify-between mt-3 sm:mt-4 text-xs sm:text-sm min-w-[400px]">
-        <span className={`font-medium ${currentStep >= 1 ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>Category</span>
-        <span className={`font-medium ${currentStep >= 2 ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>Type</span>
-        <span className={`font-medium ${currentStep >= 3 ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>Details</span>
-        <span className={`font-medium ${currentStep >= 4 ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>Amenities</span>
-        <span className={`font-medium ${currentStep >= 5 ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>Images</span>
-        <span className={`font-medium ${currentStep >= 6 ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>Submit</span>
+      <div className="flex justify-between mt-4 text-xs font-medium text-gray-500 max-w-2xl mx-auto px-2">
+        <span className={currentStep >= 1 ? 'text-black' : ''}>Category</span>
+        <span className={currentStep >= 2 ? 'text-black' : ''}>Type</span>
+        <span className={currentStep >= 3 ? 'text-black' : ''}>Details</span>
+        <span className={currentStep >= 4 ? 'text-black' : ''}>Amenities</span>
+        <span className={currentStep >= 5 ? 'text-black' : ''}>Photos</span>
+        <span className={currentStep >= 6 ? 'text-black' : ''}>Review</span>
       </div>
     </div>
   );
 
   if (loading && !showPromotionPopup) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#FF5A5F] mx-auto mb-4"></div>
-          <p className="text-gray-600">Preparing your listing form...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
@@ -1236,33 +1218,25 @@ export default function CreateListing() {
 
   if (postLimitReached) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-lg p-8 text-center">
-          <ExclamationTriangleIcon className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl border border-gray-200 p-8 text-center shadow-lg">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <ExclamationTriangleIcon className="w-8 h-8 text-gray-600" />
+          </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Listing Limit Reached</h2>
           <p className="text-gray-600 mb-6">
-            You ve used all 3 free listings. Upgrade to create more amazing listings.
+            You've used all 3 free listings. Upgrade to create more.
           </p>
           {paymentRequired ? (
             <button
               onClick={handlePayment}
               disabled={loading}
-              className="w-full bg-[#FF5A5F] text-white py-3 rounded-xl font-medium hover:bg-[#E14E50] transition-colors duration-200 flex items-center justify-center gap-2"
+              className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
             >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <CreditCardIcon className="w-5 h-5" />
-                  Pay R35 for New Listing
-                </>
-              )}
+              {loading ? "Processing..." : "Pay R35 for New Listing"}
             </button>
           ) : (
-            <p className="text-gray-500">Please delete existing listings to create new ones.</p>
+            <p className="text-gray-500">Delete existing listings to create new ones.</p>
           )}
         </div>
       </div>
@@ -1270,28 +1244,37 @@ export default function CreateListing() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6 sm:py-2 md:py-2">
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-2">
-        {/* Header */}
-        <div className="text-center mb-8 sm:mb-12">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
-            Create a New Listing
-          </h1>
-          <p className="text-gray-600 text-sm sm:text-base md:text-lg lg:text-xl">
-            Share your space, service, or event with our community
-          </p>
+    <div className="min-h-screen bg-white">
+      {/* Airbnb-style Header */}
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+          <button 
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <ArrowLeftIcon className="w-6 h-6 text-gray-900" />
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-[#FF5A5F] font-bold text-2xl tracking-tighter">loopOut</span>
+            <span className="text-gray-400">|</span>
+            <span className="text-gray-900 font-medium">Create listing</span>
+          </div>
+          <div className="w-10" />
         </div>
+      </header>
 
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 md:py-12">
         {/* Step Progress */}
         <StepProgress />
 
         {/* Main Form Container */}
         <div className={`transition-all duration-500 ${fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <form onSubmit={handleSubmit} ref={stepRef} className="space-y-4 sm:space-y-6">
+          <form onSubmit={handleSubmit} ref={stepRef} className="space-y-8">
+            
             {/* Step 1: Select Category */}
             {currentStep === 1 && (
               <SectionCard title="What would you like to list?">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <CategoryCard
                     id="stays"
                     icon={HomeIcon}
@@ -1328,8 +1311,8 @@ export default function CreateListing() {
             {currentStep === 2 && (
               <SectionCard title={`What type of ${selectedCategory === 'stays' ? 'place' : 
                 selectedCategory === 'experiences' ? 'service' :
-                selectedCategory === 'online' ? 'helper' : 'event'} are you listing?`}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+                selectedCategory === 'online' ? 'helper' : 'event'}?`}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {getTypesByCategory().map((type) => (
                     <TypeCard
                       key={type.id}
@@ -1343,11 +1326,11 @@ export default function CreateListing() {
 
             {/* Step 3: Form Details */}
             {currentStep === 3 && (
-              <div className="space-y-4 sm:space-y-6">
-                <SectionCard title="Basic Information">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              <div className="space-y-8">
+                <SectionCard title="Tell us about your place">
+                  <div className="space-y-6">
                     <FormInput
-                      label="Name / Title"
+                      label="Create a title"
                       icon={selectedCategory === 'stays' ? HomeIcon : 
                             selectedCategory === 'events' ? CalendarIcon : UserIcon}
                       id="name"
@@ -1362,100 +1345,123 @@ export default function CreateListing() {
                       }
                       required
                     />
+                    
                     <FormInput
-                      label="Address / Location"
-                      icon={MapPinIcon}
-                      id="address"
-                      value={listingForm.address}
+                      label="Describe your place"
+                      type="textarea"
+                      id="description"
+                      value={listingForm.description}
                       onChange={handleFormChange}
                       placeholder={
-                        selectedCategory === 'stays' ? "123 Main Street, City" :
-                        selectedCategory === 'experiences' && selectedType === 'carwash' ? "123 Auto Plaza, City (or Mobile Service Available)" :
-                        "Service area or venue address"
+                        selectedCategory === 'stays' ? "Describe what makes your place special..." :
+                        selectedCategory === 'experiences' && selectedType === 'carwash' ? "Professional car wash and detailing services..." :
+                        selectedCategory === 'experiences' ? "Describe your service in detail..." :
+                        selectedCategory === 'online' ? "Describe your skills and experience..." :
+                        "Describe the event, activities, and what attendees can expect..."
+                      }
+                      required
+                      rows={5}
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormInput
+                        label="Address"
+                        icon={MapPinIcon}
+                        id="address"
+                        value={listingForm.address}
+                        onChange={handleFormChange}
+                        placeholder="Street address"
+                        required
+                      />
+                      <FormInput
+                        label="Contact Number"
+                        icon={PhoneIcon}
+                        id="contact"
+                        value={listingForm.contact}
+                        onChange={handleFormChange}
+                        placeholder="Phone number"
+                        required
+                      />
+                    </div>
+
+                    {/* Host/Organizer Name Field - ADDED HERE */}
+                    <FormInput
+                      label={selectedCategory === 'stays' ? "Host name" : 
+                             selectedCategory === 'events' ? "Organizer name" : 
+                             "Provider name"}
+                      icon={UserIcon}
+                      id="host"
+                      value={listingForm.host}
+                      onChange={handleFormChange}
+                      placeholder={
+                        selectedCategory === 'stays' ? "Your name or property manager" :
+                        selectedCategory === 'events' ? "Event organizer or venue name" :
+                        selectedCategory === 'experiences' ? "Business or service provider name" :
+                        "Your name or business name"
                       }
                       required
                     />
-                    <div className="sm:col-span-2">
-                      <FormInput
-                        label="Description"
-                        type="textarea"
-                        id="description"
-                        value={listingForm.description}
-                        onChange={handleFormChange}
-                        placeholder={
-                          selectedCategory === 'stays' ? "Describe what makes your place special..." :
-                          selectedCategory === 'experiences' && selectedType === 'carwash' ? "Professional car wash and detailing services. We use eco-friendly products and premium wax. Services include exterior wash, interior cleaning, waxing, polishing, and full detailing packages. Satisfaction guaranteed!" :
-                          selectedCategory === 'experiences' ? "Describe your service in detail..." :
-                          selectedCategory === 'online' ? "Describe your skills and experience..." :
-                          "Describe the event, activities, and what attendees can expect..."
-                        }
-                        required
-                        rows={4}
-                      />
-                    </div>
-                    
-                    {/* REQUIRED near FIELD FOR ALL CATEGORIES */}
-                    <div className="sm:col-span-2">
-                      <FormInput
-                        label={getNearLabel(selectedCategory, selectedType).charAt(0).toUpperCase() + getNearLabel(selectedCategory, selectedType).slice(1)}
-                        icon={selectedCategory === 'stays' ? MapPinIcon : 
-                              selectedCategory === 'experiences' ? AcademicCapIcon :
-                              selectedCategory === 'online' ? BriefcaseIcon :
-                              CalendarIcon}
-                        type="textarea"
-                        id="near"
-                        value={listingForm.near}
-                        onChange={handleFormChange}
-                        placeholder={getDefaultNearPlaceholder(selectedCategory, selectedType)}
-                        required
-                        rows={3}
-                        helpText="This information helps users understand what you offer"
-                      />
-                    </div>
-                    
-                    {/* REQUIRED FIELDS FOR STAYS CATEGORY */}
+
+                    <FormInput
+                      label={getNearLabel(selectedCategory, selectedType).charAt(0).toUpperCase() + getNearLabel(selectedCategory, selectedType).slice(1)}
+                      type="textarea"
+                      id="near"
+                      value={listingForm.near}
+                      onChange={handleFormChange}
+                      placeholder={getDefaultNearPlaceholder(selectedCategory, selectedType)}
+                      required
+                      rows={3}
+                    />
+
                     {selectedCategory === 'stays' && (
-                      <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-200">
                         <FormInput
                           label="Property Type"
-                          icon={HomeIcon}
                           id="kind"
                           value={listingForm.kind}
                           onChange={handleFormChange}
-                          placeholder="e.g., Apartment, House, Room, Studio"
+                          placeholder="e.g., Apartment, House, Villa"
                           required
                         />
                         <FormInput
                           label="Available From"
-                          icon={CalendarIcon}
                           id="period"
                           value={listingForm.period}
                           onChange={handleFormChange}
-                          placeholder="e.g., Immediate, 1st December 2024"
+                          placeholder="e.g., Immediate, Next month"
                           required
                         />
-                      </>
+                        <div className="md:col-span-2">
+                          <FormInput
+                            label="Cancellation Policy"
+                            id="cancel"
+                            value={listingForm.cancel}
+                            onChange={handleFormChange}
+                            placeholder="e.g., Flexible - Free cancellation 48 hours before check-in"
+                            required
+                          />
+                        </div>
+                      </div>
                     )}
-                    
-                    {/* CAR WASH SPECIFIC FIELDS */}
+
                     {selectedCategory === 'experiences' && selectedType === 'carwash' && (
-                      <>
-                        <div className="sm:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Car Wash Packages <span className="text-red-500">*</span>
+                      <div className="space-y-6 pt-4 border-t border-gray-200">
+                        <div>
+                          <label className="block text-base font-medium text-gray-900 mb-3">
+                            Car Wash Packages <span className="text-[#FF5A5F]">*</span>
                           </label>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {[
                               { id: "basic", label: "Basic Wash", desc: "Exterior wash, windows, tires" },
-                              { id: "premium", label: "Premium Wash", desc: "Exterior wash + interior vacuuming" },
-                              { id: "detailing", label: "Full Detailing", desc: "Complete interior/exterior detailing" },
+                              { id: "premium", label: "Premium Wash", desc: "Exterior + interior vacuuming" },
+                              { id: "detailing", label: "Full Detailing", desc: "Complete interior/exterior" },
                               { id: "ceramic", label: "Ceramic Coating", desc: "Ceramic coating protection" },
                             ].map((pkg) => (
                               <label key={pkg.id} className={`
-                                p-3 border rounded-xl cursor-pointer transition-all duration-200
+                                p-4 border-2 rounded-xl cursor-pointer transition-all duration-200
                                 ${listingForm.carWashPackages?.includes(pkg.id) 
-                                  ? 'border-[#FF5A5F] bg-[#FF5A5F]/5' 
-                                  : 'border-gray-200 hover:border-gray-300'}
+                                  ? 'border-black bg-gray-50' 
+                                  : 'border-gray-200 hover:border-gray-400'}
                               `}>
                                 <input
                                   type="checkbox"
@@ -1476,19 +1482,19 @@ export default function CreateListing() {
                                   }}
                                   className="hidden"
                                 />
-                                <div className="flex items-start gap-2">
+                                <div className="flex items-start gap-3">
                                   <div className={`
-                                    w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 mt-0.5
+                                    w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5
                                     ${listingForm.carWashPackages?.includes(pkg.id) 
-                                      ? 'bg-[#FF5A5F] border-[#FF5A5F]' 
+                                      ? 'bg-black border-black' 
                                       : 'bg-white border-gray-300'}
                                   `}>
                                     {listingForm.carWashPackages?.includes(pkg.id) && 
-                                      <CheckCircleIcon className="w-4 h-4 text-white" />}
+                                      <CheckCircleIcon className="w-3.5 h-3.5 text-white" />}
                                   </div>
                                   <div>
-                                    <p className="font-medium text-gray-900 text-sm">{pkg.label}</p>
-                                    <p className="text-xs text-gray-500">{pkg.desc}</p>
+                                    <p className="font-semibold text-gray-900">{pkg.label}</p>
+                                    <p className="text-sm text-gray-500">{pkg.desc}</p>
                                   </div>
                                 </div>
                               </label>
@@ -1496,135 +1502,31 @@ export default function CreateListing() {
                           </div>
                         </div>
 
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Vehicle Types <span className="text-red-500">*</span>
-                          </label>
-                          <select
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FormInput
+                            label="Vehicle Types Serviced"
                             id="vehicleTypes"
                             value={listingForm.vehicleTypes}
                             onChange={handleFormChange}
+                            placeholder="e.g., Sedan, SUV, Truck"
                             required
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                          >
-                            <option value="">Select vehicle types</option>
-                            <option value="sedan">Sedan</option>
-                            <option value="suv">SUV</option>
-                            <option value="van">Van</option>
-                            <option value="truck">Truck</option>
-                            <option value="motorcycle">Motorcycle</option>
-                            <option value="all">All vehicles</option>
-                          </select>
+                          />
+                          <FormInput
+                            label="Service Duration"
+                            id="serviceDuration"
+                            value={listingForm.serviceDuration}
+                            onChange={handleFormChange}
+                            placeholder="e.g., 30-45 mins"
+                            required
+                          />
                         </div>
-
-                        <FormInput
-                          label="Service Duration"
-                          icon={ClockIcon}
-                          id="serviceDuration"
-                          value={listingForm.serviceDuration}
-                          onChange={handleFormChange}
-                          placeholder="e.g., 30-45 mins, 1-2 hours, 3+ hours"
-                          required
-                        />
-
-                        <div className="sm:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Additional Services
-                          </label>
-                          <div className="grid grid-cols-2 gap-2">
-                            {[
-                              "Engine Cleaning",
-                              "Interior Shampooing",
-                              "Waxing",
-                              "Headlight Restoration",
-                              "Odor Removal",
-                              "Paint Protection",
-                              "Undercarriage Wash",
-                              "Tire Shine"
-                            ].map((service) => (
-                              <label key={service} className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg">
-                                <input
-                                  type="checkbox"
-                                  value={service}
-                                  checked={listingForm.additionalServices?.includes(service)}
-                                  onChange={(e) => {
-                                    const current = listingForm.additionalServices ? listingForm.additionalServices.split(',') : [];
-                                    if (e.target.checked) {
-                                      current.push(service);
-                                    } else {
-                                      const index = current.indexOf(service);
-                                      if (index > -1) current.splice(index, 1);
-                                    }
-                                    setListingForm({
-                                      ...listingForm,
-                                      additionalServices: current.join(',')
-                                    });
-                                  }}
-                                  className="h-4 w-4 text-[#FF5A5F] rounded focus:ring-[#FF5A5F]"
-                                />
-                                <span className="text-sm text-gray-700">{service}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-                      </>
-                    )}
-                    
-                    <FormInput
-                      label="Contact Number"
-                      icon={PhoneIcon}
-                      id="contact"
-                      value={listingForm.contact}
-                      onChange={handleFormChange}
-                      placeholder="Phone number for inquiries"
-                      required
-                    />
-                    <FormInput
-                      label={selectedCategory === 'stays' ? "Host Name" : 
-                             selectedCategory === 'events' ? "Organizer" : "Provider Name"}
-                      icon={UserIcon}
-                      id="host"
-                      value={listingForm.host}
-                      onChange={handleFormChange}
-                      placeholder="Your name or business name"
-                      required
-                    />
-                    
-                    {/* ADDITIONAL REQUIRED FIELD FOR STAYS */}
-                    {selectedCategory === 'stays' && (
-                      <div className="sm:col-span-2">
-                        <FormInput
-                          label="Cancellation Policy"
-                          icon={ClockIcon}
-                          id="cancel"
-                          value={listingForm.cancel}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Flexible - Free cancellation 48 hours before check-in"
-                          required
-                        />
                       </div>
                     )}
-                    
-                    {selectedCategory === 'stays' && (
-                      <div className="sm:col-span-2">
-                        <FormInput
-                          label="House Rules"
-                          icon={KeyIcon}
-                          type="textarea"
-                          id="rules"
-                          value={listingForm.rules}
-                          onChange={handleFormChange}
-                          placeholder="Enter any rules or regulations for guests"
-                          rows={3}
-                        />
-                      </div>
-                    )}
-                    
+
                     {selectedCategory === 'events' && (
-                      <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-200">
                         <FormInput
                           label="Event Date"
-                          icon={CalendarIcon}
                           type="date"
                           id="date"
                           value={listingForm.date}
@@ -1633,220 +1535,63 @@ export default function CreateListing() {
                         />
                         <FormInput
                           label="Event Time"
-                          icon={ClockIcon}
                           type="time"
                           id="time"
                           value={listingForm.time}
                           onChange={handleFormChange}
                           required
                         />
-                      </>
-                    )}
-                    
-                    {selectedCategory === 'experiences' && selectedType === 'daycare' && (
-                      <>
-                        <FormInput
-                          label="Age Group"
-                          icon={UserGroupIcon}
-                          id="ageGroup"
-                          value={listingForm.ageGroup}
-                          onChange={handleFormChange}
-                          placeholder="e.g., 6 months - 5 years"
-                        />
-                        <FormInput
-                          label="Capacity"
-                          icon={UsersIcon}
-                          id="capacity"
-                          value={listingForm.capacity}
-                          onChange={handleFormChange}
-                          placeholder="Number of children"
-                        />
-                        <div className="sm:col-span-2">
-                          <FormInput
-                            label="License Number"
-                            icon={ShieldCheckIcon}
-                            id="licenseNumber"
-                            value={listingForm.licenseNumber}
-                            onChange={handleFormChange}
-                            placeholder="Your daycare license number (if applicable)"
-                          />
-                        </div>
-                      </>
-                    )}
-                    
-                    {selectedCategory === 'experiences' && selectedType === 'schoolTransport' && (
-                      <>
-                        <FormInput
-                          label="Vehicle Type"
-                          icon={TruckIcon}
-                          id="vehicleType"
-                          value={listingForm.vehicleType}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Minivan, Bus, SUV"
-                        />
-                        <div className="sm:col-span-2">
-                          <FormInput
-                            label="Route Areas"
-                            icon={MapPinIcon}
-                            type="textarea"
-                            id="routeAreas"
-                            value={listingForm.routeAreas}
-                            onChange={handleFormChange}
-                            placeholder="Areas and schools you serve"
-                            rows={2}
-                          />
-                        </div>
-                      </>
-                    )}
-                    
-                    {selectedCategory === 'online' && selectedType === 'tutor' && (
-                      <>
-                        <FormInput
-                          label="Education Level"
-                          icon={AcademicCapIcon}
-                          id="kind"
-                          value={listingForm.kind}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Bachelor's Degree in Education"
-                        />
-                        <FormInput
-                          label="Subjects"
-                          icon={BookOpenIcon}
-                          id="specializations"
-                          value={listingForm.specializations}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Mathematics, Science, English"
-                        />
-                      </>
-                    )}
-                    
-                    {selectedCategory === 'online' && selectedType === 'barber' && (
-                      <>
-                        <FormInput
-                          label="Specializations"
-                          icon={ScissorsIcon}
-                          id="specializations"
-                          value={listingForm.specializations}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Fades, beard trims, classic cuts"
-                        />
-                        <FormInput
-                          label="Equipment"
-                          icon={BriefcaseIcon}
-                          id="equipment"
-                          value={listingForm.equipment}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Professional clippers, sanitized tools"
-                        />
-                      </>
-                    )}
-                    
-                    {selectedCategory === 'online' && selectedType === 'photography' && (
-                      <>
-                        <FormInput
-                          label="Photography Style"
-                          icon={PhotoIcon}
-                          id="style"
-                          value={listingForm.style}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Portrait, event, studio, lifestyle"
-                        />
-                        <FormInput
-                          label="Session Duration"
-                          icon={ClockIcon}
-                          id="sessionDuration"
-                          value={listingForm.sessionDuration}
-                          onChange={handleFormChange}
-                          placeholder="e.g., 1-2 hours, half day, full day"
-                        />
-                      </>
-                    )}
-                    
-                    {selectedCategory === 'online' && selectedType === 'baker' && (
-                      <>
-                        <FormInput
-                          label="Specialties"
-                          icon={CakeIcon}
-                          id="specialties"
-                          value={listingForm.specialties}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Wedding cakes, custom pastries, breads"
-                        />
-                        <FormInput
-                          label="Dietary Options"
-                          icon={BeakerIcon}
-                          id="dietaryOptions"
-                          value={listingForm.dietaryOptions}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Vegan, gluten-free, sugar-free options"
-                        />
-                      </>
+                      </div>
                     )}
                   </div>
                 </SectionCard>
 
-                <SectionCard title="Pricing">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <SectionCard title="Set your price">
+                  <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {selectedCategory === 'stays' 
-                          ? `Price per ${selectedType === "rent" ? "month" : selectedType === "over" ? "night" : "hour"}`
-                          : selectedCategory === 'experiences' && selectedType === 'carwash'
-                          ? "Starting price for Basic Wash"
-                          : selectedCategory === 'events' ? "Ticket price" : "Service rate"}
+                      <label className="block text-base font-medium text-gray-900 mb-2">
+                        Price per {selectedCategory === 'stays' ? 
+                          (selectedType === "rent" ? "month" : selectedType === "over" ? "night" : "hour") :
+                          selectedCategory === 'events' ? "ticket" : "service"}
                       </label>
                       <div className="relative">
-                        <span className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
+                        <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-900 font-semibold text-lg">R</span>
                         <input
                           type="number"
                           id="regularPrice"
                           value={listingForm.regularPrice}
                           onChange={handleFormChange}
-                          className="w-full pl-8 sm:pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
+                          className="w-full pl-10 pr-4 py-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all"
                           min="0"
                           required
                         />
-                        <span className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs sm:text-sm">
-                          {selectedCategory === 'events' && '(0 for free)'}
-                          {selectedCategory === 'stays' && selectedType === 'rent' && '/month'}
-                          {selectedCategory === 'stays' && selectedType === 'over' && '/night'}
-                          {selectedCategory === 'stays' && selectedType === 'office' && '/hour'}
-                          {selectedCategory === 'experiences' && selectedType === 'carwash' && ' (starting)'}
-                        </span>
                       </div>
                     </div>
-                    
+
                     {selectedCategory === 'stays' && (
-                      <div>
-                        <div className="flex items-start h-full space-x-3 sm:space-x-4">
+                      <div className="pt-4 border-t border-gray-200">
+                        <label className="flex items-center gap-3 cursor-pointer">
                           <input
                             type="checkbox"
                             id="offer"
                             checked={listingForm.offer}
                             onChange={handleFormChange}
-                            className="mt-1 h-5 w-5 text-[#FF5A5F] rounded focus:ring-[#FF5A5F]"
+                            className="w-5 h-5 text-black rounded border-gray-300 focus:ring-black"
                           />
-                          <div>
-                            <label htmlFor="offer" className="font-medium text-gray-700">
-                              Offer a discount
-                            </label>
-                            <p className="text-sm text-gray-500 mt-1">Attract more guests with a special price</p>
-                          </div>
-                        </div>
+                          <span className="font-medium text-gray-900">Offer a discounted price</span>
+                        </label>
                         
                         {listingForm.offer && (
-                          <div className="mt-3 sm:mt-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Discounted price
-                            </label>
+                          <div className="mt-4 ml-8">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Discounted price</label>
                             <div className="relative">
-                              <span className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
+                              <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-900 font-semibold">R</span>
                               <input
                                 type="number"
                                 id="discountPrice"
                                 value={listingForm.discountPrice}
                                 onChange={handleFormChange}
-                                className="w-full pl-8 sm:pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
                                 min="0"
                               />
                             </div>
@@ -1854,327 +1599,138 @@ export default function CreateListing() {
                         )}
                       </div>
                     )}
-
-                    {/* CAR WASH ADDITIONAL PRICING */}
-                    {selectedCategory === 'experiences' && selectedType === 'carwash' && (
-                      <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Package Pricing Details (Optional)
-                        </label>
-                        <textarea
-                          id="additionalPricing"
-                          value={listingForm.additionalPricing}
-                          onChange={handleFormChange}
-                          placeholder="Premium Wash: R150, Full Detailing: R350, Ceramic Coating: R800, SUV/Truck extra: +R50, etc."
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                          rows={3}
-                        />
-                      </div>
-                    )}
-                    
-                    {selectedCategory === 'online' && selectedType === 'barber' && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Travel fee (optional)</label>
-                        <div className="relative">
-                          <span className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-500">R</span>
-                          <input
-                            type="number"
-                            id="travelFee"
-                            value={listingForm.travelFee}
-                            onChange={handleFormChange}
-                            className="w-full pl-8 sm:pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                            placeholder="0"
-                            min="0"
-                          />
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </SectionCard>
               </div>
             )}
 
-            {/* Step 4: Amenities - UPDATED with hidden scrollbar */}
+            {/* Step 4: Amenities */}
             {currentStep === 4 && (
-              <div className="space-y-4 sm:space-y-6">
-                <SectionCard title="Amenities & Features">
-                  {/* Container with hidden scrollbar */}
-                  <div className="overflow-x-auto pb-2">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 min-w-max pb-4 -mb-4
-                      [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                      {getAmenitiesByCategory().map((amenity) => (
-                        <AmenityCard
-                          key={amenity.id}
-                          {...amenity}
-                          onChange={handleFormChange}
-                        />
-                      ))}
+              <div className="space-y-8">
+                <SectionCard title="What amenities do you offer?">
+                  <p className="text-gray-600 mb-6">Select all that apply</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {getAmenitiesByCategory().map((amenity) => (
+                      <AmenityCard
+                        key={amenity.id}
+                        {...amenity}
+                        onChange={handleFormChange}
+                      />
+                    ))}
+                  </div>
+                </SectionCard>
+
+                {selectedCategory === 'stays' && (
+                  <SectionCard title="Room details">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-base font-medium text-gray-900 mb-3">
+                          {selectedType === "land" || selectedType === "office" ? "Square Meters" : "Bedrooms"}
+                        </label>
+                        <div className="flex items-center gap-4">
+                          <button
+                            type="button"
+                            onClick={() => setListingForm({...listingForm, bedrooms: Math.max(0, listingForm.bedrooms - 1)})}
+                            className="w-12 h-12 rounded-full border border-gray-300 flex items-center justify-center hover:border-black transition-colors"
+                          >
+                            <MinusIcon className="w-5 h-5" />
+                          </button>
+                          <span className="text-xl font-semibold w-8 text-center">{listingForm.bedrooms}</span>
+                          <button
+                            type="button"
+                            onClick={() => setListingForm({...listingForm, bedrooms: listingForm.bedrooms + 1})}
+                            className="w-12 h-12 rounded-full border border-gray-300 flex items-center justify-center hover:border-black transition-colors"
+                          >
+                            <PlusIcon className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {selectedType !== "land" && selectedType !== "office" && (
+                        <div>
+                          <label className="block text-base font-medium text-gray-900 mb-3">Bathrooms</label>
+                          <div className="flex items-center gap-4">
+                            <button
+                              type="button"
+                              onClick={() => setListingForm({...listingForm, bathrooms: Math.max(1, listingForm.bathrooms - 1)})}
+                              className="w-12 h-12 rounded-full border border-gray-300 flex items-center justify-center hover:border-black transition-colors"
+                            >
+                              <MinusIcon className="w-5 h-5" />
+                            </button>
+                            <span className="text-xl font-semibold w-8 text-center">{listingForm.bathrooms}</span>
+                            <button
+                              type="button"
+                              onClick={() => setListingForm({...listingForm, bathrooms: listingForm.bathrooms + 1})}
+                              className="w-12 h-12 rounded-full border border-gray-300 flex items-center justify-center hover:border-black transition-colors"
+                            >
+                              <PlusIcon className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </SectionCard>
-
-                <SectionCard title="Additional Details">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                    {selectedCategory === 'stays' && (
-                      <>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {selectedType === "land" || selectedType === "office" ? "Square Meters" : "Bedrooms"}
-                          </label>
-                          <input
-                            type="number"
-                            id="bedrooms"
-                            value={listingForm.bedrooms}
-                            onChange={handleFormChange}
-                            min={selectedType === "land" || selectedType === "office" ? 0 : 1}
-                            max={10000}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                          />
-                        </div>
-                        
-                        {selectedType !== "land" && selectedType !== "office" && (
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Bathrooms</label>
-                            <input
-                              type="number"
-                              id="bathrooms"
-                              value={listingForm.bathrooms}
-                              onChange={handleFormChange}
-                              min="1"
-                              max="10"
-                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                            />
-                          </div>
-                        )}
-                      </>
-                    )}
-                    
-                    {selectedCategory === 'experiences' && selectedType !== 'carwash' && (
-                      <>
-                        <FormInput
-                          label="Service Category"
-                          icon={TagIcon}
-                          id="kind"
-                          value={listingForm.kind}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Residential, Commercial, Both"
-                        />
-                        <FormInput
-                          label="Availability"
-                          icon={ClockIcon}
-                          id="period"
-                          value={listingForm.period}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Weekdays 9am-5pm, Weekends available"
-                        />
-                      </>
-                    )}
-
-                    {/* CAR WASH ADDITIONAL DETAILS */}
-                    {selectedCategory === 'experiences' && selectedType === 'carwash' && (
-                      <>
-                        <FormInput
-                          label="Years of Experience"
-                          icon={ClockIcon}
-                          id="period"
-                          value={listingForm.period}
-                          onChange={handleFormChange}
-                          placeholder="e.g., 5+ years"
-                        />
-                        <FormInput
-                          label="Certifications"
-                          icon={ShieldCheckIcon}
-                          id="licenseNumber"
-                          value={listingForm.licenseNumber}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Certified Detailer, Eco-Friendly Certified"
-                        />
-                      </>
-                    )}
-                    
-                    {selectedCategory === 'online' && selectedType === 'tutor' && (
-                      <>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Teaching format</label>
-                          <select
-                            id="bathrooms"
-                            value={listingForm.bathrooms}
-                            onChange={handleFormChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                          >
-                            <option value="1">In-person</option>
-                            <option value="2">Online</option>
-                            <option value="3">Both</option>
-                          </select>
-                        </div>
-                        <FormInput
-                          label="Age group"
-                          icon={UserGroupIcon}
-                          id="ageGroup"
-                          value={listingForm.ageGroup}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Primary school, High school, Adults"
-                        />
-                      </>
-                    )}
-                    
-                    {selectedCategory === 'online' && selectedType === 'barber' && (
-                      <>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Booking notice</label>
-                          <select
-                            id="bookingNotice"
-                            value={listingForm.bookingNotice}
-                            onChange={handleFormChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl"
-                          >
-                            <option value="">Select notice period</option>
-                            <option value="1">Same day</option>
-                            <option value="24">24 hours</option>
-                            <option value="48">48 hours</option>
-                            <option value="72">72 hours</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Additional pricing</label>
-                          <textarea
-                            id="additionalPricing"
-                            value={listingForm.additionalPricing}
-                            onChange={handleFormChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent"
-                            placeholder="E.g., Beard trim: R80, Kids cut: R100"
-                            rows={3}
-                          />
-                        </div>
-                      </>
-                    )}
-                    
-                    {selectedCategory === 'online' && selectedType === 'photography' && (
-                      <>
-                        <FormInput
-                          label="Photo delivery time"
-                          icon={ClockIcon}
-                          id="photoDelivery"
-                          value={listingForm.photoDelivery}
-                          onChange={handleFormChange}
-                          placeholder="E.g., 5-7 days, digital download"
-                        />
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Delivery available</label>
-                          <div className="flex items-center h-full space-x-3">
-                            <input
-                              type="checkbox"
-                              id="delivery"
-                              checked={listingForm.delivery}
-                              onChange={handleFormChange}
-                              className="h-5 w-5 text-[#FF5A5F] rounded focus:ring-[#FF5A5F]"
-                            />
-                            <label htmlFor="delivery" className="font-medium text-gray-700">
-                              Offer delivery service
-                            </label>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                    
-                    {selectedCategory === 'online' && selectedType === 'baker' && (
-                      <>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Order notice required</label>
-                          <select
-                            id="orderNotice"
-                            value={listingForm.orderNotice}
-                            onChange={handleFormChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl"
-                          >
-                            <option value="">Select notice period</option>
-                            <option value="24">24 hours</option>
-                            <option value="48">48 hours</option>
-                            <option value="72">72 hours</option>
-                            <option value="168">1 week</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Delivery available</label>
-                          <div className="flex items-center h-full space-x-3">
-                            <input
-                              type="checkbox"
-                              id="delivery"
-                              checked={listingForm.delivery}
-                              onChange={handleFormChange}
-                              className="h-5 w-5 text-[#FF5A5F] rounded focus:ring-[#FF5A5F]"
-                            />
-                            <label htmlFor="delivery" className="font-medium text-gray-700">
-                              Offer delivery service
-                            </label>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </SectionCard>
+                  </SectionCard>
+                )}
               </div>
             )}
 
-            {/* Step 5: Images & Media - UPDATED with hidden scrollbar */}
+            {/* Step 5: Images & Media */}
             {currentStep === 5 && (
-              <div className="space-y-4 sm:space-y-6">
-                <SectionCard title="Photos & Media">
+              <div className="space-y-8">
+                <SectionCard title="Add some photos of your place">
+                  <p className="text-gray-600 mb-6">You'll need 1 photo to get started. You can add more later.</p>
+                  
                   <MediaUploadArea
                     type="image"
                     onChange={handleFileChange}
                     onSubmit={handleImageSubmit}
                     filesCount={files.length}
-                    label={`Upload ${selectedCategory === 'experiences' && selectedType === 'carwash' ? 'car wash' : selectedCategory} photos`}
+                    label="Upload from your device"
                   />
                   
                   {imageUploadError && (
-                    <div className="mt-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl">
-                      <p className="text-red-600 text-xs sm:text-sm">{imageUploadError}</p>
+                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-red-600 text-sm">{imageUploadError}</p>
                     </div>
                   )}
 
                   {listingForm.imageUrls.length > 0 && (
-                    <div className="mt-4 sm:mt-6">
-                      <h3 className="font-medium text-gray-700 mb-3 sm:mb-4">Uploaded photos ({listingForm.imageUrls.length})</h3>
-                      {/* Container with hidden scrollbar for images */}
-                      <div className="overflow-x-auto pb-2">
-                        <div className="flex gap-3 sm:gap-4 pb-4 -mb-4 min-w-max
-                          [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                          {listingForm.imageUrls.map((url, index) => (
-                            <div key={url} className="relative aspect-square rounded-lg sm:rounded-xl overflow-hidden group flex-shrink-0" style={{width: '200px'}}>
-                              <img
-                                src={url}
-                                alt=""
-                                className="w-full h-full object-cover"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveImage(index)}
-                                className="absolute top-1 sm:top-2 right-1 sm:right-2 bg-white p-1 sm:p-1.5 rounded-md sm:rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                              >
-                                <XMarkIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
+                    <div className="mt-8">
+                      <h3 className="font-semibold text-gray-900 mb-4">Uploaded photos</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {listingForm.imageUrls.map((url, index) => (
+                          <div key={url} className="relative aspect-square rounded-xl overflow-hidden group">
+                            <img
+                              src={url}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(index)}
+                              className="absolute top-2 right-2 bg-white p-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <XMarkIcon className="w-4 h-4 text-gray-900" />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
 
-                  <div className="mt-6 sm:mt-8">
-                    <h3 className="font-medium text-gray-700 mb-3 sm:mb-4">Add a video (optional)</h3>
+                  <div className="mt-8 pt-8 border-t border-gray-200">
+                    <h3 className="font-semibold text-gray-900 mb-2">Add a video (optional)</h3>
+                    <p className="text-gray-600 text-sm mb-4">Show guests what your place looks like</p>
                     <MediaUploadArea
                       type="video"
                       onChange={(e) => setVideoFile(e.target.files[0])}
                       onSubmit={handleVideoUpload}
                       filesCount={videoFile ? 1 : 0}
                       maxFiles={1}
-                      label={`Upload ${selectedCategory === 'experiences' && selectedType === 'carwash' ? 'car wash' : selectedCategory} video`}
                     />
                     {videoUploadError && (
-                      <div className="mt-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl">
-                        <p className="text-red-600 text-xs sm:text-sm">{videoUploadError}</p>
+                      <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-red-600 text-sm">{videoUploadError}</p>
                       </div>
                     )}
                   </div>
@@ -2184,79 +1740,49 @@ export default function CreateListing() {
 
             {/* Step 6: Review & Submit */}
             {currentStep === 6 && (
-              <div className="space-y-4 sm:space-y-6">
-                <SectionCard title="Review Your Listing">
-                  <div className="space-y-4 sm:space-y-6">
-                    <div className="bg-gray-50 rounded-2xl p-4 sm:p-6">
-                      <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-lg sm:text-xl">Summary</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        <div>
-                          <p className="text-sm text-gray-500">Category</p>
-                          <p className="font-medium text-gray-900">{selectedCategory}</p>
+              <div className="space-y-8">
+                <SectionCard title="Review your listing">
+                  <div className="space-y-6">
+                    <div className="bg-gray-50 rounded-xl p-6">
+                      <h3 className="font-semibold text-lg text-gray-900 mb-4">Summary</h3>
+                      <div className="space-y-3 text-sm">
+                        <div className="flex justify-between py-2 border-b border-gray-200">
+                          <span className="text-gray-600">Category</span>
+                          <span className="font-medium text-gray-900 capitalize">{selectedCategory}</span>
                         </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Type</p>
-                          <p className="font-medium text-gray-900">{selectedType}</p>
+                        <div className="flex justify-between py-2 border-b border-gray-200">
+                          <span className="text-gray-600">Type</span>
+                          <span className="font-medium text-gray-900 capitalize">{selectedType}</span>
                         </div>
-                        <div className="sm:col-span-2">
-                          <p className="text-sm text-gray-500">Title</p>
-                          <p className="font-medium text-gray-900">{listingForm.name}</p>
+                        <div className="flex justify-between py-2 border-b border-gray-200">
+                          <span className="text-gray-600">Title</span>
+                          <span className="font-medium text-gray-900 text-right max-w-xs">{listingForm.name}</span>
                         </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Location</p>
-                          <p className="font-medium text-gray-900">{listingForm.address}</p>
+                        <div className="flex justify-between py-2 border-b border-gray-200">
+                          <span className="text-gray-600">Host/Organizer</span>
+                          <span className="font-medium text-gray-900 text-right max-w-xs">{listingForm.host}</span>
                         </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Price</p>
-                          <p className="font-medium text-gray-900">R{listingForm.regularPrice}</p>
+                        <div className="flex justify-between py-2 border-b border-gray-200">
+                          <span className="text-gray-600">Location</span>
+                          <span className="font-medium text-gray-900 text-right max-w-xs">{listingForm.address}</span>
                         </div>
-                        <div className="sm:col-span-2">
-                          <p className="text-sm text-gray-500">Description</p>
-                          <p className="font-medium text-gray-900">{listingForm.description.substring(0, 100)}...</p>
+                        <div className="flex justify-between py-2">
+                          <span className="text-gray-600">Price</span>
+                          <span className="font-medium text-gray-900">R{listingForm.regularPrice}</span>
                         </div>
-                        
-                        {/* CAR WASH SUMMARY */}
-                        {selectedCategory === 'experiences' && selectedType === 'carwash' && (
-                          <>
-                            <div>
-                              <p className="text-sm text-gray-500">Packages</p>
-                              <p className="font-medium text-gray-900">{listingForm.carWashPackages || 'Not specified'}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-500">Vehicle Types</p>
-                              <p className="font-medium text-gray-900">{listingForm.vehicleTypes || 'Not specified'}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-500">Duration</p>
-                              <p className="font-medium text-gray-900">{listingForm.serviceDuration || 'Not specified'}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-500">Mobile Service</p>
-                              <p className="font-medium text-gray-900">{listingForm.mobileService ? 'Yes' : 'No'}</p>
-                            </div>
-                          </>
-                        )}
                       </div>
                     </div>
 
-                    <div className="bg-gray-50 rounded-2xl p-4 sm:p-6">
-                      <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-lg sm:text-xl">Media</h3>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                          <CameraIcon className="w-5 h-5 text-gray-400" />
-                          <span className="text-gray-700">{listingForm.imageUrls.length} photos</span>
-                        </div>
-                        {listingForm.videoUrl && (
-                          <div className="flex items-center gap-2">
-                            <VideoCameraIcon className="w-5 h-5 text-gray-400" />
-                            <span className="text-gray-700">1 video</span>
-                          </div>
-                        )}
+                    <div className="bg-gray-50 rounded-xl p-6">
+                      <h3 className="font-semibold text-lg text-gray-900 mb-4">Photos</h3>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <CameraIcon className="w-5 h-5" />
+                        <span>{listingForm.imageUrls.length} photos uploaded</span>
                       </div>
                     </div>
 
-                    <div className="bg-gray-50 rounded-2xl p-4 sm:p-6">
-                      <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-lg sm:text-xl">Amenities</h3>
+                    <div className="bg-gray-50 rounded-xl p-6">
+                      <h3 className="font-semibold text-lg text-gray-900 mb-4">Amenities</h3>
                       <div className="flex flex-wrap gap-2">
                         {getAmenitiesByCategory()
                           .filter(amenity => listingForm[amenity.id])
@@ -2266,22 +1792,20 @@ export default function CreateListing() {
                             </span>
                           ))}
                         {getAmenitiesByCategory().filter(amenity => listingForm[amenity.id]).length === 0 && (
-                          <p className="text-gray-500">No amenities selected</p>
+                          <p className="text-gray-500 text-sm">No amenities selected</p>
                         )}
                       </div>
                     </div>
                   </div>
                 </SectionCard>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 sm:p-6">
-                  <div className="flex items-start gap-3">
-                    <ExclamationTriangleIcon className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-semibold text-blue-900 mb-1">Important Notice</h4>
-                      <p className="text-blue-700 text-sm">
-                        By submitting this listing, you agree to our terms of service. Please ensure all information is accurate.
-                      </p>
-                    </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 flex gap-4">
+                  <InformationCircleIcon className="w-6 h-6 text-blue-600 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-blue-900 mb-1">Important</h4>
+                    <p className="text-blue-800 text-sm">
+                      By submitting, you agree to our terms of service. Ensure all information is accurate.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -2289,102 +1813,81 @@ export default function CreateListing() {
 
             {/* Error Display */}
             {error && (
-              <div className="mt-4 sm:mt-6 bg-red-50 border border-red-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 animate-pulse">
-                <div className="flex items-start gap-2">
-                  <ExclamationTriangleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-red-600 font-medium text-sm sm:text-base">{error}</p>
-                    <p className="text-red-500 text-xs sm:text-sm mt-1">
-                      Please fix the errors above and try again. You can continue editing without losing your data.
-                    </p>
-                  </div>
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex gap-3">
+                <ExclamationTriangleIcon className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-red-800 font-medium">{error}</p>
                 </div>
               </div>
             )}
 
-            {/* Navigation Buttons */}
-            <div className="mt-6 sm:mt-8 flex justify-between items-center">
-              <div>
-                {currentStep > 1 && (
-                  <button
-                    type="button"
-                    onClick={handlePrevStep}
-                    className="px-6 py-3 sm:px-8 sm:py-3 border border-gray-300 text-gray-700 rounded-xl sm:rounded-2xl font-medium hover:bg-gray-50 transition-all duration-300 flex items-center gap-2 hover:scale-[1.02]"
-                  >
-                    <ArrowLeftIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="hidden sm:inline">Back</span>
-                  </button>
-                )}
-              </div>
+            {/* Navigation Buttons - Airbnb Style */}
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 pt-6 pb-8 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 md:border-t-0 md:pt-0 md:pb-0 md:static flex justify-between items-center">
+              <button
+                type="button"
+                onClick={handlePrevStep}
+                className={`
+                  px-6 py-3 rounded-lg font-medium transition-all duration-200 underline underline-offset-4
+                  ${currentStep > 1 ? 'text-gray-900 hover:text-gray-600' : 'invisible'}
+                `}
+              >
+                Back
+              </button>
               
-              <div>
-                {currentStep < 6 ? (
-                  <button
-                    type="button"
-                    onClick={handleNextStep}
-                    className="px-6 py-3 sm:px-10 sm:py-4 bg-[#FF5A5F] text-white rounded-xl sm:rounded-2xl font-semibold hover:bg-[#E14E50] transition-all duration-300 flex items-center gap-2 hover:scale-[1.02] shadow-lg hover:shadow-xl"
-                  >
-                    <span className="text-sm sm:text-base">Continue</span>
-                    <ArrowRightIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-6 py-3 sm:px-10 sm:py-4 bg-[#FF5A5F] text-white rounded-xl sm:rounded-2xl font-semibold hover:bg-[#E14E50] transition-all duration-300 flex items-center gap-2 hover:scale-[1.02] shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
-                        <span className="text-sm sm:text-base">Creating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <SparklesIcon className="w-4 h-4 sm:w-6 sm:h-6" />
-                        <span className="text-sm sm:text-base">Publish Listing</span>
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
+              {currentStep < 6 ? (
+                <button
+                  type="button"
+                  onClick={handleNextStep}
+                  className="px-8 py-4 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 transition-all duration-200 flex items-center gap-2"
+                >
+                  Next
+                  <ArrowRightIcon className="w-5 h-5" />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-8 py-4 bg-[#FF5A5F] text-white rounded-lg font-semibold hover:bg-[#E14E50] transition-all duration-200 flex items-center gap-2 disabled:opacity-70"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      Publishing...
+                    </>
+                  ) : (
+                    <>
+                      <SparklesIcon className="w-5 h-5" />
+                      Publish listing
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </form>
         </div>
 
-        {/* Important Message */}
-        <div className="mt-6 sm:mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl sm:rounded-2xl p-4 sm:p-6">
-          <div className="flex items-start gap-3 sm:gap-4">
-            <ExclamationTriangleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-blue-900 mb-1 sm:mb-2 text-sm sm:text-base">Important Note</h3>
-              <p className="text-blue-700 text-xs sm:text-sm">
-                If your post doesnt go through, we recommend logging out of your account and then logging back in. 
-                This will help refresh your session and resolve any potential errors you may encounter.
-              </p>
-            </div>
-          </div>
+        {/* Help Text */}
+        <div className="mt-12 text-center">
+          <p className="text-sm text-gray-500">
+            Having trouble? <button className="underline font-medium text-gray-900">Get help</button>
+          </p>
         </div>
-      </div>
+      </main>
 
       {/* Upload Progress Modal */}
       {uploading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 border-b-2 border-[#FF5A5F] mx-auto mb-4 sm:mb-6"></div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Uploading Media</h3>
-              <p className="text-gray-600 text-base sm:text-lg mb-3 sm:mb-4">{Math.round(uploadProgress)}% complete</p>
-              <div className="relative">
-                <div className="w-full bg-gray-200 rounded-full h-2 sm:h-3">
-                  <div 
-                    className="bg-[#FF5A5F] h-2 sm:h-3 rounded-full transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
-                  ></div>
-                </div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Uploading...</h3>
+              <p className="text-gray-600 mb-4">{Math.round(uploadProgress)}% complete</p>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-black h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
               </div>
-              <p className="mt-4 sm:mt-6 text-gray-500 text-sm sm:text-base">
-                Please dont close this window while uploading...
-              </p>
             </div>
           </div>
         </div>
@@ -2393,277 +1896,183 @@ export default function CreateListing() {
       {/* Promotion Popup */}
       {showPromotionPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl my-auto">
+          <div className="bg-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl my-auto">
             {promotionSteps === 0 && (
-              <div className="p-6 sm:p-8 md:p-12 text-center">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#FF5A5F]/10 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-                  <SparklesIcon className="w-8 h-8 sm:w-10 sm:h-10 text-[#FF5A5F]" />
+              <div className="p-8 md:p-12 text-center">
+                <div className="w-16 h-16 bg-[#FF5A5F]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <SparklesIcon className="w-8 h-8 text-[#FF5A5F]" />
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-3">Listing Created! 🎉</h3>
-                <p className="text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base">
-                  Boost your listings visibility and get more bookings with our promotion packages.
+                <h3 className="text-3xl font-bold text-gray-900 mb-3">You're all set! 🎉</h3>
+                <p className="text-gray-600 mb-8 text-lg">
+                  Boost your listing's visibility with our promotion packages.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <button
                     onClick={() => setPromotionSteps(1)}
-                    className="px-6 py-3 sm:px-8 sm:py-3 bg-[#FF5A5F] text-white rounded-xl font-medium hover:bg-[#E14E50] transition-colors duration-200 flex items-center justify-center gap-2"
+                    className="px-8 py-4 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors"
                   >
-                    Promote Now
-                    <ArrowRightIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Promote now
                   </button>
                   <button
                     onClick={() => navigate(`/listing/${newListingId}`)}
-                    className="px-6 py-3 sm:px-8 sm:py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors duration-200"
+                    className="px-8 py-4 border border-black text-black rounded-lg font-semibold hover:bg-gray-50 transition-colors"
                   >
-                    Skip for Now
+                    Skip for now
                   </button>
                 </div>
               </div>
             )}
 
             {promotionSteps === 1 && (
-              <div className="p-6 sm:p-8">
-                <div className="flex items-center gap-2 mb-2">
-                  <SparklesIcon className="w-5 h-5 sm:w-6 sm:h-6 text-[#FF5A5F]" />
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Choose Your Promotion</h3>
-                </div>
-                <p className="text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base">Select a package that fits your needs</p>
+              <div className="p-8">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Choose your promotion</h3>
+                <p className="text-gray-600 mb-8">Select a package that fits your needs</p>
                 
-                <div className="grid md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                  <div
-                    onClick={() => setPromotionPackage('standard')}
-                    className={`p-4 sm:p-6 border-2 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-200 ${
-                      promotionPackage === 'standard' 
-                        ? 'border-[#FF5A5F] bg-[#FF5A5F]/5' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-3 sm:mb-4">
-                      <div>
-                        <h4 className="font-semibold text-base sm:text-lg text-gray-900">Standard</h4>
-                        <p className="text-xs sm:text-sm text-gray-500 mt-1">25x more visibility</p>
+                <div className="grid md:grid-cols-2 gap-4 mb-8">
+                  {[
+                    { id: 'standard', price: 40, multiplier: '25x', days: '7 days', features: ['25x more visibility', 'Featured in category', '7-day promotion'] },
+                    { id: 'premium', price: 100, multiplier: '80x', days: '14 days', features: ['80x more visibility', 'Homepage feature', '14-day promotion', 'Priority support'] }
+                  ].map((pkg) => (
+                    <div
+                      key={pkg.id}
+                      onClick={() => setPromotionPackage(pkg.id)}
+                      className={`
+                        p-6 border-2 rounded-xl cursor-pointer transition-all duration-200
+                        ${promotionPackage === pkg.id ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-400'}
+                      `}
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h4 className="font-bold text-lg capitalize">{pkg.id}</h4>
+                          <p className="text-gray-500 text-sm">{pkg.multiplier} more visibility</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-2xl font-bold">R{pkg.price}</span>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <span className="text-xl sm:text-2xl font-bold text-[#FF5A5F]">R40</span>
-                        <p className="text-xs text-gray-500">one-time payment</p>
-                      </div>
+                      <ul className="space-y-2">
+                        {pkg.features.map((feat, i) => (
+                          <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                            <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                            {feat}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <ul className="space-y-1 sm:space-y-2">
-                      <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                        <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
-                        25x more clicks
-                      </li>
-                      <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                        <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
-                        Featured in category
-                      </li>
-                      <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                        <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
-                        7-day promotion
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div
-                    onClick={() => setPromotionPackage('premium')}
-                    className={`p-4 sm:p-6 border-2 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-200 ${
-                      promotionPackage === 'premium' 
-                        ? 'border-[#FF5A5F] bg-[#FF5A5F]/5' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-3 sm:mb-4">
-                      <div>
-                        <h4 className="font-semibold text-base sm:text-lg text-gray-900">Premium</h4>
-                        <p className="text-xs sm:text-sm text-gray-500 mt-1">80x more visibility</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xl sm:text-2xl font-bold text-[#FF5A5F]">R100</span>
-                        <p className="text-xs text-gray-500">one-time payment</p>
-                      </div>
-                    </div>
-                    <ul className="space-y-1 sm:space-y-2">
-                      <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                        <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
-                        80x more clicks
-                      </li>
-                      <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                        <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
-                        Homepage feature
-                      </li>
-                      <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                        <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
-                        14-day promotion
-                      </li>
-                      <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                        <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
-                        Priority support
-                      </li>
-                    </ul>
-                  </div>
+                  ))}
                 </div>
 
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between">
                   <button
                     onClick={() => setPromotionSteps(0)}
-                    className="px-4 sm:px-6 py-2 text-gray-600 hover:text-gray-900 transition-colors duration-200 text-sm sm:text-base"
+                    className="px-6 py-3 text-gray-900 font-medium underline underline-offset-4"
                   >
-                    ← Back
+                    Back
                   </button>
                   <button
                     onClick={() => setPromotionSteps(2)}
                     disabled={!promotionPackage}
-                    className={`px-6 py-3 sm:px-8 sm:py-3 rounded-xl font-medium transition-all duration-200 text-sm sm:text-base ${
-                      promotionPackage
-                        ? 'bg-[#FF5A5F] text-white hover:bg-[#E14E50]'
-                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    }`}
+                    className={`
+                      px-8 py-3 rounded-lg font-semibold transition-all
+                      ${promotionPackage ? 'bg-black text-white hover:bg-gray-800' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}
+                    `}
                   >
-                    Continue to Payment
+                    Continue
                   </button>
                 </div>
               </div>
             )}
 
             {promotionSteps === 2 && (
-              <div className="p-6 sm:p-8">
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Complete Payment</h3>
-                <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">Choose your payment method</p>
+              <div className="p-8">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Complete payment</h3>
+                <p className="text-gray-600 mb-6">Choose your payment method</p>
 
-                <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 rounded-xl">
+                <div className="bg-gray-50 rounded-xl p-4 mb-6">
                   <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-medium text-gray-900 text-sm sm:text-base">Order Summary</p>
-                      <p className="text-xs sm:text-sm text-gray-500">Promotion: {promotionPackage}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-[#FF5A5F] text-base sm:text-lg">
-                        R{promotionPackage === 'standard' ? '40' : '100'}
-                      </p>
-                      <p className="text-xs text-gray-500">one-time payment</p>
-                    </div>
+                    <span className="font-medium">{promotionPackage} promotion</span>
+                    <span className="text-xl font-bold">R{promotionPackage === 'standard' ? '40' : '100'}</span>
                   </div>
                 </div>
 
-                <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
-                  {[
-                    {
-                      id: 'card',
-                      name: 'Credit/Debit Card',
-                      description: 'Pay with Visa, Mastercard, etc.',
-                      emoji: '💳',
-                      icon: CreditCardIcon
-                    },
-                    {
-                      id: 'paypal',
-                      name: 'PayPal',
-                      description: 'Pay with your PayPal account',
-                      emoji: '📱',
-                      icon: DevicePhoneMobileIcon
-                    },
-                    {
-                      id: 'bank',
-                      name: 'Bank Transfer',
-                      description: 'Direct bank transfer',
-                      emoji: '🏦',
-                      icon: BuildingLibraryIcon
-                    }
-                  ].map((method) => (
+                <div className="space-y-3 mb-6">
+                  {['card', 'paypal', 'bank'].map((method) => (
                     <div
-                      key={method.id}
-                      onClick={() => handlePaymentSelection(method.id)}
-                      className={`p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
-                        selectedPaymentMethod === method.id
-                          ? 'border-[#FF5A5F] bg-[#FF5A5F]/5'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                      key={method}
+                      onClick={() => handlePaymentSelection(method)}
+                      className={`
+                        p-4 border-2 rounded-xl cursor-pointer transition-all flex items-center gap-4
+                        ${selectedPaymentMethod === method ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-400'}
+                      `}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gray-100 rounded-lg">
-                          <method.icon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 text-sm sm:text-base">{method.name}</h4>
-                          <p className="text-xs sm:text-sm text-gray-600">{method.description}</p>
-                        </div>
-                        {selectedPaymentMethod === method.id && (
-                          <CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF5A5F]" />
-                        )}
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        {method === 'card' && <CreditCardIcon className="w-5 h-5" />}
+                        {method === 'paypal' && <DevicePhoneMobileIcon className="w-5 h-5" />}
+                        {method === 'bank' && <BuildingLibraryIcon className="w-5 h-5" />}
                       </div>
+                      <span className="font-medium capitalize flex-1">{method === 'card' ? 'Credit/Debit Card' : method}</span>
+                      {selectedPaymentMethod === method && <CheckCircleIcon className="w-5 h-5 text-black" />}
                     </div>
                   ))}
-
-                  {selectedPaymentMethod === 'card' && (
-                    <div className="mt-3 sm:mt-4 space-y-3 sm:space-y-4 p-3 sm:p-4 border border-gray-200 rounded-xl">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
-                        <input
-                          type="text"
-                          placeholder="1234 5678 9012 3456"
-                          className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent text-sm sm:text-base"
-                          value={cardDetails.number}
-                          onChange={(e) => setCardDetails({ ...cardDetails, number: e.target.value })}
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-                          <input
-                            type="text"
-                            placeholder="MM/YY"
-                            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent text-sm sm:text-base"
-                            value={cardDetails.expiry}
-                            onChange={(e) => setCardDetails({ ...cardDetails, expiry: e.target.value })}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                          <input
-                            type="text"
-                            placeholder="123"
-                            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent text-sm sm:text-base"
-                            value={cardDetails.cvv}
-                            onChange={(e) => setCardDetails({ ...cardDetails, cvv: e.target.value })}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
-                        <input
-                          type="text"
-                          placeholder="John Doe"
-                          className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-transparent text-sm sm:text-base"
-                          value={cardDetails.name}
-                          onChange={(e) => setCardDetails({ ...cardDetails, name: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
 
-                {error && (
-                  <div className="mb-4 sm:mb-6 p-2 sm:p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-600 text-xs sm:text-sm">{error}</p>
+                {selectedPaymentMethod === 'card' && (
+                  <div className="space-y-4 mb-6 p-4 border border-gray-200 rounded-xl">
+                    <input
+                      type="text"
+                      placeholder="Card number"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                      value={cardDetails.number}
+                      onChange={(e) => setCardDetails({ ...cardDetails, number: e.target.value })}
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <input
+                        type="text"
+                        placeholder="MM/YY"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                        value={cardDetails.expiry}
+                        onChange={(e) => setCardDetails({ ...cardDetails, expiry: e.target.value })}
+                      />
+                      <input
+                        type="text"
+                        placeholder="CVV"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                        value={cardDetails.cvv}
+                        onChange={(e) => setCardDetails({ ...cardDetails, cvv: e.target.value })}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Cardholder name"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                      value={cardDetails.name}
+                      onChange={(e) => setCardDetails({ ...cardDetails, name: e.target.value })}
+                    />
                   </div>
                 )}
 
-                <div className="flex justify-between items-center">
+                {error && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-600 text-sm">{error}</p>
+                  </div>
+                )}
+
+                <div className="flex justify-between">
                   <button
                     onClick={() => setPromotionSteps(1)}
-                    className="px-4 sm:px-6 py-2 text-gray-600 hover:text-gray-900 transition-colors duration-200 text-sm sm:text-base"
+                    className="px-6 py-3 text-gray-900 font-medium underline underline-offset-4"
                   >
-                    ← Back
+                    Back
                   </button>
                   <button
                     onClick={handlePromoteListing}
                     disabled={selectedPaymentMethod === 'card' && !cardDetailsValid()}
-                    className={`px-6 py-3 sm:px-8 sm:py-3 rounded-xl font-medium transition-all duration-200 text-sm sm:text-base ${
-                      (selectedPaymentMethod !== 'card' || cardDetailsValid())
-                        ? 'bg-[#FF5A5F] text-white hover:bg-[#E14E50]'
-                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    }`}
+                    className={`
+                      px-8 py-3 rounded-lg font-semibold transition-all
+                      ${(selectedPaymentMethod !== 'card' || cardDetailsValid()) ? 'bg-black text-white hover:bg-gray-800' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}
+                    `}
                   >
-                    Complete Payment
+                    Pay now
                   </button>
                 </div>
               </div>

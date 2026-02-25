@@ -1487,6 +1487,9 @@ export default function HelperPage() {
     const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
     window.open(whatsappUrl, '_blank');
 
+    // Close the booking form overlay after sending
+    closeBookingFormOverlay();
+
     // Reset attachments after sending
     setAttachments([]);
   };
@@ -1662,7 +1665,7 @@ export default function HelperPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] rounded-xl overflow-hidden mb-0">
         {/* Main large image */}
         <div 
-          className="relative h-full cursor-pointer "
+          className="relative h-full cursor-pointer group"
           onClick={() => openFullScreenGallery(0)}
         >
           <img
@@ -1681,7 +1684,7 @@ export default function HelperPage() {
           {sideImages.map((url, index) => (
             <div 
               key={index}
-              className="relative h-full cursor-pointer  overflow-hidden"
+              className="relative h-full cursor-pointer group overflow-hidden"
               onClick={() => openFullScreenGallery(index + 1)}
             >
               <img
@@ -1757,7 +1760,7 @@ export default function HelperPage() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 m-0">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
         {/* Header Section */}
         <div className="mb-6">
           <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-2">
@@ -2164,14 +2167,14 @@ export default function HelperPage() {
       )}
 
       {/* Mobile Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:hidden z-40 ">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:hidden z-40">
         <div className="flex items-center justify-between">
           <div>
             <span className="text-xl font-bold text-gray-900">R{totalPrice}</span>
             <span className="text-gray-600 text-sm"> / service</span>
           </div>
           <button 
-            onClick={handleQuickBooking}
+            onClick={openBookingFormOverlay}  // Changed from handleQuickBooking to openBookingFormOverlay
             className="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-colors"
           >
             Book Now
