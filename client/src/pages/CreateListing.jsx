@@ -70,6 +70,9 @@ export default function CreateListing() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
+  // Scroll state
+  const [isScrolled, setIsScrolled] = useState(false);
+  
   // Multi-step form state
   const [currentStep, setCurrentStep] = useState(1);
   const [fadeIn, setFadeIn] = useState(true);
@@ -179,6 +182,16 @@ export default function CreateListing() {
   });
 
   const stepRef = useRef(null);
+
+  // Handle scroll effect for header
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Update form when category or type changes
   useEffect(() => {
@@ -1246,21 +1259,41 @@ export default function CreateListing() {
   return (
     <div className="min-h-screen bg-white">
       {/* Airbnb-style Header */}
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
-          <button 
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <ArrowLeftIcon className="w-6 h-6 text-gray-900" />
-          </button>
-          <div className="flex items-center gap-2">
-            <span className="text-[#FF5A5F] font-bold text-2xl tracking-tighter">loopOut</span>
-            <span className="text-gray-400">|</span>
-            <span className="text-gray-900 font-medium">Create listing</span>
+      <header>
+        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled ? 'bg-white shadow-sm' : 'bg-transparent'
+        }`}>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="flex items-center justify-between h-20">
+              <button 
+                onClick={() => navigate(-1)}
+                className={`p-2 rounded-full transition-colors ${
+                  isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
+                }`}
+              >
+                <ArrowLeftIcon className={`w-6 h-6 ${
+                  isScrolled ? 'text-gray-900' : 'text-white'
+                }`} />
+              </button>
+              
+              <div className="flex items-center gap-2">
+                <span className={`font-bold text-2xl tracking-tighter ${
+                  isScrolled ? 'text-[#FF5A5F]' : 'text-white'
+                }`}>
+                  loopOut
+                </span>
+                <span className={`${isScrolled ? 'text-gray-400' : 'text-white/60'}`}>|</span>
+                <span className={`font-medium ${
+                  isScrolled ? 'text-gray-900' : 'text-white'
+                }`}>
+                  Create listing
+                </span>
+              </div>
+              
+              <div className="w-10" /> {/* Spacer for alignment */}
+            </div>
           </div>
-          <div className="w-10" />
-        </div>
+        </nav>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 md:py-12">
