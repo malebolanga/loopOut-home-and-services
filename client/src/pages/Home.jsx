@@ -395,43 +395,7 @@ const DesktopHeroSearch = ({ searchTerm, setSearchTerm, handleSearchSubmit, navi
             onSubmit={handleSearchSubmit} 
             className="relative"
           >
-            <div className="bg-white rounded-full shadow-2xl p-2 flex items-center">
-              <div className="flex-1 pl-6 pr-4 border-r border-gray-200">
-                <label className="block text-[10px] font-bold text-gray-900 uppercase tracking-wider">Where</label>
-                <input 
-                  type="text" 
-                  value={searchTerm} 
-                  onChange={(e) => setSearchTerm(e.target.value)} 
-                  placeholder="Search destinations" 
-                  className="w-full text-sm text-gray-600 outline-none placeholder-gray-400 bg-transparent"
-                />
-              </div>
-              <div className="hidden md:block flex-1 px-4 border-r border-gray-200">
-                <label className="block text-[10px] font-bold text-gray-900 uppercase tracking-wider">Check in</label>
-                <input 
-                  type="text" 
-                  placeholder="Add dates" 
-                  className="w-full text-sm text-gray-600 outline-none placeholder-gray-400 bg-transparent"
-                />
-              </div>
-              <div className="hidden md:block flex-1 px-4 border-r border-gray-200">
-                <label className="block text-[10px] font-bold text-gray-900 uppercase tracking-wider">Check out</label>
-                <input 
-                  type="text" 
-                  placeholder="Add dates" 
-                  className="w-full text-sm text-gray-600 outline-none placeholder-gray-400 bg-transparent"
-                />
-              </div>
-              <div className="pl-2 pr-2">
-                <button 
-                  type="submit" 
-                  className="bg-rose-500 hover:bg-rose-600 text-white px-6 py-3.5 rounded-full font-semibold transition-colors flex items-center gap-2"
-                >
-                  <MagnifyingGlassIcon className="w-5 h-5" />
-                  <span className="hidden md:inline">Search</span>
-                </button>
-              </div>
-            </div>
+        
           </motion.form>
           
           <div className="grid grid-cols-4 gap-4 mt-8">
@@ -764,7 +728,7 @@ const MobileAppHomepage = ({
                   <div 
                     key={helper._id}
                     onClick={() => navigate(`/helper/${helper._id}`)}
-                    className="group cursor-pointer flex flex-col gap-3"
+                    className="cursor-pointer flex flex-col gap-3"
                   >
                     <div className="relative aspect-square overflow-hidden rounded-full bg-gray-200 w-32 h-32 mx-auto border-2 border-gray-100 group-hover:border-rose-200 transition-colors">
                       <img 
@@ -814,7 +778,7 @@ const MobileAppHomepage = ({
                     key={event._id}
                     whileHover={{ y: -4 }}
                     onClick={() => navigate(`/event/${event._id}`)}
-                    className="group cursor-pointer flex flex-col gap-3"
+                    className="cursor-pointer flex flex-col gap-3"
                   >
                     <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-gray-200">
                       <img 
