@@ -321,7 +321,7 @@ export default function WishList() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12 py-8 pt-28">
+      <main className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12 py-8 pt-0">
         {/* Header Section */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">

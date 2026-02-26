@@ -78,6 +78,7 @@ import { Link, useNavigate } from "react-router-dom";
 import WishList from "./WishListProfile";
 import MyListing from "./MyListing";
 import { Camera, CheckCircle, X, MessageCircle, Mail, Phone, ChevronRight, Globe, Shield, Bell, User, Home, Heart, List, Settings, LogOut, Plus, Trash2, Edit3, MapPin, Calendar, Star, Award, HelpCircle, Download, ChartBarIcon, Gift } from 'lucide-react';
+
 // Airbnb Color Palette
 const colors = {
   primary: '#FF5A5F',      // Airbnb Rausch
@@ -776,19 +777,20 @@ export default function Profile() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Airbnb-style Header */}
-      <div className="border-b border-[#DDDDDD] sticky top-0 bg-white z-40">
+    <div className="min-h-screen bg-white pb-20">
+      {/* Airbnb-style Header - Fixed at top */}
+      <div className="border-b border-[#DDDDDD] fixed top-0 left-0 right-0 bg-white z-40 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <h1 className="text-2xl font-bold text-[#484848]">Account</h1>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Main Content with top padding to account for fixed header */}
+      <div className="max-w-6xl mx-auto px-4 pt-24 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Sidebar - Airbnb Style */}
           <div className="lg:col-span-3">
-            <div className="sticky top-24">
+            <div className=" top-28">
               {/* Profile Summary Card */}
               <div className="bg-white rounded-xl border border-[#DDDDDD] p-6 mb-6 text-center">
                 <div className="relative inline-block mb-4">
@@ -902,11 +904,11 @@ export default function Profile() {
                   onClick={handleNavigateToHelp}
                 />
                 <SettingsRow
-  icon={Gift}  // Gift was not imported
-  title="Refer a friend"
-  description="Earn travel credits"
-  onClick={handleNavigateToReferrals}
-/>
+                  icon={Gift}
+                  title="Refer a friend"
+                  description="Earn travel credits"
+                  onClick={handleNavigateToReferrals}
+                />
               </div>
             </div>
           </div>

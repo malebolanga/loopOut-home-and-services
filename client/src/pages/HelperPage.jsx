@@ -983,6 +983,16 @@ export default function HelperPage() {
           'sanitizedStation',
           'professionalTools'
         ]
+      },
+      domestic: {
+        comeToYou: [
+          'cleanSpace',
+          'waterAccess',
+          'powerOutlets'
+        ],
+        goToThem: [
+          'professionalEquipment'
+        ]
       }
     };
 
@@ -1115,6 +1125,11 @@ export default function HelperPage() {
       message += `• Delivery Format: ${bookingData.deliveryFormat}%0A`;
     }
 
+    // Add food-related details for domestic/maid services
+    if ((helper.type === 'domestic' || helper.type === 'maid') && bookingData.bringFood) {
+      message += `• Food Provided: ${bookingData.bringFood === 'yes' ? 'Yes' : 'No'}%0A`;
+    }
+
     // Add service provider details to quick booking
     message += `%0A*🏠 Service Provider Details*%0A`;
     
@@ -1126,8 +1141,8 @@ export default function HelperPage() {
       message += `• Food Provided: ${bookingData.foodProvided === 'yes' ? 'Yes' : 'No'}%0A`;
     }
     
-    if (bookingData.cleaningProvided) {
-      message += `• Cleaning Provided: ${bookingData.cleaningProvided === 'yes' ? 'Yes' : 'No'}%0A`;
+    if (bookingData.cleaningArrengement) {
+      message += `• Cleaning Arrangement: ${bookingData.cleaningArrengement === 'yes' ? 'Yes' : 'No'}%0A`;
     }
     
     if (bookingData.equipmentProvided) {
@@ -1170,10 +1185,10 @@ export default function HelperPage() {
         message += `  ✓ Clean, well-lit workspace%0A`;
         message += `  ✓ Power source for tools%0A`;
         message += `  ✓ Mirror access%0A`;
-      } else if (helper.type === 'baker') {
-        message += `  ✓ Clean kitchen workspace%0A`;
-        message += `  ✓ Power outlets for baking equipment%0A`;
-        message += `  ✓ Adequate counter space%0A`;
+      } else if (helper.type === 'domestic' || helper.type === 'maid') {
+        message += `  ✓ Clean workspace%0A`;
+        message += `  ✓ Water access%0A`;
+        message += `  ✓ Power outlets for cleaning equipment%0A`;
       } else {
         message += `  ✓ Clean, accessible workspace with power outlets%0A`;
       }
@@ -1278,7 +1293,7 @@ export default function HelperPage() {
     const locationMessage = getLocationSpecificMessage(bookingData, helper);
 
     // Build the main WhatsApp message with enhanced location details
-    let message = `*${helper.type === 'chef' ? '👨‍🍳' : helper.type === 'barber' || helper.type === 'barbar' ? '✂️' : helper.type === 'tattoo' ? '🎨' : helper.type === 'photography' ? '📷' : helper.type === 'baker' ? '🍰' : '👤'} New ${getProfessionalTitle(helper.type)} Booking Request for ${helper.name}*%0A%0A`;
+    let message = `*${helper.type === 'chef' ? '👨‍🍳' : helper.type === 'barber' || helper.type === 'barbar' ? '✂️' : helper.type === 'tattoo' ? '🎨' : helper.type === 'photography' ? '📷' : helper.type === 'domestic' || helper.type === 'maid' ? '🧹' : '👤'} New ${getProfessionalTitle(helper.type)} Booking Request for ${helper.name}*%0A%0A`;
 
     message += `*🛎️ SERVICE DETAILS*%0A`;
     message += `• Price: R${helper.regularPrice}%0A`;
@@ -1340,6 +1355,11 @@ export default function HelperPage() {
       message += `• Ingredients: ${bookingData.ingredientsProvided === 'yes' ? 'Client will provide' : 'Chef to provide'}%0A`;
     }
 
+    // Add domestic/maid specific details
+    if ((helper.type === 'domestic' || helper.type === 'maid') && bookingData.bringFood) {
+      message += `• Food Provided: ${bookingData.bringFood === 'yes' ? 'Client will provide food' : 'Helper will bring own food'}%0A`;
+    }
+
     // Add photography-specific details
     if ((helper.type === 'photography') && bookingData.photographyType) {
       message += `• Photography Type: ${bookingData.photographyType}%0A`;
@@ -1368,8 +1388,8 @@ export default function HelperPage() {
       message += `• Food Provided: ${bookingData.foodProvided === 'yes' ? 'Yes' : 'No'}%0A`;
     }
     
-    if (bookingData.cleaningProvided) {
-      message += `• Cleaning Provided: ${bookingData.cleaningProvided === 'yes' ? 'Yes' : 'No'}%0A`;
+    if (bookingData.cleaningArrengement) {
+      message += `• Cleaning Arrangement: ${bookingData.cleaningArrengement === 'yes' ? 'Yes' : 'No'}%0A`;
     }
     
     if (bookingData.equipmentProvided) {
@@ -1428,13 +1448,13 @@ export default function HelperPage() {
             shootingSpace: '✓ Adequate shooting space needed',
             naturalLight: '✓ Natural light preferred',
             powerOutlets: '✓ Power outlets required',
-            chairSpace: '✓ Chair and workspace needed',
+            workspace: '✓ Workspace with chair needed',
             powerSource: '✓ Power source required',
             mirrorAccess: '✓ Mirror access needed',
             cleanSpace: '✓ Clean, well-lit workspace required',
-            bakingEquipment: '✓ Power outlets for baking equipment',
-            counterSpace: '✓ Adequate counter space needed'
-          }[req] || `✓ ${req}`;
+            waterAccess: '✓ Water access required',
+            professionalEquipment: '✓ Professional equipment provided'
+          }[req] || `✓ ${req.replace(/([A-Z])/g, ' $1').toLowerCase()}`;
           message += `  ${reqText}%0A`;
         });
       }
@@ -1861,7 +1881,7 @@ export default function HelperPage() {
               )}
             </div>
 
-            {/* Services Offered */}
+            {/* Services Offered - FIXED SECTION */}
             {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography') && (
               <div className="pb-6 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Services offered</h2>
@@ -1869,7 +1889,7 @@ export default function HelperPage() {
                   {serviceOptions.map((service) => (
                     <div key={service.id} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
                       <div className="text-xl">{service.icon}</div>
-                      <span className="font-medium text-gray-900">{helper.name}</span>
+                      <span className="font-medium text-gray-900">{service.name}</span>
                     </div>
                   ))}
                 </div>
@@ -1931,7 +1951,7 @@ export default function HelperPage() {
 
           {/* Right Column - Booking Card */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24">
+            <div className=" top-24 py-12">
               <div className="border border-gray-200 rounded-xl shadow-lg p-6 bg-white">
                 <div className="flex items-end justify-between mb-6">
                   <div>
@@ -2016,7 +2036,7 @@ export default function HelperPage() {
               </div>
 
               {/* Report listing */}
-              <div className="mt-4 text-center">
+              <div className="mt-4 text-center py-14">
                 <button className="text-gray-500 text-sm underline flex items-center justify-center gap-2 mx-auto">
                   <FaFlag className="text-xs" />
                   Report this listing
@@ -2109,17 +2129,81 @@ export default function HelperPage() {
                       placeholder="071 234 5678"
                     />
                   </div>
+                  
+                  {/* Location Option */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                    <textarea
-                      name="address"
-                      value={bookingData.address}
-                      onChange={handleBookingChange}
-                      rows="3"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                      placeholder="Enter your full address"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Service location</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="locationOption"
+                          value="comeToYou"
+                          checked={bookingData.locationOption === 'comeToYou'}
+                          onChange={handleBookingChange}
+                          className="mr-2"
+                        />
+                        Come to me
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="locationOption"
+                          value="goToThem"
+                          checked={bookingData.locationOption === 'goToThem'}
+                          onChange={handleBookingChange}
+                          className="mr-2"
+                        />
+                        Go to them
+                      </label>
+                    </div>
                   </div>
+
+                  {/* Address (only if comeToYou is selected) */}
+                  {bookingData.locationOption === 'comeToYou' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                      <textarea
+                        name="address"
+                        value={bookingData.address}
+                        onChange={handleBookingChange}
+                        rows="3"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        placeholder="Enter your full address"
+                      />
+                    </div>
+                  )}
+
+                  {/* Food/Bring food option for domestic/maid services */}
+                  {(helper.type === 'domestic' || helper.type === 'maid') && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Will you provide food for the helper?</label>
+                      <div className="flex gap-4">
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            name="bringFood"
+                            value="yes"
+                            checked={bookingData.bringFood === 'yes'}
+                            onChange={handleBookingChange}
+                            className="mr-2"
+                          />
+                          Yes, I'll provide
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            name="bringFood"
+                            value="no"
+                            checked={bookingData.bringFood === 'no'}
+                            onChange={handleBookingChange}
+                            className="mr-2"
+                          />
+                          No, helper will bring own food
+                        </label>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
