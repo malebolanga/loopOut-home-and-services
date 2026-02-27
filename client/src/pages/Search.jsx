@@ -305,7 +305,7 @@ const ResultsMap = ({ listings, hoveredItem, onMarkerClick }) => {
                 <div className="p-2 min-w-[200px]">
                   <img 
                     src={item.imageUrls?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400'} 
-                    alt={item.name}
+                    alt={item.name || item.title}
                     className="w-full h-32 object-cover rounded-lg mb-2"
                   />
                   <h3 className="font-bold text-gray-900 truncate">{item.name || item.title}</h3>
@@ -911,6 +911,77 @@ const SkeletonCard = () => (
   </div>
 );
 
+const generateMockData = (urlParams) => {
+  const type = urlParams.get('type') || 'all';
+  const subType = urlParams.get('subType') || '';
+  const mockData = [];
+  
+  if (type === 'all' || type === 'properties') {
+    const propertyTypes = subType ? [subType] : ['rent', 'sale', 'over', 'land', 'office', 'guest_house'];
+    propertyTypes.forEach((propType, index) => {
+      if (PROPERTY_TYPE_CONFIG[propType]) {
+        mockData.push({
+          _id: `p${index}`,
+          name: `${PROPERTY_TYPE_CONFIG[propType].label} in Sandton`,
+          price: 5000 + (index * 2000),
+          itemType: 'properties',
+          subType: propType,
+          imageUrls: ['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800'],
+          rating: 4.5 + (index * 0.1),
+          address: 'Sandton, Johannesburg',
+          bedrooms: 2 + index,
+          bathrooms: 1 + index,
+          lat: -26.2041 + (Math.random() - 0.5) * 0.1,
+          lng: 28.0473 + (Math.random() - 0.5) * 0.1,
+        });
+      }
+    });
+  }
+  
+  if (type === 'all' || type === 'helpers') {
+    const helperTypes = subType ? [subType] : ['beauty', 'barber', 'chef', 'tattoo', 'tutor', 'photography', 'domestic', 'hair', 'nail'];
+    helperTypes.forEach((helperType, index) => {
+      if (HELPER_CATEGORY_CONFIG[helperType]) {
+        mockData.push({
+          _id: `h${index}`,
+          name: `Professional ${HELPER_CATEGORY_CONFIG[helperType].label}`,
+          price: 300 + (index * 100),
+          itemType: 'helpers',
+          subType: helperType,
+          imageUrls: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800'],
+          rating: 4.7 + (index * 0.05),
+          address: 'Cape Town',
+          skills: [HELPER_CATEGORY_CONFIG[helperType].label],
+          lat: -33.9249 + (Math.random() - 0.5) * 0.1,
+          lng: 18.4241 + (Math.random() - 0.5) * 0.1,
+        });
+      }
+    });
+  }
+  
+  if (type === 'all' || type === 'services') {
+    const serviceTypes = subType ? [subType] : ['car_wash', 'landscaping', 'electrician', 'maintenance', 'catering', 'moving', 'transport'];
+    serviceTypes.forEach((serviceType, index) => {
+      if (SERVICES_CATEGORY_CONFIG[serviceType]) {
+        mockData.push({
+          _id: `s${index}`,
+          name: `${SERVICES_CATEGORY_CONFIG[serviceType].label} Service`,
+          price: 350 + (index * 50),
+          itemType: 'services',
+          subType: serviceType,
+          imageUrls: ['https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800'],
+          rating: 4.8,
+          address: 'Cape Town',
+          lat: -33.9249 + (Math.random() - 0.5) * 0.05,
+          lng: 18.4241 + (Math.random() - 0.5) * 0.05,
+        });
+      }
+    });
+  }
+  
+  return mockData;
+};
+
 const SearchPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -1060,77 +1131,6 @@ const SearchPage = () => {
     }
   }, [location.search]);
 
-  const generateMockData = (urlParams) => {
-    const type = urlParams.get('type') || 'all';
-    const subType = urlParams.get('subType') || '';
-    const mockData = [];
-    
-    if (type === 'all' || type === 'properties') {
-      const propertyTypes = subType ? [subType] : ['rent', 'sale', 'over', 'land', 'office', 'guest_house'];
-      propertyTypes.forEach((propType, index) => {
-        if (PROPERTY_TYPE_CONFIG[propType]) {
-          mockData.push({
-            _id: `p${index}`,
-            name: `${PROPERTY_TYPE_CONFIG[propType].label} in Sandton`,
-            price: 5000 + (index * 2000),
-            itemType: 'properties',
-            subType: propType,
-            imageUrls: ['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800'],
-            rating: 4.5 + (index * 0.1),
-            address: 'Sandton, Johannesburg',
-            bedrooms: 2 + index,
-            bathrooms: 1 + index,
-            lat: -26.2041 + (Math.random() - 0.5) * 0.1,
-            lng: 28.0473 + (Math.random() - 0.5) * 0.1,
-          });
-        }
-      });
-    }
-    
-    if (type === 'all' || type === 'helpers') {
-      const helperTypes = subType ? [subType] : ['beauty', 'barber', 'chef', 'tattoo', 'tutor', 'photography', 'domestic', 'hair', 'nail'];
-      helperTypes.forEach((helperType, index) => {
-        if (HELPER_CATEGORY_CONFIG[helperType]) {
-          mockData.push({
-            _id: `h${index}`,
-            name: `Professional ${HELPER_CATEGORY_CONFIG[helperType].label}`,
-            price: 300 + (index * 100),
-            itemType: 'helpers',
-            subType: helperType,
-            imageUrls: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800'],
-            rating: 4.7 + (index * 0.05),
-            address: 'Cape Town',
-            skills: [HELPER_CATEGORY_CONFIG[helperType].label],
-            lat: -33.9249 + (Math.random() - 0.5) * 0.1,
-            lng: 18.4241 + (Math.random() - 0.5) * 0.1,
-          });
-        }
-      });
-    }
-    
-    if (type === 'all' || type === 'services') {
-      const serviceTypes = subType ? [subType] : ['car_wash', 'landscaping', 'electrician', 'maintenance', 'catering', 'moving', 'transport'];
-      serviceTypes.forEach((serviceType, index) => {
-        if (SERVICES_CATEGORY_CONFIG[serviceType]) {
-          mockData.push({
-            _id: `s${index}`,
-            name: `${SERVICES_CATEGORY_CONFIG[serviceType].label} Service`,
-            price: 350 + (index * 50),
-            itemType: 'services',
-            subType: serviceType,
-            imageUrls: ['https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800'],
-            rating: 4.8,
-            address: 'Cape Town',
-            lat: -33.9249 + (Math.random() - 0.5) * 0.05,
-            lng: 18.4241 + (Math.random() - 0.5) * 0.05,
-          });
-        }
-      });
-    }
-    
-    return mockData;
-  };
-
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -1233,7 +1233,7 @@ const SearchPage = () => {
       />
 
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-white  border-[#DDDDDD]">
+      <div className="sticky top-0 z-50 bg-white border-[#DDDDDD]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-4">
             <div className="flex items-center gap-4">
@@ -1314,11 +1314,7 @@ const SearchPage = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                <button onClick={() => setShowFilters(true)} className="flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-xl hover:border-gray-900 hover:bg-gray-50 transition-colors">
-                  <SlidersHorizontal className="w-4 h-4" />
-                  <span className="font-medium text-sm hidden sm:inline">Filters</span>
-                </button>
-                
+              
                 <div className="hidden md:flex items-center bg-gray-100 rounded-lg p-1">
                   <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}>
                     <Grid3X3 className="w-4 h-4" />
@@ -1333,9 +1329,6 @@ const SearchPage = () => {
               </div>
             </div>
           </div>
-
-          {/* CATEGORY FILTER TABS SECTION REMOVED */}
-          
         </div>
       </div>
 
@@ -1349,7 +1342,6 @@ const SearchPage = () => {
             )}
             {filters.location && <span className="text-gray-500 font-normal"> near {filters.location}</span>}
           </h1>
-       
         </div>
       </div>
 
