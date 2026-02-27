@@ -200,11 +200,9 @@ const SlideOpenSearch = ({
     };
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
     }
     return () => {
       document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
 
@@ -233,10 +231,10 @@ const SlideOpenSearch = ({
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: -20, opacity: 0, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed top-0 left-0 right-0 bg-white z-50 shadow-2xl rounded-b-3xl overflow-hidden max-h-[85vh] overflow-y-auto"
+            className="fixed top-0 left-0 right-0 bg-white z-50 shadow-2xl rounded-b-3xl max-h-[85vh] flex flex-col"
           >
-            {/* Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-4 flex items-center gap-3 z-10">
+            {/* Header - Fixed */}
+            <div className="flex-shrink-0 bg-white border-b border-gray-100 px-4 py-4 flex items-center gap-3">
               <button 
                 onClick={onClose}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -278,8 +276,8 @@ const SlideOpenSearch = ({
               </button>
             </div>
 
-            {/* Content */}
-            <div className="p-4 space-y-6">
+            {/* Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
               {/* Selected Category Badge */}
               {selectedCategory && (
                 <div className="flex items-center gap-2">
@@ -327,8 +325,8 @@ const SlideOpenSearch = ({
                         <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-gray-200 transition-colors">
                           <Search className="w-4 h-4 text-gray-500" />
                         </div>
-                        <span className="text-gray-700 font-medium">{search}</span>
-                        <ArrowUpDown className="w-4 h-4 text-gray-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <span className="text-gray-700 font-medium flex-1 truncate">{search}</span>
+                        <ArrowUpDown className="w-4 h-4 text-gray-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                       </button>
                     ))}
                   </div>
@@ -338,7 +336,7 @@ const SlideOpenSearch = ({
               {/* Popular Categories Grid */}
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Popular Categories</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {ALL_CATEGORIES.slice(0, 8).map((category) => {
                     const Icon = category.icon;
                     const isSelected = selectedCategory === category.id;
@@ -349,16 +347,16 @@ const SlideOpenSearch = ({
                           onCategoryClick && onCategoryClick(category);
                           onClose();
                         }}
-                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                        className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
                           isSelected 
                             ? 'border-rose-500 bg-rose-50 text-rose-700' 
                             : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                       >
-                        <div className={`p-3 rounded-xl ${category.color}`}>
-                          <Icon className="w-6 h-6" />
+                        <div className={`p-2 rounded-xl ${category.color}`}>
+                          <Icon className="w-5 h-5" />
                         </div>
-                        <span className="text-sm font-medium text-center leading-tight">
+                        <span className="text-xs font-medium text-center leading-tight">
                           {category.label}
                         </span>
                       </button>
@@ -385,14 +383,14 @@ const SlideOpenSearch = ({
                           isSelected ? 'bg-rose-50 text-rose-700' : 'hover:bg-gray-50'
                         }`}
                       >
-                        <div className={`p-2 rounded-lg ${category.color}`}>
+                        <div className={`p-2 rounded-lg ${category.color} flex-shrink-0`}>
                           <Icon className="w-5 h-5" />
                         </div>
-                        <div className="flex-1">
-                          <div className="font-medium text-sm">{category.label}</div>
-                          <div className="text-xs text-gray-500">{category.description}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">{category.label}</div>
+                          <div className="text-xs text-gray-500 truncate">{category.description}</div>
                         </div>
-                        {isSelected && <Check className="w-5 h-5 text-rose-500" />}
+                        {isSelected && <Check className="w-5 h-5 text-rose-500 flex-shrink-0" />}
                       </button>
                     );
                   })}
@@ -485,10 +483,10 @@ const CategoryDropdown = ({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 10, scale: 0.95 }}
       transition={{ duration: 0.2 }}
-      className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-50 max-h-[500px] overflow-y-auto"
+      className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 max-h-[400px] flex flex-col"
     >
-      {/* Search within dropdown */}
-      <div className="sticky top-0 bg-white border-b border-gray-100 p-3 z-10">
+      {/* Search within dropdown - Fixed */}
+      <div className="flex-shrink-0 bg-white border-b border-gray-100 p-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -496,7 +494,7 @@ const CategoryDropdown = ({
             placeholder="Search categories..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-gray-100 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+            className="w-full pl-9 pr-8 py-2 bg-gray-100 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
             autoFocus
           />
           {searchQuery && (
@@ -510,8 +508,8 @@ const CategoryDropdown = ({
         </div>
       </div>
 
-      {/* Categories list */}
-      <div className="p-2">
+      {/* Categories list - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-2">
         {Object.entries(groupedCategories).map(([type, categories]) => (
           <div key={type} className="mb-4">
             <h3 className="px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
@@ -531,17 +529,17 @@ const CategoryDropdown = ({
                         : 'hover:bg-gray-50 border border-transparent'
                     }`}
                   >
-                    <div className={`p-2 rounded-lg ${category.color} group-hover:scale-110 transition-transform`}>
+                    <div className={`p-2 rounded-lg ${category.color} group-hover:scale-110 transition-transform flex-shrink-0`}>
                       <Icon className="w-5 h-5" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className={`font-semibold text-sm ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>
+                        <span className={`font-semibold text-sm truncate ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>
                           {category.label}
                         </span>
-                        {isSelected && <Check className="w-4 h-4 text-rose-500" />}
+                        {isSelected && <Check className="w-4 h-4 text-rose-500 flex-shrink-0" />}
                       </div>
-                      <p className="text-xs text-gray-500 mt-0.5">{category.description}</p>
+                      <p className="text-xs text-gray-500 truncate">{category.description}</p>
                     </div>
                   </button>
                 );
@@ -559,18 +557,18 @@ const CategoryDropdown = ({
         )}
       </div>
 
-      {/* Quick select footer */}
-      <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-3">
+      {/* Quick select footer - Fixed */}
+      <div className="flex-shrink-0 bg-gray-50 border-t border-gray-200 p-3">
         <div className="flex items-center justify-between text-xs text-gray-500">
           <span>Press ESC to close</span>
-          <span>{filteredCategories.length} categories available</span>
+          <span>{filteredCategories.length} categories</span>
         </div>
       </div>
     </motion.div>
   );
 };
 
-const ResultCard = ({ item, index, viewMode, onClick, isHovered, onHover }) => {
+const ResultCard = ({ item, index, viewMode, onClick }) => {
   const [isLiked, setIsLiked] = useState(false);
   
   const getItemType = () => {
@@ -641,48 +639,42 @@ const ResultCard = ({ item, index, viewMode, onClick, isHovered, onHover }) => {
         variants={itemVariants}
         whileHover={{ x: 5 }}
         onClick={onClick}
-        onMouseEnter={() => onHover?.(item._id)}
-        onMouseLeave={() => onHover?.(null)}
-        className={`bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer border ${
-          isHovered ? 'border-rose-500 ring-2 ring-rose-200' : 'border-gray-100'
-        } flex gap-4`}
+        className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer border border-gray-100 flex gap-4"
       >
-        <div className="w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
+        <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
           <img src={getImageUrl()} alt={item.name || item.title} className="w-full h-full object-cover" />
         </div>
         
         <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-start">
+          <div className="flex justify-between items-start gap-2">
             <div className="min-w-0">
-              <h3 className="font-bold text-gray-900 text-lg truncate">{item.name || item.title}</h3>
+              <h3 className="font-bold text-gray-900 truncate">{item.name || item.title}</h3>
               <p className="text-gray-500 text-sm flex items-center gap-1 truncate">
-                <MapPin className="w-4 h-4 flex-shrink-0" />
+                <MapPin className="w-3 h-3 flex-shrink-0" />
                 <span className="truncate">{getLocation()}</span>
               </p>
             </div>
             <button
               onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }}
-              className="p-2 hover:bg-gray-100 rounded-full flex-shrink-0"
+              className="p-1.5 hover:bg-gray-100 rounded-full flex-shrink-0"
             >
-              {isLiked ? <Heart className="w-5 h-5 text-rose-500 fill-rose-500" /> : <Heart className="w-5 h-5 text-gray-400" />}
+              {isLiked ? <Heart className="w-4 h-4 text-rose-500 fill-rose-500" /> : <Heart className="w-4 h-4 text-gray-400" />}
             </button>
           </div>
           
           <div className="flex items-center gap-3 mt-2 text-sm text-gray-600 flex-wrap">
-            {item.bedrooms !== undefined && <span className="flex items-center gap-1"><Bed className="w-4 h-4" /> {item.bedrooms}</span>}
-            {item.bathrooms !== undefined && <span className="flex items-center gap-1"><Bath className="w-4 h-4" /> {item.bathrooms}</span>}
-            {item.skills && <span className="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded-full">{Array.isArray(item.skills) ? item.skills[0] : item.skills}</span>}
+            {item.bedrooms !== undefined && <span className="flex items-center gap-1"><Bed className="w-3 h-3" /> {item.bedrooms}</span>}
+            {item.bathrooms !== undefined && <span className="flex items-center gap-1"><Bath className="w-3 h-3" /> {item.bathrooms}</span>}
             <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+              <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
               <span>{getRating().toFixed(1)}</span>
             </div>
           </div>
           
-          <div className="mt-3 flex justify-between items-center">
-            <span className="text-xl font-bold text-gray-900">{getPrice()}</span>
+          <div className="mt-2 flex justify-between items-center">
+            <span className="text-lg font-bold text-gray-900">{getPrice()}</span>
             <div className="flex gap-1">
               {subConfig && <span className={`text-xs px-2 py-1 rounded-full ${subConfig.color || 'bg-gray-100 text-gray-700'}`}>{subConfig.label || itemSubType}</span>}
-              <span className={`text-xs px-2 py-1 rounded-full ${mainConfig.bgColor || 'bg-gray-100'} ${mainConfig.textColor || 'text-gray-700'}`}>{mainConfig.label || itemType}</span>
             </div>
           </div>
         </div>
@@ -694,35 +686,29 @@ const ResultCard = ({ item, index, viewMode, onClick, isHovered, onHover }) => {
     <motion.div
       variants={itemVariants}
       onClick={onClick}
-      onMouseEnter={() => onHover?.(item._id)}
-      onMouseLeave={() => onHover?.(null)}
-      className={`bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer h-full flex flex-col group ${
-        isHovered ? 'ring-2 ring-rose-500' : ''
-      }`}
+      className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer h-full flex flex-col group"
     >
-      <div className="relative h-64 overflow-hidden bg-gray-200">
+      <div className="relative h-48 overflow-hidden bg-gray-200">
         <img src={getImageUrl()} alt={item.name || item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
         <button
           onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }}
-          className="absolute top-3 right-3 p-2 bg-white/90 hover:bg-white rounded-full shadow-sm transition-colors"
+          className="absolute top-3 right-3 p-1.5 bg-white/90 hover:bg-white rounded-full shadow-sm transition-colors"
         >
           {isLiked ? <Heart className="w-4 h-4 text-rose-500 fill-rose-500" /> : <Heart className="w-4 h-4 text-gray-600" />}
         </button>
       </div>
       
-      <div className="p-4 flex-1 flex flex-col">
+      <div className="p-3 flex-1 flex flex-col">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-gray-900 truncate text-base">{item.name || item.title}</h3>
-          <div className="flex items-center gap-1 text-sm flex-shrink-0">
-            <Star className="w-3.5 h-3.5 text-gray-900 fill-current" />
+          <h3 className="font-semibold text-gray-900 truncate text-sm">{item.name || item.title}</h3>
+          <div className="flex items-center gap-1 text-xs flex-shrink-0">
+            <Star className="w-3 h-3 text-gray-900 fill-current" />
             <span className="text-gray-900">{getRating().toFixed(1)}</span>
           </div>
         </div>
-        <p className="text-gray-500 text-sm truncate mt-1">{getLocation()}</p>
-        <div className="mt-auto pt-3 flex items-center justify-between">
-          <div className="flex items-baseline gap-1">
-            <span className="font-semibold text-gray-900 text-lg">{getPrice()}</span>
-          </div>
+        <p className="text-gray-500 text-xs truncate mt-1">{getLocation()}</p>
+        <div className="mt-auto pt-2">
+          <span className="font-semibold text-gray-900 text-base">{getPrice()}</span>
         </div>
       </div>
     </motion.div>
@@ -730,13 +716,13 @@ const ResultCard = ({ item, index, viewMode, onClick, isHovered, onHover }) => {
 };
 
 const EmptyState = ({ onClear }) => (
-  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-12 text-center border border-gray-100">
-    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-      <Search className="w-10 h-10 text-gray-400" />
+  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-8 text-center border border-gray-100">
+    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+      <Search className="w-8 h-8 text-gray-400" />
     </div>
-    <h3 className="text-xl font-bold text-gray-900 mb-2">No results found</h3>
-    <p className="text-gray-600 mb-6">Try adjusting your search or filters</p>
-    <button onClick={onClear} className="px-6 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors">
+    <h3 className="text-lg font-bold text-gray-900 mb-2">No results found</h3>
+    <p className="text-sm text-gray-600 mb-4">Try adjusting your search or filters</p>
+    <button onClick={onClear} className="px-5 py-2 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors text-sm">
       Clear all filters
     </button>
   </motion.div>
@@ -744,14 +730,14 @@ const EmptyState = ({ onClear }) => (
 
 const SkeletonCard = () => (
   <div className="bg-white rounded-xl overflow-hidden">
-    <div className="h-64 bg-gray-200 animate-pulse" />
-    <div className="p-4 space-y-3">
+    <div className="h-48 bg-gray-200 animate-pulse" />
+    <div className="p-3 space-y-2">
       <div className="flex justify-between">
-        <div className="h-5 bg-gray-200 rounded w-2/3 animate-pulse" />
-        <div className="h-5 bg-gray-200 rounded w-12 animate-pulse" />
+        <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
+        <div className="h-4 bg-gray-200 rounded w-8 animate-pulse" />
       </div>
-      <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
-      <div className="h-5 bg-gray-200 rounded w-1/3 animate-pulse" />
+      <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse" />
+      <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
     </div>
   </div>
 );
@@ -829,10 +815,9 @@ const SearchPage = () => {
   const [searchSubType, setSearchSubType] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid', 'list' (removed 'map')
+  const [viewMode, setViewMode] = useState('grid');
   const [loading, setLoading] = useState(false);
   const [listings, setListings] = useState([]);
-  const [hoveredItem, setHoveredItem] = useState(null);
   const [filters, setFilters] = useState({
     minPrice: '',
     maxPrice: '',
@@ -1008,18 +993,6 @@ const SearchPage = () => {
     navigate(`/${itemType}/${item._id}`);
   };
 
-  const handleTypeChange = (type) => {
-    setSearchType(type);
-    setSearchSubType('');
-    setSelectedCategory(null);
-    handleSearch();
-  };
-
-  const handleSubTypeChange = (subType) => {
-    setSearchSubType(subType);
-    handleSearch();
-  };
-
   const handleCategorySelect = (category) => {
     if (!category) {
       setSelectedCategory(null);
@@ -1041,11 +1014,6 @@ const SearchPage = () => {
     if (filters.location) urlParams.set('location', filters.location);
     
     navigate(`/search?${urlParams.toString()}`);
-  };
-
-  // Toggle between list views (removed map toggle)
-  const toggleViewMode = () => {
-    setViewMode(prev => prev === 'grid' ? 'list' : 'grid');
   };
 
   // Get display text for selected category
@@ -1072,10 +1040,10 @@ const SearchPage = () => {
       />
 
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-white border-[#DDDDDD]">
+      <div className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-4">
-            <div className="flex items-center gap-4">
+          <div className="py-3">
+            <div className="flex items-center gap-3">
               <div className="flex-1 max-w-3xl relative">
                 {/* Enhanced Search Bar with Click-to-Expand */}
                 <div className="flex items-center bg-white border border-gray-300 rounded-full shadow-sm hover:shadow-md transition-shadow relative">
@@ -1083,46 +1051,46 @@ const SearchPage = () => {
                   {/* Category Selector Button */}
                   <button 
                     onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                    className="flex-shrink-0 px-6 py-3.5 text-left hover:bg-gray-100 rounded-l-full transition-colors border-r border-gray-300 flex items-center gap-2 min-w-[140px]"
+                    className="flex-shrink-0 px-4 py-2.5 text-left hover:bg-gray-100 rounded-l-full transition-colors border-r border-gray-300 flex items-center gap-1 min-w-[120px]"
                   >
-                    <div>
-                      <div className="text-xs font-bold text-gray-900">Category</div>
-                      <div className="text-sm text-gray-500 truncate flex items-center gap-1">
+                    <div className="truncate">
+                      <div className="text-[10px] font-bold text-gray-900">Category</div>
+                      <div className="text-xs text-gray-500 truncate flex items-center gap-1">
                         {selectedCategory ? (
                           <>
                             {(() => {
                               const cat = ALL_CATEGORIES.find(c => c.id === selectedCategory);
                               const Icon = cat?.icon || Sparkles;
-                              return <Icon className="w-3 h-3" />;
+                              return <Icon className="w-3 h-3 flex-shrink-0" />;
                             })()}
-                            <span className="truncate max-w-[100px]">{getSelectedCategoryLabel()}</span>
+                            <span className="truncate max-w-[80px]">{getSelectedCategoryLabel()}</span>
                           </>
                         ) : (
-                          'All categories'
+                          'All'
                         )}
                       </div>
                     </div>
-                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform flex-shrink-0 ${showCategoryDropdown ? 'rotate-180' : ''}`} />
                   </button>
 
                   {/* Search Input - Click to open slide panel */}
                   <div 
-                    className="flex-1 px-4 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="flex-1 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={() => setIsSearchPanelOpen(true)}
                   >
-                    <div className="text-xs font-bold text-gray-900 mb-0.5">Search</div>
-                    <div className="w-full text-sm text-gray-700 placeholder-gray-400 truncate">
-                      {searchTerm ? searchTerm : 'Search anything...'}
+                    <div className="text-[10px] font-bold text-gray-900">Search</div>
+                    <div className="w-full text-xs text-gray-700 truncate">
+                      {searchTerm || 'Anything...'}
                     </div>
                   </div>
 
                   {/* Location Quick Button */}
                   <button 
                     onClick={() => setShowFilters(true)}
-                    className="flex-shrink-0 px-4 py-3.5 text-left hover:bg-gray-100 transition-colors border-l border-gray-300 hidden sm:block"
+                    className="flex-shrink-0 px-3 py-2 text-left hover:bg-gray-100 transition-colors border-l border-gray-300 hidden sm:block"
                   >
-                    <div className="text-xs font-bold text-gray-900">Where</div>
-                    <div className="text-sm text-gray-500 truncate max-w-[100px]">
+                    <div className="text-[10px] font-bold text-gray-900">Where</div>
+                    <div className="text-xs text-gray-500 truncate max-w-[80px]">
                       {filters.location || 'Anywhere'}
                     </div>
                   </button>
@@ -1130,10 +1098,9 @@ const SearchPage = () => {
                   {/* Search Button */}
                   <button 
                     onClick={handleSearch} 
-                    className="m-1.5 p-3.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors flex items-center gap-2 flex-shrink-0"
+                    className="m-1 p-2 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors flex-shrink-0"
                   >
-                    <SearchIcon className="w-5 h-5" />
-                    <span className="hidden sm:inline font-semibold text-sm pr-1">Search</span>
+                    <SearchIcon className="w-4 h-4" />
                   </button>
                 </div>
 
@@ -1153,16 +1120,16 @@ const SearchPage = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                <button onClick={() => setShowFilters(true)} className="flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-xl hover:border-gray-900 hover:bg-gray-50 transition-colors">
+                <button onClick={() => setShowFilters(true)} className="flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-lg hover:border-gray-900 hover:bg-gray-50 transition-colors">
                   <SlidersHorizontal className="w-4 h-4" />
-                  <span className="font-medium text-sm hidden sm:inline">Filters</span>
+                  <span className="font-medium text-xs hidden sm:inline">Filters</span>
                 </button>
                 
-                <div className="hidden md:flex items-center bg-gray-100 rounded-lg p-1">
-                  <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}>
+                <div className="hidden md:flex items-center bg-gray-100 rounded-lg p-0.5">
+                  <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}>
                     <Grid3X3 className="w-4 h-4" />
                   </button>
-                  <button onClick={() => setViewMode('list')} className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}>
+                  <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}>
                     <List className="w-4 h-4" />
                   </button>
                 </div>
@@ -1173,33 +1140,30 @@ const SearchPage = () => {
       </div>
 
       {/* Results Count */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">
-            {listings.length} {listings.length === 1 ? 'result' : 'results'}
-            {selectedCategory && (
-              <span className="text-gray-500 font-normal"> in {getSelectedCategoryLabel()}</span>
-            )}
-            {filters.location && <span className="text-gray-500 font-normal"> near {filters.location}</span>}
-          </h1>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <h1 className="text-lg font-semibold text-gray-900">
+          {listings.length} {listings.length === 1 ? 'result' : 'results'}
+          {selectedCategory && (
+            <span className="text-gray-500 font-normal text-sm ml-1">in {getSelectedCategoryLabel()}</span>
+          )}
+          {filters.location && <span className="text-gray-500 font-normal text-sm ml-1">near {filters.location}</span>}
+        </h1>
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : listings.length > 0 ? (
-          // Grid/List View
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
             className={`grid ${
               viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'
-            } gap-6`}
+            } gap-4`}
           >
             {listings.map((item, index) => (
               <ResultCard
@@ -1226,9 +1190,9 @@ const SearchPage = () => {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-x-0 bottom-0 md:inset-0 md:left-auto md:w-full md:max-w-md bg-white z-50 md:h-full md:shadow-xl overflow-hidden flex flex-col"
+              className="fixed inset-x-0 bottom-0 md:inset-0 md:left-auto md:w-full md:max-w-md bg-white z-50 md:h-full md:shadow-xl flex flex-col"
             >
-              <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200">
                 <button onClick={() => setShowFilters(false)} className="p-2 hover:bg-gray-100 rounded-full">
                   <X className="w-5 h-5" />
                 </button>
@@ -1238,7 +1202,7 @@ const SearchPage = () => {
                 </button>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-6 space-y-8">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Location</h3>
                   <div className="relative">
@@ -1257,7 +1221,7 @@ const SearchPage = () => {
                   <h3 className="text-lg font-semibold mb-3">Price range</h3>
                   <div className="flex gap-4">
                     <div className="flex-1">
-                      <label className="text-sm text-gray-500 mb-1 block">Minimum</label>
+                      <label className="text-sm text-gray-500 mb-1 block">Min</label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">R</span>
                         <input
@@ -1270,7 +1234,7 @@ const SearchPage = () => {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <label className="text-sm text-gray-500 mb-1 block">Maximum</label>
+                      <label className="text-sm text-gray-500 mb-1 block">Max</label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">R</span>
                         <input
@@ -1322,7 +1286,7 @@ const SearchPage = () => {
                 </div>
               </div>
               
-              <div className="p-4 border-t border-gray-200 bg-white">
+              <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-white">
                 <div className="flex gap-3">
                   <button 
                     onClick={() => setShowFilters(false)} 
