@@ -786,7 +786,7 @@ export default function Profile() {
       </div>
 
       {/* Main Content with top padding to account for fixed header */}
-      <div className="max-w-6xl mx-auto px-4 pt-24 py-8">
+      <div className="max-w-6xl mx-auto px-4 pt-0 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Sidebar - Airbnb Style */}
           <div className="lg:col-span-3">
