@@ -231,9 +231,7 @@ export default function WishList() {
   return (
     <div className="min-h-screen bg-white">
       {/* Airbnb-style Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white shadow-sm border-b border-gray-200' : 'bg-transparent'
-      }`}>
+     <div className="sticky top-0 z-50 bg-white border-b border-[#DDDDDD]">
         <div className="max-w-[1600px] mx-auto px-6 sm:px-2 lg:px-12">
           <div className="flex items-center justify-between h-20">
             {/* Logo Area / Back Button */}
@@ -318,7 +316,7 @@ export default function WishList() {
             </div>
           </div>
         </div>
-      </nav>
+      </div>
 
       {/* Main Content */}
       <main className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12 py-8 pt-0">
@@ -518,7 +516,7 @@ export default function WishList() {
             )}
 
             {/* Bottom Actions */}
-            <div className="mt-12 pt-8 border-t border-gray-200">
+            <div className="mt-12 pt-8 py-16 border-t border-gray-200">
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <button
                   onClick={clearAll}
@@ -675,7 +673,7 @@ export default function WishList() {
               </button>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-4 py-10">
               <button 
                 onClick={() => {
                   setShowSettingsModal(false);

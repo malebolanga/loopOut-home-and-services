@@ -161,7 +161,7 @@ export default function List() {
     <div className="min-h-screen bg-white">
       {/* Airbnb-style Header */}
       <div className="sticky top-0 z-50 bg-white border-b border-[#DDDDDD]">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+        <div className="max-w-[1280px] mx-auto px-0 lg:px-10">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <h1 className="text-[22px] font-semibold text-[#222222]">Listings</h1>

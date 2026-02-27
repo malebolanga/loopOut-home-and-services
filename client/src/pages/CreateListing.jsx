@@ -1260,9 +1260,7 @@ export default function CreateListing() {
     <div className="min-h-screen bg-white">
       {/* Airbnb-style Header */}
       <header>
-        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled ? 'bg-white shadow-sm' : 'bg-transparent'
-        }`}>
+        <div className="sticky top-0 z-50 bg-white border-b border-[#DDDDDD]">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between h-20">
               <button 
@@ -1272,19 +1270,19 @@ export default function CreateListing() {
                 }`}
               >
                 <ArrowLeftIcon className={`w-6 h-6 ${
-                  isScrolled ? 'text-gray-900' : 'text-white'
+                  isScrolled ? 'text-gray-900' : 'text-black'
                 }`} />
               </button>
               
               <div className="flex items-center gap-2">
                 <span className={`font-bold text-2xl tracking-tighter ${
-                  isScrolled ? 'text-[#FF5A5F]' : 'text-white'
+                  isScrolled ? 'text-[#FF5A5F]' : 'text-[#FF5A5F]'
                 }`}>
                   loopOut
                 </span>
                 <span className={`${isScrolled ? 'text-gray-400' : 'text-white/60'}`}>|</span>
                 <span className={`font-medium ${
-                  isScrolled ? 'text-gray-900' : 'text-white'
+                  isScrolled ? 'text-gray-900' : 'text-black'
                 }`}>
                   Create listing
                 </span>
@@ -1293,7 +1291,7 @@ export default function CreateListing() {
               <div className="w-10" /> {/* Spacer for alignment */}
             </div>
           </div>
-        </nav>
+        </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 md:py-12">
