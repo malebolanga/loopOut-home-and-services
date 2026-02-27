@@ -23,12 +23,18 @@ import {
   Cog6ToothIcon,
   ViewColumnsIcon,
   Bars3Icon,
+  ScissorsIcon,
+  TruckIcon,
+  AcademicCapIcon,
+  WrenchIcon,
+  SparklesIcon as SparklesIconSolid,
+  FireIcon,
 } from '@heroicons/react/24/outline';
 import {
   StarIcon as StarIconSolid,
   HeartIcon as HeartIconSolid,
 } from '@heroicons/react/24/solid';
-import { FaCar } from "react-icons/fa";
+import { FaCar, FaBreadSlice, FaHouseUser, FaCut, FaTruckMoving, FaGraduationCap, FaHandsWash, FaBroom, FaChalkboardTeacher, FaHome, FaBed, FaUtensils, FaLeaf, FaBolt } from "react-icons/fa";
 
 // --- Constants ---
 const RECENTLY_VIEWED_KEY = 'recentlyViewed';
@@ -43,7 +49,7 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 }
+    transition: { staggerChildren: 0.05 }
   }
 };
 
@@ -60,6 +66,136 @@ const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
 };
+
+// --- TOP CATEGORIES DATA (Fresha Style) ---
+const TOP_CATEGORIES = [
+  {
+    id: 'barber',
+    name: 'Barber',
+    image: 'https://images.pexels.com/photos/897262/pexels-photo-897262.jpeg',
+    count: '1,234',
+    color: 'from-gray-900 to-gray-700'
+  },
+  {
+    id: 'baker',
+    name: 'Baker',
+    image: 'https://plus.unsplash.com/premium_photo-1759145128249-96ba5361d5d9?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '856',
+    color: 'from-amber-600 to-orange-500'
+  },
+  {
+    id: 'carwash',
+    name: 'Car Wash',
+    image: 'https://images.pexels.com/photos/6873098/pexels-photo-6873098.jpeg',
+    count: '23',
+    color: 'from-blue-600 to-cyan-500'
+  },
+  {
+    id: 'delivery',
+    name: 'Delivery',
+    image: 'https://images.unsplash.com/photo-1617347454431-f49d7ff5c3b1?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '3,567',
+    color: 'from-green-600 to-emerald-500'
+  },
+  {
+    id: 'photograph',
+    name: 'Photograph',
+    image: 'https://images.pexels.com/photos/1088491/pexels-photo-1088491.jpeg',
+    count: '892',
+    color: 'from-indigo-600 to-purple-500'
+  },
+  {
+    id: 'transport',
+    name: 'Transport',
+    image: 'https://plus.unsplash.com/premium_photo-1661963219843-f1a50a6cfcd3?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '1,567',
+    color: 'from-red-600 to-rose-500'
+  },
+  {
+    id: 'tattor Artise',
+    name: 'Tattoo artist',
+    image: 'https://images.pexels.com/photos/1304469/pexels-photo-1304469.jpeg',
+    count: '2,109',
+    color: 'from-teal-600 to-cyan-500'
+  },
+  {
+    id: 'domestic',
+    name: 'Domestic Work',
+    image: 'https://plus.unsplash.com/premium_photo-1667520405114-47d3677f966e?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '1,445',
+    color: 'from-pink-600 to-rose-500'
+  },
+  {
+    id: 'tutor',
+    name: 'Private Tutor',
+    image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '678',
+    color: 'from-violet-600 to-purple-500'
+  },
+  {
+    id: 'rental',
+    name: 'Rental',
+    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '4,321',
+    color: 'from-orange-600 to-amber-500'
+  },
+  {
+    id: 'guesthouse',
+    name: 'Guest House',
+    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '1,234',
+    color: 'from-cyan-600 to-blue-500'
+  },
+  {
+    id: 'hair',
+    name: 'Hair & Style',
+    image: 'https://images.unsplash.com/photo-1634449571010-02389ed0f9b0?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '3,890',
+    color: 'from-fuchsia-600 to-pink-500'
+  },
+  {
+    id: 'nails',
+    name: 'Nails',
+    image: 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '2,456',
+    color: 'from-rose-400 to-pink-400'
+  },
+  {
+    id: 'massage',
+    name: 'Massage',
+    image: 'https://images.unsplash.com/photo-1600334129128-685c5582fd35?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '1,678',
+    color: 'from-emerald-600 to-teal-500'
+  },
+  {
+    id: 'tattoo',
+    name: 'Tattoo Artist',
+    image: 'https://images.unsplash.com/photo-1552627019-947c3789ffb5?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '445',
+    color: 'from-slate-800 to-gray-900'
+  },
+  {
+    id: 'chef',
+    name: 'Private Chef',
+    image: 'https://plus.unsplash.com/premium_photo-1682097301631-902c29a12a21?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '334',
+    color: 'from-orange-500 to-red-500'
+  },
+  {
+    id: 'landscaping',
+    name: 'Landscaping',
+    image: 'https://images.unsplash.com/photo-1597201278257-3687be27d954?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '889',
+    color: 'from-green-700 to-emerald-600'
+  },
+  {
+    id: 'electrician',
+    name: 'Electrician',
+    image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '1,123',
+    color: 'from-yellow-500 to-amber-500'
+  }
+];
 
 // --- Mock Data (Preserved) ---
 const MOCK_PROPERTIES = [
@@ -194,51 +330,82 @@ class AIRecommendationEngine {
   }
 }
 
-// --- Airbnb-Style Components ---
+// --- FRESHA-STYLE CATEGORY CARD COMPONENT ---
+const FreshaCategoryCard = ({ category, onClick, index }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05, duration: 0.4 }}
+      whileHover={{ y: -8, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => onClick(category)}
+      className="group cursor-pointer relative overflow-hidden rounded-2xl bg-white shadow-sm hover:shadow-xl transition-all duration-300"
+    >
+      {/* Image Container */}
+      <div className="relative aspect-[4/5] overflow-hidden">
+        <img
+          src={category.image}
+          alt={category.name}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+        />
+        
+        {/* Gradient Overlay */}
+        <div className={`absolute inset-0 bg-gradient-to-t ${category.color} opacity-60 mix-blend-multiply`} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        
+        {/* Content */}
+        <div className="absolute inset-0 flex flex-col justify-end p-4">
+          <h3 className="text-white font-bold text-lg mb-1 group-hover:translate-y-0 transition-transform">
+            {category.name}
+          </h3>
+          <div className="flex items-center gap-2 text-white/90 text-sm">
+            <span className="bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-full text-xs font-medium">
+              {category.count} providers
+            </span>
+          </div>
+        </div>
+
+        {/* Hover Icon */}
+        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="bg-white/90 backdrop-blur-md p-2 rounded-full">
+            <ArrowTrendingUpIcon className="w-4 h-4 text-gray-900" />
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// --- Airbnb-Style Components (Preserved) ---
 
 const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property' }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const isGuestFavorite = item.rating >= 4.8;
   
-  // Function to determine price suffix based on item type
   const getPriceSuffix = () => {
     if (type !== 'property') return '';
-    
     switch (item.type) {
-      case 'rent':
-        return '/ month';
-      case 'over':
-        return '/ night';
-      case 'sale':
-        return ''; // No suffix for sale
-      case 'office':
-        return '/ hour';
-      case 'land':
-        return ''; // No suffix for land
-      default:
-        return item.type?.includes('rent') ? '/ month' : '';
+      case 'rent': return '/ month';
+      case 'over': return '/ night';
+      case 'sale': return '';
+      case 'office': return '/ hour';
+      case 'land': return '';
+      default: return item.type?.includes('rent') ? '/ month' : '';
     }
   };
 
-  // Function to get property type label
   const getPropertyTypeLabel = () => {
     switch (item.type) {
-      case 'rent-long':
-        return 'Long term rental';
-      case 'rent-short':
-        return 'Short stay';
-      case 'sale':
-        return 'For sale';
-      case 'office':
-        return 'Office space';
-      case 'land':
-        return 'Land plot';
-      default:
-        return '';
+      case 'rent-long': return 'Long term rental';
+      case 'rent-short': return 'Short stay';
+      case 'sale': return 'For sale';
+      case 'office': return 'Office space';
+      case 'land': return 'Land plot';
+      default: return '';
     }
   };
 
-  // Function to format price display
   const formatPrice = () => {
     const price = item.price || item.regularPrice;
     if (type === 'property' && (item.type === 'sale' || item.type === 'land')) {
@@ -253,14 +420,13 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property' }) => {
       onClick={onClick}
       className="cursor-pointer flex flex-col gap-3"
     >
-      <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-200">
+      <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-200 group">
         <img 
           src={item.imageUrls?.[0]} 
           alt={item.name} 
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
         
-        {/* Heart Button */}
         <button 
           onClick={(e) => { e.stopPropagation(); onLike && onLike(item._id, !isLiked); }}
           className="absolute top-3 right-3 p-2 rounded-full hover:scale-110 transition-transform"
@@ -272,29 +438,21 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property' }) => {
           )}
         </button>
         
-        {/* Guest Favorite Badge */}
         {isGuestFavorite && type === 'property' && (
           <div className="absolute top-3 left-3 bg-white/95 backdrop-blur px-2 py-1 rounded-md shadow-sm">
             <span className="text-xs font-bold text-gray-900">Guest favorite</span>
           </div>
         )}
         
-        {/* Property Type Badge */}
         {type === 'property' && item.type && (
           <div className="absolute top-3 left-3 bg-black/70 backdrop-blur px-2 py-1 rounded-md shadow-sm">
-            <span className="text-xs font-bold text-white">
-              {getPropertyTypeLabel()}
-            </span>
+            <span className="text-xs font-bold text-white">{getPropertyTypeLabel()}</span>
           </div>
         )}
         
-        {/* Image Dots */}
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
           {[0, 1, 2].map((i) => (
-            <div 
-              key={i} 
-              className={`w-1.5 h-1.5 rounded-full transition-all ${i === 0 ? 'bg-white w-2' : 'bg-white/60'}`}
-            />
+            <div key={i} className={`w-1.5 h-1.5 rounded-full transition-all ${i === 0 ? 'bg-white w-2' : 'bg-white/60'}`} />
           ))}
         </div>
       </div>
@@ -310,9 +468,7 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property' }) => {
         <p className="text-gray-500 text-[15px] truncate">{item.name}</p>
         <div className="flex items-baseline gap-1 mt-0.5">
           <span className="font-semibold text-gray-900 text-[15px]">{formatPrice()}</span>
-          {type === 'property' && (
-            <span className="text-gray-900 text-[15px]">{getPriceSuffix()}</span>
-          )}
+          {type === 'property' && <span className="text-gray-900 text-[15px]">{getPriceSuffix()}</span>}
         </div>
       </div>
     </motion.div>
@@ -337,15 +493,94 @@ const SectionTitle = ({ title, actionText, onAction }) => (
   <div className="flex justify-between items-end mb-6">
     <h2 className="text-[22px] font-semibold text-gray-900 tracking-tight">{title}</h2>
     {actionText && (
-      <button 
-        onClick={onAction}
-        className="text-sm font-semibold underline underline-offset-4 hover:text-gray-600 transition-colors"
-      >
+      <button onClick={onAction} className="text-sm font-semibold underline underline-offset-4 hover:text-gray-600 transition-colors">
         {actionText}
       </button>
     )}
   </div>
 );
+
+// --- FRESHA-STYLE TOP CATEGORIES SECTION ---
+const TopCategoriesSection = ({ navigate }) => {
+  const scrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    const scrollEl = scrollRef.current;
+    if (scrollEl) {
+      scrollEl.addEventListener('scroll', checkScroll);
+      checkScroll();
+      return () => scrollEl.removeEventListener('scroll', checkScroll);
+    }
+  }, []);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = direction === 'left' ? -400 : 400;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const handleCategoryClick = (category) => {
+    navigate(`/search?category=${category.id}&type=services`);
+  };
+
+  return (
+    <section className="mb-12 relative">
+      <div className="flex justify-between items-end mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Top categories</h2>
+          <p className="text-gray-500 mt-1 text-sm">Discover professionals near you</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => scroll('left')}
+            className={`p-2 rounded-full border transition-all ${
+              canScrollLeft ? 'border-gray-300 hover:bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-300 cursor-not-allowed'
+            }`}
+            disabled={!canScrollLeft}
+          >
+            <ChevronLeftIcon className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => scroll('right')}
+            className={`p-2 rounded-full border transition-all ${
+              canScrollRight ? 'border-gray-300 hover:bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-300 cursor-not-allowed'
+            }`}
+            disabled={!canScrollRight}
+          >
+            <ChevronRightIcon className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      <div 
+        ref={scrollRef}
+        className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {TOP_CATEGORIES.map((category, index) => (
+          <div key={category.id} className="snap-start shrink-0 w-[160px] sm:w-[180px]">
+            <FreshaCategoryCard 
+              category={category} 
+              onClick={handleCategoryClick}
+              index={index}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
 
 // --- Main Views ---
 
@@ -358,44 +593,40 @@ const DesktopHeroSearch = ({ searchTerm, setSearchTerm, handleSearchSubmit, navi
   ];
   
   return (
-    <motion.div 
-      key="desktop-hero"
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
-      className="relative bg-rose-500 overflow-hidden"
-    >
+    <motion.div key="desktop-hero" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative bg-rose-500 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-r from-rose-600 to-pink-600"></div>
       <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center"></div>
       
       <div className="relative max-w-7xl mx-auto px-8 py-20">
         <div className="text-center mb-12">
-          <motion.h1 
-            initial={{ y: -20, opacity: 0 }} 
-            animate={{ y: 0, opacity: 1 }} 
-            transition={{ delay: 0.2 }} 
-            className="text-5xl font-semibold text-white mb-4 tracking-tight"
-          >
+          <motion.h1 initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="text-5xl font-semibold text-white mb-4 tracking-tight">
             Find your next stay
           </motion.h1>
-          <motion.p 
-            initial={{ y: -20, opacity: 0 }} 
-            animate={{ y: 0, opacity: 1 }} 
-            transition={{ delay: 0.3 }} 
-            className="text-xl text-white/90 max-w-2xl mx-auto font-light"
-          >
+          <motion.p initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-xl text-white/90 max-w-2xl mx-auto font-light">
             Discover homes, services, and experiences around you
           </motion.p>
         </div>
         
         <div className="max-w-4xl mx-auto">
-          <motion.form 
-            initial={{ y: 20, opacity: 0 }} 
-            animate={{ y: 0, opacity: 1 }} 
-            transition={{ delay: 0.4 }} 
-            onSubmit={handleSearchSubmit} 
-            className="relative"
-          >
-        
+          <motion.form initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} onSubmit={handleSearchSubmit} className="relative">
+            <div className="bg-white rounded-full shadow-2xl flex items-center p-2">
+              <div className="flex-1 flex items-center px-6 border-r border-gray-200">
+                <MapIcon className="w-5 h-5 text-gray-400 mr-3" />
+                <div className="flex flex-col">
+                  <label className="text-xs font-bold text-gray-900">Where</label>
+                  <input 
+                    type="text" 
+                    placeholder="Search destinations" 
+                    className="outline-none text-sm text-gray-600 placeholder-gray-400 w-full"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+              <button type="submit" className="bg-rose-500 hover:bg-rose-600 text-white rounded-full p-4 ml-2 transition-colors">
+                <MagnifyingGlassIcon className="w-6 h-6" />
+              </button>
+            </div>
           </motion.form>
           
           <div className="grid grid-cols-4 gap-4 mt-8">
@@ -435,33 +666,13 @@ const DesktopPopularDestinations = ({ navigate }) => {
   ];
   
   return (
-    <motion.section 
-      key="popular-destinations"
-      initial="hidden" 
-      whileInView="visible" 
-      viewport={{ once: true }} 
-      variants={containerVariants} 
-      className="mb-16"
-    >
-      <SectionTitle 
-        title="Popular destinations" 
-        actionText="View all"
-        onAction={() => navigate('/explore')}
-      />
+    <motion.section key="popular-destinations" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={containerVariants} className="mb-16">
+      <SectionTitle title="Popular destinations" actionText="View all" onAction={() => navigate('/explore')} />
       <div className="grid grid-cols-5 gap-6">
         {popularDestinations.map((destination) => (
-          <motion.div 
-            key={`dest-${destination.name}`} 
-            variants={itemVariants} 
-            onClick={() => navigate(`/search?address=${encodeURIComponent(destination.name)}`)} 
-            className="cursor-pointer "
-          >
+          <motion.div key={`dest-${destination.name}`} variants={itemVariants} onClick={() => navigate(`/search?address=${encodeURIComponent(destination.name)}`)} className="cursor-pointer group">
             <div className="relative overflow-hidden rounded-xl mb-3 aspect-[3/4]">
-              <img 
-                src={destination.image} 
-                alt={destination.name} 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
+              <img src={destination.image} alt={destination.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
               <div className="absolute bottom-0 left-0 right-0 p-4">
                 <h3 className="text-white font-semibold text-lg">{destination.name}</h3>
@@ -483,9 +694,7 @@ const SmartRecommendations = ({ recommendations, insights, loading, onItemClick 
           <div className="h-4 bg-gray-200 rounded w-32"></div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="aspect-square bg-gray-200 rounded-xl"></div>
-          ))}
+          {[...Array(6)].map((_, i) => <div key={i} className="aspect-square bg-gray-200 rounded-xl"></div>)}
         </div>
       </div>
     );
@@ -494,13 +703,7 @@ const SmartRecommendations = ({ recommendations, insights, loading, onItemClick 
   if (!recommendations || recommendations.length === 0) return null;
   
   return (
-    <motion.div 
-      initial="hidden" 
-      whileInView="visible" 
-      viewport={{ once: true }} 
-      variants={fadeInUp} 
-      className="mb-10"
-    >
+    <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mb-10">
       <div className="flex items-center gap-2 mb-4">
         <SparklesIcon className="w-5 h-5 text-rose-500" />
         <h3 className="font-semibold text-gray-900">AI Picks for you</h3>
@@ -508,18 +711,9 @@ const SmartRecommendations = ({ recommendations, insights, loading, onItemClick 
       
       <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
         {recommendations.slice(0, 6).map((item, i) => (
-          <motion.div 
-            key={item._id ? `rec-${item._id}` : `rec-${i}`} 
-            whileHover={{ y: -4 }} 
-            onClick={() => onItemClick(item, item.type)} 
-            className="flex-shrink-0 w-40 cursor-pointer"
-          >
+          <motion.div key={item._id ? `rec-${item._id}` : `rec-${i}`} whileHover={{ y: -4 }} onClick={() => onItemClick(item, item.type)} className="flex-shrink-0 w-40 cursor-pointer">
             <div className="relative aspect-square rounded-xl overflow-hidden mb-2 bg-gray-200">
-              <img 
-                src={item.imageUrls?.[0]} 
-                alt={item.name} 
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-              />
+              <img src={item.imageUrls?.[0]} alt={item.name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
               <div className="absolute top-2 left-2">
                 <span className="text-[10px] font-semibold px-2 py-1 bg-white/90 backdrop-blur rounded-md">AI Pick</span>
               </div>
@@ -569,177 +763,80 @@ const MobileAppHomepage = ({
     { icon: '🏰', label: 'Trending', type: 'all' },
   ];
 
-  const handleAISuggestionClick = (suggestion) => {
-    const suggestionMap = { 
-      'View Modern Apartments': 'modern apartments', 
-      'See Budget Options': 'budget friendly', 
-      'Explore Luxury Homes': 'luxury homes', 
-      'Professional Cleaning': 'cleaning services', 
-      'Deep Clean Services': 'deep cleaning', 
-      'Move-in Cleaning': 'move in cleaning', 
-      'Music Events': 'music events', 
-      'Food Festivals': 'food festival', 
-      'Art Exhibitions': 'art exhibition' 
-    };
-    const term = suggestionMap[suggestion] || suggestion;
-    navigate(`/search?searchTerm=${encodeURIComponent(term)}&type=all`);
-  };
-
   if (isDesktop) {
     return (
       <div className="min-h-screen bg-white">
-        {/* Global scrollbar hiding styles */}
         <style jsx global>{`
-          /* Hide scrollbar for Chrome, Safari and Opera */
-          .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-          }
-          
-          /* Hide scrollbar for IE, Edge and Firefox */
-          .scrollbar-hide {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-          }
-          
-          /* Hide all scrollbars on the page */
-          body {
-            overflow-y: auto;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE and Edge */
-          }
-          
-          body::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera */
-          }
-          
-          /* Hide scrollbars for all elements */
-          * {
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-          }
-          
-          *::-webkit-scrollbar {
-            display: none;
-          }
+          .scrollbar-hide::-webkit-scrollbar { display: none; }
+          .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+          body { overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+          body::-webkit-scrollbar { display: none; }
+          * { scrollbar-width: none; -ms-overflow-style: none; }
+          *::-webkit-scrollbar { display: none; }
         `}</style>
         
-        <DesktopHeroSearch 
-          searchTerm={searchTerm} 
-          setSearchTerm={setSearchTerm} 
-          handleSearchSubmit={handleSearchSubmit} 
-          navigate={navigate} 
-          currentLocation={currentLocation} 
-        />
+        <DesktopHeroSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} handleSearchSubmit={handleSearchSubmit} navigate={navigate} currentLocation={currentLocation} />
         
         <main className="max-w-7xl mx-auto px-8 py-12">
+          {/* FRESHA-STYLE TOP CATEGORIES SECTION */}
+          <TopCategoriesSection navigate={navigate} />
+          
           <DesktopPopularDestinations navigate={navigate} />
           
-          {/* Category Filter Bar */}
           <div className="flex items-center gap-8 overflow-x-auto pb-4 mb-8 border-b border-gray-200 scrollbar-hide">
             {categories.map((cat) => (
-              <CategoryFilter 
-                key={cat.label} 
-                {...cat} 
-                isActive={activeCategory === cat.label}
-                onClick={() => setActiveCategory(cat.label)}
-              />
+              <CategoryFilter key={cat.label} {...cat} isActive={activeCategory === cat.label} onClick={() => setActiveCategory(cat.label)} />
             ))}
           </div>
 
-          {/* AI Recommendations */}
           {showAIInsights && aiRecommendations && (
-            <SmartRecommendations 
-              recommendations={aiRecommendations} 
-              insights={aiInsights} 
-              loading={loadingProperties && loadingServices} 
-              onItemClick={onItemClick} 
-            />
+            <SmartRecommendations recommendations={aiRecommendations} insights={aiInsights} loading={loadingProperties && loadingServices} onItemClick={onItemClick} />
           )}
 
-          {/* Featured Properties - Airbnb Grid Style */}
           <section className="mb-16">
-            <SectionTitle 
-              title="Featured properties" 
-              actionText="View all"
-              onAction={() => navigate('/listing-home-page')}
-            />
+            <SectionTitle title="Featured properties" actionText="View all" onAction={() => navigate('/listing-home-page')} />
             {loadingProperties ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="aspect-square bg-gray-200 rounded-xl animate-pulse" />
-                ))}
+                {[...Array(8)].map((_, i) => <div key={i} className="aspect-square bg-gray-200 rounded-xl animate-pulse" />)}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {featuredProperties.slice(0, 8).map((property) => (
-                  <AirbnbCard 
-                    key={property._id} 
-                    item={property} 
-                    onClick={() => navigate(`/listing/${property._id}`)}
-                  />
+                  <AirbnbCard key={property._id} item={property} onClick={() => navigate(`/listing/${property._id}`)} />
                 ))}
               </div>
             )}
           </section>
 
-          {/* Services Section */}
           <section className="mb-16">
-            <SectionTitle 
-              title="Professional services" 
-              actionText="View all"
-              onAction={() => navigate('/service-home-page')}
-            />
+            <SectionTitle title="Professional services" actionText="View all" onAction={() => navigate('/service-home-page')} />
             {loadingServices ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="aspect-square bg-gray-200 rounded-xl animate-pulse" />
-                ))}
+                {[...Array(4)].map((_, i) => <div key={i} className="aspect-square bg-gray-200 rounded-xl animate-pulse" />)}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {featuredServices.slice(0, 4).map((service) => (
-                  <AirbnbCard 
-                    key={service._id} 
-                    item={service} 
-                    type="service"
-                    onClick={() => navigate(`/service/${service._id}`)}
-                  />
+                  <AirbnbCard key={service._id} item={service} type="service" onClick={() => navigate(`/service/${service._id}`)} />
                 ))}
               </div>
             )}
           </section>
 
-          {/* Helpers Section */}
           <section className="mb-16">
-            <SectionTitle 
-              title="Verified helpers" 
-              actionText="View all"
-              onAction={() => navigate('/helper-home-page')}
-            />
+            <SectionTitle title="Verified helpers" actionText="View all" onAction={() => navigate('/helper-home-page')} />
             {loadingHelpers ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="aspect-square bg-gray-200 rounded-xl animate-pulse" />
-                ))}
+                {[...Array(4)].map((_, i) => <div key={i} className="aspect-square bg-gray-200 rounded-xl animate-pulse" />)}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {featuredHelpers.slice(0, 4).map((helper) => (
-                  <div 
-                    key={helper._id}
-                    onClick={() => navigate(`/helper/${helper._id}`)}
-                    className="cursor-pointer flex flex-col gap-3"
-                  >
+                  <div key={helper._id} onClick={() => navigate(`/helper/${helper._id}`)} className="cursor-pointer flex flex-col gap-3">
                     <div className="relative aspect-square overflow-hidden rounded-full bg-gray-200 w-32 h-32 mx-auto border-2 border-gray-100 group-hover:border-rose-200 transition-colors">
-                      <img 
-                        src={helper.imageUrls?.[0]} 
-                        alt={helper.name} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      />
+                      <img src={helper.imageUrls?.[0]} alt={helper.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                       <div className="absolute bottom-0 right-0 w-6 h-6 bg-rose-500 rounded-full flex items-center justify-center border-2 border-white">
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                       </div>
                     </div>
                     <div className="text-center">
@@ -758,43 +855,23 @@ const MobileAppHomepage = ({
             )}
           </section>
 
-          {/* Events Section */}
           <section className="mb-16">
-            <SectionTitle 
-              title="Upcoming events" 
-              actionText="View all"
-              onAction={() => navigate('/search?type=events')}
-            />
+            <SectionTitle title="Upcoming events" actionText="View all" onAction={() => navigate('/search?type=events')} />
             {loadingEvents ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="aspect-[4/3] bg-gray-200 rounded-xl animate-pulse" />
-                ))}
+                {[...Array(4)].map((_, i) => <div key={i} className="aspect-[4/3] bg-gray-200 rounded-xl animate-pulse" />)}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {featuredEvents.slice(0, 4).map((event) => (
-                  <motion.div 
-                    key={event._id}
-                    whileHover={{ y: -4 }}
-                    onClick={() => navigate(`/event/${event._id}`)}
-                    className="cursor-pointer flex flex-col gap-3"
-                  >
+                  <motion.div key={event._id} whileHover={{ y: -4 }} onClick={() => navigate(`/event/${event._id}`)} className="cursor-pointer flex flex-col gap-3">
                     <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-gray-200">
-                      <img 
-                        src={event.imageUrls?.[0]} 
-                        alt={event.name} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
+                      <img src={event.imageUrls?.[0]} alt={event.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       <div className="absolute top-3 left-3 bg-white/95 backdrop-blur px-2 py-1 rounded-md">
-                        <span className="text-xs font-bold text-gray-900">
-                          {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </span>
+                        <span className="text-xs font-bold text-gray-900">{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                       </div>
                       {event.attendingCount > 100 && (
-                        <div className="absolute top-3 right-3 bg-rose-500 text-white px-2 py-1 rounded-md text-xs font-bold">
-                          Trending
-                        </div>
+                        <div className="absolute top-3 right-3 bg-rose-500 text-white px-2 py-1 rounded-md text-xs font-bold">Trending</div>
                       )}
                     </div>
                     <div>
@@ -811,14 +888,7 @@ const MobileAppHomepage = ({
             )}
           </section>
 
-          {/* Stats Section */}
-          <motion.section 
-            initial="hidden" 
-            whileInView="visible" 
-            viewport={{ once: true }} 
-            variants={fadeInUp} 
-            className="bg-gray-50 rounded-3xl p-8"
-          >
+          <motion.section initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="bg-gray-50 rounded-3xl p-8">
             <div className="flex justify-between items-center mb-8">
               <div>
                 <h2 className="text-2xl font-semibold text-gray-900">LoopOut by the numbers</h2>
@@ -852,66 +922,47 @@ const MobileAppHomepage = ({
   // Mobile View
   return (
     <div className="min-h-screen bg-white pb-20">
-      {/* Global scrollbar hiding styles */}
       <style jsx global>{`
-        /* Hide scrollbar for Chrome, Safari and Opera */
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        
-        /* Hide scrollbar for IE, Edge and Firefox */
-        .scrollbar-hide {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
-        }
-        
-        /* Hide all scrollbars on the page */
-        body {
-          overflow-y: auto;
-          scrollbar-width: none; /* Firefox */
-          -ms-overflow-style: none; /* IE and Edge */
-        }
-        
-        body::-webkit-scrollbar {
-          display: none; /* Chrome, Safari, Opera */
-        }
-        
-        /* Hide scrollbars for all elements */
-        * {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-        
-        *::-webkit-scrollbar {
-          display: none;
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        body { overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        body::-webkit-scrollbar { display: none; }
+        * { scrollbar-width: none; -ms-overflow-style: none; }
+        *::-webkit-scrollbar { display: none; }
       `}</style>
       
       <main className="px-4 py-4">
+        {/* Mobile Top Categories - Horizontal Scroll */}
+        <section className="mb-8 -mx-4 px-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-bold text-gray-900 text-lg">Top categories</h2>
+            <button onClick={() => navigate('/categories')} className="text-sm text-rose-500 font-medium">See all</button>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x">
+            {TOP_CATEGORIES.slice(0, 10).map((category, index) => (
+              <motion.div
+                key={category.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.05 }}
+                onClick={() => navigate(`/search?category=${category.id}`)}
+                className="snap-start shrink-0 w-[120px] cursor-pointer"
+              >
+                <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-2">
+                  <img src={category.image} alt={category.name} className="w-full h-full object-cover" />
+                  <div className={`absolute inset-0 bg-gradient-to-t ${category.color} opacity-40 mix-blend-multiply`} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-2">
+                    <p className="text-white font-semibold text-sm leading-tight">{category.name}</p>
+                    <p className="text-white/80 text-xs">{category.count}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
 
-           {/* Categories */}
-        <div className="flex overflow-x-auto gap-4 pb-4 mb-6 -mx-4 px-4 scrollbar-hide">
-          {categories.map((cat) => (
-            <button 
-              key={cat.label}
-              onClick={() => navigate(`/search?type=${cat.type}`)}
-              className="flex flex-col items-center gap-2 min-w-[64px]"
-            >
-              <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center text-2xl hover:bg-gray-200 transition-colors">
-                {cat.icon}
-              </div>
-              <span className="text-xs font-medium text-gray-700">{cat.label}</span>
-            </button>
-          ))}
-        </div>
-
-
-        {/* Mobile Hero */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          className="bg-rose-500 rounded-2xl p-6 mb-6 relative overflow-hidden"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-rose-500 rounded-2xl p-6 mb-6 relative overflow-hidden">
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-3">
               <SparklesIcon className="w-5 h-5 text-white" />
@@ -922,65 +973,47 @@ const MobileAppHomepage = ({
             
             <div className="flex flex-wrap gap-2 mb-4">
               {['Smart homes', 'Best deals', 'Near me', 'Trending'].map((tag) => (
-                <button 
-                  key={tag}
-                  onClick={() => navigate(`/search?searchTerm=${tag}&type=all`)} 
-                  className="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm transition-colors"
-                >
+                <button key={tag} onClick={() => navigate(`/search?searchTerm=${tag}&type=all`)} className="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm transition-colors">
                   {tag}
                 </button>
               ))}
             </div>
             
-            <button 
-              onClick={() => navigate('/search?ai=1')} 
-              className="bg-white text-gray-900 px-5 py-2.5 rounded-full font-medium text-sm hover:bg-gray-50 transition-colors flex items-center gap-2 w-fit"
-            >
+            <button onClick={() => navigate('/search?ai=1')} className="bg-white text-gray-900 px-5 py-2.5 rounded-full font-medium text-sm hover:bg-gray-50 transition-colors flex items-center gap-2 w-fit">
               <SparklesIcon className="w-4 h-4" />
               AI Explore
             </button>
           </div>
         </motion.div>
 
-     
+        <div className="flex overflow-x-auto gap-4 pb-4 mb-6 -mx-4 px-4 scrollbar-hide">
+          {categories.map((cat) => (
+            <button key={cat.label} onClick={() => navigate(`/search?type=${cat.type}`)} className="flex flex-col items-center gap-2 min-w-[64px]">
+              <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center text-2xl hover:bg-gray-200 transition-colors">
+                {cat.icon}
+              </div>
+              <span className="text-xs font-medium text-gray-700">{cat.label}</span>
+            </button>
+          ))}
+        </div>
 
-        {/* AI Recommendations */}
         {showAIInsights && aiRecommendations && (
-          <SmartRecommendations 
-            recommendations={aiRecommendations} 
-            insights={aiInsights} 
-            loading={loadingProperties && loadingServices} 
-            onItemClick={onItemClick} 
-          />
+          <SmartRecommendations recommendations={aiRecommendations} insights={aiInsights} loading={loadingProperties && loadingServices} onItemClick={onItemClick} />
         )}
 
-        {/* Recently Viewed */}
         {recentlyViewedItems.length > 0 && (
           <section className="mb-8">
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-semibold text-gray-900">Recently viewed</h2>
-              <button onClick={() => navigate('/recently-viewed')} className="text-sm text-gray-500 underline">
-                See all
-              </button>
+              <button onClick={() => navigate('/recently-viewed')} className="text-sm text-gray-500 underline">See all</button>
             </div>
             <div className="flex overflow-x-auto gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
               {recentlyViewedItems.slice(0, 5).map((item) => (
-                <div 
-                  key={item._id}
-                  onClick={() => navigate(item.type === 'helper' ? `/helper/${item._id}` : `/listing/${item._id}`)}
-                  className="flex-shrink-0 w-36 cursor-pointer"
-                >
+                <div key={item._id} onClick={() => navigate(item.type === 'helper' ? `/helper/${item._id}` : `/listing/${item._id}`)} className="flex-shrink-0 w-36 cursor-pointer">
                   <div className="relative aspect-[3/2] rounded-xl overflow-hidden mb-2 bg-gray-200">
                     <img src={item.imageUrls?.[0]} alt={item.name} className="w-full h-full object-cover" />
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); onRecentlyViewedLike(item._id, !item.isLiked); }}
-                      className="absolute top-2 right-2 p-1"
-                    >
-                      {item.isLiked ? (
-                        <HeartIconSolid className="w-5 h-5 text-rose-500" />
-                      ) : (
-                        <HeartIcon className="w-5 h-5 text-white drop-shadow-md" />
-                      )}
+                    <button onClick={(e) => { e.stopPropagation(); onRecentlyViewedLike(item._id, !item.isLiked); }} className="absolute top-2 right-2 p-1">
+                      {item.isLiked ? <HeartIconSolid className="w-5 h-5 text-rose-500" /> : <HeartIcon className="w-5 h-5 text-white drop-shadow-md" />}
                     </button>
                   </div>
                   <p className="font-medium text-sm truncate">{item.name}</p>
@@ -991,7 +1024,6 @@ const MobileAppHomepage = ({
           </section>
         )}
 
-        {/* Popular Homes */}
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-semibold text-gray-900">Popular homes</h2>
@@ -999,24 +1031,17 @@ const MobileAppHomepage = ({
           </div>
           {loadingProperties ? (
             <div className="grid grid-cols-2 gap-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="aspect-square bg-gray-200 rounded-xl animate-pulse" />
-              ))}
+              {[...Array(4)].map((_, i) => <div key={i} className="aspect-square bg-gray-200 rounded-xl animate-pulse" />)}
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4">
               {featuredProperties.slice(0, 4).map((property) => (
-                <AirbnbCard 
-                  key={property._id} 
-                  item={property} 
-                  onClick={() => navigate(`/listing/${property._id}`)}
-                />
+                <AirbnbCard key={property._id} item={property} onClick={() => navigate(`/listing/${property._id}`)} />
               ))}
             </div>
           )}
         </section>
 
-        {/* Services */}
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-semibold text-gray-900">Top services</h2>
@@ -1024,23 +1049,17 @@ const MobileAppHomepage = ({
           </div>
           <div className="flex overflow-x-auto gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
             {featuredServices.slice(0, 3).map((service) => (
-              <div 
-                key={service._id}
-                onClick={() => navigate(`/service/${service._id}`)}
-                className="flex-shrink-0 w-60 cursor-pointer"
-              >
+              <div key={service._id} onClick={() => navigate(`/service/${service._id}`)} className="flex-shrink-0 w-60 cursor-pointer">
                 <div className="relative aspect-[3/2] rounded-xl overflow-hidden mb-2 bg-gray-200">
                   <img src={service.imageUrls?.[0]} alt={service.name} className="w-full h-full object-cover" />
                 </div>
                 <p className="font-medium text-sm truncate">{service.name}</p>
-             
                 <p className="font-semibold text-sm mt-1">R{service.regularPrice}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Events */}
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-semibold text-gray-900">Upcoming events</h2>
@@ -1049,11 +1068,7 @@ const MobileAppHomepage = ({
           {featuredEvents.length > 0 ? (
             <div className="flex overflow-x-auto gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
               {featuredEvents.slice(0, 3).map((event) => (
-                <div 
-                  key={event._id}
-                  onClick={() => navigate(`/event/${event._id}`)}
-                  className="flex-shrink-0 w-72 cursor-pointer"
-                >
+                <div key={event._id} onClick={() => navigate(`/event/${event._id}`)} className="flex-shrink-0 w-72 cursor-pointer">
                   <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-2 bg-gray-200">
                     <img src={event.imageUrls?.[0]} alt={event.name} className="w-full h-full object-cover" />
                     <div className="absolute top-2 left-2 bg-white/90 px-2 py-1 rounded text-xs font-bold">
@@ -1077,7 +1092,6 @@ const MobileAppHomepage = ({
           )}
         </section>
 
-        {/* Helpers */}
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-semibold text-gray-900">Helpers</h2>
@@ -1085,21 +1099,11 @@ const MobileAppHomepage = ({
           </div>
           <div className="flex overflow-x-auto gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
             {featuredHelpers.slice(0, 4).map((helper) => (
-              <div 
-                key={helper._id}
-                onClick={() => navigate(`/helper/${helper._id}`)}
-                className="flex-shrink-0 w-32 text-center cursor-pointer"
-              >
+              <div key={helper._id} onClick={() => navigate(`/helper/${helper._id}`)} className="flex-shrink-0 w-32 text-center cursor-pointer">
                 <div className="relative w-20 h-20 mx-auto mb-2">
-                  <img 
-                    src={helper.imageUrls?.[0]} 
-                    alt={helper.name} 
-                    className="w-full h-full object-cover rounded-full border-2 border-gray-100"
-                  />
+                  <img src={helper.imageUrls?.[0]} alt={helper.name} className="w-full h-full object-cover rounded-full border-2 border-gray-100" />
                   <div className="absolute bottom-0 right-0 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center border-2 border-white">
-                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
+                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                   </div>
                 </div>
                 <p className="font-medium text-sm truncate">{helper.name}</p>
@@ -1114,11 +1118,7 @@ const MobileAppHomepage = ({
         </section>
       </main>
 
-      {/* AI Chat Button */}
-      <button
-        onClick={() => {/* Open chat */}}
-        className="fixed bottom-24 right-4 bg-gray-900 text-white p-4 rounded-full shadow-xl hover:scale-105 transition-transform z-50"
-      >
+      <button onClick={() => {/* Open chat */}} className="fixed bottom-24 right-4 bg-gray-900 text-white p-4 rounded-full shadow-xl hover:scale-105 transition-transform z-50">
         <SparklesIcon className="w-6 h-6" />
       </button>
     </div>
