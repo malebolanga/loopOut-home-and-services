@@ -4,19 +4,28 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search as SearchIcon,
   SlidersHorizontal,
+  Map,
   Grid3X3,
   List,
   ArrowUpDown,
   Heart,
+  Share2,
+  Phone,
+  Mail,
   Star,
   MapPin,
   Bed,
   Bath,
   Sparkles,
   RotateCcw,
+  Compass,
   Home,
   Wrench,
   Users,
+  Calendar,
+  DollarSign,
+  Tag,
+  Building,
   Search,
   ChevronDown,
   X,
@@ -32,6 +41,7 @@ import {
   ChefHat,
   Truck,
   Settings,
+  MoreHorizontal,
   Check,
   ArrowLeft
 } from 'lucide-react';
@@ -698,11 +708,6 @@ const ResultCard = ({ item, index, viewMode, onClick, isHovered, onHover }) => {
         >
           {isLiked ? <Heart className="w-4 h-4 text-rose-500 fill-rose-500" /> : <Heart className="w-4 h-4 text-gray-600" />}
         </button>
-        {isHovered && (
-          <div className="absolute inset-0 bg-rose-500/10 flex items-center justify-center">
-            <span className="bg-white px-4 py-2 rounded-full text-sm font-semibold text-rose-600 shadow-lg">View details</span>
-          </div>
-        )}
       </div>
       
       <div className="p-4 flex-1 flex flex-col">
@@ -824,7 +829,7 @@ const SearchPage = () => {
   const [searchSubType, setSearchSubType] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('grid'); // 'grid', 'list' (removed 'map')
   const [loading, setLoading] = useState(false);
   const [listings, setListings] = useState([]);
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -1038,6 +1043,11 @@ const SearchPage = () => {
     navigate(`/search?${urlParams.toString()}`);
   };
 
+  // Toggle between list views (removed map toggle)
+  const toggleViewMode = () => {
+    setViewMode(prev => prev === 'grid' ? 'list' : 'grid');
+  };
+
   // Get display text for selected category
   const getSelectedCategoryLabel = () => {
     if (selectedCategory) {
@@ -1182,6 +1192,7 @@ const SearchPage = () => {
             {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : listings.length > 0 ? (
+          // Grid/List View
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -1197,8 +1208,6 @@ const SearchPage = () => {
                 index={index}
                 viewMode={viewMode}
                 onClick={() => addToRecentlyViewed(item, item.itemType)}
-                isHovered={hoveredItem === item._id}
-                onHover={setHoveredItem}
               />
             ))}
           </motion.div>
