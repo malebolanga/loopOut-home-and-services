@@ -28,7 +28,7 @@ const helperSchema = new mongoose.Schema({
     type: {
         type: String,
         required: true,
-        enum: ['domestic', 'errand', 'tutor', 'chef', 'beauty', 'tattoo', 'barber', 'photography', 'baker'],
+        enum: ['domestic', 'errand', 'tutor', 'chef', 'beauty', 'tattoo', 'barber', 'photography', 'baker', 'sneaker', 'washingmat', 'animals'],
     },
     regularPrice: {
         type: Number,
@@ -59,7 +59,7 @@ const helperSchema = new mongoose.Schema({
         type: Number,
         default: 1,
     },
-    // New fields for barber
+    // Fields for barber
     specializations: {
         type: String,
     },
@@ -75,7 +75,7 @@ const helperSchema = new mongoose.Schema({
     additionalPricing: {
         type: String,
     },
-    // New fields for photography
+    // Fields for photography
     style: {
         type: String,
     },
@@ -85,7 +85,7 @@ const helperSchema = new mongoose.Schema({
     photoDelivery: {
         type: String,
     },
-    // New fields for baker
+    // Fields for baker
     specialties: {
         type: String,
     },
@@ -98,6 +98,39 @@ const helperSchema = new mongoose.Schema({
     delivery: {
         type: Boolean,
         default: false,
+    },
+    // New fields for sneaker cleaner
+    shoeTypes: {
+        type: String,
+    },
+    cleaningMethod: {
+        type: String,
+    },
+    turnaroundTime: {
+        type: String,
+    },
+    // New fields for washing mat
+    machineType: {
+        type: String,
+    },
+    matTypes: {
+        type: String,
+    },
+    dryingMethod: {
+        type: String,
+    },
+    // New fields for animal care
+    animalTypes: {
+        type: String,
+    },
+    servicesOffered: {
+        type: String,
+    },
+    experience: {
+        type: String,
+    },
+    certifications: {
+        type: String,
     },
     imageUrls: {
         type: Array,

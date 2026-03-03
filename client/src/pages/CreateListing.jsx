@@ -174,6 +174,18 @@ export default function CreateListing() {
     orderNotice: '',
     delivery: false,
     
+    // New helper types specific fields
+    shoeTypes: '', // For sneaker cleaner
+    cleaningMethod: '', // For sneaker cleaner
+    turnaroundTime: '', // For sneaker cleaner
+    machineType: '', // For washing mat
+    matTypes: '', // For washing mat
+    dryingMethod: '', // For washing mat
+    animalTypes: '', // For animals
+    servicesOffered: '', // For animals
+    experience: '', // For animals
+    certifications: '', // For animals
+    
     // Event specific
     date: "",
     time: "",
@@ -231,6 +243,9 @@ export default function CreateListing() {
         if (type === 'barber') return "Services you offer, specialties, experience...";
         if (type === 'photography') return "Your photography style, experience, services...";
         if (type === 'baker') return "Your baking specialties, experience, dietary options...";
+        if (type === 'sneaker') return "Your sneaker cleaning experience, methods, products used...";
+        if (type === 'washingmat') return "Your mat washing experience, equipment used, drying process...";
+        if (type === 'animals') return "Your animal care experience, certifications, types of animals you work with...";
         return "Specific services you provide, experience, skills...";
       case 'events':
         return "Event highlights, special features, what makes it unique...";
@@ -382,6 +397,46 @@ export default function CreateListing() {
           return;
         }
       }
+
+      // New validations for online helper types
+      if (selectedCategory === 'online') {
+        if (selectedType === 'sneaker') {
+          if (!listingForm.shoeTypes) {
+            setError("Please specify what types of sneakers you clean");
+            return;
+          }
+          if (!listingForm.turnaroundTime) {
+            setError("Please enter your turnaround time");
+            return;
+          }
+        }
+        
+        if (selectedType === 'washingmat') {
+          if (!listingForm.matTypes) {
+            setError("Please specify what types of mats you clean");
+            return;
+          }
+          if (!listingForm.machineType) {
+            setError("Please specify your washing machine type");
+            return;
+          }
+        }
+        
+        if (selectedType === 'animals') {
+          if (!listingForm.animalTypes) {
+            setError("Please specify what types of animals you care for");
+            return;
+          }
+          if (!listingForm.servicesOffered) {
+            setError("Please specify what services you offer");
+            return;
+          }
+          if (!listingForm.experience) {
+            setError("Please describe your experience with animals");
+            return;
+          }
+        }
+      }
       
       if (!listingForm.near.trim()) {
         setError(`Please provide ${getNearLabel(selectedCategory, selectedType)}`);
@@ -419,6 +474,9 @@ export default function CreateListing() {
         if (type === 'barber') return "services and specialties";
         if (type === 'photography') return "photography services and style";
         if (type === 'baker') return "baking specialties and options";
+        if (type === 'sneaker') return "your sneaker cleaning experience and methods";
+        if (type === 'washingmat') return "your mat washing experience and equipment";
+        if (type === 'animals') return "your animal care experience and services";
         return "your services and experience";
       case 'events':
         return "event highlights and features";
@@ -735,6 +793,39 @@ export default function CreateListing() {
         return setError("Please enter the service duration");
       }
     }
+
+    // New validations for online helper types
+    if (selectedCategory === 'online') {
+      if (selectedType === 'sneaker') {
+        if (!listingForm.shoeTypes) {
+          return setError("Please specify what types of sneakers you clean");
+        }
+        if (!listingForm.turnaroundTime) {
+          return setError("Please enter your turnaround time");
+        }
+      }
+      
+      if (selectedType === 'washingmat') {
+        if (!listingForm.matTypes) {
+          return setError("Please specify what types of mats you clean");
+        }
+        if (!listingForm.machineType) {
+          return setError("Please specify your washing machine type");
+        }
+      }
+      
+      if (selectedType === 'animals') {
+        if (!listingForm.animalTypes) {
+          return setError("Please specify what types of animals you care for");
+        }
+        if (!listingForm.servicesOffered) {
+          return setError("Please specify what services you offer");
+        }
+        if (!listingForm.experience) {
+          return setError("Please describe your experience with animals");
+        }
+      }
+    }
     
     if (!listingForm.near.trim()) {
       return setError(`${getNearLabel(selectedCategory, selectedType)} is required`);
@@ -769,6 +860,17 @@ export default function CreateListing() {
         host: listingForm.host || "",
         regularPrice: listingForm.regularPrice || 50,
         discountPrice: listingForm.discountPrice || 0,
+        // New fields for sneaker, washingmat, animals
+        shoeTypes: listingForm.shoeTypes || "",
+        cleaningMethod: listingForm.cleaningMethod || "",
+        turnaroundTime: listingForm.turnaroundTime || "",
+        machineType: listingForm.machineType || "",
+        matTypes: listingForm.matTypes || "",
+        dryingMethod: listingForm.dryingMethod || "",
+        animalTypes: listingForm.animalTypes || "",
+        servicesOffered: listingForm.servicesOffered || "",
+        experience: listingForm.experience || "",
+        certifications: listingForm.certifications || "",
       };
 
       console.log("Submitting to:", endpoint);
@@ -856,6 +958,28 @@ export default function CreateListing() {
           { id: "pets", label: "Pet Friendly", emoji: "🐾", checked: listingForm.pets },
         ];
       case 'online':
+        if (selectedType === 'sneaker') {
+          return [
+            { id: "security", label: "Background Check", emoji: "✅", checked: listingForm.security },
+            { id: "delivery", label: "Pickup & Delivery", emoji: "🚚", checked: listingForm.delivery },
+            { id: "ecoFriendly", label: "Eco-Friendly Products", emoji: "🌱", checked: listingForm.ecoFriendly },
+          ];
+        }
+        if (selectedType === 'washingmat') {
+          return [
+            { id: "security", label: "Background Check", emoji: "✅", checked: listingForm.security },
+            { id: "delivery", label: "Pickup & Delivery", emoji: "🚚", checked: listingForm.delivery },
+            { id: "ecoFriendly", label: "Eco-Friendly", emoji: "🌱", checked: listingForm.ecoFriendly },
+          ];
+        }
+        if (selectedType === 'animals') {
+          return [
+            { id: "security", label: "Background Check", emoji: "✅", checked: listingForm.security },
+            { id: "pets", label: "Pet Friendly", emoji: "🐾", checked: listingForm.pets },
+            { id: "delivery", label: "Pickup & Delivery", emoji: "🚚", checked: listingForm.delivery },
+            { id: "parking", label: "On-Site Parking", emoji: "🅿️", checked: listingForm.parking },
+          ];
+        }
         return [
           { id: "security", label: "Background Check", emoji: "✅", checked: listingForm.security },
           { id: "pets", label: "Pet Friendly", emoji: "🐾", checked: listingForm.pets },
@@ -904,6 +1028,9 @@ export default function CreateListing() {
           { id: "barber", label: "Barber", emoji: "✂️", description: "Haircuts, grooming" },
           { id: "photography", label: "Photographer", emoji: "📷", description: "Photo sessions" },
           { id: "baker", label: "Baker", emoji: "🍰", description: "Custom baked goods" },
+          { id: "sneaker", label: "Sneaker Cleaner", emoji: "👟", description: "Sneaker cleaning & restoration" },
+          { id: "washingmat", label: "Mat Washer", emoji: "🧼", description: "Professional mat washing service" },
+          { id: "animals", label: "Animal Care", emoji: "🐕", description: "Pet sitting, walking, grooming" },
         ];
       case 'events':
         return [
@@ -1371,6 +1498,9 @@ export default function CreateListing() {
                         selectedCategory === 'stays' ? "Cozy mountain cabin with amazing views" :
                         selectedCategory === 'experiences' && selectedType === 'carwash' ? "Premium Car Wash & Detailing Service" :
                         selectedCategory === 'experiences' ? "Professional Cleaning Service" :
+                        selectedCategory === 'online' && selectedType === 'sneaker' ? "Expert Sneaker Cleaning & Restoration" :
+                        selectedCategory === 'online' && selectedType === 'washingmat' ? "Professional Mat Washing Service" :
+                        selectedCategory === 'online' && selectedType === 'animals' ? "Loving Pet Care & Walking Services" :
                         selectedCategory === 'online' ? "John's Tutoring Services" :
                         "Summer Music Festival"
                       }
@@ -1387,6 +1517,9 @@ export default function CreateListing() {
                         selectedCategory === 'stays' ? "Describe what makes your place special..." :
                         selectedCategory === 'experiences' && selectedType === 'carwash' ? "Professional car wash and detailing services..." :
                         selectedCategory === 'experiences' ? "Describe your service in detail..." :
+                        selectedCategory === 'online' && selectedType === 'sneaker' ? "Expert sneaker cleaning using premium products. I restore and clean all types of sneakers..." :
+                        selectedCategory === 'online' && selectedType === 'washingmat' ? "Professional mat washing service using industrial machines. I clean all types of mats..." :
+                        selectedCategory === 'online' && selectedType === 'animals' ? "Loving and experienced animal care provider. I offer pet sitting, walking, and grooming..." :
                         selectedCategory === 'online' ? "Describe your skills and experience..." :
                         "Describe the event, activities, and what attendees can expect..."
                       }
@@ -1415,7 +1548,7 @@ export default function CreateListing() {
                       />
                     </div>
 
-                    {/* Host/Organizer Name Field - ADDED HERE */}
+                    {/* Host/Organizer Name Field */}
                     <FormInput
                       label={selectedCategory === 'stays' ? "Host name" : 
                              selectedCategory === 'events' ? "Organizer name" : 
@@ -1472,6 +1605,119 @@ export default function CreateListing() {
                             required
                           />
                         </div>
+                      </div>
+                    )}
+
+                    {/* Sneaker Cleaner Specific Fields */}
+                    {selectedCategory === 'online' && selectedType === 'sneaker' && (
+                      <div className="space-y-6 pt-4 border-t border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-900">Sneaker Cleaning Details</h3>
+                        
+                        <FormInput
+                          label="Types of Sneakers You Clean"
+                          id="shoeTypes"
+                          value={listingForm.shoeTypes}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Athletic, Casual, High-end, All types"
+                          required
+                          helpText="Specify what types of sneakers you specialize in"
+                        />
+
+                        <FormInput
+                          label="Cleaning Method"
+                          id="cleaningMethod"
+                          value={listingForm.cleaningMethod}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Hand wash, Machine wash, Steam cleaning"
+                          helpText="Describe your cleaning process"
+                        />
+
+                        <FormInput
+                          label="Turnaround Time"
+                          id="turnaroundTime"
+                          value={listingForm.turnaroundTime}
+                          onChange={handleFormChange}
+                          placeholder="e.g., 24-48 hours, 3-5 days"
+                          required
+                        />
+                      </div>
+                    )}
+
+                    {/* Mat Washer Specific Fields */}
+                    {selectedCategory === 'online' && selectedType === 'washingmat' && (
+                      <div className="space-y-6 pt-4 border-t border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-900">Mat Washing Details</h3>
+                        
+                        <FormInput
+                          label="Types of Mats You Clean"
+                          id="matTypes"
+                          value={listingForm.matTypes}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Doormats, Bath mats, Gym mats, Car mats"
+                          required
+                        />
+
+                        <FormInput
+                          label="Machine Type"
+                          id="machineType"
+                          value={listingForm.machineType}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Industrial washer, Commercial dryer"
+                          required
+                        />
+
+                        <FormInput
+                          label="Drying Method"
+                          id="dryingMethod"
+                          value={listingForm.dryingMethod}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Air dry, Machine dry, Both"
+                          helpText="How do you dry the mats?"
+                        />
+                      </div>
+                    )}
+
+                    {/* Animal Care Specific Fields */}
+                    {selectedCategory === 'online' && selectedType === 'animals' && (
+                      <div className="space-y-6 pt-4 border-t border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-900">Animal Care Details</h3>
+                        
+                        <FormInput
+                          label="Types of Animals You Care For"
+                          id="animalTypes"
+                          value={listingForm.animalTypes}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Dogs, Cats, Birds, Small pets, All types"
+                          required
+                        />
+
+                        <FormInput
+                          label="Services Offered"
+                          id="servicesOffered"
+                          value={listingForm.servicesOffered}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Pet sitting, Dog walking, Grooming, Training"
+                          required
+                        />
+
+                        <FormInput
+                          label="Experience with Animals"
+                          id="experience"
+                          value={listingForm.experience}
+                          onChange={handleFormChange}
+                          placeholder="Describe your experience with animals"
+                          required
+                          rows={3}
+                        />
+
+                        <FormInput
+                          label="Certifications"
+                          id="certifications"
+                          value={listingForm.certifications}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Pet first aid, Animal behavior training, etc."
+                          helpText="List any relevant certifications or training"
+                        />
                       </div>
                     )}
 
@@ -1827,6 +2073,71 @@ export default function CreateListing() {
                         )}
                       </div>
                     </div>
+
+                    {/* Show specific details based on type */}
+                    {selectedCategory === 'online' && selectedType === 'sneaker' && (
+                      <div className="bg-gray-50 rounded-xl p-6">
+                        <h3 className="font-semibold text-lg text-gray-900 mb-4">Sneaker Cleaning Details</h3>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between py-1">
+                            <span className="text-gray-600">Shoe Types:</span>
+                            <span className="font-medium text-gray-900">{listingForm.shoeTypes}</span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span className="text-gray-600">Cleaning Method:</span>
+                            <span className="font-medium text-gray-900">{listingForm.cleaningMethod || "Not specified"}</span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span className="text-gray-600">Turnaround Time:</span>
+                            <span className="font-medium text-gray-900">{listingForm.turnaroundTime}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedCategory === 'online' && selectedType === 'washingmat' && (
+                      <div className="bg-gray-50 rounded-xl p-6">
+                        <h3 className="font-semibold text-lg text-gray-900 mb-4">Mat Washing Details</h3>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between py-1">
+                            <span className="text-gray-600">Mat Types:</span>
+                            <span className="font-medium text-gray-900">{listingForm.matTypes}</span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span className="text-gray-600">Machine Type:</span>
+                            <span className="font-medium text-gray-900">{listingForm.machineType}</span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span className="text-gray-600">Drying Method:</span>
+                            <span className="font-medium text-gray-900">{listingForm.dryingMethod || "Not specified"}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedCategory === 'online' && selectedType === 'animals' && (
+                      <div className="bg-gray-50 rounded-xl p-6">
+                        <h3 className="font-semibold text-lg text-gray-900 mb-4">Animal Care Details</h3>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between py-1">
+                            <span className="text-gray-600">Animal Types:</span>
+                            <span className="font-medium text-gray-900">{listingForm.animalTypes}</span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span className="text-gray-600">Services Offered:</span>
+                            <span className="font-medium text-gray-900">{listingForm.servicesOffered}</span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span className="text-gray-600">Experience:</span>
+                            <span className="font-medium text-gray-900">{listingForm.experience}</span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span className="text-gray-600">Certifications:</span>
+                            <span className="font-medium text-gray-900">{listingForm.certifications || "None listed"}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </SectionCard>
 

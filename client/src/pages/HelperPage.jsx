@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { Link } from "react-router-dom";
 import {
   FaStar, FaMapMarkerAlt, FaPhone, FaUser,
-  FaClock, FaShieldAlt, FaDog, FaUsers,
+  FaClock, FaShieldAlt, FaUsers,
   FaGraduationCap, FaWhatsapp,
   FaExclamationTriangle, FaCheckCircle,
   FaFlag, FaArrowLeft,
@@ -25,7 +25,11 @@ import {
   FaBoxOpen, FaShippingFast, FaRecycle, FaSeedling, FaFish, FaDrumstickBite,
   FaPepperHot, FaCheese, FaBreadSlice, FaIceCream, FaCoffee, FaWineBottle,
   FaWater, FaWind, FaSun, FaCloudRain, FaTemperatureHigh, FaTemperatureLow,
-  FaHeart, FaShareAlt, FaMedal, FaRegClock, FaRegCheckCircle, FaRegStar
+  FaHeart, FaShareAlt, FaMedal, FaRegClock, FaRegCheckCircle, FaRegStar,
+  // New icons for sneaker, washingmat, animals
+  FaShoePrints, FaWater as FaWaterDrop, FaPaw, FaDog as FaDogIcon,
+  FaCat, FaHorse, FaDove, FaFish as FaFishIcon, FaBath, FaSoap,
+  FaTint, FaBlender, FaCogs, FaIndustry, FaTruck, FaTshirt as FaTshirtIcon
 } from 'react-icons/fa';
 import { FiShare2, FiHeart } from 'react-icons/fi';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -161,7 +165,28 @@ export default function HelperPage() {
     foodProvided: 'no',
     cleaningArrengement: 'no',
     equipmentProvided: 'no',
-    otherDetails: ''
+    otherDetails: '',
+    // Sneaker cleaner specific fields
+    shoeBrands: '',
+    shoeCondition: '',
+    cleaningType: '',
+    restorationNeeded: false,
+    waterproofing: false,
+    // Washing mat specific fields
+    matSize: '',
+    matMaterial: '',
+    stainLevel: '',
+    dryingPreference: '',
+    pickupDelivery: false,
+    // Animal care specific fields
+    animalType: '',
+    animalSize: '',
+    animalAge: '',
+    animalBreed: '',
+    serviceDuration: '',
+    vaccinationStatus: '',
+    specialNeeds: '',
+    ownSupplies: false,
   });
 
   // AI Assessment States
@@ -204,7 +229,10 @@ export default function HelperPage() {
       domestic: 'Domestic Helper',
       tattoo: 'Tattoo Artist',
       tutor: 'Private Tutor',
-      photography: 'Photographer'
+      photography: 'Photographer',
+      sneaker: 'Sneaker Cleaner',
+      washingmat: 'Mat Washer',
+      animals: 'Animal Care Professional'
     };
     return titles[type] || 'Professional';
   };
@@ -223,6 +251,9 @@ export default function HelperPage() {
       tattoo: 'gray',
       tutor: 'green',
       photography: 'purple',
+      sneaker: 'indigo',
+      washingmat: 'cyan',
+      animals: 'amber',
       default: 'red'
     };
     return themes[type] || themes.default;
@@ -303,6 +334,45 @@ export default function HelperPage() {
       { id: 'landscape', name: 'Landscape', icon: <FaMapMarkerAlt className="text-teal-500" /> }
     ];
 
+    // Sneaker cleaner options
+    const sneakerOptions = [
+      { id: 'basicClean', name: 'Basic Clean', icon: <FaShoePrints className="text-indigo-500" /> },
+      { id: 'deepClean', name: 'Deep Clean', icon: <FaSoap className="text-purple-500" /> },
+      { id: 'stainRemoval', name: 'Stain Removal', icon: <FaTint className="text-blue-500" /> },
+      { id: 'whitening', name: 'Whitening', icon: <FaStar className="text-yellow-500" /> },
+      { id: 'restoration', name: 'Restoration', icon: <FaTools className="text-gray-600" /> },
+      { id: 'waterproofing', name: 'Waterproofing', icon: <FaWaterDrop className="text-cyan-500" /> },
+      { id: 'soleRepair', name: 'Sole Repair', icon: <FaCogs className="text-gray-700" /> },
+      { id: 'colorRestore', name: 'Color Restore', icon: <FaPalette className="text-pink-500" /> }
+    ];
+
+    // Washing mat options
+    const washingmatOptions = [
+      { id: 'basicWash', name: 'Basic Wash', icon: <FaWaterDrop className="text-blue-500" /> },
+      { id: 'deepClean', name: 'Deep Clean', icon: <FaBath className="text-purple-500" /> },
+      { id: 'stainRemoval', name: 'Stain Removal', icon: <FaTint className="text-red-500" /> },
+      { id: 'sanitizing', name: 'Sanitizing', icon: <FaShieldAlt className="text-green-500" /> },
+      { id: 'deodorizing', name: 'Deodorizing', icon: <FaWind className="text-teal-500" /> },
+      { id: 'steamCleaning', name: 'Steam Cleaning', icon: <FaFire className="text-orange-500" /> },
+      { id: 'drying', name: 'Drying Service', icon: <FaSun className="text-yellow-500" /> },
+      { id: 'pickupDelivery', name: 'Pickup & Delivery', icon: <FaTruck className="text-gray-600" /> }
+    ];
+
+    // Animal care options - FIXED: Changed FaBird to FaDove
+    const animalOptions = [
+      { id: 'dogWalking', name: 'Dog Walking', icon: <FaDogIcon className="text-amber-600" /> },
+      { id: 'petSitting', name: 'Pet Sitting', icon: <FaPaw className="text-amber-500" /> },
+      { id: 'grooming', name: 'Grooming', icon: <FaCut className="text-purple-500" /> },
+      { id: 'bathing', name: 'Bathing', icon: <FaBath className="text-blue-500" /> },
+      { id: 'feeding', name: 'Feeding', icon: <FaFishIcon className="text-green-500" /> },
+      { id: 'medication', name: 'Medication', icon: <FaShieldAlt className="text-red-500" /> },
+      { id: 'training', name: 'Training', icon: <FaGraduationCap className="text-indigo-500" /> },
+      { id: 'vetVisits', name: 'Vet Visits', icon: <FaTruck className="text-gray-600" /> },
+      { id: 'catCare', name: 'Cat Care', icon: <FaCat className="text-amber-400" /> },
+      { id: 'birdCare', name: 'Bird Care', icon: <FaDove className="text-sky-500" /> },
+      { id: 'horseCare', name: 'Horse Care', icon: <FaHorse className="text-brown-500" /> }
+    ];
+
     switch (type) {
       case 'beauty':
       case 'spa':
@@ -322,6 +392,12 @@ export default function HelperPage() {
       case 'domestic':
       case 'maid':
         return baseOptions;
+      case 'sneaker':
+        return sneakerOptions;
+      case 'washingmat':
+        return washingmatOptions;
+      case 'animals':
+        return animalOptions;
       default:
         return [];
     }
@@ -378,6 +454,105 @@ export default function HelperPage() {
     { id: 'custom', name: 'Custom Menu' }
   ];
 
+  // Sneaker cleaner specific options
+  const shoeBrands = [
+    { id: 'nike', name: 'Nike' },
+    { id: 'adidas', name: 'Adidas' },
+    { id: 'jordan', name: 'Jordan' },
+    { id: 'newbalance', name: 'New Balance' },
+    { id: 'puma', name: 'Puma' },
+    { id: 'reebok', name: 'Reebok' },
+    { id: 'vans', name: 'Vans' },
+    { id: 'converse', name: 'Converse' },
+    { id: 'yeezy', name: 'Yeezy' },
+    { id: 'other', name: 'Other' }
+  ];
+
+  const shoeConditions = [
+    { id: 'lightlyWorn', name: 'Lightly Worn' },
+    { id: 'moderatelyWorn', name: 'Moderately Worn' },
+    { id: 'heavilyWorn', name: 'Heavily Worn' },
+    { id: 'veryDirty', name: 'Very Dirty' },
+    { id: 'stained', name: 'Stained' },
+    { id: 'damaged', name: 'Damaged' }
+  ];
+
+  const cleaningTypes = [
+    { id: 'surface', name: 'Surface Clean' },
+    { id: 'deep', name: 'Deep Clean' },
+    { id: 'restoration', name: 'Restoration' },
+    { id: 'whitening', name: 'Whitening' },
+    { id: 'stainRemoval', name: 'Stain Removal' }
+  ];
+
+  // Washing mat specific options
+  const matSizes = [
+    { id: 'small', name: 'Small (under 2x3 ft)' },
+    { id: 'medium', name: 'Medium (2x3 to 4x6 ft)' },
+    { id: 'large', name: 'Large (4x6 to 6x9 ft)' },
+    { id: 'xlarge', name: 'Extra Large (over 6x9 ft)' }
+  ];
+
+  const matMaterials = [
+    { id: 'cotton', name: 'Cotton' },
+    { id: 'synthetic', name: 'Synthetic' },
+    { id: 'rubber', name: 'Rubber Backed' },
+    { id: 'wool', name: 'Wool' },
+    { id: 'coconut', name: 'Coconut Fiber' },
+    { id: 'microfiber', name: 'Microfiber' }
+  ];
+
+  const stainLevels = [
+    { id: 'light', name: 'Light Stains' },
+    { id: 'moderate', name: 'Moderate Stains' },
+    { id: 'heavy', name: 'Heavy Stains' },
+    { id: 'setIn', name: 'Set-in Stains' }
+  ];
+
+  const dryingPreferences = [
+    { id: 'airdry', name: 'Air Dry' },
+    { id: 'machinedry', name: 'Machine Dry' },
+    { id: 'both', name: 'Both Options' }
+  ];
+
+  // Animal care specific options - FIXED: Changed FaBird to FaDove
+  const animalTypes = [
+    { id: 'dog', name: 'Dog', icon: <FaDogIcon /> },
+    { id: 'cat', name: 'Cat', icon: <FaCat /> },
+    { id: 'bird', name: 'Bird', icon: <FaDove /> },
+    { id: 'fish', name: 'Fish', icon: <FaFishIcon /> },
+    { id: 'horse', name: 'Horse', icon: <FaHorse /> },
+    { id: 'rabbit', name: 'Rabbit', icon: <FaPaw /> },
+    { id: 'hamster', name: 'Hamster', icon: <FaPaw /> },
+    { id: 'reptile', name: 'Reptile', icon: <FaPaw /> },
+    { id: 'multiple', name: 'Multiple Animals', icon: <FaUsers /> }
+  ];
+
+  const animalSizes = [
+    { id: 'small', name: 'Small (under 10kg)' },
+    { id: 'medium', name: 'Medium (10-25kg)' },
+    { id: 'large', name: 'Large (25-45kg)' },
+    { id: 'xlarge', name: 'Extra Large (over 45kg)' }
+  ];
+
+  const animalAgeRanges = [
+    { id: 'puppy', name: 'Puppy/Kitten' },
+    { id: 'young', name: 'Young' },
+    { id: 'adult', name: 'Adult' },
+    { id: 'senior', name: 'Senior' }
+  ];
+
+  const serviceDurations = [
+    { id: '30min', name: '30 minutes' },
+    { id: '1hour', name: '1 hour' },
+    { id: '2hours', name: '2 hours' },
+    { id: '4hours', name: '4 hours' },
+    { id: '8hours', name: 'Full day (8 hours)' },
+    { id: 'overnight', name: 'Overnight' },
+    { id: '24hours', name: '24 hours' },
+    { id: 'weekly', name: 'Weekly' }
+  ];
+
   // Equipment options for different services
   const equipmentOptions = {
     chef: [
@@ -419,6 +594,36 @@ export default function HelperPage() {
       'Editing laptop',
       'Memory cards',
       'Battery packs'
+    ],
+    sneaker: [
+      'Professional cleaning solutions',
+      'Soft brushes',
+      'Microfiber cloths',
+      'Shoe trees',
+      'Waterproofing spray',
+      'Stain removers',
+      'Whitening products',
+      'Drying equipment'
+    ],
+    washingmat: [
+      'Industrial washing machine',
+      'Commercial dryer',
+      'Steam cleaner',
+      'High-pressure washer',
+      'Stain removers',
+      'Deodorizing products',
+      'Sanitizing equipment',
+      'Drying racks'
+    ],
+    animals: [
+      'Leashes and harnesses',
+      'Grooming tools',
+      'Pet carrier',
+      'First aid kit',
+      'Pet treats',
+      'Cleaning supplies',
+      'Toys',
+      'Pet waste bags'
     ],
     default: [
       'Basic tools',
@@ -555,6 +760,9 @@ export default function HelperPage() {
       photography: "Photography Studio",
       massage: "Massage Studio",
       tutor: "Tutoring Center",
+      sneaker: "Sneaker Cleaning Studio",
+      washingmat: "Mat Washing Facility",
+      animals: "Animal Care Center",
       default: "Professional's Location"
     };
     
@@ -591,7 +799,7 @@ export default function HelperPage() {
   // Helper functions for social media verification
   const generateUsername = (name, platform) => {
     const cleanName = name.toLowerCase().replace(/\s+/g, '');
-    const suffixes = ['', 'official', 'professionals', 'styles', 'studio', 'hair', 'beauty', 'chef', 'cooking', 'art', 'tattoo', 'photography'];
+    const suffixes = ['', 'official', 'professionals', 'styles', 'studio', 'hair', 'beauty', 'chef', 'cooking', 'art', 'tattoo', 'photography', 'sneakers', 'mats', 'pets', 'animals'];
     const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
     return suffix ? `${cleanName}.${suffix}` : cleanName;
   };
@@ -734,8 +942,8 @@ export default function HelperPage() {
         // Simulate AI assessment on data load
         simulateAiAssessment(data);
 
-        // Check if helper is barber, chef, beauty, domestic, or maid and verify social media
-        if (['barber', 'barbar', 'chef', 'cooking', 'beauty', 'spa', 'domestic', 'maid', 'tattoo', 'tutor', 'photography'].includes(data.type)) {
+        // Check if helper is barber, chef, beauty, domestic, maid, sneaker, washingmat, or animals and verify social media
+        if (['barber', 'barbar', 'chef', 'cooking', 'beauty', 'spa', 'domestic', 'maid', 'tattoo', 'tutor', 'photography', 'sneaker', 'washingmat', 'animals'].includes(data.type)) {
           verifySocialMediaPresence(data);
         }
 
@@ -816,6 +1024,31 @@ export default function HelperPage() {
         if (description.includes("equipment") || description.includes("camera")) descScore += 1;
         if (description.includes("portfolio") || description.includes("experience")) descScore += 1;
         if (description.includes("editing") || description.includes("retouching")) descScore += 1;
+      }
+
+      // Sneaker cleaner-specific scoring
+      if (helperData.type === 'sneaker') {
+        if (description.includes("professional") || description.includes("experience")) descScore += 2;
+        if (description.includes("products") || description.includes("solutions")) descScore += 1;
+        if (description.includes("restoration") || description.includes("cleaning")) descScore += 1;
+        if (description.includes("brands") || description.includes("materials")) descScore += 1;
+      }
+
+      // Washing mat-specific scoring
+      if (helperData.type === 'washingmat') {
+        if (description.includes("industrial") || description.includes("commercial")) descScore += 2;
+        if (description.includes("machine") || description.includes("equipment")) descScore += 1;
+        if (description.includes("sanitizing") || description.includes("sterilizing")) descScore += 1;
+        if (description.includes("drying") || description.includes("process")) descScore += 1;
+      }
+
+      // Animal care-specific scoring
+      if (helperData.type === 'animals') {
+        if (description.includes("certified") || description.includes("trained")) descScore += 2;
+        if (description.includes("experience") || description.includes("passion")) descScore += 1;
+        if (description.includes("animals") || description.includes("pets")) descScore += 1;
+        if (description.includes("care") || description.includes("handling")) descScore += 1;
+        if (description.includes("first aid") || description.includes("emergency")) descScore += 1;
       }
 
       // Calculate image quality based on number of images
@@ -993,6 +1226,38 @@ export default function HelperPage() {
         goToThem: [
           'professionalEquipment'
         ]
+      },
+      sneaker: {
+        comeToYou: [
+          'workSurface',
+          'waterAccess',
+          'powerOutlets'
+        ],
+        goToThem: [
+          'professionalCleaningStation'
+        ]
+      },
+      washingmat: {
+        comeToYou: [
+          'waterAccess',
+          'outdoorSpace',
+          'dryingArea'
+        ],
+        goToThem: [
+          'industrialWasher',
+          'dryingFacility'
+        ]
+      },
+      animals: {
+        comeToYou: [
+          'secureSpace',
+          'waterAccess',
+          'outdoorArea'
+        ],
+        goToThem: [
+          'professionalFacility',
+          'outdoorRuns'
+        ]
       }
     };
 
@@ -1125,6 +1390,72 @@ export default function HelperPage() {
       message += `• Delivery Format: ${bookingData.deliveryFormat}%0A`;
     }
 
+    // Add sneaker cleaner specific details
+    if (helper.type === 'sneaker') {
+      if (bookingData.shoeBrands) {
+        message += `• Shoe Brand: ${bookingData.shoeBrands}%0A`;
+      }
+      if (bookingData.shoeCondition) {
+        message += `• Shoe Condition: ${bookingData.shoeCondition}%0A`;
+      }
+      if (bookingData.cleaningType) {
+        message += `• Cleaning Type: ${bookingData.cleaningType}%0A`;
+      }
+      if (bookingData.restorationNeeded) {
+        message += `• Restoration Needed: Yes%0A`;
+      }
+      if (bookingData.waterproofing) {
+        message += `• Waterproofing: Yes%0A`;
+      }
+    }
+
+    // Add washing mat specific details
+    if (helper.type === 'washingmat') {
+      if (bookingData.matSize) {
+        message += `• Mat Size: ${bookingData.matSize}%0A`;
+      }
+      if (bookingData.matMaterial) {
+        message += `• Mat Material: ${bookingData.matMaterial}%0A`;
+      }
+      if (bookingData.stainLevel) {
+        message += `• Stain Level: ${bookingData.stainLevel}%0A`;
+      }
+      if (bookingData.dryingPreference) {
+        message += `• Drying Preference: ${bookingData.dryingPreference}%0A`;
+      }
+      if (bookingData.pickupDelivery) {
+        message += `• Pickup & Delivery: Yes%0A`;
+      }
+    }
+
+    // Add animal care specific details
+    if (helper.type === 'animals') {
+      if (bookingData.animalType) {
+        message += `• Animal Type: ${bookingData.animalType}%0A`;
+      }
+      if (bookingData.animalBreed) {
+        message += `• Breed: ${bookingData.animalBreed}%0A`;
+      }
+      if (bookingData.animalSize) {
+        message += `• Animal Size: ${bookingData.animalSize}%0A`;
+      }
+      if (bookingData.animalAge) {
+        message += `• Animal Age: ${bookingData.animalAge}%0A`;
+      }
+      if (bookingData.serviceDuration) {
+        message += `• Service Duration: ${bookingData.serviceDuration}%0A`;
+      }
+      if (bookingData.vaccinationStatus) {
+        message += `• Vaccination Status: ${bookingData.vaccinationStatus}%0A`;
+      }
+      if (bookingData.specialNeeds) {
+        message += `• Special Needs: ${bookingData.specialNeeds}%0A`;
+      }
+      if (bookingData.ownSupplies) {
+        message += `• Owner Provides Supplies: Yes%0A`;
+      }
+    }
+
     // Add food-related details for domestic/maid services
     if ((helper.type === 'domestic' || helper.type === 'maid') && bookingData.bringFood) {
       message += `• Food Provided: ${bookingData.bringFood === 'yes' ? 'Yes' : 'No'}%0A`;
@@ -1189,6 +1520,18 @@ export default function HelperPage() {
         message += `  ✓ Clean workspace%0A`;
         message += `  ✓ Water access%0A`;
         message += `  ✓ Power outlets for cleaning equipment%0A`;
+      } else if (helper.type === 'sneaker') {
+        message += `  ✓ Clean work surface%0A`;
+        message += `  ✓ Water access nearby%0A`;
+        message += `  ✓ Power outlets for equipment%0A`;
+      } else if (helper.type === 'washingmat') {
+        message += `  ✓ Outdoor space or garage with water access%0A`;
+        message += `  ✓ Area for drying%0A`;
+        message += `  ✓ Power outlets for equipment%0A`;
+      } else if (helper.type === 'animals') {
+        message += `  ✓ Secure, fenced area%0A`;
+        message += `  ✓ Water access%0A`;
+        message += `  ✓ Indoor/outdoor space%0A`;
       } else {
         message += `  ✓ Clean, accessible workspace with power outlets%0A`;
       }
@@ -1256,7 +1599,7 @@ export default function HelperPage() {
 
     // Validate service selection
     if (
-      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography') && 
+      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals') && 
       bookingData.selectedServices.length === 0
     ) {
       alert("Please select at least one service you need.");
@@ -1293,7 +1636,7 @@ export default function HelperPage() {
     const locationMessage = getLocationSpecificMessage(bookingData, helper);
 
     // Build the main WhatsApp message with enhanced location details
-    let message = `*${helper.type === 'chef' ? '👨‍🍳' : helper.type === 'barber' || helper.type === 'barbar' ? '✂️' : helper.type === 'tattoo' ? '🎨' : helper.type === 'photography' ? '📷' : helper.type === 'domestic' || helper.type === 'maid' ? '🧹' : '👤'} New ${getProfessionalTitle(helper.type)} Booking Request for ${helper.name}*%0A%0A`;
+    let message = `*${helper.type === 'chef' ? '👨‍🍳' : helper.type === 'barber' || helper.type === 'barbar' ? '✂️' : helper.type === 'tattoo' ? '🎨' : helper.type === 'photography' ? '📷' : helper.type === 'sneaker' ? '👟' : helper.type === 'washingmat' ? '🧼' : helper.type === 'animals' ? '🐕' : helper.type === 'domestic' || helper.type === 'maid' ? '🧹' : '👤'} New ${getProfessionalTitle(helper.type)} Booking Request for ${helper.name}*%0A%0A`;
 
     message += `*🛎️ SERVICE DETAILS*%0A`;
     message += `• Price: R${helper.regularPrice}%0A`;
@@ -1377,6 +1720,77 @@ export default function HelperPage() {
       message += `• Delivery Format: ${bookingData.deliveryFormat}%0A`;
     }
 
+    // Add sneaker cleaner specific details
+    if (helper.type === 'sneaker') {
+      if (bookingData.shoeBrands) {
+        message += `• Shoe Brand: ${bookingData.shoeBrands}%0A`;
+      }
+      if (bookingData.shoeCondition) {
+        message += `• Shoe Condition: ${bookingData.shoeCondition}%0A`;
+      }
+      if (bookingData.cleaningType) {
+        message += `• Cleaning Type: ${bookingData.cleaningType}%0A`;
+      }
+      if (bookingData.restorationNeeded) {
+        message += `• Restoration Needed: Yes%0A`;
+      }
+      if (bookingData.waterproofing) {
+        message += `• Waterproofing: Yes%0A`;
+      }
+    }
+
+    // Add washing mat specific details
+    if (helper.type === 'washingmat') {
+      if (bookingData.matSize) {
+        message += `• Mat Size: ${bookingData.matSize}%0A`;
+      }
+      if (bookingData.matMaterial) {
+        message += `• Mat Material: ${bookingData.matMaterial}%0A`;
+      }
+      if (bookingData.stainLevel) {
+        message += `• Stain Level: ${bookingData.stainLevel}%0A`;
+      }
+      if (bookingData.dryingPreference) {
+        message += `• Drying Preference: ${bookingData.dryingPreference}%0A`;
+      }
+      if (bookingData.pickupDelivery) {
+        message += `• Pickup & Delivery: Yes%0A`;
+      }
+    }
+
+    // Add animal care specific details
+    if (helper.type === 'animals') {
+      if (bookingData.animalType) {
+        message += `• Animal Type: ${bookingData.animalType}%0A`;
+      }
+      if (bookingData.animalBreed) {
+        message += `• Breed: ${bookingData.animalBreed}%0A`;
+      }
+      if (bookingData.animalSize) {
+        message += `• Animal Size: ${bookingData.animalSize}%0A`;
+      }
+      if (bookingData.animalAge) {
+        message += `• Animal Age: ${bookingData.animalAge}%0A`;
+      }
+      if (bookingData.serviceDuration) {
+        message += `• Service Duration: ${bookingData.serviceDuration}%0A`;
+      }
+      if (bookingData.vaccinationStatus) {
+        const vaccinationOptions = {
+          'upToDate': 'Up to date',
+          'notUpToDate': 'Not up to date',
+          'unknown': 'Unknown'
+        };
+        message += `• Vaccination Status: ${vaccinationOptions[bookingData.vaccinationStatus] || bookingData.vaccinationStatus}%0A`;
+      }
+      if (bookingData.specialNeeds) {
+        message += `• Special Needs: ${bookingData.specialNeeds}%0A`;
+      }
+      if (bookingData.ownSupplies) {
+        message += `• Owner Provides Supplies: Yes%0A`;
+      }
+    }
+
     // Add service provider details
     message += `%0A*🏠 SERVICE PROVIDER DETAILS*%0A`;
     
@@ -1453,7 +1867,12 @@ export default function HelperPage() {
             mirrorAccess: '✓ Mirror access needed',
             cleanSpace: '✓ Clean, well-lit workspace required',
             waterAccess: '✓ Water access required',
-            professionalEquipment: '✓ Professional equipment provided'
+            professionalEquipment: '✓ Professional equipment provided',
+            workSurface: '✓ Clean work surface required',
+            outdoorSpace: '✓ Outdoor space or garage required',
+            dryingArea: '✓ Drying area required',
+            secureSpace: '✓ Secure, fenced space required',
+            outdoorArea: '✓ Outdoor area preferred'
           }[req] || `✓ ${req.replace(/([A-Z])/g, ' $1').toLowerCase()}`;
           message += `  ${reqText}%0A`;
         });
@@ -1882,7 +2301,7 @@ export default function HelperPage() {
             </div>
 
             {/* Services Offered - FIXED SECTION */}
-            {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography') && (
+            {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals') && (
               <div className="pb-6 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Services offered</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1951,7 +2370,7 @@ export default function HelperPage() {
 
           {/* Right Column - Booking Card */}
           <div className="lg:col-span-1">
-            <div className=" top-24 py-12">
+            <div className="top-24 py-12">
               <div className="border border-gray-200 rounded-xl shadow-lg p-6 bg-white">
                 <div className="flex items-end justify-between mb-6">
                   <div>
@@ -2103,7 +2522,7 @@ export default function HelperPage() {
             </div>
             
             <div className="p-6 space-y-6">
-              {/* Form content here - simplified for Airbnb style */}
+              {/* Form content - simplified for Airbnb style */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">Your information</h3>
                 <div className="space-y-4">
@@ -2203,6 +2622,269 @@ export default function HelperPage() {
                         </label>
                       </div>
                     </div>
+                  )}
+
+                  {/* Sneaker Cleaner Specific Fields */}
+                  {helper.type === 'sneaker' && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Shoe Brand</label>
+                        <select
+                          name="shoeBrands"
+                          value={bookingData.shoeBrands}
+                          onChange={handleBookingChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        >
+                          <option value="">Select shoe brand</option>
+                          {shoeBrands.map(brand => (
+                            <option key={brand.id} value={brand.id}>{brand.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Shoe Condition</label>
+                        <select
+                          name="shoeCondition"
+                          value={bookingData.shoeCondition}
+                          onChange={handleBookingChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        >
+                          <option value="">Select condition</option>
+                          {shoeConditions.map(condition => (
+                            <option key={condition.id} value={condition.id}>{condition.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Cleaning Type</label>
+                        <select
+                          name="cleaningType"
+                          value={bookingData.cleaningType}
+                          onChange={handleBookingChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        >
+                          <option value="">Select cleaning type</option>
+                          {cleaningTypes.map(type => (
+                            <option key={type.id} value={type.id}>{type.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="restorationNeeded"
+                          checked={bookingData.restorationNeeded}
+                          onChange={handleBookingChange}
+                          className="mr-2"
+                        />
+                        <label className="text-sm text-gray-700">Restoration needed</label>
+                      </div>
+
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="waterproofing"
+                          checked={bookingData.waterproofing}
+                          onChange={handleBookingChange}
+                          className="mr-2"
+                        />
+                        <label className="text-sm text-gray-700">Waterproofing service</label>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Washing Mat Specific Fields */}
+                  {helper.type === 'washingmat' && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Mat Size</label>
+                        <select
+                          name="matSize"
+                          value={bookingData.matSize}
+                          onChange={handleBookingChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        >
+                          <option value="">Select mat size</option>
+                          {matSizes.map(size => (
+                            <option key={size.id} value={size.id}>{size.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Mat Material</label>
+                        <select
+                          name="matMaterial"
+                          value={bookingData.matMaterial}
+                          onChange={handleBookingChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        >
+                          <option value="">Select material</option>
+                          {matMaterials.map(material => (
+                            <option key={material.id} value={material.id}>{material.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Stain Level</label>
+                        <select
+                          name="stainLevel"
+                          value={bookingData.stainLevel}
+                          onChange={handleBookingChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        >
+                          <option value="">Select stain level</option>
+                          {stainLevels.map(level => (
+                            <option key={level.id} value={level.id}>{level.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Drying Preference</label>
+                        <select
+                          name="dryingPreference"
+                          value={bookingData.dryingPreference}
+                          onChange={handleBookingChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        >
+                          <option value="">Select drying preference</option>
+                          {dryingPreferences.map(pref => (
+                            <option key={pref.id} value={pref.id}>{pref.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="pickupDelivery"
+                          checked={bookingData.pickupDelivery}
+                          onChange={handleBookingChange}
+                          className="mr-2"
+                        />
+                        <label className="text-sm text-gray-700">Pickup & Delivery required (additional fee may apply)</label>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Animal Care Specific Fields - FIXED: Changed FaBird to FaDove */}
+                  {helper.type === 'animals' && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Animal Type</label>
+                        <select
+                          name="animalType"
+                          value={bookingData.animalType}
+                          onChange={handleBookingChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        >
+                          <option value="">Select animal type</option>
+                          {animalTypes.map(animal => (
+                            <option key={animal.id} value={animal.id}>{animal.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Breed (if applicable)</label>
+                        <input
+                          type="text"
+                          name="animalBreed"
+                          value={bookingData.animalBreed}
+                          onChange={handleBookingChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                          placeholder="e.g., Labrador, Persian, etc."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Animal Size</label>
+                        <select
+                          name="animalSize"
+                          value={bookingData.animalSize}
+                          onChange={handleBookingChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        >
+                          <option value="">Select size</option>
+                          {animalSizes.map(size => (
+                            <option key={size.id} value={size.id}>{size.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Animal Age</label>
+                        <select
+                          name="animalAge"
+                          value={bookingData.animalAge}
+                          onChange={handleBookingChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        >
+                          <option value="">Select age range</option>
+                          {animalAgeRanges.map(age => (
+                            <option key={age.id} value={age.id}>{age.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Service Duration</label>
+                        <select
+                          name="serviceDuration"
+                          value={bookingData.serviceDuration}
+                          onChange={handleBookingChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        >
+                          <option value="">Select duration</option>
+                          {serviceDurations.map(duration => (
+                            <option key={duration.id} value={duration.id}>{duration.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Vaccination Status</label>
+                        <select
+                          name="vaccinationStatus"
+                          value={bookingData.vaccinationStatus}
+                          onChange={handleBookingChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        >
+                          <option value="">Select status</option>
+                          <option value="upToDate">Up to date</option>
+                          <option value="notUpToDate">Not up to date</option>
+                          <option value="unknown">Unknown</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Special Needs or Instructions</label>
+                        <textarea
+                          name="specialNeeds"
+                          value={bookingData.specialNeeds}
+                          onChange={handleBookingChange}
+                          rows="2"
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                          placeholder="Any medical conditions, behavioral issues, or special requirements"
+                        />
+                      </div>
+
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="ownSupplies"
+                          checked={bookingData.ownSupplies}
+                          onChange={handleBookingChange}
+                          className="mr-2"
+                        />
+                        <label className="text-sm text-gray-700">I will provide my own supplies (food, leash, etc.)</label>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>

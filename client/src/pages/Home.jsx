@@ -34,7 +34,7 @@ import {
   StarIcon as StarIconSolid,
   HeartIcon as HeartIconSolid,
 } from '@heroicons/react/24/solid';
-import { FaCar, FaBreadSlice, FaHouseUser, FaCut, FaTruckMoving, FaGraduationCap, FaHandsWash, FaBroom, FaChalkboardTeacher, FaHome, FaBed, FaUtensils, FaLeaf, FaBolt } from "react-icons/fa";
+import { FaCar, FaBreadSlice, FaHouseUser, FaCut, FaTruckMoving, FaGraduationCap, FaHandsWash, FaBroom, FaChalkboardTeacher, FaHome, FaBed, FaUtensils, FaLeaf, FaBolt, FaShoePrints, FaWater, FaPaw } from "react-icons/fa";
 
 // --- Constants ---
 const RECENTLY_VIEWED_KEY = 'recentlyViewed';
@@ -194,10 +194,35 @@ const TOP_CATEGORIES = [
     image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?fm=jpg&q=60&w=800&auto=format&fit=crop',
     count: '1,123',
     color: 'from-yellow-500 to-amber-500'
+  },
+  // New helper types
+  {
+    id: 'sneaker',
+    name: 'Sneaker Cleaner',
+    image: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '567',
+    color: 'from-indigo-600 to-purple-600',
+    icon: <FaShoePrints />
+  },
+  {
+    id: 'washingmat',
+    name: 'Mat Washer',
+    image: 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '234',
+    color: 'from-cyan-600 to-blue-600',
+    icon: <FaWater />
+  },
+  {
+    id: 'animals',
+    name: 'Animal Care',
+    image: 'https://images.unsplash.com/photo-1450778869180-41d0601e046e?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '789',
+    color: 'from-amber-600 to-orange-500',
+    icon: <FaPaw />
   }
 ];
 
-// --- Mock Data (Preserved) ---
+// --- Mock Data with specific IDs for testing ---
 const MOCK_PROPERTIES = [
   { _id: 'prop-1', name: 'Modern Apartment in City Center', price: 2500, regularPrice: 2500, type: 'rent-long', imageUrls: ['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.5, address: 'Johannesburg' },
   { _id: 'prop-2', name: 'Luxury Villa with Pool', price: 8500000, regularPrice: 8500000, type: 'sale', imageUrls: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8, address: 'Cape Town' },
@@ -214,16 +239,23 @@ const MOCK_SERVICES = [
   { _id: 'serv-2', name: 'Moving & Relocation Assistance', price: 350, regularPrice: 350, description: 'Help with packing and moving to your new home', imageUrls: ['https://images.unsplash.com/photo-1541976590-713941681591?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8 },
   { _id: 'serv-3', name: 'Landscaping & Garden Design', price: 450, regularPrice: 450, description: 'Garden maintenance and landscape design services', imageUrls: ['https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.6 },
   { _id: 'serv-4', name: 'Home Repair & Maintenance', price: 300, regularPrice: 300, description: 'Professional home repair and maintenance services', imageUrls: ['https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9 },
-  { _id: 'serv-5', name: 'Car Wash & Detailing', price: 150, regularPrice: 150, description: 'Professional car washing and detailing services', imageUrls: ['https://images.unsplash.com/photo-1565689221354-d87f85d4aee2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.5 }
+  { _id: 'serv-5', name: 'Car Wash & Detailing', price: 150, regularPrice: 150, description: 'Professional car washing and detailing services', imageUrls: ['https://images.unsplash.com/photo-1565689221354-d87f85d4aee2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.5 },
+  { _id: 'serv-6', name: 'Sneaker Cleaning & Restoration', price: 250, regularPrice: 250, description: 'Professional sneaker cleaning and restoration services', imageUrls: ['https://images.unsplash.com/photo-1463100099107-aa0980c362e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8 },
+  { _id: 'serv-7', name: 'Professional Mat Washing', price: 180, regularPrice: 180, description: 'Deep cleaning and sanitizing of all types of mats', imageUrls: ['https://images.unsplash.com/photo-1582735689369-4fe89db7114c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.7 },
+  { _id: 'serv-8', name: 'Pet Grooming & Care', price: 220, regularPrice: 220, description: 'Professional grooming, bathing, and care for your pets', imageUrls: ['https://images.unsplash.com/photo-1450778869180-41d0601e046e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9 }
 ];
 
+// Updated MOCK_HELPERS with specific IDs that match your database
 const MOCK_HELPERS = [
-  { _id: 'help-1', name: 'John Doe', type: 'Math Tutor', rating: 4.8, price: 120, regularPrice: 120, imageUrls: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'] },
-  { _id: 'help-2', name: 'Jane Smith', type: 'Elderly Caregiver', rating: 4.9, price: 150, regularPrice: 150, imageUrls: ['https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'] },
-  { _id: 'help-3', name: 'Mike Johnson', type: 'Certified Handyman', rating: 4.7, price: 200, regularPrice: 200, imageUrls: ['https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'] },
-  { _id: 'help-4', name: 'Sarah Wilson', type: 'Professional Cleaner', rating: 4.6, price: 180, regularPrice: 180, imageUrls: ['https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'] },
-  { _id: 'help-5', name: 'David Brown', type: 'IT Support Specialist', rating: 4.8, price: 250, regularPrice: 250, imageUrls: ['https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'] },
-  { _id: 'help-6', name: 'Emily Davis', type: 'Personal Trainer', rating: 4.9, price: 300, regularPrice: 300, imageUrls: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'] }
+  { _id: '69a6a956f0c40835a3119612', name: 'John\'s Sneaker Care', type: 'sneaker', rating: 4.8, regularPrice: 250, imageUrls: ['https://images.unsplash.com/photo-1491553895911-0055eca6402d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Johannesburg', host: 'John Smith', description: 'Professional sneaker cleaning and restoration services using premium products. I restore and clean all types of sneakers with care and attention to detail.', travelFee: 50 },
+  { _id: 'help-2', name: 'Jane Smith', type: 'Elderly Caregiver', rating: 4.9, regularPrice: 150, imageUrls: ['https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Cape Town', host: 'Jane Smith', description: 'Experienced caregiver providing compassionate care for elderly individuals.', travelFee: 30 },
+  { _id: 'help-3', name: 'Mike Johnson', type: 'barber', rating: 4.7, regularPrice: 200, imageUrls: ['https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Durban', host: 'Mike Johnson', description: 'Professional barber with 10+ years of experience in modern and classic cuts.', travelFee: 40 },
+  { _id: 'help-4', name: 'Sarah Wilson', type: 'domestic', rating: 4.6, regularPrice: 180, imageUrls: ['https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Pretoria', host: 'Sarah Wilson', description: 'Reliable domestic helper for cleaning, laundry, and household chores.', travelFee: 25 },
+  { _id: 'help-5', name: 'David Brown', type: 'tutor', rating: 4.8, regularPrice: 250, imageUrls: ['https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Johannesburg', host: 'David Brown', description: 'Qualified math and science tutor for high school and university students.', travelFee: 35 },
+  { _id: 'help-6', name: 'Emily Davis', type: 'photography', rating: 4.9, regularPrice: 300, imageUrls: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Cape Town', host: 'Emily Davis', description: 'Professional photographer specializing in portraits, events, and commercial work.', travelFee: 60 },
+  { _id: 'help-7', name: 'Mike\'s Sneaker Care', type: 'sneaker', rating: 4.8, regularPrice: 250, imageUrls: ['https://images.unsplash.com/photo-1491553895911-0055eca6402d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Johannesburg', host: 'Mike Johnson', description: 'Expert sneaker cleaning and restoration services. I use premium products to restore your sneakers to like-new condition.', travelFee: 45 },
+  { _id: 'help-8', name: 'Clean Mats SA', type: 'washingmat', rating: 4.7, regularPrice: 180, imageUrls: ['https://images.unsplash.com/photo-1582735689369-4fe89db7114c?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Durban', host: 'Sarah Williams', description: 'Professional mat washing service using industrial machines. I clean all types of mats including doormats, bath mats, and gym mats.', travelFee: 40 },
+  { _id: 'help-9', name: 'Paws & Claws Care', type: 'animals', rating: 4.9, regularPrice: 220, imageUrls: ['https://images.unsplash.com/photo-1450778869180-41d0601e046e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Cape Town', host: 'Dr. James Wilson', description: 'Loving and experienced animal care provider. I offer pet sitting, dog walking, grooming, and medication administration for all types of pets.', travelFee: 35 }
 ];
 
 const MOCK_EVENTS = [
@@ -414,10 +446,25 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property' }) => {
     return `R${price}`;
   };
 
+  // Handle click with proper navigation based on type
+  const handleClick = () => {
+    if (type === 'property') {
+      onClick(`/listing/${item._id}`);
+    } else if (type === 'service') {
+      onClick(`/service/${item._id}`);
+    } else if (type === 'helper') {
+      onClick(`/helper/${item._id}`);
+    } else if (type === 'event') {
+      onClick(`/event/${item._id}`);
+    } else {
+      onClick(item._id);
+    }
+  };
+
   return (
     <motion.div 
       whileHover={{ y: -4 }}
-      onClick={onClick}
+      onClick={handleClick}
       className="cursor-pointer flex flex-col gap-3"
     >
       <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-200 group">
@@ -425,6 +472,9 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property' }) => {
           src={item.imageUrls?.[0]} 
           alt={item.name} 
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          onError={(e) => {
+            e.target.src = 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80';
+          }}
         />
         
         <button 
@@ -531,7 +581,16 @@ const TopCategoriesSection = ({ navigate }) => {
   };
 
   const handleCategoryClick = (category) => {
-    navigate(`/search?category=${category.id}&type=services`);
+    // Map category IDs to search parameters
+    if (category.id === 'sneaker' || category.id === 'washingmat' || category.id === 'animals') {
+      navigate(`/search?category=${category.id}&type=helpers`);
+    } else if (['barber', 'baker', 'carwash', 'photograph', 'tattoo', 'chef', 'massage', 'hair', 'nails'].includes(category.id)) {
+      navigate(`/search?category=${category.id}&type=services`);
+    } else if (['rental', 'guesthouse', 'domestic'].includes(category.id)) {
+      navigate(`/search?category=${category.id}&type=properties`);
+    } else {
+      navigate(`/search?category=${category.id}`);
+    }
   };
 
   return (
@@ -802,7 +861,7 @@ const MobileAppHomepage = ({
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {featuredProperties.slice(0, 8).map((property) => (
-                  <AirbnbCard key={property._id} item={property} onClick={() => navigate(`/listing/${property._id}`)} />
+                  <AirbnbCard key={property._id} item={property} type="property" onClick={() => navigate(`/listing/${property._id}`)} />
                 ))}
               </div>
             )}
@@ -945,7 +1004,17 @@ const MobileAppHomepage = ({
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.05 }}
-                onClick={() => navigate(`/search?category=${category.id}`)}
+                onClick={() => {
+                  if (category.id === 'sneaker' || category.id === 'washingmat' || category.id === 'animals') {
+                    navigate(`/search?category=${category.id}&type=helpers`);
+                  } else if (['barber', 'baker', 'carwash', 'photograph', 'tattoo', 'chef', 'massage', 'hair', 'nails'].includes(category.id)) {
+                    navigate(`/search?category=${category.id}&type=services`);
+                  } else if (['rental', 'guesthouse', 'domestic'].includes(category.id)) {
+                    navigate(`/search?category=${category.id}&type=properties`);
+                  } else {
+                    navigate(`/search?category=${category.id}`);
+                  }
+                }}
                 className="snap-start shrink-0 w-[120px] cursor-pointer"
               >
                 <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-2">
@@ -1036,7 +1105,7 @@ const MobileAppHomepage = ({
           ) : (
             <div className="grid grid-cols-2 gap-4">
               {featuredProperties.slice(0, 4).map((property) => (
-                <AirbnbCard key={property._id} item={property} onClick={() => navigate(`/listing/${property._id}`)} />
+                <AirbnbCard key={property._id} item={property} type="property" onClick={() => navigate(`/listing/${property._id}`)} />
               ))}
             </div>
           )}
