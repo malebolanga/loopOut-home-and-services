@@ -44,6 +44,17 @@ const AI_RECOMMENDATION_LIMIT = 6;
 const USER_PREFERENCE_KEY = 'userPreferences';
 const API_TIMEOUT = 3000;
 
+// --- Fallback Images for Broken Pictures ---
+const FALLBACK_IMAGES = {
+  property: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+  service: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+  helper: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+  event: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+  category: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80',
+  avatar: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+  default: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80'
+};
+
 // --- Animation Variants ---
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -65,6 +76,38 @@ const itemVariants = {
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+};
+
+// --- Image Fallback Handler Component ---
+const ImageWithFallback = ({ src, alt, className, type = 'default', ...props }) => {
+  const [imgSrc, setImgSrc] = useState(src);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  const handleError = () => {
+    setHasError(true);
+    setImgSrc(FALLBACK_IMAGES[type] || FALLBACK_IMAGES.default);
+  };
+
+  const handleLoad = () => {
+    setIsLoading(false);
+  };
+
+  return (
+    <>
+      {isLoading && !hasError && (
+        <div className={`${className} bg-gray-200 animate-pulse`} />
+      )}
+      <img
+        src={imgSrc}
+        alt={alt}
+        className={`${className} ${isLoading && !hasError ? 'hidden' : 'block'}`}
+        onError={handleError}
+        onLoad={handleLoad}
+        {...props}
+      />
+    </>
+  );
 };
 
 // --- TOP CATEGORIES DATA (Fresha Style) ---
@@ -376,9 +419,10 @@ const FreshaCategoryCard = ({ category, onClick, index }) => {
     >
       {/* Image Container */}
       <div className="relative aspect-[4/5] overflow-hidden">
-        <img
+        <ImageWithFallback
           src={category.image}
           alt={category.name}
+          type="category"
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         
@@ -468,13 +512,11 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property' }) => {
       className="cursor-pointer flex flex-col gap-3"
     >
       <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-200 group">
-        <img 
-          src={item.imageUrls?.[0]} 
-          alt={item.name} 
+        <ImageWithFallback
+          src={item.imageUrls?.[0]}
+          alt={item.name}
+          type={type}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          onError={(e) => {
-            e.target.src = 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80';
-          }}
         />
         
         <button 
@@ -731,7 +773,12 @@ const DesktopPopularDestinations = ({ navigate }) => {
         {popularDestinations.map((destination) => (
           <motion.div key={`dest-${destination.name}`} variants={itemVariants} onClick={() => navigate(`/search?address=${encodeURIComponent(destination.name)}`)} className="cursor-pointer group">
             <div className="relative overflow-hidden rounded-xl mb-3 aspect-[3/4]">
-              <img src={destination.image} alt={destination.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <ImageWithFallback
+                src={destination.image}
+                alt={destination.name}
+                type="category"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
               <div className="absolute bottom-0 left-0 right-0 p-4">
                 <h3 className="text-white font-semibold text-lg">{destination.name}</h3>
@@ -772,7 +819,12 @@ const SmartRecommendations = ({ recommendations, insights, loading, onItemClick 
         {recommendations.slice(0, 6).map((item, i) => (
           <motion.div key={item._id ? `rec-${item._id}` : `rec-${i}`} whileHover={{ y: -4 }} onClick={() => onItemClick(item, item.type)} className="flex-shrink-0 w-40 cursor-pointer">
             <div className="relative aspect-square rounded-xl overflow-hidden mb-2 bg-gray-200">
-              <img src={item.imageUrls?.[0]} alt={item.name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+              <ImageWithFallback
+                src={item.imageUrls?.[0]}
+                alt={item.name}
+                type={item.type || 'default'}
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+              />
               <div className="absolute top-2 left-2">
                 <span className="text-[10px] font-semibold px-2 py-1 bg-white/90 backdrop-blur rounded-md">AI Pick</span>
               </div>
@@ -893,7 +945,12 @@ const MobileAppHomepage = ({
                 {featuredHelpers.slice(0, 4).map((helper) => (
                   <div key={helper._id} onClick={() => navigate(`/helper/${helper._id}`)} className="cursor-pointer flex flex-col gap-3">
                     <div className="relative aspect-square overflow-hidden rounded-full bg-gray-200 w-32 h-32 mx-auto border-2 border-gray-100 group-hover:border-rose-200 transition-colors">
-                      <img src={helper.imageUrls?.[0]} alt={helper.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      <ImageWithFallback
+                        src={helper.imageUrls?.[0]}
+                        alt={helper.name}
+                        type="avatar"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
                       <div className="absolute bottom-0 right-0 w-6 h-6 bg-rose-500 rounded-full flex items-center justify-center border-2 border-white">
                         <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                       </div>
@@ -925,7 +982,12 @@ const MobileAppHomepage = ({
                 {featuredEvents.slice(0, 4).map((event) => (
                   <motion.div key={event._id} whileHover={{ y: -4 }} onClick={() => navigate(`/event/${event._id}`)} className="cursor-pointer flex flex-col gap-3">
                     <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-gray-200">
-                      <img src={event.imageUrls?.[0]} alt={event.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <ImageWithFallback
+                        src={event.imageUrls?.[0]}
+                        alt={event.name}
+                        type="event"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
                       <div className="absolute top-3 left-3 bg-white/95 backdrop-blur px-2 py-1 rounded-md">
                         <span className="text-xs font-bold text-gray-900">{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                       </div>
@@ -1018,7 +1080,12 @@ const MobileAppHomepage = ({
                 className="snap-start shrink-0 w-[120px] cursor-pointer"
               >
                 <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-2">
-                  <img src={category.image} alt={category.name} className="w-full h-full object-cover" />
+                  <ImageWithFallback
+                    src={category.image}
+                    alt={category.name}
+                    type="category"
+                    className="w-full h-full object-cover"
+                  />
                   <div className={`absolute inset-0 bg-gradient-to-t ${category.color} opacity-40 mix-blend-multiply`} />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-2">
@@ -1080,7 +1147,12 @@ const MobileAppHomepage = ({
               {recentlyViewedItems.slice(0, 5).map((item) => (
                 <div key={item._id} onClick={() => navigate(item.type === 'helper' ? `/helper/${item._id}` : `/listing/${item._id}`)} className="flex-shrink-0 w-36 cursor-pointer">
                   <div className="relative aspect-[3/2] rounded-xl overflow-hidden mb-2 bg-gray-200">
-                    <img src={item.imageUrls?.[0]} alt={item.name} className="w-full h-full object-cover" />
+                    <ImageWithFallback
+                      src={item.imageUrls?.[0]}
+                      alt={item.name}
+                      type={item.type || 'default'}
+                      className="w-full h-full object-cover"
+                    />
                     <button onClick={(e) => { e.stopPropagation(); onRecentlyViewedLike(item._id, !item.isLiked); }} className="absolute top-2 right-2 p-1">
                       {item.isLiked ? <HeartIconSolid className="w-5 h-5 text-rose-500" /> : <HeartIcon className="w-5 h-5 text-white drop-shadow-md" />}
                     </button>
@@ -1120,7 +1192,12 @@ const MobileAppHomepage = ({
             {featuredServices.slice(0, 3).map((service) => (
               <div key={service._id} onClick={() => navigate(`/service/${service._id}`)} className="flex-shrink-0 w-60 cursor-pointer">
                 <div className="relative aspect-[3/2] rounded-xl overflow-hidden mb-2 bg-gray-200">
-                  <img src={service.imageUrls?.[0]} alt={service.name} className="w-full h-full object-cover" />
+                  <ImageWithFallback
+                    src={service.imageUrls?.[0]}
+                    alt={service.name}
+                    type="service"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <p className="font-medium text-sm truncate">{service.name}</p>
                 <p className="font-semibold text-sm mt-1">R{service.regularPrice}</p>
@@ -1139,7 +1216,12 @@ const MobileAppHomepage = ({
               {featuredEvents.slice(0, 3).map((event) => (
                 <div key={event._id} onClick={() => navigate(`/event/${event._id}`)} className="flex-shrink-0 w-72 cursor-pointer">
                   <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-2 bg-gray-200">
-                    <img src={event.imageUrls?.[0]} alt={event.name} className="w-full h-full object-cover" />
+                    <ImageWithFallback
+                      src={event.imageUrls?.[0]}
+                      alt={event.name}
+                      type="event"
+                      className="w-full h-full object-cover"
+                    />
                     <div className="absolute top-2 left-2 bg-white/90 px-2 py-1 rounded text-xs font-bold">
                       {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </div>
@@ -1170,7 +1252,12 @@ const MobileAppHomepage = ({
             {featuredHelpers.slice(0, 4).map((helper) => (
               <div key={helper._id} onClick={() => navigate(`/helper/${helper._id}`)} className="flex-shrink-0 w-32 text-center cursor-pointer">
                 <div className="relative w-20 h-20 mx-auto mb-2">
-                  <img src={helper.imageUrls?.[0]} alt={helper.name} className="w-full h-full object-cover rounded-full border-2 border-gray-100" />
+                  <ImageWithFallback
+                    src={helper.imageUrls?.[0]}
+                    alt={helper.name}
+                    type="avatar"
+                    className="w-full h-full object-cover rounded-full border-2 border-gray-100"
+                  />
                   <div className="absolute bottom-0 right-0 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center border-2 border-white">
                     <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                   </div>
