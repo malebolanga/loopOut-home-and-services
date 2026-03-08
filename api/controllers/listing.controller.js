@@ -1,5 +1,6 @@
 import Listing from '../models/listing.model.js';
 import { errorHandler } from '../utils/error.js';
+import { createAreaNotifications } from '../utils/notificationUtils.js';
 
 // Create Listing
 export const createListing = async (req, res, next) => {
@@ -72,14 +73,17 @@ export const createListing = async (req, res, next) => {
       furnished,
       offer,
       userRef,
-      hot, 
-      pets, 
-      prepaid, 
+      hot,
+      pets,
+      prepaid,
       fridge,
       share,
       breakfast,
       party,
     });
+
+    // Create notifications for users in the area
+    createAreaNotifications(listing, 'listing');
 
     return res.status(201).json(listing);
   } catch (error) {
@@ -92,7 +96,7 @@ export const createListing = async (req, res, next) => {
 export const deleteListing = async (req, res, next) => {
   try {
     const listing = await Listing.findById(req.params.id);
-    
+
     if (!listing) {
       return next(errorHandler(404, 'Listing not found!'));
     }
@@ -104,10 +108,10 @@ export const deleteListing = async (req, res, next) => {
 
     // Permanent deletion from database
     await Listing.findByIdAndDelete(req.params.id);
-    
-    res.status(200).json({ 
+
+    res.status(200).json({
       success: true,
-      message: 'Listing has been permanently deleted!' 
+      message: 'Listing has been permanently deleted!'
     });
   } catch (error) {
     next(errorHandler(500, 'Failed to delete listing. Please try again.'));
@@ -248,16 +252,14 @@ export const getListings = async (req, res, next) => {
       share = { $in: [false, true] };
     }
 
-    let breakfast = req.query.share;
-
+    let breakfast = req.query.breakfast;
     if (breakfast === undefined || breakfast === 'false') {
       breakfast = { $in: [false, true] };
     }
 
-    let party = req.query.share;
-
+    let party = req.query.party;
     if (party === undefined || party === 'false') {
-        party = { $in: [false, true] };
+      party = { $in: [false, true] };
     }
 
 
@@ -268,17 +270,48 @@ export const getListings = async (req, res, next) => {
     }
 
     const searchTerm = req.query.searchTerm || '';
+    const address = req.query.address || '';
+
+    let bedrooms = req.query.bedrooms;
+    if (bedrooms === undefined || bedrooms === '0') {
+      bedrooms = { $in: [1, 2, 3, 4, 5, 6, 10] }; // Allowing all common bedroom counts
+    }
+
+    let bathrooms = req.query.bathrooms;
+    if (bathrooms === undefined || bathrooms === '0') {
+      bathrooms = { $in: [1, 2, 3, 4, 5, 6, 10] };
+    }
 
     const sort = req.query.sort || 'createdAt';
 
     const order = req.query.order || 'desc';
 
     const listings = await Listing.find({
-      name: { $regex: searchTerm, $options: 'i' },
+      $or: [
+        { name: { $regex: searchTerm, $options: 'i' } },
+        { description: { $regex: searchTerm, $options: 'i' } }
+      ],
+      address: { $regex: address, $options: 'i' },
       offer,
       furnished,
       parking,
+      pool,
+      wifi,
+      kitchen,
+      stove,
+      tv,
+      storage,
+      security,
+      hot,
+      pets,
+      prepaid,
+      fridge,
+      share,
+      breakfast,
+      party,
       type,
+      bedrooms,
+      bathrooms,
     })
       .sort({ [sort]: order })
       .limit(limit)

@@ -25,9 +25,9 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * Math.PI / 180) *
-      Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
@@ -67,11 +67,10 @@ const UserMessage = ({ type, message, onAction, actionText }) => (
 const PropertyTypeButton = ({ type, label, isSelected, onClick }) => (
   <button
     onClick={() => onClick(type)}
-    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-      isSelected 
-        ? 'bg-gray-800 text-white shadow-sm' 
+    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${isSelected
+        ? 'bg-gray-800 text-white shadow-sm'
         : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:shadow-sm'
-    }`}
+      }`}
   >
     {label}
   </button>
@@ -125,10 +124,10 @@ export default function OverNight() {
         const rawKinds = Array.isArray(data)
           ? data
           : data?.kinds && Array.isArray(data.kinds)
-          ? data.kinds
-          : data && typeof data === "object"
-          ? Object.keys(data)
-          : [];
+            ? data.kinds
+            : data && typeof data === "object"
+              ? Object.keys(data)
+              : [];
 
         const validKinds = [
           ...new Set(
@@ -228,19 +227,19 @@ export default function OverNight() {
         const newItems = Array.isArray(data)
           ? data
           : data.listings && Array.isArray(data.listings)
-          ? data.listings
-          : [];
+            ? data.listings
+            : [];
 
         const listingsWithProximity = newItems
           .map((listing) => ({
             ...listing,
             proximity: userLocation?.lat && userLocation?.lng && listing.location?.lat && listing.location?.lng
               ? calculateDistance(
-                  userLocation.lat,
-                  userLocation.lng,
-                  listing.location.lat,
-                  listing.location.lng
-                )
+                userLocation.lat,
+                userLocation.lng,
+                listing.location.lat,
+                listing.location.lng
+              )
               : Infinity,
           }))
           .sort((a, b) => a.proximity - b.proximity);
@@ -252,13 +251,13 @@ export default function OverNight() {
           );
           return uniqueListings;
         });
-        
+
         if (reset) {
           setPage(2);
         } else {
           setPage((prev) => prev + 1);
         }
-        
+
         setHasMore(newItems.length >= 12);
       } catch (err) {
         console.error("Failed to load listings:", err);
@@ -281,7 +280,7 @@ export default function OverNight() {
     const handleScroll = () => {
       if (
         window.innerHeight + document.documentElement.scrollTop >=
-          document.documentElement.offsetHeight - 300 &&
+        document.documentElement.offsetHeight - 300 &&
         !loading &&
         hasMore &&
         !isFetchingRef.current
@@ -317,7 +316,7 @@ export default function OverNight() {
                   )}
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 {/* Location Status */}
                 {userLocation ? (
@@ -331,15 +330,14 @@ export default function OverNight() {
                     <span>Location needed</span>
                   </div>
                 )}
-                
+
                 {/* Filters Toggle */}
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center px-4 py-2 rounded-lg border transition-all duration-200 ${
-                    showFilters 
-                      ? 'bg-gray-800 text-white border-gray-800' 
+                  className={`flex items-center px-4 py-2 rounded-lg border transition-all duration-200 ${showFilters
+                      ? 'bg-gray-800 text-white border-gray-800'
                       : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
-                  }`}
+                    }`}
                 >
                   <FunnelIcon className="w-4 h-4 mr-2" />
                   <span className="text-sm font-medium">Filters</span>
@@ -360,7 +358,7 @@ export default function OverNight() {
                   />
                 ))}
               </div>
-              
+
               {/* Search Radius Selector */}
               <div className="relative hidden sm:block" ref={radiusMenuRef}>
                 <button
@@ -374,7 +372,7 @@ export default function OverNight() {
                     <ChevronDownIcon className="w-4 h-4" />
                   )}
                 </button>
-                
+
                 {radiusMenuOpen && (
                   <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
                     {radiusOptions.map((radius) => (
@@ -384,9 +382,8 @@ export default function OverNight() {
                           setSearchRadius(radius);
                           setRadiusMenuOpen(false);
                         }}
-                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
-                          searchRadius === radius ? 'text-purple-600 font-medium' : 'text-gray-700'
-                        }`}
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${searchRadius === radius ? 'text-purple-600 font-medium' : 'text-gray-700'
+                          }`}
                       >
                         Within {radius}km
                       </button>
@@ -419,7 +416,7 @@ export default function OverNight() {
                 Clear all
               </button>
             </div>
-            
+
             <div className="relative">
               <div className="flex space-x-4 overflow-x-auto pb-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
                 {recentlyViewed.map((listing) => (
@@ -432,11 +429,11 @@ export default function OverNight() {
                       proximity={
                         userLocation && listing.location
                           ? calculateDistance(
-                              userLocation.lat,
-                              userLocation.lng,
-                              listing.location.lat,
-                              listing.location.lng
-                            ).toFixed(1)
+                            userLocation.lat,
+                            userLocation.lng,
+                            listing.location.lat,
+                            listing.location.lng
+                          ).toFixed(1)
                           : null
                       }
                       onClick={() => markAsViewed(listing)}
@@ -485,11 +482,11 @@ export default function OverNight() {
                     proximity={
                       userLocation && listing.location
                         ? calculateDistance(
-                            userLocation.lat,
-                            userLocation.lng,
-                            listing.location.lat,
-                            listing.location.lng
-                          ).toFixed(1)
+                          userLocation.lat,
+                          userLocation.lng,
+                          listing.location.lat,
+                          listing.location.lng
+                        ).toFixed(1)
                         : null
                     }
                     onClick={() => markAsViewed(listing)}
@@ -498,7 +495,7 @@ export default function OverNight() {
                   />
                 ))}
               </div>
-              
+
               {loading && page > 1 && (
                 <div className="flex justify-center py-12">
                   <div className="flex items-center space-x-3">
@@ -507,7 +504,7 @@ export default function OverNight() {
                   </div>
                 </div>
               )}
-              
+
               {!hasMore && overnightListings.length > 0 && (
                 <div className="text-center py-12 border-t border-gray-100">
                   <p className="text-gray-500">
@@ -561,15 +558,14 @@ export default function OverNight() {
           </div>
         </div>
       )}
-      
-      <style jsx global>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
+
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        body { overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        body::-webkit-scrollbar { display: none; }
+        * { scrollbar-width: none; -ms-overflow-style: none; }
+        *::-webkit-scrollbar { display: none; }
       `}</style>
     </div>
   );

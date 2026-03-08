@@ -30,7 +30,7 @@ import { TbBuilding, TbTools, TbUsers, TbCalendarEvent } from "react-icons/tb";
 const generateMockItems = (count, type) => {
   const types = ['properties', 'services', 'helpers', 'events'];
   const itemType = type || types[Math.floor(Math.random() * types.length)];
-  
+
   const baseItem = {
     _id: Math.random().toString(36).substr(2, 9),
     itemType,
@@ -83,11 +83,11 @@ const generateMockItems = (count, type) => {
   ];
 
   const items = [];
-  
+
   for (let i = 0; i < count; i++) {
     let title, price, rating;
-    
-    switch(itemType) {
+
+    switch (itemType) {
       case 'properties':
         title = propertyTitles[Math.floor(Math.random() * propertyTitles.length)];
         price = Math.floor(Math.random() * 5000) + 1000;
@@ -128,7 +128,7 @@ const generateMockItems = (count, type) => {
       isTrending: i < 3
     });
   }
-  
+
   return items;
 };
 
@@ -195,12 +195,12 @@ const ExplorePage = () => {
       async (position) => {
         const { latitude, longitude } = position.coords;
         setUserLocation({ latitude, longitude });
-        
+
         // Reverse geocode to get city name
         try {
           const city = await reverseGeocode(latitude, longitude);
           setUserCity(city);
-          
+
           // Fetch nearby items based on location
           fetchNearbyItems(latitude, longitude, city);
         } catch (error) {
@@ -214,7 +214,7 @@ const ExplorePage = () => {
       },
       (error) => {
         setIsLocationLoading(false);
-        switch(error.code) {
+        switch (error.code) {
           case error.PERMISSION_DENIED:
             setLocationError('Location access was denied. Please enable location services.');
             break;
@@ -261,20 +261,20 @@ const ExplorePage = () => {
         // Generate mock data based on active category
         const mockFeatured = generateMockItems(6, activeCategory === 'all' ? null : activeCategory);
         const mockTrending = generateMockItems(6, activeCategory === 'all' ? null : activeCategory);
-        
+
         // Mark some items as featured/trending
         const featuredData = mockFeatured.map((item, index) => ({
           ...item,
           isFeatured: true,
           title: `Featured: ${item.title}`
         }));
-        
+
         const trendingData = mockTrending.map((item, index) => ({
           ...item,
           isTrending: true,
           title: `Trending: ${item.title}`
         }));
-        
+
         setFeaturedItems(featuredData);
         setTrendingItems(trendingData);
       } else {
@@ -313,14 +313,14 @@ const ExplorePage = () => {
         setNearbyItems(nearbyData);
         return;
       }
-      
+
       // Production: Fetch from API
       let url = `/api/explore/nearby?category=${activeCategory}&limit=6`;
-      
+
       if (latitude && longitude) {
         url += `&lat=${latitude}&lng=${longitude}`;
       }
-      
+
       if (city) {
         url += `&city=${encodeURIComponent(city)}`;
       }
@@ -348,7 +348,7 @@ const ExplorePage = () => {
         setNearbyItems(nearbyData);
         return;
       }
-      
+
       // Production: Fetch from API
       const nearbyRes = await fetch(`/api/explore/nearby?category=${activeCategory}&limit=6`);
       const nearbyData = await nearbyRes.json();
@@ -368,7 +368,7 @@ const ExplorePage = () => {
 
   // Render item based on type
   const renderItem = (item) => {
-    switch(item.itemType) {
+    switch (item.itemType) {
       case 'services':
         return <ServiceItem key={item._id} service={item} />;
       case 'helpers':
@@ -412,7 +412,7 @@ const ExplorePage = () => {
                 <p className="text-lg text-gray-600 mb-8 max-w-2xl">
                   Find properties, services, helpers, and events that match your lifestyle
                 </p>
-                
+
                 {/* Search Bar */}
                 <div className="max-w-2xl mx-auto">
                   <SearchInput
@@ -461,7 +461,7 @@ const ExplorePage = () => {
                   <FiChevronRight className="w-4 h-4 md:w-5 md:h-5" />
                 </Link>
               </div>
-              
+
               {isLoading ? (
                 <SkeletonGrid />
               ) : featuredItems.length > 0 ? (
@@ -516,7 +516,7 @@ const ExplorePage = () => {
                   <FiChevronRight className="w-4 h-4 md:w-5 md:h-5" />
                 </Link>
               </div>
-              
+
               {isLoading ? (
                 <SkeletonGrid />
               ) : trendingItems.length > 0 ? (
@@ -584,7 +584,7 @@ const ExplorePage = () => {
                   </button>
                 </div>
               </div>
-              
+
               {locationError && (
                 <div className="mb-4 md:mb-6 p-3 md:p-4 bg-amber-50 border border-amber-200 rounded-xl">
                   <div className="flex items-start gap-2 md:gap-3">
@@ -599,7 +599,7 @@ const ExplorePage = () => {
                   </div>
                 </div>
               )}
-              
+
               {isLoading || isLocationLoading ? (
                 <SkeletonGrid />
               ) : nearbyItems.length > 0 ? (
@@ -613,8 +613,8 @@ const ExplorePage = () => {
                     {locationError ? 'General Recommendations' : 'No nearby items found'}
                   </h3>
                   <p className="text-gray-600 text-sm md:text-base mb-3 md:mb-4">
-                    {locationError 
-                      ? 'Enable location services for personalized recommendations' 
+                    {locationError
+                      ? 'Enable location services for personalized recommendations'
                       : 'Try refreshing your location or browse other categories'}
                   </p>
                   {!locationError && (
@@ -660,7 +660,7 @@ const ExplorePage = () => {
       </div>
 
       {/* Add bottom padding to account for the Footer's fixed bottom navigation */}
-      <div className="pb-20"></div>
+      <div className="pb-32"></div>
     </div>
   );
 };

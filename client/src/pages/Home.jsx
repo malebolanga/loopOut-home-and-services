@@ -35,6 +35,7 @@ import {
   HeartIcon as HeartIconSolid,
 } from '@heroicons/react/24/solid';
 import { FaCar, FaBreadSlice, FaHouseUser, FaCut, FaTruckMoving, FaGraduationCap, FaHandsWash, FaBroom, FaChalkboardTeacher, FaHome, FaBed, FaUtensils, FaLeaf, FaBolt, FaShoePrints, FaWater, FaPaw } from "react-icons/fa";
+import ImageWithFallback from "../components/ImageWithFallback";
 
 // --- Constants ---
 const RECENTLY_VIEWED_KEY = 'recentlyViewed';
@@ -44,71 +45,38 @@ const AI_RECOMMENDATION_LIMIT = 6;
 const USER_PREFERENCE_KEY = 'userPreferences';
 const API_TIMEOUT = 3000;
 
-// --- Fallback Images for Broken Pictures ---
-const FALLBACK_IMAGES = {
-  property: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  service: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  helper: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  event: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  category: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80',
-  avatar: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  default: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80'
+// --- Framer Motion Animation Variants ---
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" }
+  }
 };
 
-// --- Animation Variants ---
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.05 }
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.3
+    }
   }
 };
 
 const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
+  hidden: { opacity: 0, y: 20 },
   visible: {
-    y: 0,
     opacity: 1,
-    transition: { type: 'spring', stiffness: 100 }
+    y: 0,
+    transition: { duration: 0.5 }
   }
 };
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-};
-
 // --- Image Fallback Handler Component ---
-const ImageWithFallback = ({ src, alt, className, type = 'default', ...props }) => {
-  const [imgSrc, setImgSrc] = useState(src);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-
-  const handleError = () => {
-    setHasError(true);
-    setImgSrc(FALLBACK_IMAGES[type] || FALLBACK_IMAGES.default);
-  };
-
-  const handleLoad = () => {
-    setIsLoading(false);
-  };
-
-  return (
-    <>
-      {isLoading && !hasError && (
-        <div className={`${className} bg-gray-200 animate-pulse`} />
-      )}
-      <img
-        src={imgSrc}
-        alt={alt}
-        className={`${className} ${isLoading && !hasError ? 'hidden' : 'block'}`}
-        onError={handleError}
-        onLoad={handleLoad}
-        {...props}
-      />
-    </>
-  );
-};
+// (Moved to shared components/ImageWithFallback.jsx)
 
 // --- TOP CATEGORIES DATA (Fresha Style) ---
 const TOP_CATEGORIES = [
@@ -267,14 +235,14 @@ const TOP_CATEGORIES = [
 
 // --- Mock Data with specific IDs for testing ---
 const MOCK_PROPERTIES = [
-  { _id: 'prop-1', name: 'Modern Apartment in City Center', price: 2500, regularPrice: 2500, type: 'rent-long', imageUrls: ['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.5, address: 'Johannesburg' },
-  { _id: 'prop-2', name: 'Luxury Villa with Pool', price: 8500000, regularPrice: 8500000, type: 'sale', imageUrls: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8, address: 'Cape Town' },
-  { _id: 'prop-3', name: 'Cozy Studio near University', price: 1200, regularPrice: 1200, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.3, address: 'Pretoria' },
-  { _id: 'prop-4', name: 'Modern Office Space', price: 500, regularPrice: 500, type: 'office', imageUrls: ['https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.6, address: 'Sandton' },
-  { _id: 'prop-5', name: 'Family House in Suburbs', price: 3500, regularPrice: 3500, type: 'rent-long', imageUrls: ['https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.7, address: 'Durban' },
-  { _id: 'prop-6', name: 'Vacation Beach House', price: 1800, regularPrice: 1800, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1518780664697-55e3ad937233?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9, address: 'Port Elizabeth' },
-  { _id: 'prop-7', name: 'Commercial Land Plot', price: 250000, regularPrice: 250000, type: 'land', imageUrls: ['https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.4, address: 'Bloemfontein' },
-  { _id: 'prop-8', name: 'Penthouse with View', price: 12000000, regularPrice: 12000000, type: 'sale', imageUrls: ['https://images.unsplash.com/photo-1513584684374-8bab748fbf90?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8, address: 'Johannesburg' }
+  { _id: 'prop-1', name: 'Modern Apartment in City Center', price: 2500, regularPrice: 2500, type: 'rent-long', imageUrls: ['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.5, address: 'Johannesburg' },
+  { _id: 'prop-2', name: 'Luxury Villa with Pool', price: 8500000, regularPrice: 8500000, type: 'sale', imageUrls: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8, address: 'Cape Town' },
+  { _id: 'prop-3', name: 'Cozy Studio near University', price: 1200, regularPrice: 1200, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.3, address: 'Pretoria' },
+  { _id: 'prop-4', name: 'Modern Office Space', price: 500, regularPrice: 500, type: 'office', imageUrls: ['https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.6, address: 'Sandton' },
+  { _id: 'prop-5', name: 'Family House in Suburbs', price: 3500, regularPrice: 3500, type: 'rent-long', imageUrls: ['https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.7, address: 'Durban' },
+  { _id: 'prop-6', name: 'Vacation Beach House', price: 1800, regularPrice: 1800, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1518780664697-55e3ad937233?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9, address: 'Port Elizabeth' },
+  { _id: 'prop-7', name: 'Commercial Land Plot', price: 250000, regularPrice: 250000, type: 'land', imageUrls: ['https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.4, address: 'Bloemfontein' },
+  { _id: 'prop-8', name: 'Penthouse with View', price: 12000000, regularPrice: 12000000, type: 'sale', imageUrls: ['https://images.unsplash.com/photo-1513584684374-8bab748fbf90?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8, address: 'Johannesburg' }
 ];
 
 const MOCK_SERVICES = [
@@ -425,11 +393,11 @@ const FreshaCategoryCard = ({ category, onClick, index }) => {
           type="category"
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
-        
+
         {/* Gradient Overlay */}
         <div className={`absolute inset-0 bg-gradient-to-t ${category.color} opacity-60 mix-blend-multiply`} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-        
+
         {/* Content */}
         <div className="absolute inset-0 flex flex-col justify-end p-4">
           <h3 className="text-white font-bold text-lg mb-1 group-hover:translate-y-0 transition-transform">
@@ -458,7 +426,7 @@ const FreshaCategoryCard = ({ category, onClick, index }) => {
 const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property' }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const isGuestFavorite = item.rating >= 4.8;
-  
+
   const getPriceSuffix = () => {
     if (type !== 'property') return '';
     switch (item.type) {
@@ -506,7 +474,7 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property' }) => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       whileHover={{ y: -4 }}
       onClick={handleClick}
       className="cursor-pointer flex flex-col gap-3"
@@ -514,12 +482,13 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property' }) => {
       <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-200 group">
         <ImageWithFallback
           src={item.imageUrls?.[0]}
+          imageUrls={item.imageUrls}
           alt={item.name}
-          type={type}
+          type={type === 'property' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property') : type}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        
-        <button 
+
+        <button
           onClick={(e) => { e.stopPropagation(); onLike && onLike(item._id, !isLiked); }}
           className="absolute top-3 right-3 p-2 rounded-full hover:scale-110 transition-transform"
         >
@@ -529,26 +498,26 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property' }) => {
             <HeartIcon className="w-6 h-6 text-white drop-shadow-md hover:text-rose-500 transition-colors" />
           )}
         </button>
-        
+
         {isGuestFavorite && type === 'property' && (
           <div className="absolute top-3 left-3 bg-white/95 backdrop-blur px-2 py-1 rounded-md shadow-sm">
             <span className="text-xs font-bold text-gray-900">Guest favorite</span>
           </div>
         )}
-        
+
         {type === 'property' && item.type && (
           <div className="absolute top-3 left-3 bg-black/70 backdrop-blur px-2 py-1 rounded-md shadow-sm">
             <span className="text-xs font-bold text-white">{getPropertyTypeLabel()}</span>
           </div>
         )}
-        
+
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
           {[0, 1, 2].map((i) => (
             <div key={i} className={`w-1.5 h-1.5 rounded-full transition-all ${i === 0 ? 'bg-white w-2' : 'bg-white/60'}`} />
           ))}
         </div>
       </div>
-      
+
       <div className="flex flex-col gap-0.5">
         <div className="flex justify-between items-start">
           <h3 className="font-semibold text-gray-900 truncate pr-2 text-[15px]">{item.address || 'South Africa'}</h3>
@@ -572,9 +541,8 @@ const CategoryFilter = ({ icon, label, onClick, isActive }) => (
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
-    className={`flex flex-col items-center gap-2 min-w-[64px] pb-3 border-b-2 transition-all duration-200 ${
-      isActive ? 'border-black text-black' : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300'
-    }`}
+    className={`flex flex-col items-center gap-2 min-w-[64px] pb-3 border-b-2 transition-all duration-200 ${isActive ? 'border-black text-black' : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300'
+      }`}
   >
     <span className="text-2xl filter grayscale hover:grayscale-0 transition-all">{icon}</span>
     <span className="text-xs font-medium whitespace-nowrap">{label}</span>
@@ -623,12 +591,15 @@ const TopCategoriesSection = ({ navigate }) => {
   };
 
   const handleCategoryClick = (category) => {
-    // Map category IDs to search parameters
-    if (category.id === 'sneaker' || category.id === 'washingmat' || category.id === 'animals') {
+    const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor'];
+    const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattor Artise', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician'];
+    const properties = ['rental', 'guesthouse'];
+
+    if (helpers.includes(category.id)) {
       navigate(`/search?category=${category.id}&type=helpers`);
-    } else if (['barber', 'baker', 'carwash', 'photograph', 'tattoo', 'chef', 'massage', 'hair', 'nails'].includes(category.id)) {
+    } else if (services.includes(category.id)) {
       navigate(`/search?category=${category.id}&type=services`);
-    } else if (['rental', 'guesthouse', 'domestic'].includes(category.id)) {
+    } else if (properties.includes(category.id)) {
       navigate(`/search?category=${category.id}&type=properties`);
     } else {
       navigate(`/search?category=${category.id}`);
@@ -645,18 +616,16 @@ const TopCategoriesSection = ({ navigate }) => {
         <div className="flex gap-2">
           <button
             onClick={() => scroll('left')}
-            className={`p-2 rounded-full border transition-all ${
-              canScrollLeft ? 'border-gray-300 hover:bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-300 cursor-not-allowed'
-            }`}
+            className={`p-2 rounded-full border transition-all ${canScrollLeft ? 'border-gray-300 hover:bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-300 cursor-not-allowed'
+              }`}
             disabled={!canScrollLeft}
           >
             <ChevronLeftIcon className="w-5 h-5" />
           </button>
           <button
             onClick={() => scroll('right')}
-            className={`p-2 rounded-full border transition-all ${
-              canScrollRight ? 'border-gray-300 hover:bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-300 cursor-not-allowed'
-            }`}
+            className={`p-2 rounded-full border transition-all ${canScrollRight ? 'border-gray-300 hover:bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-300 cursor-not-allowed'
+              }`}
             disabled={!canScrollRight}
           >
             <ChevronRightIcon className="w-5 h-5" />
@@ -664,15 +633,15 @@ const TopCategoriesSection = ({ navigate }) => {
         </div>
       </div>
 
-      <div 
+      <div
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {TOP_CATEGORIES.map((category, index) => (
           <div key={category.id} className="snap-start shrink-0 w-[160px] sm:w-[180px]">
-            <FreshaCategoryCard 
-              category={category} 
+            <FreshaCategoryCard
+              category={category}
               onClick={handleCategoryClick}
               index={index}
             />
@@ -687,17 +656,17 @@ const TopCategoriesSection = ({ navigate }) => {
 
 const DesktopHeroSearch = ({ searchTerm, setSearchTerm, handleSearchSubmit, navigate, currentLocation }) => {
   const searchCategories = [
-    { key: 'properties', label: 'Rent', icon: '🏠', subtext: 'over 1,000+ options' }, 
-    { key: 'properties', label: 'Long stays', icon: '⏳', subtext: '30+ days minimum' }, 
-    { key: 'helpers', label: 'Helpers', icon: '👷', subtext: 'Professional services' }, 
+    { key: 'properties', label: 'Rent', icon: '🏠', subtext: 'over 1,000+ options' },
+    { key: 'properties', label: 'Long stays', icon: '⏳', subtext: '30+ days minimum' },
+    { key: 'helpers', label: 'Helpers', icon: '👷', subtext: 'Professional services' },
     { key: 'services', label: 'Services', icon: '✨', subtext: 'Various offerings' }
   ];
-  
+
   return (
     <motion.div key="desktop-hero" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative bg-rose-500 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-r from-rose-600 to-pink-600"></div>
       <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center"></div>
-      
+
       <div className="relative max-w-7xl mx-auto px-8 py-20">
         <div className="text-center mb-12">
           <motion.h1 initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="text-5xl font-semibold text-white mb-4 tracking-tight">
@@ -707,7 +676,7 @@ const DesktopHeroSearch = ({ searchTerm, setSearchTerm, handleSearchSubmit, navi
             Discover homes, services, and experiences around you
           </motion.p>
         </div>
-        
+
         <div className="max-w-4xl mx-auto">
           <motion.form initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} onSubmit={handleSearchSubmit} className="relative">
             <div className="bg-white rounded-full shadow-2xl flex items-center p-2">
@@ -715,9 +684,9 @@ const DesktopHeroSearch = ({ searchTerm, setSearchTerm, handleSearchSubmit, navi
                 <MapIcon className="w-5 h-5 text-gray-400 mr-3" />
                 <div className="flex flex-col">
                   <label className="text-xs font-bold text-gray-900">Where</label>
-                  <input 
-                    type="text" 
-                    placeholder="Search destinations" 
+                  <input
+                    type="text"
+                    placeholder="Search destinations"
                     className="outline-none text-sm text-gray-600 placeholder-gray-400 w-full"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -729,16 +698,16 @@ const DesktopHeroSearch = ({ searchTerm, setSearchTerm, handleSearchSubmit, navi
               </button>
             </div>
           </motion.form>
-          
+
           <div className="grid grid-cols-4 gap-4 mt-8">
             {searchCategories.map((category, idx) => (
-              <motion.button 
-                key={`search-cat-${category.label}-${idx}`} 
-                initial={{ opacity: 0, y: 20 }} 
-                animate={{ opacity: 1, y: 0 }} 
-                transition={{ delay: 0.5 + idx * 0.1 }} 
-                whileHover={{ scale: 1.02, y: -2 }} 
-                onClick={() => navigate(`/search?type=${category.key}&address=${encodeURIComponent(currentLocation)}`)} 
+              <motion.button
+                key={`search-cat-${category.label}-${idx}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 + idx * 0.1 }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                onClick={() => navigate(`/search?type=${category.key}&address=${encodeURIComponent(currentLocation)}`)}
                 className="bg-white/10 backdrop-blur-md rounded-2xl p-4 text-white hover:bg-white/20 transition-all border border-white/20 text-left group"
               >
                 <div className="flex items-center space-x-3">
@@ -759,13 +728,13 @@ const DesktopHeroSearch = ({ searchTerm, setSearchTerm, handleSearchSubmit, navi
 
 const DesktopPopularDestinations = ({ navigate }) => {
   const popularDestinations = [
-    { name: 'Johannesburg', image: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' }, 
-    { name: 'Cape Town', image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' }, 
-    { name: 'Durban', image: 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' }, 
-    { name: 'Pretoria', image: 'https://images.unsplash.com/photo-1592210454359-9043f067919b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' }, 
+    { name: 'Johannesburg', image: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
+    { name: 'Cape Town', image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
+    { name: 'Durban', image: 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
+    { name: 'Pretoria', image: 'https://images.unsplash.com/photo-1592210454359-9043f067919b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
     { name: 'Port Elizabeth', image: 'https://images.unsplash.com/photo-1590841609987-4ac211afdde1?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' }
   ];
-  
+
   return (
     <motion.section key="popular-destinations" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={containerVariants} className="mb-16">
       <SectionTitle title="Popular destinations" actionText="View all" onAction={() => navigate('/explore')} />
@@ -805,24 +774,29 @@ const SmartRecommendations = ({ recommendations, insights, loading, onItemClick 
       </div>
     );
   }
-  
+
   if (!recommendations || recommendations.length === 0) return null;
-  
+
   return (
     <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mb-10">
       <div className="flex items-center gap-2 mb-4">
         <SparklesIcon className="w-5 h-5 text-rose-500" />
         <h3 className="font-semibold text-gray-900">AI Picks for you</h3>
       </div>
-      
+
       <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
         {recommendations.slice(0, 6).map((item, i) => (
-          <motion.div key={item._id ? `rec-${item._id}` : `rec-${i}`} whileHover={{ y: -4 }} onClick={() => onItemClick(item, item.type)} className="flex-shrink-0 w-40 cursor-pointer">
+          <motion.div key={item._id ? `rec-${item._id}` : `rec-${i}`} whileHover={{ y: -4 }} onClick={() => onItemClick(item, item.routeType || item.type)} className="flex-shrink-0 w-40 cursor-pointer">
             <div className="relative aspect-square rounded-xl overflow-hidden mb-2 bg-gray-200">
               <ImageWithFallback
                 src={item.imageUrls?.[0]}
+                imageUrls={item.imageUrls}
                 alt={item.name}
-                type={item.type || 'default'}
+                type={
+                  item.routeType === 'listing'
+                    ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property')
+                    : (item.routeType || 'default')
+                }
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute top-2 left-2">
@@ -856,12 +830,12 @@ const MobileAppHomepage = ({
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  const handleSearchSubmit = (e) => { 
-    if (e) e.preventDefault(); 
-    if (searchTerm.trim()) { 
-      navigate(`/search?searchTerm=${encodeURIComponent(searchTerm)}&type=all&address=${encodeURIComponent(currentLocation)}`); 
-      setSearchTerm(''); 
-    } 
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (searchTerm.trim()) {
+      navigate(`/search?searchTerm=${encodeURIComponent(searchTerm)}&type=all&address=${encodeURIComponent(currentLocation)}`);
+      setSearchTerm('');
+    }
   };
 
   const categories = [
@@ -877,7 +851,7 @@ const MobileAppHomepage = ({
   if (isDesktop) {
     return (
       <div className="min-h-screen bg-white">
-        <style jsx global>{`
+        <style>{`
           .scrollbar-hide::-webkit-scrollbar { display: none; }
           .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
           body { overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
@@ -885,15 +859,15 @@ const MobileAppHomepage = ({
           * { scrollbar-width: none; -ms-overflow-style: none; }
           *::-webkit-scrollbar { display: none; }
         `}</style>
-        
+
         <DesktopHeroSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} handleSearchSubmit={handleSearchSubmit} navigate={navigate} currentLocation={currentLocation} />
-        
+
         <main className="max-w-7xl mx-auto px-8 py-12">
           {/* FRESHA-STYLE TOP CATEGORIES SECTION */}
           <TopCategoriesSection navigate={navigate} />
-          
+
           <DesktopPopularDestinations navigate={navigate} />
-          
+
           <div className="flex items-center gap-8 overflow-x-auto pb-4 mb-8 border-b border-gray-200 scrollbar-hide">
             {categories.map((cat) => (
               <CategoryFilter key={cat.label} {...cat} isActive={activeCategory === cat.label} onClick={() => setActiveCategory(cat.label)} />
@@ -1042,8 +1016,8 @@ const MobileAppHomepage = ({
 
   // Mobile View
   return (
-    <div className="min-h-screen bg-white pb-20">
-      <style jsx global>{`
+    <div className="min-h-screen bg-white pb-32">
+      <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         body { overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
@@ -1051,7 +1025,7 @@ const MobileAppHomepage = ({
         * { scrollbar-width: none; -ms-overflow-style: none; }
         *::-webkit-scrollbar { display: none; }
       `}</style>
-      
+
       <main className="px-4 py-4">
         {/* Mobile Top Categories - Horizontal Scroll */}
         <section className="mb-8 -mx-4 px-4">
@@ -1067,11 +1041,15 @@ const MobileAppHomepage = ({
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.05 }}
                 onClick={() => {
-                  if (category.id === 'sneaker' || category.id === 'washingmat' || category.id === 'animals') {
+                  const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor'];
+                  const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattor Artise', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician'];
+                  const properties = ['rental', 'guesthouse'];
+
+                  if (helpers.includes(category.id)) {
                     navigate(`/search?category=${category.id}&type=helpers`);
-                  } else if (['barber', 'baker', 'carwash', 'photograph', 'tattoo', 'chef', 'massage', 'hair', 'nails'].includes(category.id)) {
+                  } else if (services.includes(category.id)) {
                     navigate(`/search?category=${category.id}&type=services`);
-                  } else if (['rental', 'guesthouse', 'domestic'].includes(category.id)) {
+                  } else if (properties.includes(category.id)) {
                     navigate(`/search?category=${category.id}&type=properties`);
                   } else {
                     navigate(`/search?category=${category.id}`);
@@ -1106,7 +1084,7 @@ const MobileAppHomepage = ({
             </div>
             <h2 className="text-2xl font-semibold text-white mb-2">Find your perfect space</h2>
             <p className="text-white/80 text-sm mb-4">Discover homes, services, and experiences</p>
-            
+
             <div className="flex flex-wrap gap-2 mb-4">
               {['Smart homes', 'Best deals', 'Near me', 'Trending'].map((tag) => (
                 <button key={tag} onClick={() => navigate(`/search?searchTerm=${tag}&type=all`)} className="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm transition-colors">
@@ -1114,7 +1092,7 @@ const MobileAppHomepage = ({
                 </button>
               ))}
             </div>
-            
+
             <button onClick={() => navigate('/search?ai=1')} className="bg-white text-gray-900 px-5 py-2.5 rounded-full font-medium text-sm hover:bg-gray-50 transition-colors flex items-center gap-2 w-fit">
               <SparklesIcon className="w-4 h-4" />
               AI Explore
@@ -1145,7 +1123,7 @@ const MobileAppHomepage = ({
             </div>
             <div className="flex overflow-x-auto gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
               {recentlyViewedItems.slice(0, 5).map((item) => (
-                <div key={item._id} onClick={() => navigate(item.type === 'helper' ? `/helper/${item._id}` : `/listing/${item._id}`)} className="flex-shrink-0 w-36 cursor-pointer">
+                <div key={item._id} onClick={() => navigate(`/${item.itemType || 'listing'}/${item._id}`)} className="flex-shrink-0 w-36 cursor-pointer">
                   <div className="relative aspect-[3/2] rounded-xl overflow-hidden mb-2 bg-gray-200">
                     <ImageWithFallback
                       src={item.imageUrls?.[0]}
@@ -1274,7 +1252,7 @@ const MobileAppHomepage = ({
         </section>
       </main>
 
-      <button onClick={() => {/* Open chat */}} className="fixed bottom-24 right-4 bg-gray-900 text-white p-4 rounded-full shadow-xl hover:scale-105 transition-transform z-50">
+      <button onClick={() => {/* Open chat */ }} className="fixed bottom-24 right-4 bg-gray-900 text-white p-4 rounded-full shadow-xl hover:scale-105 transition-transform z-50">
         <SparklesIcon className="w-6 h-6" />
       </button>
     </div>
@@ -1286,17 +1264,17 @@ const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const aiEngine = useRef(new AIRecommendationEngine());
-  
+
   const [featuredProperties, setFeaturedProperties] = useState(MOCK_PROPERTIES);
   const [featuredServices, setFeaturedServices] = useState(MOCK_SERVICES);
   const [featuredHelpers, setFeaturedHelpers] = useState(MOCK_HELPERS);
   const [featuredEvents, setFeaturedEvents] = useState(MOCK_EVENTS);
-  
+
   const [loadingProperties, setLoadingProperties] = useState(true);
   const [loadingServices, setLoadingServices] = useState(true);
   const [loadingHelpers, setLoadingHelpers] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
-  
+
   const [stats, setStats] = useState({ properties: 1234, services: 456, helpers: 789, events: 321 });
   const [aiRecommendations, setAiRecommendations] = useState([]);
   const [aiInsights, setAiInsights] = useState([]);
@@ -1326,12 +1304,12 @@ const Home = () => {
   const addToRecentlyViewed = (item, itemType) => {
     try {
       aiEngine.current.updatePreferences(item, 'view');
-      const viewedItem = { 
-        ...item, 
-        itemType: itemType, 
-        viewedAt: new Date().toISOString(), 
-        isLiked: false, 
-        aiScore: Math.floor(Math.random() * 30) + 70 
+      const viewedItem = {
+        ...item,
+        itemType: itemType,
+        viewedAt: new Date().toISOString(),
+        isLiked: false,
+        aiScore: Math.floor(Math.random() * 30) + 70
       };
       const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
       let items = stored ? JSON.parse(stored) : [];
@@ -1352,19 +1330,24 @@ const Home = () => {
         items = items.map(item => item._id === itemId ? { ...item, isLiked } : item);
         localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(items));
         setRecentlyViewedItems(items);
-        if (isLiked) { 
-          const likedItem = items.find(item => item._id === itemId); 
-          if (likedItem) aiEngine.current.updatePreferences(likedItem, 'like'); 
+        if (isLiked) {
+          const likedItem = items.find(item => item._id === itemId);
+          if (likedItem) aiEngine.current.updatePreferences(likedItem, 'like');
         }
       }
     } catch (error) { console.error('Failed to update like status:', error); }
   };
 
   const generateAIRecommendations = (properties, services, helpers, events) => {
-    const allItems = [...properties, ...services, ...helpers, ...events].filter(Boolean);
-    return aiEngine.current.generatePersonalizedRecommendations(allItems, { 
-      location: currentLocation, 
-      preferences: aiEngine.current.userPreferences 
+    const allItems = [
+      ...properties.map(p => ({ ...p, routeType: 'listing' })),
+      ...services.map(s => ({ ...s, routeType: 'service' })),
+      ...helpers.map(h => ({ ...h, routeType: 'helper' })),
+      ...events.map(e => ({ ...e, routeType: 'event' }))
+    ].filter(Boolean);
+    return aiEngine.current.generatePersonalizedRecommendations(allItems, {
+      location: currentLocation,
+      preferences: aiEngine.current.userPreferences
     });
   };
 
@@ -1382,29 +1365,29 @@ const Home = () => {
       }, API_TIMEOUT);
 
       const fetchPromises = [
-        fetch(`/api/listing/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc&address=${encodeURIComponent(currentLocation)}`, { 
-          signal: controllers.properties.signal 
+        fetch(`/api/listing/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc&address=${encodeURIComponent(currentLocation)}`, {
+          signal: controllers.properties.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => { if (data?.length > 0) setFeaturedProperties(data.slice(0, DATA_FETCH_LIMIT)); })
-          .catch(() => {}).finally(() => setLoadingProperties(false)),
+          .catch(() => { }).finally(() => setLoadingProperties(false)),
 
-        fetch(`/api/service/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc&location=${encodeURIComponent(currentLocation)}`, { 
-          signal: controllers.services.signal 
+        fetch(`/api/service/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc&location=${encodeURIComponent(currentLocation)}`, {
+          signal: controllers.services.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => { if (data?.length > 0) setFeaturedServices(data.slice(0, DATA_FETCH_LIMIT)); })
-          .catch(() => {}).finally(() => setLoadingServices(false)),
+          .catch(() => { }).finally(() => setLoadingServices(false)),
 
-        fetch(`/api/helper/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc&address=${encodeURIComponent(currentLocation)}`, { 
-          signal: controllers.helpers.signal 
+        fetch(`/api/helper/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc&address=${encodeURIComponent(currentLocation)}`, {
+          signal: controllers.helpers.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => { if (data?.length > 0) setFeaturedHelpers(data.slice(0, DATA_FETCH_LIMIT)); })
-          .catch(() => {}).finally(() => setLoadingHelpers(false)),
+          .catch(() => { }).finally(() => setLoadingHelpers(false)),
 
-        fetch(`/api/event/get?limit=${DATA_FETCH_LIMIT}&sort=date&order=asc&location=${encodeURIComponent(currentLocation)}`, { 
-          signal: controllers.events.signal 
+        fetch(`/api/event/get?limit=${DATA_FETCH_LIMIT}&sort=date&order=asc&location=${encodeURIComponent(currentLocation)}`, {
+          signal: controllers.events.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => { if (data?.length > 0) setFeaturedEvents(data.slice(0, DATA_FETCH_LIMIT)); })
-          .catch(() => {}).finally(() => setLoadingEvents(false))
+          .catch(() => { }).finally(() => setLoadingEvents(false))
       ];
 
       await Promise.all(fetchPromises);
@@ -1425,22 +1408,22 @@ const Home = () => {
 
   return (
     <MobileAppHomepage
-      featuredProperties={featuredProperties} 
-      featuredServices={featuredServices} 
-      featuredHelpers={featuredHelpers} 
+      featuredProperties={featuredProperties}
+      featuredServices={featuredServices}
+      featuredHelpers={featuredHelpers}
       featuredEvents={featuredEvents}
-      loadingProperties={loadingProperties} 
-      loadingServices={loadingServices} 
-      loadingHelpers={loadingHelpers} 
+      loadingProperties={loadingProperties}
+      loadingServices={loadingServices}
+      loadingHelpers={loadingHelpers}
       loadingEvents={loadingEvents}
-      stats={stats} 
-      onItemClick={addToRecentlyViewed} 
-      recentlyViewedItems={recentlyViewedItems} 
+      stats={stats}
+      onItemClick={addToRecentlyViewed}
+      recentlyViewedItems={recentlyViewedItems}
       onRecentlyViewedLike={updateRecentlyViewedLike}
-      currentLocation={currentLocation} 
-      navigate={navigate} 
-      aiRecommendations={aiRecommendations} 
-      aiInsights={aiInsights} 
+      currentLocation={currentLocation}
+      navigate={navigate}
+      aiRecommendations={aiRecommendations}
+      aiInsights={aiInsights}
       aiTrendData={null}
       onAISuggestionClick={(suggestion) => { navigate(`/search?searchTerm=${encodeURIComponent(suggestion)}&type=all&ai=1`); }}
     />

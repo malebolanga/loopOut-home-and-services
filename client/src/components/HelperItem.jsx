@@ -8,6 +8,7 @@ import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "../styles/ListingDetails.scss";
+import ImageWithFallback from "./ImageWithFallback";
 
 const NEW_HELPER_THRESHOLD_DAYS = 14;
 const CLICKS_PER_STAR = 20;
@@ -256,12 +257,13 @@ function HelperItem({ helper, className = "", compactMode = false }) {
         <>
           {/* Compact Mode Layout */}
           <div className="relative w-24 h-28 flex-shrink-0 rounded-lg overflow-hidden">
-            <img
+            <ImageWithFallback
               src={enhancedImages[0]?.url}
+              imageUrls={helper.imageUrls}
+              type="helper"
               alt={`${helper.name || 'Helper'} image`}
               className="w-full h-full object-cover"
               loading="lazy"
-              onError={(e) => { e.target.src = "https://placehold.co/600x400/E0E0E0/333333?text=No+Image"; }}
             />
             {isNewHelper && (
               <span className="absolute top-1 left-1 bg-green-500 text-white px-1.5 py-0.5 text-[10px] font-semibold rounded-full shadow-xs">
@@ -364,15 +366,14 @@ function HelperItem({ helper, className = "", compactMode = false }) {
                 {enhancedImages.map((img, index) => (
                   <SwiperSlide key={index}>
                     <div className="relative h-full w-full">
-                      <img
+                      <ImageWithFallback
                         src={img.url}
+                        imageUrls={index === 0 ? helper.imageUrls : undefined}
+                        type="helper"
                         alt={`${helper.name || 'Helper'} image ${index + 1}`}
                         className={`w-full h-full rounded-2xl object-cover transition-transform duration-500 ${imageLoaded ? 'scale-100' : 'scale-110'} group-hover:scale-105`}
                         loading="lazy"
                         onLoad={() => setImageLoaded(true)}
-                        onError={(e) => {
-                          e.target.src = "https://placehold.co/600x400/E0E0E0/333333?text=No+Image";
-                        }}
                       />
                       <div className="absolute top-2 left-2 z-10 flex flex-col gap-1.5 items-start">
                         {/* PROMO BELT - Standard Mode */}
@@ -404,47 +405,47 @@ function HelperItem({ helper, className = "", compactMode = false }) {
             </div>
           </div>
 
-         <div className="p-4 flex-grow flex flex-col space-y-2">
-  {/* Header with rating */}
-  <div className="flex justify-between items-start">
-    <div className="flex-1 min-w-0">
-      <h3 className="text-[15px] font-semibold text-gray-900 truncate pr-2 leading-tight">
-        {helper.name || 'Helper Name'}
-      </h3>
-      
-      {/* Location */}
-      <div className="flex items-center mt-0">
-        <MdLocationOn className="text-rose-500 mr-1 flex-shrink-0 text-[13px]" />
-        <span className="text-gray-600 text-[13px] truncate">
-          {helper.address || 'Location not available'}
-        </span>
-      </div>
-    </div>
+          <div className="p-4 flex-grow flex flex-col space-y-2">
+            {/* Header with rating */}
+            <div className="flex justify-between items-start">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-[15px] font-semibold text-gray-900 truncate pr-2 leading-tight">
+                  {helper.name || 'Helper Name'}
+                </h3>
 
-    {/* Airbnb-style compact rating */}
- 
-  </div>
+                {/* Location */}
+                <div className="flex items-center mt-0">
+                  <MdLocationOn className="text-rose-500 mr-1 flex-shrink-0 text-[13px]" />
+                  <span className="text-gray-600 text-[13px] truncate">
+                    {helper.address || 'Location not available'}
+                  </span>
+                </div>
+              </div>
 
-  {/* Price section - Airbnb style */}
-<div className="mt-auto pt-0">
-  <div className="flex items-baseline justify-between">
-    <div className="flex items-baseline">
-      <span className="text-[15px] font-semibold text-gray-900">
-        {formatPrice(helper.regularPrice)}
-      </span>
-   
-    </div>
-    
-    <div className="flex items-center text-gray-600">
-      <FaStar className="text-amber-500 text-[12px]" />
-      <span className="font-medium text-gray-900 text-[13px] ml-1">
-        {calculatedStarRating}
-      </span>
-  
-    </div>
-  </div>
-</div>
-</div>
+              {/* Airbnb-style compact rating */}
+
+            </div>
+
+            {/* Price section - Airbnb style */}
+            <div className="mt-auto pt-0">
+              <div className="flex items-baseline justify-between">
+                <div className="flex items-baseline">
+                  <span className="text-[15px] font-semibold text-gray-900">
+                    {formatPrice(helper.regularPrice)}
+                  </span>
+
+                </div>
+
+                <div className="flex items-center text-gray-600">
+                  <FaStar className="text-amber-500 text-[12px]" />
+                  <span className="font-medium text-gray-900 text-[13px] ml-1">
+                    {calculatedStarRating}
+                  </span>
+
+                </div>
+              </div>
+            </div>
+          </div>
         </>
       )}
     </Link>

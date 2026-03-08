@@ -7,6 +7,7 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
   const { currentUser } = useSelector((state) => state.user);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState('');
+  const [rating, setRating] = useState(0);
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyContent, setReplyContent] = useState('');
   const [loading, setLoading] = useState({
@@ -35,19 +36,19 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
   // Helper function to get token from localStorage or session
   const getToken = () => {
     // Try to get token from localStorage (common pattern)
-    const tokenFromStorage = localStorage.getItem('token') || 
-                            localStorage.getItem('access_token') || 
-                            localStorage.getItem('jwt');
-    
+    const tokenFromStorage = localStorage.getItem('token') ||
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('jwt');
+
     if (tokenFromStorage) {
       return tokenFromStorage;
     }
 
     // Try from sessionStorage
-    const tokenFromSession = sessionStorage.getItem('token') || 
-                            sessionStorage.getItem('access_token') || 
-                            sessionStorage.getItem('jwt');
-    
+    const tokenFromSession = sessionStorage.getItem('token') ||
+      sessionStorage.getItem('access_token') ||
+      sessionStorage.getItem('jwt');
+
     if (tokenFromSession) {
       return tokenFromSession;
     }
@@ -60,21 +61,21 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
     setError(null);
     try {
       // If maxComments is 0, fetch all comments without limit
-      const url = maxComments > 0 
+      const url = maxComments > 0
         ? `/api/comment/${listingId}?limit=${maxComments}`
         : `/api/comment/${listingId}`;
-      
+
       const res = await fetch(url);
-      
+
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || 'Failed to fetch comments');
       }
-      
+
       const data = await res.json();
       setComments(data.comments || []);
       setTotalComments(data.totalComments || 0);
-      
+
       // Set ratings from API response
       if (data.ratings) {
         setRatings({
@@ -101,7 +102,7 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
   const handleSubmitComment = async (e) => {
     e.preventDefault();
     setError(null);
-    
+
     if (!commentContent.trim()) {
       setError('Comment cannot be empty');
       return;
@@ -114,14 +115,14 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
 
     try {
       setLoading(prev => ({ ...prev, submitting: true }));
-      
+
       // Get token from storage
       const token = getToken();
-      
+
       const headers = {
         'Content-Type': 'application/json',
       };
-      
+
       // Only add Authorization header if token exists
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -134,13 +135,14 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
           content: commentContent,
           listingId,
           userName: currentUser.username || currentUser.name || currentUser.displayName || 'User',
-          userAvatar: currentUser.avatar || currentUser.picture || '/default-avatar.jpg'
+          userAvatar: currentUser.avatar || currentUser.picture || '/default-avatar.jpg',
+          rating: rating > 0 ? rating : undefined
         }),
         credentials: 'include'
       });
 
       const responseData = await res.json();
-      
+
       if (!res.ok) {
         if (res.status === 401) {
           throw new Error('Session expired. Please log in again.');
@@ -149,6 +151,7 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
       }
 
       setCommentContent('');
+      setRating(0);
       setRefreshTrigger(prev => prev + 1);
       setError(null);
     } catch (err) {
@@ -167,13 +170,13 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
 
     try {
       setLoading(prev => ({ ...prev, liking: true }));
-      
+
       const token = getToken();
-      
+
       const headers = {
         'Content-Type': 'application/json',
       };
-      
+
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
@@ -201,7 +204,7 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
           const isLiked = comment.likes?.includes(currentUser._id);
           return {
             ...comment,
-            likes: isLiked 
+            likes: isLiked
               ? comment.likes.filter(id => id !== currentUser._id)
               : [...(comment.likes || []), currentUser._id]
           };
@@ -229,13 +232,13 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
 
     try {
       setLoading(prev => ({ ...prev, replying: true }));
-      
+
       const token = getToken();
-      
+
       const headers = {
         'Content-Type': 'application/json',
       };
-      
+
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
@@ -252,7 +255,7 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
       });
 
       const responseData = await res.json();
-      
+
       if (!res.ok) {
         if (res.status === 401) {
           throw new Error('Session expired. Please log in again.');
@@ -280,9 +283,9 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
 
     try {
       setLoading(prev => ({ ...prev, deleting: true }));
-      
+
       const token = getToken();
-      
+
       const headers = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -343,8 +346,8 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
                 <span className="font-medium">{ratings.cleanliness.toFixed(1)}</span>
               </div>
               <div className="h-2 bg-gray-200 rounded-full mt-1">
-                <div 
-                  className="h-full bg-blue-500 rounded-full" 
+                <div
+                  className="h-full bg-blue-500 rounded-full"
                   style={{ width: `${(ratings.cleanliness / 5) * 100}%` }}
                 />
               </div>
@@ -355,33 +358,32 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
                 <span className="font-medium">{ratings.staff.toFixed(1)}</span>
               </div>
               <div className="h-2 bg-gray-200 rounded-full mt-1">
-                <div 
-                  className="h-full bg-blue-500 rounded-full" 
+                <div
+                  className="h-full bg-blue-500 rounded-full"
                   style={{ width: `${(ratings.staff / 5) * 100}%` }}
                 />
               </div>
             </div>
           </div>
-          
+
           {totalComments > 0 && (
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="text-sm text-gray-700">
-                Rating per 10 comments: 
+                Rating per 10 comments:
                 <span className="font-semibold ml-1">
                   {(ratings.overall * 2).toFixed(1)}/10
                 </span>
               </div>
               <div className="flex items-center mt-1">
                 {[...Array(5)].map((_, i) => (
-                  <FaStar 
+                  <FaStar
                     key={i}
-                    className={`${
-                      i < Math.floor(ratings.overall) 
-                        ? 'text-yellow-400' 
-                        : ratings.overall % 1 > 0.5 && i === Math.floor(ratings.overall) 
-                          ? 'text-yellow-400' 
+                    className={`${i < Math.floor(ratings.overall)
+                        ? 'text-yellow-400'
+                        : ratings.overall % 1 > 0.5 && i === Math.floor(ratings.overall)
+                          ? 'text-yellow-400'
                           : 'text-gray-300'
-                    } mr-1`} 
+                      } mr-1`}
                   />
                 ))}
                 <span className="text-xs text-gray-500 ml-2">
@@ -396,8 +398,8 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
       {error && (
         <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg flex justify-between items-center text-sm">
           <span>{error}</span>
-          <button 
-            onClick={() => setError(null)} 
+          <button
+            onClick={() => setError(null)}
             className="text-red-700 hover:text-red-900"
             aria-label="Dismiss error"
           >
@@ -410,8 +412,8 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
       {!cardStyle && currentUser ? (
         <form onSubmit={handleSubmitComment} className="mb-6">
           <div className="flex items-start gap-3">
-            <img 
-              src={currentUser.avatar || currentUser.picture || '/default-avatar.jpg'} 
+            <img
+              src={currentUser.avatar || currentUser.picture || '/default-avatar.jpg'}
               alt={currentUser.username || currentUser.name || 'User'}
               className="w-9 h-9 rounded-full object-cover flex-shrink-0"
               onError={(e) => {
@@ -429,8 +431,24 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
                 onFocus={() => setFocusedInput('comment')}
                 onBlur={() => setFocusedInput(null)}
               />
-              {(focusedInput === 'comment' || commentContent) && (
-                <div className="flex justify-end mt-1">
+              {(focusedInput === 'comment' || commentContent || rating > 0) && (
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-gray-500 mr-1">Rating:</span>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setRating(star)}
+                        className="focus:outline-none transition-colors"
+                      >
+                        <FaStar
+                          size={14}
+                          className={star <= rating ? 'text-yellow-400' : 'text-gray-300'}
+                        />
+                      </button>
+                    ))}
+                  </div>
                   <button
                     type="submit"
                     className="bg-blue-500 text-white p-1.5 rounded-full hover:bg-blue-600 disabled:opacity-50 transition-colors"
@@ -458,8 +476,8 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
         <div className="mb-4 bg-white rounded-xl p-4 shadow-sm border border-gray-200">
           <form onSubmit={handleSubmitComment}>
             <div className="flex items-start gap-3">
-              <img 
-                src={currentUser.avatar || currentUser.picture || '/default-avatar.jpg'} 
+              <img
+                src={currentUser.avatar || currentUser.picture || '/default-avatar.jpg'}
                 alt={currentUser.username || currentUser.name || 'User'}
                 className="w-9 h-9 rounded-full object-cover flex-shrink-0"
                 onError={(e) => {
@@ -477,8 +495,24 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
                   onFocus={() => setFocusedInput('comment')}
                   onBlur={() => setFocusedInput(null)}
                 />
-                {(focusedInput === 'comment' || commentContent) && (
-                  <div className="flex justify-end mt-1">
+                {(focusedInput === 'comment' || commentContent || rating > 0) && (
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-gray-500 mr-1">Rating:</span>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setRating(star)}
+                          className="focus:outline-none transition-colors"
+                        >
+                          <FaStar
+                            size={14}
+                            className={star <= rating ? 'text-yellow-400' : 'text-gray-300'}
+                          />
+                        </button>
+                      ))}
+                    </div>
                     <button
                       type="submit"
                       className="bg-blue-500 text-white p-1.5 rounded-full hover:bg-blue-600 disabled:opacity-50 transition-colors"
@@ -522,8 +556,8 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
                 </div>
                 <div className="flex items-center">
                   <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full" 
+                    <div
+                      className="bg-blue-600 h-2 rounded-full"
                       style={{ width: `${(ratings[name.toLowerCase()] / 5) * 100}%` }}
                     ></div>
                   </div>
@@ -544,21 +578,21 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
           comments.map(comment => {
             const replyCount = comment.replies?.length || 0;
             const showLimitedReplies = replyCount > 2 && !expandedReplies[comment._id];
-            const displayedReplies = showLimitedReplies 
-              ? comment.replies.slice(0, 2) 
+            const displayedReplies = showLimitedReplies
+              ? comment.replies.slice(0, 2)
               : comment.replies;
 
             return (
-              <div 
-                key={comment._id} 
-                className={cardStyle ? 
-                  'bg-white rounded-xl p-4 shadow-sm border border-gray-200' : 
+              <div
+                key={comment._id}
+                className={cardStyle ?
+                  'bg-white rounded-xl p-4 shadow-sm border border-gray-200' :
                   'border-b border-gray-100 pb-4 last:border-0'
                 }
               >
                 <div className="flex items-start gap-3">
-                  <img 
-                    src={comment.userAvatar || '/default-avatar.jpg'} 
+                  <img
+                    src={comment.userAvatar || '/default-avatar.jpg'}
                     alt={comment.userName}
                     className="w-9 h-9 rounded-full object-cover flex-shrink-0"
                     onError={(e) => {
@@ -570,7 +604,7 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
                       <div className="flex items-center justify-between">
                         <h4 className="font-semibold text-sm text-gray-800">{comment.userName}</h4>
                         {currentUser?._id === comment.userId && !cardStyle && (
-                          <button 
+                          <button
                             onClick={() => handleDeleteComment(comment._id)}
                             className="text-gray-400 hover:text-gray-600 transition-colors p-1"
                             disabled={loading.deleting}
@@ -584,13 +618,24 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
                           </button>
                         )}
                       </div>
+                      {comment.rating && (
+                        <div className="flex items-center mt-1">
+                          {[...Array(5)].map((_, i) => (
+                            <FaStar
+                              key={i}
+                              size={10}
+                              className={`${i < comment.rating ? 'text-yellow-400' : 'text-gray-300'} mr-0.5`}
+                            />
+                          ))}
+                        </div>
+                      )}
                       <p className={`${cardStyle ? 'mt-2' : 'mt-1'} text-gray-700 text-sm whitespace-pre-line break-words`}>
                         {comment.content}
                       </p>
                     </div>
-                    
+
                     <div className="mt-1 flex items-center gap-4 ml-2">
-                      <button 
+                      <button
                         onClick={() => handleLikeComment(comment._id)}
                         className={`flex items-center gap-1 text-xs ${comment.likes?.includes(currentUser?._id) ? 'text-blue-500 font-semibold' : 'text-gray-500'} disabled:opacity-50`}
                         disabled={loading.liking}
@@ -627,8 +672,8 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
                     {!cardStyle && replyingTo === comment._id && (
                       <div className="mt-3 ml-2">
                         <div className="flex items-start gap-2">
-                          <img 
-                            src={currentUser?.avatar || currentUser?.picture || '/default-avatar.jpg'} 
+                          <img
+                            src={currentUser?.avatar || currentUser?.picture || '/default-avatar.jpg'}
                             alt={currentUser?.username || currentUser?.name || 'User'}
                             className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                             onError={(e) => {
@@ -673,8 +718,8 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
                       <div className="mt-2 space-y-3">
                         {displayedReplies?.map((reply) => (
                           <div key={reply._id || reply.createdAt} className="flex items-start gap-2">
-                            <img 
-                              src={reply.userAvatar || '/default-avatar.jpg'} 
+                            <img
+                              src={reply.userAvatar || '/default-avatar.jpg'}
                               alt={reply.userName}
                               className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                               onError={(e) => {
@@ -686,7 +731,7 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
                                 <div className="flex items-center justify-between">
                                   <span className="font-medium text-xs text-gray-800">{reply.userName}</span>
                                   {currentUser?._id === reply.userId && (
-                                    <button 
+                                    <button
                                       onClick={() => handleDeleteComment(reply._id)}
                                       className="text-gray-400 hover:text-gray-600 transition-colors p-1"
                                       disabled={loading.deleting}
@@ -705,7 +750,7 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
                                 </p>
                               </div>
                               <div className="mt-1 flex items-center gap-4 ml-2">
-                                <button 
+                                <button
                                   onClick={() => handleLikeComment(reply._id)}
                                   className={`flex items-center gap-1 text-xs ${reply.likes?.includes(currentUser?._id) ? 'text-blue-500 font-semibold' : 'text-gray-500'} disabled:opacity-50`}
                                   disabled={loading.liking}

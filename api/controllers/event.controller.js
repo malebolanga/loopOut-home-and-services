@@ -1,16 +1,20 @@
 import Event from '../models/event.model.js';
 import { errorHandler } from '../utils/error.js';
 import User from '../models/user.model.js'; // Add this import
+import { createAreaNotifications } from '../utils/notificationUtils.js';
 
 export const createEvent = async (req, res, next) => {
   try {
     const event = await Event.create(req.body);
-    
+
     // Add event to user's events array
     await User.findByIdAndUpdate(req.body.userRef, {
       $push: { events: event._id }
     });
-    
+
+    // Create notifications for users in the area
+    createAreaNotifications(event, 'event');
+
     return res.status(201).json(event);
   } catch (error) {
     next(error);
@@ -22,7 +26,20 @@ export const getEvents = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 9;
     const startIndex = parseInt(req.query.startIndex) || 0;
 
-    const events = await Event.find()
+    const searchTerm = req.query.searchTerm || '';
+    const category = req.query.category;
+    const location = req.query.location || req.query.address;
+
+    const query = {
+      $or: [
+        { title: { $regex: searchTerm, $options: 'i' } },
+        { description: { $regex: searchTerm, $options: 'i' } }
+      ],
+      ...(category && { category }),
+      ...(location && { location: { $regex: location, $options: 'i' } })
+    };
+
+    const events = await Event.find(query)
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(startIndex);

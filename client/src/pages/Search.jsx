@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import ImageWithFallback from '../components/ImageWithFallback';
 import {
   Search as SearchIcon,
   SlidersHorizontal,
@@ -57,7 +58,7 @@ const ALL_CATEGORIES = [
   { id: 'for_rent', label: 'For Rent', type: 'properties', icon: Home, color: 'bg-blue-100 text-blue-800', description: 'Rental properties' },
   { id: 'for_sale', label: 'For Sale', type: 'properties', icon: Tag, color: 'bg-emerald-100 text-emerald-800', description: 'Properties for sale' },
   { id: 'vacation', label: 'Vacation Rental', type: 'properties', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Short-term stays' },
-  
+
   // Services
   { id: 'photography', label: 'Photography', type: 'services', icon: Camera, color: 'bg-indigo-100 text-indigo-800', description: 'Photo & video services' },
   { id: 'car_wash', label: 'Car Wash', type: 'services', icon: Droplets, color: 'bg-cyan-100 text-cyan-800', description: 'Vehicle cleaning' },
@@ -66,7 +67,7 @@ const ALL_CATEGORIES = [
   { id: 'maintenance', label: 'Maintenance', type: 'services', icon: Settings, color: 'bg-gray-100 text-gray-800', description: 'Repair & maintenance' },
   { id: 'catering', label: 'Catering', type: 'services', icon: ChefHat, color: 'bg-orange-100 text-orange-800', description: 'Event catering' },
   { id: 'moving', label: 'Moving & Transport', type: 'services', icon: Truck, color: 'bg-amber-100 text-amber-800', description: 'Relocation services' },
-  
+
   // Helpers
   { id: 'domestic', label: 'Domestic Help', type: 'helpers', icon: Home, color: 'bg-teal-100 text-teal-800', description: 'Household assistance' },
   { id: 'tattoo', label: 'Tattoo Artist', type: 'helpers', icon: Paintbrush, color: 'bg-red-100 text-red-800', description: 'Tattoo & piercing' },
@@ -75,7 +76,7 @@ const ALL_CATEGORIES = [
   { id: 'nail', label: 'Nail Services', type: 'helpers', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Manicure & pedicure' },
   { id: 'chef', label: 'Private Chef', type: 'helpers', icon: ChefHat, color: 'bg-amber-100 text-amber-800', description: 'Personal cooking' },
   { id: 'barber', label: 'Barber', type: 'helpers', icon: Scissors, color: 'bg-sky-100 text-sky-800', description: 'Men\'s grooming' },
-  
+
   // Transport
   { id: 'transport', label: 'Transport', type: 'services', icon: Car, color: 'bg-blue-100 text-blue-800', description: 'Transportation services' },
 ];
@@ -117,6 +118,14 @@ const SERVICES_CATEGORY_CONFIG = {
   transport: { label: 'Transport', color: 'bg-blue-100 text-blue-800', icon: '🚕', endpoint: 'service' }
 };
 
+// Events Categories Configuration
+const EVENTS_CATEGORY_CONFIG = {
+  music: { label: 'Music', color: 'bg-purple-100 text-purple-800', icon: '🎵', endpoint: 'event' },
+  art: { label: 'Art', color: 'bg-pink-100 text-pink-800', icon: '🎨', endpoint: 'event' },
+  food: { label: 'Food & Wine', color: 'bg-red-100 text-red-800', icon: '🍷', endpoint: 'event' },
+  tech: { label: 'Tech', color: 'bg-blue-100 text-blue-800', icon: '💻', endpoint: 'event' },
+};
+
 // Main Search Type Configuration
 const SEARCH_TYPE_CONFIG = {
   all: {
@@ -153,6 +162,15 @@ const SEARCH_TYPE_CONFIG = {
     textColor: 'text-amber-600',
     endpoint: 'helper',
     subTypes: HELPER_CATEGORY_CONFIG
+  },
+  events: {
+    label: 'Events',
+    icon: Calendar,
+    color: 'from-purple-500 to-purple-600',
+    bgColor: 'bg-purple-500',
+    textColor: 'text-purple-600',
+    endpoint: 'event',
+    subTypes: EVENTS_CATEGORY_CONFIG
   }
 };
 
@@ -174,18 +192,18 @@ const itemVariants = {
 };
 
 // Slide-Open Search Panel Component
-const SlideOpenSearch = ({ 
-  isOpen, 
-  onClose, 
-  searchTerm, 
-  setSearchTerm, 
+const SlideOpenSearch = ({
+  isOpen,
+  onClose,
+  searchTerm,
+  setSearchTerm,
   onSearch,
   selectedCategory,
   onCategoryClick,
   recentSearches = []
 }) => {
   const inputRef = useRef(null);
-  
+
   // Focus input when opened
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -224,7 +242,7 @@ const SlideOpenSearch = ({
             onClick={onClose}
             className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
           />
-          
+
           {/* Slide Panel */}
           <motion.div
             initial={{ y: -20, opacity: 0, scale: 0.95 }}
@@ -235,13 +253,13 @@ const SlideOpenSearch = ({
           >
             {/* Header - Fixed */}
             <div className="flex-shrink-0 bg-white border-b border-gray-100 px-4 py-4 flex items-center gap-3">
-              <button 
+              <button
                 onClick={onClose}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-gray-700" />
               </button>
-              
+
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
@@ -259,7 +277,7 @@ const SlideOpenSearch = ({
                   }}
                 />
                 {searchTerm && (
-                  <button 
+                  <button
                     onClick={clearSearch}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full transition-colors"
                   >
@@ -267,8 +285,8 @@ const SlideOpenSearch = ({
                   </button>
                 )}
               </div>
-              
-              <button 
+
+              <button
                 onClick={() => { onSearch(); onClose(); }}
                 className="px-6 py-3 bg-rose-500 hover:bg-rose-600 text-white font-medium rounded-xl transition-colors whitespace-nowrap"
               >
@@ -295,7 +313,7 @@ const SlideOpenSearch = ({
                       );
                     })()}
                   </span>
-                  <button 
+                  <button
                     onClick={() => onCategoryClick && onCategoryClick(null)}
                     className="text-xs text-gray-400 hover:text-gray-600 underline"
                   >
@@ -347,11 +365,10 @@ const SlideOpenSearch = ({
                           onCategoryClick && onCategoryClick(category);
                           onClose();
                         }}
-                        className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
-                          isSelected 
-                            ? 'border-rose-500 bg-rose-50 text-rose-700' 
-                            : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'
-                        }`}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${isSelected
+                          ? 'border-rose-500 bg-rose-50 text-rose-700'
+                          : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
                       >
                         <div className={`p-2 rounded-xl ${category.color}`}>
                           <Icon className="w-5 h-5" />
@@ -379,9 +396,8 @@ const SlideOpenSearch = ({
                           onCategoryClick && onCategoryClick(category);
                           onClose();
                         }}
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl transition-colors text-left ${
-                          isSelected ? 'bg-rose-50 text-rose-700' : 'hover:bg-gray-50'
-                        }`}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl transition-colors text-left ${isSelected ? 'bg-rose-50 text-rose-700' : 'hover:bg-gray-50'
+                          }`}
                       >
                         <div className={`p-2 rounded-lg ${category.color} flex-shrink-0`}>
                           <Icon className="w-5 h-5" />
@@ -424,22 +440,22 @@ const SlideOpenSearch = ({
 };
 
 // Category Dropdown Component (for compact view)
-const CategoryDropdown = ({ 
-  isOpen, 
-  onClose, 
-  onSelect, 
+const CategoryDropdown = ({
+  isOpen,
+  onClose,
+  onSelect,
   selectedCategory,
   searchQuery,
-  setSearchQuery 
+  setSearchQuery
 }) => {
   const dropdownRef = useRef(null);
-  
+
   // Filter categories based on search
   const filteredCategories = useMemo(() => {
     if (!searchQuery) return ALL_CATEGORIES;
     const query = searchQuery.toLowerCase();
-    return ALL_CATEGORIES.filter(cat => 
-      cat.label.toLowerCase().includes(query) || 
+    return ALL_CATEGORIES.filter(cat =>
+      cat.label.toLowerCase().includes(query) ||
       cat.description.toLowerCase().includes(query)
     );
   }, [searchQuery]);
@@ -468,10 +484,11 @@ const CategoryDropdown = ({
   if (!isOpen) return null;
 
   const getGroupLabel = (type) => {
-    switch(type) {
+    switch (type) {
       case 'properties': return '🏠 Properties & Accommodation';
       case 'services': return '🔧 Services';
       case 'helpers': return '👤 Helpers & Professionals';
+      case 'events': return '🎪 Events';
       default: return 'Other';
     }
   };
@@ -498,7 +515,7 @@ const CategoryDropdown = ({
             autoFocus
           />
           {searchQuery && (
-            <button 
+            <button
               onClick={() => setSearchQuery('')}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full"
             >
@@ -523,11 +540,10 @@ const CategoryDropdown = ({
                   <button
                     key={category.id}
                     onClick={() => onSelect(category)}
-                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left group ${
-                      isSelected 
-                        ? 'bg-rose-50 border-rose-200 border' 
-                        : 'hover:bg-gray-50 border border-transparent'
-                    }`}
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left group ${isSelected
+                      ? 'bg-rose-50 border-rose-200 border'
+                      : 'hover:bg-gray-50 border border-transparent'
+                      }`}
                   >
                     <div className={`p-2 rounded-lg ${category.color} group-hover:scale-110 transition-transform flex-shrink-0`}>
                       <Icon className="w-5 h-5" />
@@ -547,7 +563,7 @@ const CategoryDropdown = ({
             </div>
           </div>
         ))}
-        
+
         {filteredCategories.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             <Search className="w-12 h-12 mx-auto mb-3 text-gray-300" />
@@ -570,7 +586,7 @@ const CategoryDropdown = ({
 
 const ResultCard = ({ item, index, viewMode, onClick }) => {
   const [isLiked, setIsLiked] = useState(false);
-  
+
   const getItemType = () => {
     const type = item.itemType || item.type || 'properties';
     if (type === 'listing') return 'properties';
@@ -580,21 +596,21 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
     if (type === 'event') return 'events';
     return type;
   };
-  
+
   const getItemSubType = () => {
     return item.subType || item.type || item.category || item.serviceType || '';
   };
-  
+
   const itemType = getItemType();
   const itemSubType = getItemSubType();
-  
+
   const mainConfig = SEARCH_TYPE_CONFIG[itemType] || {
     label: itemType.charAt(0).toUpperCase() + itemType.slice(1),
     bgColor: 'bg-gray-100',
     textColor: 'text-gray-600',
     endpoint: itemType
   };
-  
+
   let subConfig = null;
   if (mainConfig?.subTypes && itemSubType) {
     subConfig = mainConfig.subTypes[itemSubType];
@@ -608,18 +624,22 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
   if (!subConfig && itemType === 'services' && itemSubType) {
     subConfig = SERVICES_CATEGORY_CONFIG[itemSubType];
   }
+  if (!subConfig && itemType === 'events' && itemSubType) {
+    subConfig = EVENTS_CATEGORY_CONFIG[itemSubType];
+  }
 
   const getImageUrl = () => {
     if (item.imageUrls && item.imageUrls.length > 0) return item.imageUrls[0];
     if (item.images && item.images.length > 0) return item.images[0];
     if (item.imageUrl) return item.imageUrl;
-    const defaultImages = {
-      properties: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800',
-      services: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800',
-      helpers: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800',
-      events: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800'
-    };
-    return defaultImages[itemType] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800';
+    return null;
+  };
+
+  const getAllImages = () => {
+    if (item.imageUrls && item.imageUrls.length > 0) return item.imageUrls;
+    if (item.images && item.images.length > 0) return item.images;
+    if (item.imageUrl) return [item.imageUrl];
+    return [];
   };
 
   const getPrice = () => {
@@ -642,9 +662,15 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
         className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer border border-gray-100 flex gap-4"
       >
         <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
-          <img src={getImageUrl()} alt={item.name || item.title} className="w-full h-full object-cover" />
+          <ImageWithFallback
+            src={getImageUrl()}
+            imageUrls={getAllImages()}
+            type={itemType === 'listing' ? 'property' : (itemType === 'helper' ? 'helper' : (itemType === 'event' ? 'event' : 'service'))}
+            alt={item.name || item.title}
+            className="w-full h-full object-cover"
+          />
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start gap-2">
             <div className="min-w-0">
@@ -661,7 +687,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
               {isLiked ? <Heart className="w-4 h-4 text-rose-500 fill-rose-500" /> : <Heart className="w-4 h-4 text-gray-400" />}
             </button>
           </div>
-          
+
           <div className="flex items-center gap-3 mt-2 text-sm text-gray-600 flex-wrap">
             {item.bedrooms !== undefined && <span className="flex items-center gap-1"><Bed className="w-3 h-3" /> {item.bedrooms}</span>}
             {item.bathrooms !== undefined && <span className="flex items-center gap-1"><Bath className="w-3 h-3" /> {item.bathrooms}</span>}
@@ -670,7 +696,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
               <span>{getRating().toFixed(1)}</span>
             </div>
           </div>
-          
+
           <div className="mt-2 flex justify-between items-center">
             <span className="text-lg font-bold text-gray-900">{getPrice()}</span>
             <div className="flex gap-1">
@@ -689,7 +715,13 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
       className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer h-full flex flex-col group"
     >
       <div className="relative h-48 overflow-hidden bg-gray-200">
-        <img src={getImageUrl()} alt={item.name || item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        <ImageWithFallback
+          src={getImageUrl()}
+          imageUrls={getAllImages()}
+          type={itemType === 'listing' ? 'property' : (itemType === 'helper' ? 'helper' : (itemType === 'event' ? 'event' : 'service'))}
+          alt={item.name || item.title}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
         <button
           onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }}
           className="absolute top-3 right-3 p-1.5 bg-white/90 hover:bg-white rounded-full shadow-sm transition-colors"
@@ -697,7 +729,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
           {isLiked ? <Heart className="w-4 h-4 text-rose-500 fill-rose-500" /> : <Heart className="w-4 h-4 text-gray-600" />}
         </button>
       </div>
-      
+
       <div className="p-3 flex-1 flex flex-col">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-semibold text-gray-900 truncate text-sm">{item.name || item.title}</h3>
@@ -746,7 +778,7 @@ const generateMockData = (urlParams) => {
   const type = urlParams.get('type') || 'all';
   const subType = urlParams.get('subType') || '';
   const mockData = [];
-  
+
   if (type === 'all' || type === 'properties') {
     const propertyTypes = subType ? [subType] : ['rent', 'sale', 'over', 'land', 'office', 'guest_house'];
     propertyTypes.forEach((propType, index) => {
@@ -766,7 +798,7 @@ const generateMockData = (urlParams) => {
       }
     });
   }
-  
+
   if (type === 'all' || type === 'helpers') {
     const helperTypes = subType ? [subType] : ['beauty', 'barber', 'chef', 'tattoo', 'tutor', 'photography', 'domestic', 'hair', 'nail'];
     helperTypes.forEach((helperType, index) => {
@@ -785,7 +817,7 @@ const generateMockData = (urlParams) => {
       }
     });
   }
-  
+
   if (type === 'all' || type === 'services') {
     const serviceTypes = subType ? [subType] : ['car_wash', 'landscaping', 'electrician', 'maintenance', 'catering', 'moving', 'transport'];
     serviceTypes.forEach((serviceType, index) => {
@@ -803,14 +835,32 @@ const generateMockData = (urlParams) => {
       }
     });
   }
-  
+
+  if (type === 'all' || type === 'events') {
+    const eventTypes = subType ? [subType] : ['music', 'art', 'food', 'tech'];
+    eventTypes.forEach((eventType, index) => {
+      if (EVENTS_CATEGORY_CONFIG[eventType]) {
+        mockData.push({
+          _id: `e${index}`,
+          name: `${EVENTS_CATEGORY_CONFIG[eventType].label} Event`,
+          price: 150 + (index * 50),
+          itemType: 'events',
+          subType: eventType,
+          imageUrls: ['https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800'],
+          rating: 4.9,
+          address: 'Durban',
+        });
+      }
+    });
+  }
+
   return mockData;
 };
 
 const SearchPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const [searchType, setSearchType] = useState('all');
   const [searchSubType, setSearchSubType] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -822,17 +872,19 @@ const SearchPage = () => {
     minPrice: '',
     maxPrice: '',
     minRating: '',
-    location: ''
+    location: '',
+    bedroomsMin: '',
+    bathroomsMin: ''
   });
 
   // Slide-open search panel state
   const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false);
-  
+
   // Category dropdown state (for compact view)
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [categorySearchQuery, setCategorySearchQuery] = useState('');
-  
+
   // Recent searches
   const [recentSearches, setRecentSearches] = useState([]);
 
@@ -840,15 +892,17 @@ const SearchPage = () => {
     const urlParams = new URLSearchParams(location.search);
     const type = urlParams.get('type') || 'all';
     const subType = urlParams.get('subType') || '';
-    
+
     setSearchTerm(urlParams.get('searchTerm') || '');
     setSearchType(type);
     setSearchSubType(subType);
     setFilters({
       minPrice: urlParams.get('minPrice') || '',
-      maxPrice: urlParams.get('maxPrice') || '',
+      maxPrice: urlParams.get('maxPrice') || urlParams.get('priceMax') || '',
       minRating: urlParams.get('minRating') || '',
-      location: urlParams.get('location') || ''
+      location: urlParams.get('location') || urlParams.get('address') || '',
+      bedroomsMin: urlParams.get('bedroomsMin') || '',
+      bathroomsMin: urlParams.get('bathroomsMin') || ''
     });
 
     // Set selected category if subType matches
@@ -856,7 +910,7 @@ const SearchPage = () => {
       const category = ALL_CATEGORIES.find(c => c.id === subType);
       if (category) setSelectedCategory(category.id);
     }
-    
+
     // Load recent searches from localStorage
     const saved = localStorage.getItem(RECENT_SEARCHES_KEY);
     if (saved) {
@@ -874,9 +928,9 @@ const SearchPage = () => {
       setListings([]);
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       const type = urlParams.get('type') || 'all';
       const subType = urlParams.get('subType') || '';
@@ -885,19 +939,19 @@ const SearchPage = () => {
       const maxPrice = urlParams.get('maxPrice');
       const location = urlParams.get('location') || '';
       const minRating = urlParams.get('minRating');
-      
+
       let endpoints = [];
-      
+
       if (type === 'all') {
-        endpoints = ['listing', 'service', 'helper'];
+        endpoints = ['listing', 'service', 'helper', 'event'];
       } else {
         const config = SEARCH_TYPE_CONFIG[type];
         if (config) endpoints = [config.endpoint];
       }
-      
+
       const fetchPromises = endpoints.map(async (endpoint) => {
         let url = `/api/${endpoint}/get?limit=${DEFAULT_LISTING_LIMIT}`;
-        
+
         if (searchTerm) url += `&searchTerm=${encodeURIComponent(searchTerm)}`;
         if (location) {
           if (endpoint === 'listing' || endpoint === 'helper') {
@@ -906,28 +960,36 @@ const SearchPage = () => {
             url += `&location=${encodeURIComponent(location)}`;
           }
         }
-        
+
         if (endpoint === 'listing') {
           if (minPrice) url += `&minPrice=${minPrice}`;
-          if (maxPrice) url += `&maxPrice=${maxPrice}`;
+          const maxPriceParam = maxPrice || urlParams.get('priceMax');
+          if (maxPriceParam) url += `&maxPrice=${maxPriceParam}`;
+
+          const bedroomsMin = urlParams.get('bedroomsMin');
+          if (bedroomsMin) url += `&bedrooms=${bedroomsMin}`;
+
+          const bathroomsMin = urlParams.get('bathroomsMin');
+          if (bathroomsMin) url += `&bathrooms=${bathroomsMin}`;
+
           if (subType && PROPERTY_TYPE_CONFIG[subType]) url += `&type=${subType}`;
         }
-        
+
         if (endpoint === 'helper' && subType && HELPER_CATEGORY_CONFIG[subType]) {
           url += `&category=${subType}`;
         }
-        
+
         if (endpoint === 'service' && subType && SERVICES_CATEGORY_CONFIG[subType]) {
           url += `&category=${subType}`;
         }
-        
+
         try {
           const res = await fetch(url);
           if (res.ok) {
             const data = await res.json();
-            return data.map(item => ({ 
-              ...item, 
-              itemType: endpoint === 'listing' ? 'properties' : endpoint,
+            return data.map(item => ({
+              ...item,
+              itemType: endpoint,
               subType: item.type || item.category || subType
             }));
           }
@@ -936,15 +998,15 @@ const SearchPage = () => {
         }
         return [];
       });
-      
+
       const results = await Promise.all(fetchPromises);
       let combinedResults = results.flat();
-      
+
       if (minRating) {
         const ratingThreshold = parseFloat(minRating);
         combinedResults = combinedResults.filter(item => (item.rating || 4.5) >= ratingThreshold);
       }
-      
+
       setListings(combinedResults);
     } catch (error) {
       console.error('Search error:', error);
@@ -968,9 +1030,9 @@ const SearchPage = () => {
     if (filters.maxPrice) urlParams.set('maxPrice', filters.maxPrice);
     if (filters.minRating) urlParams.set('minRating', filters.minRating);
     if (filters.location) urlParams.set('location', filters.location);
-    
+
     navigate(`/search?${urlParams.toString()}`);
-    
+
     // Save to recent searches
     if (searchTerm && !recentSearches.includes(searchTerm)) {
       const newRecent = [searchTerm, ...recentSearches.slice(0, MAX_RECENT_SEARCHES - 1)];
@@ -990,7 +1052,8 @@ const SearchPage = () => {
   };
 
   const addToRecentlyViewed = (item, itemType) => {
-    navigate(`/${itemType}/${item._id}`);
+    const id = item._id || item.id;
+    navigate(`/${itemType}/${id}`);
   };
 
   const handleCategorySelect = (category) => {
@@ -1005,14 +1068,14 @@ const SearchPage = () => {
     setSearchSubType(category.id);
     setShowCategoryDropdown(false);
     setCategorySearchQuery('');
-    
+
     // Trigger search immediately
     const urlParams = new URLSearchParams();
     if (searchTerm) urlParams.set('searchTerm', searchTerm);
     urlParams.set('type', category.type);
     urlParams.set('subType', category.id);
     if (filters.location) urlParams.set('location', filters.location);
-    
+
     navigate(`/search?${urlParams.toString()}`);
   };
 
@@ -1047,9 +1110,9 @@ const SearchPage = () => {
               <div className="flex-1 max-w-3xl relative">
                 {/* Enhanced Search Bar with Click-to-Expand */}
                 <div className="flex items-center bg-white border border-gray-300 rounded-full shadow-sm hover:shadow-md transition-shadow relative">
-                  
+
                   {/* Category Selector Button */}
-                  <button 
+                  <button
                     onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
                     className="flex-shrink-0 px-4 py-2.5 text-left hover:bg-gray-100 rounded-l-full transition-colors border-r border-gray-300 flex items-center gap-1 min-w-[120px]"
                   >
@@ -1074,7 +1137,7 @@ const SearchPage = () => {
                   </button>
 
                   {/* Search Input - Click to open slide panel */}
-                  <div 
+                  <div
                     className="flex-1 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={() => setIsSearchPanelOpen(true)}
                   >
@@ -1085,7 +1148,7 @@ const SearchPage = () => {
                   </div>
 
                   {/* Location Quick Button */}
-                  <button 
+                  <button
                     onClick={() => setShowFilters(true)}
                     className="flex-shrink-0 px-3 py-2 text-left hover:bg-gray-100 transition-colors border-l border-gray-300 hidden sm:block"
                   >
@@ -1094,10 +1157,10 @@ const SearchPage = () => {
                       {filters.location || 'Anywhere'}
                     </div>
                   </button>
-                  
+
                   {/* Search Button */}
-                  <button 
-                    onClick={handleSearch} 
+                  <button
+                    onClick={handleSearch}
                     className="m-1 p-2 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors flex-shrink-0"
                   >
                     <SearchIcon className="w-4 h-4" />
@@ -1124,7 +1187,7 @@ const SearchPage = () => {
                   <SlidersHorizontal className="w-4 h-4" />
                   <span className="font-medium text-xs hidden sm:inline">Filters</span>
                 </button>
-                
+
                 <div className="hidden md:flex items-center bg-gray-100 rounded-lg p-0.5">
                   <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}>
                     <Grid3X3 className="w-4 h-4" />
@@ -1151,7 +1214,7 @@ const SearchPage = () => {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32">
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
@@ -1161,9 +1224,8 @@ const SearchPage = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className={`grid ${
-              viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'
-            } gap-4`}
+            className={`grid ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'
+              } gap-4`}
           >
             {listings.map((item, index) => (
               <ResultCard
@@ -1201,7 +1263,7 @@ const SearchPage = () => {
                   Clear all
                 </button>
               </div>
-              
+
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Location</h3>
@@ -1256,11 +1318,10 @@ const SearchPage = () => {
                       <button
                         key={rating}
                         onClick={() => setFilters({ ...filters, minRating: filters.minRating === rating.toString() ? '' : rating.toString() })}
-                        className={`flex-1 py-3 rounded-xl border transition-all ${
-                          filters.minRating === rating.toString() 
-                            ? 'bg-gray-900 text-white border-gray-900' 
-                            : 'bg-white text-gray-700 border-gray-300 hover:border-gray-900'
-                        }`}
+                        className={`flex-1 py-3 rounded-xl border transition-all ${filters.minRating === rating.toString()
+                          ? 'bg-gray-900 text-white border-gray-900'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-gray-900'
+                          }`}
                       >
                         <div className="flex items-center justify-center gap-1">
                           <span className="font-semibold">{rating}+</span>
@@ -1285,16 +1346,16 @@ const SearchPage = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-white">
                 <div className="flex gap-3">
-                  <button 
-                    onClick={() => setShowFilters(false)} 
+                  <button
+                    onClick={() => setShowFilters(false)}
                     className="flex-1 px-4 py-3 border border-gray-300 rounded-xl font-medium hover:bg-gray-50 transition-colors"
                   >
                     Cancel
                   </button>
-                  <button 
+                  <button
                     onClick={() => { handleSearch(); setShowFilters(false); }}
                     className="flex-1 px-4 py-3 bg-rose-500 text-white rounded-xl font-medium hover:bg-rose-600 transition-colors"
                   >

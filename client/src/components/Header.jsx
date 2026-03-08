@@ -30,6 +30,13 @@ import {
 } from "react-icons/fi";
 
 import {
+  generateSuggestions,
+  extractFiltersFromQuery,
+  saveSearchHistory,
+  getSearchHistory
+} from '../utils/searchUtils';
+
+import {
   signOutUserStart,
   signOutUserSuccess,
   signOutUserFailure,
@@ -38,13 +45,13 @@ import {
 // Reusable AirbnbLogo Component
 function AirbnbLogo({ className = "h-8 w-auto" }) {
   return (
-    <svg 
-      className={`${className} text-[#FF5A5F]`} 
-      viewBox="0 0 102 32" 
+    <svg
+      className={`${className} text-[#FF5A5F]`}
+      viewBox="0 0 102 32"
       fill="currentColor"
       aria-label="Airbnb logo"
     >
-      <path d="M29.24 22.68c-.16-.39-.31-.8-.47-1.15l-.74-1.67-.03-.03c-2.2-4.8-4.55-9.68-7.04-14.48l-.1-.2c-.25-.47-.5-.99-.76-1.47-.32-.57-.63-1.18-1.14-1.76a5.4 5.4 0 00-8.2 0c-.47.58-.82 1.19-1.14 1.76-.25.52-.5 1.03-.76 1.5l-.1.2c-2.45 4.8-4.84 9.68-7.04 14.48l-.06.06c-.22.52-.48 1.06-.73 1.64-.16.35-.32.73-.48 1.15a6.83 6.83 0 007.2 9.23 8.38 8.38 0 003.18-.76c1.27-.57 2.4-1.37 3.34-2.37 1.02-1.07 1.93-2.3 2.86-3.55l.06-.06c1.16-1.56 2.3-3.2 3.43-4.82l.06-.06c1.1-1.53 2.18-3.05 3.28-4.56l.06-.06c.03-.03.06-.06.06-.06.03-.03.06-.06.06-.06 1.1 1.5 2.18 3.03 3.28 4.56l.06.06c1.13 1.62 2.27 3.26 3.43 4.82l.06.06c.93 1.25 1.84 2.48 2.86 3.55.94.99 2.07 1.8 3.34 2.37 1.02.47 2.1.73 3.18.76a6.83 6.83 0 007.2-9.23zM7.96 21.17c-.48.75-1.03 1.5-1.63 2.18-1.04 1.17-2.4 1.97-3.8 2.2-1.03.17-2.07-.03-2.93-.58a3.8 3.8 0 01-1.5-1.9c-.2-.52-.2-1.1-.03-1.63.16-.52.46-.99.85-1.37.73-.73 1.63-1.27 2.56-1.63.99-.39 2.03-.61 3.07-.73h.06c.16 0 .32.03.48.06-.03.32-.06.64-.06.99 0 1.14.14 2.27.42 3.37.06.23.13.45.2.67.03.06.06.13.09.2-.13.03-.26.06-.42.06zM50.96 9.51c-.26-1.23-.99-2.27-1.93-2.93-.99-.67-2.2-.99-3.46-.85-1.2.14-2.27.67-3.07 1.5-.76.82-1.23 1.9-1.37 3.07-.14 1.14.06 2.27.52 3.2.52.99 1.3 1.76 2.3 2.27.99.52 2.14.73 3.28.58 1.14-.14 2.2-.64 3.01-1.4.82-.79 1.37-1.84 1.5-3.01.06-.52.03-1.07-.06-1.6zm-1.63 1.4c-.1.64-.39 1.23-.82 1.7-.46.49-1.07.82-1.76.91-.67.1-1.37-.03-1.93-.36-.58-.32-1.04-.82-1.3-1.43-.26-.61-.32-1.3-.2-1.96.13-.64.46-1.2.91-1.63.49-.46 1.1-.76 1.76-.85.67-.1 1.34.03 1.9.36.58.32 1.04.79 1.3 1.4.29.58.35 1.24.24 1.9zM62.87 8.09c-.76-.82-1.76-1.3-2.84-1.37-1.07-.06-2.11.29-2.93.99-.82.7-1.37 1.7-1.53 2.8-.17 1.1.1 2.2.73 3.07.67.93 1.67 1.53 2.8 1.7 1.1.17 2.23-.1 3.14-.79.91-.67 1.5-1.67 1.7-2.8.16-1.1-.1-2.2-.76-3.07a4.1 4.1 0 00-.31-.53zm-1.27 3.07c-.1.52-.39.99-.76 1.34-.39.36-.88.58-1.43.61-.52.03-1.04-.13-1.46-.42-.42-.29-.73-.7-.91-1.17-.17-.49-.2-1.01-.06-1.5.13-.49.42-.91.79-1.24.39-.32.88-.52 1.4-.55.52-.03 1.04.13 1.46.42.42.29.73.67.91 1.14.2.49.23 1.01.06 1.5-.03.03-.03.03-.06.03-.03-.03 0-.03 0-.03zM73.73 8.09c-.76-.82-1.76-1.3-2.84-1.37-1.07-.06-2.11.29-2.93.99-.82.7-1.37 1.7-1.53 2.8-.17 1.1.1 2.2.73 3.07.67.93 1.67 1.53 2.8 1.7 1.1.17 2.23-.1 3.14-.79.91-.67 1.5-1.67 1.7-2.8.16-1.1-.1-2.2-.76-3.07-.1-.16-.2-.35-.31-.53zm-1.27 3.07c-.1.52-.39.99-.76 1.34-.39.36-.88.58-1.43.61-.52.03-1.04-.13-1.46-.42-.42-.29-.73-.7-.91-1.17-.17-.49-.2-1.01-.06-1.5.13-.49.42-.91.79-1.24.39-.32.88-.52 1.4-.55.52-.03 1.04.13 1.46.42.42.29.73.67.91 1.14.2.49.23 1.01.06 1.5-.03.03-.03.03-.06.03zM84.6 8.09c-.76-.82-1.76-1.3-2.84-1.37-1.07-.06-2.11.29-2.93.99-.82.7-1.37 1.7-1.53 2.8-.17 1.1.1 2.2.73 3.07.67.93 1.67 1.53 2.8 1.7 1.1.17 2.23-.1 3.14-.79.91-.67 1.5-1.67 1.7-2.8.16-1.1-.1-2.2-.76-3.07-.1-.16-.2-.35-.31-.53zm-1.27 3.07c-.1.52-.39.99-.76 1.34-.39.36-.88.58-1.43.61-.52.03-1.04-.13-1.46-.42-.42-.29-.73-.7-.91-1.17-.17-.49-.2-1.01-.06-1.5.13-.49.42-.91.79-1.24.39-.32.88-.52 1.4-.55.52-.03 1.04.13 1.46.42.42.29.73.67.91 1.14.2.49.23 1.01.06 1.5-.03.03-.03.03-.06.03zM95.46 8.09c-.76-.82-1.76-1.3-2.84-1.37-1.07-.06-2.11.29-2.93.99-.82.7-1.37 1.7-1.53 2.8-.17 1.1.1 2.2.73 3.07.67.93 1.67 1.53 2.8 1.7 1.1.17 2.23-.1 3.14-.79.91-.67 1.5-1.67 1.7-2.8.16-1.1-.1-2.2-.76-3.07-.1-.16-.2-.35-.31-.53zm-1.27 3.07c-.1.52-.39.99-.76 1.34-.39.36-.88.58-1.43.61-.52.03-1.04-.13-1.46-.42-.42-.29-.73-.7-.91-1.17-.17-.49-.2-1.01-.06-1.5.13-.49.42-.91.79-1.24.39-.32.88-.52 1.4-.55.52-.03 1.04.13 1.46.42.42.29.73.67.91 1.14.2.49.23 1.01.06 1.5-.03.03-.03.03-.06.03z"/>
+      <path d="M29.24 22.68c-.16-.39-.31-.8-.47-1.15l-.74-1.67-.03-.03c-2.2-4.8-4.55-9.68-7.04-14.48l-.1-.2c-.25-.47-.5-.99-.76-1.47-.32-.57-.63-1.18-1.14-1.76a5.4 5.4 0 00-8.2 0c-.47.58-.82 1.19-1.14 1.76-.25.52-.5 1.03-.76 1.5l-.1.2c-2.45 4.8-4.84 9.68-7.04 14.48l-.06.06c-.22.52-.48 1.06-.73 1.64-.16.35-.32.73-.48 1.15a6.83 6.83 0 007.2 9.23 8.38 8.38 0 003.18-.76c1.27-.57 2.4-1.37 3.34-2.37 1.02-1.07 1.93-2.3 2.86-3.55l.06-.06c1.16-1.56 2.3-3.2 3.43-4.82l.06-.06c1.1-1.53 2.18-3.05 3.28-4.56l.06-.06c.03-.03.06-.06.06-.06.03-.03.06-.06.06-.06 1.1 1.5 2.18 3.03 3.28 4.56l.06.06c1.13 1.62 2.27 3.26 3.43 4.82l.06.06c.93 1.25 1.84 2.48 2.86 3.55.94.99 2.07 1.8 3.34 2.37 1.02.47 2.1.73 3.18.76a6.83 6.83 0 007.2-9.23zM7.96 21.17c-.48.75-1.03 1.5-1.63 2.18-1.04 1.17-2.4 1.97-3.8 2.2-1.03.17-2.07-.03-2.93-.58a3.8 3.8 0 01-1.5-1.9c-.2-.52-.2-1.1-.03-1.63.16-.52.46-.99.85-1.37.73-.73 1.63-1.27 2.56-1.63.99-.39 2.03-.61 3.07-.73h.06c.16 0 .32.03.48.06-.03.32-.06.64-.06.99 0 1.14.14 2.27.42 3.37.06.23.13.45.2.67.03.06.06.13.09.2-.13.03-.26.06-.42.06zM50.96 9.51c-.26-1.23-.99-2.27-1.93-2.93-.99-.67-2.2-.99-3.46-.85-1.2.14-2.27.67-3.07 1.5-.76.82-1.23 1.9-1.37 3.07-.14 1.14.06 2.27.52 3.2.52.99 1.3 1.76 2.3 2.27.99.52 2.14.73 3.28.58 1.14-.14 2.2-.64 3.01-1.4.82-.79 1.37-1.84 1.5-3.01.06-.52.03-1.07-.06-1.6zm-1.63 1.4c-.1.64-.39 1.23-.82 1.7-.46.49-1.07.82-1.76.91-.67.1-1.37-.03-1.93-.36-.58-.32-1.04-.82-1.3-1.43-.26-.61-.32-1.3-.2-1.96.13-.64.46-1.2.91-1.63.49-.46 1.1-.76 1.76-.85.67-.1 1.34.03 1.9.36.58.32 1.04.79 1.3 1.4.29.58.35 1.24.24 1.9zM62.87 8.09c-.76-.82-1.76-1.3-2.84-1.37-1.07-.06-2.11.29-2.93.99-.82.7-1.37 1.7-1.53 2.8-.17 1.1.1 2.2.73 3.07.67.93 1.67 1.53 2.8 1.7 1.1.17 2.23-.1 3.14-.79.91-.67 1.5-1.67 1.7-2.8.16-1.1-.1-2.2-.76-3.07a4.1 4.1 0 00-.31-.53zm-1.27 3.07c-.1.52-.39.99-.76 1.34-.39.36-.88.58-1.43.61-.52.03-1.04-.13-1.46-.42-.42-.29-.73-.7-.91-1.17-.17-.49-.2-1.01-.06-1.5.13-.49.42-.91.79-1.24.39-.32.88-.52 1.4-.55.52-.03 1.04.13 1.46.42.42.29.73.67.91 1.14.2.49.23 1.01.06 1.5-.03.03-.03.03-.06.03-.03-.03 0-.03 0-.03zM73.73 8.09c-.76-.82-1.76-1.3-2.84-1.37-1.07-.06-2.11.29-2.93.99-.82.7-1.37 1.7-1.53 2.8-.17 1.1.1 2.2.73 3.07.67.93 1.67 1.53 2.8 1.7 1.1.17 2.23-.1 3.14-.79.91-.67 1.5-1.67 1.7-2.8.16-1.1-.1-2.2-.76-3.07-.1-.16-.2-.35-.31-.53zm-1.27 3.07c-.1.52-.39.99-.76 1.34-.39.36-.88.58-1.43.61-.52.03-1.04-.13-1.46-.42-.42-.29-.73-.7-.91-1.17-.17-.49-.2-1.01-.06-1.5.13-.49.42-.91.79-1.24.39-.32.88-.52 1.4-.55.52-.03 1.04.13 1.46.42.42.29.73.67.91 1.14.2.49.23 1.01.06 1.5-.03.03-.03.03-.06.03zM84.6 8.09c-.76-.82-1.76-1.3-2.84-1.37-1.07-.06-2.11.29-2.93.99-.82.7-1.37 1.7-1.53 2.8-.17 1.1.1 2.2.73 3.07.67.93 1.67 1.53 2.8 1.7 1.1.17 2.23-.1 3.14-.79.91-.67 1.5-1.67 1.7-2.8.16-1.1-.1-2.2-.76-3.07-.1-.16-.2-.35-.31-.53zm-1.27 3.07c-.1.52-.39.99-.76 1.34-.39.36-.88.58-1.43.61-.52.03-1.04-.13-1.46-.42-.42-.29-.73-.7-.91-1.17-.17-.49-.2-1.01-.06-1.5.13-.49.42-.91.79-1.24.39-.32.88-.52 1.4-.55.52-.03 1.04.13 1.46.42.42.29.73.67.91 1.14.2.49.23 1.01.06 1.5-.03.03-.03.03-.06.03zM95.46 8.09c-.76-.82-1.76-1.3-2.84-1.37-1.07-.06-2.11.29-2.93.99-.82.7-1.37 1.7-1.53 2.8-.17 1.1.1 2.2.73 3.07.67.93 1.67 1.53 2.8 1.7 1.1.17 2.23-.1 3.14-.79.91-.67 1.5-1.67 1.7-2.8.16-1.1-.1-2.2-.76-3.07-.1-.16-.2-.35-.31-.53zm-1.27 3.07c-.1.52-.39.99-.76 1.34-.39.36-.88.58-1.43.61-.52.03-1.04-.13-1.46-.42-.42-.29-.73-.7-.91-1.17-.17-.49-.2-1.01-.06-1.5.13-.49.42-.91.79-1.24.39-.32.88-.52 1.4-.55.52-.03 1.04.13 1.46.42.42.29.73.67.91 1.14.2.49.23 1.01.06 1.5-.03.03-.03.03-.06.03z" />
     </svg>
   );
 }
@@ -53,17 +60,16 @@ export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
   const [searchTerm, setSearchTerm] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-  const [searchHistory, setSearchHistory] = useState(() => {
-    const saved = localStorage.getItem('searchHistory');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
+  const [searchHistory, setSearchHistory] = useState(() => getSearchHistory());
+  const [suggestions, setSuggestions] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
+
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('San Francisco');
-  
+
   // Currency and Language states
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
@@ -73,7 +79,7 @@ export default function Header() {
   const [selectedLanguage, setSelectedLanguage] = useState(() => {
     return localStorage.getItem('preferredLanguage') || 'English';
   });
-  
+
   const profileDropdownRef = useRef(null);
   const searchInputRef = useRef(null);
   const mobileMenuRef = useRef(null);
@@ -110,14 +116,14 @@ export default function Header() {
   // Fetch notifications
   const fetchNotifications = useCallback(async () => {
     if (!currentUser) return;
-    
+
     try {
       const res = await fetch('/api/notifications', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
+
       if (res.ok) {
         const data = await res.json();
         setNotifications(data.notifications || []);
@@ -156,13 +162,28 @@ export default function Header() {
         setShowSearch(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showSearch]);
+
+  // Suggestions debouncing
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const newSuggestions = generateSuggestions(searchTerm, 'all', searchHistory);
+      setSuggestions(newSuggestions);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, searchHistory]);
 
   // Focus search input when opened
   useEffect(() => {
@@ -203,15 +224,33 @@ export default function Header() {
     if (e) e.preventDefault();
     if (!searchTerm.trim()) return;
 
-    const updatedHistory = [{ term: searchTerm, type: 'all', timestamp: new Date().toISOString() }, ...searchHistory.slice(0, 9)];
-    localStorage.setItem('searchHistory', JSON.stringify(updatedHistory));
+    // Save search history
+    const updatedHistory = saveSearchHistory(searchTerm, 'all');
     setSearchHistory(updatedHistory);
 
-    const url = `/search?searchTerm=${encodeURIComponent(searchTerm)}&type=all&address=${encodeURIComponent(currentLocation)}`;
+    // AI-like extraction of filters from query
+    const extractedFilters = extractFiltersFromQuery(searchTerm);
+    console.log('Extracted filters:', extractedFilters);
+
+    // Build search parameters
+    const urlParams = new URLSearchParams();
+    urlParams.set('searchTerm', searchTerm);
+    urlParams.set('type', extractedFilters.type || 'all');
+    urlParams.set('address', extractedFilters.location || currentLocation);
+
+    // Join other extracted filters
+    Object.entries(extractedFilters).forEach(([key, value]) => {
+      if (key !== 'type' && key !== 'location') {
+        urlParams.set(key, value);
+      }
+    });
+
+    const url = `/search?${urlParams.toString()}`;
     console.log('Navigating to:', url);
     navigate(url);
     setShowSearch(false);
     setSearchTerm('');
+    setSuggestions([]);
   };
 
   // Handle currency change
@@ -219,10 +258,10 @@ export default function Header() {
     setSelectedCurrency(currencyCode);
     localStorage.setItem('preferredCurrency', currencyCode);
     setShowCurrencyDropdown(false);
-    
+
     // Dispatch currency change to Redux store if you have currency slice
     // dispatch(setCurrency(currencyCode));
-    
+
     // Refresh page data with new currency
     window.dispatchEvent(new CustomEvent('currencyChanged', { detail: currencyCode }));
   };
@@ -232,13 +271,13 @@ export default function Header() {
     setSelectedLanguage(languageName);
     localStorage.setItem('preferredLanguage', languageCode);
     setShowLanguageDropdown(false);
-    
+
     // Dispatch language change to Redux store if you have language slice
     // dispatch(setLanguage(languageCode));
-    
+
     // Refresh page data with new language
     window.dispatchEvent(new CustomEvent('languageChanged', { detail: languageCode }));
-    
+
     // Show success message
     alert(`Language changed to ${languageName}`);
   };
@@ -281,10 +320,10 @@ export default function Header() {
       <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-[#DDDDDD]">
         <div className="max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-2 px-4">
           <div className="flex flex-row items-center justify-between gap-3 md:gap-0 h-20">
-            
+
             {/* Logo - Airbnb Style */}
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="hidden md:block cursor-pointer"
               onClick={() => console.log('Logo clicked - navigating to /')}
             >
@@ -293,7 +332,7 @@ export default function Header() {
 
             {/* Center: Simplified Search Bar */}
             <div className="flex-1 max-w-[850px] mx-auto px-4">
-              <div 
+              <div
                 onClick={() => {
                   console.log('Search bar clicked - opening search modal');
                   setShowSearch(true);
@@ -336,6 +375,19 @@ export default function Header() {
                   <FiGlobe className="w-4 h-4" />
                 </button>
 
+                {/* Notification Bell Icon - Desktop */}
+                <button
+                  onClick={() => handleNavigate('/notifications')}
+                  className="relative p-3 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
+                >
+                  <FiBell className="w-4 h-4" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-[#FF5A5F] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
                 {/* User Menu Button - Airbnb Style */}
                 <button
                   onClick={() => {
@@ -366,7 +418,7 @@ export default function Header() {
                   <div className="flex flex-col cursor-pointer">
                     {currentUser ? (
                       <>
-                        <div 
+                        <div
                           className="px-4 py-3 font-semibold border-b border-[#DDDDDD] hover:bg-gray-100 transition text-[#222222]"
                           onClick={() => handleNavigate('/profile')}
                         >
@@ -403,6 +455,12 @@ export default function Header() {
                           className="px-4 py-3 hover:bg-gray-100 transition flex justify-between items-center text-left text-[#222222]"
                         >
                           <span>Messages</span>
+                        </button>
+                        <button
+                          onClick={() => handleNavigate('/notifications')}
+                          className="px-4 py-3 hover:bg-gray-100 transition flex justify-between items-center text-left text-[#222222]"
+                        >
+                          <span>Notifications</span>
                           {unreadCount > 0 && (
                             <span className="bg-[#FF5A5F] text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
                               {unreadCount}
@@ -452,7 +510,7 @@ export default function Header() {
 
               {/* Language Dropdown */}
               {showLanguageDropdown && (
-                <div 
+                <div
                   ref={languageDropdownRef}
                   className="absolute rounded-xl shadow-lg w-[240px] bg-white overflow-hidden right-0 top-12 text-sm border border-[#DDDDDD] max-h-[400px] overflow-y-auto hidden md:block"
                 >
@@ -482,103 +540,144 @@ export default function Header() {
 
         {/* Full Screen Search Modal - Simplified */}
         {showSearch && (
-        <div className="search-container absolute top-20 left-0 right-0 bg-white border-b border-gray-200 shadow-xl py-6 animate-[fadeIn_0.2s_ease-in-out]">
-  <div className="max-w-3xl mx-auto px-6">
-    {/* Search Input - Larger & Cleaner */}
-    <form onSubmit={handleSearch} className="bg-white rounded-2xl shadow-lg border border-gray-200 flex items-center p-2 hover:shadow-xl transition-shadow">
-      <div className="flex-1 px-6 py-4">
-        <label className="block text-xs font-semibold text-gray-900 uppercase tracking-wider mb-1">Search</label>
-        <input
-          ref={searchInputRef}
-          type="text"
-          placeholder="Where to?"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-transparent outline-none text-gray-900 text-lg placeholder-gray-400 font-medium"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              handleSearch();
-            }
-          }}
-        />
-      </div>
-      <button
-        type="submit"
-        onClick={(e) => {
-          e.preventDefault();
-          handleSearch();
-        }}
-        className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl p-2 transition-all flex items-center justify-center min-w-[50px] h-[50px] shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
-      >
-        <FiSearch className="w-5 h-5" />
-      </button>
-    </form>
+          <div className="search-container absolute top-20 left-0 right-0 bg-white border-b border-gray-200 shadow-xl py-6 animate-[fadeIn_0.2s_ease-in-out]">
+            <div className="max-w-3xl mx-auto px-6">
+              {/* Search Input - Larger & Cleaner */}
+              <div className="relative">
+                <form onSubmit={handleSearch} className="bg-white rounded-2xl shadow-md border border-gray-200 flex items-center p-2 hover:shadow-lg transition-shadow">
+                  <div className="flex-1 px-6 py-4">
+                    <label className="block text-xs font-semibold text-gray-900 uppercase tracking-wider mb-1">Search</label>
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder="Where to?"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full bg-transparent outline-none text-gray-900 text-lg placeholder-gray-400 font-medium"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleSearch();
+                        }
+                      }}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl p-2 transition-all flex items-center justify-center min-w-[50px] h-[50px] shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+                  >
+                    <FiSearch className="w-5 h-5" />
+                  </button>
+                </form>
 
-    {/* Recent Searches - Compact Pills */}
-    {searchHistory.length > 0 && (
-      <div className="mt-6">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Recent</h3>
-          <button
-            onClick={clearSearchHistory}
-            className="text-xs font-medium text-gray-400 hover:text-gray-900 transition-colors"
-          >
-            Clear
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {searchHistory.slice(0, 6).map((item, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                const url = `/search?searchTerm=${encodeURIComponent(item.term)}&type=${item.type}&address=${encodeURIComponent(currentLocation)}`;
-                console.log('Recent search clicked - navigating to:', url);
-                navigate(url);
-                setShowSearch(false);
-              }}
-              className="group flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-full border border-gray-200 hover:border-gray-300 transition-all text-left"
-            >
-              <FiSearch className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
-              <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                {item.term}
-              </span>
-              <span className="text-xs text-gray-400 capitalize">
-                {item.type}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-    )}
+                {/* --- Suggestions Dropdown --- */}
+                {suggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 bg-white mt-2 rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] animate-[slideDown_0.2s_ease-out]">
+                    <div className="py-2">
+                      {suggestions.map((item, index) => (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            setSearchTerm(item.term);
+                            // Execute search immediately
+                            const extracted = extractFiltersFromQuery(item.term);
+                            const urlParams = new URLSearchParams();
+                            urlParams.set('searchTerm', item.term);
+                            urlParams.set('type', item.type || extracted.type || 'all');
+                            urlParams.set('address', extracted.location || currentLocation);
+                            Object.entries(extracted).forEach(([k, v]) => { if (k !== 'type' && k !== 'location') urlParams.set(k, v); });
+                            navigate(`/search?${urlParams.toString()}`);
+                            setShowSearch(false);
+                            setSearchTerm('');
+                            setSuggestions([]);
+                          }}
+                          className="w-full px-6 py-3 flex items-center gap-4 hover:bg-gray-50 transition-colors text-left group"
+                        >
+                          <div className={`p-2 rounded-lg ${item.isHistory ? 'bg-gray-100' : 'bg-rose-50'} text-gray-500`}>
+                            {item.isHistory ? <FiMap className="w-4 h-4" /> : <FiSearch className="w-4 h-4 text-rose-500" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-gray-900 truncate">
+                              {item.term}
+                            </div>
+                            <div className="text-xs text-gray-500 capitalize">
+                              {item.type || 'All'}
+                            </div>
+                          </div>
+                          <FiChevronLeft className="w-4 h-4 text-gray-300 group-hover:text-gray-900 transition-colors rotate-180" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
-    {/* Search by Category - Compact Grid */}
-    <div className="mt-8">
-      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Categories</h3>
-      <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
-        {searchCategories.map((category) => (
-          <button
-            key={category.key}
-            onClick={() => {
-              const url = `/search?type=${category.key}&address=${encodeURIComponent(currentLocation)}`;
-              console.log('Category clicked - navigating to:', url);
-              navigate(url);
-              setShowSearch(false);
-            }}
-            className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition group"
-          >
-            <div className="w-12 h-12 flex items-center justify-center bg-gray-50 group-hover:bg-white border border-gray-200 group-hover:border-gray-300 rounded-xl transition-all shadow-sm group-hover:shadow-md group-hover:-translate-y-0.5">
-              <span className="text-xl">{category.icon}</span>
+              {/* Recent Searches - Compact Pills */}
+              {searchHistory.length > 0 && !searchTerm && (
+                <div className="mt-6">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Recent</h3>
+                    <button
+                      onClick={clearSearchHistory}
+                      className="text-xs font-medium text-gray-400 hover:text-gray-900 transition-colors"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {searchHistory.slice(0, 6).map((item, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          const url = `/search?searchTerm=${encodeURIComponent(item.term)}&type=${item.type}&address=${encodeURIComponent(currentLocation)}`;
+                          console.log('Recent search clicked - navigating to:', url);
+                          navigate(url);
+                          setShowSearch(false);
+                        }}
+                        className="group flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-full border border-gray-200 hover:border-gray-300 transition-all text-left"
+                      >
+                        <FiSearch className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
+                        <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                          {item.term}
+                        </span>
+                        <span className="text-xs text-gray-400 capitalize">
+                          {item.type}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Search by Category - Compact Grid */}
+              {!searchTerm && (
+                <div className="mt-8">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Categories</h3>
+                  <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
+                    {searchCategories.map((category) => (
+                      <button
+                        key={category.key}
+                        onClick={() => {
+                          const url = `/search?type=${category.key}&address=${encodeURIComponent(currentLocation)}`;
+                          console.log('Category clicked - navigating to:', url);
+                          navigate(url);
+                          setShowSearch(false);
+                        }}
+                        className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition group"
+                      >
+                        <div className="w-12 h-12 flex items-center justify-center bg-gray-50 group-hover:bg-white border border-gray-200 group-hover:border-gray-300 rounded-xl transition-all shadow-sm group-hover:shadow-md group-hover:-translate-y-0.5">
+                          <span className="text-xl">{category.icon}</span>
+                        </div>
+                        <span className="text-xs font-medium text-gray-600 group-hover:text-gray-900 text-center leading-tight">
+                          {category.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            <span className="text-xs font-medium text-gray-600 group-hover:text-gray-900 text-center leading-tight">
-              {category.label}
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
-  </div>
-</div>
+          </div>
         )}
       </header>
 

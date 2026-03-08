@@ -1,5 +1,6 @@
 import Service from '../models/service.model.js';
 import { errorHandler } from '../utils/error.js';
+import { createAreaNotifications } from '../utils/notificationUtils.js';
 
 // Create Service
 export const createService = async (req, res, next) => {
@@ -36,6 +37,10 @@ export const createService = async (req, res, next) => {
     }
 
     const service = await Service.create(serviceData);
+
+    // Create notifications for users in the area
+    createAreaNotifications(service, 'service');
+
     return res.status(201).json(service);
   } catch (error) {
     next(error);
@@ -46,7 +51,7 @@ export const createService = async (req, res, next) => {
 export const deleteService = async (req, res, next) => {
   try {
     const service = await Service.findById(req.params.id);
-    
+
     if (!service) {
       return next(errorHandler(404, 'Service not found!'));
     }
@@ -56,10 +61,10 @@ export const deleteService = async (req, res, next) => {
     }
 
     await Service.findByIdAndDelete(req.params.id);
-    
-    res.status(200).json({ 
+
+    res.status(200).json({
       success: true,
-      message: 'Service has been deleted!' 
+      message: 'Service has been deleted!'
     });
   } catch (error) {
     next(errorHandler(500, 'Failed to delete service'));
@@ -79,7 +84,7 @@ export const updateService = async (req, res, next) => {
 
     // Handle conditional fields based on service type
     const updateData = { ...req.body };
-    
+
     if (req.body.type !== 'daycare') {
       updateData.ageGroup = undefined;
       updateData.licenseNumber = undefined;
@@ -109,7 +114,7 @@ export const updateService = async (req, res, next) => {
       updateData,
       { new: true }
     );
-    
+
     res.status(200).json(updatedService);
   } catch (error) {
     next(errorHandler(500, 'Failed to update service'));
@@ -142,10 +147,12 @@ export const getServices = async (req, res, next) => {
     let type = req.query.type;
     if (type === undefined || type === 'all') {
       // ✅ UPDATED: Include carwash in default filter
-      type = { $in: [
-        'cleaning', 'maintenance', 'moving', 'landscaping', 
-        'catering', 'other', 'daycare', 'schoolTransport', 'carwash'
-      ] };
+      type = {
+        $in: [
+          'cleaning', 'maintenance', 'moving', 'landscaping',
+          'catering', 'other', 'daycare', 'schoolTransport', 'carwash'
+        ]
+      };
     }
 
     const query = {
@@ -161,18 +168,18 @@ export const getServices = async (req, res, next) => {
       ...(req.query.period && { period: req.query.period }),
       ...(req.query.near && { near: req.query.near }),
       ...(req.query.userRef && { userRef: req.query.userRef }),
-      
+
       // Daycare filters
       ...(req.query.ageGroup && { ageGroup: req.query.ageGroup }),
       ...(req.query.licenseNumber && { licenseNumber: req.query.licenseNumber }),
       ...(req.query.capacity && { capacity: req.query.capacity }),
       ...(req.query.meals && { meals: req.query.meals === 'true' }),
-      
+
       // School transport filters
       ...(req.query.vehicleType && { vehicleType: req.query.vehicleType }),
       ...(req.query.routeAreas && { routeAreas: req.query.routeAreas }),
       ...(req.query.childSeats && { childSeats: req.query.childSeats === 'true' }),
-      
+
       // ✅ NEW: Car wash filters
       ...(req.query.carWashPackages && { carWashPackages: { $regex: req.query.carWashPackages, $options: 'i' } }),
       ...(req.query.vehicleTypes && { vehicleTypes: req.query.vehicleTypes }),

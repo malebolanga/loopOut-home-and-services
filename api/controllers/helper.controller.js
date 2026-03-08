@@ -1,5 +1,6 @@
 import Helper from '../models/helper.model.js';
 import { errorHandler } from '../utils/error.js';
+import { createAreaNotifications } from '../utils/notificationUtils.js';
 
 /**
  * @description Create a new helper profile.
@@ -11,6 +12,9 @@ export const createHelper = async (req, res, next) => {
       ...req.body,
       userRef: req.user.id
     });
+    // Create notifications for users in the area
+    createAreaNotifications(helper, 'helper');
+
     return res.status(201).json(helper);
   } catch (error) {
     next(errorHandler(500, error.message));
@@ -45,10 +49,14 @@ export const getHelpers = async (req, res, next) => {
     const helpers = await Helper.find({
       ...(req.query.userId && { userRef: req.query.userId }),
       ...(req.query.type && { type: req.query.type }),
+      ...(req.query.category && { category: req.query.category }),
+      ...(req.query.address && { address: { $regex: req.query.address, $options: 'i' } }),
+      ...(req.query.location && { address: { $regex: req.query.location, $options: 'i' } }),
       ...(req.query.searchTerm && {
         $or: [
           { name: { $regex: req.query.searchTerm, $options: 'i' } },
           { description: { $regex: req.query.searchTerm, $options: 'i' } },
+          { skills: { $regex: req.query.searchTerm, $options: 'i' } }
         ],
       }),
     })

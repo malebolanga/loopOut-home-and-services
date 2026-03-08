@@ -11,7 +11,8 @@ import {
     getUser,
     getUsers, // Add this import
     rateHost, // Add this
-    getHostRatings // Add this
+    getHostRatings, // Add this
+    verifyWhatsApp
 } from '../controllers/user.controller.js';
 import { verifyToken } from '../utils/verifyUser.js';
 
@@ -45,6 +46,7 @@ router.get('/post-count/:id', verifyToken, getUserPostCount);
 // Add these new routes
 router.put('/rate-host/:hostId', verifyToken, rateHost);
 router.get('/host-ratings/:hostId', verifyToken, getHostRatings);
+router.post('/verify-whatsapp/:id', verifyToken, verifyWhatsApp);
 
 // Route to get user details
 router.get('/:id', verifyToken, getUser);

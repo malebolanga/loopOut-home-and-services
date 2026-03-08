@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import ListingItem from "../components/ListingItem";
-import { 
-  MapPinIcon, 
-  FunnelIcon, 
+import {
+  MapPinIcon,
+  FunnelIcon,
   XMarkIcon,
   ClockIcon,
   MagnifyingGlassIcon,
@@ -21,9 +21,9 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * Math.PI / 180) *
-      Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
@@ -64,11 +64,10 @@ const UserMessage = ({ type, message, onAction, actionText }) => (
 const PropertyTypeButton = ({ type, label, isSelected, onClick }) => (
   <button
     onClick={() => onClick(type)}
-    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-      isSelected 
-        ? 'bg-gray-800 text-white shadow-sm' 
-        : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:shadow-sm'
-    }`}
+    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${isSelected
+      ? 'bg-gray-800 text-white shadow-sm'
+      : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:shadow-sm'
+      }`}
   >
     {label}
   </button>
@@ -143,10 +142,10 @@ export default function ForRent() {
         const rawKinds = Array.isArray(data)
           ? data
           : data?.kinds && Array.isArray(data.kinds)
-          ? data.kinds
-          : data && typeof data === "object"
-          ? Object.keys(data)
-          : [];
+            ? data.kinds
+            : data && typeof data === "object"
+              ? Object.keys(data)
+              : [];
 
         const validKinds = [
           ...new Set(
@@ -260,19 +259,19 @@ export default function ForRent() {
         const newItems = Array.isArray(data)
           ? data
           : data.listings && Array.isArray(data.listings)
-          ? data.listings
-          : [];
+            ? data.listings
+            : [];
 
         const listingsWithProximity = newItems
           .map((listing) => ({
             ...listing,
             proximity: userLocation?.lat && userLocation?.lng && listing.location?.lat && listing.location?.lng
               ? calculateDistance(
-                  userLocation.lat,
-                  userLocation.lng,
-                  listing.location.lat,
-                  listing.location.lng
-                )
+                userLocation.lat,
+                userLocation.lng,
+                listing.location.lat,
+                listing.location.lng
+              )
               : Infinity,
           }))
           .sort((a, b) => a.proximity - b.proximity);
@@ -285,13 +284,13 @@ export default function ForRent() {
           );
           return uniqueListings;
         });
-        
+
         if (reset) {
           setPage(2);
         } else {
           setPage((prev) => prev + 1);
         }
-        
+
         setHasMore(newItems.length >= 12);
 
         if (selectedKind !== "all" && userLocation) {
@@ -342,7 +341,7 @@ export default function ForRent() {
     const handleScroll = () => {
       if (
         window.innerHeight + document.documentElement.scrollTop >=
-          document.documentElement.offsetHeight - 300 &&
+        document.documentElement.offsetHeight - 300 &&
         !loading &&
         hasMore &&
         !isFetchingRef.current
@@ -371,9 +370,9 @@ export default function ForRent() {
                 <div className="p-2 bg-[#FF385C] rounded-lg">
                   <HomeModernIcon className="w-6 h-6 text-white" />
                 </div>
-              
+
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 {/* Location Status */}
                 {userLocation ? (
@@ -387,22 +386,21 @@ export default function ForRent() {
                     <span>Location needed</span>
                   </div>
                 )}
-                
+
                 {/* Price Filter Button */}
                 <div className="relative">
-             
-                  
+
+
                   {showPriceFilter && (
                     <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
                       {priceOptions.map((option, index) => (
                         <button
                           key={index}
                           onClick={() => handlePriceSelect(option.min, option.max)}
-                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
-                            priceRange.min === option.min && priceRange.max === option.max 
-                              ? 'text-[#FF385C] font-medium' 
-                              : 'text-gray-700'
-                          }`}
+                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${priceRange.min === option.min && priceRange.max === option.max
+                            ? 'text-[#FF385C] font-medium'
+                            : 'text-gray-700'
+                            }`}
                         >
                           {option.label}
                         </button>
@@ -410,15 +408,14 @@ export default function ForRent() {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Filters Toggle */}
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center px-4 py-2 rounded-lg border transition-all duration-200 ${
-                    showFilters 
-                      ? 'bg-gray-800 text-white border-gray-800' 
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
-                  }`}
+                  className={`flex items-center px-4 py-2 rounded-lg border transition-all duration-200 ${showFilters
+                    ? 'bg-gray-800 text-white border-gray-800'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
+                    }`}
                 >
                   <FunnelIcon className="w-4 h-4 mr-2" />
                   <span className="text-sm font-medium">Filters</span>
@@ -439,7 +436,7 @@ export default function ForRent() {
                   />
                 ))}
               </div>
-              
+
               {/* Search Radius Selector */}
               <div className="relative hidden sm:block" ref={radiusMenuRef}>
                 <button
@@ -453,7 +450,7 @@ export default function ForRent() {
                     <ChevronDownIcon className="w-4 h-4" />
                   )}
                 </button>
-                
+
                 {radiusMenuOpen && (
                   <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
                     {radiusOptions.map((radius) => (
@@ -463,9 +460,8 @@ export default function ForRent() {
                           setSearchRadius(radius);
                           setRadiusMenuOpen(false);
                         }}
-                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
-                          searchRadius === radius ? 'text-[#FF385C] font-medium' : 'text-gray-700'
-                        }`}
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${searchRadius === radius ? 'text-[#FF385C] font-medium' : 'text-gray-700'
+                          }`}
                       >
                         Within {radius}km
                       </button>
@@ -479,7 +475,7 @@ export default function ForRent() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-32">
         {/* Recently Viewed Section */}
         {recentlyViewed.length > 0 && (
           <section className="mb-12">
@@ -498,7 +494,7 @@ export default function ForRent() {
                 Clear all
               </button>
             </div>
-            
+
             <div className="relative">
               <div className="flex space-x-4 overflow-x-auto pb-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
                 {recentlyViewed.map((listing) => (
@@ -511,11 +507,11 @@ export default function ForRent() {
                       proximity={
                         userLocation && listing.location
                           ? calculateDistance(
-                              userLocation.lat,
-                              userLocation.lng,
-                              listing.location.lat,
-                              listing.location.lng
-                            ).toFixed(1)
+                            userLocation.lat,
+                            userLocation.lng,
+                            listing.location.lat,
+                            listing.location.lng
+                          ).toFixed(1)
                           : null
                       }
                       onClick={() => markAsViewed(listing)}
@@ -565,11 +561,11 @@ export default function ForRent() {
                     proximity={
                       userLocation && listing.location
                         ? calculateDistance(
-                            userLocation.lat,
-                            userLocation.lng,
-                            listing.location.lat,
-                            listing.location.lng
-                          ).toFixed(1)
+                          userLocation.lat,
+                          userLocation.lng,
+                          listing.location.lat,
+                          listing.location.lng
+                        ).toFixed(1)
                         : null
                     }
                     onClick={() => markAsViewed(listing)}
@@ -578,7 +574,7 @@ export default function ForRent() {
                   />
                 ))}
               </div>
-              
+
               {loading && page > 1 && (
                 <div className="flex justify-center py-12">
                   <div className="flex items-center space-x-3">
@@ -587,7 +583,7 @@ export default function ForRent() {
                   </div>
                 </div>
               )}
-              
+
               {!hasMore && rentalListings.length > 0 && (
                 <div className="text-center py-12 border-t border-gray-100">
                   <p className="text-gray-500">
@@ -638,16 +634,15 @@ export default function ForRent() {
           </div>
         </div>
       )}
-      
+
       {/* Add CSS for scrollbar hiding */}
-      <style jsx global>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        body { overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        body::-webkit-scrollbar { display: none; }
+        * { scrollbar-width: none; -ms-overflow-style: none; }
+        *::-webkit-scrollbar { display: none; }
       `}</style>
     </div>
   );

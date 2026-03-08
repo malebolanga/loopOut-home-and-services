@@ -10,10 +10,11 @@ const CommentsSidePanel = ({ listingId, onClose }) => {
   const [isClosing, setIsClosing] = useState(false);
   const [showSummary, setShowSummary] = useState(true);
   const [commentContent, setCommentContent] = useState('');
+  const [rating, setRating] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  
+
   // Pagination state
   const [visibleComments, setVisibleComments] = useState(5);
   const [totalComments, setTotalComments] = useState(0);
@@ -22,14 +23,14 @@ const CommentsSidePanel = ({ listingId, onClose }) => {
   // Helper function to get token from currentUser
   const getToken = () => {
     if (!currentUser) return null;
-    
+
     // Try different possible token locations
-    return currentUser.token || 
-           currentUser.access_token || 
-           currentUser.accessToken || 
-           currentUser.jwt ||
-           (currentUser.data && currentUser.data.token) ||
-           null;
+    return currentUser.token ||
+      currentUser.access_token ||
+      currentUser.accessToken ||
+      currentUser.jwt ||
+      (currentUser.data && currentUser.data.token) ||
+      null;
   };
 
   // Trigger slide-in animation on mount
@@ -37,7 +38,7 @@ const CommentsSidePanel = ({ listingId, onClose }) => {
     setIsVisible(true);
     // Prevent body scrolling when panel is open
     document.body.style.overflow = 'hidden';
-    
+
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -54,7 +55,7 @@ const CommentsSidePanel = ({ listingId, onClose }) => {
   const handleSubmitComment = async (e) => {
     e.preventDefault();
     setError(null);
-    
+
     if (!commentContent.trim()) {
       setError('Comment cannot be empty');
       return;
@@ -67,13 +68,13 @@ const CommentsSidePanel = ({ listingId, onClose }) => {
 
     try {
       setLoading(true);
-      
+
       const token = getToken();
-      
+
       const headers = {
         'Content-Type': 'application/json',
       };
-      
+
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
@@ -86,12 +87,13 @@ const CommentsSidePanel = ({ listingId, onClose }) => {
           content: commentContent,
           listingId,
           userName: currentUser.username || currentUser.name || currentUser.displayName || 'User',
-          userAvatar: currentUser.avatar || currentUser.picture || '/default-avatar.jpg'
+          userAvatar: currentUser.avatar || currentUser.picture || '/default-avatar.jpg',
+          rating: rating > 0 ? rating : undefined
         })
       });
 
       const responseData = await res.json();
-      
+
       if (!res.ok) {
         if (res.status === 401) {
           throw new Error('Session expired. Please log in again.');
@@ -100,6 +102,7 @@ const CommentsSidePanel = ({ listingId, onClose }) => {
       }
 
       setCommentContent('');
+      setRating(0);
       setRefreshTrigger(prev => prev + 1);
       setError(null);
       // Reset visible comments count to show new comment
@@ -128,23 +131,21 @@ const CommentsSidePanel = ({ listingId, onClose }) => {
   return (
     <>
       {/* Backdrop overlay */}
-      <div 
-        className={`fixed inset-0 z-50 transition-opacity duration-300 ${
-          isClosing ? 'opacity-0' : 'opacity-100'
-        }`}
-        style={{ 
+      <div
+        className={`fixed inset-0 z-50 transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'
+          }`}
+        style={{
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
           pointerEvents: isClosing ? 'none' : 'auto'
         }}
         onClick={handleClose}
       />
-      
+
       {/* Side panel - slides in from right */}
-      <div 
-        className={`fixed top-0 right-0 z-50 h-full w-full max-w-2xl bg-white shadow-2xl transform transition-transform duration-300 ease-in-out ${
-          isVisible && !isClosing ? 'translate-x-0' : 'translate-x-full'
-        }`}
-        style={{ 
+      <div
+        className={`fixed top-0 right-0 z-50 h-full w-full max-w-2xl bg-white shadow-2xl transform transition-transform duration-300 ease-in-out ${isVisible && !isClosing ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        style={{
           pointerEvents: isClosing ? 'none' : 'auto',
           display: 'flex',
           flexDirection: 'column'
@@ -162,7 +163,7 @@ const CommentsSidePanel = ({ listingId, onClose }) => {
                 </p>
               )}
             </div>
-            <button 
+            <button
               onClick={handleClose}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               aria-label="Close panel"
@@ -171,7 +172,7 @@ const CommentsSidePanel = ({ listingId, onClose }) => {
             </button>
           </div>
         </div>
-        
+
         {/* Scrollable content area */}
         <div className="flex-1 overflow-y-auto p-6">
           {/* Toggle button for summary */}
@@ -188,15 +189,15 @@ const CommentsSidePanel = ({ listingId, onClose }) => {
               )}
             </button>
           </div>
-          
+
           {/* Comment input form */}
           <div className="mb-6 bg-white rounded-xl">
             <h3 className="text-lg font-semibold text-gray-800 mb-3">Add Your Review</h3>
             {currentUser ? (
               <form onSubmit={handleSubmitComment}>
                 <div className="flex items-start gap-3">
-                  <img 
-                    src={currentUser.avatar || currentUser.picture || '/default-avatar.jpg'} 
+                  <img
+                    src={currentUser.avatar || currentUser.picture || '/default-avatar.jpg'}
                     alt={currentUser.username || currentUser.name || 'User'}
                     className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                     onError={(e) => {
@@ -215,10 +216,36 @@ const CommentsSidePanel = ({ listingId, onClose }) => {
                     {error && (
                       <p className="mt-2 text-sm text-red-600">{error}</p>
                     )}
-                    <div className="flex justify-end mt-2">
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
+                        <span className="text-sm font-medium text-gray-700 mr-1">Your Rating:</span>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setRating(star)}
+                            className="focus:outline-none transition-transform hover:scale-110"
+                          >
+                            <svg
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill={star <= rating ? "#FBBF24" : "none"}
+                              stroke={star <= rating ? "#FBBF24" : "#D1D5DB"}
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="transition-colors duration-200"
+                            >
+                              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                            </svg>
+                          </button>
+                        ))}
+                      </div>
+
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                        className="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all duration-200 shadow-sm hover:shadow-md"
                         disabled={!commentContent.trim() || loading}
                       >
                         {loading ? (
@@ -245,18 +272,18 @@ const CommentsSidePanel = ({ listingId, onClose }) => {
               </div>
             )}
           </div>
-          
+
           {/* Comments with card styling - show limited comments with load more */}
           <div className="pb-6">
-            <Comments 
-              listingId={listingId} 
+            <Comments
+              listingId={listingId}
               showSummary={showSummary}
               cardStyle={true}
               maxComments={visibleComments} // Show limited number of comments
               externalRefreshTrigger={refreshTrigger}
               onTotalComments={handleTotalComments}
             />
-            
+
             {/* Load More Button */}
             {totalComments > visibleComments && (
               <div className="mt-8 flex justify-center">
@@ -279,7 +306,7 @@ const CommentsSidePanel = ({ listingId, onClose }) => {
                 </button>
               </div>
             )}
-            
+
             {/* Show all loaded message */}
             {totalComments > 0 && visibleComments >= totalComments && visibleComments > 5 && (
               <div className="mt-6 text-center">
@@ -288,7 +315,7 @@ const CommentsSidePanel = ({ listingId, onClose }) => {
                 </div>
               </div>
             )}
-            
+
             {/* Initial message when all comments are shown from the start */}
             {totalComments > 0 && totalComments <= 5 && (
               <div className="mt-6 text-center text-sm text-gray-500">

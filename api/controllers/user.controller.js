@@ -25,16 +25,28 @@ export const getUsers = async (req, res, next) => {
 export const updateUser = async (req, res, next) => {
   if (req.user.id !== req.params.id)
     return next(errorHandler(401, 'You can only update your own account!'));
-  
+
   try {
-    // Create update object with all possible fields
-    const updateData = {
-      username: req.body.username,
-      email: req.body.email,
-      avatar: req.body.avatar,
-      location: req.body.location,
-      updatedAt: new Date()  // Always update timestamp
-    };
+    // List of allowed fields to update directly
+    const allowedFields = [
+      'username', 'email', 'avatar', 'location', 'bio', 'phone',
+      'occupation', 'interests', 'website', 'socialMedia',
+      'faceData', 'whatsappNumber', 'whatsappVerified',
+      'twoFactorEnabled', 'profileVisibility', 'contactVisibility',
+      'sharedInfo', 'dataSharing', 'securitySettings'
+    ];
+
+    const updateData = {};
+
+    // Only add fields that are present in the request body
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    });
+
+    // Always update timestamp
+    updateData.updatedAt = new Date();
 
     // Only hash and update password if provided
     if (req.body.password) {
@@ -44,7 +56,7 @@ export const updateUser = async (req, res, next) => {
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
       { $set: updateData },
-      { 
+      {
         new: true,  // Return updated document
         runValidators: true  // Validate updates
       }
@@ -141,7 +153,7 @@ export const getUserEvents = async (req, res, next) => {
 export const getUserPostCount = async (req, res, next) => {
   try {
     const userId = req.params.id;
-    
+
     const [listingsCount, servicesCount, helpersCount, eventsCount] = await Promise.all([
       Listing.countDocuments({ userRef: userId }),
       Service.countDocuments({ userRef: userId }),
@@ -193,7 +205,7 @@ export const rateHost = async (req, res, next) => {
 
     if (existingRatingIndex !== -1) {
       const existingAction = host.ratedBy[existingRatingIndex].action;
-      
+
       if (existingAction === action) {
         // User is removing their rating
         host.ratedBy.splice(existingRatingIndex, 1);
@@ -256,7 +268,7 @@ export const getHostRatings = async (req, res, next) => {
       return next(errorHandler(404, 'Host not found'));
     }
 
-    const userAction = host.ratedBy.find(r => 
+    const userAction = host.ratedBy.find(r =>
       r.userId.toString() === userId
     )?.action || null;
 
@@ -264,6 +276,37 @@ export const getHostRatings = async (req, res, next) => {
       likeCount: host.likeCount,
       dislikeCount: host.dislikeCount,
       userAction
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyWhatsApp = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { whatsappNumber } = req.body;
+
+    if (req.user.id !== id) {
+      return next(errorHandler(401, 'You can only verify your own WhatsApp!'));
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          whatsappNumber,
+          whatsappVerified: true,
+          isVerified: true,
+        },
+      },
+      { new: true }
+    ).select('-password');
+
+    res.status(200).json({
+      success: true,
+      message: 'WhatsApp number verified successfully!',
+      user: updatedUser,
     });
   } catch (error) {
     next(error);

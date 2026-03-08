@@ -88,6 +88,7 @@ import LoginRequiredPage from './components/LoginRequiredPage';
 import Wishlist from './pages/WishList';
 import Events from './pages/Events';
 import Private from "./pages/Private";
+import Notifications from './pages/Notifications';
 
 // User Profile
 import UserProfile from './pages/UserProfile';
@@ -120,14 +121,14 @@ export default function App() {
         <Route path="/search" element={<Search />} />
         <Route path="/message" element={<Message />} />
         <Route path="/smart-search" element={<SmartSearchPage />} />
-      
+
         <Route path="/dashboard" element={<DashBoard />} />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/categories" element={<Categories />} />
-        
+
         {/* User Profile - Specific before dynamic */}
         <Route path="/user/:id" element={<UserProfile />} />
-        
+
         {/* Specific Listing Routes */}
         <Route path="/list" element={<List />} />
         <Route path="/listings/:type" element={<ListingsPage />} />
@@ -141,12 +142,12 @@ export default function App() {
         <Route path="/event-home-page" element={<EventsHomePage />} />
         <Route path="/listing-home-page" element={<ListingsHomePage />} />
         <Route path="/service-home-page" element={<ServicesHomePage />} />
-        
+
         {/* Trip Routes */}
         <Route path="/trips" element={<Trips />} />
         <Route path="/trip/:id" element={<TripDetail />} />
         <Route path="/plan-trip" element={<TripSearch />} />
-        
+
         {/* Service Routes - IMPORTANT: Order matters! More specific routes first */}
         <Route path="/carwash/:id" element={<CarWashPage />} />
         <Route path="/photography/:id" element={<PhotographyHelperPage />} />
@@ -155,23 +156,24 @@ export default function App() {
         <Route path="/privatetutor/:privatetutorId" element={<PrivateTutor />} />
         <Route path="/service/:serviceId" element={<Services />} />
         <Route path="/update-helper/:helperId" element={<UpdateHelper />} />
-        
+
         {/* User Routes - Keep these after more specific routes */}
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/users" element={<Users />} />
         <Route path="/events/:id" element={<Events />} />
-        
+        <Route path="/notifications" element={<Notifications />} />
+
         {/* Dynamic User Routes - These come last to avoid conflict */}
         <Route path="/:userId/list" element={<MyListing />} />
         <Route path="/:userId/listings" element={<UserListings />} />
         <Route path="/listings/user/:id" element={<UserListings />} />
-        
+
         {/* Content & AI Routes */}
         <Route path="/ai" element={<Ai />} />
         <Route path="/content" element={<Content />} />
         <Route path="/first-time-buyers" element={<ArticlePages />} />
         <Route path="/help-center" element={<AIHelpCenter />} />
-        
+
         {/* Informational Routes */}
         <Route path="/propertysafety" element={<PropertySafety />} />
         <Route path="/safetyservices" element={<SafetyServices />} />
@@ -181,11 +183,11 @@ export default function App() {
         <Route path="/become" element={<Become />} />
         <Route path="/adiver" element={<Adiver />} />
         <Route path="/lifestyle-decor" element={<LifestyleDecor />} />
-        
+
         {/* Payment & Promotion */}
         <Route path="/promote" element={<PromotionSelection />} />
         <Route path="/payment" element={<PaymentMethod />} />
-        
+
         {/* Help & Resources */}
         <Route path="/sitemap" element={<SiteMap />} />
         <Route path="/login-required" element={<LoginRequiredPage />} />
@@ -204,7 +206,7 @@ export default function App() {
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/newsroom" element={<Newsroom />} />
         <Route path="/recently-viewed" element={<RecentlyViewedPage />} />
-        
+
         {/* Private Routes - Protected by authentication */}
         <Route element={<PrivateRoute />}>
           <Route path="/sale" element={<Sale />} />
@@ -212,10 +214,10 @@ export default function App() {
           <Route path="/:userId/create-listing" element={<CreateListing />} />
           <Route path="/update-listing/:listingId" element={<UpdateListing />} />
         </Route>
-        
+
         {/* Additional Routes */}
         <Route path="/private" element={<Private />} />
-        
+
         {/* Fallback/404 Route - Uncomment if you have a NotFound component */}
         {/* <Route path="*" element={<NotFound />} /> */}
       </Routes>

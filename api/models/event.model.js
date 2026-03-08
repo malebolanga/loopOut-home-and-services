@@ -15,6 +15,10 @@ const eventSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    near: {
+      type: String,
+      required: true,
+    },
     address: {
       type: String,
       required: true,
@@ -70,9 +74,9 @@ const eventSchema = new mongoose.Schema(
       default: false,
     },
 
-     comments: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: 'EventComment' 
+    comments: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'EventComment'
     },
   },
   { timestamps: true }

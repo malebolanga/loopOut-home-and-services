@@ -8,8 +8,9 @@ import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "../styles/ListingDetails.scss";
+import ImageWithFallback from "./ImageWithFallback";
 
-const NEW_EVENT_THRESHOLD_DAYS = 14; 
+const NEW_EVENT_THRESHOLD_DAYS = 14;
 const CLICKS_PER_STAR = 20;
 
 const EVENT_TYPE_COLORS = {
@@ -42,17 +43,17 @@ const formatPrice = (price) => {
 
 const formatDateTime = (dateString, timeString) => {
   if (!dateString || !timeString) return 'Date not available';
-  
+
   try {
     const dateTimeString = `${dateString}T${timeString}`;
     const eventDate = new Date(dateTimeString);
-    
+
     const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
     const formattedDate = eventDate.toLocaleDateString('en-US', dateOptions);
-    
+
     const timeOptions = { hour: '2-digit', minute: '2-digit' };
     const formattedTime = eventDate.toLocaleTimeString('en-US', timeOptions);
-    
+
     return `${formattedDate} • ${formattedTime}`;
   } catch (error) {
     console.error('Error formatting date/time:', error);
@@ -147,7 +148,7 @@ function EventItem({ event, className = "", compactMode = false }) {
     }
   };
 
-  const enhancedImages = event?.imageUrls?.length > 0 
+  const enhancedImages = event?.imageUrls?.length > 0
     ? event.imageUrls.map((img) => ({ url: img }))
     : [{ url: "https://placehold.co/600x400/E0E0E0/333333?text=No+Image" }];
 
@@ -158,7 +159,7 @@ function EventItem({ event, className = "", compactMode = false }) {
     const eventUrl = `${window.location.origin}/event/${event._id}`;
     const shareText = `Check out this ${event.type} event: ${event.name} at ${event.address}`;
 
-    switch(platform) {
+    switch (platform) {
       case 'whatsapp':
         window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText} ${eventUrl}`)}`, '_blank');
         break;
@@ -213,9 +214,8 @@ function EventItem({ event, className = "", compactMode = false }) {
   return (
     <Link
       to={`/event/${event._id}`}
-      className={`${className} ${
-        compactMode 
-         ? 'flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg w-full'
+      className={`${className} ${compactMode
+          ? 'flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg w-full'
           : 'rounded-xl hover:shadow-sm transition-all duration-200 overflow-hidden cursor-pointer w-full relative max-w-sm mx-auto flex flex-col'
         }`}
       onClick={handleCardClick}
@@ -223,12 +223,13 @@ function EventItem({ event, className = "", compactMode = false }) {
       {compactMode ? (
         <>
           <div className="relative w-24 h-28 flex-shrink-0 rounded-lg overflow-hidden">
-            <img
+            <ImageWithFallback
               src={enhancedImages[0]?.url}
+              imageUrls={event.imageUrls}
+              type="event"
               alt={`${event.name || 'Event'} image`}
               className="w-full h-full object-cover"
               loading="lazy"
-              onError={(e) => { e.target.src = "https://placehold.co/600x400/E0E0E0/333333?text=No+Image"; }}
             />
             {isNewEvent && (
               <span className="absolute top-1 left-1 bg-green-500 text-white px-1.5 py-0.5 text-[10px] font-semibold rounded-full shadow-xs">
@@ -236,7 +237,7 @@ function EventItem({ event, className = "", compactMode = false }) {
               </span>
             )}
           </div>
-          
+
           <div className="flex-grow flex flex-col justify-between h-full min-w-0">
             <div>
               <div className="flex justify-between items-start">
@@ -251,24 +252,24 @@ function EventItem({ event, className = "", compactMode = false }) {
                   {isFavorite ? <FaHeart className="w-3.5 h-3.5 text-rose-600" /> : <FaRegHeart className="w-3.5 h-3.5" />}
                 </button>
               </div>
-              
+
               {event.type && (
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${EVENT_TYPE_COLORS[event.type] || 'bg-gray-100 text-gray-800'} mt-1 inline-block`}>
                   {event.type}
                 </span>
               )}
-              
+
               <p className="text-gray-600 text-xs flex items-center mt-1">
                 <MdCalendarToday className="text-blue-500 mr-1 text-xs" />
                 <span className="truncate">{formatDateTime(event.date, event.time)}</span>
               </p>
-              
+
               <div className="mt-2 flex items-center gap-1 text-sm font-bold text-gray-900">
                 {formatPrice(event.regularPrice)}
               </div>
             </div>
           </div>
-          
+
           {showShareOptions && (
             <div className="absolute right-2 top-8 mt-2 w-40 bg-white rounded-lg shadow-lg z-20 border border-gray-200 divide-y divide-gray-100 text-sm">
               <div className="py-1">
@@ -313,15 +314,14 @@ function EventItem({ event, className = "", compactMode = false }) {
                 {enhancedImages.map((img, index) => (
                   <SwiperSlide key={index}>
                     <div className="relative h-full w-full">
-                      <img
+                      <ImageWithFallback
                         src={img.url}
+                        imageUrls={index === 0 ? event.imageUrls : undefined}
+                        type="event"
                         alt={`${event.name || 'Event'} image ${index + 1}`}
                         className={`w-full h-full rounded-2xl object-cover transition-transform duration-500 ${imageLoaded ? 'scale-100' : 'scale-110'} group-hover:scale-105`}
                         loading="lazy"
                         onLoad={() => setImageLoaded(true)}
-                        onError={(e) => {
-                          e.target.src = "https://placehold.co/600x400/E0E0E0/333333?text=No+Image";
-                        }}
                       />
                       <div className="absolute top-2 left-2 z-10 flex gap-1.5">
                         {event.type && (
@@ -329,7 +329,7 @@ function EventItem({ event, className = "", compactMode = false }) {
                             {event.type}
                           </span>
                         )}
-                        
+
                         {isNewEvent && (
                           <span className="bg-green-500 text-white px-2 py-1 text-xs font-semibold rounded-full shadow-md">
                             NEW
@@ -348,7 +348,7 @@ function EventItem({ event, className = "", compactMode = false }) {
               <h3 className="text-sm font-semibold text-gray-900 truncate max-w-[70%]">
                 {event.name || 'Event Name'}
               </h3>
-              
+
               <div className="flex items-center text-xs bg-white/80 backdrop-blur-sm px-2 py-1 rounded-full border border-gray-200">
                 <FaStar className="text-yellow-400" />
                 <span className="ml-1 font-medium">{calculatedStarRating}</span>
@@ -356,35 +356,35 @@ function EventItem({ event, className = "", compactMode = false }) {
               </div>
             </div>
 
-            <p className="text-gray-600 text-xs flex items-center"> 
+            <p className="text-gray-600 text-xs flex items-center">
               <MdCalendarToday className="text-blue-500 mr-1 min-w-fit text-xs" />
               <span className="truncate hover:text-gray-800 transition-colors">
                 {formatDateTime(event.date, event.time)}
               </span>
             </p>
 
-        
 
-        <div className="mt-auto pt-0">
-          <div className="flex items-baseline justify-between">
-            <div className="flex items-baseline">
-              <span className="text-[15px] font-semibold text-gray-900">
-                {formatPrice(event.regularPrice)}
-              </span>
-           
-            </div>
-            
-            <div className="flex items-center text-gray-600">
-              <FaStar className="text-amber-500 text-[12px]" />
-              <span className="font-medium text-gray-900 text-[13px] ml-1">
-                {calculatedStarRating}
-              </span>
-          
+
+            <div className="mt-auto pt-0">
+              <div className="flex items-baseline justify-between">
+                <div className="flex items-baseline">
+                  <span className="text-[15px] font-semibold text-gray-900">
+                    {formatPrice(event.regularPrice)}
+                  </span>
+
+                </div>
+
+                <div className="flex items-center text-gray-600">
+                  <FaStar className="text-amber-500 text-[12px]" />
+                  <span className="font-medium text-gray-900 text-[13px] ml-1">
+                    {calculatedStarRating}
+                  </span>
+
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        </div>
-          
+
 
         </>
       )}

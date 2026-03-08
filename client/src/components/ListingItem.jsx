@@ -8,6 +8,7 @@ import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "../styles/ListingDetails.scss";
+import ImageWithFallback from "./ImageWithFallback";
 
 const NEW_LISTING_THRESHOLD_DAYS = 14;
 const CLICKS_PER_STAR = 20;
@@ -263,12 +264,13 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
             onClick={handleCardClick}
           >
             <div className="relative w-24 h-28 flex-shrink-0 rounded-lg overflow-hidden">
-              <img
+              <ImageWithFallback
                 src={enhancedImages[0]?.url}
+                imageUrls={listing.imageUrls}
+                type="property"
                 alt={`${listing.name || 'Property'} image`}
                 className={`w-full h-full rounded-2xl object-cover transition-transform duration-500 ${imageLoaded ? 'scale-100' : 'scale-110'} group-hover:scale-105`}
                 loading="lazy"
-                onError={(e) => { e.target.src = "https://placehold.co/600x400/E0E0E0/333333?text=No+Image"; }}
               />
 
               {/* User avatar link - Compact Mode */}
@@ -386,15 +388,14 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
                 {enhancedImages.map((img, index) => (
                   <SwiperSlide key={index}>
                     <div className="relative h-full w-full">
-                      <img
+                      <ImageWithFallback
                         src={img.url}
+                        imageUrls={index === 0 ? listing.imageUrls : undefined}
+                        type="property"
                         alt={`${listing.name || 'Property'} image ${index + 1}`}
                         className={`w-full h-full rounded-2xl object-cover transition-transform duration-500 ${imageLoaded ? 'scale-100' : 'scale-110'} group-hover:scale-105`}
                         loading="lazy"
                         onLoad={() => setImageLoaded(true)}
-                        onError={(e) => {
-                          e.target.src = "https://placehold.co/600x400/E0E0E0/333333?text=No+Image";
-                        }}
                       />
                       <div className="absolute top-2 left-2 z-10 flex gap-1.5">
                         <span className="bg-white text-gray-800 px-1.5 py-0.5 text-xs font-semibold rounded-full shadow-md backdrop-blur-sm bg-opacity-70">
@@ -471,13 +472,13 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
                   { type: listing.type }
                 )}
               </div>
-<div className="flex items-center text-gray-600">
-      <FaStar className="text-amber-500 text-[12px]" />
-      <span className="font-medium text-gray-900 text-[13px] ml-1">
-        {calculatedStarRating}
-      </span>
-  
-    </div>
+              <div className="flex items-center text-gray-600">
+                <FaStar className="text-amber-500 text-[12px]" />
+                <span className="font-medium text-gray-900 text-[13px] ml-1">
+                  {calculatedStarRating}
+                </span>
+
+              </div>
 
             </div>
           </div>

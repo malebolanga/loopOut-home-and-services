@@ -4,7 +4,7 @@ import { errorHandler } from '../utils/error.js';
 
 export const createComment = async (req, res, next) => {
   try {
-    const { content, listingId, userName, userAvatar } = req.body;
+    const { content, listingId, userName, userAvatar, rating } = req.body;
     const userId = req.user.id;
 
     if (!content || !listingId) {
@@ -21,11 +21,12 @@ export const createComment = async (req, res, next) => {
       listingId,
       userId,
       userName: userName || req.user.username,
-      userAvatar: userAvatar || req.user.avatar || '/default-avatar.jpg'
+      userAvatar: userAvatar || req.user.avatar || '/default-avatar.jpg',
+      rating: rating ? Number(rating) : undefined
     });
 
     await comment.save();
-    
+
     // Initialize comments array if it doesn't exist
     if (!listing.comments) {
       listing.comments = [];
@@ -58,9 +59,32 @@ export const getComments = async (req, res, next) => {
 
     const totalComments = await Comment.countDocuments({ listingId });
 
+    // Calculate ratings summary based on comments
+    const allComments = await Comment.find({ listingId, rating: { $exists: true, $ne: null } });
+
+    let ratings = {
+      cleanliness: 0,
+      staff: 0,
+      overall: 0
+    };
+
+    if (allComments.length > 0) {
+      const sum = allComments.reduce((acc, curr) => acc + curr.rating, 0);
+      const avg = sum / allComments.length;
+
+      // We're assigning the same average to categories for now 
+      // since the comment only has a single overall rating
+      ratings = {
+        cleanliness: avg,
+        staff: avg,
+        overall: avg
+      };
+    }
+
     res.status(200).json({
       comments,
       totalComments,
+      ratings,
       totalPages: Math.ceil(totalComments / limit),
       currentPage: page
     });

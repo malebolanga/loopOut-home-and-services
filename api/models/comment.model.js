@@ -27,6 +27,12 @@ const commentSchema = new mongoose.Schema({
     required: [true, 'Comment content is required'],
     maxlength: [1000, 'Comment cannot exceed 1000 characters']
   },
+  rating: {
+    type: Number,
+    min: 1,
+    max: 5,
+    required: false
+  },
   listingId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Listing',

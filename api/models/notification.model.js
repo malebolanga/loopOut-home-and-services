@@ -11,6 +11,9 @@ const notificationSchema = new mongoose.Schema({
         required: true,
         enum: ['new_post', 'message', 'booking', 'system']
     },
+    title: {
+        type: String,
+    },
     message: {
         type: String,
         required: true

@@ -140,12 +140,12 @@ const RecentlyViewedPage = () => {
 
   const handleLike = (itemId, e) => {
     e.stopPropagation();
-    
+
     try {
       const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
       if (stored) {
         let items = JSON.parse(stored);
-        items = items.map(item => 
+        items = items.map(item =>
           item._id === itemId ? { ...item, isLiked: !item.isLiked } : item
         );
         localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(items));
@@ -158,7 +158,7 @@ const RecentlyViewedPage = () => {
 
   const handleRemoveItem = (itemId, e) => {
     e.stopPropagation();
-    
+
     try {
       const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
       if (stored) {
@@ -185,7 +185,7 @@ const RecentlyViewedPage = () => {
 
   const handleRemoveSelected = () => {
     if (selectedItems.size === 0) return;
-    
+
     if (window.confirm(`Remove ${selectedItems.size} selected item(s)?`)) {
       try {
         const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
@@ -223,8 +223,8 @@ const RecentlyViewedPage = () => {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays}d ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays/7)}w ago`;
-    
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric'
@@ -232,7 +232,7 @@ const RecentlyViewedPage = () => {
   };
 
   const getCategoryIcon = (itemType) => {
-    switch(itemType) {
+    switch (itemType) {
       case 'properties': return '🏠';
       case 'services': return '✨';
       case 'helpers': return '👤';
@@ -242,7 +242,7 @@ const RecentlyViewedPage = () => {
   };
 
   const getCategoryColor = (itemType) => {
-    switch(itemType) {
+    switch (itemType) {
       case 'properties': return 'bg-blue-100 text-blue-600';
       case 'services': return 'bg-purple-100 text-purple-600';
       case 'helpers': return 'bg-green-100 text-green-600';
@@ -252,7 +252,7 @@ const RecentlyViewedPage = () => {
   };
 
   const getCategoryLabel = (itemType) => {
-    switch(itemType) {
+    switch (itemType) {
       case 'properties': return 'Property';
       case 'services': return 'Service';
       case 'helpers': return 'Helper';
@@ -264,7 +264,7 @@ const RecentlyViewedPage = () => {
   const getFormattedPrice = (price) => {
     if (!price || price === 'N/A') return 'N/A';
     if (typeof price === 'number') {
-      return price < 1000 ? `R${price}` : `R${(price/1000).toFixed(0)}k`;
+      return price < 1000 ? `R${price}` : `R${(price / 1000).toFixed(0)}k`;
     }
     return price;
   };
@@ -274,13 +274,13 @@ const RecentlyViewedPage = () => {
     const now = new Date();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
-    
+
     const monthAgo = new Date();
     monthAgo.setMonth(monthAgo.getMonth() - 1);
-    
+
     return {
       all: viewedItems.length,
       today: viewedItems.filter(item => new Date(item.viewedAt) >= today).length,
@@ -295,17 +295,15 @@ const RecentlyViewedPage = () => {
   const FilterButton = ({ label, count, active, onClick, emoji }) => (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
-        active
+      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${active
           ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-pink-200'
           : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:shadow-md'
-      }`}
+        }`}
     >
       <span className="text-base">{emoji}</span>
       <span>{label}</span>
-      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-        active ? 'bg-white/20' : 'bg-gray-100'
-      }`}>
+      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${active ? 'bg-white/20' : 'bg-gray-100'
+        }`}>
         {count}
       </span>
     </button>
@@ -332,14 +330,14 @@ const RecentlyViewedPage = () => {
             alt={name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 rounded-xl"
           />
-          
+
           {/* Category badge */}
           <div className="absolute top-3 left-3">
             <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${categoryColor}`}>
               {getCategoryLabel(item.itemType)}
             </span>
           </div>
-          
+
           {/* Like button */}
           <button
             onClick={(e) => handleLike(item._id, e)}
@@ -351,14 +349,14 @@ const RecentlyViewedPage = () => {
               <HeartIcon className="w-5 h-5 text-gray-600" />
             )}
           </button>
-          
+
           {/* Time indicator */}
           <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium">
             <ClockIcon className="w-3 h-3 inline mr-1" />
             {timeAgo}
           </div>
         </div>
-        
+
         {/* Content section */}
         <div className="p-5">
           <div className="flex justify-between items-start mb-3">
@@ -368,12 +366,12 @@ const RecentlyViewedPage = () => {
               <span className="font-semibold">{item.rating?.toFixed(1) || '4.5'}</span>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-1 text-gray-600 mb-3">
             <MapPinIcon className="w-4 h-4 flex-shrink-0" />
             <span className="text-sm truncate">{location}</span>
           </div>
-          
+
           <div className="flex justify-between items-center">
             <div className="text-2xl font-bold text-gray-900">
               {formattedPrice}
@@ -406,11 +404,10 @@ const RecentlyViewedPage = () => {
           {/* Selection checkbox */}
           <button
             onClick={(e) => handleSelectItem(item._id, e)}
-            className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors self-center ${
-              isSelected 
-                ? 'bg-gradient-to-r from-rose-500 to-pink-600 border-transparent' 
+            className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors self-center ${isSelected
+                ? 'bg-gradient-to-r from-rose-500 to-pink-600 border-transparent'
                 : 'border-gray-300 hover:border-rose-400'
-            }`}
+              }`}
           >
             {isSelected && (
               <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -418,7 +415,7 @@ const RecentlyViewedPage = () => {
               </svg>
             )}
           </button>
-          
+
           {/* Image */}
           <div className="relative flex-shrink-0">
             <div className="w-32 h-32 rounded-xl overflow-hidden bg-gray-200">
@@ -432,7 +429,7 @@ const RecentlyViewedPage = () => {
               <span className="text-xs font-semibold">{getCategoryIcon(item.itemType)}</span>
             </div>
           </div>
-          
+
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex justify-between items-start mb-2">
@@ -452,7 +449,7 @@ const RecentlyViewedPage = () => {
                   <span className="truncate">{location}</span>
                 </div>
               </div>
-              
+
               <div className="flex flex-col items-end">
                 <div className="text-2xl font-bold text-gray-900 mb-1">
                   {formattedPrice}
@@ -465,7 +462,7 @@ const RecentlyViewedPage = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex justify-between items-center">
               <div className="flex gap-2">
                 {item.bedrooms && (
@@ -479,7 +476,7 @@ const RecentlyViewedPage = () => {
                   </span>
                 )}
               </div>
-              
+
               <div className="flex gap-2">
                 <button
                   onClick={(e) => handleLike(item._id, e)}
@@ -507,17 +504,17 @@ const RecentlyViewedPage = () => {
       <div className="w-24 h-24 bg-gradient-to-r from-rose-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-6">
         <EyeIcon className="w-12 h-12 text-rose-500" />
       </div>
-      
+
       <h3 className="text-2xl font-bold text-gray-900 mb-3">
         {filter === 'wishlist' ? 'No saved items yet' : 'No recently viewed items'}
       </h3>
-      
+
       <p className="text-gray-600 mb-8 max-w-md mx-auto">
         {filter === 'wishlist'
           ? 'Start liking items to save them for later. Click the heart icon on any listing.'
           : 'Start browsing properties, services, helpers, and events to build your history.'}
       </p>
-      
+
       <div className="flex gap-4 justify-center">
         <Link
           to="/"
@@ -552,14 +549,14 @@ const RecentlyViewedPage = () => {
             </div>
             <div className="h-10 bg-gray-200 rounded-lg w-32 animate-pulse"></div>
           </div>
-          
+
           {/* Skeleton Filters */}
           <div className="flex gap-3 mb-8 overflow-x-auto">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="w-24 h-12 bg-gray-200 rounded-xl animate-pulse"></div>
             ))}
           </div>
-          
+
           {/* Skeleton Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
@@ -583,7 +580,7 @@ const RecentlyViewedPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-14">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-14 pb-32">
       {/* Hero Header */}
       <div className="bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 text-white">
         <div className="max-w-7xl mx-auto px-4 py-12">
@@ -602,7 +599,7 @@ const RecentlyViewedPage = () => {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               {selectedItems.size > 0 && (
                 <button
@@ -613,7 +610,7 @@ const RecentlyViewedPage = () => {
                   Remove {selectedItems.size}
                 </button>
               )}
-              
+
               <div className="flex bg-white/20 backdrop-blur-sm rounded-xl overflow-hidden">
                 <button
                   onClick={() => setViewMode('grid')}
@@ -630,7 +627,7 @@ const RecentlyViewedPage = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Quick Stats */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
@@ -665,7 +662,7 @@ const RecentlyViewedPage = () => {
               <FunnelIcon className="w-5 h-5 text-gray-600" />
               <h3 className="font-semibold text-gray-900">Filter by time:</h3>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <ArrowsUpDownIcon className="w-5 h-5 text-gray-600" />
               <select
@@ -680,7 +677,7 @@ const RecentlyViewedPage = () => {
               </select>
             </div>
           </div>
-          
+
           <div className="flex flex-wrap gap-3">
             <FilterButton
               label="All"
@@ -742,7 +739,7 @@ const RecentlyViewedPage = () => {
                   : `${selectedItems.size} of ${filteredItems.length} selected`}
               </span>
             </div>
-            
+
             {selectedItems.size > 0 && (
               <div className="flex gap-3">
                 <button
@@ -754,7 +751,7 @@ const RecentlyViewedPage = () => {
                 <button
                   onClick={() => {
                     const likedItems = filteredItems.filter(item => selectedItems.has(item._id));
-                    likedItems.forEach(item => handleLike(item._id, { stopPropagation: () => {} }));
+                    likedItems.forEach(item => handleLike(item._id, { stopPropagation: () => { } }));
                   }}
                   className="px-4 py-2 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
                 >
@@ -796,7 +793,7 @@ const RecentlyViewedPage = () => {
                   Your browsing history is private and stored locally. Clear it anytime or continue exploring.
                 </p>
               </div>
-              
+
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={handleClearAll}
@@ -823,7 +820,7 @@ const RecentlyViewedPage = () => {
               {['properties', 'services', 'helpers', 'events'].map((category) => {
                 const count = viewedItems.filter(item => item.itemType === category).length;
                 const percentage = viewedItems.length > 0 ? (count / viewedItems.length * 100).toFixed(0) : 0;
-                
+
                 return (
                   <div key={category} className="bg-white rounded-xl p-4 border border-gray-200">
                     <div className="flex items-center justify-between mb-2">
@@ -834,7 +831,7 @@ const RecentlyViewedPage = () => {
                       {getCategoryLabel(category)}
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-gradient-to-r from-rose-500 to-pink-600 h-2 rounded-full transition-all duration-500"
                         style={{ width: `${percentage}%` }}
                       ></div>

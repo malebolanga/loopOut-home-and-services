@@ -7,8 +7,8 @@ import ListingItem from '../components/ListingItem';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { 
-  MapPin, 
+import {
+  MapPin,
   ChevronRight,
   Home,
   Search,
@@ -48,23 +48,23 @@ const ListingsHomePage = () => {
   // Filter listings based on search
   const filteredListings = useMemo(() => {
     if (!listings.length) return [];
-    
-    let categoryListings = activeTab === 'all' 
-      ? listings 
+
+    let categoryListings = activeTab === 'all'
+      ? listings
       : listings.filter(listing => listing.type === activeTab);
-    
+
     // Apply search filter
     if (searchQuery.trim()) {
-      categoryListings = categoryListings.filter(listing => 
+      categoryListings = categoryListings.filter(listing =>
         listing.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         listing.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         listing.location?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
+
     // Apply sorting
     return [...categoryListings].sort((a, b) => {
-      switch(sortBy) {
+      switch (sortBy) {
         case 'price-low':
           return (a.price || 0) - (b.price || 0);
         case 'price-high':
@@ -87,16 +87,16 @@ const ListingsHomePage = () => {
       land: [],
       all: []
     };
-    
+
     if (!listings.length) return result;
-    
+
     listings.forEach(listing => {
       if (listing.type && result[listing.type]) {
         result[listing.type].push(listing);
       }
       result.all.push(listing);
     });
-    
+
     return result;
   }, [listings]);
 
@@ -106,11 +106,11 @@ const ListingsHomePage = () => {
       try {
         setLoading(true);
         const response = await fetch('/api/listing/get');
-        
+
         if (!response.ok) {
           throw new Error(`Failed to fetch listings: ${response.status}`);
         }
-        
+
         const data = await response.json();
         setListings(data);
         setLoading(false);
@@ -173,10 +173,10 @@ const ListingsHomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-16">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-16 pb-32">
       {/* Hero Section */}
       <div className="relative bg-gradient-to-r from-rose-50 to-blue-50 rounded-3xl overflow-hidden mb-8">
-      <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-blue-500/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-blue-500/10"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-2xl">
             <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm text-sm font-medium mb-6">
@@ -186,8 +186,8 @@ const ListingsHomePage = () => {
             <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
               Find Your Perfect Space
             </h1>
-          
-            
+
+
             {/* Search Bar */}
             <div className="bg-white rounded-2xl p-2 shadow-2xl max-w-2xl">
               <div className="flex flex-col md:flex-row items-center gap-2">
@@ -250,11 +250,10 @@ const ListingsHomePage = () => {
               <button
                 key={category.id}
                 onClick={() => setActiveTab(category.id)}
-                className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all duration-300 ${
-                  activeTab === category.id
+                className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all duration-300 ${activeTab === category.id
                     ? 'border-gray-900 bg-gray-50 shadow-lg scale-[1.02]'
                     : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
-                }`}
+                  }`}
               >
                 <div className={`${category.color} p-4 rounded-full text-white mb-4 shadow-md`}>
                   {React.cloneElement(category.icon, { className: 'h-6 w-6' })}
@@ -279,7 +278,7 @@ const ListingsHomePage = () => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <SlidersHorizontal className="h-4 w-4 text-gray-500" />
-              <select 
+              <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="border border-gray-200 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
@@ -308,7 +307,7 @@ const ListingsHomePage = () => {
                   .map(category => {
                     const categoryListings = categorizedListings[category.id];
                     if (!categoryListings || categoryListings.length === 0) return null;
-                    
+
                     return (
                       <div key={category.id} className="mb-16">
                         <div className="flex justify-between items-center mb-8">
@@ -321,15 +320,15 @@ const ListingsHomePage = () => {
                               Curated selection of premium {category.label.toLowerCase()}
                             </p>
                           </div>
-                          <button 
-                            onClick={() => setActiveTab(category.id)} 
+                          <button
+                            onClick={() => setActiveTab(category.id)}
                             className="flex items-center gap-2 text-gray-900 font-semibold hover:text-rose-500 transition-colors"
                           >
                             View all
                             <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                           </button>
                         </div>
-                        
+
                         <Swiper
                           slidesPerView={1.2}
                           spaceBetween={20}
@@ -391,7 +390,7 @@ const ListingsHomePage = () => {
                       No properties found
                     </h3>
                     <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                      {searchQuery 
+                      {searchQuery
                         ? `We couldn't find any properties matching "${searchQuery}". Try adjusting your search criteria.`
                         : `No properties available in this category. Check back soon or explore other categories.`
                       }
@@ -432,7 +431,7 @@ const ListingsHomePage = () => {
                       <MapPin className="h-16 w-16 text-blue-500 mx-auto mb-6" />
                       <div className="text-2xl font-bold text-gray-900 mb-2">Map View</div>
                       <div className="text-gray-600 mb-6">Interactive property map coming soon</div>
-                      <button 
+                      <button
                         onClick={() => setShowMap(false)}
                         className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:shadow-lg transition-all font-medium"
                       >
@@ -448,7 +447,7 @@ const ListingsHomePage = () => {
       </div>
 
       {/* Stats Banner */}
-     <div className="bg-gradient-to-r from-rose-500 to-blue-500 rounded-2xl p-4 mb-6 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-rose-500 to-blue-500 rounded-2xl p-4 mb-6 relative overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="text-center">

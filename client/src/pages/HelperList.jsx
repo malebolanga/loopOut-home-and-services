@@ -6,9 +6,9 @@ import { Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { 
+import {
   FaStar, FaMapMarkerAlt, FaHeart, FaRegHeart,
-  FaUser, FaClock, FaDog, FaUsers, FaGraduationCap, FaCut, FaTools, FaCar,FaShieldAlt
+  FaUser, FaClock, FaDog, FaUsers, FaGraduationCap, FaCut, FaTools, FaCar, FaShieldAlt
 } from 'react-icons/fa';
 
 export default function HelperDetails() {
@@ -38,7 +38,7 @@ export default function HelperDetails() {
         // In a real app, this would be an API call: 
         // const res = await fetch(`/api/helpers?type=${type}`);
         // const data = await res.json();
-        
+
         // Simulated data based on type
         const simulatedData = Array(12).fill().map((_, i) => ({
           _id: `${type}-${i + 1}`,
@@ -49,7 +49,7 @@ export default function HelperDetails() {
           address: `Location ${i + 1}, Cape Town`,
           regularPrice: Math.floor(Math.random() * 300) + 100,
           description: `Professional ${typeLabels[type].toLowerCase()} with ${i + 3} years of experience`,
-          imageUrls: Array(4).fill().map((_, imgIndex) => 
+          imageUrls: Array(4).fill().map((_, imgIndex) =>
             `https://source.unsplash.com/random/400x300/?${type},${i},${imgIndex}`
           ),
           host: `Host ${i + 1}`,
@@ -57,7 +57,7 @@ export default function HelperDetails() {
           pets: i % 3 === 0,
           security: i % 4 === 0,
         }));
-        
+
         // Set data with delay to simulate network request
         setTimeout(() => {
           setHelpers(simulatedData);
@@ -99,7 +99,7 @@ export default function HelperDetails() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-16 pb-32 flex items-center justify-center">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-airbnb-red"></div>
         <p className="ml-4 text-lg text-gray-700">Loading {typeLabels[type]}...</p>
       </div>
@@ -111,8 +111,8 @@ export default function HelperDetails() {
       <div className="max-w-7xl mx-auto px-4 py-8 text-center">
         <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg inline-block">
           <h3 className="text-lg font-medium text-red-800">{error}</h3>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="mt-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-md"
           >
             Try Again
@@ -123,7 +123,7 @@ export default function HelperDetails() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-32">
       {/* Header */}
       <div className="mb-10 text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">
@@ -138,8 +138,8 @@ export default function HelperDetails() {
       {/* Helpers Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {helpers.map((helper) => (
-          <div 
-            key={helper._id} 
+          <div
+            key={helper._id}
             className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-100"
           >
             {/* Image Gallery with Navigation */}
@@ -161,7 +161,7 @@ export default function HelperDetails() {
                   </SwiperSlide>
                 ))}
               </Swiper>
-              
+
               {/* Favorite Button */}
               <button
                 onClick={() => toggleFavorite(helper._id)}
@@ -174,7 +174,7 @@ export default function HelperDetails() {
                   <FaRegHeart className="text-gray-600 text-xl" />
                 )}
               </button>
-              
+
               {/* Image Counter */}
               <div className="absolute bottom-3 right-3 z-10 bg-black bg-opacity-60 text-white px-2 py-1 rounded-full text-xs">
                 {activeSlideIndex + 1}/{helper.imageUrls.length}
@@ -188,7 +188,7 @@ export default function HelperDetails() {
                   <h2 className="text-lg font-semibold text-gray-900 line-clamp-1">{helper.name}</h2>
                   <p className="text-gray-600 text-sm mt-1 line-clamp-2">{helper.description}</p>
                 </div>
-                
+
                 <div className="flex items-center">
                   <FaStar className="text-yellow-400 mr-1" />
                   <span className="font-medium">{helper.rating}</span>
@@ -196,26 +196,26 @@ export default function HelperDetails() {
                   <span className="text-gray-500 text-sm">{helper.reviews} reviews</span>
                 </div>
               </div>
-              
+
               <div className="flex items-center mt-3 text-gray-600">
                 <FaMapMarkerAlt className="mr-2" />
                 <span className="text-sm truncate">{helper.address}</span>
               </div>
-              
+
               <div className="mt-4 flex justify-between items-center">
                 <div>
                   <span className="text-lg font-bold text-airbnb-red">R{helper.regularPrice}</span>
                   <span className="text-gray-600"> / service</span>
                 </div>
-                
-                <Link 
-                  to={`/helper/${helper._id}`} 
+
+                <Link
+                  to={`/helper/${helper._id}`}
                   className="px-4 py-2 bg-airbnb-red hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
                 >
                   View Details
                 </Link>
               </div>
-              
+
               {/* Helper-specific badges */}
               <div className="mt-4 flex flex-wrap gap-2">
                 {helper.security && (
@@ -223,13 +223,13 @@ export default function HelperDetails() {
                     <FaShieldAlt className="mr-1" /> Verified
                   </span>
                 )}
-                
+
                 {helper.pets && (
                   <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full flex items-center">
                     <FaDog className="mr-1" /> Pets OK
                   </span>
                 )}
-                
+
                 <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full flex items-center">
                   <FaClock className="mr-1" /> {helper.period}
                 </span>

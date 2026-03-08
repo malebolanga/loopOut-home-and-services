@@ -20,9 +20,9 @@ import {
   deleteUserSuccess,
   signOutUserStart,
 } from "../redux/user/userSlice";
-import { 
-  MdLocationOn, 
-  MdVerifiedUser, 
+import {
+  MdLocationOn,
+  MdVerifiedUser,
   MdLanguage,
   MdCalendarToday,
   MdEmail,
@@ -40,9 +40,9 @@ import {
   MdDelete,
   MdCameraAlt
 } from 'react-icons/md';
-import { 
-  FaBath, 
-  FaBed, 
+import {
+  FaBath,
+  FaBed,
   FaShieldAlt,
   FaBell,
   FaHome,
@@ -170,8 +170,8 @@ const MenuItem = ({ icon: Icon, label, active, onClick, badge }) => (
   <button
     onClick={onClick}
     className={`flex items-center justify-between w-full p-3 rounded-lg text-left transition-all duration-200 ${active
-        ? "bg-[#F7F7F7] text-[#FF5A5F] font-semibold"
-        : "text-[#484848] hover:bg-[#F7F7F7]"
+      ? "bg-[#F7F7F7] text-[#FF5A5F] font-semibold"
+      : "text-[#484848] hover:bg-[#F7F7F7]"
       }`}
   >
     <div className="flex items-center gap-3">
@@ -338,7 +338,7 @@ export default function Profile() {
   const handleConnectWhatsApp = () => {
     const defaultMessage = `Hello! I'd like to connect my WhatsApp number for booking notifications. My username is ${currentUser?.username || 'User'}.`;
     const phoneNumber = whatsappNumber || currentUser?.phone || '';
-    
+
     if (!phoneNumber) {
       alert('Please add a phone number in your profile first');
       return;
@@ -347,7 +347,7 @@ export default function Profile() {
     // Format WhatsApp number
     let num = phoneNumber.replace(/\D/g, '');
     let formattedNumber;
-    
+
     if (num.startsWith('27') && num.length === 11) {
       formattedNumber = num;
     } else {
@@ -356,7 +356,7 @@ export default function Profile() {
       if (num.length < 10) num = num.padEnd(10, '0');
       formattedNumber = num.replace(/^0/, '27');
     }
-    
+
     const whatsappUrl = `https://wa.me/${formattedNumber}?text=${encodeURIComponent(defaultMessage)}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -368,9 +368,12 @@ export default function Profile() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ whatsappNumber })
+        body: JSON.stringify({
+          whatsappNumber,
+          isVerified: true
+        })
       });
-      
+
       const data = await res.json();
       if (data.success) {
         setWhatsappVerified(true);
@@ -393,12 +396,12 @@ export default function Profile() {
         return;
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
           width: { ideal: 640 },
           height: { ideal: 480 },
-          facingMode: 'user' 
-        } 
+          facingMode: 'user'
+        }
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -423,7 +426,7 @@ export default function Profile() {
     try {
       const context = canvasRef.current.getContext('2d');
       context.drawImage(videoRef.current, 0, 0, 640, 480);
-      
+
       canvasRef.current.toBlob(async (blob) => {
         if (!blob) {
           setFaceUploadError("Failed to capture image.");
@@ -431,11 +434,11 @@ export default function Profile() {
           return;
         }
 
-        const file = new File([blob], `verification_${Date.now()}.jpg`, { 
+        const file = new File([blob], `verification_${Date.now()}.jpg`, {
           type: 'image/jpeg',
           lastModified: Date.now()
         });
-        
+
         await processCameraCapture(file);
       }, 'image/jpeg', 0.9);
     } catch (error) {
@@ -470,19 +473,20 @@ export default function Profile() {
         async () => {
           try {
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            
+
             const newFaceData = {
               imageUrl: downloadURL,
               verified: true,
               verifiedAt: new Date().toISOString(),
               method: 'camera'
             };
-            
+
             const res = await fetch(`/api/user/update/${currentUser._id}`, {
-              method: "POST",
+              method: "PUT",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ 
-                faceData: newFaceData
+              body: JSON.stringify({
+                faceData: newFaceData,
+                isVerified: true
               }),
             });
 
@@ -527,9 +531,9 @@ export default function Profile() {
   const removeFaceData = async () => {
     try {
       const res = await fetch(`/api/user/update/${currentUser._id}`, {
-        method: "POST",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           faceData: null
         }),
       });
@@ -571,7 +575,7 @@ export default function Profile() {
       },
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          setFormData({ ...formData, avatar: downloadURL });
+          setFormData((prev) => ({ ...prev, avatar: downloadURL }));
           setFileUploadError(false);
         });
       }
@@ -587,7 +591,7 @@ export default function Profile() {
     try {
       dispatch(updateUserStart());
       const res = await fetch(`/api/user/update/${currentUser._id}`, {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
@@ -818,9 +822,16 @@ export default function Profile() {
                     onChange={(e) => setFile(e.target.files[0])}
                   />
                 </div>
-                <h2 className="font-bold text-lg text-[#484848]">{currentUser?.username || 'User'}</h2>
+                <h2 className="font-bold text-lg text-[#484848] flex items-center justify-center gap-2">
+                  {currentUser?.username || 'User'}
+                  {currentUser?.isVerified && (
+                    <span className="text-[#00A699]" title="Verified Account">
+                      <MdVerifiedUser size={18} />
+                    </span>
+                  )}
+                </h2>
                 <p className="text-sm text-[#767676] mt-1">{currentUser?.email || 'user@example.com'}</p>
-                
+
                 {isFaceVerified && (
                   <div className="mt-3 inline-flex items-center gap-1 text-sm text-[#00A699] font-medium bg-[#00A699]/10 px-3 py-1 rounded-full">
                     <Shield size={14} />
@@ -883,7 +894,7 @@ export default function Profile() {
                     badge={postCount || 0}
                   />
                 </div>
-                
+
                 <div className="border-t border-[#DDDDDD] p-2">
                   <button
                     onClick={handleSignOut}
@@ -955,6 +966,40 @@ export default function Profile() {
                         handleChange={handleChange}
                         icon={MapPin}
                       />
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <InputField
+                          label="Occupation"
+                          id="occupation"
+                          value={formData.occupation || currentUser?.occupation || ''}
+                          handleChange={handleChange}
+                          icon={FaUserTie}
+                        />
+                        <InputField
+                          label="Interests"
+                          id="interests"
+                          value={formData.interests || currentUser?.interests || ''}
+                          handleChange={handleChange}
+                          icon={Heart}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <InputField
+                          label="Website"
+                          id="website"
+                          value={formData.website || currentUser?.website || ''}
+                          handleChange={handleChange}
+                          icon={MdLink}
+                        />
+                        <InputField
+                          label="Social media"
+                          id="socialMedia"
+                          value={formData.socialMedia || currentUser?.socialMedia || ''}
+                          handleChange={handleChange}
+                          icon={MdShare}
+                        />
+                      </div>
 
                       <div className="pt-4 border-t border-[#DDDDDD]">
                         <label className="block text-sm font-semibold text-[#484848] mb-2">About</label>
@@ -1460,7 +1505,7 @@ export default function Profile() {
                 <X size={24} className="text-[#484848]" />
               </button>
             </div>
-            
+
             <div className="p-6">
               <div className="relative mx-auto max-w-sm mb-6">
                 <video
@@ -1475,11 +1520,11 @@ export default function Profile() {
                 </div>
                 <canvas ref={canvasRef} className="hidden" width="640" height="480" />
               </div>
-              
+
               <p className="text-center text-[#767676] mb-6">
                 Position your face in the circle and ensure good lighting
               </p>
-              
+
               <div className="flex gap-3">
                 <button
                   onClick={captureFace}
@@ -1520,7 +1565,7 @@ export default function Profile() {
                 <X size={24} className="text-[#484848]" />
               </button>
             </div>
-            
+
             <div className="p-6 text-center">
               <div className="relative inline-block mb-4">
                 <img
@@ -1534,19 +1579,19 @@ export default function Profile() {
                   </div>
                 )}
               </div>
-              
+
               <h2 className="text-2xl font-bold text-[#484848] mb-1">{currentUser?.username || 'User'}</h2>
               <div className="flex items-center justify-center gap-2 text-[#767676] mb-4">
                 <MapPin size={16} />
                 {currentUser?.location || 'No location set'}
               </div>
-              
+
               {currentUser?.bio && (
                 <p className="text-[#484848] mb-6 text-left bg-[#F7F7F7] p-4 rounded-lg">
                   {currentUser.bio}
                 </p>
               )}
-              
+
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-[#F7F7F7] p-4 rounded-lg">
                   <p className="text-2xl font-bold text-[#484848]">{userListings?.length || 0}</p>
@@ -1557,7 +1602,7 @@ export default function Profile() {
                   <p className="text-sm text-[#767676]">Reviews</p>
                 </div>
               </div>
-              
+
               <button
                 onClick={() => setShowViewProfile(false)}
                 className="w-full bg-[#FF5A5F] text-white py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors"
@@ -1584,12 +1629,12 @@ export default function Profile() {
                 <X size={24} className="text-[#484848]" />
               </button>
             </div>
-            
+
             <div className="p-6">
               <p className="text-[#767676] mb-6">
                 Connect your WhatsApp to receive instant booking notifications and guest messages.
               </p>
-              
+
               <InputField
                 label="WhatsApp number"
                 type="tel"
@@ -1599,7 +1644,7 @@ export default function Profile() {
                 placeholder="+27 82 123 4567"
                 icon={Phone}
               />
-              
+
               {!whatsappConnected ? (
                 <button
                   onClick={handleConnectWhatsApp}
@@ -1614,7 +1659,7 @@ export default function Profile() {
                     <CheckCircle size={20} />
                     <span className="font-medium">Connected: {whatsappNumber}</span>
                   </div>
-                  
+
                   <div className="flex gap-3">
                     <button
                       onClick={handleVerifyWhatsApp}

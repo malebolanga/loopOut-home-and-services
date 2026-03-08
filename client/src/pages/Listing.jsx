@@ -12,6 +12,7 @@ import emailjs from "emailjs-com";
 import Calendar from "react-calendar";
 import CommentsSidePanel from '../components/CommentsSidePanel';
 import Comments from '../components/Comments';
+import ImageWithFallback from '../components/ImageWithFallback';
 
 // Icons imports
 import {
@@ -155,7 +156,7 @@ const HOST_RATING_CATEGORIES = [
   { name: "Location", icon: MdLocationOn, key: "location_rating" },
 ];
 
-const PROPERTY_TYPES = {
+const LISTING_TYPES = {
   rent: { label: 'For Rent', color: 'bg-black text-white', icon: FaHome, period: '/month' },
   sale: { label: 'For Sale', color: 'bg-rose-600 text-white', icon: FaHome, period: '' },
   over: { label: 'Vacation Rental', color: 'bg-rose-600 text-white', icon: FaUmbrellaBeach, period: '/night' },
@@ -236,7 +237,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose }) => {
   // Calculate total price based on property type
   const calculateTotalPrice = () => {
     if (!listing?.regularPrice) return 0;
-    
+
     if (isOvernight) {
       if (nights === 0) return 0;
       const basePrice = listing.regularPrice * nights * bookingDetails.rooms;
@@ -246,12 +247,12 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose }) => {
       const serviceFee = 350;
       return basePrice + breakfastPrice + extraGuestFee + cleaningFee + serviceFee;
     }
-    
+
     if (isOffice) {
       if (hours === 0) return 0;
       return listing.regularPrice * hours;
     }
-    
+
     // For sale and rent - just show the price (no calculation needed)
     return listing.regularPrice;
   };
@@ -286,28 +287,28 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose }) => {
   // Validate form
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!bookingDetails.fullName.trim()) {
       newErrors.fullName = 'Full name is required';
     }
-    
+
     if (!bookingDetails.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(bookingDetails.email)) {
       newErrors.email = 'Email is invalid';
     }
-    
+
     if (!bookingDetails.phone.trim()) {
       newErrors.phone = 'Phone number is required';
     } else if (!/^[0-9+\-\s()]{10,}$/.test(bookingDetails.phone.replace(/\D/g, ''))) {
       newErrors.phone = 'Please enter a valid phone number';
     }
-    
+
     if (isOvernight) {
       if (!bookingDetails.checkIn) {
         newErrors.checkIn = 'Check-in date is required';
       }
-      
+
       if (!bookingDetails.checkOut) {
         newErrors.checkOut = 'Check-out date is required';
       } else if (bookingDetails.checkIn && bookingDetails.checkOut) {
@@ -317,53 +318,53 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose }) => {
           newErrors.checkOut = 'Check-out must be after check-in';
         }
       }
-      
+
       if (bookingDetails.guests < 1) {
         newErrors.guests = 'At least 1 guest is required';
       }
-      
+
       if (bookingDetails.rooms < 1) {
         newErrors.rooms = 'At least 1 room is required';
       }
     }
-    
+
     if (isOffice) {
       if (!bookingDetails.selectedDate) {
         newErrors.selectedDate = 'Date is required';
       }
     }
-    
+
     return newErrors;
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const newErrors = validateForm();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     const hostPhone = getHostPhone();
-    
+
     if (!hostPhone) {
       alert('Host contact information is not available');
       setIsSubmitting(false);
       return;
     }
-    
+
     // Format date for display
     const formatDate = (dateString) => {
       if (!dateString) return 'Not specified';
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-ZA', { 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric' 
+      return date.toLocaleDateString('en-ZA', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
       });
     };
 
@@ -375,13 +376,13 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose }) => {
       const roomSubtotal = listing.regularPrice * nights * bookingDetails.rooms;
       const breakfastSubtotal = bookingDetails.breakfast ? 150 * nights * bookingDetails.guests : 0;
       const extraGuestSubtotal = bookingDetails.guests > 2 ? 200 * (bookingDetails.guests - 2) * nights : 0;
-      
+
       message = `🏨 *NEW OVERNIGHT BOOKING REQUEST* 🏨
 
 ━━━━━━━━━━━━━━━━━━━
-*PROPERTY DETAILS*
+*LISTING DETAILS*
 ━━━━━━━━━━━━━━━━━━━
-🏠 *Property:* ${listing?.name || 'Not specified'}
+🏠 *Listing:* ${listing?.name || 'Not specified'}
 📍 *Address:* ${listing?.address || 'Not specified'}
 💰 *Rate:* R${listing?.regularPrice?.toLocaleString()}/night
 
@@ -434,13 +435,13 @@ ${bookingDetails.specialRequests || 'No special requests'}
 💬 MESSAGE - Contact guest
 
 _This booking request was sent via LoopOut_`;
-    } 
+    }
     else if (isOffice) {
       // Office space message
       message = `🏢 *OFFICE SPACE BOOKING REQUEST* 🏢
 
 ━━━━━━━━━━━━━━━━━━━
-*PROPERTY DETAILS*
+*LISTING DETAILS*
 ━━━━━━━━━━━━━━━━━━━
 🏢 *Office:* ${listing?.name || 'Not specified'}
 📍 *Address:* ${listing?.address || 'Not specified'}
@@ -482,12 +483,12 @@ _This booking request was sent via LoopOut_`;
     }
     else if (isSale || isRent) {
       // Sale or Rent inquiry message
-      message = `🏠 *PROPERTY INQUIRY* 🏠
+      message = `🏠 *LISTING INQUIRY* 🏠
 
 ━━━━━━━━━━━━━━━━━━━
-*PROPERTY DETAILS*
+*LISTING DETAILS*
 ━━━━━━━━━━━━━━━━━━━
-🏠 *Property:* ${listing?.name || 'Not specified'}
+🏠 *Listing:* ${listing?.name || 'Not specified'}
 📍 *Address:* ${listing?.address || 'Not specified'}
 💰 *Price:* R${listing?.regularPrice?.toLocaleString()}${isRent ? '/month' : ''}
 📋 *Type:* ${isSale ? 'For Sale' : 'For Rent'}
@@ -502,7 +503,7 @@ _This booking request was sent via LoopOut_`;
 ━━━━━━━━━━━━━━━━━━━
 *MESSAGE*
 ━━━━━━━━━━━━━━━━━━━
-${bookingDetails.specialRequests || `I'm interested in this property. Please provide more information.`}
+${bookingDetails.specialRequests || `I'm interested in this listing. Please provide more information.`}
 
 ━━━━━━━━━━━━━━━━━━━
 📋 *Please reply with:*
@@ -517,9 +518,9 @@ _This inquiry was sent via LoopOut_`;
     // Send via WhatsApp
     const whatsappNumber = formatPhoneNumberForWhatsApp(hostPhone);
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-    
+
     window.open(whatsappUrl, '_blank');
-    
+
     setTimeout(() => {
       setIsSubmitting(false);
       onClose();
@@ -551,7 +552,7 @@ _This inquiry was sent via LoopOut_`;
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    
+
     // Clear error for this field
     if (errors[name]) {
       setErrors(prev => {
@@ -584,8 +585,8 @@ _This inquiry was sent via LoopOut_`;
               {(isSale || isRent) && 'Fill in your details to contact the seller'}
             </p>
           </div>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
             <FaTimes className="text-xl text-gray-500" />
@@ -600,7 +601,7 @@ _This inquiry was sent via LoopOut_`;
               <FaUsers className="text-rose-500" />
               Your Information
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -611,9 +612,8 @@ _This inquiry was sent via LoopOut_`;
                   name="fullName"
                   value={bookingDetails.fullName}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${
-                    errors.fullName ? 'border-rose-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${errors.fullName ? 'border-rose-500' : 'border-gray-300'
+                    }`}
                   placeholder="John Doe"
                 />
                 {errors.fullName && (
@@ -630,9 +630,8 @@ _This inquiry was sent via LoopOut_`;
                   name="email"
                   value={bookingDetails.email}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${
-                    errors.email ? 'border-rose-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${errors.email ? 'border-rose-500' : 'border-gray-300'
+                    }`}
                   placeholder="john@example.com"
                 />
                 {errors.email && (
@@ -649,9 +648,8 @@ _This inquiry was sent via LoopOut_`;
                   name="phone"
                   value={bookingDetails.phone}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${
-                    errors.phone ? 'border-rose-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${errors.phone ? 'border-rose-500' : 'border-gray-300'
+                    }`}
                   placeholder="082 123 4567"
                 />
                 {errors.phone && (
@@ -670,7 +668,7 @@ _This inquiry was sent via LoopOut_`;
                   <FaCalendar className="text-rose-500" />
                   Stay Dates
                 </h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -682,9 +680,8 @@ _This inquiry was sent via LoopOut_`;
                       value={bookingDetails.checkIn}
                       onChange={handleChange}
                       min={today}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${
-                        errors.checkIn ? 'border-rose-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${errors.checkIn ? 'border-rose-500' : 'border-gray-300'
+                        }`}
                     />
                     {errors.checkIn && (
                       <p className="mt-1 text-xs text-rose-500">{errors.checkIn}</p>
@@ -701,9 +698,8 @@ _This inquiry was sent via LoopOut_`;
                       value={bookingDetails.checkOut}
                       onChange={handleChange}
                       min={bookingDetails.checkIn || today}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${
-                        errors.checkOut ? 'border-rose-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${errors.checkOut ? 'border-rose-500' : 'border-gray-300'
+                        }`}
                     />
                     {errors.checkOut && (
                       <p className="mt-1 text-xs text-rose-500">{errors.checkOut}</p>
@@ -726,7 +722,7 @@ _This inquiry was sent via LoopOut_`;
                   <FaBed className="text-rose-500" />
                   Room & Guest Details
                 </h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -738,7 +734,7 @@ _This inquiry was sent via LoopOut_`;
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                     >
-                      {[1,2,3,4,5].map(num => (
+                      {[1, 2, 3, 4, 5].map(num => (
                         <option key={num} value={num}>{num} {num === 1 ? 'Room' : 'Rooms'}</option>
                       ))}
                     </select>
@@ -754,7 +750,7 @@ _This inquiry was sent via LoopOut_`;
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                     >
-                      {[1,2,3,4,5,6,7,8].map(num => (
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
                         <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
                       ))}
                     </select>
@@ -770,7 +766,7 @@ _This inquiry was sent via LoopOut_`;
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                     >
-                      {[0,1,2,3,4].map(num => (
+                      {[0, 1, 2, 3, 4].map(num => (
                         <option key={num} value={num}>{num}</option>
                       ))}
                     </select>
@@ -818,7 +814,7 @@ _This inquiry was sent via LoopOut_`;
                   <FaClock className="text-rose-500" />
                   Booking Date & Time
                 </h3>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Select Date <span className="text-rose-500">*</span>
@@ -829,9 +825,8 @@ _This inquiry was sent via LoopOut_`;
                     value={bookingDetails.selectedDate}
                     onChange={handleChange}
                     min={today}
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${
-                      errors.selectedDate ? 'border-rose-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${errors.selectedDate ? 'border-rose-500' : 'border-gray-300'
+                      }`}
                   />
                   {errors.selectedDate && (
                     <p className="mt-1 text-xs text-rose-500">{errors.selectedDate}</p>
@@ -894,8 +889,8 @@ _This inquiry was sent via LoopOut_`;
               onChange={handleChange}
               rows="4"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
-              placeholder={isSale || isRent 
-                ? "I'm interested in this property. Please provide more information..." 
+              placeholder={isSale || isRent
+                ? "I'm interested in this property. Please provide more information..."
                 : "Any special requirements or requests..."}
             />
           </div>
@@ -904,7 +899,7 @@ _This inquiry was sent via LoopOut_`;
           {((isOvernight && nights > 0) || (isOffice && hours > 0)) && (
             <div className="bg-gray-50 rounded-xl p-4 space-y-3">
               <h4 className="font-semibold text-gray-900">Price Summary</h4>
-              
+
               <div className="space-y-2 text-sm">
                 {isOvernight && (
                   <>
@@ -916,26 +911,26 @@ _This inquiry was sent via LoopOut_`;
                       <span className="text-gray-600">Room Subtotal:</span>
                       <span className="font-medium">R{(listing.regularPrice * nights * bookingDetails.rooms).toLocaleString()}</span>
                     </div>
-                    
+
                     {bookingDetails.breakfast && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">Breakfast:</span>
                         <span className="font-medium">R{(150 * bookingDetails.guests * nights).toLocaleString()}</span>
                       </div>
                     )}
-                    
+
                     {bookingDetails.guests > 2 && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">Extra Guest Fee:</span>
                         <span className="font-medium">R{(200 * (bookingDetails.guests - 2) * nights).toLocaleString()}</span>
                       </div>
                     )}
-                    
+
                     <div className="flex justify-between">
                       <span className="text-gray-600">Cleaning Fee:</span>
                       <span className="font-medium">R450</span>
                     </div>
-                    
+
                     <div className="flex justify-between">
                       <span className="text-gray-600">Service Fee:</span>
                       <span className="font-medium">R350</span>
@@ -949,7 +944,7 @@ _This inquiry was sent via LoopOut_`;
                     <span className="font-medium">R{listing.regularPrice.toLocaleString()}/hour × {hours.toFixed(1)} hours</span>
                   </div>
                 )}
-                
+
                 <div className="pt-3 border-t border-gray-200 flex justify-between font-semibold text-lg">
                   <span>Total:</span>
                   <span className="text-rose-600">R{totalPrice.toLocaleString()}</span>
@@ -1007,9 +1002,9 @@ _This inquiry was sent via LoopOut_`;
 const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
   const [contactMethod, setContactMethod] = useState('whatsapp');
   const [message, setMessage] = useState('');
-  
-  const defaultMessage = `Hello, I'm ${user?.name || 'Interested Client'}. I'm interested in your "${listing?.name || 'Property'}" property. Could you please provide more details?`;
-  
+
+  const defaultMessage = `Hello, I'm ${user?.name || 'Interested Client'}. I'm interested in your "${listing?.name || 'Listing'}" listing. Could you please provide more details?`;
+
   const formatPhoneNumber = (phone) => {
     if (!phone) return '';
     const phoneStr = String(phone).trim();
@@ -1025,29 +1020,29 @@ const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
     if (!digits.startsWith('0') && digits.length >= 9) return '0' + digits;
     return digits;
   };
-  
+
   const formatPhoneNumberForWhatsApp = (phone) => {
     const formatted = formatPhoneNumber(phone);
     if (!formatted) return '';
     if (formatted.startsWith('0') && formatted.length === 10) return '27' + formatted.substring(1);
     return formatted;
   };
-  
+
   const handleSubmit = () => {
     const contactNumber = listing?.contact || listing?.phone || listing?.userRef?.contact || listing?.userRef?.phone || '';
     const emailAddress = listing?.email || listing?.userRef?.email;
-    
+
     const hasWhatsApp = contactNumber && contactMethod === 'whatsapp';
     const hasEmail = emailAddress && contactMethod === 'email';
     const hasCall = contactNumber && contactMethod === 'call';
-    
+
     if (!hasWhatsApp && !hasEmail && !hasCall) {
       alert(`No ${contactMethod} information available`);
       return;
     }
 
     const finalMessage = message || defaultMessage;
-    
+
     if (contactMethod === 'whatsapp' && contactNumber) {
       const whatsappNumber = formatPhoneNumberForWhatsApp(contactNumber);
       if (!whatsappNumber || whatsappNumber.length < 10) {
@@ -1063,10 +1058,10 @@ const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
       const telNumber = formatPhoneNumber(contactNumber);
       window.location.href = `tel:${telNumber}`;
     }
-    
+
     onClose();
   };
-  
+
   const getAvailableContactMethods = () => {
     const contactNumber = listing?.contact || listing?.phone || listing?.userRef?.contact || listing?.userRef?.phone || '';
     const emailAddress = listing?.email || listing?.userRef?.email;
@@ -1075,13 +1070,13 @@ const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
     if (emailAddress) methods.push('email');
     return methods;
   };
-  
+
   const availableMethods = getAvailableContactMethods();
   const displayPhoneNumber = listing?.contact || listing?.phone || listing?.userRef?.contact || listing?.userRef?.phone || '';
   const formattedDisplayNumber = formatPhoneNumber(displayPhoneNumber);
-  
+
   if (!isOpen) return null;
-  
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
@@ -1096,14 +1091,14 @@ const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
             </button>
           </div>
         </div>
-        
+
         <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-180px)]">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
             <input type="text" value={user?.name || ''} readOnly={!!user?.name}
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black" />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Contact Method</label>
             <div className="grid grid-cols-3 gap-2">
@@ -1129,7 +1124,7 @@ const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
                 </button>
               )}
             </div>
-            
+
             <div className="mt-4 p-3 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600 mb-1">Host contact details:</p>
               <div className="space-y-1">
@@ -1139,14 +1134,14 @@ const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
               </div>
             </div>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Your Message</label>
             <textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder={defaultMessage} rows="4"
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black resize-none" />
           </div>
         </div>
-        
+
         <div className="p-6 border-t border-gray-100">
           <div className="flex gap-3">
             <button onClick={onClose} className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors">Cancel</button>
@@ -1186,9 +1181,15 @@ const FullScreenGallery = ({ images, currentIndex, isOpen, onClose, onPrev, onNe
         <button onClick={onPrev} className="absolute left-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors">
           <FaChevronLeft className="text-xl" />
         </button>
-        
-        <img src={images[currentIndex]} alt={`Photo ${currentIndex + 1}`} className="max-h-full max-w-full object-contain" />
-        
+
+        <ImageWithFallback
+          src={images[currentIndex]}
+          imageUrls={images.slice(currentIndex)}
+          alt={`Photo ${currentIndex + 1}`}
+          type="property"
+          className="max-h-full max-w-full object-contain"
+        />
+
         <button onClick={onNext} className="absolute right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors">
           <FaChevronRight className="text-xl" />
         </button>
@@ -1201,7 +1202,12 @@ const FullScreenGallery = ({ images, currentIndex, isOpen, onClose, onPrev, onNe
             <SwiperSlide key={index} style={{ width: '100px' }}>
               <button onClick={() => onIndexChange(index)}
                 className={`block w-full h-16 rounded-lg overflow-hidden ${index === currentIndex ? 'ring-2 ring-white' : 'opacity-50 hover:opacity-100'}`}>
-                <img src={img} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
+                <ImageWithFallback
+                  src={img}
+                  alt={`Thumbnail ${index + 1}`}
+                  type="property"
+                  className="w-full h-full object-cover"
+                />
               </button>
             </SwiperSlide>
           ))}
@@ -1220,13 +1226,13 @@ export default function Listing() {
   const [commentCount, setCommentCount] = useState(0);
   const [numberOfGuests, setNumberOfGuests] = useState(2);
   const [extraBed, setExtraBed] = useState('no');
-  
+
   // Modal states
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showFullGallery, setShowFullGallery] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
-  
+
   // State declarations
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -1431,16 +1437,16 @@ export default function Listing() {
   const handleContactHost = () => {
     const contactNumber = listing?.contact || listing?.phone || listing?.userRef?.contact || listing?.userRef?.phone || '';
     const emailAddress = listing?.email || listing?.userRef?.email;
-    
+
     if (!contactNumber && !emailAddress) {
       alert('No contact information available for this host');
       return;
     }
 
     const userName = currentUser?.name || 'Interested Client';
-    const listingName = listing.name || 'Property Listing';
-    const message = `Hello, I'm ${userName}. I'm interested in your "${listingName}" property. Could you please provide more details?`;
-    
+    const listingName = listing.name || 'Listing detail';
+    const message = `Hello, I'm ${userName}. I'm interested in your "${listingName}" listing. Could you please provide more details?`;
+
     if (contactNumber) {
       const whatsappNumber = formatPhoneNumberForWhatsApp(contactNumber);
       if (whatsappNumber && whatsappNumber.length >= 10) {
@@ -1449,7 +1455,7 @@ export default function Listing() {
         return;
       }
     }
-    
+
     if (emailAddress) {
       const subject = `Interest in "${listingName}"`;
       window.location.href = `mailto:${emailAddress}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
@@ -1560,7 +1566,7 @@ export default function Listing() {
   const verifySocialMedia = async (hostData) => {
     if (!hostData) return;
     setSocialMediaVerified(prev => ({ ...prev, loading: true }));
-    
+
     setTimeout(() => {
       setSocialMediaVerified({
         facebook: Math.random() > 0.3,
@@ -1626,15 +1632,15 @@ export default function Listing() {
 
       try {
         setUiState({ loading: true, error: false, submitting: false, showAllReviews: false, newReviewsAvailable: false });
-        
+
         const response = await fetch(`/api/listing/get/${listingId}`, {
           headers: { 'Content-Type': 'application/json' }
         });
 
         if (!response.ok) throw new Error('Failed to fetch');
-        
+
         const listingData = await response.json();
-        
+
         if (!listingData._id || !listingData.name) {
           throw new Error('Invalid listing data');
         }
@@ -1696,12 +1702,12 @@ export default function Listing() {
           near: "• 5 min walk to Camps Bay Beach\n• 10 min drive to Table Mountain\n• 15 min to V&A Waterfront\n• Restaurants within walking distance",
           cancel: "Free cancellation up to 30 days before check-in. 50% refund if canceled 14-30 days before check-in."
         };
-        
+
         setListing(mockListing);
         setUiState(prev => ({ ...prev, loading: false, error: false }));
       }
     };
-    
+
     if (listingId) fetchListing();
   }, [listingId, navigate]);
 
@@ -1778,21 +1784,21 @@ export default function Listing() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900">Property not found</h2>
-          <button onClick={() => navigate('/listings')} className="mt-4 px-6 py-2 bg-rose-500 text-white rounded-lg">
-            Browse Properties
+          <h2 className="text-2xl font-bold text-gray-900">Listing not found</h2>
+          <button onClick={() => navigate('/listing-home-page')} className="mt-4 px-6 py-2 bg-rose-500 text-white rounded-lg">
+            Browse Listings
           </button>
         </div>
       </div>
     );
   }
 
-  const propertyType = PROPERTY_TYPES[listing.type] || PROPERTY_TYPES.over;
+  const listingType = LISTING_TYPES[listing.type] || LISTING_TYPES.over;
   const activeAmenities = getActiveAmenities();
   const displayContactNumber = listing?.contact || listing?.phone || '';
   const formattedDisplayNumber = formatPhoneNumberSafe(displayContactNumber);
   const displayEmail = listing?.email || listing?.userRef?.email || '';
-  
+
   // Determine property type for UI
   const isOvernight = listing.type === 'over';
   const isOffice = listing.type === 'office';
@@ -1815,7 +1821,7 @@ export default function Listing() {
             <button onClick={() => navigate(-1)} className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}>
               <FaArrowLeft className={`text-xl ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
             </button>
-            
+
             <div className="flex items-center gap-2">
               <button onClick={handleShare} className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}>
                 <FiShare2 className={`text-xl ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
@@ -1829,67 +1835,71 @@ export default function Listing() {
       </nav>
 
       {/* Image Gallery Grid - KEPT EXACTLY AS YOU WANTED */}
-   <div className="relative pt-0">
-  <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-[300px] md:h-[400px] lg:h-[500px] max-w-screen-xl mx-auto px-4 md:px-6">
-    
-    {/* Main Image - Takes left half (2 cols, 2 rows) */}
-    <div 
-      className="md:col-span-2 md:row-span-2 relative overflow-hidden cursor-pointer group rounded-l-xl md:rounded-l-2xl md:rounded-r-none"
-      onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
-    >
-      <img 
-        src={listing.imageUrls[0]} 
-        alt={listing.name} 
-        className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105" 
-      />
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
-    </div>
-    
-    {/* Side Images - 2x2 grid on right */}
-    {listing.imageUrls.slice(1, 5).map((url, index) => {
-      // Determine border radius based on position
-      const getBorderRadius = () => {
-        if (index === 0) return 'rounded-tr-xl md:rounded-tr-2xl'; // Top right
-        if (index === 1) return 'rounded-none'; // Top middle-right
-        if (index === 2) return 'rounded-none'; // Bottom middle-right
-        if (index === 3) return 'rounded-br-xl md:rounded-br-2xl'; // Bottom right
-        return '';
-      };
+      <div className="relative pt-0">
+        <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-[300px] md:h-[400px] lg:h-[500px] max-w-screen-xl mx-auto px-4 md:px-6">
 
-      return (
-        <div 
-          key={index} 
-          className={`relative overflow-hidden cursor-pointer group hidden md:block ${getBorderRadius()}`}
-          onClick={() => { setGalleryIndex(index + 1); setShowFullGallery(true); }}
-        >
-          <img 
-            src={url} 
-            alt={`${listing.name} ${index + 2}`} 
-            className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105" 
-          />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+          {/* Main Image - Takes left half (2 cols, 2 rows) */}
+          <div
+            className="md:col-span-2 md:row-span-2 relative overflow-hidden cursor-pointer group rounded-l-xl md:rounded-l-2xl md:rounded-r-none"
+            onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
+          >
+            <ImageWithFallback
+              src={listing.imageUrls[0]}
+              imageUrls={listing.imageUrls}
+              alt={listing.name}
+              type="property"
+              className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+          </div>
+
+          {/* Side Images - 2x2 grid on right */}
+          {listing.imageUrls.slice(1, 5).map((url, index) => {
+            // Determine border radius based on position
+            const getBorderRadius = () => {
+              if (index === 0) return 'rounded-tr-xl md:rounded-tr-2xl'; // Top right
+              if (index === 1) return 'rounded-none'; // Top middle-right
+              if (index === 2) return 'rounded-none'; // Bottom middle-right
+              if (index === 3) return 'rounded-br-xl md:rounded-br-2xl'; // Bottom right
+              return '';
+            };
+
+            return (
+              <div
+                key={index}
+                className={`relative overflow-hidden cursor-pointer group hidden md:block ${getBorderRadius()}`}
+                onClick={() => { setGalleryIndex(index + 1); setShowFullGallery(true); }}
+              >
+                <ImageWithFallback
+                  src={url}
+                  imageUrls={listing.imageUrls.slice(index + 1)}
+                  alt={`${listing.name} ${index + 2}`}
+                  type="property"
+                  className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+              </div>
+            );
+          })}
+
+          {/* Show All Photos Button */}
+          <button
+            onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
+            className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-2.5 rounded-lg font-medium text-sm text-gray-800 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg border border-gray-200"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            Show all photos
+          </button>
         </div>
-      );
-    })}
-    
-    {/* Show All Photos Button */}
-    <button 
-      onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
-      className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-2.5 rounded-lg font-medium text-sm text-gray-800 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg border border-gray-200"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-      </svg>
-      Show all photos
-    </button>
-  </div>
-</div>
+      </div>
 
       {/* Full Screen Gallery */}
-      <FullScreenGallery 
-        images={listing.imageUrls} 
-        currentIndex={galleryIndex} 
-        isOpen={showFullGallery} 
+      <FullScreenGallery
+        images={listing.imageUrls}
+        currentIndex={galleryIndex}
+        isOpen={showFullGallery}
         onClose={() => setShowFullGallery(false)}
         onPrev={() => setGalleryIndex(prev => prev === 0 ? listing.imageUrls.length - 1 : prev - 1)}
         onNext={() => setGalleryIndex(prev => prev === listing.imageUrls.length - 1 ? 0 : prev + 1)}
@@ -1913,8 +1923,8 @@ export default function Listing() {
                 <span>·</span>
                 <span className="underline">{listing.address?.split(',')[0]}</span>
                 <span>·</span>
-                <span className={`px-2 py-1 rounded text-xs font-medium ${propertyType.color}`}>
-                  {propertyType.label}
+                <span className={`px-2 py-1 rounded text-xs font-medium ${listingType.color}`}>
+                  {listingType.label}
                 </span>
               </div>
             </div>
@@ -1943,7 +1953,7 @@ export default function Listing() {
 
             {/* Host Info */}
             <div className="flex items-center gap-4 py-6 border-b border-gray-200">
-              <img src={listing.userRef?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'} 
+              <img src={listing.userRef?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
                 alt={listing.userRef?.username} className="w-12 h-12 lg:w-14 lg:h-14 rounded-full object-cover" />
               <div>
                 <h2 className="text-base lg:text-lg font-semibold text-gray-900">Hosted by {listing.userRef?.username || 'Host'}</h2>
@@ -1993,7 +2003,7 @@ export default function Listing() {
                 <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">
                   {isOffice ? 'Select date & time' : 'Select your dates'}
                 </h2>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
                   {isOvernight && (
                     <div>
@@ -2006,7 +2016,7 @@ export default function Listing() {
                       />
                     </div>
                   )}
-                  
+
                   {isOffice && (
                     <div className="space-y-4">
                       <div>
@@ -2045,9 +2055,9 @@ export default function Listing() {
                 <FaStar className="text-rose-500 text-lg lg:text-xl" />
                 <h2 className="text-lg lg:text-xl font-semibold text-gray-900">{Number(aiRating.average).toFixed(1)} · {commentCount} reviews</h2>
               </div>
-              
+
               <Comments listingId={listingId} maxComments={6} />
-              
+
               {commentCount > 6 && (
                 <button onClick={() => setShowCommentsPanel(true)}
                   className="mt-6 px-4 lg:px-6 py-2 lg:py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm lg:text-base">
@@ -2104,17 +2114,17 @@ export default function Listing() {
                 <div className="flex items-baseline justify-between mb-4 lg:mb-6">
                   <div>
                     <span className="text-xl lg:text-2xl font-semibold text-gray-900">R{listing.regularPrice.toLocaleString('en-ZA')}</span>
-                    <span className="text-gray-600 text-sm lg:text-base">{propertyType.period}</span>
+                    <span className="text-gray-600 text-sm lg:text-base">{listingType.period}</span>
                   </div>
                   {listing.discountPrice && (
                     <span className="text-gray-400 line-through text-sm lg:text-base">R{listing.discountPrice}</span>
                   )}
                 </div>
 
-                {/* Property Type Info */}
+                {/* Listing Type Info */}
                 <div className="mb-4 p-2 lg:p-3 bg-gray-50 rounded-lg">
                   <p className="text-xs lg:text-sm text-gray-700">
-                    <span className="font-semibold">Property Type:</span> {propertyType.label}
+                    <span className="font-semibold">Listing Type:</span> {listingType.label}
                   </p>
                   {isOvernight && <p className="text-xs text-gray-500 mt-1">Price is per night</p>}
                   {isOffice && <p className="text-xs text-gray-500 mt-1">Price is per hour</p>}
@@ -2123,7 +2133,7 @@ export default function Listing() {
                 </div>
 
                 {/* Action Button - Different based on property type */}
-                <button 
+                <button
                   onClick={() => setShowBookingModal(true)}
                   disabled={!formattedDisplayNumber}
                   className="w-full py-2 lg:py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm lg:text-base"
@@ -2133,7 +2143,7 @@ export default function Listing() {
                 </button>
 
                 <p className="text-center text-gray-500 text-xs lg:text-sm mt-2">
-                  {isSaleOrRent ? 'Ask questions about this property' : 'You\'ll receive a confirmation via WhatsApp'}
+                  {isSaleOrRent ? 'Ask questions about this listing' : 'You\'ll receive a confirmation via WhatsApp'}
                 </p>
 
                 {/* Quick Contact Button */}
@@ -2197,14 +2207,14 @@ export default function Listing() {
       </div>
 
       {/* WhatsApp Booking Modal */}
-      <WhatsAppBookingModal 
+      <WhatsAppBookingModal
         listing={listing}
         isOpen={showBookingModal}
         onClose={() => setShowBookingModal(false)}
       />
 
       {/* Contact Modal */}
-      <ContactHostModal 
+      <ContactHostModal
         listing={listing}
         user={currentUser}
         isOpen={showContactModal}
@@ -2213,7 +2223,7 @@ export default function Listing() {
 
       {/* Comments Side Panel */}
       {showCommentsPanel && (
-        <CommentsSidePanel 
+        <CommentsSidePanel
           listingId={listingId}
           onClose={() => setShowCommentsPanel(false)}
           currentUser={currentUser}
@@ -2222,27 +2232,27 @@ export default function Listing() {
       )}
 
       {/* Mobile Bottom Bar */}
-    {/* Mobile Bottom Bar */}
-<div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:hidden z-40">
-  <div className="flex items-center justify-between">
-    <div>
-      <span className="text-xl font-bold text-gray-900">
-        R{isOvernight && nights > 0 ? grandTotal.toLocaleString() : 
-          isOffice && totalHours > 0 ? totalPrice : 
-          listing.regularPrice.toLocaleString()}
-      </span>
-      <span className="text-gray-600 text-sm">
-        {isOvernight ? ' / total' : isOffice ? ' / booking' : isRent ? ' / month' : ''}
-      </span>
-    </div>
-    <button 
-      onClick={handleQuickBooking}
-      className="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-colors"
-    >
-      Book Now
-    </button>
-  </div>
-</div>
+      {/* Mobile Bottom Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:hidden z-40">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-xl font-bold text-gray-900">
+              R{isOvernight && nights > 0 ? grandTotal.toLocaleString() :
+                isOffice && totalHours > 0 ? totalPrice :
+                  listing.regularPrice.toLocaleString()}
+            </span>
+            <span className="text-gray-600 text-sm">
+              {isOvernight ? ' / total' : isOffice ? ' / booking' : isRent ? ' / month' : ''}
+            </span>
+          </div>
+          <button
+            onClick={handleQuickBooking}
+            className="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-colors"
+          >
+            Book Now
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

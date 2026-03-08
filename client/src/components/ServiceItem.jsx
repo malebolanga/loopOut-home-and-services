@@ -8,8 +8,9 @@ import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "../styles/ListingDetails.scss";
+import ImageWithFallback from "./ImageWithFallback";
 
-const NEW_SERVICE_THRESHOLD_DAYS = 14; 
+const NEW_SERVICE_THRESHOLD_DAYS = 14;
 const CLICKS_PER_STAR = 20;
 
 const SERVICE_TYPE_COLORS = {
@@ -143,12 +144,12 @@ function ServiceItem({ service, className = "", compactMode = false }) {
     }
   };
 
-  const enhancedImages = service?.imageUrls?.length > 0 
+  const enhancedImages = service?.imageUrls?.length > 0
     ? service.imageUrls.map((img) => ({ url: img }))
     : [{ url: "https://placehold.co/600x400/E0E0E0/333333?text=No+Image" }];
 
   const getServiceIcon = () => {
-    switch(service.type) {
+    switch (service.type) {
       case 'daycare': return <FaChild className="mr-1 text-xs" />;
       case 'schoolTransport': return <FaBus className="mr-1 text-xs" />;
       default: return <MdLocationOn className="text-rose-600 mr-1 text-xs" />;
@@ -156,7 +157,7 @@ function ServiceItem({ service, className = "", compactMode = false }) {
   };
 
   const getLocationLabel = () => {
-    switch(service.type) {
+    switch (service.type) {
       case 'daycare': return 'Location';
       case 'schoolTransport': return 'Covered Areas';
       default: return service.address || 'Location not available';
@@ -170,7 +171,7 @@ function ServiceItem({ service, className = "", compactMode = false }) {
     const serviceUrl = `${window.location.origin}/service/${service._id}`;
     const shareText = `Check out this ${getServiceTypeName(service.type)} service: ${service.name} - ${service.address}`;
 
-    switch(platform) {
+    switch (platform) {
       case 'whatsapp':
         window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText} ${serviceUrl}`)}`, '_blank');
         break;
@@ -225,9 +226,8 @@ function ServiceItem({ service, className = "", compactMode = false }) {
   return (
     <Link
       to={`/service/${service._id}`}
-      className={`${className} ${
-        compactMode 
-         ? 'flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg w-full'
+      className={`${className} ${compactMode
+          ? 'flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg w-full'
           : 'rounded-xl hover:shadow-sm transition-all duration-200 overflow-hidden cursor-pointer w-full relative max-w-sm mx-auto flex flex-col'
         }`}
       onClick={handleCardClick}
@@ -235,12 +235,13 @@ function ServiceItem({ service, className = "", compactMode = false }) {
       {compactMode ? (
         <>
           <div className="relative w-24 h-28 flex-shrink-0 rounded-lg overflow-hidden">
-            <img
+            <ImageWithFallback
               src={enhancedImages[0]?.url}
+              imageUrls={service.imageUrls}
+              type="service"
               alt={`${service.name || 'Service'} image`}
               className="w-full h-full object-cover"
               loading="lazy"
-              onError={(e) => { e.target.src = "https://placehold.co/600x400/E0E0E0/333333?text=No+Image"; }}
             />
             {isNewService && (
               <span className="absolute top-1 left-1 bg-green-500 text-white px-1.5 py-0.5 text-[10px] font-semibold rounded-full shadow-xs">
@@ -248,7 +249,7 @@ function ServiceItem({ service, className = "", compactMode = false }) {
               </span>
             )}
           </div>
-          
+
           <div className="flex-grow flex flex-col justify-between h-full min-w-0">
             <div>
               <div className="flex justify-between items-start">
@@ -263,42 +264,42 @@ function ServiceItem({ service, className = "", compactMode = false }) {
                   {isFavorite ? <FaHeart className="w-3.5 h-3.5 text-rose-600" /> : <FaRegHeart className="w-3.5 h-3.5" />}
                 </button>
               </div>
-              
+
               {service.type && (
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${SERVICE_TYPE_COLORS[service.type]} mt-1 inline-block`}>
                   {service.type === 'daycare' ? 'DayCare' : service.type === 'schoolTransport' ? 'School' : service.type.charAt(0).toUpperCase() + service.type.slice(1)}
                 </span>
               )}
-              
+
               <p className="text-gray-600 text-xs flex items-center mt-1">
                 {getServiceIcon()}
                 <span className="truncate">
-                  {service.type === 'daycare' || service.type === 'schoolTransport' 
-                    ? getLocationLabel() 
+                  {service.type === 'daycare' || service.type === 'schoolTransport'
+                    ? getLocationLabel()
                     : service.address || 'Location not available'}
                 </span>
               </p>
-              
+
               {service.type === 'daycare' && service.capacity && (
                 <p className="text-gray-600 text-xs flex items-center mt-1">
                   <FaUser className="text-gray-500 mr-1 text-xs" />
                   <span>Capacity: {service.capacity}</span>
                 </p>
               )}
-              
+
               {service.type === 'schoolTransport' && service.vehicleType && (
                 <p className="text-gray-600 text-xs flex items-center mt-1">
                   <FaBus className="text-gray-500 mr-1 text-xs" />
                   <span>Vehicle: {service.vehicleType}</span>
                 </p>
               )}
-              
+
               <div className="mt-2 flex items-center gap-1 text-sm font-bold text-gray-900">
                 {formatPrice(service.regularPrice)}
               </div>
             </div>
           </div>
-          
+
           {showShareOptions && (
             <div className="absolute right-2 top-8 mt-2 w-40 bg-white rounded-lg shadow-lg z-20 border border-gray-200 divide-y divide-gray-100 text-sm">
               <div className="py-1">
@@ -343,25 +344,24 @@ function ServiceItem({ service, className = "", compactMode = false }) {
                 {enhancedImages.map((img, index) => (
                   <SwiperSlide key={index}>
                     <div className="relative h-full w-full">
-                      <img
+                      <ImageWithFallback
                         src={img.url}
+                        imageUrls={index === 0 ? service.imageUrls : undefined}
+                        type="service"
                         alt={`${service.name || 'Service'} image ${index + 1}`}
                         className={`w-full h-full rounded-2xl object-cover transition-transform duration-500 ${imageLoaded ? 'scale-100' : 'scale-110'} group-hover:scale-105`}
                         loading="lazy"
                         onLoad={() => setImageLoaded(true)}
-                        onError={(e) => {
-                          e.target.src = "https://placehold.co/600x400/E0E0E0/333333?text=No+Image";
-                        }}
                       />
                       <div className="absolute top-2 left-2 z-10 flex flex-col gap-1.5 items-start">
                         {service.type && (
                           <span className={`text-xs px-2 py-1 rounded-full ${SERVICE_TYPE_COLORS[service.type] || 'bg-gray-100 text-gray-800'} font-medium`}>
-                            {service.type === 'daycare' ? 'Day Care' : 
-                             service.type === 'schoolTransport' ? 'School Transport' : 
-                             getServiceTypeName(service.type)}
+                            {service.type === 'daycare' ? 'Day Care' :
+                              service.type === 'schoolTransport' ? 'School Transport' :
+                                getServiceTypeName(service.type)}
                           </span>
                         )}
-                        
+
                         {isNewService && (
                           <span className="bg-green-500 text-white px-2 py-1 text-xs font-semibold rounded-full shadow-md">
                             NEW
@@ -380,7 +380,7 @@ function ServiceItem({ service, className = "", compactMode = false }) {
               <h3 className="text-sm font-semibold text-gray-900 truncate max-w-[70%]">
                 {service.name || 'Service Name'}
               </h3>
-           
+
             </div>
 
             <p className="text-gray-600 text-xs flex items-center mt-0">
@@ -388,27 +388,27 @@ function ServiceItem({ service, className = "", compactMode = false }) {
               <span className="truncate">{service.address || 'Location not available'}</span>
             </p>
 
-         <div className="mt-auto pt-0">
-           <div className="flex items-baseline justify-between">
-             <div className="flex items-baseline">
-               <span className="text-[15px] font-semibold text-gray-900">
-                 {formatPrice(service.regularPrice)}
-               </span>
-            
-             </div>
-             
-             <div className="flex items-center text-gray-600">
-               <FaStar className="text-amber-500 text-[12px]" />
-               <span className="font-medium text-gray-900 text-[13px] ml-1">
-                 {calculatedStarRating}
-               </span>
-           
-             </div>
-           </div>
-         </div>
-         </div>
-            
-       
+            <div className="mt-auto pt-0">
+              <div className="flex items-baseline justify-between">
+                <div className="flex items-baseline">
+                  <span className="text-[15px] font-semibold text-gray-900">
+                    {formatPrice(service.regularPrice)}
+                  </span>
+
+                </div>
+
+                <div className="flex items-center text-gray-600">
+                  <FaStar className="text-amber-500 text-[12px]" />
+                  <span className="font-medium text-gray-900 text-[13px] ml-1">
+                    {calculatedStarRating}
+                  </span>
+
+                </div>
+              </div>
+            </div>
+          </div>
+
+
         </>
       )}
     </Link>
