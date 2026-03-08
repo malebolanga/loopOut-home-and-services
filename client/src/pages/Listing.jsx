@@ -357,6 +357,15 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose }) => {
       return;
     }
 
+    // Generate map link
+    const generateMapLink = (address) => {
+      if (!address) return null;
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    };
+
+    // Generate Verification Code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000);
+
     // Format date for display
     const formatDate = (dateString) => {
       if (!dateString) return 'Not specified';
@@ -368,6 +377,16 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose }) => {
       });
     };
 
+    // Format the client's phone number for the reply link
+    const clientPhone = bookingDetails.phone ? formatPhoneNumberForWhatsApp(bookingDetails.phone) : '';
+
+    // Define the accept and decline messages and their corresponding links
+    const acceptMessage = `Accept the booking for ${bookingDetails.fullName}, I accept your request for ${listing.name} on ${isOvernight ? formatDate(bookingDetails.checkIn) : formatDate(bookingDetails.selectedDate)}. See you then!`;
+    const declineMessage = `Decline the booking for ${bookingDetails.fullName}, I'm unable to accept ${isOvernight ? formatDate(bookingDetails.checkIn) : formatDate(bookingDetails.selectedDate)}. Can we try another time?`;
+
+    const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
+    const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
+
     // Create different messages based on property type
     let message = '';
 
@@ -377,142 +396,151 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose }) => {
       const breakfastSubtotal = bookingDetails.breakfast ? 150 * nights * bookingDetails.guests : 0;
       const extraGuestSubtotal = bookingDetails.guests > 2 ? 200 * (bookingDetails.guests - 2) * nights : 0;
 
-      message = `🏨 *NEW OVERNIGHT BOOKING REQUEST* 🏨
+      message = `*🏨 NEW OVERNIGHT BOOKING REQUEST* 🏨%0A%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*LISTING DETAILS*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `🏠 *Listing:* ${listing?.name || 'Not specified'}%0A`;
+      message += `📍 *Location:* ${listing?.address || 'Not specified'}%0A`;
+      const mapLink = generateMapLink(listing?.address);
+      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
+      message += `💰 *Rate:* R${listing?.regularPrice?.toLocaleString()}/night%0A%0A`;
 
-━━━━━━━━━━━━━━━━━━━
-*LISTING DETAILS*
-━━━━━━━━━━━━━━━━━━━
-🏠 *Listing:* ${listing?.name || 'Not specified'}
-📍 *Address:* ${listing?.address || 'Not specified'}
-💰 *Rate:* R${listing?.regularPrice?.toLocaleString()}/night
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*GUEST INFORMATION*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `👤 *Name:* ${bookingDetails.fullName}%0A`;
+      message += `📧 *Email:* ${bookingDetails.email}%0A`;
+      message += `📞 *Phone:* ${bookingDetails.phone}%0A%0A`;
 
-━━━━━━━━━━━━━━━━━━━
-*GUEST INFORMATION*
-━━━━━━━━━━━━━━━━━━━
-👤 *Name:* ${bookingDetails.fullName}
-📧 *Email:* ${bookingDetails.email}
-📞 *Phone:* ${bookingDetails.phone}
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*BOOKING DETAILS*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `📅 *Check-in:* ${formatDate(bookingDetails.checkIn)}%0A`;
+      message += `📅 *Check-out:* ${formatDate(bookingDetails.checkOut)}%0A`;
+      message += `🌙 *Nights:* ${nights}%0A`;
+      message += `👥 *Guests:* ${bookingDetails.guests} (${bookingDetails.children} children)%0A`;
+      message += `🚪 *Rooms:* ${bookingDetails.rooms}%0A`;
+      message += `🍳 *Breakfast:* ${bookingDetails.breakfast ? '✅ Yes' : '❌ No'}%0A`;
+      message += `🐾 *Pets:* ${bookingDetails.pets ? '✅ Yes' : '❌ No'}%0A%0A`;
 
-━━━━━━━━━━━━━━━━━━━
-*BOOKING DETAILS*
-━━━━━━━━━━━━━━━━━━━
-📅 *Check-in:* ${formatDate(bookingDetails.checkIn)}
-📅 *Check-out:* ${formatDate(bookingDetails.checkOut)}
-🌙 *Nights:* ${nights}
-👥 *Guests:* ${bookingDetails.guests} (${bookingDetails.children} children)
-🚪 *Rooms:* ${bookingDetails.rooms}
-🍳 *Breakfast:* ${bookingDetails.breakfast ? '✅ Yes' : '❌ No'}
-🐾 *Pets:* ${bookingDetails.pets ? '✅ Yes' : '❌ No'}
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*PRICE BREAKDOWN*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `💰 *Room Rate:* R${listing.regularPrice.toLocaleString()} × ${nights} nights × ${bookingDetails.rooms} room(s)%0A`;
+      message += `   *Subtotal:* R${roomSubtotal.toLocaleString()}%0A`;
 
-━━━━━━━━━━━━━━━━━━━
-*PRICE BREAKDOWN*
-━━━━━━━━━━━━━━━━━━━
-💰 *Room Rate:* R${listing.regularPrice.toLocaleString()} × ${nights} nights × ${bookingDetails.rooms} room(s)
-   *Subtotal:* R${roomSubtotal.toLocaleString()}
+      if (bookingDetails.breakfast) {
+        message += `🍳 *Breakfast:* R150 × ${bookingDetails.guests} guests × ${nights} nights%0A`;
+        message += `   *Subtotal:* R${breakfastSubtotal.toLocaleString()}%0A`;
+      }
+      if (bookingDetails.guests > 2) {
+        message += `👥 *Extra Guest Fee:* R200 × ${bookingDetails.guests - 2} guests × ${nights} nights%0A`;
+        message += `   *Subtotal:* R${extraGuestSubtotal.toLocaleString()}%0A`;
+      }
+      message += `🧹 *Cleaning Fee:* R450%0A`;
+      message += `🛠️ *Service Fee:* R350%0A%0A`;
 
-${bookingDetails.breakfast ? `🍳 *Breakfast:* R150 × ${bookingDetails.guests} guests × ${nights} nights
-   *Subtotal:* R${breakfastSubtotal.toLocaleString()}\n` : ''}
-${bookingDetails.guests > 2 ? `👥 *Extra Guest Fee:* R200 × ${bookingDetails.guests - 2} guests × ${nights} nights
-   *Subtotal:* R${extraGuestSubtotal.toLocaleString()}\n` : ''}
-🧹 *Cleaning Fee:* R450
-🛠️ *Service Fee:* R350
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*TOTAL AMOUNT*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `💵 *Total:* R${totalPrice.toLocaleString()}%0A%0A`;
 
-━━━━━━━━━━━━━━━━━━━
-*TOTAL AMOUNT*
-━━━━━━━━━━━━━━━━━━━
-💵 *Total:* R${totalPrice.toLocaleString()}
+      if (bookingDetails.specialRequests) {
+        message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+        message += `*SPECIAL REQUESTS*%0A`;
+        message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+        message += `${bookingDetails.specialRequests}%0A%0A`;
+      }
 
-━━━━━━━━━━━━━━━━━━━
-*SPECIAL REQUESTS*
-━━━━━━━━━━━━━━━━━━━
-${bookingDetails.specialRequests || 'No special requests'}
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*⚡ QUICK ACTIONS*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      if (acceptLink) message += `✅ *ACCEPT BOOKING:*%0A${acceptLink}%0A%0A`;
+      if (declineLink) message += `❌ *DECLINE BOOKING:*%0A${declineLink}%0A%0A`;
 
-━━━━━━━━━━━━━━━━━━━
-📋 *Please reply with:*
-━━━━━━━━━━━━━━━━━━━
-✅ ACCEPT - Confirm booking
-❌ DECLINE - Reject request
-💬 MESSAGE - Contact guest
-
-_This booking request was sent via LoopOut_`;
-    }
-    else if (isOffice) {
+      message += `*Verification Code:* ${verificationCode}%0A`;
+      message += `_This booking request was sent via LoopOut_`;
+    } else if (isOffice) {
       // Office space message
-      message = `🏢 *OFFICE SPACE BOOKING REQUEST* 🏢
+      message = `*🏢 OFFICE SPACE BOOKING REQUEST* 🏢%0A%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*LISTING DETAILS*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `🏢 *Office:* ${listing?.name || 'Not specified'}%0A`;
+      message += `📍 *Location:* ${listing?.address || 'Not specified'}%0A`;
+      const mapLink = generateMapLink(listing?.address);
+      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
+      message += `💰 *Rate:* R${listing?.regularPrice?.toLocaleString()}/hour%0A%0A`;
 
-━━━━━━━━━━━━━━━━━━━
-*LISTING DETAILS*
-━━━━━━━━━━━━━━━━━━━
-🏢 *Office:* ${listing?.name || 'Not specified'}
-📍 *Address:* ${listing?.address || 'Not specified'}
-💰 *Rate:* R${listing?.regularPrice?.toLocaleString()}/hour
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*GUEST INFORMATION*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `👤 *Name:* ${bookingDetails.fullName}%0A`;
+      message += `📧 *Email:* ${bookingDetails.email}%0A`;
+      message += `📞 *Phone:* ${bookingDetails.phone}%0A%0A`;
 
-━━━━━━━━━━━━━━━━━━━
-*GUEST INFORMATION*
-━━━━━━━━━━━━━━━━━━━
-👤 *Name:* ${bookingDetails.fullName}
-📧 *Email:* ${bookingDetails.email}
-📞 *Phone:* ${bookingDetails.phone}
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*BOOKING DETAILS*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `📅 *Date:* ${formatDate(bookingDetails.selectedDate)}%0A`;
+      message += `⏰ *Time:* ${bookingDetails.startTime} - ${bookingDetails.endTime}%0A`;
+      message += `⏱️ *Hours:* ${hours.toFixed(1)} hours%0A%0A`;
 
-━━━━━━━━━━━━━━━━━━━
-*BOOKING DETAILS*
-━━━━━━━━━━━━━━━━━━━
-📅 *Date:* ${formatDate(bookingDetails.selectedDate)}
-⏰ *Time:* ${bookingDetails.startTime} - ${bookingDetails.endTime}
-⏱️ *Hours:* ${hours.toFixed(1)} hours
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*PRICE DETAILS*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `💰 *Rate:* R${listing.regularPrice.toLocaleString()}/hour × ${hours.toFixed(1)} hours%0A`;
+      message += `💵 *Total:* R${totalPrice.toLocaleString()}%0A%0A`;
 
-━━━━━━━━━━━━━━━━━━━
-*PRICE*
-━━━━━━━━━━━━━━━━━━━
-💰 *Rate:* R${listing.regularPrice.toLocaleString()}/hour × ${hours.toFixed(1)} hours
-💵 *Total:* R${totalPrice.toLocaleString()}
+      if (bookingDetails.specialRequests) {
+        message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+        message += `*SPECIAL REQUESTS*%0A`;
+        message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+        message += `${bookingDetails.specialRequests}%0A%0A`;
+      }
 
-━━━━━━━━━━━━━━━━━━━
-*SPECIAL REQUESTS*
-━━━━━━━━━━━━━━━━━━━
-${bookingDetails.specialRequests || 'No special requests'}
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*⚡ QUICK ACTIONS*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      if (acceptLink) message += `✅ *ACCEPT BOOKING:*%0A${acceptLink}%0A%0A`;
+      if (declineLink) message += `❌ *DECLINE BOOKING:*%0A${declineLink}%0A%0A`;
 
-━━━━━━━━━━━━━━━━━━━
-📋 *Please reply with:*
-━━━━━━━━━━━━━━━━━━━
-✅ ACCEPT - Confirm booking
-❌ DECLINE - Reject request
-💬 MESSAGE - Contact guest
-
-_This booking request was sent via LoopOut_`;
-    }
-    else if (isSale || isRent) {
+      message += `*Verification Code:* ${verificationCode}%0A`;
+      message += `_This booking request was sent via LoopOut_`;
+    } else if (isSale || isRent) {
       // Sale or Rent inquiry message
-      message = `🏠 *LISTING INQUIRY* 🏠
+      message = `*🏠 PROPERTY LISTING INQUIRY* 🏠%0A%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*LISTING DETAILS*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `🏠 *Listing:* ${listing?.name || 'Not specified'}%0A`;
+      message += `📍 *Location:* ${listing?.address || 'Not specified'}%0A`;
+      const mapLink = generateMapLink(listing?.address);
+      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
+      message += `💰 *Price:* R${listing?.regularPrice?.toLocaleString()}${isRent ? '/month' : ''}%0A`;
+      message += `📋 *Type:* ${isSale ? 'For Sale' : 'For Rent'}%0A%0A`;
 
-━━━━━━━━━━━━━━━━━━━
-*LISTING DETAILS*
-━━━━━━━━━━━━━━━━━━━
-🏠 *Listing:* ${listing?.name || 'Not specified'}
-📍 *Address:* ${listing?.address || 'Not specified'}
-💰 *Price:* R${listing?.regularPrice?.toLocaleString()}${isRent ? '/month' : ''}
-📋 *Type:* ${isSale ? 'For Sale' : 'For Rent'}
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*CONTACT INFORMATION*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `👤 *Name:* ${bookingDetails.fullName}%0A`;
+      message += `📧 *Email:* ${bookingDetails.email}%0A`;
+      message += `📞 *Phone:* ${bookingDetails.phone}%0A%0A`;
 
-━━━━━━━━━━━━━━━━━━━
-*CONTACT INFORMATION*
-━━━━━━━━━━━━━━━━━━━
-👤 *Name:* ${bookingDetails.fullName}
-📧 *Email:* ${bookingDetails.email}
-📞 *Phone:* ${bookingDetails.phone}
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*INQUIRY MESSAGE*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `${bookingDetails.specialRequests || "I'm interested in this listing. Please provide more information."}%0A%0A`;
 
-━━━━━━━━━━━━━━━━━━━
-*MESSAGE*
-━━━━━━━━━━━━━━━━━━━
-${bookingDetails.specialRequests || `I'm interested in this listing. Please provide more information.`}
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*⚡ QUICK ACTIONS*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      if (acceptLink) message += `✅ *AVAILABLE:*%0A${acceptLink}%0A%0A`;
+      if (declineLink) message += `❌ *NOT AVAILABLE:*%0A${declineLink}%0A%0A`;
 
-━━━━━━━━━━━━━━━━━━━
-📋 *Please reply with:*
-━━━━━━━━━━━━━━━━━━━
-✅ AVAILABLE - Confirm availability
-📞 CALL ME - Schedule a call
-📅 VIEWING - Arrange a viewing
-
-_This inquiry was sent via LoopOut_`;
+      message += `*Verification Code:* ${verificationCode}%0A`;
+      message += `_This inquiry was sent via LoopOut_`;
     }
 
     // Send via WhatsApp

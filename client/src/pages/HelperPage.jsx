@@ -11,7 +11,7 @@ import {
   FaGraduationCap, FaWhatsapp,
   FaExclamationTriangle, FaCheckCircle,
   FaFlag, FaArrowLeft,
-  FaBandcamp, FaCut, FaTools, FaCar, 
+  FaBandcamp, FaCut, FaTools, FaCar,
   FaInfoCircle, FaMoneyBillWave, FaTimes,
   FaFileImage, FaFilePdf, FaUserFriends, FaBroom, FaArrowUp, FaArrowDown,
   FaCalendar, FaEnvelope, FaBriefcase, FaAward,
@@ -163,6 +163,7 @@ export default function HelperPage() {
     // Service provider fields
     addressProvided: '',
     foodProvided: 'no',
+    electricityProvided: 'no',
     cleaningArrengement: 'no',
     equipmentProvided: 'no',
     otherDetails: '',
@@ -688,7 +689,7 @@ export default function HelperPage() {
     // Check for basic address components
     const hasStreet = /\d+\s+[A-Za-z\s]+/.test(addressStr);
     const hasCity = /[A-Za-z]{2,}/.test(addressStr);
-    
+
     if (!hasStreet || !hasCity) {
       throw new Error('Please include street number, street name, and city');
     }
@@ -697,18 +698,11 @@ export default function HelperPage() {
   };
 
   // Generate comprehensive map links
-  const generateMapLink = (address, providerType = '') => {
-    if (!address) return '#';
-    
+  const generateMapLink = (address) => {
+    if (!address) return '';
     const encodedAddress = encodeURIComponent(address);
-    const baseMaps = {
-      google: `https://maps.google.com/?q=${encodedAddress}`,
-      apple: `https://maps.apple.com/?q=${encodedAddress}`,
-      waze: `https://waze.com/ul?q=${encodedAddress}`,
-      mapsApp: `https://maps.app.goo.gl/?q=${encodedAddress}`
-    };
-    
-    return baseMaps.google; // Default to Google Maps
+    // Official Google Maps Search URL format for better cross-platform reliability
+    return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
   };
 
   // Enhanced location handler
@@ -731,14 +725,14 @@ export default function HelperPage() {
         locationInfo.instructions = bookingData.specialInstructions || '';
         locationInfo.mapLink = generateMapLink(bookingData.address);
         break;
-      
+
       case locationTypes.PROVIDER_LOCATION:
         locationInfo.displayName = getProviderLocationName(provider.type);
         locationInfo.address = provider.businessAddress || provider.address || 'Address not specified';
         locationInfo.instructions = provider.locationInstructions || '';
         locationInfo.mapLink = generateMapLink(locationInfo.address, provider.type);
         break;
-      
+
       default:
         locationInfo.displayName = `${getProfessionalTitle(provider.type)}'s Location`;
         locationInfo.address = provider.address || 'Address not specified';
@@ -752,7 +746,7 @@ export default function HelperPage() {
   const getProviderLocationName = (serviceType) => {
     const locationNames = {
       chef: "Chef's Kitchen",
-      barber: "Barber Shop", 
+      barber: "Barber Shop",
       barbar: "Barber Shop",
       tattoo: "Tattoo Studio",
       beauty: "Beauty Salon",
@@ -765,32 +759,32 @@ export default function HelperPage() {
       animals: "Animal Care Center",
       default: "Professional's Location"
     };
-    
+
     return locationNames[serviceType] || locationNames.default;
   };
 
   // Enhanced location-specific messaging
   const getLocationSpecificMessage = (bookingData, provider) => {
     const locationInfo = handleLocationInfo(bookingData, provider);
-    
+
     let locationMessage = `📍 *Location Details:*%0A`;
     locationMessage += `• Type: ${locationInfo.displayName}%0A`;
-    
+
     if (locationInfo.address) {
       locationMessage += `• Address: ${locationInfo.address}%0A`;
       if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
         locationMessage += `• Navigation: ${locationInfo.mapLink}%0A`;
       }
     }
-    
+
     if (locationInfo.instructions) {
       locationMessage += `• Instructions: ${locationInfo.instructions}%0A`;
     }
-    
+
     if (locationInfo.travelFee > 0) {
       locationMessage += `• Travel Fee: R${locationInfo.travelFee}%0A`;
     }
-    
+
     return locationMessage;
   };
 
@@ -818,19 +812,19 @@ export default function HelperPage() {
   // AI-powered social media verification
   const verifySocialMediaPresence = async (helperData) => {
     setVerifyingSocialMedia(true);
-    
+
     try {
       // Simulate AI API calls to check social media presence
       setTimeout(() => {
         // Generate realistic mock data based on helper information
         const name = helperData.name || '';
-        
+
         // AI logic to determine social media presence
         const hasFacebook = Math.random() > 0.3; // 70% chance
         const hasInstagram = Math.random() > 0.2; // 80% chance
         const hasLinkedIn = Math.random() > 0.4; // 60% chance
         const hasTwitter = Math.random() > 0.5; // 50% chance
-        
+
         const facebookData = hasFacebook ? {
           exists: true,
           username: generateUsername(name, 'facebook'),
@@ -1088,9 +1082,9 @@ export default function HelperPage() {
 
   const handleBookingChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setBookingData({ 
-      ...bookingData, 
-      [name]: type === 'checkbox' ? checked : value 
+    setBookingData({
+      ...bookingData,
+      [name]: type === 'checkbox' ? checked : value
     });
   };
 
@@ -1099,13 +1093,13 @@ export default function HelperPage() {
     setBookingData(prev => {
       const selectedServices = [...prev.selectedServices];
       const serviceIndex = selectedServices.indexOf(serviceId);
-      
+
       if (serviceIndex > -1) {
         selectedServices.splice(serviceIndex, 1);
       } else {
         selectedServices.push(serviceId);
       }
-      
+
       return { ...prev, selectedServices };
     });
   };
@@ -1114,13 +1108,13 @@ export default function HelperPage() {
   const handleEquipmentSelection = (equipment) => {
     const currentEquipment = bookingData.cookingEquipment ? bookingData.cookingEquipment.split(',') : [];
     const index = currentEquipment.indexOf(equipment);
-    
+
     if (index > -1) {
       currentEquipment.splice(index, 1);
     } else {
       currentEquipment.push(equipment);
     }
-    
+
     setBookingData({
       ...bookingData,
       cookingEquipment: currentEquipment.join(',')
@@ -1175,7 +1169,7 @@ export default function HelperPage() {
       chef: {
         comeToYou: [
           'kitchenAccess',
-          'cookingEquipment', 
+          'cookingEquipment',
           'diningSpace',
           'powerOutlets'
         ],
@@ -1209,7 +1203,7 @@ export default function HelperPage() {
       beauty: {
         comeToYou: [
           'cleanSpace',
-          'powerSource', 
+          'powerSource',
           'mirrorAccess'
         ],
         goToThem: [
@@ -1295,277 +1289,45 @@ export default function HelperPage() {
 
     // Enhanced location handling for quick booking
     const locationInfo = handleLocationInfo(bookingData, helper);
-    const locationMessage = getLocationSpecificMessage(bookingData, helper);
 
-    let message = `*📅 Quick Booking Request for ${helper.name}*%0A%0A`;
-    message += `*👤 Client Details*%0A`;
+    let message = `*📅 QUICK BOOKING REQUEST*%0A`;
+    message += `*For:* ${helper.name} (${getProfessionalTitle(helper.type)})%0A%0A`;
+
+    message += `*👤 CLIENT DETAILS*%0A`;
     message += `• Name: ${bookingData.name}%0A`;
-    message += `• Phone: ${bookingData.phone}%0A`;
-    
-    if (bookingData.date) {
-      message += `• Date: ${bookingData.date}%0A`;
+    message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
+
+    if (bookingData.date) message += `• Date: ${bookingData.date}%0A`;
+    if (bookingData.time) message += `• Time: ${bookingData.time}%0A`;
+
+    message += `%0A*📍 LOCATION DETAILS*%0A`;
+    message += `• Type: ${locationInfo.displayName}%0A`;
+    if (locationInfo.address) {
+      message += `• Address: ${locationInfo.address}%0A`;
+      const mapLink = generateMapLink(locationInfo.address);
+      if (mapLink) {
+        message += `• Open in Maps: ${mapLink}%0A`;
+      }
     }
-    if (bookingData.time) {
-      message += `• Time: ${bookingData.time}%0A`;
-    }
-    
-    // Add location details to quick booking
-    message += locationMessage;
-    
-    message += `%0A`;
-    message += `*💼 Service Details*%0A`;
-    message += `• Service: ${getProfessionalTitle(helper.type)}%0A`;
-    message += `• Price: R${helper.regularPrice}%0A`;
-    
-    // Enhanced service selection details
+
+    message += `%0A*💼 SERVICE SUMMARY*%0A`;
+    message += `• Base Price: R${helper.regularPrice}%0A`;
+
     if (bookingData.selectedServices.length > 0) {
       const serviceOptions = getServiceOptions(helper.type);
-      const selectedServiceNames = bookingData.selectedServices.map(serviceId => {
-        const service = serviceOptions.find(s => s.id === serviceId);
-        return service ? service.name : serviceId;
+      const selectedNames = bookingData.selectedServices.map(id => {
+        const s = serviceOptions.find(opt => opt.id === id);
+        return s ? s.name : id;
       }).join(', ');
-      message += `• Selected Services: ${selectedServiceNames}%0A`;
+      message += `• Services: ${selectedNames}%0A`;
     }
 
-    // Add barber-specific details to quick booking
-    if ((helper.type === 'barber' || helper.type === 'barbar') && bookingData.selectedHaircut) {
-      const haircut = haircutStyles.find(h => h.id === bookingData.selectedHaircut);
-      if (haircut) {
-        message += `• Haircut Style: ${haircut.name}%0A`;
-      }
-    }
+    message += `%0A*⚡ QUICK ACTIONS*%0A`;
+    message += `Please tap a link below to respond to ${bookingData.name}:%0A%0A`;
+    if (acceptLink) message += `✅ *ACCEPT BOOKING:*%0A${acceptLink}%0A%0A`;
+    if (declineLink) message += `❌ *DECLINE BOOKING:*%0A${declineLink}%0A%0A`;
 
-    if ((helper.type === 'barber' || helper.type === 'barbar') && bookingData.beardStyle) {
-      const beard = beardStyles.find(b => b.id === bookingData.beardStyle);
-      if (beard) {
-        message += `• Beard Style: ${beard.name}%0A`;
-      }
-    }
-
-    if (bookingData.hairLength) {
-      message += `• Current Hair Length: ${bookingData.hairLength}%0A`;
-    }
-
-    // Add chef-specific details to quick booking
-    if ((helper.type === 'chef' || helper.type === 'cooking') && bookingData.mealType) {
-      const meal = mealTypes.find(m => m.id === bookingData.mealType);
-      if (meal) {
-        message += `• Meal Type: ${meal.name}%0A`;
-      }
-    }
-
-    if ((helper.type === 'chef' || helper.type === 'cooking') && bookingData.cuisinePreference) {
-      const cuisine = cuisineTypes.find(c => c.id === bookingData.cuisinePreference);
-      if (cuisine) {
-        message += `• Cuisine Preference: ${cuisine.name}%0A`;
-      }
-    }
-
-    if (bookingData.numberOfGuests) {
-      message += `• Number of Guests: ${bookingData.numberOfGuests}%0A`;
-    }
-
-    if (bookingData.dietaryRestrictions) {
-      message += `• Dietary Restrictions: ${bookingData.dietaryRestrictions}%0A`;
-    }
-
-    if (bookingData.ingredientsProvided) {
-      message += `• Ingredients: ${bookingData.ingredientsProvided === 'yes' ? 'Client will provide' : 'Chef to provide'}%0A`;
-    }
-
-    // Add photography-specific details to quick booking
-    if ((helper.type === 'photography') && bookingData.photographyType) {
-      message += `• Photography Type: ${bookingData.photographyType}%0A`;
-    }
-
-    if ((helper.type === 'photography') && bookingData.sessionDuration) {
-      message += `• Session Duration: ${bookingData.sessionDuration} hours%0A`;
-    }
-
-    if ((helper.type === 'photography') && bookingData.numberOfPeople) {
-      message += `• Number of People: ${bookingData.numberOfPeople}%0A`;
-    }
-
-    if ((helper.type === 'photography') && bookingData.deliveryFormat) {
-      message += `• Delivery Format: ${bookingData.deliveryFormat}%0A`;
-    }
-
-    // Add sneaker cleaner specific details
-    if (helper.type === 'sneaker') {
-      if (bookingData.shoeBrands) {
-        message += `• Shoe Brand: ${bookingData.shoeBrands}%0A`;
-      }
-      if (bookingData.shoeCondition) {
-        message += `• Shoe Condition: ${bookingData.shoeCondition}%0A`;
-      }
-      if (bookingData.cleaningType) {
-        message += `• Cleaning Type: ${bookingData.cleaningType}%0A`;
-      }
-      if (bookingData.restorationNeeded) {
-        message += `• Restoration Needed: Yes%0A`;
-      }
-      if (bookingData.waterproofing) {
-        message += `• Waterproofing: Yes%0A`;
-      }
-    }
-
-    // Add washing mat specific details
-    if (helper.type === 'washingmat') {
-      if (bookingData.matSize) {
-        message += `• Mat Size: ${bookingData.matSize}%0A`;
-      }
-      if (bookingData.matMaterial) {
-        message += `• Mat Material: ${bookingData.matMaterial}%0A`;
-      }
-      if (bookingData.stainLevel) {
-        message += `• Stain Level: ${bookingData.stainLevel}%0A`;
-      }
-      if (bookingData.dryingPreference) {
-        message += `• Drying Preference: ${bookingData.dryingPreference}%0A`;
-      }
-      if (bookingData.pickupDelivery) {
-        message += `• Pickup & Delivery: Yes%0A`;
-      }
-    }
-
-    // Add animal care specific details
-    if (helper.type === 'animals') {
-      if (bookingData.animalType) {
-        message += `• Animal Type: ${bookingData.animalType}%0A`;
-      }
-      if (bookingData.animalBreed) {
-        message += `• Breed: ${bookingData.animalBreed}%0A`;
-      }
-      if (bookingData.animalSize) {
-        message += `• Animal Size: ${bookingData.animalSize}%0A`;
-      }
-      if (bookingData.animalAge) {
-        message += `• Animal Age: ${bookingData.animalAge}%0A`;
-      }
-      if (bookingData.serviceDuration) {
-        message += `• Service Duration: ${bookingData.serviceDuration}%0A`;
-      }
-      if (bookingData.vaccinationStatus) {
-        message += `• Vaccination Status: ${bookingData.vaccinationStatus}%0A`;
-      }
-      if (bookingData.specialNeeds) {
-        message += `• Special Needs: ${bookingData.specialNeeds}%0A`;
-      }
-      if (bookingData.ownSupplies) {
-        message += `• Owner Provides Supplies: Yes%0A`;
-      }
-    }
-
-    // Add food-related details for domestic/maid services
-    if ((helper.type === 'domestic' || helper.type === 'maid') && bookingData.bringFood) {
-      message += `• Food Provided: ${bookingData.bringFood === 'yes' ? 'Yes' : 'No'}%0A`;
-    }
-
-    // Add service provider details to quick booking
-    message += `%0A*🏠 Service Provider Details*%0A`;
-    
-    if (bookingData.addressProvided) {
-      message += `• Address Provided: ${bookingData.addressProvided}%0A`;
-    }
-    
-    if (bookingData.foodProvided) {
-      message += `• Food Provided: ${bookingData.foodProvided === 'yes' ? 'Yes' : 'No'}%0A`;
-    }
-    
-    if (bookingData.cleaningArrengement) {
-      message += `• Cleaning Arrangement: ${bookingData.cleaningArrengement === 'yes' ? 'Yes' : 'No'}%0A`;
-    }
-    
-    if (bookingData.equipmentProvided) {
-      message += `• Equipment Provided: ${bookingData.equipmentProvided === 'yes' ? 'Yes' : 'No'}%0A`;
-    }
-    
-    if (bookingData.otherDetails) {
-      message += `• Other Details: ${bookingData.otherDetails}%0A`;
-    }
-
-    if (bookingData.specialRequirements) {
-      message += `• Special Requirements: ${bookingData.specialRequirements}%0A`;
-    }
-
-    if (bookingData.photographyRequirements) {
-      message += `• Photography Requirements: ${bookingData.photographyRequirements}%0A`;
-    }
-    
-    // Enhanced location details for quick booking
-    if (bookingData.locationOption === 'comeToYou' && bookingData.address) {
-      message += `%0A*📍 LOCATION FOR SERVICE*%0A`;
-      message += `• Service at Client's Location%0A`;
-      message += `• Address: ${bookingData.address}%0A`;
-      
-      // Add location requirements based on service type
-      message += `• Location Requirements:%0A`;
-      if (helper.type === 'chef') {
-        message += `  ✓ Kitchen access with basic cooking equipment%0A`;
-        message += `  ✓ Dining area for meal service%0A`;
-        message += `  ✓ Power outlets for appliances%0A`;
-      } else if (helper.type === 'barber' || helper.type === 'barbar') {
-        message += `  ✓ Well-lit workspace with chair%0A`;
-        message += `  ✓ Power source for clippers%0A`;
-        message += `  ✓ Mirror access for styling%0A`;
-      } else if (helper.type === 'photography') {
-        message += `  ✓ Adequate shooting space%0A`;
-        message += `  ✓ Natural light preferred%0A`;
-        message += `  ✓ Power outlets for equipment%0A`;
-      } else if (helper.type === 'beauty') {
-        message += `  ✓ Clean, well-lit workspace%0A`;
-        message += `  ✓ Power source for tools%0A`;
-        message += `  ✓ Mirror access%0A`;
-      } else if (helper.type === 'domestic' || helper.type === 'maid') {
-        message += `  ✓ Clean workspace%0A`;
-        message += `  ✓ Water access%0A`;
-        message += `  ✓ Power outlets for cleaning equipment%0A`;
-      } else if (helper.type === 'sneaker') {
-        message += `  ✓ Clean work surface%0A`;
-        message += `  ✓ Water access nearby%0A`;
-        message += `  ✓ Power outlets for equipment%0A`;
-      } else if (helper.type === 'washingmat') {
-        message += `  ✓ Outdoor space or garage with water access%0A`;
-        message += `  ✓ Area for drying%0A`;
-        message += `  ✓ Power outlets for equipment%0A`;
-      } else if (helper.type === 'animals') {
-        message += `  ✓ Secure, fenced area%0A`;
-        message += `  ✓ Water access%0A`;
-        message += `  ✓ Indoor/outdoor space%0A`;
-      } else {
-        message += `  ✓ Clean, accessible workspace with power outlets%0A`;
-      }
-      
-      if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
-        message += `• Map: ${locationInfo.mapLink}%0A`;
-      }
-      
-      if (locationInfo.travelFee > 0) {
-        message += `• Travel Fee: R${locationInfo.travelFee}%0A`;
-      }
-    } else if (bookingData.locationOption === 'goToThem' && helper.address) {
-      message += `%0A*📍 SERVICE LOCATION*%0A`;
-      message += `• Service at ${getProfessionalTitle(helper.type)}'s Location%0A`;
-      message += `• Address: ${helper.address}%0A`;
-      
-      if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
-        message += `• Map: ${locationInfo.mapLink}%0A`;
-      }
-    }
-    
-    message += `%0A`;
-    message += `Please respond:%0A`;
-    
-    if (acceptLink) {
-      message += `✅ [Accept Booking](${acceptLink})%0A`;
-    }
-    if (declineLink) {
-      message += `❌ [Decline Booking](${declineLink})%0A`;
-    }
-    
-    message += `%0A`;
-    message += `Or reply directly to this message%0A%0A`;
-    message += `_Sent via loopOut Quick Booking_`;
+    message += `_Sent via loopOut_`;
 
     const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
     window.open(whatsappUrl, '_blank');
@@ -1599,7 +1361,7 @@ export default function HelperPage() {
 
     // Validate service selection
     if (
-      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals') && 
+      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals') &&
       bookingData.selectedServices.length === 0
     ) {
       alert("Please select at least one service you need.");
@@ -1633,297 +1395,93 @@ export default function HelperPage() {
 
     // Enhanced location handling
     const locationInfo = handleLocationInfo(bookingData, helper);
-    const locationMessage = getLocationSpecificMessage(bookingData, helper);
 
-    // Build the main WhatsApp message with enhanced location details
-    let message = `*${helper.type === 'chef' ? '👨‍🍳' : helper.type === 'barber' || helper.type === 'barbar' ? '✂️' : helper.type === 'tattoo' ? '🎨' : helper.type === 'photography' ? '📷' : helper.type === 'sneaker' ? '👟' : helper.type === 'washingmat' ? '🧼' : helper.type === 'animals' ? '🐕' : helper.type === 'domestic' || helper.type === 'maid' ? '🧹' : '👤'} New ${getProfessionalTitle(helper.type)} Booking Request for ${helper.name}*%0A%0A`;
+    // Generate verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
-    message += `*🛎️ SERVICE DETAILS*%0A`;
-    message += `• Price: R${helper.regularPrice}%0A`;
-    
+    // Build the main WhatsApp message with premium structure
+    let message = `*✨ NEW ${getProfessionalTitle(helper.type).toUpperCase()} BOOKING* ✨\n\n`;
+
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `*👤 CLIENT DETAILS*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `👤 *Name:* ${bookingData.name}\n`;
+    message += `📞 *Phone:* ${bookingData.phone || 'Not provided'}\n`;
+    message += `📅 *Date:* ${bookingData.date || 'Not specified'}\n`;
+    message += `⏰ *Time:* ${bookingData.time || 'Not specified'}\n\n`;
+
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `*💼 SERVICE SUMMARY*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `⚒️ *Service:* ${helper.name}\n`;
+    message += `📋 *Type:* ${getProfessionalTitle(helper.type)}\n`;
+    message += `💵 *Base Price:* R${helper.regularPrice}\n`;
+
     // Add selected services
     const serviceOptions = getServiceOptions(helper.type);
     if (bookingData.selectedServices.length > 0) {
-      const selectedServiceNames = bookingData.selectedServices.map(serviceId => {
-        const service = serviceOptions.find(s => s.id === serviceId);
-        return service ? service.name : serviceId;
+      const selectedNames = bookingData.selectedServices.map(id => {
+        const s = serviceOptions.find(opt => opt.id === id);
+        return s ? s.name : id;
       }).join(', ');
-      
-      message += `• Services: ${selectedServiceNames}%0A`;
+      message += `📜 *Requested:* ${selectedNames}\n`;
     }
 
-    // Add barber-specific details
-    if ((helper.type === 'barber' || helper.type === 'barbar') && bookingData.selectedHaircut) {
-      const haircut = haircutStyles.find(h => h.id === bookingData.selectedHaircut);
-      if (haircut) {
-        message += `• Haircut Style: ${haircut.name}%0A`;
-      }
+    // Add service-specific details (Barber, Chef, etc.)
+    if (helper.type === 'barber' || helper.type === 'barbar') {
+      if (bookingData.selectedHaircut) message += `✂️ *Haircut Style:* ${haircutStyles.find(h => h.id === bookingData.selectedHaircut)?.name || bookingData.selectedHaircut}\n`;
+      if (bookingData.beardStyle) message += `🧔 *Beard Style:* ${beardStyles.find(b => b.id === bookingData.beardStyle)?.name || bookingData.beardStyle}\n`;
+    } else if (helper.type === 'chef' || helper.type === 'cooking') {
+      if (bookingData.mealType) message += `🍽️ *Meal Type:* ${mealTypes.find(m => m.id === bookingData.mealType)?.name || bookingData.mealType}\n`;
+      if (bookingData.cuisinePreference) message += `🌍 *Cuisine:* ${cuisineTypes.find(c => c.id === bookingData.cuisinePreference)?.name || bookingData.cuisinePreference}\n`;
     }
+    message += `\n`;
 
-    if ((helper.type === 'barber' || helper.type === 'barbar') && bookingData.beardStyle) {
-      const beard = beardStyles.find(b => b.id === bookingData.beardStyle);
-      if (beard) {
-        message += `• Beard Style: ${beard.name}%0A`;
-      }
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `*📍 LOCATION & NAVIGATION*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `📌 *Type:* ${locationInfo.displayName}\n`;
+    if (locationInfo.address && locationInfo.address !== 'Address not specified') {
+      message += `🏠 *Address:* ${locationInfo.address}\n`;
+      const mapLink = generateMapLink(locationInfo.address);
+      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
     }
+    if (locationInfo.travelFee > 0) message += `🚗 *Travel Fee:* R${locationInfo.travelFee}\n`;
+    message += `\n`;
 
-    if (bookingData.hairLength) {
-      message += `• Current Hair Length: ${bookingData.hairLength}%0A`;
-    }
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `*🍴 PROVISIONS*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `🍽️ *Food provided by client:* ${bookingData.foodProvided === 'yes' ? '✅ Yes' : '❌ No'}\n`;
+    message += `⚡ *Electricity available:* ${bookingData.electricityProvided === 'yes' ? '✅ Yes' : '❌ No'}\n\n`;
 
-    // Add chef-specific details
-    if ((helper.type === 'chef' || helper.type === 'cooking') && bookingData.mealType) {
-      const meal = mealTypes.find(m => m.id === bookingData.mealType);
-      if (meal) {
-        message += `• Meal Type: ${meal.name}%0A`;
-      }
-    }
-
-    if ((helper.type === 'chef' || helper.type === 'cooking') && bookingData.cuisinePreference) {
-      const cuisine = cuisineTypes.find(c => c.id === bookingData.cuisinePreference);
-      if (cuisine) {
-        message += `• Cuisine Preference: ${cuisine.name}%0A`;
-      }
-    }
-
-    if (bookingData.numberOfGuests) {
-      message += `• Number of Guests: ${bookingData.numberOfGuests}%0A`;
-    }
-
-    if (bookingData.dietaryRestrictions) {
-      message += `• Dietary Restrictions: ${bookingData.dietaryRestrictions}%0A`;
-    }
-
-    if (bookingData.ingredientsProvided) {
-      message += `• Ingredients: ${bookingData.ingredientsProvided === 'yes' ? 'Client will provide' : 'Chef to provide'}%0A`;
-    }
-
-    // Add domestic/maid specific details
-    if ((helper.type === 'domestic' || helper.type === 'maid') && bookingData.bringFood) {
-      message += `• Food Provided: ${bookingData.bringFood === 'yes' ? 'Client will provide food' : 'Helper will bring own food'}%0A`;
-    }
-
-    // Add photography-specific details
-    if ((helper.type === 'photography') && bookingData.photographyType) {
-      message += `• Photography Type: ${bookingData.photographyType}%0A`;
-    }
-
-    if ((helper.type === 'photography') && bookingData.sessionDuration) {
-      message += `• Session Duration: ${bookingData.sessionDuration} hours%0A`;
-    }
-
-    if ((helper.type === 'photography') && bookingData.numberOfPeople) {
-      message += `• Number of People: ${bookingData.numberOfPeople}%0A`;
-    }
-
-    if ((helper.type === 'photography') && bookingData.deliveryFormat) {
-      message += `• Delivery Format: ${bookingData.deliveryFormat}%0A`;
-    }
-
-    // Add sneaker cleaner specific details
-    if (helper.type === 'sneaker') {
-      if (bookingData.shoeBrands) {
-        message += `• Shoe Brand: ${bookingData.shoeBrands}%0A`;
-      }
-      if (bookingData.shoeCondition) {
-        message += `• Shoe Condition: ${bookingData.shoeCondition}%0A`;
-      }
-      if (bookingData.cleaningType) {
-        message += `• Cleaning Type: ${bookingData.cleaningType}%0A`;
-      }
-      if (bookingData.restorationNeeded) {
-        message += `• Restoration Needed: Yes%0A`;
-      }
-      if (bookingData.waterproofing) {
-        message += `• Waterproofing: Yes%0A`;
-      }
-    }
-
-    // Add washing mat specific details
-    if (helper.type === 'washingmat') {
-      if (bookingData.matSize) {
-        message += `• Mat Size: ${bookingData.matSize}%0A`;
-      }
-      if (bookingData.matMaterial) {
-        message += `• Mat Material: ${bookingData.matMaterial}%0A`;
-      }
-      if (bookingData.stainLevel) {
-        message += `• Stain Level: ${bookingData.stainLevel}%0A`;
-      }
-      if (bookingData.dryingPreference) {
-        message += `• Drying Preference: ${bookingData.dryingPreference}%0A`;
-      }
-      if (bookingData.pickupDelivery) {
-        message += `• Pickup & Delivery: Yes%0A`;
-      }
-    }
-
-    // Add animal care specific details
-    if (helper.type === 'animals') {
-      if (bookingData.animalType) {
-        message += `• Animal Type: ${bookingData.animalType}%0A`;
-      }
-      if (bookingData.animalBreed) {
-        message += `• Breed: ${bookingData.animalBreed}%0A`;
-      }
-      if (bookingData.animalSize) {
-        message += `• Animal Size: ${bookingData.animalSize}%0A`;
-      }
-      if (bookingData.animalAge) {
-        message += `• Animal Age: ${bookingData.animalAge}%0A`;
-      }
-      if (bookingData.serviceDuration) {
-        message += `• Service Duration: ${bookingData.serviceDuration}%0A`;
-      }
-      if (bookingData.vaccinationStatus) {
-        const vaccinationOptions = {
-          'upToDate': 'Up to date',
-          'notUpToDate': 'Not up to date',
-          'unknown': 'Unknown'
-        };
-        message += `• Vaccination Status: ${vaccinationOptions[bookingData.vaccinationStatus] || bookingData.vaccinationStatus}%0A`;
-      }
-      if (bookingData.specialNeeds) {
-        message += `• Special Needs: ${bookingData.specialNeeds}%0A`;
-      }
-      if (bookingData.ownSupplies) {
-        message += `• Owner Provides Supplies: Yes%0A`;
-      }
-    }
-
-    // Add service provider details
-    message += `%0A*🏠 SERVICE PROVIDER DETAILS*%0A`;
-    
-    if (bookingData.addressProvided) {
-      message += `• Address Provided: ${bookingData.addressProvided}%0A`;
-    }
-    
-    if (bookingData.foodProvided) {
-      message += `• Food Provided: ${bookingData.foodProvided === 'yes' ? 'Yes' : 'No'}%0A`;
-    }
-    
-    if (bookingData.cleaningArrengement) {
-      message += `• Cleaning Arrangement: ${bookingData.cleaningArrengement === 'yes' ? 'Yes' : 'No'}%0A`;
-    }
-    
-    if (bookingData.equipmentProvided) {
-      message += `• Equipment Provided: ${bookingData.equipmentProvided === 'yes' ? 'Yes' : 'No'}%0A`;
-    }
-    
-    if (bookingData.cookingEquipment) {
-      message += `• Equipment Details: ${bookingData.cookingEquipment}%0A`;
-    }
-    
-    if (bookingData.otherDetails) {
-      message += `• Other Details: ${bookingData.otherDetails}%0A`;
-    }
-    
-    if (locationInfo.travelFee > 0) {
-      message += `• Travel Fee: R${locationInfo.travelFee}%0A`;
-    }
-    message += `• ${getProfessionalTitle(helper.type)} Contact: ${helper.contact}%0A%0A`;
-
-    message += `*👤 CLIENT DETAILS*%0A`;
-    message += `• Name: ${bookingData.name}%0A`;
-    message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
-    message += `• Date: ${bookingData.date}%0A`;
-    message += `• Time: ${bookingData.time}%0A`;
-    
-    // Enhanced location section
-    message += locationMessage;
-    
-    message += `• Special Requirements: ${bookingData.specialRequirements || 'None'}%0A`;
-    
-    if (bookingData.photographyRequirements) {
-      message += `• Photography Requirements: ${bookingData.photographyRequirements}%0A`;
-    }
-    
-    message += `%0A`;
-
-    // Enhanced location instructions for home visits
-    if (bookingData.locationOption === 'comeToYou' && bookingData.address) {
-      message += `*📍 LOCATION DETAILS*%0A`;
-      message += `• Service Type: Home Service (${getProfessionalTitle(helper.type)} comes to you)%0A`;
-      message += `• Full Address:%0A  ${bookingData.address.replace(/,/g, '%0A  ')}%0A`;
-      
-      if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
-        message += `• Navigation Link:%0A  ${locationInfo.mapLink}%0A`;
-      }
-      
-      // Add service-specific location requirements
-      const requirements = getLocationRequirements(helper.type);
-      if (requirements.comeToYou && requirements.comeToYou.length > 0) {
-        message += `• Location Requirements:%0A`;
-        requirements.comeToYou.forEach(req => {
-          const reqText = {
-            kitchenAccess: '✓ Kitchen access required',
-            cookingEquipment: '✓ Basic cooking equipment needed',
-            diningSpace: '✓ Dining area required',
-            shootingSpace: '✓ Adequate shooting space needed',
-            naturalLight: '✓ Natural light preferred',
-            powerOutlets: '✓ Power outlets required',
-            workspace: '✓ Workspace with chair needed',
-            powerSource: '✓ Power source required',
-            mirrorAccess: '✓ Mirror access needed',
-            cleanSpace: '✓ Clean, well-lit workspace required',
-            waterAccess: '✓ Water access required',
-            professionalEquipment: '✓ Professional equipment provided',
-            workSurface: '✓ Clean work surface required',
-            outdoorSpace: '✓ Outdoor space or garage required',
-            dryingArea: '✓ Drying area required',
-            secureSpace: '✓ Secure, fenced space required',
-            outdoorArea: '✓ Outdoor area preferred'
-          }[req] || `✓ ${req.replace(/([A-Z])/g, ' $1').toLowerCase()}`;
-          message += `  ${reqText}%0A`;
-        });
-      }
-      
-      if (locationInfo.instructions) {
-        message += `• Additional Instructions: ${locationInfo.instructions}%0A`;
-      }
-      
-      message += `%0A`;
-    } else if (bookingData.locationOption === 'goToThem' && helper.address) {
-      message += `*📍 SERVICE LOCATION*%0A`;
-      message += `• Service Type: At ${getProfessionalTitle(helper.type)}'s Location%0A`;
-      message += `• Business Name: ${getProviderLocationName(helper.type)}%0A`;
-      message += `• Address: ${helper.address}%0A`;
-      
-      if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
-        message += `• Navigation Link: ${locationInfo.mapLink}%0A`;
-      }
-      
-      if (locationInfo.instructions) {
-        message += `• Location Instructions: ${locationInfo.instructions}%0A`;
-      }
-      
-      message += `%0A`;
-    }
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `*💬 COMMENTS & NOTES*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `📝 ${bookingData.specialRequirements ? bookingData.specialRequirements : 'No special requirements'}\n\n`;
 
     // Add attachments if they exist
     if (uploadedFiles.length > 0) {
-      message += `*📎 ATTACHMENTS*%0A_Files uploaded for your reference_%0A%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*📎 ATTACHMENTS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
       uploadedFiles.forEach((file) => {
-        message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: ${file.name}%0A`;
-        message += `  ${file.url}%0A%0A`;
+        message += `• ${file.name}: ${file.url}\n`;
       });
+      message += `\n`;
     }
 
-    // Add action links for the helper to accept or decline
-    message += `*ACTION REQUIRED*%0A`;
-    message += `Tap a link to reply to the client:%0A%0A`;
-    if (acceptLink) {
-      message += `✅ Accept: ${acceptLink}%0A`;
-    }
-    if (declineLink) {
-      message += `❌ Decline: ${declineLink}%0A%0A`;
-    }
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `*⚡ QUICK ACTIONS*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    if (acceptLink) message += `✅ *ACCEPT BOOKING:*\n${acceptLink}\n\n`;
+    if (declineLink) message += `❌ *DECLINE BOOKING:*\n${declineLink}\n\n`;
 
-    message += `💬 You can also reply directly to this message.%0A%0A`;
-    message += `_Sent via loopOut Booking System_`;
+    message += `🔐 *Verification Code:* ${verificationCode}\n`;
+    message += `_Sent via loopOut_`;
 
-    // Open WhatsApp with the pre-filled message
-    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
+    // Open WhatsApp with properly encoded message
+    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
 
     // Close the booking form overlay after sending
@@ -2005,7 +1563,7 @@ export default function HelperPage() {
 
   const nextImage = () => {
     if (helper.imageUrls && helper.imageUrls.length > 0) {
-      setCurrentGalleryIndex((prevIndex) => 
+      setCurrentGalleryIndex((prevIndex) =>
         prevIndex === helper.imageUrls.length - 1 ? 0 : prevIndex + 1
       );
     }
@@ -2013,7 +1571,7 @@ export default function HelperPage() {
 
   const prevImage = () => {
     if (helper.imageUrls && helper.imageUrls.length > 0) {
-      setCurrentGalleryIndex((prevIndex) => 
+      setCurrentGalleryIndex((prevIndex) =>
         prevIndex === 0 ? helper.imageUrls.length - 1 : prevIndex - 1
       );
     }
@@ -2095,15 +1653,15 @@ export default function HelperPage() {
   // Airbnb-style image gallery layout
   const renderImageGallery = () => {
     if (!helper.imageUrls || helper.imageUrls.length === 0) return null;
-    
+
     const images = helper.imageUrls;
     const mainImage = images[0];
     const sideImages = images.slice(1, 5);
-    
+
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] rounded-xl overflow-hidden mb-0">
         {/* Main large image */}
-        <div 
+        <div
           className="relative h-full cursor-pointer group"
           onClick={() => openFullScreenGallery(0)}
         >
@@ -2117,11 +1675,11 @@ export default function HelperPage() {
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
         </div>
-        
+
         {/* Side images grid */}
         <div className="hidden md:grid grid-cols-2 gap-2 h-full">
           {sideImages.map((url, index) => (
-            <div 
+            <div
               key={index}
               className="relative h-full cursor-pointer group overflow-hidden"
               onClick={() => openFullScreenGallery(index + 1)}
@@ -2135,7 +1693,7 @@ export default function HelperPage() {
                 }}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-              
+
               {/* Show all photos button on last image */}
               {index === 3 && images.length > 5 && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -2146,13 +1704,13 @@ export default function HelperPage() {
               )}
             </div>
           ))}
-          
+
           {/* Fill empty slots if less than 4 side images */}
           {sideImages.length < 4 && Array(4 - sideImages.length).fill(null).map((_, i) => (
             <div key={`empty-${i}`} className="bg-gray-100 h-full" />
           ))}
         </div>
-        
+
         {/* Mobile: Show all photos button */}
         <button
           onClick={() => openFullScreenGallery(0)}
@@ -2170,26 +1728,26 @@ export default function HelperPage() {
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-sm' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-0 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <button 
-              onClick={() => navigate(-1)} 
+            <button
+              onClick={() => navigate(-1)}
               className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}
             >
               <FaArrowLeft className={`text-xl ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
             </button>
-            
+
             <div className="flex items-center gap-2">
-              <button 
-                onClick={handleShare} 
+              <button
+                onClick={handleShare}
                 className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}
               >
                 <FiShare2 className={`text-xl ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
               </button>
-              <button 
-                onClick={toggleFavorite} 
+              <button
+                onClick={toggleFavorite}
                 className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}
               >
-                {isFavorite ? 
-                  <FaHeart className="text-xl text-rose-500" /> : 
+                {isFavorite ?
+                  <FaHeart className="text-xl text-rose-500" /> :
                   <FiHeart className={`text-xl ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
                 }
               </button>
@@ -2210,7 +1768,7 @@ export default function HelperPage() {
               <FaStar className="text-rose-500" />
               <span className="font-semibold">{helper.rating || '4.5'}</span>
               <span className="text-gray-500">·</span>
-              <button 
+              <button
                 onClick={() => setShowCommentsPanel(true)}
                 className="underline text-gray-700"
               >
@@ -2323,7 +1881,7 @@ export default function HelperPage() {
                   {helper.rating || '4.5'} · {helper.reviewCount || '25'} reviews
                 </h2>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
                   <div className="flex justify-between text-sm mb-1">
@@ -2345,8 +1903,8 @@ export default function HelperPage() {
                 </div>
               </div>
 
-              <HelperComments 
-                helperId={helper._id} 
+              <HelperComments
+                helperId={helper._id}
                 onCommentCountChange={setCommentCount}
                 onAnalyzeComments={analyzeCommentsWithAI}
                 commentAnalysis={commentAnalysis}
@@ -2481,7 +2039,7 @@ export default function HelperPage() {
             </span>
             <div className="w-10" /> {/* Spacer for centering */}
           </div>
-          
+
           <div className="flex-1 flex items-center justify-center p-4 relative">
             <button
               onClick={prevImage}
@@ -2489,13 +2047,13 @@ export default function HelperPage() {
             >
               <FaChevronLeft className="text-xl" />
             </button>
-            
+
             <img
               src={helper.imageUrls[currentGalleryIndex]}
               alt={`Gallery ${currentGalleryIndex + 1}`}
               className="max-h-full max-w-full object-contain rounded-lg"
             />
-            
+
             <button
               onClick={nextImage}
               className="absolute right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
@@ -2520,7 +2078,7 @@ export default function HelperPage() {
               <h2 className="text-lg font-semibold">Complete your booking</h2>
               <div className="w-10" />
             </div>
-            
+
             <div className="p-6 space-y-6">
               {/* Form content - simplified for Airbnb style */}
               <div>
@@ -2548,7 +2106,32 @@ export default function HelperPage() {
                       placeholder="071 234 5678"
                     />
                   </div>
-                  
+
+                  {/* Date & Time */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">📅 Date</label>
+                      <input
+                        type="date"
+                        name="date"
+                        value={bookingData.date}
+                        onChange={handleBookingChange}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">⏰ Time</label>
+                      <input
+                        type="time"
+                        name="time"
+                        value={bookingData.time}
+                        onChange={handleBookingChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
                   {/* Location Option */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Service location</label>
@@ -2581,48 +2164,85 @@ export default function HelperPage() {
                   {/* Address (only if comeToYou is selected) */}
                   {bookingData.locationOption === 'comeToYou' && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">📍 Address</label>
                       <textarea
                         name="address"
                         value={bookingData.address}
                         onChange={handleBookingChange}
                         rows="3"
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        placeholder="Enter your full address"
+                        placeholder="Enter your full address (street, suburb, city)"
                       />
+                      {bookingData.address && bookingData.address.length >= 10 && (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bookingData.address)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 mt-2 text-sm text-blue-600 hover:text-blue-800 underline"
+                        >
+                          <FaMapMarkerAlt className="text-xs" />
+                          View on Google Maps
+                        </a>
+                      )}
                     </div>
                   )}
 
-                  {/* Food/Bring food option for domestic/maid services */}
-                  {(helper.type === 'domestic' || helper.type === 'maid') && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Will you provide food for the helper?</label>
-                      <div className="flex gap-4">
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            name="bringFood"
-                            value="yes"
-                            checked={bookingData.bringFood === 'yes'}
-                            onChange={handleBookingChange}
-                            className="mr-2"
-                          />
-                          Yes, I'll provide
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            name="bringFood"
-                            value="no"
-                            checked={bookingData.bringFood === 'no'}
-                            onChange={handleBookingChange}
-                            className="mr-2"
-                          />
-                          No, helper will bring own food
-                        </label>
-                      </div>
+                  {/* Provisions - Food & Electricity (all service types) */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">🍴 Will you provide food for the helper?</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="foodProvided"
+                          value="yes"
+                          checked={bookingData.foodProvided === 'yes'}
+                          onChange={handleBookingChange}
+                          className="accent-rose-500"
+                        />
+                        <span className="text-sm text-gray-700">Yes, I'll provide food</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="foodProvided"
+                          value="no"
+                          checked={bookingData.foodProvided === 'no'}
+                          onChange={handleBookingChange}
+                          className="accent-rose-500"
+                        />
+                        <span className="text-sm text-gray-700">No</span>
+                      </label>
                     </div>
-                  )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">⚡ Is electricity available at the location?</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="electricityProvided"
+                          value="yes"
+                          checked={bookingData.electricityProvided === 'yes'}
+                          onChange={handleBookingChange}
+                          className="accent-rose-500"
+                        />
+                        <span className="text-sm text-gray-700">Yes, available</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="electricityProvided"
+                          value="no"
+                          checked={bookingData.electricityProvided === 'no'}
+                          onChange={handleBookingChange}
+                          className="accent-rose-500"
+                        />
+                        <span className="text-sm text-gray-700">No</span>
+                      </label>
+                    </div>
+                  </div>
 
                   {/* Sneaker Cleaner Specific Fields */}
                   {helper.type === 'sneaker' && (
@@ -2889,6 +2509,19 @@ export default function HelperPage() {
                 </div>
               </div>
 
+              {/* Comments / Special Requirements */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">💬 Comments / Special requirements</label>
+                <textarea
+                  name="specialRequirements"
+                  value={bookingData.specialRequirements}
+                  onChange={handleBookingChange}
+                  rows="3"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                  placeholder="Any special instructions, preferences, or questions for the professional..."
+                />
+              </div>
+
               <div>
                 <h3 className="text-lg font-semibold mb-4">Select services</h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -2897,11 +2530,10 @@ export default function HelperPage() {
                       key={service.id}
                       type="button"
                       onClick={() => handleServiceSelection(service.id)}
-                      className={`p-4 border-2 rounded-xl text-left transition-all ${
-                        bookingData.selectedServices.includes(service.id)
-                          ? 'border-rose-500 bg-rose-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                      className={`p-4 border-2 rounded-xl text-left transition-all ${bookingData.selectedServices.includes(service.id)
+                        ? 'border-rose-500 bg-rose-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                        }`}
                     >
                       <div className="text-2xl mb-2">{service.icon}</div>
                       <div className="font-medium text-sm">{service.name}</div>
@@ -2923,10 +2555,23 @@ export default function HelperPage() {
                 ) : (
                   <>
                     <FaWhatsapp className="text-xl" />
-                    Send booking request
+                    Send booking via WhatsApp
                   </>
                 )}
               </button>
+
+              {/* Quick Accept Info */}
+              {bookingData.name && bookingData.phone && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-green-800">
+                  <div className="flex items-start gap-2">
+                    <FaCheckCircle className="text-green-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold mb-1">How it works</p>
+                      <p>Your booking request will be sent to <strong>{helper?.name}</strong> on WhatsApp. They will receive a pre-filled <strong>✅ Accept</strong> or <strong>❌ Decline</strong> reply link — tap the button in WhatsApp to send the message.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -2939,7 +2584,7 @@ export default function HelperPage() {
             <span className="text-xl font-bold text-gray-900">R{totalPrice}</span>
             <span className="text-gray-600 text-sm"> / service</span>
           </div>
-          <button 
+          <button
             onClick={openBookingFormOverlay}  // Changed from handleQuickBooking to openBookingFormOverlay
             className="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-colors"
           >

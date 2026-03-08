@@ -9,11 +9,11 @@ import {
   FaWhatsapp, FaUtensils,
   FaCalendarAlt, FaExclamationTriangle,
   FaArrowUp, FaArrowDown, FaRobot,
-  FaInfoCircle, FaArrowLeft, 
-   FaTimes,
+  FaInfoCircle, FaArrowLeft,
+  FaTimes,
   FaFileImage, FaFilePdf, FaMusic, FaFutbol, FaPalette,
-  FaUsers as FaCommunity,  FaEllipsisH,
-  FaStar,  FaSpinner, FaCheckCircle,
+  FaUsers as FaCommunity, FaEllipsisH,
+  FaStar, FaSpinner, FaCheckCircle,
   FaInstagram, FaFacebook, FaLinkedin, FaTwitter
 } from 'react-icons/fa';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -121,7 +121,7 @@ export default function EventPage() {
   // AI-powered social media verification
   const verifySocialMediaPresence = async (eventData) => {
     setVerifyingSocialMedia(true);
-    
+
     try {
       setTimeout(() => {
         const name = eventData.name || '';
@@ -129,7 +129,7 @@ export default function EventPage() {
         const hasInstagram = Math.random() > 0.2;
         const hasLinkedIn = Math.random() > 0.4;
         const hasTwitter = Math.random() > 0.5;
-        
+
         const facebookData = hasFacebook ? {
           exists: true,
           username: generateUsername(name, 'facebook'),
@@ -404,25 +404,65 @@ export default function EventPage() {
       setIsUploading(false);
     }
 
-    let message = `New Registration for *${event.name}*%0A%0A`;
-    message += `*Name:* ${registrationData.name}%0A`;
-    message += `*Email:* ${registrationData.email}%0A`;
-    message += `*Phone:* ${registrationData.phone}%0A`;
-    message += `*Tickets:* ${registrationData.quantity}%0A`;
-    message += `*Special Requests:* ${registrationData.message || 'None'}%0A%0A`;
+    // Generate verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000);
+
+    let message = `*🎟️ NEW EVENT REGISTRATION* 🎟️%0A%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `*EVENT DETAILS*%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `🎭 *Event:* ${event.name}%0A`;
+    message += `📅 *Date:* ${formatDateTime(event.date, event.time)}%0A`;
+    message += `📍 *Location:* ${event.address}%0A`;
+
+    const mapLink = generateMapLink(event.address);
+    if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
+    message += `💰 *Price:* ${event.regularPrice ? `R${event.regularPrice}` : 'Free Entry'}%0A%0A`;
+
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `*REGISTRANT INFORMATION*%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `👤 *Name:* ${registrationData.name}%0A`;
+    message += `📧 *Email:* ${registrationData.email}%0A`;
+    message += `📞 *Phone:* ${registrationData.phone}%0A`;
+    message += `🎟️ *Tickets:* ${registrationData.quantity}%0A%0A`;
+
+    if (registrationData.message) {
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*SPECIAL REQUESTS*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `${registrationData.message}%0A%0A`;
+    }
 
     // Add attachments if they exist
     if (uploadedFiles.length > 0) {
-      message += `*📎 ATTACHMENTS*%0A_Files uploaded for your reference_%0A%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*📎 ATTACHMENTS*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
       uploadedFiles.forEach((file) => {
         message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: ${file.name}%0A`;
         message += `  ${file.url}%0A%0A`;
       });
     }
 
-    message += `_Sent via loopOut Booking System_`;
+    const clientPhone = registrationData.phone ? formatContactForWhatsApp(registrationData.phone) : '';
+    const acceptMessage = `Hi ${registrationData.name}, your registration for ${event.name} is CONFIRMED! We look forward to seeing you there.`;
+    const declineMessage = `Hi ${registrationData.name}, unfortunately we are unable to accept your registration for ${event.name} at this time.`;
 
-    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(event.organizerContact)}?text=${message}`;
+    const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
+    const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
+
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `*⚡ QUICK ACTIONS*%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    if (acceptLink) message += `✅ *CONFIRM REGISTRATION:*%0A${acceptLink}%0A%0A`;
+    if (declineLink) message += `❌ *DECLINE REGISTRATION:*%0A${declineLink}%0A%0A`;
+
+    message += `*Verification Code:* ${verificationCode}%0A`;
+    message += `_This registration request was sent via LoopOut_`;
+
+    const organizerPhone = formatContactForWhatsApp(event.organizerContact);
+    const whatsappUrl = `https://wa.me/${organizerPhone}?text=${message}`;
     window.open(whatsappUrl, '_blank');
 
     // Reset attachments after sending
@@ -580,7 +620,7 @@ export default function EventPage() {
                     {eventTypeInfo.icon}
                   </div>
                 </div>
-                
+
                 {/* Name and Type */}
                 <div className="flex-1 min-w-0">
                   <h1 className="text-2xl md:text-3xl font-bold text-white mb-1 truncate">
@@ -590,7 +630,7 @@ export default function EventPage() {
                     {eventTypeInfo.name}
                   </div>
                 </div>
-                
+
                 {/* Price Badge */}
                 <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl px-4 py-3 border border-white border-opacity-30">
                   <div className="text-white text-xs font-semibold opacity-90 mb-1">STARTING FROM</div>
@@ -613,7 +653,7 @@ export default function EventPage() {
                     </span>
                   </div>
                 )}
-                
+
                 <div className="inline-flex items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-200">
                   <FaStar className="text-yellow-500 text-sm mr-2" />
                   <span className="text-blue-700 font-semibold text-sm">
@@ -740,13 +780,13 @@ export default function EventPage() {
                           </div>
                         )}
 
-                        {!socialMediaVerification.facebook.exists && !socialMediaVerification.instagram.exists && 
-                         !socialMediaVerification.linkedin.exists && !socialMediaVerification.twitter.exists && (
-                          <div className="inline-flex items-center gap-2 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
-                            <FaInfoCircle className="text-gray-400" />
-                            <span className="text-gray-600 font-medium text-sm">No social profiles found</span>
-                          </div>
-                        )}
+                        {!socialMediaVerification.facebook.exists && !socialMediaVerification.instagram.exists &&
+                          !socialMediaVerification.linkedin.exists && !socialMediaVerification.twitter.exists && (
+                            <div className="inline-flex items-center gap-2 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
+                              <FaInfoCircle className="text-gray-400" />
+                              <span className="text-gray-600 font-medium text-sm">No social profiles found</span>
+                            </div>
+                          )}
                       </div>
                     )}
                   </div>
@@ -762,7 +802,7 @@ export default function EventPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Event Gallery</h3>
                 <p className="text-gray-600 text-sm">View photos from the event</p>
               </div>
-              
+
               <div className="space-y-4">
                 {/* Main Swiper */}
                 <Swiper
@@ -861,21 +901,19 @@ export default function EventPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleLike}
-                  className={`p-2 rounded-lg transition-colors ${
-                    aiAssessment.userReaction === 'like'
+                  className={`p-2 rounded-lg transition-colors ${aiAssessment.userReaction === 'like'
                       ? 'bg-green-100 text-green-600'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                    }`}
                 >
                   <FaArrowUp className="text-sm" />
                 </button>
                 <button
                   onClick={handleDislike}
-                  className={`p-2 rounded-lg transition-colors ${
-                    aiAssessment.userReaction === 'dislike'
+                  className={`p-2 rounded-lg transition-colors ${aiAssessment.userReaction === 'dislike'
                       ? 'bg-red-100 text-red-600'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                    }`}
                 >
                   <FaArrowDown className="text-sm" />
                 </button>
@@ -1030,7 +1068,7 @@ export default function EventPage() {
                     disabled={attachments.length >= 2}
                     className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
-                  
+
                   {attachments.length > 0 && (
                     <div className="space-y-2">
                       {attachments.map((file, index) => (
@@ -1056,7 +1094,7 @@ export default function EventPage() {
                       ))}
                     </div>
                   )}
-                  
+
                   <p className="text-xs text-gray-500">
                     Max 2 files, 5MB each. Images and PDFs only.
                   </p>
@@ -1175,7 +1213,7 @@ export default function EventPage() {
                     <FaPhone />
                     Call Organizer
                   </a>
-                  
+
                   {whatsappLink && (
                     <a
                       href={whatsappLink}

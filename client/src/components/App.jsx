@@ -14,16 +14,16 @@ function App() {
           method: 'POST',
           credentials: 'include'
         });
-        
+
         const data = await res.json();
-        
+
         if (data.valid) {
           dispatch(signInSuccess(data.user));
         } else {
-          dispatch(signInFailure('Session expired. Please sign in again.'));
+          dispatch(signInFailure(null));
         }
       } catch (error) {
-        dispatch(signInFailure('Failed to validate session.'));
+        dispatch(signInFailure(null));
       }
     };
 
@@ -31,7 +31,7 @@ function App() {
   }, [dispatch]);
 
   return (
-  <div></div>
+    <div></div>
   );
 }
 

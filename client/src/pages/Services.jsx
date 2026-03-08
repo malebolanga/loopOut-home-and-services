@@ -209,10 +209,10 @@ const ServicePage = () => {
   const [totalPrice, setTotalPrice] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [attachments, setAttachments] = useState([]);
-  
+
   const [showFullScreenGallery, setShowFullScreenGallery] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
-  
+
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
 
@@ -230,7 +230,9 @@ const ServicePage = () => {
     vehicleMake: '',
     vehicleModel: '',
     vehicleYear: '',
-    licensePlate: ''
+    licensePlate: '',
+    foodProvided: 'no',
+    electricityProvided: 'no'
   });
 
   const [enhancedServiceData] = useState({
@@ -304,6 +306,11 @@ const ServicePage = () => {
     if (!contact) return null;
     const digitsOnly = String(contact).replace(/\D/g, '');
     return digitsOnly.startsWith('0') ? '27' + digitsOnly.substring(1) : digitsOnly;
+  };
+
+  const generateMapLink = (address) => {
+    if (!address) return null;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
   };
 
   const handleBookingChange = (e) => {
@@ -421,77 +428,104 @@ const ServicePage = () => {
       uploadedFiles = await uploadFilesToCloud(attachments);
     }
 
+    // Generate verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000);
+
     // Format the client's phone number for the reply link
     const clientPhone = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
 
     // Define accept and decline messages
-    const acceptMessage = `I accept your booking for ${bookingData.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
-    const declineMessage = `I'm unable to accept your booking for ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
+    const acceptMessage = `Hi ${bookingData.name}, I accept your booking for ${service.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
+    const declineMessage = `Hi ${bookingData.name}, unfortunately I'm unable to accept your booking for ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
 
     const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
     const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
 
-    let message = isQuick 
-      ? `*📅 Quick Booking Request for ${service.name}*%0A%0A`
-      : `*${currentServiceConfig?.icon ? '🛎️' : ''} New ${getProfessionalTitle(service.type)} Booking Request*%0A%0A`;
-    
-    message += `*👤 CLIENT DETAILS*%0A`;
-    message += `• Name: ${bookingData.name}%0A`;
-    message += `• Phone: ${bookingData.phone}%0A`;
-    message += `• Date: ${bookingData.date}%0A`;
-    message += `• Time: ${bookingData.time}%0A`;
-    
-    if (requiresVehicleType && bookingData.vehicleType) {
-      message += `%0A*🚗 VEHICLE DETAILS*%0A`;
-      message += `• Type: ${VEHICLE_TYPES.find(v => v.id === bookingData.vehicleType)?.name}%0A`;
-      if (bookingData.vehicleMake) message += `• Make: ${bookingData.vehicleMake}%0A`;
-      if (bookingData.vehicleModel) message += `• Model: ${bookingData.vehicleModel}%0A`;
-      if (bookingData.licensePlate) message += `• License Plate: ${bookingData.licensePlate}%0A`;
-    }
-    
+    let message = isQuick
+      ? `*📅 QUICK SERVICE BOOKING* 📅\n\n`
+      : `*🛎️ NEW SERVICE BOOKING* 🛎️\n\n`;
+
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `*💼 SERVICE DETAILS*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `⚒️ *Service:* ${service.name}\n`;
+    message += `📋 *Type:* ${getProfessionalTitle(service.type)}\n`;
+
     if (selectedService) {
-      message += `%0A*📋 SELECTED SERVICE*%0A`;
-      message += `• ${selectedService.name} (${selectedService.price})%0A`;
+      message += `📜 *Option:* ${selectedService.name} (${selectedService.price})\n`;
     }
-    
+
+    message += `📅 *Date:* ${bookingData.date || 'Not specified'}\n`;
+    message += `⏰ *Time:* ${bookingData.time || 'Not specified'}\n\n`;
+
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `*👤 CLIENT INFORMATION*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `👤 *Name:* ${bookingData.name}\n`;
+    message += `📞 *Phone:* ${bookingData.phone}\n\n`;
+
     if (bookingData.address) {
-      message += `%0A*📍 SERVICE LOCATION*%0A`;
-      message += `• ${bookingData.address}%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*📍 SERVICE LOCATION*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `🏠 *Address:* ${bookingData.address}\n`;
+      const mapLink = generateMapLink(bookingData.address);
+      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
+      message += `\n`;
     }
-    
-    if (bookingData.specialRequirements) {
-      message += `%0A*📝 SPECIAL REQUESTS*%0A`;
-      message += `• ${bookingData.specialRequirements}%0A`;
+
+    if (requiresVehicleType && bookingData.vehicleType) {
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*🚗 VEHICLE DETAILS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `🚗 *Type:* ${VEHICLE_TYPES.find(v => v.id === bookingData.vehicleType)?.name}\n`;
+      if (bookingData.vehicleMake) message += `🔖 *Make:* ${bookingData.vehicleMake}\n`;
+      if (bookingData.vehicleModel) message += `🚘 *Model:* ${bookingData.vehicleModel}\n`;
+      if (bookingData.licensePlate) message += `🆔 *Plate:* ${bookingData.licensePlate}\n`;
+      message += `\n`;
     }
-    
+
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `*🍴 PROVISIONS*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `🍽️ *Food provided by client:* ${bookingData.foodProvided === 'yes' ? '✅ Yes' : '❌ No'}\n`;
+    message += `⚡ *Electricity available:* ${bookingData.electricityProvided === 'yes' ? '✅ Yes' : '❌ No'}\n\n`;
+
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `*💬 COMMENTS & NOTES*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `📝 ${bookingData.specialRequirements ? bookingData.specialRequirements : 'No special requirements'}\n`;
     if (bookingData.numberOfGuests && bookingData.numberOfGuests !== '1') {
-      message += `• Number of Guests: ${bookingData.numberOfGuests}%0A`;
+      message += `👥 *Guests:* ${bookingData.numberOfGuests}\n`;
     }
+    message += `\n`;
 
     // Add attachments if they exist
     if (uploadedFiles.length > 0) {
-      message += `%0A*📎 ATTACHMENTS*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*📎 ATTACHMENTS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
       uploadedFiles.forEach((file) => {
-        message += `• ${file.type === 'image' ? '🖼️' : '📄'} ${file.name}%0A`;
-        message += `  ${file.url}%0A`;
+        message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: ${file.name}\n`;
+        message += `  ${file.url}\n\n`;
       });
     }
-    
-    message += `%0A*💰 Total: R${totalPrice}*%0A%0A`;
 
-    // Add action links for the provider to respond
-    message += `*ACTION REQUIRED*%0A`;
-    message += `Please respond to this booking request:%0A%0A`;
-    if (acceptLink) {
-      message += `✅ Accept: ${acceptLink}%0A`;
-    }
-    if (declineLink) {
-      message += `❌ Decline: ${declineLink}%0A%0A`;
-    }
-    message += `💬 You can also reply directly to this message.%0A%0A`;
-    message += `_Sent via loopOut${isQuick ? ' Quick Booking' : ' Booking System'}_`;
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `*💵 TOTAL AMOUNT*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `� *Total Est:* R${totalPrice}\n\n`;
 
-    return `https://wa.me/${whatsappNumber}?text=${message}`;
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `*⚡ QUICK ACTIONS*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    if (acceptLink) message += `✅ *ACCEPT BOOKING:*\n${acceptLink}\n\n`;
+    if (declineLink) message += `❌ *DECLINE BOOKING:*\n${declineLink}\n\n`;
+
+    message += `🔐 *Verification Code:* ${verificationCode}\n`;
+    message += `_This booking request was sent via LoopOut_`;
+
+    return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
   };
 
   const handleQuickBooking = async () => {
@@ -514,7 +548,7 @@ const ServicePage = () => {
 
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!service?.contact) {
       alert("Service contact information is missing.");
       return;
@@ -537,10 +571,10 @@ const ServicePage = () => {
     }
 
     setIsUploading(true);
-    
+
     const url = await buildWhatsAppMessage(false);
     if (url) window.open(url, '_blank');
-    
+
     setIsUploading(false);
     closeBookingModal();
   };
@@ -597,15 +631,15 @@ const ServicePage = () => {
             >
               <FaArrowLeft className="text-xl" />
             </button>
-            
+
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={handleShare}
                 className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100 text-gray-900' : 'hover:bg-white/20 text-white'}`}
               >
                 <FiShare2 className="text-xl" />
               </button>
-              <button 
+              <button
                 onClick={toggleFavorite}
                 className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}
               >
@@ -624,7 +658,7 @@ const ServicePage = () => {
       <div className="relative h-[50vh] md:h-[60vh] bg-gray-900">
         {service.imageUrls?.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-full p-2">
-            <div 
+            <div
               className="md:col-span-2 md:row-span-2 relative rounded-xl overflow-hidden cursor-pointer group"
               onClick={() => openFullScreenGallery(0)}
             >
@@ -638,9 +672,9 @@ const ServicePage = () => {
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
             </div>
-            
+
             {service.imageUrls.slice(1, 5).map((url, index) => (
-              <div 
+              <div
                 key={index}
                 className="relative rounded-xl overflow-hidden cursor-pointer group hidden md:block"
                 onClick={() => openFullScreenGallery(index + 1)}
@@ -656,7 +690,7 @@ const ServicePage = () => {
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
               </div>
             ))}
-            
+
             <button
               onClick={() => openFullScreenGallery(0)}
               className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 hover:bg-white transition-colors shadow-lg"
@@ -735,7 +769,7 @@ const ServicePage = () => {
                   <p className="text-gray-600 text-sm">Service provider travels to you</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-4">
                 <div className="p-2 bg-gray-100 rounded-lg">
                   <FaClock className="text-xl text-gray-700" />
@@ -783,7 +817,7 @@ const ServicePage = () => {
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Service options</h2>
               <div className="space-y-4">
                 {displayedServices.map((option) => (
-                  <div 
+                  <div
                     key={option.id}
                     className="flex items-start justify-between p-4 border border-gray-200 rounded-xl hover:border-gray-300 transition-colors cursor-pointer"
                     onClick={() => openBookingModal(option)}
@@ -810,7 +844,7 @@ const ServicePage = () => {
                   </div>
                 ))}
               </div>
-              
+
               {serviceOptions.length > 4 && (
                 <button
                   onClick={() => setShowAllServices(!showAllServices)}
@@ -833,7 +867,7 @@ const ServicePage = () => {
                     <p className="text-gray-600 text-sm mt-1">Professional experience in {getProfessionalTitle(service.type).toLowerCase()}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <FaAward className="text-2xl text-gray-400 mt-1" />
                   <div>
@@ -868,7 +902,7 @@ const ServicePage = () => {
                   {service.rating || '4.5'} · {commentCount || service.reviewCount || '0'} reviews
                 </h2>
                 {commentCount > 3 && (
-                  <button 
+                  <button
                     onClick={() => setShowCommentsPanel(true)}
                     className="font-semibold text-gray-900 underline underline-offset-4"
                   >
@@ -876,8 +910,8 @@ const ServicePage = () => {
                   </button>
                 )}
               </div>
-              <Comment 
-                serviceId={service._id} 
+              <Comment
+                serviceId={service._id}
                 maxComments={3}
                 onTotalComments={setCommentCount}
                 cardStyle={true}
@@ -903,27 +937,27 @@ const ServicePage = () => {
                   <div className="grid grid-cols-2 border-b border-gray-300">
                     <div className="p-3 border-r border-gray-300">
                       <label className="block text-xs font-bold text-gray-900 uppercase">Date</label>
-                      <input 
-                        type="date" 
+                      <input
+                        type="date"
                         className="w-full text-sm text-gray-600 outline-none"
                         min={new Date().toISOString().split('T')[0]}
-                        onChange={(e) => setBookingData(prev => ({...prev, date: e.target.value}))}
+                        onChange={(e) => setBookingData(prev => ({ ...prev, date: e.target.value }))}
                       />
                     </div>
                     <div className="p-3">
                       <label className="block text-xs font-bold text-gray-900 uppercase">Time</label>
-                      <input 
-                        type="time" 
+                      <input
+                        type="time"
                         className="w-full text-sm text-gray-600 outline-none"
-                        onChange={(e) => setBookingData(prev => ({...prev, time: e.target.value}))}
+                        onChange={(e) => setBookingData(prev => ({ ...prev, time: e.target.value }))}
                       />
                     </div>
                   </div>
                   <div className="p-3">
                     <label className="block text-xs font-bold text-gray-900 uppercase">Guests</label>
-                    <select 
+                    <select
                       className="w-full text-sm text-gray-600 outline-none bg-transparent"
-                      onChange={(e) => setBookingData(prev => ({...prev, numberOfGuests: e.target.value}))}
+                      onChange={(e) => setBookingData(prev => ({ ...prev, numberOfGuests: e.target.value }))}
                     >
                       <option value="1">1 guest</option>
                       <option value="2">2 guests</option>
@@ -1025,22 +1059,22 @@ const ServicePage = () => {
             <span className="font-medium">{modalImageIndex + 1} / {service.imageUrls.length}</span>
             <div className="w-10" />
           </div>
-          
+
           <div className="flex-1 flex items-center justify-center relative">
-            <button 
+            <button
               onClick={prevImage}
               className="absolute left-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white"
             >
               <FaChevronLeft className="text-xl" />
             </button>
-            
+
             <img
               src={service.imageUrls[modalImageIndex]}
               alt={`Gallery ${modalImageIndex + 1}`}
               className="max-h-full max-w-full object-contain"
             />
-            
-            <button 
+
+            <button
               onClick={nextImage}
               className="absolute right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white"
             >
@@ -1060,7 +1094,7 @@ const ServicePage = () => {
                 <FaTimes />
               </button>
             </div>
-            
+
             <form onSubmit={handleBookingSubmit} className="p-6 space-y-6">
               {selectedService && (
                 <div className="bg-rose-50 p-4 rounded-lg border border-rose-200">
@@ -1149,11 +1183,10 @@ const ServicePage = () => {
                             key={vehicle.id}
                             type="button"
                             onClick={() => handleVehicleTypeSelect(vehicle.id)}
-                            className={`p-3 border rounded-lg text-center transition-colors ${
-                              bookingData.vehicleType === vehicle.id
-                                ? 'border-rose-500 bg-rose-50 text-rose-700'
-                                : 'border-gray-300 hover:border-gray-400'
-                            }`}
+                            className={`p-3 border rounded-lg text-center transition-colors ${bookingData.vehicleType === vehicle.id
+                              ? 'border-rose-500 bg-rose-50 text-rose-700'
+                              : 'border-gray-300 hover:border-gray-400'
+                              }`}
                           >
                             <div className="text-2xl mb-1">{vehicle.icon}</div>
                             <div className="text-xs font-medium">{vehicle.name}</div>
@@ -1235,6 +1268,79 @@ const ServicePage = () => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     placeholder="Enter your full address for service..."
                   />
+                  {bookingData.address && bookingData.address.length >= 10 && (
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bookingData.address)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 mt-2 text-sm text-blue-600 hover:text-blue-800 underline"
+                    >
+                      <FaMapMarkerAlt className="text-xs" />
+                      View on Google Maps
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {/* Food & Electricity */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Provisions</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">🍴 Will you provide food for the service provider?</label>
+                    <div className="flex gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="foodProvided"
+                          value="yes"
+                          checked={bookingData.foodProvided === 'yes'}
+                          onChange={handleBookingChange}
+                          className="accent-rose-500"
+                        />
+                        <span className="text-sm text-gray-700">Yes, I'll provide food</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="foodProvided"
+                          value="no"
+                          checked={bookingData.foodProvided === 'no'}
+                          onChange={handleBookingChange}
+                          className="accent-rose-500"
+                        />
+                        <span className="text-sm text-gray-700">No</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">⚡ Is electricity available at the service location?</label>
+                    <div className="flex gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="electricityProvided"
+                          value="yes"
+                          checked={bookingData.electricityProvided === 'yes'}
+                          onChange={handleBookingChange}
+                          className="accent-rose-500"
+                        />
+                        <span className="text-sm text-gray-700">Yes, available</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="electricityProvided"
+                          value="no"
+                          checked={bookingData.electricityProvided === 'no'}
+                          onChange={handleBookingChange}
+                          className="accent-rose-500"
+                        />
+                        <span className="text-sm text-gray-700">No</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1272,7 +1378,7 @@ const ServicePage = () => {
                     </label>
                     <span className="text-sm text-gray-500">Max 2 files (5MB each)</span>
                   </div>
-                  
+
                   {attachments.length > 0 && (
                     <div className="space-y-2">
                       {attachments.map((file, index) => (
@@ -1353,7 +1459,7 @@ const ServicePage = () => {
             <span className="text-xl font-bold text-gray-900">R{totalPrice}</span>
             <span className="text-gray-600 text-sm"> / service</span>
           </div>
-          <button 
+          <button
             onClick={openBookingModal}
             className="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-colors"
           >

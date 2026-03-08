@@ -27,7 +27,7 @@ export const signin = async (req, res, next) => {
     });
     const { password: pass, ...rest } = validUser._doc;
     res
-      .cookie('access_token', token, { 
+      .cookie('access_token', token, {
         httpOnly: true,
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         sameSite: 'strict',
@@ -49,7 +49,7 @@ export const google = async (req, res, next) => {
       });
       const { password: pass, ...rest } = user._doc;
       res
-        .cookie('access_token', token, { 
+        .cookie('access_token', token, {
           httpOnly: true,
           maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
           sameSite: 'strict',
@@ -76,7 +76,7 @@ export const google = async (req, res, next) => {
       });
       const { password: pass, ...rest } = newUser._doc;
       res
-        .cookie('access_token', token, { 
+        .cookie('access_token', token, {
           httpOnly: true,
           maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
           sameSite: 'strict',
@@ -103,15 +103,15 @@ export const signOut = async (req, res, next) => {
 export const validateToken = async (req, res, next) => {
   try {
     const token = req.cookies.access_token;
-    if (!token) return res.status(401).json({ valid: false });
+    if (!token) return res.status(200).json({ valid: false });
 
     jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
-      if (err) return res.status(401).json({ valid: false });
-      
+      if (err) return res.status(200).json({ valid: false });
+
       const user = await User.findById(decoded.id).select('-password');
-      if (!user) return res.status(404).json({ valid: false });
-      
-      res.status(200).json({ 
+      if (!user) return res.status(200).json({ valid: false });
+
+      res.status(200).json({
         valid: true,
         user: {
           _id: user._id,

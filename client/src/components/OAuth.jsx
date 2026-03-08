@@ -1,45 +1,72 @@
 import { GoogleAuthProvider, getAuth, signInWithPopup } from 'firebase/auth';
 import { app } from '../firebase';
-import { useDispatch } from 'react-redux';
-import { signInSuccess } from '../redux/user/userSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { signInStart, signInSuccess, signInFailure } from '../redux/user/userSlice';
 import { useNavigate } from 'react-router-dom';
-
+import { FcGoogle } from 'react-icons/fc';
+import { motion } from 'framer-motion';
+import { FaSpinner } from 'react-icons/fa';
 
 export default function OAuth() {
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
-    const handleGoogleClick = async () => {
+  const { loading } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleGoogleClick = async () => {
     try {
-        const provider = new GoogleAuthProvider();
-        const auth = getAuth(app)
+      dispatch(signInStart());
+      const provider = new GoogleAuthProvider();
+      const auth = getAuth(app);
 
-        const result = await signInWithPopup(auth, provider)
+      const result = await signInWithPopup(auth, provider);
 
-        const res = await fetch('/api/auth/google', {
-            method: 'POST',
-            headers: {
-                'Content-type': 'application/json',
-            },
-            body: JSON.stringify({
-                name: result.user.displayName,
-                email: result.user.email,
-                photo: result.user.photoURL,
-              }),
-        });
-       const data = await res.json();
-       dispatch(signInSuccess(data));
-       navigate('/');
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: {
+          'Content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: result.user.displayName,
+          email: result.user.email,
+          photo: result.user.photoURL,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        dispatch(signInSuccess(data));
+        navigate('/');
+      } else {
+        dispatch(signInFailure(data.message || 'Server error during Google sign-in'));
+      }
     } catch (error) {
-        console.log('could not sign in with google', error);
-        }
-    };
+      console.error('Google Auth Error:', error);
+      let errorMessage = 'Could not sign in with Google';
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Sign-in popup was closed before completion.';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your connection.';
+      }
+      dispatch(signInFailure(errorMessage));
+    }
+  };
+
   return (
-    <button
-    onClick={handleGoogleClick}
-    type='button' 
-    className='bg-red-700 text-white font-semibold p-3 rounded-lg uppercase hover:opacity-95'
+    <motion.button
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      onClick={handleGoogleClick}
+      disabled={loading}
+      type='button'
+      className='flex items-center justify-center gap-3 w-full bg-white border border-[#DDDDDD] text-[#222222] font-semibold p-3 rounded-lg hover:bg-[#F7F7F7] hover:border-[#000000] transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm'
     >
-      Sign-in with Google
-    </button>
+      {loading ? (
+        <FaSpinner className="animate-spin text-[#E61E4D]" />
+      ) : (
+        <FcGoogle className="text-xl" />
+      )}
+      <span>{loading ? 'Processing...' : 'Continue with Google'}</span>
+    </motion.button>
   );
 }
