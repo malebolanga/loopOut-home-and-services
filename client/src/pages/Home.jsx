@@ -27,7 +27,6 @@ import {
   TruckIcon,
   AcademicCapIcon,
   WrenchIcon,
-  SparklesIcon as SparklesIconSolid,
   FireIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -35,7 +34,7 @@ import {
   HeartIcon as HeartIconSolid,
 } from '@heroicons/react/24/solid';
 import { FaCar, FaBreadSlice, FaHouseUser, FaCut, FaTruckMoving, FaGraduationCap, FaHandsWash, FaBroom, FaChalkboardTeacher, FaHome, FaBed, FaUtensils, FaLeaf, FaBolt, FaShoePrints, FaWater, FaPaw } from "react-icons/fa";
-import ImageWithFallback from "../components/ImageWithFallback";
+import ImageGallery from '../components/ImageGallery';
 
 // --- Constants ---
 const RECENTLY_VIEWED_KEY = 'recentlyViewed';
@@ -75,14 +74,32 @@ const itemVariants = {
   }
 };
 
-// --- Image Fallback Handler Component ---
-// (Moved to shared components/ImageWithFallback.jsx)
-
 // --- TOP CATEGORIES DATA (Fresha Style) ---
 const TOP_CATEGORIES = [
   {
+    id: 'beauty',
+    name: 'Beauty',
+    image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '3,210',
+    color: 'from-pink-500 to-rose-400'
+  },
+  {
+    id: 'maid',
+    name: 'Maid',
+    image: 'https://images.unsplash.com/photo-1584820927498-cafe3c157921?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '1,890',
+    color: 'from-purple-500 to-indigo-500'
+  },
+  {
+    id: 'cleaner',
+    name: 'Cleaner',
+    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '2,145',
+    color: 'from-cyan-500 to-blue-500'
+  },
+  {
     id: 'barber',
-    name: 'Barber',
+    name: 'Barbershop',
     image: 'https://images.pexels.com/photos/897262/pexels-photo-897262.jpeg',
     count: '1,234',
     color: 'from-gray-900 to-gray-700'
@@ -110,7 +127,7 @@ const TOP_CATEGORIES = [
   },
   {
     id: 'photograph',
-    name: 'Photograph',
+    name: 'Photography',
     image: 'https://images.pexels.com/photos/1088491/pexels-photo-1088491.jpeg',
     count: '892',
     color: 'from-indigo-600 to-purple-500'
@@ -387,11 +404,10 @@ const FreshaCategoryCard = ({ category, onClick, index }) => {
     >
       {/* Image Container */}
       <div className="relative aspect-[4/5] overflow-hidden">
-        <ImageWithFallback
-          src={category.image}
+        <ImageGallery
+          imageUrls={[category.image]}
           alt={category.name}
           type="category"
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
 
         {/* Gradient Overlay */}
@@ -424,7 +440,6 @@ const FreshaCategoryCard = ({ category, onClick, index }) => {
 // --- Airbnb-Style Components (Preserved) ---
 
 const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property' }) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const isGuestFavorite = item.rating >= 4.8;
 
   const getPriceSuffix = () => {
@@ -480,17 +495,15 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property' }) => {
       className="cursor-pointer flex flex-col gap-3"
     >
       <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-200 group">
-        <ImageWithFallback
-          src={item.imageUrls?.[0]}
-          imageUrls={item.imageUrls}
+        <ImageGallery
+          imageUrls={item.imageUrls || []}
           alt={item.name}
           type={type === 'property' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property') : type}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
 
         <button
           onClick={(e) => { e.stopPropagation(); onLike && onLike(item._id, !isLiked); }}
-          className="absolute top-3 right-3 p-2 rounded-full hover:scale-110 transition-transform"
+          className="absolute top-3 right-3 p-2 rounded-full hover:scale-110 transition-transform z-20"
         >
           {isLiked ? (
             <HeartIconSolid className="w-6 h-6 text-rose-500 fill-rose-500 drop-shadow-md" />
@@ -500,22 +513,16 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property' }) => {
         </button>
 
         {isGuestFavorite && type === 'property' && (
-          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur px-2 py-1 rounded-md shadow-sm">
+          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur px-2 py-1 rounded-md shadow-sm z-20">
             <span className="text-xs font-bold text-gray-900">Guest favorite</span>
           </div>
         )}
 
         {type === 'property' && item.type && (
-          <div className="absolute top-3 left-3 bg-black/70 backdrop-blur px-2 py-1 rounded-md shadow-sm">
+          <div className="absolute top-3 left-3 bg-black/70 backdrop-blur px-2 py-1 rounded-md shadow-sm z-20">
             <span className="text-xs font-bold text-white">{getPropertyTypeLabel()}</span>
           </div>
         )}
-
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className={`w-1.5 h-1.5 rounded-full transition-all ${i === 0 ? 'bg-white w-2' : 'bg-white/60'}`} />
-          ))}
-        </div>
       </div>
 
       <div className="flex flex-col gap-0.5">
@@ -591,7 +598,7 @@ const TopCategoriesSection = ({ navigate }) => {
   };
 
   const handleCategoryClick = (category) => {
-    const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor'];
+    const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner'];
     const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattor Artise', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician'];
     const properties = ['rental', 'guesthouse'];
 
@@ -742,11 +749,10 @@ const DesktopPopularDestinations = ({ navigate }) => {
         {popularDestinations.map((destination) => (
           <motion.div key={`dest-${destination.name}`} variants={itemVariants} onClick={() => navigate(`/search?address=${encodeURIComponent(destination.name)}`)} className="cursor-pointer group">
             <div className="relative overflow-hidden rounded-xl mb-3 aspect-[3/4]">
-              <ImageWithFallback
-                src={destination.image}
+              <ImageGallery
+                imageUrls={[destination.image]}
                 alt={destination.name}
                 type="category"
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
               <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -788,16 +794,10 @@ const SmartRecommendations = ({ recommendations, insights, loading, onItemClick 
         {recommendations.slice(0, 6).map((item, i) => (
           <motion.div key={item._id ? `rec-${item._id}` : `rec-${i}`} whileHover={{ y: -4 }} onClick={() => onItemClick(item, item.routeType || item.type)} className="flex-shrink-0 w-40 cursor-pointer">
             <div className="relative aspect-square rounded-xl overflow-hidden mb-2 bg-gray-200">
-              <ImageWithFallback
-                src={item.imageUrls?.[0]}
-                imageUrls={item.imageUrls}
+              <ImageGallery
+                imageUrls={item.imageUrls || []}
                 alt={item.name}
-                type={
-                  item.routeType === 'listing'
-                    ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property')
-                    : (item.routeType || 'default')
-                }
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                type={item.routeType === 'listing' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property') : (item.routeType || 'default')}
               />
               <div className="absolute top-2 left-2">
                 <span className="text-[10px] font-semibold px-2 py-1 bg-white/90 backdrop-blur rounded-md">AI Pick</span>
@@ -842,6 +842,13 @@ const MobileAppHomepage = ({
     { icon: '🏠', label: 'Homes', type: 'properties' },
     { icon: '✨', label: 'Services', type: 'services' },
     { icon: '👷', label: 'Helpers', type: 'helpers' },
+    { icon: '🧹', label: 'Maid', type: 'helpers', category: 'domestic' },
+    { icon: '🧽', label: 'Cleaner', type: 'helpers', category: 'cleaner' },
+    { icon: '📚', label: 'Tutor', type: 'helpers', category: 'tutor' },
+    { icon: '👨‍🍳', label: 'Chef', type: 'helpers', category: 'chef' },
+    { icon: '💄', label: 'Beauty', type: 'helpers', category: 'beauty' },
+    { icon: '🖋️', label: 'Tattoos', type: 'helpers', category: 'tattoo' },
+    { icon: '✂️', label: 'Barber', type: 'helpers', category: 'barber' },
     { icon: '🎪', label: 'Events', type: 'events' },
     { icon: '🏖️', label: 'Beachfront', type: 'properties' },
     { icon: '🏕️', label: 'Cabins', type: 'properties' },
@@ -870,7 +877,10 @@ const MobileAppHomepage = ({
 
           <div className="flex items-center gap-8 overflow-x-auto pb-4 mb-8 border-b border-gray-200 scrollbar-hide">
             {categories.map((cat) => (
-              <CategoryFilter key={cat.label} {...cat} isActive={activeCategory === cat.label} onClick={() => setActiveCategory(cat.label)} />
+              <CategoryFilter key={cat.label} {...cat} isActive={activeCategory === cat.label} onClick={() => {
+                setActiveCategory(cat.label);
+                navigate(cat.category ? `/search?type=${cat.type}&category=${cat.category}` : `/search?type=${cat.type}`);
+              }} />
             ))}
           </div>
 
@@ -919,11 +929,10 @@ const MobileAppHomepage = ({
                 {featuredHelpers.slice(0, 4).map((helper) => (
                   <div key={helper._id} onClick={() => navigate(`/helper/${helper._id}`)} className="cursor-pointer flex flex-col gap-3">
                     <div className="relative aspect-square overflow-hidden rounded-full bg-gray-200 w-32 h-32 mx-auto border-2 border-gray-100 group-hover:border-rose-200 transition-colors">
-                      <ImageWithFallback
-                        src={helper.imageUrls?.[0]}
+                      <ImageGallery
+                        imageUrls={helper.imageUrls || []}
                         alt={helper.name}
                         type="avatar"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                       />
                       <div className="absolute bottom-0 right-0 w-6 h-6 bg-rose-500 rounded-full flex items-center justify-center border-2 border-white">
                         <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
@@ -956,11 +965,10 @@ const MobileAppHomepage = ({
                 {featuredEvents.slice(0, 4).map((event) => (
                   <motion.div key={event._id} whileHover={{ y: -4 }} onClick={() => navigate(`/event/${event._id}`)} className="cursor-pointer flex flex-col gap-3">
                     <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-gray-200">
-                      <ImageWithFallback
-                        src={event.imageUrls?.[0]}
+                      <ImageGallery
+                        imageUrls={event.imageUrls || []}
                         alt={event.name}
                         type="event"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute top-3 left-3 bg-white/95 backdrop-blur px-2 py-1 rounded-md">
                         <span className="text-xs font-bold text-gray-900">{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
@@ -1034,16 +1042,16 @@ const MobileAppHomepage = ({
             <button onClick={() => navigate('/categories')} className="text-sm text-rose-500 font-medium">See all</button>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x">
-            {TOP_CATEGORIES.slice(0, 10).map((category, index) => (
+            {TOP_CATEGORIES.map((category, index) => (
               <motion.div
                 key={category.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.05 }}
                 onClick={() => {
-                  const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor'];
+                  const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner'];
                   const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattor Artise', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician'];
-                  const properties = ['rental', 'guesthouse'];
+                  const properties = ['rental', 'guesthouse','sale','overnight'];
 
                   if (helpers.includes(category.id)) {
                     navigate(`/search?category=${category.id}&type=helpers`);
@@ -1058,11 +1066,10 @@ const MobileAppHomepage = ({
                 className="snap-start shrink-0 w-[120px] cursor-pointer"
               >
                 <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-2">
-                  <ImageWithFallback
-                    src={category.image}
+                  <ImageGallery
+                    imageUrls={[category.image]}
                     alt={category.name}
                     type="category"
-                    className="w-full h-full object-cover"
                   />
                   <div className={`absolute inset-0 bg-gradient-to-t ${category.color} opacity-40 mix-blend-multiply`} />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
@@ -1102,7 +1109,7 @@ const MobileAppHomepage = ({
 
         <div className="flex overflow-x-auto gap-4 pb-4 mb-6 -mx-4 px-4 scrollbar-hide">
           {categories.map((cat) => (
-            <button key={cat.label} onClick={() => navigate(`/search?type=${cat.type}`)} className="flex flex-col items-center gap-2 min-w-[64px]">
+            <button key={cat.label} onClick={() => navigate(cat.category ? `/search?type=${cat.type}&category=${cat.category}` : `/search?type=${cat.type}`)} className="flex flex-col items-center gap-2 min-w-[64px]">
               <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center text-2xl hover:bg-gray-200 transition-colors">
                 {cat.icon}
               </div>
@@ -1125,13 +1132,12 @@ const MobileAppHomepage = ({
               {recentlyViewedItems.slice(0, 5).map((item) => (
                 <div key={item._id} onClick={() => navigate(`/${item.itemType || 'listing'}/${item._id}`)} className="flex-shrink-0 w-36 cursor-pointer">
                   <div className="relative aspect-[3/2] rounded-xl overflow-hidden mb-2 bg-gray-200">
-                    <ImageWithFallback
-                      src={item.imageUrls?.[0]}
+                    <ImageGallery
+                      imageUrls={item.imageUrls || []}
                       alt={item.name}
                       type={item.type || 'default'}
-                      className="w-full h-full object-cover"
                     />
-                    <button onClick={(e) => { e.stopPropagation(); onRecentlyViewedLike(item._id, !item.isLiked); }} className="absolute top-2 right-2 p-1">
+                    <button onClick={(e) => { e.stopPropagation(); onRecentlyViewedLike(item._id, !item.isLiked); }} className="absolute top-2 right-2 p-1 z-20">
                       {item.isLiked ? <HeartIconSolid className="w-5 h-5 text-rose-500" /> : <HeartIcon className="w-5 h-5 text-white drop-shadow-md" />}
                     </button>
                   </div>
@@ -1170,11 +1176,10 @@ const MobileAppHomepage = ({
             {featuredServices.slice(0, 3).map((service) => (
               <div key={service._id} onClick={() => navigate(`/service/${service._id}`)} className="flex-shrink-0 w-60 cursor-pointer">
                 <div className="relative aspect-[3/2] rounded-xl overflow-hidden mb-2 bg-gray-200">
-                  <ImageWithFallback
-                    src={service.imageUrls?.[0]}
+                  <ImageGallery
+                    imageUrls={service.imageUrls || []}
                     alt={service.name}
                     type="service"
-                    className="w-full h-full object-cover"
                   />
                 </div>
                 <p className="font-medium text-sm truncate">{service.name}</p>
@@ -1194,11 +1199,10 @@ const MobileAppHomepage = ({
               {featuredEvents.slice(0, 3).map((event) => (
                 <div key={event._id} onClick={() => navigate(`/event/${event._id}`)} className="flex-shrink-0 w-72 cursor-pointer">
                   <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-2 bg-gray-200">
-                    <ImageWithFallback
-                      src={event.imageUrls?.[0]}
+                    <ImageGallery
+                      imageUrls={event.imageUrls || []}
                       alt={event.name}
                       type="event"
-                      className="w-full h-full object-cover"
                     />
                     <div className="absolute top-2 left-2 bg-white/90 px-2 py-1 rounded text-xs font-bold">
                       {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -1230,11 +1234,10 @@ const MobileAppHomepage = ({
             {featuredHelpers.slice(0, 4).map((helper) => (
               <div key={helper._id} onClick={() => navigate(`/helper/${helper._id}`)} className="flex-shrink-0 w-32 text-center cursor-pointer">
                 <div className="relative w-20 h-20 mx-auto mb-2">
-                  <ImageWithFallback
-                    src={helper.imageUrls?.[0]}
+                  <ImageGallery
+                    imageUrls={helper.imageUrls || []}
                     alt={helper.name}
                     type="avatar"
-                    className="w-full h-full object-cover rounded-full border-2 border-gray-100"
                   />
                   <div className="absolute bottom-0 right-0 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center border-2 border-white">
                     <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
@@ -1242,9 +1245,8 @@ const MobileAppHomepage = ({
                 </div>
                 <p className="font-medium text-sm truncate">{helper.name}</p>
                 <p className="text-xs text-gray-500 truncate">{helper.type}</p>
-                <div className="flex items-center justify-center gap-1 mt-0.5">
-                  <StarIconSolid className="w-3 h-3 text-gray-900" />
-                  <span className="text-xs">{helper.regularPrice}</span>
+                <div className="flex items-center justify-center mt-0.5">
+                  <span className="text-xs font-semibold">R{helper.regularPrice}</span>
                 </div>
               </div>
             ))}

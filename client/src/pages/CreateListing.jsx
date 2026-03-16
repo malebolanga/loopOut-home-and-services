@@ -65,6 +65,241 @@ const PawIcon = ({ className = "w-4 h-4" }) => (
   </svg>
 );
 
+// Airbnb-style UI Components
+const SectionCard = ({ title, children, className = "" }) => (
+  <div className={`bg-white rounded-2xl border border-gray-200 p-6 md:p-8 ${className}`}>
+    {title && (
+      <h2 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-6 md:mb-8">
+        {title}
+      </h2>
+    )}
+    {children}
+  </div>
+);
+
+const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, placeholder, required = false, className = "", rows = 4, helpText = "", children = null }) => (
+  <div className={className}>
+    <label className="block text-base font-medium text-gray-900 mb-2">
+      {label}
+      {required && <span className="text-[#FF5A5F] ml-1">*</span>}
+    </label>
+    {type === "textarea" ? (
+      <textarea
+        id={id}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 resize-none hover:border-gray-400"
+        rows={rows}
+      />
+    ) : type === "number" ? (
+      <input
+        type="number"
+        id={id}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 hover:border-gray-400"
+      />
+    ) : type === "select" ? (
+      <select
+        id={id}
+        value={value}
+        onChange={onChange}
+        required={required}
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 bg-white hover:border-gray-400"
+      >
+        {placeholder && <option value="">{placeholder}</option>}
+        {children}
+      </select>
+    ) : (
+      <input
+        type={type}
+        id={id}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 hover:border-gray-400"
+      />
+    )}
+    {helpText && (
+      <p className="mt-2 text-sm text-gray-500">{helpText}</p>
+    )}
+  </div>
+);
+
+const CategoryCard = ({ id, icon: Icon, label, description, selected, onSelect }) => (
+  <button
+    type="button"
+    onClick={() => onSelect(id)}
+    className={`
+      flex flex-col p-6 rounded-xl border-2 transition-all duration-200 w-full text-left
+      ${selected 
+        ? 'border-black bg-gray-50' 
+        : 'border-gray-200 hover:border-gray-400 bg-white'
+      }
+    `}
+  >
+    <div className={`
+      p-3 rounded-full mb-4 w-fit
+      ${selected ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}
+    `}>
+      <Icon className="w-6 h-6" />
+    </div>
+    <h3 className="font-semibold text-lg text-gray-900 mb-1">{label}</h3>
+    <p className="text-gray-500 text-sm leading-relaxed">{description}</p>
+    {selected && (
+      <div className="mt-4 flex items-center gap-2 text-black font-medium text-sm">
+        <CheckCircleIcon className="w-5 h-5" />
+        Selected
+      </div>
+    )}
+  </button>
+);
+
+const TypeCard = ({ id, label, emoji, description, selected, onSelect }) => (
+  <button
+    type="button"
+    onClick={() => onSelect(id)}
+    className={`
+      p-6 border-2 rounded-xl transition-all duration-200 w-full text-left
+      ${selected 
+        ? 'border-black bg-gray-50' 
+        : 'border-gray-200 hover:border-gray-400 bg-white'
+      }
+    `}
+  >
+    <span className="text-3xl mb-3 block">{emoji}</span>
+    <h4 className="font-semibold text-lg text-gray-900 mb-1">{label}</h4>
+    <p className="text-gray-500 text-sm">{description}</p>
+    {selected && (
+      <div className="mt-4 flex items-center gap-2 text-black font-medium text-sm">
+        <CheckCircleIcon className="w-5 h-5" />
+        Selected
+      </div>
+    )}
+  </button>
+);
+
+const AmenityCard = ({ id, label, emoji, checked, onChange }) => (
+  <label className={`
+    flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all duration-200
+    ${checked 
+      ? 'border-black bg-gray-50' 
+      : 'border-gray-200 hover:border-gray-400 bg-white'
+    }
+  `}>
+    <input
+      type="checkbox"
+      id={id}
+      checked={checked}
+      onChange={onChange}
+      className="hidden"
+    />
+    <span className="text-2xl">{emoji}</span>
+    <span className="font-medium text-gray-900 flex-1">{label}</span>
+    <div className={`
+      w-6 h-6 rounded border-2 flex items-center justify-center transition-all duration-200
+      ${checked 
+        ? 'bg-black border-black' 
+        : 'bg-white border-gray-300'
+      }
+    `}>
+      {checked && <CheckCircleIcon className="w-4 h-4 text-white" />}
+    </div>
+  </label>
+);
+
+const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFiles = 10, label, uploading, uploadProgress }) => (
+  <div className="space-y-4">
+    <div className="flex flex-col gap-4">
+      <input
+        type="file"
+        id={`${type}-upload`}
+        accept={type === 'image' ? 'image/*' : 'video/*'}
+        multiple={type === 'image'}
+        onChange={onChange}
+        className="hidden"
+        disabled={uploading}
+      />
+      <label
+        htmlFor={`${type}-upload`}
+        className={`
+          p-8 md:p-12 border-2 border-dashed rounded-xl flex flex-col items-center justify-center 
+          cursor-pointer transition-all duration-200 min-h-[200px]
+          ${uploading ? 'border-gray-200 bg-gray-50' : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'}
+        `}
+      >
+        {type === 'image' ? (
+          <>
+            <div className="p-4 bg-gray-100 rounded-full mb-4">
+              <CameraIcon className="w-8 h-8 text-gray-600" />
+            </div>
+            <span className="text-gray-900 font-medium text-lg mb-1">{label || "Add photos"}</span>
+            <span className="text-gray-500 text-sm">Drag and drop or click to upload</span>
+            <span className="text-gray-400 text-xs mt-2">PNG, JPG up to 2MB each</span>
+          </>
+        ) : (
+          <>
+            <div className="p-4 bg-gray-100 rounded-full mb-4">
+              <VideoCameraIcon className="w-8 h-8 text-gray-600" />
+            </div>
+            <span className="text-gray-900 font-medium text-lg mb-1">{label || "Add a video"}</span>
+            <span className="text-gray-500 text-sm">MP4 or MOV up to 50MB</span>
+          </>
+        )}
+      </label>
+      {filesCount > 0 && (
+        <button
+          type="button"
+          onClick={onSubmit}
+          className="w-full py-3 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
+          disabled={uploading}
+        >
+          {uploading ? `Uploading ${Math.round(uploadProgress)}%...` : `Upload ${filesCount} file${filesCount > 1 ? 's' : ''}`}
+        </button>
+      )}
+    </div>
+  </div>
+);
+
+const StepProgress = ({ currentStep }) => (
+  <div className="mb-8 md:mb-12">
+    <div className="flex items-center justify-between max-w-2xl mx-auto">
+      {[1, 2, 3, 4, 5, 6].map((step, index) => (
+        <div key={step} className="flex items-center flex-1">
+          <div className={`
+            w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300
+            ${step < currentStep ? 'bg-black text-white' :
+              step === currentStep ? 'bg-black text-white ring-4 ring-gray-200' :
+              'bg-white border-2 border-gray-300 text-gray-400'
+            }
+          `}>
+            {step < currentStep ? <CheckCircleIcon className="w-5 h-5" /> : step}
+          </div>
+          {step < 6 && (
+            <div className={`
+              h-0.5 flex-1 mx-2 transition-all duration-300
+              ${step < currentStep ? 'bg-black' : 'bg-gray-200'}
+            `} />
+          )}
+        </div>
+      ))}
+    </div>
+    <div className="flex justify-between mt-4 text-xs font-medium text-gray-500 max-w-2xl mx-auto px-2">
+      <span className={currentStep >= 1 ? 'text-black' : ''}>Category</span>
+      <span className={currentStep >= 2 ? 'text-black' : ''}>Type</span>
+      <span className={currentStep >= 3 ? 'text-black' : ''}>Details</span>
+      <span className={currentStep >= 4 ? 'text-black' : ''}>Amenities</span>
+      <span className={currentStep >= 5 ? 'text-black' : ''}>Photos</span>
+      <span className={currentStep >= 6 ? 'text-black' : ''}>Review</span>
+    </div>
+  </div>
+);
+
 export default function CreateListing() {
   const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
@@ -1110,240 +1345,7 @@ export default function CreateListing() {
     setSelectedPaymentMethod(method);
   };
 
-  // Airbnb-style UI Components
-  const SectionCard = ({ title, children, className = "" }) => (
-    <div className={`bg-white rounded-2xl border border-gray-200 p-6 md:p-8 ${className}`}>
-      {title && (
-        <h2 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-6 md:mb-8">
-          {title}
-        </h2>
-      )}
-      {children}
-    </div>
-  );
 
-  const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, placeholder, required = false, className = "", rows = 4, helpText = "" }) => (
-    <div className={className}>
-      <label className="block text-base font-medium text-gray-900 mb-2">
-        {label}
-        {required && <span className="text-[#FF5A5F] ml-1">*</span>}
-      </label>
-      {type === "textarea" ? (
-        <textarea
-          id={id}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          required={required}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 resize-none hover:border-gray-400"
-          rows={rows}
-        />
-      ) : type === "number" ? (
-        <input
-          type="number"
-          id={id}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          required={required}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 hover:border-gray-400"
-        />
-      ) : type === "select" ? (
-        <select
-          id={id}
-          value={value}
-          onChange={onChange}
-          required={required}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 bg-white hover:border-gray-400"
-        >
-          {placeholder && <option value="">{placeholder}</option>}
-          {children}
-        </select>
-      ) : (
-        <input
-          type={type}
-          id={id}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          required={required}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 hover:border-gray-400"
-        />
-      )}
-      {helpText && (
-        <p className="mt-2 text-sm text-gray-500">{helpText}</p>
-      )}
-    </div>
-  );
-
-  const CategoryCard = ({ id, icon: Icon, label, description, selected }) => (
-    <button
-      type="button"
-      onClick={() => setSelectedCategory(id)}
-      className={`
-        flex flex-col p-6 rounded-xl border-2 transition-all duration-200 w-full text-left
-        ${selected 
-          ? 'border-black bg-gray-50' 
-          : 'border-gray-200 hover:border-gray-400 bg-white'
-        }
-      `}
-    >
-      <div className={`
-        p-3 rounded-full mb-4 w-fit
-        ${selected ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}
-      `}>
-        <Icon className="w-6 h-6" />
-      </div>
-      <h3 className="font-semibold text-lg text-gray-900 mb-1">{label}</h3>
-      <p className="text-gray-500 text-sm leading-relaxed">{description}</p>
-      {selected && (
-        <div className="mt-4 flex items-center gap-2 text-black font-medium text-sm">
-          <CheckCircleIcon className="w-5 h-5" />
-          Selected
-        </div>
-      )}
-    </button>
-  );
-
-  const TypeCard = ({ id, label, emoji, description, selected }) => (
-    <button
-      type="button"
-      onClick={() => setSelectedType(id)}
-      className={`
-        p-6 border-2 rounded-xl transition-all duration-200 w-full text-left
-        ${selected 
-          ? 'border-black bg-gray-50' 
-          : 'border-gray-200 hover:border-gray-400 bg-white'
-        }
-      `}
-    >
-      <span className="text-3xl mb-3 block">{emoji}</span>
-      <h4 className="font-semibold text-lg text-gray-900 mb-1">{label}</h4>
-      <p className="text-gray-500 text-sm">{description}</p>
-      {selected && (
-        <div className="mt-4 flex items-center gap-2 text-black font-medium text-sm">
-          <CheckCircleIcon className="w-5 h-5" />
-          Selected
-        </div>
-      )}
-    </button>
-  );
-
-  const AmenityCard = ({ id, label, emoji, checked, onChange }) => (
-    <label className={`
-      flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all duration-200
-      ${checked 
-        ? 'border-black bg-gray-50' 
-        : 'border-gray-200 hover:border-gray-400 bg-white'
-      }
-    `}>
-      <input
-        type="checkbox"
-        id={id}
-        checked={checked}
-        onChange={onChange}
-        className="hidden"
-      />
-      <span className="text-2xl">{emoji}</span>
-      <span className="font-medium text-gray-900 flex-1">{label}</span>
-      <div className={`
-        w-6 h-6 rounded border-2 flex items-center justify-center transition-all duration-200
-        ${checked 
-          ? 'bg-black border-black' 
-          : 'bg-white border-gray-300'
-        }
-      `}>
-        {checked && <CheckCircleIcon className="w-4 h-4 text-white" />}
-      </div>
-    </label>
-  );
-
-  const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFiles = 10, label }) => (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-4">
-        <input
-          type="file"
-          id={`${type}-upload`}
-          accept={type === 'image' ? 'image/*' : 'video/*'}
-          multiple={type === 'image'}
-          onChange={onChange}
-          className="hidden"
-          disabled={uploading}
-        />
-        <label
-          htmlFor={`${type}-upload`}
-          className={`
-            p-8 md:p-12 border-2 border-dashed rounded-xl flex flex-col items-center justify-center 
-            cursor-pointer transition-all duration-200 min-h-[200px]
-            ${uploading ? 'border-gray-200 bg-gray-50' : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'}
-          `}
-        >
-          {type === 'image' ? (
-            <>
-              <div className="p-4 bg-gray-100 rounded-full mb-4">
-                <CameraIcon className="w-8 h-8 text-gray-600" />
-              </div>
-              <span className="text-gray-900 font-medium text-lg mb-1">{label || "Add photos"}</span>
-              <span className="text-gray-500 text-sm">Drag and drop or click to upload</span>
-              <span className="text-gray-400 text-xs mt-2">PNG, JPG up to 2MB each</span>
-            </>
-          ) : (
-            <>
-              <div className="p-4 bg-gray-100 rounded-full mb-4">
-                <VideoCameraIcon className="w-8 h-8 text-gray-600" />
-              </div>
-              <span className="text-gray-900 font-medium text-lg mb-1">{label || "Add a video"}</span>
-              <span className="text-gray-500 text-sm">MP4 or MOV up to 50MB</span>
-            </>
-          )}
-        </label>
-        {filesCount > 0 && (
-          <button
-            type="button"
-            onClick={onSubmit}
-            className="w-full py-3 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
-            disabled={uploading}
-          >
-            {uploading ? `Uploading ${Math.round(uploadProgress)}%...` : `Upload ${filesCount} file${filesCount > 1 ? 's' : ''}`}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-
-  const StepProgress = () => (
-    <div className="mb-8 md:mb-12">
-      <div className="flex items-center justify-between max-w-2xl mx-auto">
-        {[1, 2, 3, 4, 5, 6].map((step, index) => (
-          <div key={step} className="flex items-center flex-1">
-            <div className={`
-              w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300
-              ${step < currentStep ? 'bg-black text-white' :
-                step === currentStep ? 'bg-black text-white ring-4 ring-gray-200' :
-                'bg-white border-2 border-gray-300 text-gray-400'
-              }
-            `}>
-              {step < currentStep ? <CheckCircleIcon className="w-5 h-5" /> : step}
-            </div>
-            {step < 6 && (
-              <div className={`
-                h-0.5 flex-1 mx-2 transition-all duration-300
-                ${step < currentStep ? 'bg-black' : 'bg-gray-200'}
-              `} />
-            )}
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-between mt-4 text-xs font-medium text-gray-500 max-w-2xl mx-auto px-2">
-        <span className={currentStep >= 1 ? 'text-black' : ''}>Category</span>
-        <span className={currentStep >= 2 ? 'text-black' : ''}>Type</span>
-        <span className={currentStep >= 3 ? 'text-black' : ''}>Details</span>
-        <span className={currentStep >= 4 ? 'text-black' : ''}>Amenities</span>
-        <span className={currentStep >= 5 ? 'text-black' : ''}>Photos</span>
-        <span className={currentStep >= 6 ? 'text-black' : ''}>Review</span>
-      </div>
-    </div>
-  );
 
   if (loading && !showPromotionPopup) {
     return (
@@ -1423,7 +1425,7 @@ export default function CreateListing() {
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 md:py-12">
         {/* Step Progress */}
-        <StepProgress />
+        <StepProgress currentStep={currentStep} />
 
         {/* Main Form Container */}
         <div className={`transition-all duration-500 ${fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -1439,6 +1441,7 @@ export default function CreateListing() {
                     label="Places to Stay"
                     description="Rent out your property, room, or entire home"
                     selected={selectedCategory === 'stays'}
+                    onSelect={setSelectedCategory}
                   />
                   <CategoryCard
                     id="experiences"
@@ -1446,6 +1449,7 @@ export default function CreateListing() {
                     label="Services"
                     description="Offer professional services to the community"
                     selected={selectedCategory === 'experiences'}
+                    onSelect={setSelectedCategory}
                   />
                   <CategoryCard
                     id="online"
@@ -1453,6 +1457,7 @@ export default function CreateListing() {
                     label="Helpers"
                     description="Register as a personal helper or specialist"
                     selected={selectedCategory === 'online'}
+                    onSelect={setSelectedCategory}
                   />
                   <CategoryCard
                     id="events"
@@ -1460,6 +1465,7 @@ export default function CreateListing() {
                     label="Events"
                     description="Create and promote local happenings"
                     selected={selectedCategory === 'events'}
+                    onSelect={setSelectedCategory}
                   />
                 </div>
               </SectionCard>
@@ -1476,6 +1482,7 @@ export default function CreateListing() {
                       key={type.id}
                       {...type}
                       selected={selectedType === type.id}
+                      onSelect={setSelectedType}
                     />
                   ))}
                 </div>
@@ -1963,6 +1970,8 @@ export default function CreateListing() {
                     onSubmit={handleImageSubmit}
                     filesCount={files.length}
                     label="Upload from your device"
+                    uploading={uploading}
+                    uploadProgress={uploadProgress}
                   />
                   
                   {imageUploadError && (
@@ -2004,6 +2013,8 @@ export default function CreateListing() {
                       onSubmit={handleVideoUpload}
                       filesCount={videoFile ? 1 : 0}
                       maxFiles={1}
+                      uploading={uploading}
+                      uploadProgress={uploadProgress}
                     />
                     {videoUploadError && (
                       <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { 
+import {
   FaHeart,
   FaSpinner,
   FaTrash,
@@ -73,33 +73,43 @@ export default function WishList() {
         const storedServices = JSON.parse(localStorage.getItem('serviceWishlist')) || [];
         const storedHelpers = JSON.parse(localStorage.getItem('helperWishlist')) || [];
         const storedEvents = JSON.parse(localStorage.getItem('eventWishlist')) || [];
-        
+
         const safeParse = (data) => Array.isArray(data) ? data : [];
-        
-        const listingsWithType = safeParse(storedListings).map(item => ({ 
-          ...item, 
-          type: 'listing', 
-          addedAt: item.addedAt || Date.now() 
+
+        const listingsWithType = safeParse(storedListings).map(item => ({
+          ...item,
+          type: 'listing',
+          addedAt: item.addedAt || Date.now()
         }));
-        const servicesWithType = safeParse(storedServices).map(item => ({ 
-          ...item, 
-          type: 'service', 
-          addedAt: item.addedAt || Date.now() 
+        const servicesWithType = safeParse(storedServices).map(item => ({
+          ...item,
+          type: 'service',
+          addedAt: item.addedAt || Date.now()
         }));
-        const helpersWithType = safeParse(storedHelpers).map(item => ({ 
-          ...item, 
-          type: 'helper', 
-          addedAt: item.addedAt || Date.now() 
+        const helpersWithType = safeParse(storedHelpers).map(item => ({
+          ...item,
+          type: 'helper',
+          addedAt: item.addedAt || Date.now()
         }));
-        const eventsWithType = safeParse(storedEvents).map(item => ({ 
-          ...item, 
-          type: 'event', 
-          addedAt: item.addedAt || Date.now() 
+        const eventsWithType = safeParse(storedEvents).map(item => ({
+          ...item,
+          type: 'event',
+          addedAt: item.addedAt || Date.now()
         }));
-        
+
         let combined = [...listingsWithType, ...servicesWithType, ...helpersWithType, ...eventsWithType];
+
+        // Deduplicate: remove any item with the same type+_id combination
+        const seen = new Map();
+        combined = combined.filter(item => {
+          const key = `${item.type}-${item._id}`;
+          if (seen.has(key)) return false;
+          seen.set(key, true);
+          return true;
+        });
+
         combined = sortWishlist(combined, sortBy);
-        
+
         setWishlist(combined);
       } catch (error) {
         console.error('Error loading wishlist:', error);
@@ -114,7 +124,7 @@ export default function WishList() {
   const sortWishlist = (items, sortType) => {
     if (!Array.isArray(items)) return [];
     const sorted = [...items];
-    switch(sortType) {
+    switch (sortType) {
       case 'recent':
         return sorted.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
       case 'oldest':
@@ -142,30 +152,30 @@ export default function WishList() {
     }
   };
 
-  const filteredWishlist = filterType === 'all' 
-    ? wishlist 
+  const filteredWishlist = filterType === 'all'
+    ? wishlist
     : wishlist.filter(item => item.type === filterType);
 
-  const searchedWishlist = searchQuery 
+  const searchedWishlist = searchQuery
     ? filteredWishlist.filter(item => {
-        const searchText = (item.title || item.name || item.eventName || '').toLowerCase();
-        return searchText.includes(searchQuery.toLowerCase());
-      })
+      const searchText = (item.title || item.name || item.eventName || '').toLowerCase();
+      return searchText.includes(searchQuery.toLowerCase());
+    })
     : filteredWishlist;
 
   const removeFromWishlist = async (itemId, itemType) => {
     try {
       setRemovingId(itemId);
-      
+
       setWishlist(prev => prev.filter(item => !(item._id === itemId && item.type === itemType)));
-      
+
       const storageKeys = {
         listing: 'wishlist',
         service: 'serviceWishlist',
         helper: 'helperWishlist',
         event: 'eventWishlist'
       };
-      
+
       if (storageKeys[itemType]) {
         const key = storageKeys[itemType];
         const storedData = localStorage.getItem(key);
@@ -177,7 +187,7 @@ export default function WishList() {
           }
         }
       }
-      
+
       window.dispatchEvent(new Event('storage'));
     } catch (error) {
       console.error('Error removing from wishlist:', error);
@@ -231,16 +241,15 @@ export default function WishList() {
   return (
     <div className="min-h-screen bg-white">
       {/* Airbnb-style Navigation */}
-     <div className="sticky top-0 z-50 bg-white border-b border-[#DDDDDD]">
+      <div className="sticky top-0 z-50 bg-white border-b border-[#DDDDDD]">
         <div className="max-w-[1600px] mx-auto px-6 sm:px-2 lg:px-12">
           <div className="flex items-center justify-between h-20">
             {/* Logo Area / Back Button */}
             <div className="flex items-center gap-4">
-              <button 
+              <button
                 onClick={() => navigate(-1)}
-                className={`p-2 rounded-full transition-colors ${
-                  isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
-                }`}
+                className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
+                  }`}
               >
                 <FaArrowLeft className={`text-xl ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
               </button>
@@ -248,9 +257,8 @@ export default function WishList() {
                 <div className="w-8 h-8 bg-[#FF5A5F] rounded-lg flex items-center justify-center">
                   <TbHeartFilled className="w-5 h-5 text-white" />
                 </div>
-                <span className={`text-xl font-semibold tracking-tight hidden sm:block ${
-                  isScrolled ? 'text-gray-900' : 'text-white'
-                }`}>
+                <span className={`text-xl font-semibold tracking-tight hidden sm:block ${isScrolled ? 'text-gray-900' : 'text-white'
+                  }`}>
                   My Collections
                 </span>
               </div>
@@ -260,55 +268,50 @@ export default function WishList() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowShareModal(true)}
-                className={`hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all text-sm font-medium ${
-                  isScrolled 
-                    ? 'border-gray-300 hover:border-gray-800 hover:bg-gray-50 text-gray-700' 
+                className={`hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all text-sm font-medium ${isScrolled
+                    ? 'border-gray-300 hover:border-gray-800 hover:bg-gray-50 text-gray-700'
                     : 'border-white/30 hover:border-white text-white hover:bg-white/10'
-                }`}
+                  }`}
               >
                 <FaShareAlt className="w-4 h-4" />
                 Share
               </button>
               <button
                 onClick={handleShare}
-                className={`p-2.5 rounded-lg border transition-all ${
-                  isScrolled 
-                    ? 'border-gray-300 hover:border-gray-800 hover:bg-gray-50 text-gray-700' 
+                className={`p-2.5 rounded-lg border transition-all ${isScrolled
+                    ? 'border-gray-300 hover:border-gray-800 hover:bg-gray-50 text-gray-700'
                     : 'border-white/30 hover:border-white text-white hover:bg-white/10'
-                }`}
+                  }`}
               >
                 <FiShare2 className="w-4 h-4" />
               </button>
               <button
                 onClick={toggleFavorite}
-                className={`p-2.5 rounded-lg border transition-all ${
-                  isScrolled 
-                    ? 'border-gray-300 hover:border-gray-800 hover:bg-gray-50 text-gray-700' 
+                className={`p-2.5 rounded-lg border transition-all ${isScrolled
+                    ? 'border-gray-300 hover:border-gray-800 hover:bg-gray-50 text-gray-700'
                     : 'border-white/30 hover:border-white text-white hover:bg-white/10'
-                }`}
+                  }`}
               >
-                {isFavorite ? 
-                  <FaHeart className="w-4 h-4 text-rose-500" /> : 
+                {isFavorite ?
+                  <FaHeart className="w-4 h-4 text-rose-500" /> :
                   <FiHeart className="w-4 h-4" />
                 }
               </button>
               <button
                 onClick={() => setShowSettingsModal(true)}
-                className={`p-2.5 rounded-lg border transition-all ${
-                  isScrolled 
-                    ? 'border-gray-300 hover:border-gray-800 hover:bg-gray-50 text-gray-700' 
+                className={`p-2.5 rounded-lg border transition-all ${isScrolled
+                    ? 'border-gray-300 hover:border-gray-800 hover:bg-gray-50 text-gray-700'
                     : 'border-white/30 hover:border-white text-white hover:bg-white/10'
-                }`}
+                  }`}
               >
                 <FaSlidersH className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setShowCreateModal(true)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all text-sm font-medium ${
-                  isScrolled 
-                    ? 'bg-gray-900 hover:bg-black text-white' 
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all text-sm font-medium ${isScrolled
+                    ? 'bg-gray-900 hover:bg-black text-white'
                     : 'bg-white hover:bg-gray-100 text-gray-900'
-                }`}
+                  }`}
               >
                 <FaPlus className="w-4 h-4" />
                 <span className="hidden sm:inline">Create list</span>
@@ -331,7 +334,7 @@ export default function WishList() {
                 {wishlist.length} {wishlist.length === 1 ? 'stay' : 'stays'} saved
               </p>
             </div>
-            
+
             {/* Collaborators Preview (Airbnb-style) */}
             <div className="flex items-center gap-3">
               <div className="flex -space-x-2">
@@ -365,41 +368,37 @@ export default function WishList() {
             <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
               <button
                 onClick={() => setFilterType('all')}
-                className={`px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all border ${
-                  filterType === 'all'
+                className={`px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all border ${filterType === 'all'
                     ? 'bg-gray-900 text-white border-gray-900'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-gray-900'
-                }`}
+                  }`}
               >
                 All ({stats.all})
               </button>
               <button
                 onClick={() => setFilterType('listing')}
-                className={`px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all border ${
-                  filterType === 'listing'
+                className={`px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all border ${filterType === 'listing'
                     ? 'bg-gray-900 text-white border-gray-900'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-gray-900'
-                }`}
+                  }`}
               >
                 Homes ({stats.listings})
               </button>
               <button
                 onClick={() => setFilterType('service')}
-                className={`px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all border ${
-                  filterType === 'service'
+                className={`px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all border ${filterType === 'service'
                     ? 'bg-gray-900 text-white border-gray-900'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-gray-900'
-                }`}
+                  }`}
               >
                 Services ({stats.services})
               </button>
               <button
                 onClick={() => setFilterType('event')}
-                className={`px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all border ${
-                  filterType === 'event'
+                className={`px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all border ${filterType === 'event'
                     ? 'bg-gray-900 text-white border-gray-900'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-gray-900'
-                }`}
+                  }`}
               >
                 Experiences ({stats.events})
               </button>
@@ -415,11 +414,11 @@ export default function WishList() {
                   <span className="capitalize">{sortBy.replace('-', ' ')}</span>
                   <FaChevronDown className={`w-3 h-3 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
                 </button>
-                
+
                 {isFilterOpen && (
                   <>
-                    <div 
-                      className="fixed inset-0 z-40" 
+                    <div
+                      className="fixed inset-0 z-40"
                       onClick={() => setIsFilterOpen(false)}
                     />
                     <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-2">
@@ -430,15 +429,14 @@ export default function WishList() {
                             setSortBy(option);
                             setIsFilterOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors text-sm ${
-                            sortBy === option ? 'font-semibold text-gray-900' : 'text-gray-600'
-                          }`}
+                          className={`w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors text-sm ${sortBy === option ? 'font-semibold text-gray-900' : 'text-gray-600'
+                            }`}
                         >
-                          {option === 'recent' ? 'Recently saved' : 
-                           option === 'oldest' ? 'Oldest first' :
-                           option === 'name' ? 'Name' :
-                           option === 'price-high' ? 'Price: high to low' :
-                           'Price: low to high'}
+                          {option === 'recent' ? 'Recently saved' :
+                            option === 'oldest' ? 'Oldest first' :
+                              option === 'name' ? 'Name' :
+                                option === 'price-high' ? 'Price: high to low' :
+                                  'Price: low to high'}
                         </button>
                       ))}
                     </div>
@@ -474,12 +472,12 @@ export default function WishList() {
               {searchQuery ? 'No matches found' : 'Start saving places you love'}
             </h2>
             <p className="text-gray-500 max-w-sm mb-6">
-              {searchQuery 
+              {searchQuery
                 ? 'Try adjusting your search terms'
                 : 'As you search, click the heart icon to save your favorite listings, services, and experiences.'}
             </p>
             {!searchQuery && (
-              <button 
+              <button
                 onClick={() => window.location.href = '/listings'}
                 className="px-6 py-3 bg-[#FF5A5F] hover:bg-[#E14E50] text-white rounded-lg font-medium transition-colors"
               >
@@ -546,7 +544,7 @@ export default function WishList() {
                 <FaTimes className="w-5 h-5 text-gray-500" />
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -560,7 +558,7 @@ export default function WishList() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Description (optional)
@@ -573,7 +571,7 @@ export default function WishList() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all resize-none"
                 />
               </div>
-              
+
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-lg ${isPrivate ? 'bg-gray-200' : 'bg-green-100'}`}>
@@ -596,7 +594,7 @@ export default function WishList() {
                 </button>
               </div>
             </div>
-            
+
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowCreateModal(false)}
@@ -607,11 +605,10 @@ export default function WishList() {
               <button
                 onClick={createNewList}
                 disabled={!newListName.trim()}
-                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${
-                  newListName.trim()
+                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${newListName.trim()
                     ? 'bg-gray-900 text-white hover:bg-black'
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                }`}
+                  }`}
               >
                 Create
               </button>
@@ -633,7 +630,7 @@ export default function WishList() {
                 <FaTimes className="w-5 h-5 text-gray-500" />
               </button>
             </div>
-            
+
             <div className="space-y-3">
               <button className="w-full flex items-center gap-3 p-4 border border-gray-300 rounded-xl hover:border-gray-900 hover:bg-gray-50 transition-all text-left">
                 <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
@@ -644,7 +641,7 @@ export default function WishList() {
                   <div className="text-sm text-gray-500">Share via message or email</div>
                 </div>
               </button>
-              
+
               <button className="w-full flex items-center gap-3 p-4 border border-gray-300 rounded-xl hover:border-gray-900 hover:bg-gray-50 transition-all text-left">
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                   <FaUser className="w-5 h-5 text-blue-600" />
@@ -672,9 +669,9 @@ export default function WishList() {
                 <FaTimes className="w-5 h-5 text-gray-500" />
               </button>
             </div>
-            
+
             <div className="space-y-4 py-10">
-              <button 
+              <button
                 onClick={() => {
                   setShowSettingsModal(false);
                   setShowCreateModal(true);
@@ -684,8 +681,8 @@ export default function WishList() {
                 <span className="font-medium text-gray-900">Create new wishlist</span>
                 <FaPlus className="w-5 h-5 text-gray-400" />
               </button>
-              
-              <button 
+
+              <button
                 onClick={() => {
                   setShowSettingsModal(false);
                   clearAll();
@@ -745,7 +742,7 @@ function AirbnbCard({ item, removingId, removeFromWishlist }) {
 
   const getViewUrl = () => {
     const baseUrl = 'http://localhost:5173';
-    switch(item.type) {
+    switch (item.type) {
       case 'listing': return `${baseUrl}/listing/${item._id}`;
       case 'service': return `${baseUrl}/service/${item._id}`;
       case 'helper': return `${baseUrl}/helper/${item._id}`;
@@ -757,7 +754,7 @@ function AirbnbCard({ item, removingId, removeFromWishlist }) {
   const price = getPrice();
 
   return (
-    <div 
+    <div
       className="cursor-pointer "
       onClick={() => window.open(getViewUrl(), '_blank')}
     >
@@ -771,7 +768,7 @@ function AirbnbCard({ item, removingId, removeFromWishlist }) {
             e.target.src = 'https://images.unsplash.com/photo-1615529182904-14819c35db37?w=800&q=80';
           }}
         />
-        
+
         {/* Heart Button - Airbnb Style */}
         <button
           onClick={(e) => {
@@ -806,10 +803,10 @@ function AirbnbCard({ item, removingId, removeFromWishlist }) {
             <span>{getRating()}</span>
           </div>
         </div>
-        
+
         <p className="text-gray-500 text-sm truncate">{getDetails()}</p>
         <p className="text-gray-500 text-sm">{getTitle()}</p>
-        
+
         {price && (
           <div className="flex items-baseline gap-1 pt-1">
             <span className="font-semibold text-gray-900">{price}</span>
@@ -869,7 +866,7 @@ function AirbnbListCard({ item, removingId, removeFromWishlist }) {
           )}
         </button>
       </div>
-      
+
       <div className="flex-1 flex flex-col justify-between py-1">
         <div>
           <div className="flex justify-between items-start">
@@ -889,7 +886,7 @@ function AirbnbListCard({ item, removingId, removeFromWishlist }) {
             {item.type === 'event' && <span>{item.date}</span>}
           </div>
         </div>
-        
+
         <div className="flex items-end justify-between">
           <div className="flex items-center gap-1">
             <FaStar className="w-4 h-4 text-gray-900" />

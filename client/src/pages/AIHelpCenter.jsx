@@ -154,11 +154,11 @@ export default function AIHelpCenter() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center mb-6">
-          <Link to="/" className="flex items-center text-rose-600 hover:text-rose-700 mr-4 transition-colors">
-            <FaArrowLeft className="mr-2" /> Back
+          <Link to="/" aria-label="Go back to Home" className="flex items-center text-rose-600 hover:text-rose-700 mr-4 transition-colors">
+            <FaArrowLeft className="mr-2" aria-hidden="true" /> Back
           </Link>
           <h1 className="text-3xl font-bold flex items-center">
-            <FaBrain className="text-rose-600 mr-3" />
+            <FaBrain className="text-rose-600 mr-3" aria-label="AI Help Brain Icon" />
             LoupeOut Help Center
           </h1>
         </div>
@@ -211,7 +211,7 @@ export default function AIHelpCenter() {
                 <div className="flex items-start text-left w-full">
                   <div className="mr-3 flex-shrink-0 mt-1">
                     <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center">
-                      <FaBrain className="text-white text-sm" />
+                      <FaBrain className="text-white text-sm" aria-label="AI Response Icon" />
                     </div>
                   </div>
                   <div className="prose max-w-none"> {/* Ensures text flows nicely */}
@@ -226,7 +226,7 @@ export default function AIHelpCenter() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-40 text-gray-500">
-                  <FaBrain className="text-4xl text-rose-500 mb-3" />
+                  <FaBrain className="text-4xl text-rose-500 mb-3" aria-label="AI Assistant Placeholder Icon" />
                   <p className="text-lg">Select a question to see AI-powered insights</p>
                 </div>
               )}

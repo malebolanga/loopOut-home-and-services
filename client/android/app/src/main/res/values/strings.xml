@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LoupeOut</string>
+    <string name="title_activity_main">LoupeOut</string>
+    <string name="package_name">com.loupeout.app</string>
+    <string name="custom_url_scheme">com.loupeout.app</string>
+</resources>

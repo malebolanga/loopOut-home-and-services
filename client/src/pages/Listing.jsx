@@ -181,7 +181,7 @@ const ADVERTISING_PLATFORMS = [
 ];
 
 // WhatsApp Booking Modal Component for different property types
-const WhatsAppBookingModal = ({ listing, isOpen, onClose }) => {
+const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates }) => {
   const [bookingDetails, setBookingDetails] = useState({
     fullName: '',
     email: '',
@@ -198,6 +198,19 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose }) => {
     startTime: '09:00',
     endTime: '17:00'
   });
+
+  useEffect(() => {
+    if (isOpen && initialDates) {
+      setBookingDetails(prev => ({
+        ...prev,
+        checkIn: initialDates.checkIn || prev.checkIn,
+        checkOut: initialDates.checkOut || prev.checkOut,
+        selectedDate: initialDates.selectedDate || prev.selectedDate,
+        startTime: initialDates.startTime || prev.startTime,
+        endTime: initialDates.endTime || prev.endTime
+      }));
+    }
+  }, [isOpen, initialDates]);
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1491,13 +1504,7 @@ export default function Listing() {
   };
 
   const handleQuickBooking = () => {
-    // Scroll to calendar section or open booking modal
-    const calendarSection = document.getElementById('calendar-section');
-    if (calendarSection) {
-      calendarSection.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      setShowBookingModal(true);
-    }
+    setShowBookingModal(true);
   };
 
   const handleRateHostLikeDislike = async (action) => {
@@ -2239,6 +2246,13 @@ export default function Listing() {
         listing={listing}
         isOpen={showBookingModal}
         onClose={() => setShowBookingModal(false)}
+        initialDates={{
+          checkIn: dateRange && dateRange[0] ? new Date(dateRange[0].getTime() - dateRange[0].getTimezoneOffset() * 60000).toISOString().split('T')[0] : '',
+          checkOut: dateRange && dateRange[1] ? new Date(dateRange[1].getTime() - dateRange[1].getTimezoneOffset() * 60000).toISOString().split('T')[0] : '',
+          selectedDate: selectedDate ? new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0] : '',
+          startTime,
+          endTime
+        }}
       />
 
       {/* Contact Modal */}

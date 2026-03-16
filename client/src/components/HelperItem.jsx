@@ -3,12 +3,8 @@ import { Link } from "react-router-dom";
 import { MdLocationOn } from "react-icons/md";
 import { FaHeart, FaRegHeart, FaStar } from "react-icons/fa";
 import { useState, useEffect, useMemo } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/pagination";
 import "../styles/ListingDetails.scss";
-import ImageWithFallback from "./ImageWithFallback";
+import ImageGallery from "./ImageGallery";
 
 const NEW_HELPER_THRESHOLD_DAYS = 14;
 const CLICKS_PER_STAR = 20;
@@ -53,7 +49,8 @@ const formatPrice = (price) => {
 // Updated helper type names with beauty and photographer
 const getHelperTypeName = (type) => {
   switch (type) {
-    case 'domestic': return 'Maid';
+    case 'domestic': return 'Domestic Worker';
+    case 'maid': return 'Maid';
     case 'tutor': return 'Tutor';
     case 'chef': return 'Chef';
     case 'handyman': return 'Handyman';
@@ -68,7 +65,6 @@ const getHelperTypeName = (type) => {
 function HelperItem({ helper, className = "", compactMode = false }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [isNewHelper, setIsNewHelper] = useState(false);
   const [clickCount, setClickCount] = useState(0);
   const [hasPositivePromo, setHasPositivePromo] = useState(false);
@@ -174,10 +170,7 @@ function HelperItem({ helper, className = "", compactMode = false }) {
     }
   };
 
-  // Prepare images, add a placeholder if no images are available
-  const enhancedImages = helper?.imageUrls?.length > 0
-    ? helper.imageUrls.map((img) => ({ url: img }))
-    : [{ url: "https://placehold.co/600x400/E0E0E0/333333?text=No+Image" }];
+  // Helper images handled by ImageGallery
 
   // Function to share helper details to different platforms
   const shareHelper = (platform, e) => {
@@ -257,13 +250,11 @@ function HelperItem({ helper, className = "", compactMode = false }) {
         <>
           {/* Compact Mode Layout */}
           <div className="relative w-24 h-28 flex-shrink-0 rounded-lg overflow-hidden">
-            <ImageWithFallback
-              src={enhancedImages[0]?.url}
-              imageUrls={helper.imageUrls}
+            <ImageGallery
+              imageUrls={helper.imageUrls || []}
               type="helper"
               alt={`${helper.name || 'Helper'} image`}
               className="w-full h-full object-cover"
-              loading="lazy"
             />
             {isNewHelper && (
               <span className="absolute top-1 left-1 bg-green-500 text-white px-1.5 py-0.5 text-[10px] font-semibold rounded-full shadow-xs">
@@ -353,55 +344,39 @@ function HelperItem({ helper, className = "", compactMode = false }) {
           </button>
 
           <div className="block relative flex-grow-0">
-            <div className="relative pb-[75%] bg-gray-100 overflow-hidden rounded-t-xl">
-              <Swiper
-                modules={[Pagination, Autoplay]}
-                pagination={{
-                  clickable: true,
-                  dynamicBullets: true,
-                }}
-                autoplay={{ delay: 5000, disableOnInteraction: false }}
-                className="absolute inset-0 h-full w-full"
-              >
-                {enhancedImages.map((img, index) => (
-                  <SwiperSlide key={index}>
-                    <div className="relative h-full w-full">
-                      <ImageWithFallback
-                        src={img.url}
-                        imageUrls={index === 0 ? helper.imageUrls : undefined}
-                        type="helper"
-                        alt={`${helper.name || 'Helper'} image ${index + 1}`}
-                        className={`w-full h-full rounded-2xl object-cover transition-transform duration-500 ${imageLoaded ? 'scale-100' : 'scale-110'} group-hover:scale-105`}
-                        loading="lazy"
-                        onLoad={() => setImageLoaded(true)}
-                      />
-                      <div className="absolute top-2 left-2 z-10 flex flex-col gap-1.5 items-start">
-                        {/* PROMO BELT - Standard Mode */}
-                        {hasPositivePromo && (
-                          <span className="bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 text-xs font-bold px-2 py-1 rounded-md shadow-md whitespace-nowrap">
-                            ★★★★★ HIGHLY RECOMMENDED
-                          </span>
-                        )}
+            <div className="relative pb-[75%] bg-gray-100 overflow-hidden rounded-t-xl group/image">
+              <div className="absolute inset-0 h-full w-full">
+                <ImageGallery
+                  imageUrls={helper.imageUrls || []}
+                  type="helper"
+                  alt={`${helper.name || 'Helper'} image`}
+                  className="w-full h-full rounded-t-xl"
+                />
+                
+                <div className="absolute top-2 left-2 z-30 flex flex-col gap-1.5 items-start pointer-events-none">
+                  {/* PROMO BELT - Standard Mode */}
+                  {hasPositivePromo && (
+                    <span className="bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 text-xs font-bold px-2 py-1 rounded-md shadow-md whitespace-nowrap">
+                      ★★★★★ HIGHLY RECOMMENDED
+                    </span>
+                  )}
 
-                        <div className="flex gap-1.5 flex-wrap">
-                          {/* Helper Type Badge */}
-                          {helper.type && (
-                            <span className={`text-xs px-2 py-1 rounded-full ${HELPER_TYPE_COLORS[helper.type] || 'bg-gray-100 text-gray-800'} font-medium`}>
-                              {getHelperTypeName(helper.type)}
-                            </span>
-                          )}
+                  <div className="flex gap-1.5 flex-wrap">
+                    {/* Helper Type Badge */}
+                    {helper.type && (
+                      <span className={`text-xs px-2 py-1 rounded-full ${HELPER_TYPE_COLORS[helper.type] || 'bg-gray-100 text-gray-800'} font-medium`}>
+                        {getHelperTypeName(helper.type)}
+                      </span>
+                    )}
 
-                          {isNewHelper && (
-                            <span className="bg-green-500 text-white px-2 py-1 text-xs font-semibold rounded-full shadow-md">
-                              NEW
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
+                    {isNewHelper && (
+                      <span className="bg-green-500 text-white px-2 py-1 text-xs font-semibold rounded-full shadow-md">
+                        NEW
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
