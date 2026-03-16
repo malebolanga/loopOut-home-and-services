@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -816,7 +816,8 @@ const MobileAppHomepage = ({
   featuredProperties, featuredServices, featuredHelpers, featuredEvents,
   loadingProperties, loadingServices, loadingHelpers, loadingEvents,
   stats, onItemClick, recentlyViewedItems, onRecentlyViewedLike,
-  currentLocation = 'South Africa', navigate, aiRecommendations, aiInsights, aiTrendData, onAISuggestionClick
+  currentLocation = 'South Africa', navigate, aiRecommendations, aiInsights, aiTrendData, onAISuggestionClick,
+  recentlyAddedItems
 }) => {
   const [isDesktop, setIsDesktop] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -886,6 +887,40 @@ const MobileAppHomepage = ({
 
           {showAIInsights && aiRecommendations && (
             <SmartRecommendations recommendations={aiRecommendations} insights={aiInsights} loading={loadingProperties && loadingServices} onItemClick={onItemClick} />
+          )}
+
+          {recentlyViewedItems.length > 0 && (
+            <section className="mb-16">
+              <SectionTitle title="Recently viewed" actionText="See all" onAction={() => navigate('/recently-viewed')} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {recentlyViewedItems.slice(0, 4).map((item) => (
+                  <AirbnbCard
+                    key={item._id}
+                    item={item}
+                    type={item.itemType === 'listing' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property') : item.itemType}
+                    onClick={() => onItemClick(item, item.itemType)}
+                    isLiked={item.isLiked}
+                    onLike={onRecentlyViewedLike}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {recentlyAddedItems.length > 0 && (
+            <section className="mb-16">
+              <SectionTitle title="Recently added" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {recentlyAddedItems.slice(0, 8).map((item) => (
+                  <AirbnbCard
+                    key={item._id}
+                    item={item}
+                    type={item.itemType === 'listing' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property') : item.itemType}
+                    onClick={() => navigate(`/${item.itemType || 'listing'}/${item._id}`)}
+                  />
+                ))}
+              </div>
+            </section>
           )}
 
           <section className="mb-16">
@@ -1051,7 +1086,7 @@ const MobileAppHomepage = ({
                 onClick={() => {
                   const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner'];
                   const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattor Artise', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician'];
-                  const properties = ['rental', 'guesthouse','sale','overnight'];
+                  const properties = ['rental', 'guesthouse', 'sale', 'overnight'];
 
                   if (helpers.includes(category.id)) {
                     navigate(`/search?category=${category.id}&type=helpers`);
@@ -1122,6 +1157,27 @@ const MobileAppHomepage = ({
           <SmartRecommendations recommendations={aiRecommendations} insights={aiInsights} loading={loadingProperties && loadingServices} onItemClick={onItemClick} />
         )}
 
+        {recentlyAddedItems.length > 0 && (
+          <section className="mb-8">
+            <h2 className="font-semibold text-gray-900 mb-4">Recently added</h2>
+            <div className="flex overflow-x-auto gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
+              {recentlyAddedItems.slice(0, 5).map((item) => (
+                <div key={item._id} onClick={() => onItemClick(item, item.itemType)} className="flex-shrink-0 w-36 cursor-pointer">
+                  <div className="relative aspect-[3/2] rounded-xl overflow-hidden mb-2 bg-gray-200">
+                    <ImageGallery
+                      imageUrls={item.imageUrls || []}
+                      alt={item.name}
+                      type={item.itemType === 'listing' ? 'property' : item.itemType}
+                    />
+                  </div>
+                  <p className="font-medium text-sm truncate">{item.name}</p>
+                  <p className="text-sm text-gray-500">R{item.price || item.regularPrice}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {recentlyViewedItems.length > 0 && (
           <section className="mb-8">
             <div className="flex justify-between items-center mb-4">
@@ -1130,7 +1186,7 @@ const MobileAppHomepage = ({
             </div>
             <div className="flex overflow-x-auto gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
               {recentlyViewedItems.slice(0, 5).map((item) => (
-                <div key={item._id} onClick={() => navigate(`/${item.itemType || 'listing'}/${item._id}`)} className="flex-shrink-0 w-36 cursor-pointer">
+                <div key={item._id} onClick={() => onItemClick(item, item.itemType)} className="flex-shrink-0 w-36 cursor-pointer">
                   <div className="relative aspect-[3/2] rounded-xl overflow-hidden mb-2 bg-gray-200">
                     <ImageGallery
                       imageUrls={item.imageUrls || []}
@@ -1400,6 +1456,19 @@ const Home = () => {
     fetchHomepageData();
   }, [currentLocation]);
 
+  const recentlyAddedItems = useMemo(() => {
+    const combined = [
+      ...(featuredProperties || []).map(p => ({ ...p, itemType: 'listing' })),
+      ...(featuredServices || []).map(s => ({ ...s, itemType: 'service' })),
+      ...(featuredHelpers || []).map(h => ({ ...h, itemType: 'helper' })),
+      ...(featuredEvents || []).map(e => ({ ...e, itemType: 'event' }))
+    ];
+    return combined
+      .filter(item => item.createdAt)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 12);
+  }, [featuredProperties, featuredServices, featuredHelpers, featuredEvents]);
+
   useEffect(() => {
     if (featuredProperties && featuredServices && featuredHelpers && featuredEvents) {
       const aiResults = generateAIRecommendations(featuredProperties, featuredServices, featuredHelpers, featuredEvents);
@@ -1421,6 +1490,7 @@ const Home = () => {
       stats={stats}
       onItemClick={addToRecentlyViewed}
       recentlyViewedItems={recentlyViewedItems}
+      recentlyAddedItems={recentlyAddedItems}
       onRecentlyViewedLike={updateRecentlyViewedLike}
       currentLocation={currentLocation}
       navigate={navigate}

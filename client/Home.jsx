@@ -777,7 +777,14 @@ export default function Home() {
             priceRange
           ),
         }))
-        .sort((a, b) => b.relevance - a.relevance);
+        .sort((a, b) => {
+          if (!searchQuery.trim()) {
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
+            return dateB - dateA;
+          }
+          return b.relevance - a.relevance;
+        });
     } catch (error) {
       console.error("Error calculating relevance:", error);
       return [];
