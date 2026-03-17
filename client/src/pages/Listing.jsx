@@ -54,10 +54,13 @@ import {
   FaWarehouse,
   FaChevronDown,
   FaBed,
-  FaRegHeart,
-  FaThumbsUp,
-  FaThumbsDown,
   FaPaperPlane,
+  FaEnvelope,
+  FaTimes,
+  FaChevronLeft,
+  FaChevronRight,
+  FaExpand,
+  FaRegCommentDots,
   FaExternalLinkAlt,
   FaUserFriends,
   FaFacebook,
@@ -66,9 +69,7 @@ import {
   FaLinkedin,
   FaTiktok,
   FaGlobe,
-  FaTimes,
   FaHeart,
-  FaEnvelope,
   FaCamera,
   FaUsers,
   FaCar,
@@ -90,8 +91,6 @@ import {
   FaLightbulb,
   FaClock,
   FaInfoCircle,
-  FaChevronLeft,
-  FaChevronRight,
   FaShare,
   FaEllipsisH,
   FaBath,
@@ -1041,8 +1040,9 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates }) => {
 
 // Contact Host Modal Component
 const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
-  const [contactMethod, setContactMethod] = useState('whatsapp');
+  const [contactMethod, setContactMethod] = useState('internal');
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
   const defaultMessage = `Hello, I'm ${user?.name || 'Interested Client'}. I'm interested in your "${listing?.name || 'Listing'}" listing. Could you please provide more details?`;
 
@@ -1069,9 +1069,46 @@ const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
     return formatted;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const contactNumber = listing?.contact || listing?.phone || listing?.userRef?.contact || listing?.userRef?.phone || '';
     const emailAddress = listing?.email || listing?.userRef?.email;
+    const hostId = typeof listing.userRef === 'string' ? listing.userRef : listing.userRef._id;
+
+    if (contactMethod === 'internal') {
+      if (!user) {
+        navigate('/sign-in');
+        return;
+      }
+      
+      if (user._id === hostId) {
+        alert("You cannot message yourself.");
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/messages/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            receiverId: hostId,
+            content: message || defaultMessage,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          navigate(`/messages/${data.conversationId || data._id}`);
+          onClose();
+        } else {
+          alert(data.message || 'Failed to start conversation');
+        }
+      } catch (error) {
+        console.error('Error starting conversation:', error);
+        alert('An error occurred. Please try again.');
+      }
+      return;
+    }
 
     const hasWhatsApp = contactNumber && contactMethod === 'whatsapp';
     const hasEmail = emailAddress && contactMethod === 'email';
@@ -1106,7 +1143,7 @@ const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
   const getAvailableContactMethods = () => {
     const contactNumber = listing?.contact || listing?.phone || listing?.userRef?.contact || listing?.userRef?.phone || '';
     const emailAddress = listing?.email || listing?.userRef?.email;
-    const methods = [];
+    const methods = ['internal'];
     if (contactNumber) { methods.push('whatsapp'); methods.push('call'); }
     if (emailAddress) methods.push('email');
     return methods;
@@ -1143,6 +1180,11 @@ const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Contact Method</label>
             <div className="grid grid-cols-3 gap-2">
+                <button onClick={() => setContactMethod('internal')}
+                  className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-2 transition-all ${contactMethod === 'internal' ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-400'}`}>
+                  <FaRegCommentDots className={`text-2xl ${contactMethod === 'internal' ? 'text-rose-500' : 'text-gray-400'}`} />
+                  <span className="text-sm font-medium">Message</span>
+                </button>
               {availableMethods.includes('whatsapp') && (
                 <button onClick={() => setContactMethod('whatsapp')}
                   className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-2 transition-all ${contactMethod === 'whatsapp' ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-400'}`}>

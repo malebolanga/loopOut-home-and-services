@@ -25,7 +25,7 @@ import {
   FaBoxOpen, FaShippingFast, FaRecycle, FaSeedling, FaFish, FaDrumstickBite,
   FaPepperHot, FaCheese, FaBreadSlice, FaIceCream, FaCoffee, FaWineBottle,
   FaWater, FaWind, FaSun, FaCloudRain, FaTemperatureHigh, FaTemperatureLow,
-  FaHeart, FaShareAlt, FaMedal, FaRegClock, FaRegCheckCircle, FaRegStar,
+  FaHeart, FaShareAlt, FaMedal, FaRegClock, FaRegCheckCircle, FaRegStar, FaRegCommentDots,
   // New icons for sneaker, washingmat, animals
   FaShoePrints, FaWater as FaWaterDrop, FaPaw, FaDog as FaDogIcon,
   FaCat, FaHorse, FaDove, FaFish as FaFishIcon, FaBath, FaSoap,
@@ -1582,6 +1582,42 @@ export default function HelperPage() {
     ? `https://wa.me/${whatsappNumber}?text=Hi ${helper.name}, I'm interested in your ${getProfessionalTitle(helper.type).toLowerCase()} services.`
     : null;
 
+  const handleInternalMessage = async () => {
+    if (!currentUser) {
+      navigate('/sign-in');
+      return;
+    }
+    
+    // Check if the user is trying to message themselves
+    if (currentUser._id === helper.userRef) {
+      alert("You cannot message yourself.");
+      return;
+    }
+
+    try {
+      // Create/Get conversation by sending an initial message
+      const res = await fetch('/api/messages/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          receiverId: helper.userRef,
+          content: `Hi ${helper.name}, I'm interested in your ${getProfessionalTitle(helper.type).toLowerCase()} services.`,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        navigate(`/messages/${data.conversationId || data._id}`);
+      } else {
+        alert(data.message || 'Failed to start conversation');
+      }
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      alert('An error occurred. Please try again.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-white">
@@ -1981,9 +2017,16 @@ export default function HelperPage() {
 
                 <button
                   onClick={openBookingFormOverlay}
-                  className="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-lg transition-colors mb-4"
+                  className="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-lg transition-colors mb-3"
                 >
                   Check availability
+                </button>
+
+                <button
+                  onClick={handleInternalMessage}
+                  className="w-full py-3 bg-white border border-gray-900 text-gray-900 font-semibold rounded-lg hover:bg-gray-50 transition-colors mb-4 flex items-center justify-center gap-2"
+                >
+                  <FaRegCommentDots /> Message Host
                 </button>
 
                 <div className="text-center text-gray-500 text-sm mb-4">

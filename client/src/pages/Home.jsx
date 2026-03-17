@@ -223,6 +223,13 @@ const TOP_CATEGORIES = [
     count: '1,123',
     color: 'from-yellow-500 to-amber-500'
   },
+  {
+    id: 'nanny',
+    name: 'Nanny',
+    image: 'https://images.unsplash.com/photo-1581579135012-7ff8957bd0ae?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '642',
+    color: 'from-rose-400 to-pink-400'
+  },
   // New helper types
   {
     id: 'sneaker',
@@ -598,7 +605,7 @@ const TopCategoriesSection = ({ navigate }) => {
   };
 
   const handleCategoryClick = (category) => {
-    const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner'];
+    const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner', 'nanny'];
     const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattor Artise', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician'];
     const properties = ['rental', 'guesthouse'];
 
@@ -850,6 +857,7 @@ const MobileAppHomepage = ({
     { icon: '💄', label: 'Beauty', type: 'helpers', category: 'beauty' },
     { icon: '🖋️', label: 'Tattoos', type: 'helpers', category: 'tattoo' },
     { icon: '✂️', label: 'Barber', type: 'helpers', category: 'barber' },
+    { icon: '👶', label: 'Nanny', type: 'helpers', category: 'nanny' },
     { icon: '🎪', label: 'Events', type: 'events' },
     { icon: '🏖️', label: 'Beachfront', type: 'properties' },
     { icon: '🏕️', label: 'Cabins', type: 'properties' },
@@ -956,31 +964,31 @@ const MobileAppHomepage = ({
           <section className="mb-16">
             <SectionTitle title="Verified helpers" actionText="View all" onAction={() => navigate('/helper-home-page')} />
             {loadingHelpers ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {[...Array(4)].map((_, i) => <div key={i} className="aspect-square bg-gray-200 rounded-xl animate-pulse" />)}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-6">
+                {[...Array(8)].map((_, i) => <div key={i} className="aspect-square bg-gray-200 rounded-3xl animate-pulse" />)}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {featuredHelpers.slice(0, 4).map((helper) => (
-                  <div key={helper._id} onClick={() => navigate(`/helper/${helper._id}`)} className="cursor-pointer flex flex-col gap-3">
-                    <div className="relative aspect-square overflow-hidden rounded-full bg-gray-200 w-32 h-32 mx-auto border-2 border-gray-100 group-hover:border-rose-200 transition-colors">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-x-6 gap-y-12">
+                {featuredHelpers.slice(0, 8).map((helper) => (
+                  <div key={helper._id} onClick={() => navigate(`/helper/${helper._id}`)} className="cursor-pointer flex flex-col gap-3 group">
+                    <div className="relative aspect-square overflow-hidden rounded-3xl bg-gray-200 w-48 h-48 mx-auto border-2 border-gray-100 group-hover:border-rose-200 transition-all duration-300">
                       <ImageGallery
                         imageUrls={helper.imageUrls || []}
                         alt={helper.name}
                         type="avatar"
                       />
-                      <div className="absolute bottom-0 right-0 w-6 h-6 bg-rose-500 rounded-full flex items-center justify-center border-2 border-white">
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                      <div className="absolute bottom-2 right-2 w-7 h-7 bg-rose-500 rounded-full flex items-center justify-center border-2 border-white shadow-md">
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                       </div>
                     </div>
                     <div className="text-center">
-                      <h3 className="font-semibold text-gray-900">{helper.name}</h3>
-                      <p className="text-gray-500 text-sm">{helper.type}</p>
+                      <h3 className="font-semibold text-gray-900 group-hover:text-rose-600 transition-colors">{helper.name}</h3>
+                      <p className="text-gray-500 text-sm uppercase tracking-wider font-medium">{helper.type}</p>
                       <div className="flex items-center justify-center gap-1 mt-1">
-                        <StarIconSolid className="w-3.5 h-3.5 text-gray-900" />
-                        <span className="text-sm">{helper.rating}</span>
-                        <span className="text-gray-400">•</span>
-                        <span className="font-semibold text-sm">R{helper.regularPrice}</span>
+                        <StarIconSolid className="w-3.5 h-3.5 text-rose-500" />
+                        <span className="text-sm font-semibold">{helper.rating}</span>
+                        <span className="text-gray-300 px-1">|</span>
+                        <span className="font-bold text-sm text-gray-900">R{helper.regularPrice}</span>
                       </div>
                     </div>
                   </div>
@@ -1287,15 +1295,15 @@ const MobileAppHomepage = ({
             <Link to="/helper-home-page" className="text-sm text-gray-500 underline">See all</Link>
           </div>
           <div className="flex overflow-x-auto gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
-            {featuredHelpers.slice(0, 4).map((helper) => (
+            {featuredHelpers.slice(0, 8).map((helper) => (
               <div key={helper._id} onClick={() => navigate(`/helper/${helper._id}`)} className="flex-shrink-0 w-32 text-center cursor-pointer">
-                <div className="relative w-20 h-20 mx-auto mb-2">
+                <div className="relative w-32 h-32 mx-auto mb-2 aspect-square rounded-2xl overflow-hidden border-2 border-gray-50 bg-gray-100">
                   <ImageGallery
                     imageUrls={helper.imageUrls || []}
                     alt={helper.name}
                     type="avatar"
                   />
-                  <div className="absolute bottom-0 right-0 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center border-2 border-white">
+                  <div className="absolute bottom-1 right-1 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center border-2 border-white">
                     <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                   </div>
                 </div>

@@ -103,6 +103,7 @@ import Trips from './pages/Trips';
 
 import SmartSearchPage from './pages/SmartSearchPage';
 import ExplorePage from "./pages/ExplorePage";
+import Inbox from './pages/Inbox';
 
 // Categories page
 import Categories from './pages/Categories';
@@ -119,7 +120,7 @@ export default function App() {
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/search" element={<Search />} />
-        <Route path="/message" element={<Message />} />
+        <Route path="/messages" element={<Inbox />} />
         <Route path="/smart-search" element={<SmartSearchPage />} />
 
         <Route path="/dashboard" element={<DashBoard />} />
@@ -162,6 +163,8 @@ export default function App() {
         <Route path="/users" element={<Users />} />
         <Route path="/events/:id" element={<Events />} />
         <Route path="/notifications" element={<Notifications />} />
+        <Route path="/messages" element={<Inbox />} />
+        <Route path="/messages/:id" element={<Inbox />} />
 
         {/* Dynamic User Routes - These come last to avoid conflict */}
         <Route path="/:userId/list" element={<MyListing />} />
