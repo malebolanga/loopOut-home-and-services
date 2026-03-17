@@ -165,6 +165,7 @@ export const getUserPostCount = async (req, res, next) => {
 
     res.status(200).json({
       count: totalPosts,
+      limit: 3,
       breakdown: {
         listings: listingsCount,
         services: servicesCount,
@@ -176,6 +177,37 @@ export const getUserPostCount = async (req, res, next) => {
     next(errorHandler(500, 'Failed to get user post count'));
   }
 };
+
+// POST version: reads userId from request body (used by CreateListing)
+export const getPostCountByBody = async (req, res, next) => {
+  try {
+    const userId = req.body.userId;
+    if (!userId) return next(errorHandler(400, 'userId is required'));
+
+    const [listingsCount, servicesCount, helpersCount, eventsCount] = await Promise.all([
+      Listing.countDocuments({ userRef: userId }),
+      Service.countDocuments({ userRef: userId }),
+      Helper.countDocuments({ userRef: userId }),
+      Event.countDocuments({ userRef: userId })
+    ]);
+
+    const totalPosts = listingsCount + servicesCount + helpersCount + eventsCount;
+
+    res.status(200).json({
+      count: totalPosts,
+      limit: 3,
+      breakdown: {
+        listings: listingsCount,
+        services: servicesCount,
+        helpers: helpersCount,
+        events: eventsCount
+      }
+    });
+  } catch (error) {
+    next(errorHandler(500, 'Failed to get user post count'));
+  }
+};
+
 
 // Add these functions at the bottom
 

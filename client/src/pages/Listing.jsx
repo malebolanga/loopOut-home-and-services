@@ -13,6 +13,8 @@ import Calendar from "react-calendar";
 import CommentsSidePanel from '../components/CommentsSidePanel';
 import Comments from '../components/Comments';
 import ImageWithFallback from '../components/ImageWithFallback';
+import GoogleMapComponent from '../components/GoogleMapComponent';
+
 
 // Icons imports
 import {
@@ -2147,12 +2149,15 @@ export default function Listing() {
             <div className="py-6 border-t border-gray-200">
               <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">Where you'll be</h2>
               <p className="text-gray-700 mb-4 text-sm lg:text-base">{listing.address}</p>
-              <div className="h-48 lg:h-64 bg-gray-200 rounded-xl flex items-center justify-center">
-                <div className="text-center">
-                  <FaMapMarkerAlt className="text-3xl lg:text-4xl text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-600 text-sm lg:text-base">Map view</p>
-                </div>
+              <div className="h-48 lg:h-64 bg-gray-200 rounded-xl overflow-hidden relative">
+                <GoogleMapComponent 
+                  latitude={listing.latitude} 
+                  longitude={listing.longitude} 
+                  address={listing.address} 
+                  title={listing.name} 
+                />
               </div>
+
               {listing.near && (
                 <div className="mt-6">
                   <h3 className="font-semibold text-gray-900 mb-2">What's nearby</h3>

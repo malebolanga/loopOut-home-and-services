@@ -37,7 +37,8 @@ import {
 } from '@heroicons/react/24/solid';
 import { FaCar, FaBreadSlice, FaHouseUser, FaCut, FaTruckMoving, FaGraduationCap, FaHandsWash, FaBroom, FaChalkboardTeacher, FaHome, FaBed, FaUtensils, FaLeaf, FaBolt, FaShoePrints, FaWater, FaPaw } from "react-icons/fa";
 import ImageGallery from '../components/ImageGallery';
-import useGeolocation from '../hooks/useGeolocation';
+import useLocationCoords from '../hooks/useGeolocation';
+
 import { 
   calculateDistance, 
   POLOKWANE_COORDS, 
@@ -1472,7 +1473,8 @@ const Home = () => {
     });
   };
 
-  const { coords, error: geoError, loading: geoLoading } = useGeolocation();
+  const { coords, error: geoError, loading: geoLoading } = useLocationCoords();
+
   const [locationStatus, setLocationStatus] = useState(null);
 
   useEffect(() => {

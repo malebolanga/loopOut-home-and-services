@@ -20,6 +20,8 @@ import {
 } from 'react-icons/fa';
 import { FiShare2, FiMessageSquare } from 'react-icons/fi';
 import CommentsSidePanelService from '../components/CommentsSidePanelService';
+import GoogleMapComponent from '../components/GoogleMapComponent';
+
 import Comment from '../components/Comment';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, Thumbs, FreeMode } from 'swiper/modules';
@@ -1028,7 +1030,19 @@ const ServicePage = () => {
           </div>
         </div>
 
+        {/* Location Map */}
+        <div className="mt-12 pt-8 border-t border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Location</h2>
+          <div className="aspect-[21/9] bg-gray-100 rounded-2xl overflow-hidden relative shadow-inner border border-gray-200">
+            <GoogleMapComponent 
+              address={service.address || 'Available in your area'} 
+              title={`${service.name}'s Service Area`} 
+            />
+          </div>
+        </div>
+
         {/* Things to Know */}
+
         <div className="mt-12 pt-12 border-t border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Things to know</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

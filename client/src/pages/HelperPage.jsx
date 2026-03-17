@@ -49,6 +49,8 @@ import 'swiper/css/zoom';
 import 'swiper/css/thumbs';
 import 'swiper/css/free-mode';
 
+import ImageWithFallback from '../components/ImageWithFallback';
+import GoogleMapComponent from '../components/GoogleMapComponent';
 import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 
@@ -1952,14 +1954,13 @@ export default function HelperPage() {
             <div className="pb-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Where you'll be</h2>
               <div className="aspect-video bg-gray-100 rounded-xl overflow-hidden relative">
-                <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                  <div className="text-center">
-                    <FaMapMarkerAlt className="text-4xl mx-auto mb-2" />
-                    <p>{helper.address || 'Johannesburg, South Africa'}</p>
-                  </div>
-                </div>
+                <GoogleMapComponent 
+                  address={helper.address || 'Johannesburg, South Africa'} 
+                  title={`${helper.name}'s Location`} 
+                />
               </div>
             </div>
+
           </div>
 
           {/* Right Column - Booking Card */}

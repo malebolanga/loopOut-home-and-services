@@ -6,14 +6,16 @@ import {
     getUserListings,
     getUserServices,
     getUserHelpers,
-    getUserEvents, // Add this import
-    getUserPostCount, // Add this import  
+    getUserEvents,
+    getUserPostCount,
+    getPostCountByBody,
     getUser,
-    getUsers, // Add this import
-    rateHost, // Add this
-    getHostRatings, // Add this
+    getUsers,
+    rateHost,
+    getHostRatings,
     verifyWhatsApp
 } from '../controllers/user.controller.js';
+
 import { verifyToken } from '../utils/verifyUser.js';
 
 
@@ -41,7 +43,14 @@ router.get('/helpers/:id', verifyToken, getUserHelpers);
 
 // Add these new routes
 router.get('/events/:id', verifyToken, getUserEvents);
+
+// Route to get post count by user ID param (Profile page)
 router.get('/post-count/:id', verifyToken, getUserPostCount);
+
+
+// Route to get post count via POST body (CreateListing page)
+router.post('/post-count', verifyToken, getPostCountByBody);
+
 
 // Add these new routes
 router.put('/rate-host/:hostId', verifyToken, rateHost);

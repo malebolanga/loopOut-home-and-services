@@ -18,6 +18,9 @@ import eventCommentRouter from './routes/event-comment.route.js';
 import tripRouter from './routes/trip.js'; // Make sure this is imported
 import notificationRoute from './routes/notification.route.js';
 import messageRouter from './routes/message.route.js';
+import paymentRouter from './routes/payment.route.js';
+import promotionRouter from './routes/promotion.route.js';
+
 import path from 'path';
 dotenv.config();
 
@@ -52,6 +55,9 @@ app.use('/api/event-comments', eventCommentRouter);
 app.use('/api/service', serviceRouter);
 app.use('/api/notifications', notificationRoute);
 app.use('/api/messages', messageRouter);
+app.use('/api/payment', paymentRouter);
+app.use('/api/promotion', promotionRouter);
+
 app.use(express.static(path.join(__dirname, '/client/dist')));
 
 app.get('*', (req, res) => {
