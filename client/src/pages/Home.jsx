@@ -28,6 +28,8 @@ import {
   AcademicCapIcon,
   WrenchIcon,
   FireIcon,
+  MapPinIcon,
+  CheckCircleIcon
 } from '@heroicons/react/24/outline';
 import {
   StarIcon as StarIconSolid,
@@ -35,6 +37,13 @@ import {
 } from '@heroicons/react/24/solid';
 import { FaCar, FaBreadSlice, FaHouseUser, FaCut, FaTruckMoving, FaGraduationCap, FaHandsWash, FaBroom, FaChalkboardTeacher, FaHome, FaBed, FaUtensils, FaLeaf, FaBolt, FaShoePrints, FaWater, FaPaw } from "react-icons/fa";
 import ImageGallery from '../components/ImageGallery';
+import useGeolocation from '../hooks/useGeolocation';
+import { 
+  calculateDistance, 
+  POLOKWANE_COORDS, 
+  DISTANCE_TIERS,
+  filterByDistanceTier 
+} from '../utils/locationUtils';
 
 // --- Constants ---
 const RECENTLY_VIEWED_KEY = 'recentlyViewed';
@@ -446,7 +455,7 @@ const FreshaCategoryCard = ({ category, onClick, index }) => {
 
 // --- Airbnb-Style Components (Preserved) ---
 
-const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property' }) => {
+const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDistance = false }) => {
   const isGuestFavorite = item.rating >= 4.8;
 
   const getPriceSuffix = () => {
@@ -541,9 +550,21 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property' }) => {
           </div>
         </div>
         <p className="text-gray-500 text-[15px] truncate">{item.name}</p>
-        <div className="flex items-baseline gap-1 mt-0.5">
-          <span className="font-semibold text-gray-900 text-[15px]">{formatPrice()}</span>
-          {type === 'property' && <span className="text-gray-900 text-[15px]">{getPriceSuffix()}</span>}
+        <div className="flex items-center justify-between mt-0.5">
+          <div className="flex items-baseline gap-1">
+            <span className="font-semibold text-gray-900 text-[15px]">{formatPrice()}</span>
+            {type === 'property' && <span className="text-gray-900 text-[15px]">{getPriceSuffix()}</span>}
+          </div>
+          {item._distance && item._distance !== Infinity && !hideDistance && (
+            <div className="flex items-center gap-1 text-[#FF385C] font-medium text-xs">
+              <MapPinIcon className="w-3 h-3" />
+              <span>
+                {item._distance < 1 
+                  ? "Near you" 
+                  : `${Math.round(item._distance)} km away`}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
@@ -811,7 +832,9 @@ const SmartRecommendations = ({ recommendations, insights, loading, onItemClick 
               </div>
             </div>
             <p className="font-medium text-sm text-gray-900 truncate">{item.name}</p>
-            <p className="text-sm text-gray-500">R{item.price || item.regularPrice}</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-500 font-semibold">R{item.price || item.regularPrice}</p>
+            </div>
           </motion.div>
         ))}
       </div>
@@ -824,7 +847,7 @@ const MobileAppHomepage = ({
   loadingProperties, loadingServices, loadingHelpers, loadingEvents,
   stats, onItemClick, recentlyViewedItems, onRecentlyViewedLike,
   currentLocation = 'South Africa', navigate, aiRecommendations, aiInsights, aiTrendData, onAISuggestionClick,
-  recentlyAddedItems
+  recentlyAddedItems, locationStatus
 }) => {
   const [isDesktop, setIsDesktop] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -881,6 +904,25 @@ const MobileAppHomepage = ({
         <main className="max-w-7xl mx-auto px-8 py-12">
           {/* FRESHA-STYLE TOP CATEGORIES SECTION */}
           <TopCategoriesSection navigate={navigate} />
+
+          {/* Location Status Indicator */}
+          {locationStatus && (
+            <div className="mb-8 p-4 bg-rose-50 rounded-2xl border border-rose-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-rose-500 rounded-full flex items-center justify-center text-white">
+                  <MapPinIcon className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900">{locationStatus.title}</h4>
+                  <p className="text-sm text-gray-600">{locationStatus.description}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-rose-600 bg-white px-3 py-1.5 rounded-full text-xs font-bold border border-rose-200 shadow-sm">
+                <CheckCircleIcon className="w-4 h-4" />
+                ADJUSTED RADIUS
+              </div>
+            </div>
+          )}
 
           <DesktopPopularDestinations navigate={navigate} />
 
@@ -1150,6 +1192,19 @@ const MobileAppHomepage = ({
           </div>
         </motion.div>
 
+        {/* Mobile Location Status Indicator */}
+        {locationStatus && (
+          <div className="mb-6 p-4 bg-rose-50 rounded-2xl border border-rose-100 flex items-center gap-3">
+            <div className="w-10 h-10 bg-rose-500 rounded-full flex items-center justify-center text-white shrink-0">
+              <MapPinIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-gray-900 text-sm">{locationStatus.title}</h4>
+              <p className="text-xs text-gray-500">{locationStatus.description}</p>
+            </div>
+          </div>
+        )}
+
         <div className="flex overflow-x-auto gap-4 pb-4 mb-6 -mx-4 px-4 scrollbar-hide">
           {categories.map((cat) => (
             <button key={cat.label} onClick={() => navigate(cat.category ? `/search?type=${cat.type}&category=${cat.category}` : `/search?type=${cat.type}`)} className="flex flex-col items-center gap-2 min-w-[64px]">
@@ -1225,7 +1280,7 @@ const MobileAppHomepage = ({
           ) : (
             <div className="grid grid-cols-2 gap-4">
               {featuredProperties.slice(0, 4).map((property) => (
-                <AirbnbCard key={property._id} item={property} type="property" onClick={() => navigate(`/listing/${property._id}`)} />
+                <AirbnbCard key={property._id} item={property} type="property" onClick={() => navigate(`/listing/${property._id}`)} hideDistance={true} />
               ))}
             </div>
           )}
@@ -1417,6 +1472,9 @@ const Home = () => {
     });
   };
 
+  const { coords, error: geoError, loading: geoLoading } = useGeolocation();
+  const [locationStatus, setLocationStatus] = useState(null);
+
   useEffect(() => {
     const fetchHomepageData = async () => {
       const controllers = {
@@ -1430,29 +1488,75 @@ const Home = () => {
         Object.values(controllers).forEach(controller => controller.abort());
       }, API_TIMEOUT);
 
+      // Determine search location
+      const searchCoords = coords || POLOKWANE_COORDS;
+      const radius = DISTANCE_TIERS.EVERYWHERE; // Fetch all to allow frontend tiered filtering
+
       const fetchPromises = [
-        fetch(`/api/listing/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc&address=${encodeURIComponent(currentLocation)}`, {
+        fetch(`/api/listing/get?limit=50&sort=createdAt&order=desc`, {
           signal: controllers.properties.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
-          .then(data => { if (data?.length > 0) setFeaturedProperties(data.slice(0, DATA_FETCH_LIMIT)); })
+          .then(data => { 
+            if (data?.length > 0) {
+              const polokwane = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.POLOKWANE);
+              if (polokwane.length > 0) {
+                setFeaturedProperties(polokwane.slice(0, DATA_FETCH_LIMIT));
+                setLocationStatus({
+                  title: "Showing listings in Polokwane",
+                  description: "Found immediate matches in your local area."
+                });
+              } else {
+                const nearby = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.NEARBY);
+                if (nearby.length > 0) {
+                  setFeaturedProperties(nearby.slice(0, DATA_FETCH_LIMIT));
+                  setLocationStatus({
+                    title: "Showing listings within 50km",
+                    description: "No direct Polokwane matches found, showing nearby results."
+                  });
+                } else {
+                  const regional = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.REGIONAL);
+                  setFeaturedProperties(regional.slice(0, DATA_FETCH_LIMIT));
+                  setLocationStatus({
+                    title: "Showing results within 100km",
+                    description: "No local matches found, expanded search radius to 100km."
+                  });
+                }
+              }
+            } 
+          })
           .catch(() => { }).finally(() => setLoadingProperties(false)),
 
-        fetch(`/api/service/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc&location=${encodeURIComponent(currentLocation)}`, {
+        fetch(`/api/service/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc`, {
           signal: controllers.services.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
-          .then(data => { if (data?.length > 0) setFeaturedServices(data.slice(0, DATA_FETCH_LIMIT)); })
+          .then(data => { 
+            if (data?.length > 0) {
+              const sorted = filterByDistanceTier(data, searchCoords);
+              setFeaturedServices(sorted.slice(0, DATA_FETCH_LIMIT)); 
+            }
+          })
           .catch(() => { }).finally(() => setLoadingServices(false)),
 
-        fetch(`/api/helper/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc&address=${encodeURIComponent(currentLocation)}`, {
+        fetch(`/api/helper/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc`, {
           signal: controllers.helpers.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
-          .then(data => { if (data?.length > 0) setFeaturedHelpers(data.slice(0, DATA_FETCH_LIMIT)); })
+          .then(data => { 
+            if (data?.length > 0) {
+              const sorted = filterByDistanceTier(data, searchCoords);
+              setFeaturedHelpers(sorted.slice(0, DATA_FETCH_LIMIT)); 
+            }
+          })
           .catch(() => { }).finally(() => setLoadingHelpers(false)),
 
-        fetch(`/api/event/get?limit=${DATA_FETCH_LIMIT}&sort=date&order=asc&location=${encodeURIComponent(currentLocation)}`, {
+        fetch(`/api/event/get?limit=${DATA_FETCH_LIMIT}&sort=date&order=asc`, {
           signal: controllers.events.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
-          .then(data => { if (data?.length > 0) setFeaturedEvents(data.slice(0, DATA_FETCH_LIMIT)); })
+          .then(data => { 
+            if (data?.length > 0) {
+              const sorted = filterByDistanceTier(data, searchCoords);
+              setFeaturedEvents(sorted.slice(0, DATA_FETCH_LIMIT)); 
+            }
+          })
           .catch(() => { }).finally(() => setLoadingEvents(false))
       ];
 
@@ -1461,8 +1565,10 @@ const Home = () => {
       setStats({ properties: 1234, services: 456, helpers: 789, events: 321 });
     };
 
-    fetchHomepageData();
-  }, [currentLocation]);
+    if (!geoLoading) {
+      fetchHomepageData();
+    }
+  }, [coords, geoLoading]);
 
   const recentlyAddedItems = useMemo(() => {
     const combined = [
@@ -1506,6 +1612,7 @@ const Home = () => {
       aiInsights={aiInsights}
       aiTrendData={null}
       onAISuggestionClick={(suggestion) => { navigate(`/search?searchTerm=${encodeURIComponent(suggestion)}&type=all&ai=1`); }}
+      locationStatus={locationStatus}
     />
   );
 };
