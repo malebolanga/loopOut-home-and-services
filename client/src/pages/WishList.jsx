@@ -305,7 +305,7 @@ export default function WishList() {
       </div>
 
       {/* Spacer for fixed nav bar */}
-      <div className="h-6" />
+      <div className="h-0" />
 
       {/* Main Content */}
       <main className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12 py-0 pt-0">
