@@ -319,7 +319,7 @@ export default function Header() {
             </Link>
 
             {/* Center: Simplified Search Bar */}
-            <div className="flex-1 max-w-[850px] mx-auto px-4">
+            <div className={`flex-1 max-w-[850px] mx-auto px-4 transition-opacity duration-200 ${showSearch ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
               <div
                 onClick={() => {
                   console.log('Search bar clicked - opening search modal');

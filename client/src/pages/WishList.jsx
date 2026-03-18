@@ -240,25 +240,23 @@ export default function WishList() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Airbnb-style Navigation */}
-      <div className="sticky top-0 z-50 bg-white border-b border-[#DDDDDD]">
+      {/* Wishlist Navigation — fixed at top, hides the global Header */}
+      <div className="fixed top-0 left-0 right-0 z-[60] bg-white border-b border-[#DDDDDD]">
         <div className="max-w-[1600px] mx-auto px-6 sm:px-2 lg:px-12">
           <div className="flex items-center justify-between h-20">
             {/* Logo Area / Back Button */}
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate(-1)}
-                className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
-                  }`}
+                className="p-2 rounded-full transition-colors hover:bg-gray-100"
               >
-                <FaArrowLeft className={`text-xl ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
+                <FaArrowLeft className="text-xl text-gray-900" />
               </button>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-[#FF5A5F] rounded-lg flex items-center justify-center">
                   <TbHeartFilled className="w-5 h-5 text-white" />
                 </div>
-                <span className={`text-xl font-semibold tracking-tight hidden sm:block ${isScrolled ? 'text-gray-900' : 'text-white'
-                  }`}>
+                <span className="text-xl font-semibold tracking-tight hidden sm:block text-gray-900">
                   My Collections
                 </span>
               </div>
@@ -268,29 +266,20 @@ export default function WishList() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowShareModal(true)}
-                className={`hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all text-sm font-medium ${isScrolled
-                    ? 'border-gray-300 hover:border-gray-800 hover:bg-gray-50 text-gray-700'
-                    : 'border-white/30 hover:border-white text-white hover:bg-white/10'
-                  }`}
+                className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all text-sm font-medium border-gray-300 hover:border-gray-800 hover:bg-gray-50 text-gray-900"
               >
                 <FaShareAlt className="w-4 h-4" />
                 Share
               </button>
               <button
                 onClick={handleShare}
-                className={`p-2.5 rounded-lg border transition-all ${isScrolled
-                    ? 'border-gray-300 hover:border-gray-800 hover:bg-gray-50 text-gray-700'
-                    : 'border-white/30 hover:border-white text-white hover:bg-white/10'
-                  }`}
+                className="p-2.5 rounded-lg border transition-all border-gray-300 hover:border-gray-800 hover:bg-gray-50 text-gray-900"
               >
                 <FiShare2 className="w-4 h-4" />
               </button>
               <button
                 onClick={toggleFavorite}
-                className={`p-2.5 rounded-lg border transition-all ${isScrolled
-                    ? 'border-gray-300 hover:border-gray-800 hover:bg-gray-50 text-gray-700'
-                    : 'border-white/30 hover:border-white text-white hover:bg-white/10'
-                  }`}
+                className="p-2.5 rounded-lg border transition-all border-gray-300 hover:border-gray-800 hover:bg-gray-50 text-gray-900"
               >
                 {isFavorite ?
                   <FaHeart className="w-4 h-4 text-rose-500" /> :
@@ -299,19 +288,13 @@ export default function WishList() {
               </button>
               <button
                 onClick={() => setShowSettingsModal(true)}
-                className={`p-2.5 rounded-lg border transition-all ${isScrolled
-                    ? 'border-gray-300 hover:border-gray-800 hover:bg-gray-50 text-gray-700'
-                    : 'border-white/30 hover:border-white text-white hover:bg-white/10'
-                  }`}
+                className="p-2.5 rounded-lg border transition-all border-gray-300 hover:border-gray-800 hover:bg-gray-50 text-gray-900"
               >
                 <FaSlidersH className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setShowCreateModal(true)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all text-sm font-medium ${isScrolled
-                    ? 'bg-gray-900 hover:bg-black text-white'
-                    : 'bg-white hover:bg-gray-100 text-gray-900'
-                  }`}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all text-sm font-medium bg-gray-900 hover:bg-black text-white"
               >
                 <FaPlus className="w-4 h-4" />
                 <span className="hidden sm:inline">Create list</span>
@@ -320,6 +303,9 @@ export default function WishList() {
           </div>
         </div>
       </div>
+
+      {/* Spacer for fixed nav bar */}
+      <div className="h-20" />
 
       {/* Main Content */}
       <main className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12 py-8 pt-0">
