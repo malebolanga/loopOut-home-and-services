@@ -1,41 +1,75 @@
-import listing from '../models/user.model.js';
+import User from '../models/user.model.js';
 import { errorHandler } from '../utils/error.js';
-import Favorites from './../../client/src/pages/favorites';
-import User from './../models/user.model';
 
+export const toggleFavorite = async (req, res, next) => {
+  const { itemId, itemType } = req.body;
+  const userId = req.user.id;
 
-// favoritesController.js
-const toggleFavorite = async (req, res) => {
-    const { userId } = req.body;
-    const { listingId } = req.params;
-  
-    try {
-      const user = await user.findById(userId);
-      if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-  
-      const isFavorite = user.favorites.includes(listingId);
-      if (isFavorite) {
-        user.favorites = user.favorites.filter((id) => id.toString() !== listingId);
-      } else {
-        user.favorites.push(listingId);
-      }
-      await user.save();
-  
-      res.json({ success: true, isFavorite: !isFavorite });
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Server error' });
+  if (!itemId || !itemType) {
+    return next(errorHandler(400, 'Item ID and Type are required'));
+  }
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return next(errorHandler(404, 'User not found'));
+
+    let favoriteArray;
+    switch (itemType) {
+      case 'listing':
+        favoriteArray = 'favorites';
+        break;
+      case 'service':
+        favoriteArray = 'favoriteServices';
+        break;
+      case 'helper':
+        favoriteArray = 'favoriteHelpers';
+        break;
+      case 'event':
+        favoriteArray = 'favoriteEvents';
+        break;
+      default:
+        return next(errorHandler(400, 'Invalid item type'));
     }
-  };
 
-  const getFavorites = async (req, res) => {
-    const { userId } = req.params;
-    try {
-      const user = await user.findById(userId).populate('favorites');
-      if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-  
-      res.json({ success: true, favorites: user.favorites });
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Server error' });
+    const isFavorite = user[favoriteArray].includes(itemId);
+    if (isFavorite) {
+      user[favoriteArray] = user[favoriteArray].filter((id) => id.toString() !== itemId);
+    } else {
+      user[favoriteArray].push(itemId);
     }
-  };
-  
+    
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      isFavorite: !isFavorite,
+      message: isFavorite ? 'Removed from wishlist' : 'Added to wishlist'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getWishlist = async (req, res, next) => {
+  const userId = req.user.id;
+  try {
+    const user = await User.findById(userId)
+      .populate('favorites')
+      .populate('favoriteServices')
+      .populate('favoriteHelpers')
+      .populate('favoriteEvents');
+      
+    if (!user) return next(errorHandler(404, 'User not found'));
+
+    const wishlist = [
+      ...user.favorites.map(item => ({ ...item._doc, type: 'listing' })),
+      ...user.favoriteServices.map(item => ({ ...item._doc, type: 'service' })),
+      ...user.favoriteHelpers.map(item => ({ ...item._doc, type: 'helper' })),
+      ...user.favoriteEvents.map(item => ({ ...item._doc, type: 'event' })),
+    ];
+
+    res.status(200).json(wishlist);
+  } catch (error) {
+    next(error);
+  }
+};

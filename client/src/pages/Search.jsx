@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImageWithFallback from '../components/ImageWithFallback';
+import useLocationCoords from '../hooks/useGeolocation';
 import {
   Search as SearchIcon,
   SlidersHorizontal,
@@ -868,6 +869,7 @@ const SearchPage = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [loading, setLoading] = useState(false);
   const [listings, setListings] = useState([]);
+  const { city: detectedCity, loading: geoLoading } = useLocationCoords();
   const [filters, setFilters] = useState({
     minPrice: '',
     maxPrice: '',
@@ -920,7 +922,12 @@ const SearchPage = () => {
         console.error('Failed to parse recent searches');
       }
     }
-  }, [location.search]);
+
+    // Set default location if not provided
+    if (!urlParams.get('location') && !urlParams.get('address') && detectedCity) {
+      setFilters(prev => ({ ...prev, location: detectedCity }));
+    }
+  }, [location.search, detectedCity]);
 
   const fetchData = useCallback(async () => {
     const urlParams = new URLSearchParams(location.search);

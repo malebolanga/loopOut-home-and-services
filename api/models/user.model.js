@@ -51,6 +51,18 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Listing'
     }],
+    favoriteServices: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Service'
+    }],
+    favoriteHelpers: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Helper'
+    }],
+    favoriteEvents: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Event'
+    }],
     services: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Service'

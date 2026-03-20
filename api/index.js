@@ -20,6 +20,7 @@ import notificationRoute from './routes/notification.route.js';
 import messageRouter from './routes/message.route.js';
 import paymentRouter from './routes/payment.route.js';
 import promotionRouter from './routes/promotion.route.js';
+import wishlistRouter from './routes/favorites.route.js';
 
 import path from 'path';
 dotenv.config();
@@ -57,6 +58,7 @@ app.use('/api/notifications', notificationRoute);
 app.use('/api/messages', messageRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/promotion', promotionRouter);
+app.use('/api/wishlist', wishlistRouter);
 
 app.use(express.static(path.join(__dirname, '/client/dist')));
 

@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { MdLocationOn } from "react-icons/md";
 import { FaHeart, FaRegHeart, FaStar } from "react-icons/fa";
 import { useState, useEffect, useMemo } from "react";
+import { useSelector } from "react-redux";
+import { toggleWishlistBackend } from "../services/wishlist.service";
 import "../styles/ListingDetails.scss";
 import ImageGallery from "./ImageGallery";
 
@@ -63,6 +65,7 @@ const getHelperTypeName = (type) => {
 };
 
 function HelperItem({ helper, className = "", compactMode = false }) {
+  const { currentUser } = useSelector((state) => state.user);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [isNewHelper, setIsNewHelper] = useState(false);
@@ -151,7 +154,7 @@ function HelperItem({ helper, className = "", compactMode = false }) {
   const calculatedStarRating = Math.min(5, Math.max(1, Math.floor(clickCount / CLICKS_PER_STAR) + 1));
 
   // Toggle favorite status and update local storage
-  const toggleFavorite = (e) => {
+  const toggleFavorite = async (e) => {
     e.preventDefault(); // Prevent default link behavior
     if (!helper?._id) return;
 
@@ -159,14 +162,20 @@ function HelperItem({ helper, className = "", compactMode = false }) {
     setIsFavorite(newFavoriteStatus);
 
     try {
+      // 1. Update localStorage (for immediate feedback and guest support)
       const wishlist = JSON.parse(localStorage.getItem('helperWishlist')) || [];
       const updatedWishlist = newFavoriteStatus
         ? [...wishlist, helper]
         : wishlist.filter(item => item?._id !== helper._id);
       localStorage.setItem('helperWishlist', JSON.stringify(updatedWishlist));
       window.dispatchEvent(new Event('storage')); // Dispatch event to notify other components
+
+      // 2. Update backend if logged in
+      if (currentUser) {
+        await toggleWishlistBackend(helper._id, 'helper');
+      }
     } catch (error) {
-      console.error('Error updating wishlist in localStorage:', error);
+      console.error('Error updating wishlist:', error);
     }
   };
 

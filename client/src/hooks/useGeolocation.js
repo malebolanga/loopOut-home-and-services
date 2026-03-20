@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 
 const useLocationCoords = () => {
-
   const [coords, setCoords] = useState(null);
+  const [city, setCity] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -13,12 +13,28 @@ const useLocationCoords = () => {
       return;
     }
 
+    const fetchCityName = async (lat, lon) => {
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`,
+          {
+            headers: {
+              'Accept-Language': 'en'
+            }
+          }
+        );
+        const data = await response.json();
+        const detectedCity = data.address.city || data.address.town || data.address.suburb || data.address.village || data.address.municipality;
+        setCity(detectedCity);
+      } catch (err) {
+        console.error("Reverse geocoding failed:", err);
+      }
+    };
+
     const onSuccess = (position) => {
-      setCoords({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-      });
-      setLoading(false);
+      const { latitude, longitude } = position.coords;
+      setCoords({ latitude, longitude });
+      fetchCityName(latitude, longitude).finally(() => setLoading(false));
     };
 
     const onError = (error) => {
@@ -33,8 +49,7 @@ const useLocationCoords = () => {
     });
   }, []);
 
-  return { coords, error, loading };
+  return { coords, city, error, loading };
 };
 
 export default useLocationCoords;
-

@@ -26,9 +26,12 @@ import { TbHeartFilled } from 'react-icons/tb';
 import { MdGridView, MdViewList } from 'react-icons/md';
 import { FiShare2, FiHeart } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { getWishlistBackend } from '../services/wishlist.service';
 
 export default function WishList() {
   const navigate = useNavigate();
+  const { currentUser } = useSelector((state) => state.user);
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState(null);
@@ -66,9 +69,12 @@ export default function WishList() {
   };
 
   useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => {
+    const loadWishlist = async () => {
+      setLoading(true);
       try {
+        let combined = [];
+
+        // 1. Load from localStorage (guest/fallback)
         const storedListings = JSON.parse(localStorage.getItem('wishlist')) || [];
         const storedServices = JSON.parse(localStorage.getItem('serviceWishlist')) || [];
         const storedHelpers = JSON.parse(localStorage.getItem('helperWishlist')) || [];
@@ -76,28 +82,26 @@ export default function WishList() {
 
         const safeParse = (data) => Array.isArray(data) ? data : [];
 
-        const listingsWithType = safeParse(storedListings).map(item => ({
-          ...item,
-          type: 'listing',
-          addedAt: item.addedAt || Date.now()
-        }));
-        const servicesWithType = safeParse(storedServices).map(item => ({
-          ...item,
-          type: 'service',
-          addedAt: item.addedAt || Date.now()
-        }));
-        const helpersWithType = safeParse(storedHelpers).map(item => ({
-          ...item,
-          type: 'helper',
-          addedAt: item.addedAt || Date.now()
-        }));
-        const eventsWithType = safeParse(storedEvents).map(item => ({
-          ...item,
-          type: 'event',
-          addedAt: item.addedAt || Date.now()
-        }));
+        const localItems = [
+          ...safeParse(storedListings).map(item => ({ ...item, type: 'listing' })),
+          ...safeParse(storedServices).map(item => ({ ...item, type: 'service' })),
+          ...safeParse(storedHelpers).map(item => ({ ...item, type: 'helper' })),
+          ...safeParse(storedEvents).map(item => ({ ...item, type: 'event' })),
+        ];
 
-        let combined = [...listingsWithType, ...servicesWithType, ...helpersWithType, ...eventsWithType];
+        // 2. Load from Backend if logged in
+        if (currentUser) {
+          const backendWishlist = await getWishlistBackend();
+          if (backendWishlist && backendWishlist.length > 0) {
+            // Use backend as source of truth, but augment with local if any (or just replace)
+            // For now, let's merge and deduplicate
+            combined = [...localItems, ...backendWishlist];
+          } else {
+            combined = localItems;
+          }
+        } else {
+          combined = localItems;
+        }
 
         // Deduplicate: remove any item with the same type+_id combination
         const seen = new Map();
@@ -108,18 +112,23 @@ export default function WishList() {
           return true;
         });
 
-        combined = sortWishlist(combined, sortBy);
+        // Add timestamps if missing
+        combined = combined.map(item => ({
+          ...item,
+          addedAt: item.addedAt || Date.now()
+        }));
 
+        combined = sortWishlist(combined, sortBy);
         setWishlist(combined);
       } catch (error) {
         console.error('Error loading wishlist:', error);
         setWishlist([]);
       }
       setLoading(false);
-    }, 400);
+    };
 
-    return () => clearTimeout(timer);
-  }, [sortBy]);
+    loadWishlist();
+  }, [sortBy, currentUser]);
 
   const sortWishlist = (items, sortType) => {
     if (!Array.isArray(items)) return [];
@@ -186,6 +195,11 @@ export default function WishList() {
             localStorage.setItem(key, JSON.stringify(filtered));
           }
         }
+      }
+
+      // Update backend if logged in
+      if (currentUser) {
+        await toggleWishlistBackend(itemId, itemType);
       }
 
       window.dispatchEvent(new Event('storage'));
@@ -388,6 +402,15 @@ export default function WishList() {
               >
                 Experiences ({stats.events})
               </button>
+              <button
+                onClick={() => setFilterType('helper')}
+                className={`px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all border ${filterType === 'helper'
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-900'
+                  }`}
+              >
+                Helpers ({stats.helpers})
+              </button>
             </div>
 
             {/* Sort and View Controls */}
@@ -460,7 +483,7 @@ export default function WishList() {
             <p className="text-gray-500 max-w-sm mb-6">
               {searchQuery
                 ? 'Try adjusting your search terms'
-                : 'As you search, click the heart icon to save your favorite listings, services, and experiences.'}
+                : 'As you search, click the heart icon to save your favorite homes, services, experiences, and helpers.'}
             </p>
             {!searchQuery && (
               <button

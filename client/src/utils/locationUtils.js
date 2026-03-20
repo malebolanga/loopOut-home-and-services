@@ -35,7 +35,7 @@ export const calculateDistance = (lat1, lon1, lat2, lon2) => {
  * @param {number} radius - Maximum radius in km
  * @returns {Array} - Filtered and sorted items
  */
-export const filterByDistanceTier = (items, userCoords, radius = Infinity) => {
+export const filterByDistanceTier = (items, userCoords, radius = Infinity, detectedCity = null) => {
   if (!userCoords || !userCoords.latitude || !userCoords.longitude) return items;
 
   return items
@@ -52,18 +52,22 @@ export const filterByDistanceTier = (items, userCoords, radius = Infinity) => {
       }
 
       // Fallback for items without coordinates: 
-      // check if address/description contains "Polokwane" or "Limpopo"
+      // check if address/description contains the detected city
       const lowerAddr = (item.address || item.location || "").toLowerCase();
       const lowerDesc = (item.description || "").toLowerCase();
       const lowerNear = (item.near || "").toLowerCase();
       
-      const isPolokwane = 
-        lowerAddr.includes("polokwane") || 
-        lowerDesc.includes("polokwane") ||
-        lowerNear.includes("polokwane");
+      let isLocal = false;
+      if (detectedCity) {
+        const city = detectedCity.toLowerCase();
+        isLocal = lowerAddr.includes(city) || lowerDesc.includes(city) || lowerNear.includes(city);
+      } else {
+        // Default fallback if no city detected (e.g. Polokwane as base)
+        isLocal = lowerAddr.includes("polokwane") || lowerDesc.includes("polokwane") || lowerNear.includes("polokwane");
+      }
 
       // Give string matches a "virtual distance" to rank them near the top but after coordinate matches
-      if (isPolokwane) {
+      if (isLocal) {
         return { ...item, _distance: 5.1 }; // Just outside a typical 5km center radius
       }
 

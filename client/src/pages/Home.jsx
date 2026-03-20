@@ -1473,7 +1473,7 @@ const Home = () => {
     });
   };
 
-  const { coords, error: geoError, loading: geoLoading } = useLocationCoords();
+  const { coords, city, error: geoError, loading: geoLoading } = useLocationCoords();
 
   const [locationStatus, setLocationStatus] = useState(null);
 
@@ -1492,6 +1492,7 @@ const Home = () => {
 
       // Determine search location
       const searchCoords = coords || POLOKWANE_COORDS;
+      const detectedCity = city || (coords ? null : "Polokwane");
       const radius = DISTANCE_TIERS.EVERYWHERE; // Fetch all to allow frontend tiered filtering
 
       const fetchPromises = [
@@ -1500,26 +1501,26 @@ const Home = () => {
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => { 
             if (data?.length > 0) {
-              const polokwane = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.POLOKWANE);
-              if (polokwane.length > 0) {
-                setFeaturedProperties(polokwane.slice(0, DATA_FETCH_LIMIT));
+              const localMatches = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.POLOKWANE, detectedCity);
+              if (localMatches.length > 0) {
+                setFeaturedProperties(localMatches.slice(0, DATA_FETCH_LIMIT));
                 setLocationStatus({
-                  title: "Showing listings in Polokwane",
+                  title: `Showing listings in ${detectedCity || "your area"}`,
                   description: "Found immediate matches in your local area."
                 });
               } else {
-                const nearby = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.NEARBY);
+                const nearby = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.NEARBY, detectedCity);
                 if (nearby.length > 0) {
                   setFeaturedProperties(nearby.slice(0, DATA_FETCH_LIMIT));
                   setLocationStatus({
-                    title: "Showing listings within 50km",
-                    description: "No direct Polokwane matches found, showing nearby results."
+                    title: `Showing listings within 50km of ${detectedCity || "your location"}`,
+                    description: "No direct city matches found, showing nearby results."
                   });
                 } else {
-                  const regional = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.REGIONAL);
+                  const regional = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.REGIONAL, detectedCity);
                   setFeaturedProperties(regional.slice(0, DATA_FETCH_LIMIT));
                   setLocationStatus({
-                    title: "Showing results within 100km",
+                    title: `Showing results near ${detectedCity || "your location"}`,
                     description: "No local matches found, expanded search radius to 100km."
                   });
                 }
@@ -1533,7 +1534,7 @@ const Home = () => {
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => { 
             if (data?.length > 0) {
-              const sorted = filterByDistanceTier(data, searchCoords);
+              const sorted = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity);
               setFeaturedServices(sorted.slice(0, DATA_FETCH_LIMIT)); 
             }
           })
@@ -1544,7 +1545,7 @@ const Home = () => {
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => { 
             if (data?.length > 0) {
-              const sorted = filterByDistanceTier(data, searchCoords);
+              const sorted = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity);
               setFeaturedHelpers(sorted.slice(0, DATA_FETCH_LIMIT)); 
             }
           })
@@ -1555,7 +1556,7 @@ const Home = () => {
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => { 
             if (data?.length > 0) {
-              const sorted = filterByDistanceTier(data, searchCoords);
+              const sorted = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity);
               setFeaturedEvents(sorted.slice(0, DATA_FETCH_LIMIT)); 
             }
           })
@@ -1570,7 +1571,7 @@ const Home = () => {
     if (!geoLoading) {
       fetchHomepageData();
     }
-  }, [coords, geoLoading]);
+  }, [coords, city, geoLoading]);
 
   const recentlyAddedItems = useMemo(() => {
     const combined = [

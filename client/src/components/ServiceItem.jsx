@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { MdLocationOn } from "react-icons/md";
 import { FaHeart, FaRegHeart, FaStar, FaUser, FaChild, FaBus } from "react-icons/fa";
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { toggleWishlistBackend } from "../services/wishlist.service";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
@@ -58,6 +60,7 @@ const getServiceTypeName = (type) => {
 };
 
 function ServiceItem({ service, className = "", compactMode = false }) {
+  const { currentUser } = useSelector((state) => state.user);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -125,7 +128,7 @@ function ServiceItem({ service, className = "", compactMode = false }) {
 
   const calculatedStarRating = Math.min(5, Math.max(1, Math.floor(clickCount / CLICKS_PER_STAR) + 1));
 
-  const toggleFavorite = (e) => {
+  const toggleFavorite = async (e) => {
     e.preventDefault();
     if (!service?._id) return;
 
@@ -133,14 +136,20 @@ function ServiceItem({ service, className = "", compactMode = false }) {
     setIsFavorite(newFavoriteStatus);
 
     try {
+      // 1. Update localStorage
       const wishlist = JSON.parse(localStorage.getItem('serviceWishlist')) || [];
       const updatedWishlist = newFavoriteStatus
         ? [...wishlist, service]
         : wishlist.filter(item => item?._id !== service._id);
       localStorage.setItem('serviceWishlist', JSON.stringify(updatedWishlist));
       window.dispatchEvent(new Event('storage'));
+
+      // 2. Update backend if logged in
+      if (currentUser) {
+        await toggleWishlistBackend(service._id, 'service');
+      }
     } catch (error) {
-      console.error('Error updating wishlist in localStorage:', error);
+      console.error('Error updating wishlist:', error);
     }
   };
 
