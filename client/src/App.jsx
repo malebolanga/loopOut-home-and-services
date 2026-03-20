@@ -38,6 +38,7 @@ import HelperPage from './pages/HelperPage';
 import EventPage from './pages/EventPage';
 import PrivateTutor from './pages/PrivateTutor';
 import UpdateHelper from './pages/UpdateHelper';
+import UpdateService from './pages/UpdateService';
 
 // Car Wash Page
 import CarWashPage from './pages/CarWashPage';
@@ -157,6 +158,7 @@ export default function App() {
         <Route path="/privatetutor/:privatetutorId" element={<PrivateTutor />} />
         <Route path="/service/:serviceId" element={<Services />} />
         <Route path="/update-helper/:helperId" element={<UpdateHelper />} />
+        <Route path="/update-service/:serviceId" element={<UpdateService />} />
 
         {/* User Routes - Keep these after more specific routes */}
         <Route path="/wishlist" element={<Wishlist />} />

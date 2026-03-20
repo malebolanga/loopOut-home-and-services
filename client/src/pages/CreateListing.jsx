@@ -426,6 +426,9 @@ export default function CreateListing() {
     time: "",
     foodAvailable: false,
     familyFriendly: false,
+    
+    // Multi-service pricing
+    serviceList: [],
   });
 
   const stepRef = useRef(null);
@@ -994,6 +997,25 @@ export default function CreateListing() {
     }
   };
 
+  const handleAddService = () => {
+    setListingForm({
+      ...listingForm,
+      serviceList: [...listingForm.serviceList, { name: "", price: "" }]
+    });
+  };
+
+  const handleRemoveService = (index) => {
+    const newList = [...listingForm.serviceList];
+    newList.splice(index, 1);
+    setListingForm({ ...listingForm, serviceList: newList });
+  };
+
+  const handleServiceChange = (index, field, value) => {
+    const newList = [...listingForm.serviceList];
+    newList[index][field] = value;
+    setListingForm({ ...listingForm, serviceList: newList });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -1106,6 +1128,7 @@ export default function CreateListing() {
         servicesOffered: listingForm.servicesOffered || "",
         experience: listingForm.experience || "",
         certifications: listingForm.certifications || "",
+        serviceList: (selectedCategory === 'experiences' || selectedCategory === 'online') ? listingForm.serviceList : [],
       };
 
       console.log("Submitting to:", endpoint);
@@ -1825,6 +1848,80 @@ export default function CreateListing() {
                           onChange={handleFormChange}
                           required
                         />
+                      </div>
+                    )}
+
+                    {/* Multi-Service Pricing Section for Services and Helpers */}
+                    {(selectedCategory === 'experiences' || selectedCategory === 'online') && (
+                      <div className="space-y-6 pt-6 border-t border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-xl font-semibold text-gray-900">Service List & Pricing</h3>
+                            <p className="text-sm text-gray-500 mt-1">Add specific services and their individual prices (optional)</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleAddService}
+                            className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-all shadow-sm"
+                          >
+                            <PlusIcon className="w-4 h-4" />
+                            Add Service
+                          </button>
+                        </div>
+
+                        {listingForm.serviceList.length > 0 && (
+                          <div className="space-y-4">
+                            {listingForm.serviceList.map((service, index) => (
+                              <div key={index} className="flex flex-col sm:flex-row gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 relative group animate-fadeIn">
+                                <div className="flex-1">
+                                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 px-1">Service Name</label>
+                                  <input
+                                    type="text"
+                                    placeholder="e.g., Nails, Hair Style, 3 Bags"
+                                    value={service.name}
+                                    onChange={(e) => handleServiceChange(index, "name", e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all"
+                                    required
+                                  />
+                                </div>
+                                <div className="sm:w-32">
+                                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 px-1">Price (R)</label>
+                                  <input
+                                    type="number"
+                                    placeholder="200"
+                                    value={service.price}
+                                    onChange={(e) => handleServiceChange(index, "price", e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all"
+                                    required
+                                    min="0"
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveService(index)}
+                                  className="self-end sm:self-center p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                  title="Remove Service"
+                                >
+                                  <XMarkIcon className="w-5 h-5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {listingForm.serviceList.length === 0 && (
+                          <div className="text-center py-10 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                            <SparklesIcon className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                            <p className="text-gray-500 font-medium">No individual services added yet.</p>
+                            <button
+                              type="button"
+                              onClick={handleAddService}
+                              className="mt-3 text-black font-semibold hover:underline"
+                            >
+                              Click here to add your first service
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

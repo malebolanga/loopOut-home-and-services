@@ -30,6 +30,21 @@ const ListingTypeConfig = {
     icon: <FaBuilding className="w-4 h-4" />,
     style: 'bg-rose-100 text-rose-800',
   },
+  stays: {
+    label: 'Stays',
+    icon: <FaBuilding className="w-4 h-4" />,
+    style: 'bg-blue-100 text-blue-800',
+  },
+  experiences: {
+    label: 'Experiences',
+    icon: <FaPlus className="w-4 h-4" />,
+    style: 'bg-green-100 text-green-800',
+  },
+  online: {
+    label: 'Online Helpers',
+    icon: <FaEdit className="w-4 h-4" />,
+    style: 'bg-purple-100 text-purple-800',
+  },
 };
 
 export default function UserListings() {
@@ -40,17 +55,25 @@ export default function UserListings() {
 
   const fetchListings = async () => {
     try {
-      const res = await fetch(`/api/user/listings/${currentUser._id}`, {
-        credentials: 'include',
-      });
-      const data = await res.json();
+      const [listingsRes, servicesRes, helpersRes] = await Promise.all([
+        fetch(`/api/user/listings/${currentUser._id}`),
+        fetch(`/api/user/services/${currentUser._id}`),
+        fetch(`/api/user/helpers/${currentUser._id}`)
+      ]);
+
+      const [listingsData, servicesData, helpersData] = await Promise.all([
+        listingsRes.json(),
+        servicesRes.json(),
+        helpersRes.json()
+      ]);
       
-      if (res.ok) {
-        const sortedListings = (data.listings || data).sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        );
-        setUserListings(sortedListings);
-      }
+      const allItems = [
+        ...(Array.isArray(listingsData) ? listingsData : (listingsData.listings || [])).map(l => ({ ...l, category: 'stays' })),
+        ...(Array.isArray(servicesData) ? servicesData : (servicesData.services || [])).map(s => ({ ...s, category: 'experiences' })),
+        ...(Array.isArray(helpersData) ? helpersData : (helpersData.helpers || [])).map(h => ({ ...h, category: 'online' }))
+      ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      setUserListings(allItems);
     } catch (error) {
       console.error('Fetch error:', error);
     }
@@ -62,13 +85,17 @@ export default function UserListings() {
     );
   };
 
-  const handleDelete = async (listingId) => {
-    if (!window.confirm('Are you sure you want to permanently delete this listing? This action cannot be undone.')) return;
+  const handleDelete = async (id, category) => {
+    if (!window.confirm('Are you sure you want to permanently delete this item? This action cannot be undone.')) return;
     
     try {
-      setDeletingId(listingId);
+      setDeletingId(id);
       
-      const res = await fetch(`/api/listing/delete/${listingId}`, {
+      const endpoint = category === 'stays' ? `/api/listing/delete/${id}` :
+                       category === 'experiences' ? `/api/service/delete/${id}` :
+                       category === 'online' ? `/api/helper/delete/${id}` : '';
+      
+      const res = await fetch(endpoint, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -79,17 +106,14 @@ export default function UserListings() {
       const data = await res.json();
       
       if (!res.ok) {
-        throw new Error(data.message || 'Failed to delete listing');
+        throw new Error(data.message || 'Failed to delete item');
       }
   
-      // Update UI by removing the deleted listing
-      setUserListings(prev => prev.filter(l => l._id !== listingId));
-      
-      // Optional: Show success message
-      alert('Listing deleted successfully');
+      setUserListings(prev => prev.filter(l => l._id !== id));
+      alert('Item deleted successfully');
     } catch (error) {
       console.error('Delete error:', error);
-      alert(error.message || 'Failed to delete listing');
+      alert(error.message || 'Failed to delete item');
     } finally {
       setDeletingId(null);
     }
@@ -100,7 +124,7 @@ export default function UserListings() {
   }, [currentUser]);
 
   const filteredListings = selectedTypes.length > 0
-    ? userListings.filter((l) => selectedTypes.includes(l.type))
+    ? userListings.filter((l) => selectedTypes.includes(l.type) || selectedTypes.includes(l.category))
     : userListings;
 
   return (
@@ -155,7 +179,9 @@ export default function UserListings() {
           >
             {/* Image */}
             <Link
-              to={`/listing/${listing._id}`}
+              to={listing.category === 'stays' ? `/listing/${listing._id}` : 
+                  listing.category === 'experiences' ? `/service/${listing._id}` :
+                  listing.category === 'online' ? `/helper/${listing._id}` : `/listing/${listing._id}`}
               className="block aspect-square overflow-hidden"
             >
               <img
@@ -167,8 +193,8 @@ export default function UserListings() {
 
             {/* Badges */}
             <div className="absolute top-4 left-4 flex gap-2">
-              <span className={`px-3 py-1 text-xs font-medium rounded-full backdrop-blur bg-white/90 ${ListingTypeConfig[listing.type]?.style}`}>
-                {ListingTypeConfig[listing.type]?.label}
+              <span className={`px-3 py-1 text-xs font-medium rounded-full backdrop-blur bg-white/90 ${ListingTypeConfig[listing.type]?.style || ListingTypeConfig[listing.category]?.style}`}>
+                {ListingTypeConfig[listing.type]?.label || ListingTypeConfig[listing.category]?.label}
               </span>
               {listing.offer && (
                 <span className="px-3 py-1 text-xs font-medium rounded-full backdrop-blur bg-green-100/90 text-green-800">
@@ -180,17 +206,19 @@ export default function UserListings() {
             {/* Action Buttons */}
             <div className="absolute top-4 right-4 flex gap-2">
               <Link
-                to={`/update-listing/${listing._id}`}
+                to={listing.category === 'stays' ? `/update-listing/${listing._id}` : 
+                    listing.category === 'experiences' ? `/update-service/${listing._id}` :
+                    listing.category === 'online' ? `/update-helper/${listing._id}` : `/update-listing/${listing._id}`}
                 className="p-2 bg-white/90 backdrop-blur rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
-                title="Edit listing"
+                title="Edit item"
               >
                 <FaEdit className="w-4 h-4 text-gray-600" />
               </Link>
               <button
-                onClick={() => handleDelete(listing._id)}
+                onClick={() => handleDelete(listing._id, listing.category)}
                 disabled={deletingId === listing._id}
                 className="p-2 bg-white/90 backdrop-blur rounded-lg shadow-sm hover:bg-red-50 transition-colors"
-                title="Delete listing"
+                title="Delete item"
               >
                 {deletingId === listing._id ? (
                   <span className="block w-4 h-4 animate-pulse">...</span>

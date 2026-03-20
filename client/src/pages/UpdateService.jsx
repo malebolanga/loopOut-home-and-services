@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {  FaTimes } from 'react-icons/fa';
+import { FaTimes, FaCheckCircle } from 'react-icons/fa';
 
-export default function UpdateHelper() {
+export default function UpdateService() {
   const navigate = useNavigate();
-  const { helperId } = useParams();
-  const [helper, setHelper] = useState(null);
-  const [files, setFiles] = useState([]);
+  const { serviceId } = useParams();
+  const [service, setService] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [imageUploadError, setImageUploadError] = useState(null);
+  const [files, setFiles] = useState([]);
+  
   const [formData, setFormData] = useState({
     imageUrls: [],
     name: '',
@@ -19,30 +20,29 @@ export default function UpdateHelper() {
     address: '',
     contact: '',
     host: '',
-    type: 'domestic',
+    type: 'cleaning',
     regularPrice: 50,
     kind: '',
     period: '',
     cancel: '',
     security: false,
     pets: false,
-    bedrooms: 1,
-    bathrooms: 1,
+    offer: false,
     serviceList: [],
   });
 
   useEffect(() => {
-    const fetchHelper = async () => {
+    const fetchService = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/helper/get/${helperId}`);
+        const res = await fetch(`/api/service/get/${serviceId}`);
         const data = await res.json();
         if (data.success === false) {
           setError(true);
           setLoading(false);
           return;
         }
-        setHelper(data);
+        setService(data);
         setFormData(data);
         setLoading(false);
       } catch (error) {
@@ -50,14 +50,10 @@ export default function UpdateHelper() {
         setLoading(false);
       }
     };
-    fetchHelper();
-  }, [helperId]);
+    fetchService();
+  }, [serviceId]);
 
   const handleChange = (e) => {
-    if (e.target.id === 'domestic' || e.target.id === 'errand' || e.target.id === 'tutor' || e.target.id === 'chef' || e.target.id === 'beauty' || e.target.id === 'tattoo') {
-      setFormData({ ...formData, type: e.target.id });
-      return;
-    }
     if (e.target.type === 'checkbox') {
       setFormData({ ...formData, [e.target.id]: e.target.checked });
     } else {
@@ -93,10 +89,7 @@ export default function UpdateHelper() {
       setUploading(true);
       setImageUploadError(null);
       const uploadPromises = files.map((file) => {
-        // Implement your image upload logic here
-        // This should be similar to your CreateListing.jsx implementation
         return new Promise((resolve) => {
-          // Simulate upload
           setTimeout(() => {
             resolve(URL.createObjectURL(file));
           }, 1000);
@@ -132,8 +125,8 @@ export default function UpdateHelper() {
     e.preventDefault();
     try {
       setLoading(true);
-      const res = await fetch(`/api/helper/update/${helperId}`, {
-        method: 'POST',
+      const res = await fetch(`/api/service/update/${serviceId}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -146,7 +139,7 @@ export default function UpdateHelper() {
         return;
       }
       setLoading(false);
-      navigate(`/helper/${helperId}`);
+      navigate(`/service/${serviceId}`);
     } catch (error) {
       setError(error.message);
       setLoading(false);
@@ -158,12 +151,12 @@ export default function UpdateHelper() {
 
   return (
     <main className='max-w-4xl mx-auto p-3'>
-      <h1 className='text-3xl font-semibold text-center my-7'>Update Helper Listing</h1>
+      <h1 className='text-3xl font-semibold text-center my-7'>Update Experience Listing</h1>
       <form onSubmit={handleSubmit} className='flex flex-col sm:flex-row gap-4'>
         <div className='flex flex-col gap-4 flex-1'>
           <input
             type='text'
-            placeholder='Name'
+            placeholder='Experience Name'
             className='border p-3 rounded-lg'
             id='name'
             required
@@ -179,7 +172,7 @@ export default function UpdateHelper() {
             value={formData.description}
           />
           <textarea
-            placeholder='Services Offered'
+            placeholder='What we will do / Amenities'
             className='border p-3 rounded-lg'
             id='near'
             required
@@ -197,7 +190,7 @@ export default function UpdateHelper() {
           />
           <input
             type='text'
-            placeholder='Contact'
+            placeholder='Contact Number'
             className='border p-3 rounded-lg'
             id='contact'
             required
@@ -217,12 +210,12 @@ export default function UpdateHelper() {
             <div className='flex gap-2'>
               <input
                 type='checkbox'
-                id='security'
+                id='offer'
                 className='w-5'
                 onChange={handleChange}
-                checked={formData.security}
+                checked={formData.offer}
               />
-              <span>Background Check Verified</span>
+              <span>Special Offer</span>
             </div>
             <div className='flex gap-2'>
               <input
@@ -238,21 +231,25 @@ export default function UpdateHelper() {
           <div className='flex flex-wrap gap-6'>
             <div className='flex flex-col gap-2'>
               <label className='font-semibold'>Type</label>
-              <div className='flex gap-2 flex-wrap'>
-                {['domestic', 'errand', 'tutor', 'chef', 'beauty', 'tattoo'].map((type) => (
-                  <button
-                    key={type}
-                    type='button'
-                    className={`px-4 py-2 rounded-lg capitalize ${formData.type === type ? 'bg-airbnb-red text-white' : 'bg-gray-200'}`}
-                    onClick={() => setFormData({ ...formData, type })}
-                  >
-                    {type}
-                  </button>
-                ))}
-              </div>
+              <select
+                id='type'
+                className='p-3 border rounded-lg'
+                onChange={handleChange}
+                value={formData.type}
+              >
+                <option value='cleaning'>Cleaning</option>
+                <option value='maintenance'>Maintenance</option>
+                <option value='moving'>Moving</option>
+                <option value='landscaping'>Landscaping</option>
+                <option value='catering'>Catering</option>
+                <option value='daycare'>Daycare</option>
+                <option value='schoolTransport'>School Transport</option>
+                <option value='carwash'>Car Wash</option>
+                <option value='other'>Other</option>
+              </select>
             </div>
             <div className='flex flex-col gap-2'>
-              <label className='font-semibold'>Regular Price</label>
+              <label className='font-semibold'>Base Price</label>
               <div className='flex items-center gap-2'>
                 <input
                   type='number'
@@ -262,78 +259,20 @@ export default function UpdateHelper() {
                   onChange={handleChange}
                   value={formData.regularPrice}
                 />
-                <span>{formData.type === 'tutor' ? 'per hour' : 'per service'}</span>
+                <span>per person/service</span>
               </div>
             </div>
           </div>
-          {formData.type === 'tutor' && (
-            <>
-              <div className='flex flex-col gap-2'>
-                <label className='font-semibold'>Education Level</label>
-                <input
-                  type='text'
-                  placeholder='Education Level'
-                  className='border p-3 rounded-lg'
-                  id='kind'
-                  onChange={handleChange}
-                  value={formData.kind}
-                />
-              </div>
-              <div className='flex flex-col gap-2'>
-                <label className='font-semibold'>Teaching Format</label>
-                <select
-                  id='bathrooms'
-                  className='p-3 border rounded-lg w-full'
-                  onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
-                  value={formData.bathrooms}
-                >
-                  <option value='1'>In-person</option>
-                  <option value='2'>Online</option>
-                  <option value='3'>Both</option>
-                </select>
-              </div>
-            </>
-          )}
-          {formData.type === 'domestic' && (
-            <div className='flex flex-col gap-2'>
-              <label className='font-semibold'>Minimum Hours</label>
-              <input
-                type='number'
-                id='bedrooms'
-                min='1'
-                max='24'
-                className='p-3 border border-gray-300 rounded-lg w-32'
-                onChange={handleChange}
-                value={formData.bedrooms}
-              />
-            </div>
-          )}
-          <input
-            type='text'
-            placeholder='Availability'
-            className='border p-3 rounded-lg'
-            id='period'
-            onChange={handleChange}
-            value={formData.period}
-          />
-          <input
-            type='text'
-            placeholder='Cancellation Policy'
-            className='border p-3 rounded-lg'
-            id='cancel'
-            onChange={handleChange}
-            value={formData.cancel}
-          />
 
           <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50'>
             <div className='flex justify-between items-center'>
-              <h3 className='font-semibold text-lg'>Additional Services & Prices</h3>
+              <h3 className='font-semibold text-lg'>Experience Packages & Prices</h3>
               <button
                 type='button'
                 onClick={handleAddService}
                 className='bg-blue-600 text-white px-3 py-1 rounded-lg text-sm hover:opacity-95'
               >
-                Add Service
+                Add Package
               </button>
             </div>
             {formData.serviceList && formData.serviceList.length > 0 ? (
@@ -342,7 +281,7 @@ export default function UpdateHelper() {
                   <div key={index} className='flex items-center gap-2 bg-white p-3 rounded-md shadow-sm border border-gray-100'>
                     <input
                       type='text'
-                      placeholder='Service Name (e.g. Wash & Iron)'
+                      placeholder='Package Name (e.g. Standard Wash)'
                       className='border p-2 rounded-lg flex-1'
                       value={service.name}
                       onChange={(e) => handleServiceChange(index, 'name', e.target.value)}
@@ -372,16 +311,16 @@ export default function UpdateHelper() {
               </div>
             ) : (
               <div className='text-center py-4 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg'>
-                No additional services added yet
+                No additional packages added yet
               </div>
             )}
           </div>
 
           <button
             disabled={loading || uploading}
-            className='p-3 bg-airbnb-red text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80'
+            className='p-3 bg-red-600 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80'
           >
-            {loading ? 'Updating...' : 'Update Helper Listing'}
+            {loading ? 'Updating...' : 'Update Experience'}
           </button>
           {error && <p className='text-red-700 text-sm'>{error}</p>}
         </div>
@@ -405,7 +344,7 @@ export default function UpdateHelper() {
               type='button'
               disabled={uploading}
               onClick={handleImageSubmit}
-              className='p-3 text-airbnb-red border border-airbnb-red rounded uppercase hover:shadow-lg disabled:opacity-80'
+              className='p-3 text-red-600 border border-red-600 rounded uppercase hover:shadow-lg disabled:opacity-80'
             >
               {uploading ? 'Uploading...' : 'Upload'}
             </button>
@@ -421,7 +360,7 @@ export default function UpdateHelper() {
               >
                 <img
                   src={url}
-                  alt='helper image'
+                  alt='experience image'
                   className='w-20 h-20 object-contain rounded-lg'
                 />
                 <button

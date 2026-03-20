@@ -144,6 +144,12 @@ const helperSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'HelperComment'
     },
+    serviceList: [
+        {
+            name: { type: String, required: true },
+            price: { type: Number, required: true }
+        }
+    ]
 }, { timestamps: true });
 
 const Helper = mongoose.model('Helper', helperSchema);

@@ -265,10 +265,17 @@ const ServicePage = () => {
     if (service) {
       const basePrice = parseInt(service.regularPrice) || 0;
       const travelFee = parseInt(service.travelFee) || 0;
-      const serviceFee = Math.round(basePrice * 0.1);
-      setTotalPrice(basePrice + travelFee + serviceFee);
+      
+      let selectedPrice = 0;
+      if (selectedService && selectedService.price) {
+        selectedPrice = parseInt(String(selectedService.price).replace(/[^\d]/g, '')) || 0;
+      }
+
+      const totalBase = selectedPrice > 0 ? selectedPrice : basePrice;
+      const serviceFee = Math.round(totalBase * 0.1);
+      setTotalPrice(totalBase + travelFee + serviceFee);
     }
-  }, [service]);
+  }, [service, selectedService]);
 
   useEffect(() => {
     const fetchService = async () => {
@@ -516,7 +523,7 @@ const ServicePage = () => {
     message += `━━━━━━━━━━━━━━━━━━━━\n`;
     message += `*💵 TOTAL AMOUNT*\n`;
     message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `� *Total Est:* R${totalPrice}\n\n`;
+    message += `💵 *Total Est:* R${totalPrice}\n\n`;
 
     message += `━━━━━━━━━━━━━━━━━━━━\n`;
     message += `*⚡ QUICK ACTIONS*\n`;
@@ -616,7 +623,18 @@ const ServicePage = () => {
 
   const fullDescription = getServiceDescription(service.type, service);
   const displayText = showFullDescription ? fullDescription : fullDescription.slice(0, 300) + (fullDescription.length > 300 ? "..." : "");
-  const serviceOptions = getServiceOptions(service.type);
+  
+  // Prioritize dynamic serviceList from database, fallback to hardcoded options
+  const serviceOptions = (service.serviceList && service.serviceList.length > 0) 
+    ? service.serviceList.map(s => ({
+        ...s,
+        id: s.name,
+        icon: <FaCheckCircle className="text-rose-500" />,
+        description: 'Professional service package',
+        duration: 'Custom'
+      }))
+    : getServiceOptions(service.type);
+    
   const displayedServices = showAllServices ? serviceOptions : serviceOptions.slice(0, 4);
   const whatsappNumber = formatContactForWhatsApp(service.contact);
   const serviceHighlights = currentServiceConfig?.highlights || [];
@@ -818,33 +836,50 @@ const ServicePage = () => {
             <div className="py-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Service options</h2>
               <div className="space-y-4">
-                {displayedServices.map((option) => (
-                  <div
-                    key={option.id}
-                    className="flex items-start justify-between p-4 border border-gray-200 rounded-xl hover:border-gray-300 transition-colors cursor-pointer"
-                    onClick={() => openBookingModal(option)}
-                  >
-                    <div className="flex-1 pr-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-gray-500">{option.icon}</span>
-                        <h3 className="font-semibold text-gray-900">{option.name}</h3>
-                        {option.popular && (
-                          <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs font-medium rounded">
-                            Popular
-                          </span>
-                        )}
+                {displayedServices.map((option) => {
+                  const isSelected = selectedService?.id === option.id;
+                  return (
+                    <div
+                      key={option.id}
+                      className={`flex items-start justify-between p-4 border-2 rounded-xl transition-all cursor-pointer ${
+                        isSelected 
+                          ? 'border-rose-500 bg-rose-50 shadow-sm' 
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                      onClick={() => setSelectedService(option)}
+                    >
+                      <div className="flex-1 pr-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`${isSelected ? 'text-rose-500' : 'text-gray-400'}`}>{option.icon}</span>
+                          <h3 className={`font-semibold ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>{option.name}</h3>
+                          {option.popular && (
+                            <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs font-medium rounded">
+                              Popular
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-gray-600 text-sm mb-2">{option.description}</p>
+                        <p className="text-gray-500 text-sm">{option.duration}</p>
                       </div>
-                      <p className="text-gray-600 text-sm mb-2">{option.description}</p>
-                      <p className="text-gray-500 text-sm">{option.duration}</p>
+                      <div className="text-right flex flex-col items-end">
+                        <p className={`font-semibold ${isSelected ? 'text-rose-600' : 'text-gray-900'}`}>{option.price}</p>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openBookingModal(option);
+                          }}
+                          className={`mt-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                            isSelected 
+                              ? 'bg-rose-500 text-white' 
+                              : 'bg-gray-900 text-white hover:bg-gray-800'
+                          }`}
+                        >
+                          {isSelected ? 'Book Now' : 'Select'}
+                        </button>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-900">{option.price}</p>
-                      <button className="mt-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
-                        Book
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {serviceOptions.length > 4 && (
@@ -979,18 +1014,29 @@ const ServicePage = () => {
                 <div className="text-center text-gray-500 text-sm mb-4">You won't be charged yet</div>
 
                 <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="underline">Service fee</span>
-                    <span>R{Math.round(service.regularPrice * 0.1)}</span>
-                  </div>
+                  {selectedService ? (
+                    <div className="flex justify-between">
+                      <span className="underline">{selectedService.name}</span>
+                      <span>{selectedService.price}</span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between">
+                      <span className="underline">Base Price</span>
+                      <span>R{service.regularPrice}</span>
+                    </div>
+                  )}
                   {service.travelFee > 0 && (
                     <div className="flex justify-between">
                       <span className="underline">Travel fee</span>
                       <span>R{service.travelFee}</span>
                     </div>
                   )}
-                  <div className="flex justify-between pt-3 border-t border-gray-200 font-semibold text-gray-900">
-                    <span>Total</span>
+                  <div className="flex justify-between">
+                    <span className="underline">Service fee (10%)</span>
+                    <span>R{Math.round((totalPrice - (parseInt(service.travelFee) || 0)) / 1.1 * 0.1)}</span>
+                  </div>
+                  <div className="border-t border-gray-200 pt-3 flex justify-between font-semibold text-gray-900">
+                    <span>Total Est.</span>
                     <span>R{totalPrice}</span>
                   </div>
                 </div>
@@ -1469,12 +1515,21 @@ const ServicePage = () => {
       {/* Mobile Bottom Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:hidden z-40">
         <div className="flex items-center justify-between">
-          <div>
-            <span className="text-xl font-bold text-gray-900">R{totalPrice}</span>
-            <span className="text-gray-600 text-sm"> / service</span>
+          <div className="flex-1 mr-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-gray-900">R{totalPrice}</span>
+              <span className="text-gray-600 text-xs font-bold">Total</span>
+            </div>
+            {selectedService ? (
+              <div className="text-rose-600 text-xs font-semibold truncate max-w-[150px]">
+                {selectedService.name} ({selectedService.price})
+              </div>
+            ) : (
+              <div className="text-gray-500 text-xs font-bold">Per service</div>
+            )}
           </div>
           <button
-            onClick={openBookingModal}
+            onClick={() => openBookingModal(selectedService)}
             className="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-colors"
           >
             Book Now

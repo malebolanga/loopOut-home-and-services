@@ -71,12 +71,473 @@ export default function HelperPage() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
 
+  // ==================== SERVICE CONFIGURATION (MOVED UP) ====================
+
+  // Service options for different helper types
+  const getServiceOptions = (type) => {
+    const baseOptions = [
+      { id: 'laundry', name: 'Laundry', icon: <FaTshirt className="text-blue-500" /> },
+      { id: 'cleaning', name: 'Deep Cleaning', icon: <FaBroomClean className="text-green-500" /> },
+      { id: 'ironing', name: 'Ironing', icon: <FaTshirt className="text-purple-500" /> },
+      { id: 'yard', name: 'Yard Work', icon: <FaBroom className="text-yellow-600" /> },
+      { id: 'cooking', name: 'Meal Prep', icon: <FaFire className="text-red-500" /> },
+      { id: 'babysitting', name: 'Child Care', icon: <FaBaby className="text-pink-500" /> },
+      { id: 'eventCleaning', name: 'Event Cleanup', icon: <FaGlassCheers className="text-indigo-500" /> },
+      { id: 'other', name: 'Other', icon: <FaEllipsisH className="text-gray-500" /> }
+    ];
+
+    const beautyOptions = [
+      { id: 'makeup', name: 'Makeup', icon: <FaPalette className="text-pink-500" /> },
+      { id: 'skincare', name: 'Facials', icon: <FaSpa className="text-purple-400" /> },
+      { id: 'nails', name: 'Nails', icon: <FaHandSparkles className="text-red-400" /> },
+      { id: 'hair', name: 'Hair Styling', icon: <FaCut className="text-blue-400" /> },
+      { id: 'facial', name: 'Skin Therapy', icon: <FaStar className="text-yellow-500" /> },
+      { id: 'waxing', name: 'Waxing', icon: <FaFire className="text-orange-500" /> },
+      { id: 'massage', name: 'Massage', icon: <FaHandHoldingHeart className="text-green-400" /> },
+      { id: 'bridal', name: 'Bridal', icon: <FaRing className="text-rose-500" /> }
+    ];
+
+    const barberOptions = [
+      { id: 'haircut', name: 'Haircut', icon: <FaCut className="text-blue-600" /> },
+      { id: 'beardTrim', name: 'Beard Trim', icon: <FaUser className="text-gray-700" /> },
+      { id: 'shave', name: 'Razor Shave', icon: <FaTools className="text-gray-900" /> },
+      { id: 'fade', name: 'Fade', icon: <FaCut className="text-indigo-600" /> },
+      { id: 'coloring', name: 'Coloring', icon: <FaBrush className="text-purple-500" /> },
+      { id: 'styling', name: 'Styling', icon: <FaSprayCan className="text-yellow-600" /> },
+      { id: 'kidsCut', name: 'Kids Cut', icon: <FaSmile className="text-green-500" /> },
+      { id: 'consultation', name: 'Consult', icon: <FaUser className="text-teal-500" /> }
+    ];
+
+    const chefOptions = [
+      { id: 'mealPrep', name: 'Meal Prep', icon: <FaUtensils className="text-orange-500" /> },
+      { id: 'privateDining', name: 'Private Dining', icon: <FaUtensils className="text-red-500" /> },
+      { id: 'cookingClasses', name: 'Classes', icon: <FaGraduationCap className="text-green-500" /> },
+      { id: 'eventCatering', name: 'Catering', icon: <FaGlassCheers className="text-purple-500" /> },
+      { id: 'dietMeals', name: 'Diet Plans', icon: <FaCookie className="text-blue-500" /> },
+      { id: 'baking', name: 'Baking', icon: <FaCookie className="text-yellow-500" /> },
+      { id: 'groceryShopping', name: 'Shopping', icon: <FaShoppingBasket className="text-teal-500" /> },
+      { id: 'menuPlanning', name: 'Planning', icon: <FaUtensils className="text-indigo-500" /> }
+    ];
+
+    const tattooOptions = [
+      { id: 'custom', name: 'Custom Art', icon: <FaPalette className="text-gray-800" /> },
+      { id: 'coverup', name: 'Cover-up', icon: <FaBrush className="text-purple-600" /> },
+      { id: 'touchup', name: 'Touch-up', icon: <FaTools className="text-blue-600" /> },
+      { id: 'consultation', name: 'Design', icon: <FaUser className="text-teal-500" /> }
+    ];
+
+    const tutorOptions = [
+      { id: 'math', name: 'Mathematics', icon: <FaGraduationCap className="text-blue-600" /> },
+      { id: 'science', name: 'Science', icon: <FaGraduationCap className="text-green-600" /> },
+      { id: 'language', name: 'Languages', icon: <FaGraduationCap className="text-yellow-600" /> },
+      { id: 'music', name: 'Music', icon: <FaGraduationCap className="text-purple-600" /> },
+      { id: 'art', name: 'Art', icon: <FaPalette className="text-pink-600" /> },
+      { id: 'testPrep', name: 'Test Prep', icon: <FaGraduationCap className="text-red-600" /> }
+    ];
+
+    const photographyOptions = [
+      { id: 'portrait', name: 'Portrait', icon: <FaUser className="text-blue-500" /> },
+      { id: 'event', name: 'Events', icon: <FaGlassCheers className="text-purple-500" /> },
+      { id: 'product', name: 'Product', icon: <FaShoppingBasket className="text-green-500" /> },
+      { id: 'wedding', name: 'Wedding', icon: <FaRing className="text-pink-500" /> },
+      { id: 'family', name: 'Family', icon: <FaUserFriends className="text-orange-500" /> },
+      { id: 'commercial', name: 'Commercial', icon: <FaBriefcase className="text-indigo-500" /> },
+      { id: 'realestate', name: 'Real Estate', icon: <FaHome className="text-yellow-600" /> },
+      { id: 'landscape', name: 'Landscape', icon: <FaMapMarkerAlt className="text-teal-500" /> }
+    ];
+
+    const sneakerOptions = [
+      { id: 'basicClean', name: 'Basic Clean', icon: <FaShoePrints className="text-indigo-500" /> },
+      { id: 'deepClean', name: 'Deep Clean', icon: <FaSoap className="text-purple-500" /> },
+      { id: 'stainRemoval', name: 'Stain Removal', icon: <FaTint className="text-blue-500" /> },
+      { id: 'whitening', name: 'Whitening', icon: <FaStar className="text-yellow-500" /> },
+      { id: 'restoration', name: 'Restoration', icon: <FaTools className="text-gray-600" /> },
+      { id: 'waterproofing', name: 'Waterproofing', icon: <FaWaterDrop className="text-cyan-500" /> },
+      { id: 'soleRepair', name: 'Sole Repair', icon: <FaCogs className="text-gray-700" /> },
+      { id: 'colorRestore', name: 'Color Restore', icon: <FaPalette className="text-pink-500" /> }
+    ];
+
+    const washingmatOptions = [
+      { id: 'basicWash', name: 'Basic Wash', icon: <FaWaterDrop className="text-blue-500" /> },
+      { id: 'deepClean', name: 'Deep Clean', icon: <FaBath className="text-purple-500" /> },
+      { id: 'stainRemoval', name: 'Stain Removal', icon: <FaTint className="text-red-500" /> },
+      { id: 'sanitizing', name: 'Sanitizing', icon: <FaShieldAlt className="text-green-500" /> },
+      { id: 'deodorizing', name: 'Deodorizing', icon: <FaWind className="text-teal-500" /> },
+      { id: 'steamCleaning', name: 'Steam Cleaning', icon: <FaFire className="text-orange-500" /> },
+      { id: 'drying', name: 'Drying Service', icon: <FaSun className="text-yellow-500" /> },
+      { id: 'pickupDelivery', name: 'Pickup & Delivery', icon: <FaTruck className="text-gray-600" /> }
+    ];
+
+    const animalOptions = [
+      { id: 'dogWalking', name: 'Dog Walking', icon: <FaDogIcon className="text-amber-600" /> },
+      { id: 'petSitting', name: 'Pet Sitting', icon: <FaPaw className="text-amber-500" /> },
+      { id: 'grooming', name: 'Grooming', icon: <FaCut className="text-purple-500" /> },
+      { id: 'bathing', name: 'Bathing', icon: <FaBath className="text-blue-500" /> },
+      { id: 'feeding', name: 'Feeding', icon: <FaFishIcon className="text-green-500" /> },
+      { id: 'medication', name: 'Medication', icon: <FaShieldAlt className="text-red-500" /> },
+      { id: 'training', name: 'Training', icon: <FaGraduationCap className="text-indigo-500" /> },
+      { id: 'vetVisits', name: 'Vet Visits', icon: <FaTruck className="text-gray-600" /> },
+      { id: 'catCare', name: 'Cat Care', icon: <FaCat className="text-amber-400" /> },
+      { id: 'birdCare', name: 'Bird Care', icon: <FaDove className="text-sky-500" /> },
+      { id: 'horseCare', name: 'Horse Care', icon: <FaHorse className="text-brown-500" /> }
+    ];
+
+    switch (type) {
+      case 'beauty':
+      case 'spa':
+        return beautyOptions;
+      case 'barber':
+      case 'barbar':
+        return barberOptions;
+      case 'chef':
+      case 'cooking':
+        return chefOptions;
+      case 'tattoo':
+        return tattooOptions;
+      case 'tutor':
+        return tutorOptions;
+      case 'photography':
+        return photographyOptions;
+      case 'domestic':
+      case 'maid':
+        return baseOptions;
+      case 'sneaker':
+        return sneakerOptions;
+      case 'washingmat':
+        return washingmatOptions;
+      case 'animals':
+        return animalOptions;
+      default:
+        return [];
+    }
+  };
+
+  // Prioritize dynamic serviceList from database, fallback to hardcoded options
+  const serviceOptions = (helper?.serviceList && helper.serviceList.length > 0)
+    ? helper.serviceList.map((s, index) => ({ 
+        id: s.name, 
+        name: s.name, 
+        price: s.price,
+        icon: <FaCheckCircle className="text-rose-500" /> 
+      }))
+    : getServiceOptions(helper?.type);
+
   // Full page overlay state for booking form
   const [showBookingFormOverlay, setShowBookingFormOverlay] = useState(false);
 
   // Full screen gallery states
   const [showFullScreenGallery, setShowFullScreenGallery] = useState(false);
   const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
+
+  // ==================== HELPER FUNCTIONS & STATIC DATA (MOVED UP) ====================
+
+  // Helper function to get professional title
+  const getProfessionalTitle = (type) => {
+    const titles = {
+      chef: 'Private Chef',
+      barber: 'Barber',
+      barbar: 'Barber',
+      beauty: 'Beauty Professional',
+      spa: 'Spa Professional',
+      maid: 'Housekeeper',
+      domestic: 'Domestic Helper',
+      tattoo: 'Tattoo Artist',
+      tutor: 'Private Tutor',
+      photography: 'Photographer',
+      sneaker: 'Sneaker Cleaner',
+      washingmat: 'Mat Washer',
+      animals: 'Animal Care Professional'
+    };
+    return titles[type] || 'Professional';
+  };
+
+  // Get theme color based on helper type
+  const getThemeColor = (type) => {
+    const themes = {
+      beauty: 'pink',
+      spa: 'purple',
+      domestic: 'red',
+      maid: 'red',
+      barber: 'blue',
+      barbar: 'blue',
+      chef: 'orange',
+      cooking: 'orange',
+      tattoo: 'gray',
+      tutor: 'green',
+      photography: 'purple',
+      sneaker: 'indigo',
+      washingmat: 'cyan',
+      animals: 'amber',
+      default: 'red'
+    };
+    return themes[type] || themes.default;
+  };
+
+  const themeColor = helper ? getThemeColor(helper.type) : 'red';
+
+  // Haircut styles for barbers
+  const haircutStyles = [
+    { id: 'classic-crew', name: 'Classic Crew Cut', description: 'Timeless short cut' },
+    { id: 'fade-cut', name: 'Fade Cut', description: 'Gradual length transition' },
+    { id: 'pompadour', name: 'Pompadour', description: 'Voluminous classic style' },
+    { id: 'undercut', name: 'Undercut', description: 'Sharp contrast cut' },
+    { id: 'buzz-cut', name: 'Buzz Cut', description: 'Uniform short length' },
+    { id: 'afro-style', name: 'Afro Style', description: 'Natural texture styling' },
+    { id: 'textured-crop', name: 'Textured Crop', description: 'Modern layered cut' },
+    { id: 'slick-back', name: 'Slick Back', description: 'Sleek polished look' }
+  ];
+
+  // Beard styles for barbers
+  const beardStyles = [
+    { id: 'stubble', name: 'Stubble', description: 'Short maintained beard' },
+    { id: 'short-beard', name: 'Short Beard', description: 'Neat trimmed beard' },
+    { id: 'medium-beard', name: 'Medium Beard', description: 'Fuller beard style' },
+    { id: 'long-beard', name: 'Long Beard', description: 'Extended beard care' },
+    { id: 'goatee', name: 'Goatee', description: 'Chin focused style' },
+    { id: 'van-dyke', name: 'Van Dyke', description: 'Mustache and goatee combo' },
+    { id: 'circle-beard', name: 'Circle Beard', description: 'Rounded beard style' },
+    { id: 'clean-shave', name: 'Clean Shave', description: 'Complete beard removal' }
+  ];
+
+  const cleaningTypes = [
+    { id: 'gentle', name: 'Gentle Clean' },
+    { id: 'standard', name: 'Standard Clean' },
+    { id: 'deep', name: 'Deep Clean' }
+  ];
+
+  const matSizes = [
+    { id: 'small', name: 'Small (Under 1.5m)' },
+    { id: 'medium', name: 'Medium (1.5m - 2.5m)' },
+    { id: 'large', name: 'Large (Over 2.5m)' }
+  ];
+
+  const matMaterials = [
+    { id: 'synthetic', name: 'Synthetic Fiber' },
+    { id: 'wool', name: 'Wool' },
+    { id: 'cotton', name: 'Cotton' },
+    { id: 'other', name: 'Other' }
+  ];
+
+  const stainLevels = [
+    { id: 'light', name: 'Light Soiling' },
+    { id: 'medium', name: 'Visible Stains' },
+    { id: 'heavy', name: 'Heavy Deep-set Stains' }
+  ];
+
+  const dryingPreferences = [
+    { id: 'air', name: 'Natural Air Dry' },
+    { id: 'machine', name: 'Fast Machine Dry' }
+  ];
+
+  const animalSizes = [
+    { id: 'small', name: 'Small (under 10kg)' },
+    { id: 'medium', name: 'Medium (10-25kg)' },
+    { id: 'large', name: 'Large (25-45kg)' },
+    { id: 'xlarge', name: 'Extra Large (over 45kg)' }
+  ];
+
+  const animalAgeRanges = [
+    { id: 'puppy', name: 'Puppy/Kitten' },
+    { id: 'young', name: 'Young' },
+    { id: 'adult', name: 'Adult' },
+    { id: 'senior', name: 'Senior' }
+  ];
+
+  const serviceDurations = [
+    { id: '30min', name: '30 minutes' },
+    { id: '1hour', name: '1 hour' },
+    { id: '2hours', name: '2 hours' },
+    { id: '4hours', name: '4 hours' },
+    { id: '8hours', name: 'Full day (8 hours)' },
+    { id: 'overnight', name: 'Overnight' },
+    { id: '24hours', name: '24 hours' },
+    { id: 'weekly', name: 'Weekly' }
+  ];
+
+  // Equipment options for different services
+  const equipmentOptions = {
+    chef: [
+      'Professional knives',
+      'Cooking utensils',
+      'Portable stove',
+      'Baking equipment',
+      'Serving platters',
+      'Kitchen thermometer',
+      'Mixer/blender',
+      'Food processor'
+    ],
+    barber: [
+      'Professional clippers',
+      'Hair scissors',
+      'Beard trimmers',
+      'Sterilization equipment',
+      'Hair styling tools',
+      'Barber cape',
+      'Shaving supplies',
+      'Sanitizing spray'
+    ],
+    beauty: [
+      'Makeup kit',
+      'Skincare tools',
+      'Sterilization equipment',
+      'Nail care tools',
+      'Facial steamer',
+      'Beauty lights',
+      'Massage oils',
+      'Hot towels'
+    ],
+    domestic: [
+      'Vacuum cleaner',
+      'Mop & bucket',
+      'Cleaning supplies',
+      'Iron & board',
+      'Window cleaning tools',
+      'Garden tools',
+      'Broom & dustpan',
+      'Polishing cloths'
+    ],
+    tutor: [
+      'Textbooks',
+      'Stationery kits',
+      'Whiteboard/Markers',
+      'Educational software',
+      'Reference materials',
+      'Practice tests',
+      'Calculator',
+      'Laptop/Tablet'
+    ],
+    photography: [
+      'Professional DSLR/Mirrorless',
+      'Variety of lenses',
+      'External flashes',
+      'Tripods',
+      'Reflectors/Diffusers',
+      'Editing software',
+      'Memory cards',
+      'Lighting equipment'
+    ],
+    sneaker: [
+      'Premium brushes',
+      'Eco-friendly cleaners',
+      'Microfiber towels',
+      'Shoe trees',
+      'Waterproof sprays',
+      'Odor eliminators',
+      'Paint touch-up kits'
+    ],
+    washingmat: [
+      'Industrial washers',
+      'Large dryers',
+      'Specialist detergents',
+      'Stain removers',
+      'Fabric softeners',
+      'Drying racks',
+      'Packing materials'
+    ],
+    animals: [
+      'Leashes/Harnesses',
+      'Pet carriers',
+      'Grooming brushes',
+      'Pet first-aid kit',
+      'Treats/Food bowls',
+      'Waste bags',
+      'Animal shampoo',
+      'Training clicks'
+    ],
+    default: [
+      'Professional kit',
+      'Safety equipment',
+      'ID verification',
+      'Communication device'
+    ]
+  };
+
+  // Chef-specific options
+  const mealTypes = [
+    { id: 'breakfast', name: 'Breakfast' },
+    { id: 'brunch', name: 'Brunch' },
+    { id: 'lunch', name: 'Lunch' },
+    { id: 'dinner', name: 'Dinner' },
+    { id: 'appetizers', name: 'Appetizers & Canapés' },
+    { id: 'desserts', name: 'Desserts' },
+    { id: 'full-course', name: 'Full Course Meal' },
+    { id: 'buffet', name: 'Buffet Style' }
+  ];
+
+  const cuisineTypes = [
+    { id: 'italian', name: 'Italian' },
+    { id: 'french', name: 'French' },
+    { id: 'asian', name: 'Asian Fusion' },
+    { id: 'mediterranean', name: 'Mediterranean' },
+    { id: 'mexican', name: 'Mexican' },
+    { id: 'indian', name: 'Indian' },
+    { id: 'american', name: 'American' },
+    { id: 'vegetarian', name: 'Vegetarian' },
+    { id: 'vegan', name: 'Vegan' },
+    { id: 'seafood', name: 'Seafood' },
+    { id: 'bbq', name: 'BBQ & Grilling' },
+    { id: 'custom', name: 'Custom Menu' }
+  ];
+
+  // Sneaker cleaner specific options
+  const shoeBrands = [
+    { id: 'nike', name: 'Nike' },
+    { id: 'adidas', name: 'Adidas' },
+    { id: 'jordan', name: 'Jordan' },
+    { id: 'newbalance', name: 'New Balance' },
+    { id: 'puma', name: 'Puma' },
+    { id: 'reebok', name: 'Reebok' },
+    { id: 'vans', name: 'Vans' },
+    { id: 'converse', name: 'Converse' },
+    { id: 'yeezy', name: 'Yeezy' },
+    { id: 'other', name: 'Other' }
+  ];
+
+  const shoeConditions = [
+    { id: 'lightlyWorn', name: 'Lightly Worn' },
+    { id: 'moderatelyWorn', name: 'Moderately Worn' },
+    { id: 'heavilyWorn', name: 'Heavily Worn' },
+    { id: 'veryDirty', name: 'Very Dirty' },
+    { id: 'stained', name: 'Stained' },
+    { id: 'damaged', name: 'Damaged' }
+  ];
+
+  // Animal care specific options
+  const animalTypes = [
+    { id: 'dog', name: 'Dog', icon: <FaDogIcon /> },
+    { id: 'cat', name: 'Cat', icon: <FaCat /> },
+    { id: 'bird', name: 'Bird', icon: <FaDove /> },
+    { id: 'fish', name: 'Fish', icon: <FaFishIcon /> },
+    { id: 'horse', name: 'Horse', icon: <FaHorse /> },
+    { id: 'rabbit', name: 'Rabbit', icon: <FaPaw /> },
+    { id: 'hamster', name: 'Hamster', icon: <FaPaw /> },
+    { id: 'reptile', name: 'Reptile', icon: <FaPaw /> },
+    { id: 'multiple', name: 'Multiple Animals', icon: <FaUsers /> }
+  ];
+
+  // Override these with more detailed versions if needed
+  const washingMatSizes = [
+    { id: 'small', name: 'Small (under 2x3 ft)' },
+    { id: 'medium', name: 'Medium (2x3 to 4x6 ft)' },
+    { id: 'large', name: 'Large (4x6 to 6x9 ft)' },
+    { id: 'xlarge', name: 'Extra Large (over 6x9 ft)' }
+  ];
+
+  const washingMatMaterials = [
+    { id: 'cotton', name: 'Cotton' },
+    { id: 'synthetic', name: 'Synthetic' },
+    { id: 'rubber', name: 'Rubber Backed' },
+    { id: 'wool', name: 'Wool' },
+    { id: 'coconut', name: 'Coconut Fiber' },
+    { id: 'microfiber', name: 'Microfiber' }
+  ];
+
+  const genericStainLevels = [
+    { id: 'light', name: 'Light Stains' },
+    { id: 'moderate', name: 'Moderate Stains' },
+    { id: 'heavy', name: 'Heavy Stains' },
+    { id: 'setIn', name: 'Set-in Stains' }
+  ];
 
   // Enhanced Location States
   const [locationData, setLocationData] = useState({
@@ -211,432 +672,28 @@ export default function HelperPage() {
   // Calculate total price
   useEffect(() => {
     if (helper) {
-      const basePrice = helper.regularPrice || 0;
-      const travelFee = helper.travelFee || 0;
-      const serviceFee = Math.round(basePrice * 0.1);
-      setTotalPrice(basePrice + travelFee + serviceFee);
+      const basePrice = parseInt(helper.regularPrice) || 0;
+      const travelFee = parseInt(helper.travelFee) || 0;
+      
+      // Calculate selected services price
+      let selectedServicesPrice = 0;
+      bookingData.selectedServices.forEach(serviceId => {
+        const option = serviceOptions.find(opt => opt.id === serviceId);
+        if (option && option.price) {
+          // Handle "R450" or "450" format
+          const price = parseInt(String(option.price).replace(/[^\d]/g, '')) || 0;
+          selectedServicesPrice += price;
+        }
+      });
+
+      const totalBase = selectedServicesPrice > 0 ? selectedServicesPrice : basePrice;
+      const serviceFee = Math.round(totalBase * 0.1);
+      setTotalPrice(totalBase + travelFee + serviceFee);
     }
-  }, [helper, bookingData.selectedServices]);
+  }, [helper, bookingData.selectedServices, serviceOptions]);
 
-  // ==================== HELPER FUNCTIONS (DEFINED FIRST) ====================
 
-  // Helper function to get professional title
-  const getProfessionalTitle = (type) => {
-    const titles = {
-      chef: 'Private Chef',
-      barber: 'Barber',
-      barbar: 'Barber',
-      beauty: 'Beauty Professional',
-      spa: 'Spa Professional',
-      maid: 'Housekeeper',
-      domestic: 'Domestic Helper',
-      tattoo: 'Tattoo Artist',
-      tutor: 'Private Tutor',
-      photography: 'Photographer',
-      sneaker: 'Sneaker Cleaner',
-      washingmat: 'Mat Washer',
-      animals: 'Animal Care Professional'
-    };
-    return titles[type] || 'Professional';
-  };
 
-  // Get theme color based on helper type
-  const getThemeColor = (type) => {
-    const themes = {
-      beauty: 'pink',
-      spa: 'purple',
-      domestic: 'red',
-      maid: 'red',
-      barber: 'blue',
-      barbar: 'blue',
-      chef: 'orange',
-      cooking: 'orange',
-      tattoo: 'gray',
-      tutor: 'green',
-      photography: 'purple',
-      sneaker: 'indigo',
-      washingmat: 'cyan',
-      animals: 'amber',
-      default: 'red'
-    };
-    return themes[type] || themes.default;
-  };
-
-  const themeColor = helper ? getThemeColor(helper.type) : 'red';
-
-  // Service options for different helper types
-  const getServiceOptions = (type) => {
-    const baseOptions = [
-      { id: 'laundry', name: 'Laundry', icon: <FaTshirt className="text-blue-500" /> },
-      { id: 'cleaning', name: 'Deep Cleaning', icon: <FaBroomClean className="text-green-500" /> },
-      { id: 'ironing', name: 'Ironing', icon: <FaTshirt className="text-purple-500" /> },
-      { id: 'yard', name: 'Yard Work', icon: <FaBroom className="text-yellow-600" /> },
-      { id: 'cooking', name: 'Meal Prep', icon: <FaFire className="text-red-500" /> },
-      { id: 'babysitting', name: 'Child Care', icon: <FaBaby className="text-pink-500" /> },
-      { id: 'eventCleaning', name: 'Event Cleanup', icon: <FaGlassCheers className="text-indigo-500" /> },
-      { id: 'other', name: 'Other', icon: <FaEllipsisH className="text-gray-500" /> }
-    ];
-
-    const beautyOptions = [
-      { id: 'makeup', name: 'Makeup', icon: <FaPalette className="text-pink-500" /> },
-      { id: 'skincare', name: 'Facials', icon: <FaSpa className="text-purple-400" /> },
-      { id: 'nails', name: 'Nails', icon: <FaHandSparkles className="text-red-400" /> },
-      { id: 'hair', name: 'Hair Styling', icon: <FaCut className="text-blue-400" /> },
-      { id: 'facial', name: 'Skin Therapy', icon: <FaStar className="text-yellow-500" /> },
-      { id: 'waxing', name: 'Waxing', icon: <FaFire className="text-orange-500" /> },
-      { id: 'massage', name: 'Massage', icon: <FaHandHoldingHeart className="text-green-400" /> },
-      { id: 'bridal', name: 'Bridal', icon: <FaRing className="text-rose-500" /> }
-    ];
-
-    const barberOptions = [
-      { id: 'haircut', name: 'Haircut', icon: <FaCut className="text-blue-600" /> },
-      { id: 'beardTrim', name: 'Beard Trim', icon: <FaUser className="text-gray-700" /> },
-      { id: 'shave', name: 'Razor Shave', icon: <FaTools className="text-gray-900" /> },
-      { id: 'fade', name: 'Fade', icon: <FaCut className="text-indigo-600" /> },
-      { id: 'coloring', name: 'Coloring', icon: <FaBrush className="text-purple-500" /> },
-      { id: 'styling', name: 'Styling', icon: <FaSprayCan className="text-yellow-600" /> },
-      { id: 'kidsCut', name: 'Kids Cut', icon: <FaSmile className="text-green-500" /> },
-      { id: 'consultation', name: 'Consult', icon: <FaUser className="text-teal-500" /> }
-    ];
-
-    const chefOptions = [
-      { id: 'mealPrep', name: 'Meal Prep', icon: <FaUtensils className="text-orange-500" /> },
-      { id: 'privateDining', name: 'Private Dining', icon: <FaUtensils className="text-red-500" /> },
-      { id: 'cookingClasses', name: 'Classes', icon: <FaGraduationCap className="text-green-500" /> },
-      { id: 'eventCatering', name: 'Catering', icon: <FaGlassCheers className="text-purple-500" /> },
-      { id: 'dietMeals', name: 'Diet Plans', icon: <FaCookie className="text-blue-500" /> },
-      { id: 'baking', name: 'Baking', icon: <FaCookie className="text-yellow-500" /> },
-      { id: 'groceryShopping', name: 'Shopping', icon: <FaShoppingBasket className="text-teal-500" /> },
-      { id: 'menuPlanning', name: 'Planning', icon: <FaUtensils className="text-indigo-500" /> }
-    ];
-
-    const tattooOptions = [
-      { id: 'custom', name: 'Custom Art', icon: <FaPalette className="text-gray-800" /> },
-      { id: 'coverup', name: 'Cover-up', icon: <FaBrush className="text-purple-600" /> },
-      { id: 'touchup', name: 'Touch-up', icon: <FaTools className="text-blue-600" /> },
-      { id: 'consultation', name: 'Design', icon: <FaUser className="text-teal-500" /> }
-    ];
-
-    const tutorOptions = [
-      { id: 'math', name: 'Mathematics', icon: <FaGraduationCap className="text-blue-600" /> },
-      { id: 'science', name: 'Science', icon: <FaGraduationCap className="text-green-600" /> },
-      { id: 'language', name: 'Languages', icon: <FaGraduationCap className="text-yellow-600" /> },
-      { id: 'music', name: 'Music', icon: <FaGraduationCap className="text-purple-600" /> },
-      { id: 'art', name: 'Art', icon: <FaPalette className="text-pink-600" /> },
-      { id: 'testPrep', name: 'Test Prep', icon: <FaGraduationCap className="text-red-600" /> }
-    ];
-
-    const photographyOptions = [
-      { id: 'portrait', name: 'Portrait', icon: <FaUser className="text-blue-500" /> },
-      { id: 'event', name: 'Events', icon: <FaGlassCheers className="text-purple-500" /> },
-      { id: 'product', name: 'Product', icon: <FaShoppingBasket className="text-green-500" /> },
-      { id: 'wedding', name: 'Wedding', icon: <FaRing className="text-pink-500" /> },
-      { id: 'family', name: 'Family', icon: <FaUserFriends className="text-orange-500" /> },
-      { id: 'commercial', name: 'Commercial', icon: <FaBriefcase className="text-indigo-500" /> },
-      { id: 'realestate', name: 'Real Estate', icon: <FaHome className="text-yellow-600" /> },
-      { id: 'landscape', name: 'Landscape', icon: <FaMapMarkerAlt className="text-teal-500" /> }
-    ];
-
-    // Sneaker cleaner options
-    const sneakerOptions = [
-      { id: 'basicClean', name: 'Basic Clean', icon: <FaShoePrints className="text-indigo-500" /> },
-      { id: 'deepClean', name: 'Deep Clean', icon: <FaSoap className="text-purple-500" /> },
-      { id: 'stainRemoval', name: 'Stain Removal', icon: <FaTint className="text-blue-500" /> },
-      { id: 'whitening', name: 'Whitening', icon: <FaStar className="text-yellow-500" /> },
-      { id: 'restoration', name: 'Restoration', icon: <FaTools className="text-gray-600" /> },
-      { id: 'waterproofing', name: 'Waterproofing', icon: <FaWaterDrop className="text-cyan-500" /> },
-      { id: 'soleRepair', name: 'Sole Repair', icon: <FaCogs className="text-gray-700" /> },
-      { id: 'colorRestore', name: 'Color Restore', icon: <FaPalette className="text-pink-500" /> }
-    ];
-
-    // Washing mat options
-    const washingmatOptions = [
-      { id: 'basicWash', name: 'Basic Wash', icon: <FaWaterDrop className="text-blue-500" /> },
-      { id: 'deepClean', name: 'Deep Clean', icon: <FaBath className="text-purple-500" /> },
-      { id: 'stainRemoval', name: 'Stain Removal', icon: <FaTint className="text-red-500" /> },
-      { id: 'sanitizing', name: 'Sanitizing', icon: <FaShieldAlt className="text-green-500" /> },
-      { id: 'deodorizing', name: 'Deodorizing', icon: <FaWind className="text-teal-500" /> },
-      { id: 'steamCleaning', name: 'Steam Cleaning', icon: <FaFire className="text-orange-500" /> },
-      { id: 'drying', name: 'Drying Service', icon: <FaSun className="text-yellow-500" /> },
-      { id: 'pickupDelivery', name: 'Pickup & Delivery', icon: <FaTruck className="text-gray-600" /> }
-    ];
-
-    // Animal care options - FIXED: Changed FaBird to FaDove
-    const animalOptions = [
-      { id: 'dogWalking', name: 'Dog Walking', icon: <FaDogIcon className="text-amber-600" /> },
-      { id: 'petSitting', name: 'Pet Sitting', icon: <FaPaw className="text-amber-500" /> },
-      { id: 'grooming', name: 'Grooming', icon: <FaCut className="text-purple-500" /> },
-      { id: 'bathing', name: 'Bathing', icon: <FaBath className="text-blue-500" /> },
-      { id: 'feeding', name: 'Feeding', icon: <FaFishIcon className="text-green-500" /> },
-      { id: 'medication', name: 'Medication', icon: <FaShieldAlt className="text-red-500" /> },
-      { id: 'training', name: 'Training', icon: <FaGraduationCap className="text-indigo-500" /> },
-      { id: 'vetVisits', name: 'Vet Visits', icon: <FaTruck className="text-gray-600" /> },
-      { id: 'catCare', name: 'Cat Care', icon: <FaCat className="text-amber-400" /> },
-      { id: 'birdCare', name: 'Bird Care', icon: <FaDove className="text-sky-500" /> },
-      { id: 'horseCare', name: 'Horse Care', icon: <FaHorse className="text-brown-500" /> }
-    ];
-
-    switch (type) {
-      case 'beauty':
-      case 'spa':
-        return beautyOptions;
-      case 'barber':
-      case 'barbar':
-        return barberOptions;
-      case 'chef':
-      case 'cooking':
-        return chefOptions;
-      case 'tattoo':
-        return tattooOptions;
-      case 'tutor':
-        return tutorOptions;
-      case 'photography':
-        return photographyOptions;
-      case 'domestic':
-      case 'maid':
-        return baseOptions;
-      case 'sneaker':
-        return sneakerOptions;
-      case 'washingmat':
-        return washingmatOptions;
-      case 'animals':
-        return animalOptions;
-      default:
-        return [];
-    }
-  };
-
-  // Haircut styles for barbers
-  const haircutStyles = [
-    { id: 'classic-crew', name: 'Classic Crew Cut', description: 'Timeless short cut' },
-    { id: 'fade-cut', name: 'Fade Cut', description: 'Gradual length transition' },
-    { id: 'pompadour', name: 'Pompadour', description: 'Voluminous classic style' },
-    { id: 'undercut', name: 'Undercut', description: 'Sharp contrast cut' },
-    { id: 'buzz-cut', name: 'Buzz Cut', description: 'Uniform short length' },
-    { id: 'afro-style', name: 'Afro Style', description: 'Natural texture styling' },
-    { id: 'textured-crop', name: 'Textured Crop', description: 'Modern layered cut' },
-    { id: 'slick-back', name: 'Slick Back', description: 'Sleek polished look' }
-  ];
-
-  // Beard styles for barbers
-  const beardStyles = [
-    { id: 'stubble', name: 'Stubble', description: 'Short maintained beard' },
-    { id: 'short-beard', name: 'Short Beard', description: 'Neat trimmed beard' },
-    { id: 'medium-beard', name: 'Medium Beard', description: 'Fuller beard style' },
-    { id: 'long-beard', name: 'Long Beard', description: 'Extended beard care' },
-    { id: 'goatee', name: 'Goatee', description: 'Chin focused style' },
-    { id: 'van-dyke', name: 'Van Dyke', description: 'Mustache and goatee combo' },
-    { id: 'circle-beard', name: 'Circle Beard', description: 'Rounded beard style' },
-    { id: 'clean-shave', name: 'Clean Shave', description: 'Complete beard removal' }
-  ];
-
-  // Chef-specific options
-  const mealTypes = [
-    { id: 'breakfast', name: 'Breakfast' },
-    { id: 'brunch', name: 'Brunch' },
-    { id: 'lunch', name: 'Lunch' },
-    { id: 'dinner', name: 'Dinner' },
-    { id: 'appetizers', name: 'Appetizers & Canapés' },
-    { id: 'desserts', name: 'Desserts' },
-    { id: 'full-course', name: 'Full Course Meal' },
-    { id: 'buffet', name: 'Buffet Style' }
-  ];
-
-  const cuisineTypes = [
-    { id: 'italian', name: 'Italian' },
-    { id: 'french', name: 'French' },
-    { id: 'asian', name: 'Asian Fusion' },
-    { id: 'mediterranean', name: 'Mediterranean' },
-    { id: 'mexican', name: 'Mexican' },
-    { id: 'indian', name: 'Indian' },
-    { id: 'american', name: 'American' },
-    { id: 'vegetarian', name: 'Vegetarian' },
-    { id: 'vegan', name: 'Vegan' },
-    { id: 'seafood', name: 'Seafood' },
-    { id: 'bbq', name: 'BBQ & Grilling' },
-    { id: 'custom', name: 'Custom Menu' }
-  ];
-
-  // Sneaker cleaner specific options
-  const shoeBrands = [
-    { id: 'nike', name: 'Nike' },
-    { id: 'adidas', name: 'Adidas' },
-    { id: 'jordan', name: 'Jordan' },
-    { id: 'newbalance', name: 'New Balance' },
-    { id: 'puma', name: 'Puma' },
-    { id: 'reebok', name: 'Reebok' },
-    { id: 'vans', name: 'Vans' },
-    { id: 'converse', name: 'Converse' },
-    { id: 'yeezy', name: 'Yeezy' },
-    { id: 'other', name: 'Other' }
-  ];
-
-  const shoeConditions = [
-    { id: 'lightlyWorn', name: 'Lightly Worn' },
-    { id: 'moderatelyWorn', name: 'Moderately Worn' },
-    { id: 'heavilyWorn', name: 'Heavily Worn' },
-    { id: 'veryDirty', name: 'Very Dirty' },
-    { id: 'stained', name: 'Stained' },
-    { id: 'damaged', name: 'Damaged' }
-  ];
-
-  const cleaningTypes = [
-    { id: 'surface', name: 'Surface Clean' },
-    { id: 'deep', name: 'Deep Clean' },
-    { id: 'restoration', name: 'Restoration' },
-    { id: 'whitening', name: 'Whitening' },
-    { id: 'stainRemoval', name: 'Stain Removal' }
-  ];
-
-  // Washing mat specific options
-  const matSizes = [
-    { id: 'small', name: 'Small (under 2x3 ft)' },
-    { id: 'medium', name: 'Medium (2x3 to 4x6 ft)' },
-    { id: 'large', name: 'Large (4x6 to 6x9 ft)' },
-    { id: 'xlarge', name: 'Extra Large (over 6x9 ft)' }
-  ];
-
-  const matMaterials = [
-    { id: 'cotton', name: 'Cotton' },
-    { id: 'synthetic', name: 'Synthetic' },
-    { id: 'rubber', name: 'Rubber Backed' },
-    { id: 'wool', name: 'Wool' },
-    { id: 'coconut', name: 'Coconut Fiber' },
-    { id: 'microfiber', name: 'Microfiber' }
-  ];
-
-  const stainLevels = [
-    { id: 'light', name: 'Light Stains' },
-    { id: 'moderate', name: 'Moderate Stains' },
-    { id: 'heavy', name: 'Heavy Stains' },
-    { id: 'setIn', name: 'Set-in Stains' }
-  ];
-
-  const dryingPreferences = [
-    { id: 'airdry', name: 'Air Dry' },
-    { id: 'machinedry', name: 'Machine Dry' },
-    { id: 'both', name: 'Both Options' }
-  ];
-
-  // Animal care specific options - FIXED: Changed FaBird to FaDove
-  const animalTypes = [
-    { id: 'dog', name: 'Dog', icon: <FaDogIcon /> },
-    { id: 'cat', name: 'Cat', icon: <FaCat /> },
-    { id: 'bird', name: 'Bird', icon: <FaDove /> },
-    { id: 'fish', name: 'Fish', icon: <FaFishIcon /> },
-    { id: 'horse', name: 'Horse', icon: <FaHorse /> },
-    { id: 'rabbit', name: 'Rabbit', icon: <FaPaw /> },
-    { id: 'hamster', name: 'Hamster', icon: <FaPaw /> },
-    { id: 'reptile', name: 'Reptile', icon: <FaPaw /> },
-    { id: 'multiple', name: 'Multiple Animals', icon: <FaUsers /> }
-  ];
-
-  const animalSizes = [
-    { id: 'small', name: 'Small (under 10kg)' },
-    { id: 'medium', name: 'Medium (10-25kg)' },
-    { id: 'large', name: 'Large (25-45kg)' },
-    { id: 'xlarge', name: 'Extra Large (over 45kg)' }
-  ];
-
-  const animalAgeRanges = [
-    { id: 'puppy', name: 'Puppy/Kitten' },
-    { id: 'young', name: 'Young' },
-    { id: 'adult', name: 'Adult' },
-    { id: 'senior', name: 'Senior' }
-  ];
-
-  const serviceDurations = [
-    { id: '30min', name: '30 minutes' },
-    { id: '1hour', name: '1 hour' },
-    { id: '2hours', name: '2 hours' },
-    { id: '4hours', name: '4 hours' },
-    { id: '8hours', name: 'Full day (8 hours)' },
-    { id: 'overnight', name: 'Overnight' },
-    { id: '24hours', name: '24 hours' },
-    { id: 'weekly', name: 'Weekly' }
-  ];
-
-  // Equipment options for different services
-  const equipmentOptions = {
-    chef: [
-      'Professional knives',
-      'Cooking utensils',
-      'Portable stove',
-      'Baking equipment',
-      'Serving platters',
-      'Kitchen thermometer',
-      'Mixer/blender',
-      'Food processor'
-    ],
-    barber: [
-      'Professional clippers',
-      'Hair scissors',
-      'Beard trimmers',
-      'Sterilization equipment',
-      'Hair styling tools',
-      'Barber cape',
-      'Shaving supplies',
-      'Sanitizing spray'
-    ],
-    beauty: [
-      'Makeup kit',
-      'Skincare tools',
-      'Sterilization equipment',
-      'Nail care tools',
-      'Facial steamer',
-      'Beauty lights',
-      'Professional chair',
-      'Sanitation supplies'
-    ],
-    photography: [
-      'Professional camera',
-      'Lighting equipment',
-      'Tripod',
-      'Backdrops',
-      'Lens selection',
-      'Editing laptop',
-      'Memory cards',
-      'Battery packs'
-    ],
-    sneaker: [
-      'Professional cleaning solutions',
-      'Soft brushes',
-      'Microfiber cloths',
-      'Shoe trees',
-      'Waterproofing spray',
-      'Stain removers',
-      'Whitening products',
-      'Drying equipment'
-    ],
-    washingmat: [
-      'Industrial washing machine',
-      'Commercial dryer',
-      'Steam cleaner',
-      'High-pressure washer',
-      'Stain removers',
-      'Deodorizing products',
-      'Sanitizing equipment',
-      'Drying racks'
-    ],
-    animals: [
-      'Leashes and harnesses',
-      'Grooming tools',
-      'Pet carrier',
-      'First aid kit',
-      'Pet treats',
-      'Cleaning supplies',
-      'Toys',
-      'Pet waste bags'
-    ],
-    default: [
-      'Basic tools',
-      'Cleaning supplies',
-      'Protective gear',
-      'Portable equipment'
-    ]
-  };
-
-  // ==================== END HELPER FUNCTIONS ====================
 
   // Scroll detection for navigation transparency
   useEffect(() => {
@@ -1263,6 +1320,7 @@ export default function HelperPage() {
     };
   };
 
+
   // Enhanced WhatsApp booking function with all form data
   const handleQuickBooking = () => {
     if (!helper?.contact) {
@@ -1313,15 +1371,20 @@ export default function HelperPage() {
     }
 
     message += `%0A*💼 SERVICE SUMMARY*%0A`;
-    message += `• Base Price: R${helper.regularPrice}%0A`;
-
+    
     if (bookingData.selectedServices.length > 0) {
-      const serviceOptions = getServiceOptions(helper.type);
-      const selectedNames = bookingData.selectedServices.map(id => {
+      bookingData.selectedServices.forEach(id => {
         const s = serviceOptions.find(opt => opt.id === id);
-        return s ? s.name : id;
-      }).join(', ');
-      message += `• Services: ${selectedNames}%0A`;
+        if (s) {
+          message += `• ${s.name}: R${s.price}%0A`;
+        } else {
+          message += `• ${id}%0A`;
+        }
+      });
+      message += `• *TOTAL PRICE: R${totalPrice}*%0A`;
+    } else {
+      message += `• Base Price: R${helper.regularPrice}%0A`;
+      message += `• *TOTAL PRICE: R${totalPrice}*%0A`;
     }
 
     message += `%0A*⚡ QUICK ACTIONS*%0A`;
@@ -1417,16 +1480,21 @@ export default function HelperPage() {
     message += `━━━━━━━━━━━━━━━━━━━━\n`;
     message += `⚒️ *Service:* ${helper.name}\n`;
     message += `📋 *Type:* ${getProfessionalTitle(helper.type)}\n`;
-    message += `💵 *Base Price:* R${helper.regularPrice}\n`;
 
     // Add selected services
-    const serviceOptions = getServiceOptions(helper.type);
     if (bookingData.selectedServices.length > 0) {
-      const selectedNames = bookingData.selectedServices.map(id => {
+      bookingData.selectedServices.forEach(id => {
         const s = serviceOptions.find(opt => opt.id === id);
-        return s ? s.name : id;
-      }).join(', ');
-      message += `📜 *Requested:* ${selectedNames}\n`;
+        if (s) {
+          message += `📜 *${s.name}:* R${s.price}\n`;
+        } else {
+          message += `📜 *${id}*\n`;
+        }
+      });
+      message += `💵 *TOTAL PRICE: R${totalPrice}*\n`;
+    } else {
+      message += `💵 *Base Price:* R${helper.regularPrice}\n`;
+      message += `💵 *TOTAL PRICE: R${totalPrice}*\n`;
     }
 
     // Add service-specific details (Barber, Chef, etc.)
@@ -1685,7 +1753,6 @@ export default function HelperPage() {
     ? description
     : description.slice(0, 300) + (description.length > 300 ? "..." : "");
 
-  const serviceOptions = getServiceOptions(helper.type);
   const serviceEquipmentOptions = equipmentOptions[helper.type] || equipmentOptions.default;
 
   // Airbnb-style image gallery layout
@@ -1901,12 +1968,39 @@ export default function HelperPage() {
               <div className="pb-6 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Services offered</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {serviceOptions.map((service) => (
-                    <div key={service.id} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
-                      <div className="text-xl">{service.icon}</div>
-                      <span className="font-medium text-gray-900">{service.name}</span>
-                    </div>
-                  ))}
+                  {serviceOptions.map((service) => {
+                    const isSelected = bookingData.selectedServices.includes(service.id);
+                    return (
+                      <div 
+                        key={service.id} 
+                        onClick={() => handleServiceSelection(service.id)}
+                        className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                          isSelected 
+                            ? 'border-rose-500 bg-rose-50 shadow-sm' 
+                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`text-xl transition-colors ${isSelected ? 'text-rose-500' : 'text-gray-400'}`}>
+                            {service.icon}
+                          </div>
+                          <span className={`font-medium transition-colors ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>
+                            {service.name}
+                          </span>
+                        </div>
+                        {service.price && (
+                          <span className={`font-semibold ${isSelected ? 'text-rose-600' : 'text-gray-700'}`}>
+                            R{service.price}
+                          </span>
+                        )}
+                        {isSelected && (
+                          <div className="ml-2 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center">
+                            <FaCheck className="text-white text-[10px]" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -2035,10 +2129,22 @@ export default function HelperPage() {
                 </div>
 
                 <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="underline">R{helper.regularPrice} × 1 day (8 hours)</span>
-                    <span>R{helper.regularPrice}</span>
-                  </div>
+                  {bookingData.selectedServices.length > 0 ? (
+                    bookingData.selectedServices.map(id => {
+                      const s = serviceOptions.find(opt => opt.id === id);
+                      return s ? (
+                        <div key={id} className="flex justify-between">
+                          <span className="underline">{s.name}</span>
+                          <span>R{s.price}</span>
+                        </div>
+                      ) : null;
+                    })
+                  ) : (
+                    <div className="flex justify-between">
+                      <span className="underline">Base: R{helper.regularPrice} × 1 day</span>
+                      <span>R{helper.regularPrice}</span>
+                    </div>
+                  )}
                   {helper.travelFee > 0 && (
                     <div className="flex justify-between">
                       <span className="underline">Travel fee</span>
@@ -2046,8 +2152,8 @@ export default function HelperPage() {
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="underline">Service fee</span>
-                    <span>R{Math.round(helper.regularPrice * 0.1)}</span>
+                    <span className="underline">Service fee (10%)</span>
+                    <span>R{Math.round((totalPrice - helper.travelFee) / 1.1 * 0.1)}</span>
                   </div>
                   <div className="border-t border-gray-200 pt-3 flex justify-between font-semibold text-gray-900">
                     <span>Total before taxes</span>
@@ -2574,13 +2680,19 @@ export default function HelperPage() {
                       key={service.id}
                       type="button"
                       onClick={() => handleServiceSelection(service.id)}
-                      className={`p-4 border-2 rounded-xl text-left transition-all ${bookingData.selectedServices.includes(service.id)
-                        ? 'border-rose-500 bg-rose-50'
+                      className={`p-4 border-2 rounded-xl text-left transition-all relative ${bookingData.selectedServices.includes(service.id)
+                        ? 'border-rose-500 bg-rose-50 shadow-sm'
                         : 'border-gray-200 hover:border-gray-300'
                         }`}
                     >
                       <div className="text-2xl mb-2">{service.icon}</div>
-                      <div className="font-medium text-sm">{service.name}</div>
+                      <div className="font-semibold text-sm text-gray-900">{service.name}</div>
+                      <div className="text-rose-600 font-bold text-xs mt-1">R{service.price}</div>
+                      {bookingData.selectedServices.includes(service.id) && (
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center">
+                          <FaCheck className="text-white text-[10px]" />
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -2624,9 +2736,21 @@ export default function HelperPage() {
       {/* Mobile Bottom Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:hidden z-40">
         <div className="flex items-center justify-between">
-          <div>
-            <span className="text-xl font-bold text-gray-900">R{totalPrice}</span>
-            <span className="text-gray-600 text-sm"> / service</span>
+          <div className="flex-1 mr-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-gray-900">R{totalPrice}</span>
+              <span className="text-gray-600 text-xs">Total</span>
+            </div>
+            {bookingData.selectedServices.length > 0 ? (
+              <div className="text-rose-600 text-xs font-semibold truncate max-w-[150px]">
+                {bookingData.selectedServices.map(id => {
+                  const s = serviceOptions.find(opt => opt.id === id);
+                  return s ? s.name : id;
+                }).join(', ')}
+              </div>
+            ) : (
+              <div className="text-gray-500 text-xs">Per service</div>
+            )}
           </div>
           <button
             onClick={openBookingFormOverlay}  // Changed from handleQuickBooking to openBookingFormOverlay

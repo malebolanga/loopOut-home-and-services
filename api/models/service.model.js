@@ -154,7 +154,13 @@ const serviceSchema = new mongoose.Schema(
     additionalPricing: {
       type: String, // Detailed pricing for different packages
       required: false
-    }
+    },
+    serviceList: [
+      {
+        name: { type: String, required: true },
+        price: { type: Number, required: true }
+      }
+    ]
   },
   { timestamps: true }
 );
