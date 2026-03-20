@@ -140,10 +140,10 @@ const helperSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    comments: {
+    comments: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'HelperComment'
-    },
+    }],
     serviceList: [
         {
             name: { type: String, required: true },

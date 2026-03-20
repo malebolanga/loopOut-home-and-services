@@ -9,8 +9,8 @@ const CommentsSidePanel = ({ helperId, onClose }) => {
   const [isClosing, setIsClosing] = useState(false);
   const [showSummary, setShowSummary] = useState(true);
   const [commentContent, setCommentContent] = useState('');
-  const [setLoading] = useState(false);
-  const [ setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Trigger slide-in animation on mount
@@ -42,7 +42,7 @@ const CommentsSidePanel = ({ helperId, onClose }) => {
     try {
       setLoading(true);
       
-      const res = await fetch('/api/comment', {
+      const res = await fetch('/api/helper-comments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

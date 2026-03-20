@@ -33,6 +33,7 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, showSummar
   ];
 
   const fetchComments = useCallback(async () => {
+    if (!helperId) return;
     setLoading(prev => ({ ...prev, comments: true }));
     setError(null);
     try {

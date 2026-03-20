@@ -10,7 +10,7 @@ import {
   FaClock, FaShieldAlt, FaUsers,
   FaGraduationCap, FaWhatsapp,
   FaExclamationTriangle, FaCheckCircle,
-  FaFlag, FaArrowLeft,
+  FaFlag, FaArrowLeft, FaThumbsUp, FaThumbsDown,
   FaBandcamp, FaCut, FaTools, FaCar,
   FaInfoCircle, FaMoneyBillWave, FaTimes,
   FaFileImage, FaFilePdf, FaUserFriends, FaBroom, FaArrowUp, FaArrowDown,
@@ -41,13 +41,7 @@ import 'swiper/css/thumbs';
 import 'swiper/css/pagination';
 import 'swiper/css/free-mode';
 
-// Import Swiper styles
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
-import 'swiper/css/zoom';
-import 'swiper/css/thumbs';
-import 'swiper/css/free-mode';
+// Swiper styles already imported above
 
 import ImageWithFallback from '../components/ImageWithFallback';
 import GoogleMapComponent from '../components/GoogleMapComponent';
@@ -67,8 +61,13 @@ export default function HelperPage() {
   const [commentCount, setCommentCount] = useState(0);
   const [showBookingBelt, setShowBookingBelt] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [isDisliked, setIsDisliked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [dislikeCount, setDislikeCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [ratingLoading, setRatingLoading] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
 
   // ==================== SERVICE CONFIGURATION (MOVED UP) ====================
@@ -721,9 +720,72 @@ export default function HelperPage() {
   };
 
   // Toggle favorite function
-  const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-    // You can add API call here to save to user's favorites
+  const toggleFavorite = async () => {
+    if (!currentUser) {
+      navigate('/sign-in');
+      return;
+    }
+    if (favoriteLoading) return;
+
+    try {
+      setFavoriteLoading(true);
+      const res = await fetch('/api/wishlist/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentUser.token}`
+        },
+        body: JSON.stringify({
+          itemId: helper._id,
+          itemType: 'helper'
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setIsFavorite(data.isFavorite);
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
+
+  const handleHostRate = async (action) => {
+    if (!currentUser) {
+      navigate('/sign-in');
+      return;
+    }
+    if (ratingLoading) return;
+    if (currentUser._id === helper.userRef) {
+      alert("You cannot rate yourself!");
+      return;
+    }
+
+    try {
+      setRatingLoading(true);
+      const res = await fetch(`/api/user/rate-host/${helper.userRef}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentUser.token}`
+        },
+        body: JSON.stringify({ action }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setLikeCount(data.likeCount);
+        setDislikeCount(data.dislikeCount);
+        setIsLiked(data.userAction === 'like');
+        setIsDisliked(data.userAction === 'dislike');
+      }
+    } catch (error) {
+      console.error('Error rating host:', error);
+    } finally {
+      setRatingLoading(false);
+    }
   };
 
   // Location type classification
@@ -981,6 +1043,11 @@ export default function HelperPage() {
 
   useEffect(() => {
     const fetchHelper = async () => {
+      if (!id) { // Guard against missing helper ID
+        setLoading(false);
+        setError('Helper ID is missing.');
+        return;
+      }
       try {
         setLoading(true);
         const res = await fetch(`/api/helper/get/${id}`);
@@ -1006,9 +1073,44 @@ export default function HelperPage() {
         setLoading(false);
       }
     };
-
     fetchHelper();
   }, [id]);
+
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      if (!helper || !currentUser) return;
+
+      try {
+        // Fetch Host Ratings
+        const ratingRes = await fetch(`/api/user/host-ratings/${helper.userRef}`, {
+            headers: { 'Authorization': `Bearer ${currentUser.token}` }
+        });
+        if (ratingRes.ok) {
+          const ratingData = await ratingRes.json();
+          setLikeCount(ratingData.likeCount);
+          setDislikeCount(ratingData.dislikeCount);
+          setIsLiked(ratingData.userAction === 'like');
+          setIsDisliked(ratingData.userAction === 'dislike');
+        }
+
+        // Fetch Wishlist status
+        const favoriteRes = await fetch('/api/wishlist/get', {
+            headers: { 'Authorization': `Bearer ${currentUser.token}` }
+        });
+        if (favoriteRes.ok) {
+          const wishlist = await favoriteRes.json();
+          const isFav = wishlist.some(item => (item._id === helper._id || item.itemId === helper._id));
+          setIsFavorite(isFav);
+        }
+      } catch (error) {
+        console.error('Error fetching statuses:', error);
+      }
+    };
+
+    if (helper && currentUser) {
+      fetchStatuses();
+    }
+  }, [helper, currentUser, id]);
 
   // Scroll detection for booking belt
   useEffect(() => {
@@ -2035,13 +2137,15 @@ export default function HelperPage() {
                 </div>
               </div>
 
-              <HelperComments
-                helperId={helper._id}
-                onCommentCountChange={setCommentCount}
-                onAnalyzeComments={analyzeCommentsWithAI}
-                commentAnalysis={commentAnalysis}
-                analyzingComments={analyzingComments}
-              />
+              {helper && (
+                <HelperComments
+                  helperId={helper._id}
+                  onCommentCountChange={setCommentCount}
+                  onAnalyzeComments={analyzeCommentsWithAI}
+                  commentAnalysis={commentAnalysis}
+                  analyzingComments={analyzingComments}
+                />
+              )}
             </div>
 
             {/* Location */}
