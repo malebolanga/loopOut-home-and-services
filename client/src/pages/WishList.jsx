@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   FaHeart,
   FaSpinner,
@@ -29,6 +29,28 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { getWishlistBackend } from '../services/wishlist.service';
 
+const getDateBucket = (dateString) => {
+  if (!dateString) return { label: 'Unknown Date', order: 999999 };
+  const now = new Date();
+  const date = new Date(dateString);
+  const midnightNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const midnightDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffTime = midnightNow - midnightDate;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) return { label: 'Today', order: 0 };
+  if (diffDays === 1) return { label: 'Yesterday', order: 1 };
+  if (diffDays < 30) return { label: `${diffDays} days ago`, order: diffDays };
+  
+  const diffMonths = (now.getFullYear() - date.getFullYear()) * 12 + now.getMonth() - date.getMonth();
+  if (diffMonths > 0 && diffMonths < 12) {
+    return { label: `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`, order: 30 + diffMonths };
+  }
+  
+  const year = date.getFullYear();
+  return { label: `${year}`, order: 1000 + (now.getFullYear() - year) };
+};
+
 export default function WishList() {
   const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user);
@@ -36,6 +58,7 @@ export default function WishList() {
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState(null);
   const [filterType, setFilterType] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -165,12 +188,28 @@ export default function WishList() {
     ? wishlist
     : wishlist.filter(item => item.type === filterType);
 
+  const availableDateBuckets = useMemo(() => {
+    const types = {};
+    filteredWishlist.forEach(item => {
+      const bucket = getDateBucket(item.addedAt);
+      if (!types[bucket.label]) {
+        types[bucket.label] = { label: bucket.label, order: bucket.order, count: 0 };
+      }
+      types[bucket.label].count++;
+    });
+    return Object.values(types).sort((a, b) => a.order - b.order);
+  }, [filteredWishlist]);
+
+  const dateFilteredWishlist = dateFilter === 'all'
+    ? filteredWishlist
+    : filteredWishlist.filter(item => getDateBucket(item.addedAt).label === dateFilter);
+
   const searchedWishlist = searchQuery
-    ? filteredWishlist.filter(item => {
+    ? dateFilteredWishlist.filter(item => {
       const searchText = (item.title || item.name || item.eventName || '').toLowerCase();
       return searchText.includes(searchQuery.toLowerCase());
     })
-    : filteredWishlist;
+    : dateFilteredWishlist;
 
   const removeFromWishlist = async (itemId, itemType) => {
     try {
@@ -430,7 +469,7 @@ export default function WishList() {
                       className="fixed inset-0 z-40"
                       onClick={() => setIsFilterOpen(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-2">
+                    <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-2 md:right-0 md:left-auto origin-top-right">
                       {['recent', 'oldest', 'name', 'price-high', 'price-low'].map((option) => (
                         <button
                           key={option}
@@ -469,6 +508,33 @@ export default function WishList() {
               </div>
             </div>
           </div>
+
+          {/* Date Grouping Filter Pills */}
+          {availableDateBuckets.length > 0 && (
+            <div className="flex items-center gap-2 overflow-x-auto mt-4 pt-4 border-t border-gray-100 scrollbar-hide">
+              <button
+                onClick={() => setDateFilter('all')}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${dateFilter === 'all'
+                    ? 'bg-gray-100 text-gray-900 border-gray-900'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                  }`}
+              >
+                Any time
+              </button>
+              {availableDateBuckets.map(bucket => (
+                <button
+                  key={bucket.label}
+                  onClick={() => setDateFilter(bucket.label)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${dateFilter === bucket.label
+                      ? 'bg-gray-100 text-gray-900 border-gray-900'
+                      : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                    }`}
+                >
+                  {bucket.label} ({bucket.count})
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Empty State */}

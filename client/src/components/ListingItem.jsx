@@ -9,6 +9,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "../styles/ListingDetails.scss";
 import ImageWithFallback from "./ImageWithFallback";
+import { useWishlist } from "../hooks/useWishlist";
 
 const NEW_LISTING_THRESHOLD_DAYS = 14;
 const CLICKS_PER_STAR = 20;
@@ -48,16 +49,7 @@ const getPropertyTypeName = (type) => {
 };
 
 function ListingItem({ listing, onClick, className = "", compactMode = false }) {
-  const [isFavorite, setIsFavorite] = useState(() => {
-    try {
-      const wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
-      return listing?._id ? wishlist.some(item => item?._id === listing._id) : false;
-    } catch (error) {
-      console.error('Error reading wishlist from localStorage:', error);
-      return false;
-    }
-  });
-
+  const { isFavorite, toggleFavorite } = useWishlist(listing, 'listing');
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isNewListing, setIsNewListing] = useState(false);
@@ -103,25 +95,6 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
     const stars = Math.floor(clickCount / CLICKS_PER_STAR) + 1;
     return Math.min(5, stars);
   }, [clickCount]);
-
-  const toggleFavorite = (e) => {
-    e.preventDefault();
-    if (!listing?._id) return;
-
-    const newFavoriteStatus = !isFavorite;
-    setIsFavorite(newFavoriteStatus);
-
-    try {
-      const wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
-      const updatedWishlist = newFavoriteStatus
-        ? [...wishlist, listing]
-        : wishlist.filter(item => item?._id !== listing._id);
-      localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
-      window.dispatchEvent(new Event('storage'));
-    } catch (error) {
-      console.error('Error updating wishlist in localStorage:', error);
-    }
-  };
 
   const enhancedImages = useMemo(() =>
     (listing?.imageUrls?.length > 0 ? listing.imageUrls : ["https://placehold.co/600x400/E0E0E0/333333?text=No+Image"])

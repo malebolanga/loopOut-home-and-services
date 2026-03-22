@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import User from '../models/user.model.js';
 import { errorHandler } from '../utils/error.js';
 
@@ -31,11 +32,25 @@ export const toggleFavorite = async (req, res, next) => {
         return next(errorHandler(400, 'Invalid item type'));
     }
 
-    const isFavorite = user[favoriteArray].includes(itemId);
+    // Handle string/ObjectId backward compatibility vs Object compatibility
+    const existingIndex = user[favoriteArray].findIndex(fav => {
+      // old format fav is an ObjectId
+      if (fav instanceof mongoose.Types.ObjectId || typeof fav === 'string') {
+        return fav.toString() === itemId;
+      }
+      // new format fav is { item: ObjectId, addedAt: Date }
+      if (fav.itemId) {
+        return fav.itemId.toString() === itemId;
+      }
+      return false;
+    });
+
+    const isFavorite = existingIndex !== -1;
+
     if (isFavorite) {
-      user[favoriteArray] = user[favoriteArray].filter((id) => id.toString() !== itemId);
+      user[favoriteArray].splice(existingIndex, 1);
     } else {
-      user[favoriteArray].push(itemId);
+      user[favoriteArray].push({ itemId, addedAt: new Date() });
     }
     
     await user.save();
@@ -54,18 +69,34 @@ export const getWishlist = async (req, res, next) => {
   const userId = req.user.id;
   try {
     const user = await User.findById(userId)
-      .populate('favorites')
-      .populate('favoriteServices')
-      .populate('favoriteHelpers')
-      .populate('favoriteEvents');
+      .populate('favorites.itemId')
+      .populate('favoriteServices.itemId')
+      .populate('favoriteHelpers.itemId')
+      .populate('favoriteEvents.itemId');
       
     if (!user) return next(errorHandler(404, 'User not found'));
 
+    // Map backwards compatibility for old items without addedAt and unpopulated items
+    const mapItems = (arr, type) => {
+      return arr.map(fav => {
+        // Fallbacks for old format or new format
+        const idObj = fav.itemId || fav; 
+        const addedTs = fav.addedAt || new Date(0); // If old, fallback to epoch
+        if (!idObj || typeof idObj === 'string' || idObj instanceof mongoose.Types.ObjectId) return null; // Unpopulated or invalid
+
+        return {
+          ...idObj._doc,
+          type: type,
+          addedAt: new Date(addedTs).getTime() // Send ms timestamp to frontend
+        };
+      }).filter(item => item !== null); // Remove nulls
+    };
+
     const wishlist = [
-      ...user.favorites.map(item => ({ ...item._doc, type: 'listing' })),
-      ...user.favoriteServices.map(item => ({ ...item._doc, type: 'service' })),
-      ...user.favoriteHelpers.map(item => ({ ...item._doc, type: 'helper' })),
-      ...user.favoriteEvents.map(item => ({ ...item._doc, type: 'event' })),
+      ...mapItems(user.favorites, 'listing'),
+      ...mapItems(user.favoriteServices, 'service'),
+      ...mapItems(user.favoriteHelpers, 'helper'),
+      ...mapItems(user.favoriteEvents, 'event'),
     ];
 
     res.status(200).json(wishlist);

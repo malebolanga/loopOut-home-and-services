@@ -4,9 +4,9 @@ import { MdLocationOn } from "react-icons/md";
 import { FaHeart, FaRegHeart, FaStar } from "react-icons/fa";
 import { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
-import { toggleWishlistBackend } from "../services/wishlist.service";
 import "../styles/ListingDetails.scss";
 import ImageGallery from "./ImageGallery";
+import { useWishlist } from "../hooks/useWishlist";
 
 const NEW_HELPER_THRESHOLD_DAYS = 14;
 const CLICKS_PER_STAR = 20;
@@ -66,7 +66,7 @@ const getHelperTypeName = (type) => {
 
 function HelperItem({ helper, className = "", compactMode = false }) {
   const { currentUser } = useSelector((state) => state.user);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { isFavorite, toggleFavorite } = useWishlist(helper, 'helper');
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [isNewHelper, setIsNewHelper] = useState(false);
   const [clickCount, setClickCount] = useState(0);
@@ -88,14 +88,6 @@ function HelperItem({ helper, className = "", compactMode = false }) {
   }, [helper]);
 
   useEffect(() => {
-    // Initialize favorite status from local storage
-    try {
-      const wishlist = JSON.parse(localStorage.getItem('helperWishlist')) || [];
-      setIsFavorite(helper?._id ? wishlist.some(item => item?._id === helper._id) : false);
-    } catch (error) {
-      console.error('Error reading wishlist from localStorage:', error);
-    }
-
     // Check if helper is new based on creation date
     if (helper?.createdAt) {
       const creationDate = new Date(helper.createdAt);
@@ -152,32 +144,6 @@ function HelperItem({ helper, className = "", compactMode = false }) {
 
   // Calculate star rating based on click count
   const calculatedStarRating = Math.min(5, Math.max(1, Math.floor(clickCount / CLICKS_PER_STAR) + 1));
-
-  // Toggle favorite status and update local storage
-  const toggleFavorite = async (e) => {
-    e.preventDefault(); // Prevent default link behavior
-    if (!helper?._id) return;
-
-    const newFavoriteStatus = !isFavorite;
-    setIsFavorite(newFavoriteStatus);
-
-    try {
-      // 1. Update localStorage (for immediate feedback and guest support)
-      const wishlist = JSON.parse(localStorage.getItem('helperWishlist')) || [];
-      const updatedWishlist = newFavoriteStatus
-        ? [...wishlist, helper]
-        : wishlist.filter(item => item?._id !== helper._id);
-      localStorage.setItem('helperWishlist', JSON.stringify(updatedWishlist));
-      window.dispatchEvent(new Event('storage')); // Dispatch event to notify other components
-
-      // 2. Update backend if logged in
-      if (currentUser) {
-        await toggleWishlistBackend(helper._id, 'helper');
-      }
-    } catch (error) {
-      console.error('Error updating wishlist:', error);
-    }
-  };
 
   // Helper images handled by ImageGallery
 

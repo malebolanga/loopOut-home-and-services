@@ -48,20 +48,20 @@ const userSchema = new mongoose.Schema({
         default: "",
     },
     favorites: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Listing'
+        itemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Listing' },
+        addedAt: { type: Date, default: Date.now }
     }],
     favoriteServices: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Service'
+        itemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Service' },
+        addedAt: { type: Date, default: Date.now }
     }],
     favoriteHelpers: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Helper'
+        itemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Helper' },
+        addedAt: { type: Date, default: Date.now }
     }],
     favoriteEvents: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Event'
+        itemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
+        addedAt: { type: Date, default: Date.now }
     }],
     services: [{
         type: mongoose.Schema.Types.ObjectId,

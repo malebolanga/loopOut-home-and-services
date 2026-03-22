@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useWishlist } from '../hooks/useWishlist';
 import { Link } from "react-router-dom";
 import {
   FaStar, FaMapMarkerAlt, FaPhone, FaUser,
@@ -65,10 +66,11 @@ export default function HelperPage() {
   const [likeCount, setLikeCount] = useState(0);
   const [dislikeCount, setDislikeCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const { isFavorite, toggleFavorite } = useWishlist(helper, 'helper');
   const [ratingLoading, setRatingLoading] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [ratings, setRatings] = useState({ cleanliness: 0, communication: 0, overall: 0 });
+  const [topComments, setTopComments] = useState([]);
 
   // ==================== SERVICE CONFIGURATION (MOVED UP) ====================
 
@@ -719,38 +721,47 @@ export default function HelperPage() {
     }
   };
 
-  // Toggle favorite function
-  const toggleFavorite = async () => {
-    if (!currentUser) {
-      navigate('/sign-in');
-      return;
-    }
-    if (favoriteLoading) return;
-
-    try {
-      setFavoriteLoading(true);
-      const res = await fetch('/api/wishlist/toggle', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentUser.token}`
-        },
-        body: JSON.stringify({
-          itemId: helper._id,
-          itemType: 'helper'
-        }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        setIsFavorite(data.isFavorite);
-      }
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
-    } finally {
-      setFavoriteLoading(false);
-    }
+  // Get relative time from timestamp
+  const getRelativeTime = (dateString) => {
+    const diffInMs = new Date() - new Date(dateString);
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    if (diffInDays < 1) return 'Today';
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    if (diffInWeeks < 4) return `${diffInWeeks} week${diffInWeeks > 1 ? 's' : ''} ago`;
+    const diffInMonths = Math.floor(diffInDays / 30);
+    if (diffInMonths < 12) return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
+    const diffInYears = Math.floor(diffInDays / 365);
+    return `${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
   };
+
+  // Fetch comment ratings and total count on load
+  useEffect(() => {
+    const fetchRatings = async () => {
+      if (helper && helper._id) {
+        try {
+          const res = await fetch(`/api/helper-comments/${helper._id}?limit=6`);
+          const data = await res.json();
+          if (res.ok) {
+            setCommentCount(data.totalComments || 0);
+            setTopComments(data.comments || []);
+            if (data.ratings) {
+              setRatings({
+                cleanliness: data.ratings.cleanliness || 0,
+                communication: data.ratings.staff || 0,
+                overall: data.ratings.overall || 0
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching ratings:', error);
+        }
+      }
+    };
+    fetchRatings();
+  }, [helper]);
+
+  // Toggle favorite function is now handled by useWishlist hook
 
   const handleHostRate = async (action) => {
     if (!currentUser) {
@@ -1093,15 +1104,7 @@ export default function HelperPage() {
           setIsDisliked(ratingData.userAction === 'dislike');
         }
 
-        // Fetch Wishlist status
-        const favoriteRes = await fetch('/api/wishlist/get', {
-            headers: { 'Authorization': `Bearer ${currentUser.token}` }
-        });
-        if (favoriteRes.ok) {
-          const wishlist = await favoriteRes.json();
-          const isFav = wishlist.some(item => (item._id === helper._id || item.itemId === helper._id));
-          setIsFavorite(isFav);
-        }
+
       } catch (error) {
         console.error('Error fetching statuses:', error);
       }
@@ -2109,43 +2112,116 @@ export default function HelperPage() {
 
             {/* Reviews Summary */}
             <div className="pb-6 border-b border-gray-200">
-              <div className="flex items-center gap-2 mb-6">
-                <FaStar className="text-rose-500 text-2xl" />
+              <div className="flex items-center gap-2 mb-8">
+                <FaStar className="text-gray-900 text-2xl" />
                 <h2 className="text-2xl font-semibold text-gray-900">
-                  {helper.rating || '4.5'} · {helper.reviewCount || '25'} reviews
+                  {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')} · {commentCount} reviews
                 </h2>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Cleanliness</span>
-                    <span className="font-semibold">4.9</span>
+              {commentCount > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 mb-8">
+                    {/* Cleanliness */}
+                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
+                      <div className="flex items-center gap-3 text-gray-800">
+                        <FaBroomClean className="text-xl" />
+                        <span>Cleanliness</span>
+                      </div>
+                      <div className="flex items-center gap-4 w-1/2">
+                        <span className="font-semibold text-sm">{ratings?.cleanliness?.toFixed(1) || '0.0'}</span>
+                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
+                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.cleanliness / 5) * 100 || 0}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                    {/* Communication */}
+                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
+                      <div className="flex items-center gap-3 text-gray-800">
+                        <FaRegCommentDots className="text-xl" />
+                        <span>Communication</span>
+                      </div>
+                      <div className="flex items-center gap-4 w-1/2">
+                        <span className="font-semibold text-sm">{ratings?.communication?.toFixed(1) || '0.0'}</span>
+                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
+                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.communication / 5) * 100 || 0}%` }} />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="h-1 bg-gray-200 rounded-full">
-                    <div className="h-1 bg-gray-900 rounded-full w-[98%]" />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Communication</span>
-                    <span className="font-semibold">4.8</span>
-                  </div>
-                  <div className="h-1 bg-gray-200 rounded-full">
-                    <div className="h-1 bg-gray-900 rounded-full w-[96%]" />
-                  </div>
-                </div>
-              </div>
 
-              {helper && (
-                <HelperComments
-                  helperId={helper._id}
-                  onCommentCountChange={setCommentCount}
-                  onAnalyzeComments={analyzeCommentsWithAI}
-                  commentAnalysis={commentAnalysis}
-                  analyzingComments={analyzingComments}
-                />
+                  {/* Top Comments Swiper */}
+                  {topComments.length > 0 && (
+                    <div className="mb-8">
+                      <Swiper
+                        spaceBetween={16}
+                        slidesPerView={1.1}
+                        breakpoints={{ 
+                          640: { slidesPerView: 2.1 },
+                          1024: { slidesPerView: 2.2 }
+                        }}
+                        freeMode={true}
+                        modules={[FreeMode]}
+                        className="-mx-4 px-4 sm:mx-0 sm:px-0"
+                      >
+                        {topComments.map(comment => {
+                          const rating = (comment.cleanlinessRating + comment.communicationRating) / 2 || 5;
+                          
+                          return (
+                          <SwiperSlide key={comment._id} className="h-auto">
+                            <div className="h-full bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+                              <div>
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-3">
+                                    <img 
+                                      src={comment.userAvatar || '/default-avatar.jpg'} 
+                                      alt={comment.userName}
+                                      className="w-12 h-12 rounded-full object-cover border border-gray-100"
+                                      onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
+                                    />
+                                    <div>
+                                      <h4 className="font-semibold text-gray-900 leading-tight">{comment.userName}</h4>
+                                      <p className="text-sm text-gray-500 mt-0.5">{getRelativeTime(comment.createdAt)}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-4 mb-3">
+                                  <div className="flex items-center">
+                                    {[...Array(5)].map((_, i) => (
+                                      <FaStar 
+                                        key={i} 
+                                        className={`text-[10px] mr-1 ${i < Math.round(rating) ? 'text-gray-900' : 'text-gray-200'}`} 
+                                      />
+                                    ))}
+                                  </div>
+                                  {comment.likes?.length > 0 && (
+                                    <div className="flex items-center gap-1 text-xs text-rose-500 font-medium">
+                                      <FaHeart />
+                                      {comment.likes.length}
+                                    </div>
+                                  )}
+                                </div>
+                                <p className="text-gray-700 line-clamp-4 leading-relaxed whitespace-pre-line">
+                                  {comment.content}
+                                </p>
+                              </div>
+                            </div>
+                          </SwiperSlide>
+                        )})}
+                      </Swiper>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-gray-600 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
+
+              <button
+                onClick={() => setShowCommentsPanel(true)}
+                className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
+              >
+                Show all {commentCount} reviews
+              </button>
             </div>
 
             {/* Location */}
@@ -2870,6 +2946,8 @@ export default function HelperPage() {
         <CommentsSidePanelHelper
           helperId={helper._id}
           onClose={() => setShowCommentsPanel(false)}
+          onTotalComments={setCommentCount}
+          onRatingsChange={setRatings}
           onAnalyzeComments={analyzeCommentsWithAI}
           commentAnalysis={commentAnalysis}
           analyzingComments={analyzingComments}

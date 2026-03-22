@@ -14,6 +14,7 @@ import CommentsSidePanel from '../components/CommentsSidePanel';
 import Comments from '../components/Comments';
 import ImageWithFallback from '../components/ImageWithFallback';
 import GoogleMapComponent from '../components/GoogleMapComponent';
+import { useWishlist } from '../hooks/useWishlist';
 
 
 // Icons imports
@@ -1381,14 +1382,7 @@ export default function Listing() {
     userRating: null,
   });
 
-  const [isFavorite, setIsFavorite] = useState(() => {
-    try {
-      const wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
-      return listing?._id ? wishlist.some(item => item?._id === listing._id) : false;
-    } catch (error) {
-      return false;
-    }
-  });
+  const { isFavorite, toggleFavorite } = useWishlist(listing, 'listing');
 
   const [hostData, setHostData] = useState({
     likeCount: 124,
@@ -1466,22 +1460,7 @@ export default function Listing() {
     return times;
   };
 
-  const toggleFavorite = (e) => {
-    e.preventDefault();
-    if (!listing?._id) return;
-    const newFavoriteStatus = !isFavorite;
-    setIsFavorite(newFavoriteStatus);
-    try {
-      const wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
-      const updatedWishlist = newFavoriteStatus
-        ? [...wishlist, listing]
-        : wishlist.filter(item => item?._id !== listing._id);
-      localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
-      window.dispatchEvent(new Event('storage'));
-    } catch (error) {
-      console.error('Error updating wishlist:', error);
-    }
-  };
+  // toggleFavorite is handled by useWishlist
 
   const handleShare = () => {
     if (navigator.share) {

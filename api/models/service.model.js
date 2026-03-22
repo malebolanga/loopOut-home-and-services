@@ -83,14 +83,14 @@ const serviceSchema = new mongoose.Schema(
       min: 0, 
       max: 5 
     },
-    reviews: {
+    reviews: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Review'
-    },
-    comments: {
+    }],
+    comments: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'ServiceComment'
-    },
+    }],
     
     // Daycare fields
     ageGroup: {

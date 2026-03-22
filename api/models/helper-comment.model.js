@@ -49,6 +49,18 @@ const helperCommentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
+  cleanlinessRating: {
+    type: Number,
+    min: 1,
+    max: 5,
+    default: 5
+  },
+  communicationRating: {
+    type: Number,
+    min: 1,
+    max: 5,
+    default: 5
+  },
   replies: [replySchema]
 }, { timestamps: true });
 

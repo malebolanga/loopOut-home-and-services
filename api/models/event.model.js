@@ -74,10 +74,10 @@ const eventSchema = new mongoose.Schema(
       default: false,
     },
 
-    comments: {
+    comments: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'EventComment'
-    },
+    }],
   },
   { timestamps: true }
 );

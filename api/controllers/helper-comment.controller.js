@@ -4,7 +4,7 @@ import { errorHandler } from '../utils/error.js';
 
 export const createHelperComment = async (req, res, next) => {
   try {
-    const { content, helperId, userName, userAvatar } = req.body;
+    const { content, helperId, userName, userAvatar, cleanlinessRating, communicationRating } = req.body;
     const userId = req.user.id;
 
     if (!content || !helperId) {
@@ -21,7 +21,9 @@ export const createHelperComment = async (req, res, next) => {
       helperId,
       userId,
       userName: userName || req.user.username,
-      userAvatar: userAvatar || req.user.avatar || '/default-avatar.jpg'
+      userAvatar: userAvatar || req.user.avatar || '/default-avatar.jpg',
+      cleanlinessRating: cleanlinessRating || 5,
+      communicationRating: communicationRating || 5
     });
 
     await comment.save();
@@ -55,11 +57,30 @@ export const getHelperComments = async (req, res, next) => {
 
     const totalComments = await HelperComment.countDocuments({ helperId });
 
+    // Calculate ratings
+    const allComments = await HelperComment.find({ helperId });
+    let totalCleanliness = 0;
+    let totalCommunication = 0;
+
+    allComments.forEach(c => {
+      totalCleanliness += c.cleanlinessRating || 5;
+      totalCommunication += c.communicationRating || 5;
+    });
+
+    const cleanliness = totalComments > 0 ? (totalCleanliness / totalComments) : 0;
+    const communication = totalComments > 0 ? (totalCommunication / totalComments) : 0;
+    const overall = totalComments > 0 ? ((cleanliness + communication) / 2) : 0;
+
     res.status(200).json({
       comments,
       totalComments,
       totalPages: Math.ceil(totalComments / limit),
-      currentPage: page
+      currentPage: page,
+      ratings: {
+        cleanliness,
+        staff: communication, // Map communication to staff for backward compatibility in UI
+        overall
+      }
     });
   } catch (error) {
     next(errorHandler(500, error.message || 'Failed to fetch helper comments'));

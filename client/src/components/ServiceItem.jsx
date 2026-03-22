@@ -4,7 +4,7 @@ import { MdLocationOn } from "react-icons/md";
 import { FaHeart, FaRegHeart, FaStar, FaUser, FaChild, FaBus } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { toggleWishlistBackend } from "../services/wishlist.service";
+import { useWishlist } from "../hooks/useWishlist";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
@@ -61,20 +61,13 @@ const getServiceTypeName = (type) => {
 
 function ServiceItem({ service, className = "", compactMode = false }) {
   const { currentUser } = useSelector((state) => state.user);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { isFavorite, toggleFavorite } = useWishlist(service, 'service');
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isNewService, setIsNewService] = useState(false);
   const [clickCount, setClickCount] = useState(0);
 
   useEffect(() => {
-    try {
-      const wishlist = JSON.parse(localStorage.getItem('serviceWishlist')) || [];
-      setIsFavorite(service?._id ? wishlist.some(item => item?._id === service._id) : false);
-    } catch (error) {
-      console.error('Error reading wishlist from localStorage:', error);
-    }
-
     if (service?.createdAt) {
       const creationDate = new Date(service.createdAt);
       const now = new Date();
@@ -127,31 +120,6 @@ function ServiceItem({ service, className = "", compactMode = false }) {
   };
 
   const calculatedStarRating = Math.min(5, Math.max(1, Math.floor(clickCount / CLICKS_PER_STAR) + 1));
-
-  const toggleFavorite = async (e) => {
-    e.preventDefault();
-    if (!service?._id) return;
-
-    const newFavoriteStatus = !isFavorite;
-    setIsFavorite(newFavoriteStatus);
-
-    try {
-      // 1. Update localStorage
-      const wishlist = JSON.parse(localStorage.getItem('serviceWishlist')) || [];
-      const updatedWishlist = newFavoriteStatus
-        ? [...wishlist, service]
-        : wishlist.filter(item => item?._id !== service._id);
-      localStorage.setItem('serviceWishlist', JSON.stringify(updatedWishlist));
-      window.dispatchEvent(new Event('storage'));
-
-      // 2. Update backend if logged in
-      if (currentUser) {
-        await toggleWishlistBackend(service._id, 'service');
-      }
-    } catch (error) {
-      console.error('Error updating wishlist:', error);
-    }
-  };
 
   const enhancedImages = service?.imageUrls?.length > 0
     ? service.imageUrls.map((img) => ({ url: img }))

@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { FaSpinner, FaEllipsisH, FaHeart, FaRegHeart, FaChevronDown, FaChevronUp, FaStar, FaBroom, FaUserFriends } from 'react-icons/fa';
 import { FiSend } from 'react-icons/fi';
 
-const HelperComments = ({ helperId, maxComments = 3, onTotalComments, showSummary = false, cardStyle = false, externalRefreshTrigger = 0 }) => {
+const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsChange, showSummary = false, cardStyle = false, externalRefreshTrigger = 0 }) => {
   const { currentUser } = useSelector((state) => state.user);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState('');
@@ -26,6 +26,8 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, showSummar
     staff: 0,
     overall: 0
   });
+  const [cleanlinessInput, setCleanlinessInput] = useState(5);
+  const [communicationInput, setCommunicationInput] = useState(5);
 
   const RATING_CATEGORIES = [
     { name: 'Cleanliness', icon: FaBroom },
@@ -65,6 +67,15 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, showSummar
       // Call the callback to update the comment count in parent component
       if (onTotalComments) {
         onTotalComments(data.totalComments || 0);
+      }
+      
+      // Call the callback to pass up rating data
+      if (onRatingsChange && data.ratings) {
+        onRatingsChange({
+          cleanliness: data.ratings.cleanliness || 0,
+          communication: data.ratings.staff || 0, 
+          overall: data.ratings.overall || 0
+        });
       }
 
     } catch (err) {
@@ -106,7 +117,9 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, showSummar
           content: commentContent,
           helperId,
           userName: currentUser.username,
-          userAvatar: currentUser.avatar || '/default-avatar.jpg'
+          userAvatar: currentUser.avatar || '/default-avatar.jpg',
+          cleanlinessRating: cleanlinessInput,
+          communicationRating: communicationInput
         })
       });
 
@@ -117,6 +130,8 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, showSummar
       }
 
       setCommentContent('');
+      setCleanlinessInput(5);
+      setCommunicationInput(5);
       setRefreshTrigger(prev => prev + 1);
     } catch (err) {
       setError(err.message || 'Failed to post comment');
@@ -342,6 +357,12 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, showSummar
         </div>
       )}
 
+      {/* Function to render star inputs */}
+      {currentUser && (
+        <div style={{ display: 'none' }} />
+      )}
+      
+
       {/* Comment form for non-card style */}
       {!cardStyle && currentUser ? (
         <form onSubmit={handleSubmitComment} className="mb-6">
@@ -355,6 +376,30 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, showSummar
               }}
             />
             <div className="flex-1 bg-gray-100 rounded-2xl px-3 py-2">
+              {(focusedInput === 'comment' || commentContent) && (
+                <div className="mb-3 pb-3 border-b border-gray-200">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs text-gray-600 w-24">Cleanliness</span>
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button key={star} type="button" onClick={() => setCleanlinessInput(star)} className="focus:outline-none p-0.5">
+                          <FaStar className={`text-xs ${star <= cleanlinessInput ? 'text-yellow-400' : 'text-gray-300'}`} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-600 w-24">Communication</span>
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button key={star} type="button" onClick={() => setCommunicationInput(star)} className="focus:outline-none p-0.5">
+                          <FaStar className={`text-xs ${star <= communicationInput ? 'text-yellow-400' : 'text-gray-300'}`} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
               <textarea
                 value={commentContent}
                 onChange={(e) => setCommentContent(e.target.value)}
@@ -403,12 +448,36 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, showSummar
                 }}
               />
               <div className="flex-1 bg-gray-100 rounded-2xl px-3 py-2">
+                {(focusedInput === 'comment' || commentContent) && (
+                  <div className="mb-3 pb-3 border-b border-gray-200">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs text-gray-600 w-24">Cleanliness</span>
+                      <div className="flex">
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <button key={star} type="button" onClick={() => setCleanlinessInput(star)} className="focus:outline-none p-0.5">
+                            <FaStar className={`text-xs ${star <= cleanlinessInput ? 'text-yellow-400' : 'text-gray-300'}`} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-600 w-24">Communication</span>
+                      <div className="flex">
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <button key={star} type="button" onClick={() => setCommunicationInput(star)} className="focus:outline-none p-0.5">
+                            <FaStar className={`text-xs ${star <= communicationInput ? 'text-yellow-400' : 'text-gray-300'}`} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <textarea
                   value={commentContent}
                   onChange={(e) => setCommentContent(e.target.value)}
-                  placeholder="Write a comment..."
+                  placeholder="Write a review..."
                   className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500"
-                  rows={1}
+                  rows={2}
                   disabled={loading.submitting}
                   onFocus={() => setFocusedInput('comment')}
                   onBlur={() => setFocusedInput(null)}

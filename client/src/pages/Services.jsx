@@ -21,6 +21,7 @@ import {
 import { FiShare2, FiMessageSquare } from 'react-icons/fi';
 import CommentsSidePanelService from '../components/CommentsSidePanelService';
 import GoogleMapComponent from '../components/GoogleMapComponent';
+import { useWishlist } from '../hooks/useWishlist';
 
 import Comment from '../components/Comment';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -205,7 +206,7 @@ const ServicePage = () => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { isFavorite, toggleFavorite } = useWishlist(service, 'service');
   const [showAllServices, setShowAllServices] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -295,17 +296,6 @@ const ServicePage = () => {
   }, [serviceId]);
 
   useEffect(() => {
-    if (service?._id) {
-      try {
-        const wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
-        setIsFavorite(wishlist.some(item => item?._id === service._id));
-      } catch (error) {
-        console.error('Error reading wishlist:', error);
-      }
-    }
-  }, [service]);
-
-  useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 100);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -329,23 +319,6 @@ const ServicePage = () => {
 
   const handleVehicleTypeSelect = (vehicleTypeId) => {
     setBookingData(prev => ({ ...prev, vehicleType: vehicleTypeId }));
-  };
-
-  const toggleFavorite = (e) => {
-    e.preventDefault();
-    if (!service?._id) return;
-    const newStatus = !isFavorite;
-    setIsFavorite(newStatus);
-    try {
-      const wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
-      const updated = newStatus
-        ? [...wishlist, service]
-        : wishlist.filter(item => item?._id !== service._id);
-      localStorage.setItem('wishlist', JSON.stringify(updated));
-      window.dispatchEvent(new Event('storage'));
-    } catch (error) {
-      console.error('Error updating wishlist:', error);
-    }
   };
 
   const handleShare = () => {

@@ -9,6 +9,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "../styles/ListingDetails.scss";
 import ImageWithFallback from "./ImageWithFallback";
+import { useWishlist } from "../hooks/useWishlist";
 
 const NEW_EVENT_THRESHOLD_DAYS = 14;
 const CLICKS_PER_STAR = 20;
@@ -62,20 +63,13 @@ const formatDateTime = (dateString, timeString) => {
 };
 
 function EventItem({ event, className = "", compactMode = false }) {
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { isFavorite, toggleFavorite } = useWishlist(event, 'event');
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isNewEvent, setIsNewEvent] = useState(false);
   const [clickCount, setClickCount] = useState(0);
 
   useEffect(() => {
-    try {
-      const wishlist = JSON.parse(localStorage.getItem('eventWishlist')) || [];
-      setIsFavorite(event?._id ? wishlist.some(item => item?._id === event._id) : false);
-    } catch (error) {
-      console.error('Error reading wishlist from localStorage:', error);
-    }
-
     if (event?.createdAt) {
       const creationDate = new Date(event.createdAt);
       const now = new Date();
@@ -128,25 +122,6 @@ function EventItem({ event, className = "", compactMode = false }) {
   };
 
   const calculatedStarRating = Math.min(5, Math.max(1, Math.floor(clickCount / CLICKS_PER_STAR) + 1));
-
-  const toggleFavorite = (e) => {
-    e.preventDefault();
-    if (!event?._id) return;
-
-    const newFavoriteStatus = !isFavorite;
-    setIsFavorite(newFavoriteStatus);
-
-    try {
-      const wishlist = JSON.parse(localStorage.getItem('eventWishlist')) || [];
-      const updatedWishlist = newFavoriteStatus
-        ? [...wishlist, event]
-        : wishlist.filter(item => item?._id !== event._id);
-      localStorage.setItem('eventWishlist', JSON.stringify(updatedWishlist));
-      window.dispatchEvent(new Event('storage'));
-    } catch (error) {
-      console.error('Error updating wishlist in localStorage:', error);
-    }
-  };
 
   const enhancedImages = event?.imageUrls?.length > 0
     ? event.imageUrls.map((img) => ({ url: img }))
