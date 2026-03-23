@@ -1976,19 +1976,15 @@ export default function HelperPage() {
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <div className="flex items-center gap-1">
               <FaStar className="text-rose-500" />
-              <span className="font-semibold">{helper.rating || '4.5'}</span>
-              <span className="text-gray-500">·</span>
-              <button
-                onClick={() => setShowCommentsPanel(true)}
-                className="underline text-gray-700"
-              >
-                {helper.reviewCount || '25'} reviews
-              </button>
+           
+                <h2 className="text-sm font-semibold text-gray-900">
+                  {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}   -   {commentCount}  reviews
+                </h2>
             </div>
             <span className="text-gray-300">·</span>
             <div className="flex items-center gap-1 text-gray-700">
               <FaMedal className="text-rose-500" />
-              <span>Superhost</span>
+              <span>Superhelper</span>
             </div>
             <span className="text-gray-300">·</span>
             <div className="flex items-center gap-1 text-gray-700 underline cursor-pointer">
