@@ -1,6 +1,8 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import {  } from 'react-icons/fi';
 import { 
   FaCalendarAlt, 
   FaClock, 
@@ -12,6 +14,8 @@ import {
 } from 'react-icons/fa';
 
 export default function EventPage() {
+  const { currentUser } = useSelector((state) => state.user);
+  const navigate = useNavigate();
   const { id } = useParams();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -97,6 +101,7 @@ export default function EventPage() {
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">Event Details</h2>
               <p className="text-gray-600 whitespace-pre-line mb-6">{event.description}</p>
               
+
               <h3 className="text-xl font-semibold text-gray-800 mb-3">Event Features</h3>
               <div className="flex flex-wrap gap-3 mb-6">
                 {event.parking && (

@@ -352,13 +352,13 @@ export default function PhotographyHelperPage() {
                   <FaMedal className="text-rose-500" />
                   <span>Superhost Photographer</span>
                 </div>
-                <span>•</span>
                 <div className="flex items-center gap-1">
                   <FaMapMarkerAlt />
                   <span>{helper.address || 'Cape Town, South Africa'}</span>
                 </div>
               </div>
             </div>
+
 
             {/* Host/Photographer Info Bar */}
             <div className="flex items-center gap-4 py-6 border-b border-gray-200">

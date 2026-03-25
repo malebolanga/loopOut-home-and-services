@@ -16,6 +16,7 @@ import {
   FaStar, FaSpinner, FaCheckCircle,
   FaInstagram, FaFacebook, FaLinkedin, FaTwitter
 } from 'react-icons/fa';
+import {  } from 'react-icons/fi';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Zoom, Thumbs } from 'swiper/modules';
 import 'swiper/css';
@@ -698,6 +699,7 @@ export default function EventPage() {
 
             {/* Main Content */}
             <div className="p-6">
+
               {/* Verification and Rating Badges */}
               <div className="flex flex-wrap gap-3 mb-6">
                 {event.security && (

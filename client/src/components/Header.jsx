@@ -433,6 +433,13 @@ export default function Header() {
                         </button>
                         <div className="border-t border-[#DDDDDD] my-1"></div>
                         <button
+                          onClick={() => handleNavigate(`/${currentUser._id}/listings`)}
+                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
+                        >
+                          <FiList className="w-4 h-4" />
+                          User Listings
+                        </button>
+                        <button
                           onClick={() => handleNavigate('/list')}
                           className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
                         >

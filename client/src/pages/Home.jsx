@@ -1013,7 +1013,7 @@ const MobileAppHomepage = ({
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-x-6 gap-y-12">
                 {featuredHelpers.slice(0, 8).map((helper) => (
-                  <div key={helper._id} onClick={() => navigate(`/helper/${helper._id}`)} className="cursor-pointer flex flex-col gap-3 group">
+                  <div key={helper._id} onClick={() => navigate(`/helper/${helper._id}`)} className="cursor-pointer flex flex-col gap-3 ">
                     <div className="relative aspect-square overflow-hidden rounded-3xl bg-gray-200 w-48 h-48 mx-auto border-2 border-gray-100 group-hover:border-rose-200 transition-all duration-300">
                       <ImageGallery
                         imageUrls={helper.imageUrls || []}

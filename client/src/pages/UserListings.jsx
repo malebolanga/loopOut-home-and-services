@@ -1,49 +1,49 @@
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MdLocationOn } from 'react-icons/md';
-import { FaEdit, FaTrash, FaBuilding, FaTree, FaMoneyBillWave, FaKey, FaFilter, FaPlus } from 'react-icons/fa';
+import { MdLocationOn, MdMoreVert, MdEdit, MdDelete } from 'react-icons/md';
+import { FaEdit, FaTrash, FaBuilding, FaTree, FaMoneyBillWave, FaKey, FaFilter, FaPlus, FaCheckCircle } from 'react-icons/fa';
 
 const ListingTypeConfig = {
   rent: {
     label: 'Long Term Rent',
-    icon: <FaKey className="w-4 h-4" />,
-    style: 'bg-blue-100 text-blue-800',
+    icon: <FaKey className="w-3.5 h-3.5" />,
+    style: 'bg-blue-50 text-blue-700 border-blue-100',
   },
   sale: {
     label: 'For Sale',
-    icon: <FaMoneyBillWave className="w-4 h-4" />,
-    style: 'bg-green-100 text-green-800',
+    icon: <FaMoneyBillWave className="w-3.5 h-3.5" />,
+    style: 'bg-green-50 text-green-700 border-green-100',
   },
   land: {
     label: 'Land',
-    icon: <FaTree className="w-4 h-4" />,
-    style: 'bg-amber-100 text-amber-800',
+    icon: <FaTree className="w-3.5 h-3.5" />,
+    style: 'bg-amber-50 text-amber-700 border-amber-100',
   },
   office: {
     label: 'Office Space',
-    icon: <FaBuilding className="w-4 h-4" />,
-    style: 'bg-purple-100 text-purple-800',
+    icon: <FaBuilding className="w-3.5 h-3.5" />,
+    style: 'bg-purple-50 text-purple-700 border-purple-100',
   },
   over: {
     label: 'Short Term',
-    icon: <FaBuilding className="w-4 h-4" />,
-    style: 'bg-rose-100 text-rose-800',
+    icon: <FaBuilding className="w-3.5 h-3.5" />,
+    style: 'bg-rose-50 text-rose-700 border-rose-100',
   },
   stays: {
     label: 'Stays',
-    icon: <FaBuilding className="w-4 h-4" />,
-    style: 'bg-blue-100 text-blue-800',
+    icon: <FaBuilding className="w-3.5 h-3.5" />,
+    style: 'bg-slate-50 text-slate-700 border-slate-100',
   },
   experiences: {
     label: 'Experiences',
-    icon: <FaPlus className="w-4 h-4" />,
-    style: 'bg-green-100 text-green-800',
+    icon: <FaPlus className="w-3.5 h-3.5" />,
+    style: 'bg-emerald-50 text-emerald-700 border-emerald-100',
   },
   online: {
-    label: 'Online Helpers',
-    icon: <FaEdit className="w-4 h-4" />,
-    style: 'bg-purple-100 text-purple-800',
+    label: 'Helpers',
+    icon: <FaEdit className="w-3.5 h-3.5" />,
+    style: 'bg-indigo-50 text-indigo-700 border-indigo-100',
   },
 };
 
@@ -52,8 +52,11 @@ export default function UserListings() {
   const [deletingId, setDeletingId] = useState(null);
   const [userListings, setUserListings] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [dropdownOpen, setDropdownOpen] = useState(null);
 
   const fetchListings = async () => {
+    setLoading(true);
     try {
       const [listingsRes, servicesRes, helpersRes] = await Promise.all([
         fetch(`/api/user/listings/${currentUser._id}`),
@@ -76,6 +79,8 @@ export default function UserListings() {
       setUserListings(allItems);
     } catch (error) {
       console.error('Fetch error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -110,7 +115,7 @@ export default function UserListings() {
       }
   
       setUserListings(prev => prev.filter(l => l._id !== id));
-      alert('Item deleted successfully');
+      setDropdownOpen(null);
     } catch (error) {
       console.error('Delete error:', error);
       alert(error.message || 'Failed to delete item');
@@ -121,167 +126,209 @@ export default function UserListings() {
   
   useEffect(() => {
     if (currentUser?._id) fetchListings();
+    
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('.dropdown-container')) {
+        setDropdownOpen(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [currentUser]);
 
   const filteredListings = selectedTypes.length > 0
     ? userListings.filter((l) => selectedTypes.includes(l.type) || selectedTypes.includes(l.category))
     : userListings;
 
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-20 flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-600 mb-4"></div>
+        <p className="text-gray-500 font-medium">Loading your host dashboard...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Your Listings</h1>
-          <p className="mt-1 text-gray-500">
-            {userListings.length} properties • Last updated {new Date().toLocaleDateString()}
-          </p>
-        </div>
-        <Link
-            to={`/${currentUser?._id}/create-listing`}
-          className="mt-4 sm:mt-0 inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm text-white bg-rose-600 hover:bg-rose-700 transition-colors duration-200"
-        >
-          <FaPlus className="mr-2 -ml-1 h-4 w-4" />
-          Add Property
-        </Link>
-      </div>
-
-      {/* Filter Bar */}
-      <div className="sticky top-0 z-10 py-4 mb-6">
-        <div className="flex items-center gap-4 overflow-x-auto pb-2">
-          <div className="flex items-center gap-2 text-gray-600">
-            <FaFilter className="flex-shrink-0" />
-            <span className="font-medium">Filter by:</span>
-          </div>
-          {Object.entries(ListingTypeConfig).map(([type, config]) => (
-            <button
-              key={type}
-              onClick={() => toggleTypeFilter(type)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${
-                selectedTypes.includes(type)
-                  ? 'border-rose-500 bg-rose-50 text-rose-700 shadow-sm'
-                  : 'border-gray-200 hover:border-gray-300 bg-white text-gray-600'
-              }`}
-            >
-              {config.icon}
-              <span className="whitespace-nowrap">{config.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Listings Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-2">
-        {filteredListings.map((listing) => (
-          <div
-            key={listing._id}
-            className="group relative rounded-xl overflow-hidden transition-shadow duration-200 hover:shadow-lg"
-          >
-            {/* Image */}
+    <div className="bg-[#F7F7F7] min-h-screen pb-20">
+      {/* Premium Header */}
+      <div className="bg-white border-b border-gray-200 pt-12 pb-8 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
+                Welcome back, {currentUser.username?.split(' ')[0]}
+              </h1>
+              <p className="mt-2 text-lg text-gray-500 flex items-center gap-2">
+                <FaCheckCircle className="text-rose-500" />
+                You have {userListings.length} active postings to manage
+              </p>
+            </div>
             <Link
-              to={listing.category === 'stays' ? `/listing/${listing._id}` : 
-                  listing.category === 'experiences' ? `/service/${listing._id}` :
-                  listing.category === 'online' ? `/helper/${listing._id}` : `/listing/${listing._id}`}
-              className="block aspect-square overflow-hidden"
+              to="/create-listing"
+              className="inline-flex items-center px-8 py-3.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 font-bold group"
             >
-              <img
-                src={listing.imageUrls[0] || '/placeholder-property.jpg'}
-                alt={listing.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
+              <FaPlus className="mr-2 group-hover:rotate-90 transition-transform duration-300" />
+              Build a New Post
             </Link>
+          </div>
+        </div>
+      </div>
 
-            {/* Badges */}
-            <div className="absolute top-4 left-4 flex gap-2">
-              <span className={`px-3 py-1 text-xs font-medium rounded-full backdrop-blur bg-white/90 ${ListingTypeConfig[listing.type]?.style || ListingTypeConfig[listing.category]?.style}`}>
-                {ListingTypeConfig[listing.type]?.label || ListingTypeConfig[listing.category]?.label}
-              </span>
-              {listing.offer && (
-                <span className="px-3 py-1 text-xs font-medium rounded-full backdrop-blur bg-green-100/90 text-green-800">
-                  Special Offer
-                </span>
-              )}
+      <div className="max-w-7xl mx-auto px-6 pt-10">
+        {/* Filter Bar - Horizontal Slider */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4 text-gray-400 px-1">
+            <FaFilter className="w-3.5 h-3.5" />
+            <span className="text-xs font-bold uppercase tracking-widest">Sliding Filters</span>
+          </div>
+          <div className="relative group/filters">
+            <div className="flex overflow-x-auto gap-3 pb-4 no-scrollbar scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {Object.entries(ListingTypeConfig).map(([type, config]) => (
+                <button
+                  key={type}
+                  onClick={() => toggleTypeFilter(type)}
+                  className={`flex items-center gap-2.5 px-6 py-2.5 rounded-full border transition-all duration-300 font-semibold shadow-sm flex-shrink-0 ${
+                    selectedTypes.includes(type)
+                      ? 'border-rose-600 bg-rose-600 text-white shadow-rose-200 scale-105'
+                      : 'border-white bg-white hover:border-gray-200 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {config.icon}
+                  <span className="whitespace-nowrap text-sm">{config.label}</span>
+                </button>
+              ))}
             </div>
+          </div>
+        </div>
 
-            {/* Action Buttons */}
-            <div className="absolute top-4 right-4 flex gap-2">
-              <Link
-                to={listing.category === 'stays' ? `/update-listing/${listing._id}` : 
-                    listing.category === 'experiences' ? `/update-service/${listing._id}` :
-                    listing.category === 'online' ? `/update-helper/${listing._id}` : `/update-listing/${listing._id}`}
-                className="p-2 bg-white/90 backdrop-blur rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
-                title="Edit item"
-              >
-                <FaEdit className="w-4 h-4 text-gray-600" />
-              </Link>
-              <button
-                onClick={() => handleDelete(listing._id, listing.category)}
-                disabled={deletingId === listing._id}
-                className="p-2 bg-white/90 backdrop-blur rounded-lg shadow-sm hover:bg-red-50 transition-colors"
-                title="Delete item"
-              >
-                {deletingId === listing._id ? (
-                  <span className="block w-4 h-4 animate-pulse">...</span>
-                ) : (
-                  <FaTrash className="w-4 h-4 text-red-600" />
-                )}
-              </button>
-            </div>
+        {/* Listings Grid - Higher Density */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+          {filteredListings.map((listing) => (
+            <div
+              key={listing._id}
+              className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col h-full"
+            >
+              {/* Image Section */}
+              <div className="relative aspect-square overflow-hidden">
+                <Link
+                  to={listing.category === 'stays' ? `/listing/${listing._id}` : 
+                      listing.category === 'experiences' ? `/service/${listing._id}` :
+                      `/helper/${listing._id}`}
+                  className="block w-full h-full"
+                >
+                  <img
+                    src={listing.imageUrls[0] || '/placeholder-property.jpg'}
+                    alt={listing.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                </Link>
 
-            {/* Details - Removed white background */}
-            <div className="p-4">
-              <div className="flex justify-between items-start">
-                <h3 className="text-lg font-semibold text-gray-900 truncate">
-                  {listing.name}
-                </h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-bold text-rose-600">
-                    R{listing.regularPrice?.toLocaleString()}
+                {/* Status Badges */}
+                <div className="absolute top-3 left-3">
+                  <span className={`px-3 py-1 text-[10px] font-bold rounded-full border shadow-sm backdrop-blur-md ${ListingTypeConfig[listing.type]?.style || ListingTypeConfig[listing.category]?.style}`}>
+                    {ListingTypeConfig[listing.type]?.label || ListingTypeConfig[listing.category]?.label}
                   </span>
-                  {listing.type === 'rent' && (
-                    <span className="text-sm text-gray-500">/mo</span>
+                </div>
+
+                {/* More Dropdown */}
+                <div className="absolute top-3 right-3 dropdown-container">
+                  <button
+                    onClick={() => setDropdownOpen(dropdownOpen === listing._id ? null : listing._id)}
+                    className="p-1.5 bg-white/90 backdrop-blur-md rounded-full shadow-lg hover:bg-white transition-colors border border-gray-100"
+                  >
+                    <MdMoreVert className="w-4 h-4 text-gray-700" />
+                  </button>
+                  
+                  {dropdownOpen === listing._id && (
+                    <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <Link
+                        to={listing.category === 'stays' ? `/update-listing/${listing._id}` : 
+                            listing.category === 'experiences' ? `/update-service/${listing._id}` :
+                            `/update-helper/${listing._id}`}
+                        className="flex items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 font-semibold"
+                      >
+                        <MdEdit className="w-3.5 h-3.5 text-rose-500" />
+                        Edit post
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(listing._id, listing.category)}
+                        disabled={deletingId === listing._id}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 font-semibold border-t border-gray-50"
+                      >
+                        <MdDelete className="w-3.5 h-3.5" />
+                        {deletingId === listing._id ? '...' : 'Remove'}
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
 
-              <p className="mt-2 text-gray-500 text-sm line-clamp-2">
-                {listing.description}
-              </p>
+              {/* Content Section */}
+              <div className="p-4 flex flex-col flex-1">
+                <h3 className="text-sm font-bold text-gray-900 line-clamp-1 group-hover:text-rose-600 transition-colors mb-1.5">
+                  {listing.name}
+                </h3>
 
-              <div className="mt-3 flex items-center gap-1 text-sm text-gray-500">
-                <MdLocationOn className="text-rose-500 flex-shrink-0" />
-                <span className="truncate">{listing.address}</span>
+                <div className="flex items-center gap-1.5 text-[11px] text-gray-500 mb-3">
+                  <MdLocationOn className="text-rose-500 flex-shrink-0 w-3 h-3" />
+                  <span className="truncate">{listing.address}</span>
+                </div>
+
+                <div className="mt-auto pt-3 border-t border-gray-50">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] uppercase tracking-wider text-gray-400 font-bold">Base Price</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-lg font-black text-gray-900 leading-none">
+                        R{listing.regularPrice?.toLocaleString()}
+                      </span>
+                      {listing.type === 'rent' && (
+                        <span className="text-[10px] text-gray-500 font-bold">/mo</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Improved Empty State */}
+        {filteredListings.length === 0 && (
+          <div className="text-center py-32 bg-white rounded-[40px] shadow-sm border border-gray-100 mt-10">
+            <div className="max-w-md mx-auto px-6">
+              <div className="mb-8 w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center mx-auto">
+                <FaPlus className="w-10 h-10 text-rose-500" />
+              </div>
+              <h3 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">
+                {userListings.length === 0 ? "Ready to become a host?" : "No matches found"}
+              </h3>
+              <p className="text-lg text-gray-500 mb-10 leading-relaxed font-medium">
+                {userListings.length === 0
+                  ? "Start by creating your first listing. It only takes a few minutes to showcase your space or service."
+                  : "We couldn't find any results for those filters. Try selecting a different category or clearing all filters."}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  to="/create-listing"
+                  className="px-8 py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-200 font-bold"
+                >
+                  Create Listing
+                </Link>
+                {selectedTypes.length > 0 && (
+                  <button
+                    onClick={() => setSelectedTypes([])}
+                    className="px-8 py-4 bg-gray-900 hover:bg-black text-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-200 font-bold"
+                  >
+                    Clear Filters
+                  </button>
+                )}
               </div>
             </div>
           </div>
-        ))}
+        )}
       </div>
-
-      {/* Empty State */}
-      {filteredListings.length === 0 && (
-        <div className="text-center py-16">
-          <div className="max-w-md mx-auto">
-            <div className="mb-6 text-rose-500">
-              <FaBuilding className="w-16 h-16 mx-auto opacity-30" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">
-              {userListings.length === 0 ? 'No properties yet' : 'No matches found'}
-            </h3>
-            <p className="text-gray-500 mb-6">
-              {userListings.length === 0
-                ? 'Create your first listing to get started'
-                : 'Try adjusting your filters or create a new listing'}
-            </p>
-            <Link
-              to="/create-listing"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm text-white bg-rose-600 hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500"
-            >
-              <FaPlus className="mr-2 -ml-1 h-4 w-4" />
-              Create Listing
-            </Link>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

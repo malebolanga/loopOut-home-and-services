@@ -795,13 +795,13 @@ const ServicePage = () => {
                   <FaMapMarkerAlt />
                   {service.address || 'Available in your area'}
                 </span>
-                <span>•</span>
                 <span className="font-medium flex items-center gap-1">
                   {currentServiceConfig?.icon}
                   {getProfessionalTitle(service.type)}
                 </span>
               </div>
             </div>
+
 
             {/* Provider Info */}
             <div className="py-6 border-b border-gray-200">

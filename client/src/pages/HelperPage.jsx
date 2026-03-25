@@ -2111,7 +2111,7 @@ export default function HelperPage() {
             {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals') && (
               <div className="pb-6 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Services offered</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {serviceOptions.map((service) => {
                     const isSelected = bookingData.selectedServices.includes(service.id);
                     return (
@@ -2197,7 +2197,7 @@ export default function HelperPage() {
                         slidesPerView={1.1}
                         breakpoints={{ 
                           640: { slidesPerView: 2.1 },
-                          1024: { slidesPerView: 2.2 }
+                          1024: { slidesPerView: 3.2 }
                         }}
                         freeMode={true}
                         modules={[FreeMode]}
@@ -2391,14 +2391,15 @@ export default function HelperPage() {
             </div>
           </div>
 
-          {/* Similar Helpers */}
+
+              {/* Similar Helpers */}
           {similarHelpers.length > 0 && (
             <div className="mt-12 md:mt-16 border-t border-gray-100 pt-10 md:pt-12">
               <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8 flex items-center gap-2">
                 <FaMapMarkerAlt className="text-rose-500" />
                 Other professionals you might need
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {similarHelpers.map((item) => (
                   <HelperItem key={item._id} helper={item} />
                 ))}

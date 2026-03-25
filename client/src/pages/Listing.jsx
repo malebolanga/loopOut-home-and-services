@@ -1982,7 +1982,7 @@ export default function Listing() {
             return (
               <div
                 key={index}
-                className={`relative overflow-hidden cursor-pointer group hidden md:block ${getBorderRadius()}`}
+                className={`relative overflow-hidden cursor-pointer hidden md:block ${getBorderRadius()}`}
                 onClick={() => { setGalleryIndex(index + 1); setShowFullGallery(true); }}
               >
                 <ImageWithFallback
@@ -2096,6 +2096,7 @@ export default function Listing() {
                 </button>
               )}
             </div>
+
 
             {/* Amenities */}
             {activeAmenities.length > 0 && (
