@@ -31,86 +31,19 @@ const UserProfile = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isFollowing, setIsFollowing] = useState(false);
 
-  // Mock user data
-  const mockUserData = {
-    _id: id,
-    username: 'johndoe',
-    email: 'john@example.com',
-    fullName: 'John Doe',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-    coverPhoto: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-    bio: 'Digital nomad and adventure seeker. Love hiking, photography, and meeting new people from around the world. Always up for a good conversation over coffee!',
-    location: 'San Francisco, CA',
-    joinedDate: '2024-01-15',
-    verified: true,
-    rating: 4.8,
-    reviewsCount: 127,
-    hostingSince: '2023-05-20',
-    languages: ['English', 'Spanish', 'French'],
-    occupation: 'Software Engineer',
-    company: 'Tech Corp',
-    education: 'Stanford University',
-    superhost: true,
-    responseRate: 98,
-    responseTime: 'within an hour',
-    followers: 245,
-    following: 189,
-    listings: [
-      {
-        id: 1,
-        title: 'Modern Downtown Loft',
-        location: 'San Francisco',
-        price: '$189/night',
-        rating: 4.9,
-        image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
-        type: 'Apartment'
-      },
-      {
-        id: 2,
-        title: 'Beachfront Villa',
-        location: 'Miami',
-        price: '$320/night',
-        rating: 4.7,
-        image: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
-        type: 'Villa'
-      }
-    ],
-    reviews: [
-      {
-        id: 1,
-        reviewerName: 'Sarah M.',
-        reviewerAvatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        rating: 5,
-        date: '2024-02-15',
-        comment: 'John was an amazing host! His place was exactly as described and he provided great recommendations for local restaurants.',
-        listing: 'Modern Downtown Loft'
-      },
-      {
-        id: 2,
-        reviewerName: 'Michael T.',
-        reviewerAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        rating: 4,
-        date: '2024-02-10',
-        comment: 'Great communication and very accommodating. The location was perfect for exploring the city.',
-        listing: 'Modern Downtown Loft'
-      }
-    ],
-    badges: ['Superhost', 'Verified ID', 'Quick Responder', '5-Star Host']
-  };
-
   useEffect(() => {
     const fetchUserData = async () => {
       setLoading(true);
       try {
-        await new Promise(resolve => setTimeout(resolve, 800));
+        const res = await fetch(`/api/user/public/${id}`);
+        const data = await res.json();
         
-        if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
-          throw new Error('Invalid user ID');
-        }
+        if (!res.ok) throw new Error(data.message || 'Failed to fetch user');
         
-        setUserData(mockUserData);
+        setUserData(data);
         setError(null);
       } catch (err) {
+        console.error('Fetch error:', err);
         setError(err.message);
         setUserData(null);
       } finally {
@@ -118,7 +51,7 @@ const UserProfile = () => {
       }
     };
 
-    fetchUserData();
+    if (id) fetchUserData();
   }, [id]);
 
   const handleFollow = () => {
@@ -205,12 +138,12 @@ const UserProfile = () => {
                 <div>
                   <div className="flex items-center space-x-3 mb-2">
                     <h1 className="text-3xl font-bold text-gray-900">
-                      {userData.fullName}
+                      {userData.username || 'User'}
                     </h1>
-                    {userData.superhost && (
+                    {(userData.likeCount > 50) && (
                       <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center">
                         <StarIcon className="w-3 h-3 mr-1" />
-                        Superhost
+                        Top Rated
                       </span>
                     )}
                   </div>
@@ -218,37 +151,57 @@ const UserProfile = () => {
                   <div className="flex items-center space-x-4 text-gray-600 mb-4">
                     <div className="flex items-center">
                       <StarIconSolid className="w-5 h-5 text-amber-500 mr-1" />
-                      <span className="font-medium">{userData.rating}</span>
-                      <span className="text-gray-500 ml-1">({userData.reviewsCount} reviews)</span>
+                      <span className="font-medium">
+                        {userData.likeCount + userData.dislikeCount > 0 
+                          ? ((userData.likeCount / (userData.likeCount + userData.dislikeCount)) * 5).toFixed(1) 
+                          : '0.0'}
+                      </span>
+                      <span className="text-gray-500 ml-1">
+                        ({userData.likeCount} likes)
+                      </span>
                     </div>
                     <div className="flex items-center">
                       <MapPinIcon className="w-5 h-5 mr-2" />
-                      {userData.location}
+                      {userData.location || 'Unknown Location'}
                     </div>
                     <div className="flex items-center">
                       <CalendarIcon className="w-5 h-5 mr-2" />
-                      Joined {new Date(userData.joinedDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                      Joined {new Date(userData.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                     </div>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex space-x-3 mb-6">
-                  <button
-                    onClick={handleFollow}
-                    className={`px-6 py-2.5 rounded-full font-medium transition-all hover:shadow-lg ${
-                      isFollowing
-                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        : 'bg-gradient-to-br from-pink-500 to-purple-600 text-white'
-                    }`}
+                  {currentUser?._id !== id && (
+                    <>
+                      <button
+                        onClick={handleFollow}
+                        className={`px-6 py-2.5 rounded-full font-medium transition-all hover:shadow-lg ${
+                          isFollowing
+                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-gradient-to-br from-pink-500 to-purple-600 text-white'
+                        }`}
+                      >
+                        {isFollowing ? 'Following' : 'Follow'}
+                      </button>
+                      <button
+                        onClick={handleMessage}
+                        className="px-6 py-2.5 border-2 border-gray-300 rounded-full font-medium hover:border-pink-500 hover:text-pink-600 transition-colors"
+                      >
+                        Message
+                      </button>
+                    </>
+                  )}
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      alert('Profile link copied to clipboard!');
+                    }}
+                    className="p-2.5 border border-gray-300 rounded-full hover:border-pink-500 hover:text-pink-600 transition-colors"
+                    title="Share Profile"
                   >
-                    {isFollowing ? 'Following' : 'Follow'}
-                  </button>
-                  <button
-                    onClick={handleMessage}
-                    className="px-6 py-2.5 border-2 border-gray-300 rounded-full font-medium hover:border-pink-500 hover:text-pink-600 transition-colors"
-                  >
-                    Message
+                    <GlobeAltIcon className="w-5 h-5" />
                   </button>
                   <button className="p-2.5 border border-gray-300 rounded-full hover:border-pink-500 hover:text-pink-600 transition-colors">
                     <HeartIcon className="w-5 h-5" />
@@ -258,32 +211,36 @@ const UserProfile = () => {
 
               {/* Bio */}
               <p className="text-gray-700 mb-6 leading-relaxed">
-                {userData.bio}
+                {userData.bio || 'This user hasn\'t added a bio yet.'}
               </p>
 
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="text-center p-4 bg-gray-50 rounded-xl hover:shadow-md transition-all duration-300">
-                  <div className="text-2xl font-bold text-gray-900">{userData.followers}</div>
+                  <div className="text-2xl font-bold text-gray-900">{userData.followers || 0}</div>
                   <div className="text-gray-600 text-sm">Followers</div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-xl hover:shadow-md transition-all duration-300">
-                  <div className="text-2xl font-bold text-gray-900">{userData.following}</div>
+                  <div className="text-2xl font-bold text-gray-900">{userData.following || 0}</div>
                   <div className="text-gray-600 text-sm">Following</div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-xl hover:shadow-md transition-all duration-300">
-                  <div className="text-2xl font-bold text-gray-90">{userData.listings.length}</div>
-                  <div className="text-gray-600 text-sm">Listings</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {(userData.listings?.length || 0) + (userData.services?.length || 0) + (userData.helpers?.length || 0) + (userData.events?.length || 0)}
+                  </div>
+                  <div className="text-gray-600 text-sm">Total Items</div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-xl hover:shadow-md transition-all duration-300">
-                  <div className="text-2xl font-bold text-gray-900">{userData.responseRate}%</div>
-                  <div className="text-gray-600 text-sm">Response Rate</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {userData.likeCount}
+                  </div>
+                  <div className="text-gray-600 text-sm">Likes</div>
                 </div>
               </div>
 
               {/* Badges */}
               <div className="flex flex-wrap gap-2 mb-6">
-                {userData.badges.map((badge, index) => (
+                {['Verified ID', userData.likeCount > 10 ? 'Popular' : 'Newcomer'].map((badge, index) => (
                   <span
                     key={index}
                     className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-pink-50 to-purple-50 text-pink-700"
@@ -298,15 +255,15 @@ const UserProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl">
                 <div className="flex items-center space-x-3">
                   <EnvelopeIcon className="w-5 h-5 text-pink-600" />
-                  <span className="text-gray-700">{userData.email}</span>
+                  <span className="text-gray-700">{userData.email || 'Private Email'}</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <PhoneIcon className="w-5 h-5 text-pink-600" />
-                  <span className="text-gray-700">+1 (555) 123-4567</span>
+                  <span className="text-gray-700">{userData.phone || 'No Phone'}</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <GlobeAltIcon className="w-5 h-5 text-pink-600" />
-                  <span className="text-gray-700">Speaks: {userData.languages.join(', ')}</span>
+                  <span className="text-gray-700">Occupation: {userData.occupation || 'Member'}</span>
                 </div>
               </div>
             </div>
@@ -341,89 +298,85 @@ const UserProfile = () => {
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
                     <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                       <UserGroupIcon className="w-6 h-6 mr-3 text-pink-600" />
-                      About Me
+                      Work & Education
                     </h3>
                     <div className="space-y-4">
                       <div className="flex items-center space-x-3">
                         <BriefcaseIcon className="w-5 h-5 text-gray-400" />
                         <div>
                           <div className="text-sm text-gray-500">Occupation</div>
-                          <div className="font-medium">{userData.occupation}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <BuildingOfficeIcon className="w-5 h-5 text-gray-400" />
-                        <div>
-                          <div className="text-sm text-gray-500">Company</div>
-                          <div className="font-medium">{userData.company}</div>
+                          <div className="font-medium">{userData.occupation || 'Not specified'}</div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-3">
                         <AcademicCapIcon className="w-5 h-5 text-gray-400" />
                         <div>
                           <div className="text-sm text-gray-500">Education</div>
-                          <div className="font-medium">{userData.education}</div>
+                          <div className="font-medium">{userData.education || 'Not specified'}</div>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Response Info */}
+                  {/* Recognition */}
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
                     <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                      <ChatBubbleLeftRightIcon className="w-6 h-6 mr-3 text-pink-600" />
-                      Response Info
+                      <CheckBadgeIcon className="w-6 h-6 mr-3 text-pink-600" />
+                      Trust & Verification
                     </h3>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Response rate:</span>
-                        <span className="font-bold text-green-600">{userData.responseRate}%</span>
+                        <span className="text-gray-600">Identity Verified:</span>
+                        <span className="font-bold text-green-600">Yes</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Response time:</span>
-                        <span className="font-bold">{userData.responseTime}</span>
+                        <span className="font-bold">Fast responder</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Column - Featured Listings */}
+                {/* Right Column - Featured Items */}
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-6">Featured Listings</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-6">Recent Creations</h3>
                   <div className="space-y-4">
-                    {userData.listings.map((listing) => (
+                    {[
+                      ...(userData.listings || []).slice(0, 1),
+                      ...(userData.services || []).slice(0, 1),
+                      ...(userData.helpers || []).slice(0, 1),
+                      ...(userData.events || []).slice(0, 1)
+                    ].map((item, index) => (
                       <div
-                        key={listing.id}
+                        key={index}
                         className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
-                        onClick={() => navigate(`/listing/${listing.id}`)}
+                        onClick={() => navigate(`/${item.type || 'listing'}/${item._id}`)}
                       >
                         <div className="flex">
                           <div className="w-32 h-32 flex-shrink-0">
                             <img
-                              src={listing.image}
-                              alt={listing.title}
+                              src={item.imageUrls?.[0] || item.images?.[0] || '/placeholder.jpg'}
+                              alt={item.name || item.title}
                               className="w-full h-full object-cover"
                             />
                           </div>
                           <div className="p-4 flex-1">
                             <div className="flex justify-between items-start mb-2">
-                              <h4 className="font-bold text-gray-900">{listing.title}</h4>
-                              <span className="text-pink-600 font-bold">{listing.price}</span>
+                              <h4 className="font-bold text-gray-900 line-clamp-1">{item.name || item.title}</h4>
                             </div>
-                            <p className="text-gray-600 text-sm mb-2">{listing.location}</p>
+                            <p className="text-gray-600 text-sm mb-2">{item.address || item.city || item.location}</p>
                             <div className="flex items-center justify-between">
-                              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                                {listing.type}
+                              <span className="text-xs bg-gray-100 font-semibold px-2 py-1 rounded capitalize text-gray-700">
+                                {item.type || 'Listing'}
                               </span>
-                              <div className="flex items-center">
-                                <StarIconSolid className="w-4 h-4 text-amber-500 mr-1" />
-                                <span className="font-medium">{listing.rating}</span>
-                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     ))}
+                    {(!userData.listings?.length && !userData.services?.length && !userData.helpers?.length && !userData.events?.length) && (
+                      <p className="text-gray-500 italic">No public items shared yet.</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -431,33 +384,36 @@ const UserProfile = () => {
 
             {activeTab === 'listings' && (
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">All Listings</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Public Portfolio</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {userData.listings.map((listing) => (
+                  {[
+                    ...(userData.listings || []).map(i => ({ ...i, category: 'listing' })),
+                    ...(userData.services || []).map(i => ({ ...i, category: 'service' })),
+                    ...(userData.helpers || []).map(i => ({ ...i, category: 'helper' })),
+                    ...(userData.events || []).map(i => ({ ...i, category: 'event' }))
+                  ].map((item, index) => (
                     <div
-                      key={listing.id}
-                      className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
-                      onClick={() => navigate(`/listing/${listing.id}`)}
+                      key={index}
+                      className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 flex flex-col"
+                      onClick={() => navigate(`/${item.category}/${item._id}`)}
                     >
                       <img
-                        src={listing.image}
-                        alt={listing.title}
+                        src={item.imageUrls?.[0] || item.images?.[0] || '/placeholder.jpg'}
+                        alt={item.name || item.title}
                         className="w-full h-48 object-cover"
                       />
-                      <div className="p-4">
+                      <div className="p-4 flex-1 flex flex-col">
                         <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-bold text-gray-900">{listing.title}</h3>
-                          <span className="text-pink-600 font-bold">{listing.price}</span>
+                          <h3 className="font-bold text-gray-900 line-clamp-1">{item.name || item.title}</h3>
                         </div>
-                        <p className="text-gray-600 text-sm mb-3">{listing.location}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                            {listing.type}
+                        <p className="text-gray-600 text-sm mb-3">{item.address || item.city || item.location}</p>
+                        <div className="mt-auto flex items-center justify-between">
+                          <span className="text-xs bg-pink-100 text-pink-700 font-bold px-2 py-1 rounded capitalize">
+                            {item.category}
                           </span>
-                          <div className="flex items-center">
-                            <StarIconSolid className="w-4 h-4 text-amber-500 mr-1" />
-                            <span className="font-medium">{listing.rating}</span>
-                          </div>
+                          <span className="text-pink-600 font-bold">
+                            {item.regularPrice ? `$${item.regularPrice}` : item.price || 'Free'}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -469,51 +425,29 @@ const UserProfile = () => {
             {activeTab === 'reviews' && (
               <div className="max-h-[600px] overflow-y-auto pr-4">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Reviews</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">User Appreciation</h2>
                   <div className="flex items-center">
-                    <StarIconSolid className="w-6 h-6 text-amber-500 mr-2" />
-                    <span className="text-2xl font-bold">{userData.rating}</span>
-                    <span className="text-gray-500 ml-2">({userData.reviewsCount} reviews)</span>
+                    <HeartIcon className="w-6 h-6 text-pink-500 mr-2" />
+                    <span className="text-2xl font-bold">{userData.likeCount || 0}</span>
+                    <span className="text-gray-500 ml-2">Total Likes</span>
                   </div>
                 </div>
                 <div className="space-y-6">
-                  {userData.reviews.map((review) => (
-                    <div key={review.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
-                      <div className="flex items-start space-x-4 mb-4">
-                        <img
-                          src={review.reviewerAvatar}
-                          alt={review.reviewerName}
-                          className="w-12 h-12 rounded-full"
-                        />
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h4 className="font-bold text-gray-900">{review.reviewerName}</h4>
-                              <p className="text-gray-500 text-sm">Reviewed {review.listing}</p>
-                            </div>
-                            <div className="flex items-center">
-                              {[...Array(5)].map((_, i) => (
-                                <StarIconSolid
-                                  key={i}
-                                  className={`w-4 h-4 ${i < review.rating ? 'text-amber-500' : 'text-gray-300'}`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          <p className="text-gray-600 mt-3">{review.comment}</p>
-                          <div className="flex justify-between items-center mt-4">
-                            <span className="text-gray-400 text-sm">
-                              {new Date(review.date).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                              })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
+                    <p className="text-gray-600 mb-4 text-lg">
+                      Reviews for this user are spread across their specific listings and services.
+                    </p>
+                    <div className="flex justify-center space-x-8">
+                       <div className="text-center">
+                          <div className="text-3xl font-bold text-pink-600">{userData.likeCount || 0}</div>
+                          <div className="text-gray-500 text-sm uppercase tracking-wider font-semibold">Positive Hits</div>
+                       </div>
+                       <div className="text-center">
+                          <div className="text-3xl font-bold text-gray-400">{userData.dislikeCount || 0}</div>
+                          <div className="text-gray-500 text-sm uppercase tracking-wider font-semibold">Dislikes</div>
+                       </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -521,47 +455,42 @@ const UserProfile = () => {
             {activeTab === 'about' && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">More About {userData.fullName}</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Bio & Background</h2>
                   <div className="prose prose-pink max-w-none">
-                    <p className="text-gray-700 mb-4">
-                      {userData.fullName} is an experienced host who takes great pride in providing exceptional
-                      hospitality to all guests. With a background in {userData.occupation?.toLowerCase()}, 
-                      attention to detail and customer satisfaction are top priorities.
+                    <p className="text-gray-700 mb-4 text-lg leading-relaxed">
+                      {userData.bio || "No detailed bio provided yet."}
                     </p>
-                    <p className="text-gray-700 mb-4">
-                      Living in {userData.location}, {userData.fullName} has extensive knowledge of the local area
-                      and is always happy to share recommendations for restaurants, attractions, and hidden gems.
-                    </p>
-                    <p className="text-gray-700">
-                      When not hosting, you can find {userData.fullName.split(' ')[0]} exploring the outdoors,
-                      practicing photography, or experimenting with new recipes in the kitchen.
-                    </p>
+                    {userData.occupation && (
+                      <p className="text-gray-700 mb-4">
+                        Working as a <strong>{userData.occupation}</strong>.
+                      </p>
+                    )}
+                    {userData.location && (
+                      <p className="text-gray-700">
+                        Based in <strong>{userData.location}</strong>.
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div>
-                  <div className="bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl p-6 text-white">
-                    <h3 className="text-xl font-bold mb-4">Hosting Stats</h3>
+                   <div className="bg-gradient-to-br from-pink-500 to-purple-600 rounded-2xl p-6 text-white shadow-xl">
+                    <h3 className="text-xl font-bold mb-4 border-b border-white/20 pb-2">Activity Overview</h3>
                     <ul className="space-y-4">
                       <li className="flex justify-between items-center">
-                        <span>Listings</span>
-                        <span className="font-bold">{userData.listings.length}</span>
+                        <span className="opacity-90">Joined</span>
+                        <span className="font-bold">{new Date(userData.createdAt).getFullYear()}</span>
                       </li>
                       <li className="flex justify-between items-center">
-                        <span>Total Reviews</span>
-                        <span className="font-bold">{userData.reviewsCount}</span>
+                        <span className="opacity-90">Hostings</span>
+                        <span className="font-bold">{userData.listings?.length || 0}</span>
                       </li>
                       <li className="flex justify-between items-center">
-                        <span>Average Rating</span>
-                        <span className="font-bold">{userData.rating}</span>
+                        <span className="opacity-90">Services</span>
+                        <span className="font-bold">{userData.services?.length || 0}</span>
                       </li>
                       <li className="flex justify-between items-center">
-                        <span>Hosting Since</span>
-                        <span className="font-bold">
-                          {new Date(userData.hostingSince).toLocaleDateString('en-US', {
-                            month: 'short',
-                            year: 'numeric'
-                          })}
-                        </span>
+                        <span className="opacity-90">Total Likes</span>
+                        <span className="font-bold">{userData.likeCount}</span>
                       </li>
                     </ul>
                   </div>

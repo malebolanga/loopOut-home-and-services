@@ -11,7 +11,6 @@ import emailjs from "emailjs-com";
 
 import Calendar from "react-calendar";
 import CommentsSidePanel from '../components/CommentsSidePanel';
-import Comments from '../components/Comments';
 import ImageWithFallback from '../components/ImageWithFallback';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import { useWishlist } from '../hooks/useWishlist';
@@ -1310,6 +1309,8 @@ export default function Listing() {
   const navigate = useNavigate();
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
+  const [ratings, setRatings] = useState({ cleanliness: 0, accuracy: 0, overall: 0 });
+  const [topComments, setTopComments] = useState([]);
   const [numberOfGuests, setNumberOfGuests] = useState(2);
   const [extraBed, setExtraBed] = useState('no');
 
@@ -1327,6 +1328,43 @@ export default function Listing() {
   const [specialRequests, setSpecialRequests] = useState('');
   const [listing, setListing] = useState(null);
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
+  const [similarListings, setSimilarListings] = useState([]);
+
+  const RECENTLY_VIEWED_KEY = 'recentlyViewed';
+
+  useEffect(() => {
+    if (listing) {
+      fetchSimilarListings();
+      saveToHistory(listing);
+    }
+  }, [listing]);
+
+  const fetchSimilarListings = async () => {
+    try {
+      const res = await fetch(`/api/listing/similar/${listingId}`);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setSimilarListings(data);
+    } catch (error) {
+      console.error('Error fetching similar listings:', error);
+    }
+  };
+
+  const saveToHistory = (item) => {
+    try {
+      const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
+      let history = stored ? JSON.parse(stored) : [];
+      history = history.filter(h => h._id !== item._id);
+      history.unshift({
+        ...item,
+        itemType: 'listing',
+        viewedAt: new Date().toISOString()
+      });
+      localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(history.slice(0, 20)));
+    } catch (error) {
+      console.error('Error saving history:', error);
+    }
+  };
 
   const [mealPlan, setMealPlan] = useState('breakfast');
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -1658,6 +1696,19 @@ export default function Listing() {
     return /^[a-zA-Z0-9]{20,}$/.test(id);
   };
 
+  const getRelativeTime = (dateString) => {
+    const diffInMs = new Date() - new Date(dateString);
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    if (diffInDays < 1) return 'Today';
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    if (diffInWeeks < 4) return `${diffInWeeks} week${diffInWeeks > 1 ? 's' : ''} ago`;
+    const diffInMonths = Math.floor(diffInDays / 30);
+    if (diffInMonths < 12) return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
+    const diffInYears = Math.floor(diffInDays / 365);
+    return `${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
+  };
+
   // Effects
   useEffect(() => {
     const handleResize = () => {
@@ -1801,29 +1852,35 @@ export default function Listing() {
     }
   }, [listing]);
 
-  // FIXED: Comment count fetch with correct endpoint
+  // Fetch comment count, ratings and top comments
   useEffect(() => {
-    const fetchCommentCount = async () => {
+    const fetchCommentData = async () => {
       if (!listingId || !isValidListingId(listingId)) {
         setCommentCount(0);
         return;
       }
       try {
-        const response = await fetch(`/api/comment/${listingId}`);
+        const response = await fetch(`/api/comment/${listingId}?limit=6`);
         if (response.ok) {
           const data = await response.json();
-          // The API returns { comments, totalComments, ratings }
           setCommentCount(data.totalComments || 0);
+          setTopComments(data.comments || []);
+          if (data.ratings) {
+            setRatings({
+              cleanliness: data.ratings.cleanliness || 0,
+              accuracy: data.ratings.staff || data.ratings.accuracy || 0,
+              overall: data.ratings.overall || 0
+            });
+          }
         } else {
-          // If API fails, use mock data
           setCommentCount(aiRating.totalRatings || 0);
         }
       } catch (error) {
-        console.error('Error fetching comment count:', error);
+        console.error('Error fetching comment data:', error);
         setCommentCount(aiRating.totalRatings || 0);
       }
     };
-    if (listingId) fetchCommentCount();
+    if (listingId) fetchCommentData();
   }, [listingId, aiRating.totalRatings]);
 
   // Loading and error states
@@ -2010,13 +2067,21 @@ export default function Listing() {
             </div>
 
             {/* Host Info */}
-            <div className="flex items-center gap-4 py-6 border-b border-gray-200">
-              <img src={listing.userRef?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
-                alt={listing.userRef?.username} className="w-12 h-12 lg:w-14 lg:h-14 rounded-full object-cover" />
-              <div>
-                <h2 className="text-base lg:text-lg font-semibold text-gray-900">Hosted by {listing.userRef?.username || 'Host'}</h2>
-                <p className="text-gray-600 text-xs lg:text-sm">Superhost · {listing.userRef?.createdAt ? new Date(listing.userRef.createdAt).getFullYear() : '2020'}</p>
-              </div>
+            <div className="py-6 border-b border-gray-200">
+              <Link
+                to={`/user-profile/${listing.userRef?._id || listing.userRef}`}
+                className="flex items-center gap-4 hover:opacity-80 transition-opacity w-fit"
+              >
+                <img
+                  src={listing.userRef?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
+                  alt={listing.userRef?.username}
+                  className="w-12 h-12 lg:w-14 lg:h-14 rounded-full object-cover border border-gray-100 shadow-sm"
+                />
+                <div>
+                  <h2 className="text-base lg:text-lg font-semibold text-gray-900">Hosted by {listing.userRef?.username || 'Host'}</h2>
+                  <p className="text-gray-600 text-xs lg:text-sm">Superhost · {listing.userRef?.createdAt ? new Date(listing.userRef.createdAt).getFullYear() : '2020'}</p>
+                </div>
+              </Link>
             </div>
 
             {/* Description */}
@@ -2108,20 +2173,117 @@ export default function Listing() {
             )}
 
             {/* Reviews */}
-            <div className="py-6">
-              <div className="flex items-center gap-2 mb-6">
-                <FaStar className="text-rose-500 text-lg lg:text-xl" />
-                <h2 className="text-lg lg:text-xl font-semibold text-gray-900">{Number(aiRating.average).toFixed(1)} · {commentCount} reviews</h2>
+            <div className="pb-6 border-b border-gray-200">
+              <div className="flex items-center gap-2 mb-8">
+                <FaStar className="text-gray-900 text-2xl" />
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : Number(aiRating.average).toFixed(1)} · {commentCount} reviews
+                </h2>
               </div>
 
-              <Comments listingId={listingId} maxComments={6} />
+              {commentCount > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 mb-8">
+                    {/* Cleanliness */}
+                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
+                      <div className="flex items-center gap-3 text-gray-800">
+                        <MdCleanHands className="text-xl" />
+                        <span>Cleanliness</span>
+                      </div>
+                      <div className="flex items-center gap-4 w-1/2">
+                        <span className="font-semibold text-sm">{ratings?.cleanliness?.toFixed(1) || '0.0'}</span>
+                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
+                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.cleanliness / 5) * 100 || 0}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                    {/* Accuracy */}
+                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
+                      <div className="flex items-center gap-3 text-gray-800">
+                        <MdOutlineGppGood className="text-xl" />
+                        <span>Accuracy</span>
+                      </div>
+                      <div className="flex items-center gap-4 w-1/2">
+                        <span className="font-semibold text-sm">{ratings?.accuracy?.toFixed(1) || '0.0'}</span>
+                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
+                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.accuracy / 5) * 100 || 0}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-              {commentCount > 6 && (
-                <button onClick={() => setShowCommentsPanel(true)}
-                  className="mt-6 px-4 lg:px-6 py-2 lg:py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm lg:text-base">
-                  Show all {commentCount} reviews
-                </button>
+                  {/* Top Comments Swiper */}
+                  {topComments.length > 0 && (
+                    <div className="mb-8">
+                      <Swiper
+                        spaceBetween={16}
+                        slidesPerView={1.1}
+                        breakpoints={{
+                          640: { slidesPerView: 2.1 },
+                          1024: { slidesPerView: 2.2 }
+                        }}
+                        freeMode={true}
+                        modules={[FreeMode]}
+                        className="-mx-4 px-4 sm:mx-0 sm:px-0"
+                      >
+                        {topComments.map(comment => {
+                          const rating = comment.rating || 5;
+                          return (
+                            <SwiperSlide key={comment._id} className="h-auto">
+                              <div className="h-full bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+                                <div>
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-3">
+                                      <img
+                                        src={comment.userAvatar || '/default-avatar.jpg'}
+                                        alt={comment.userName}
+                                        className="w-12 h-12 rounded-full object-cover border border-gray-100"
+                                        onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
+                                      />
+                                      <div>
+                                        <h4 className="font-semibold text-gray-900 leading-tight">{comment.userName}</h4>
+                                        <p className="text-sm text-gray-500 mt-0.5">{getRelativeTime(comment.createdAt)}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-4 mb-3">
+                                    <div className="flex items-center">
+                                      {[...Array(5)].map((_, i) => (
+                                        <FaStar
+                                          key={i}
+                                          className={`text-[10px] mr-1 ${i < Math.round(rating) ? 'text-gray-900' : 'text-gray-200'}`}
+                                        />
+                                      ))}
+                                    </div>
+                                    {comment.likes?.length > 0 && (
+                                      <div className="flex items-center gap-1 text-xs text-rose-500 font-medium">
+                                        <FaHeart />
+                                        {comment.likes.length}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <p className="text-gray-700 line-clamp-4 leading-relaxed whitespace-pre-line">
+                                    {comment.content}
+                                  </p>
+                                </div>
+                              </div>
+                            </SwiperSlide>
+                          );
+                        })}
+                      </Swiper>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-gray-600 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
+
+              <button
+                onClick={() => setShowCommentsPanel(true)}
+                className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
+              >
+                Show all {commentCount} reviews
+              </button>
             </div>
 
             {/* Location */}

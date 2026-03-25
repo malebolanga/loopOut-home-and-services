@@ -11,9 +11,10 @@ import {
     getPostCountByBody,
     getUser,
     getUsers,
+    verifyWhatsApp,
+    getPublicUser,
     rateHost,
-    getHostRatings,
-    verifyWhatsApp
+    getHostRatings
 } from '../controllers/user.controller.js';
 
 import { verifyToken } from '../utils/verifyUser.js';
@@ -56,6 +57,9 @@ router.post('/post-count', verifyToken, getPostCountByBody);
 router.put('/rate-host/:hostId', verifyToken, rateHost);
 router.get('/host-ratings/:hostId', verifyToken, getHostRatings);
 router.post('/verify-whatsapp/:id', verifyToken, verifyWhatsApp);
+
+// Route to get public user details (no token required)
+router.get('/public/:id', getPublicUser);
 
 // Route to get user details
 router.get('/:id', verifyToken, getUser);

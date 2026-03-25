@@ -1,6 +1,7 @@
-import Comment from '../models/comment.model.js';
 import Listing from '../models/listing.model.js';
+import Comment from '../models/comment.model.js';
 import { errorHandler } from '../utils/error.js';
+import { createUserNotification } from '../utils/notificationUtils.js';
 
 export const createComment = async (req, res, next) => {
   try {
@@ -33,6 +34,20 @@ export const createComment = async (req, res, next) => {
     }
     listing.comments.push(comment._id);
     await listing.save();
+
+    // Notify listing owner
+    if (listing.userRef.toString() !== userId) {
+      await createUserNotification(
+        listing.userRef,
+        'comment', 
+                   // The enum in model is ['new_post', 'message', 'booking', 'system']. 
+                   // I'll use 'system' for now or update the model.
+                   // Actually, 'booking' fits best for interactions.
+        'New Comment',
+        `${userName || req.user.username} commented on your listing "${listing.name}"`,
+        { itemId: listingId, itemType: 'listing', commentId: comment._id }
+      );
+    }
 
     res.status(201).json(comment);
   } catch (error) {

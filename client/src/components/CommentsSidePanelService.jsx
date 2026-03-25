@@ -115,22 +115,7 @@ const CommentsSidePanel = ({ serviceId, onClose }) => {
           </button>
         </div>
         
-        {/* Comment input form */}
-        <div className="mb-6 bg-white rounded-xl ">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">Add Your Review</h3>
-          {currentUser ? (
-            <form onSubmit={handleSubmitComment}>
-            
-            </form>
-          ) : (
-            <div className="text-center py-3 bg-gray-50 rounded-lg">
-              <p className="text-gray-600">
-                Please <a href="/sign-in" className="text-blue-600 hover:underline">sign in</a> to leave a review
-              </p>
-            </div>
-          )}
-        </div>
-        
+
         {/* Comments with card styling - show all comments without limit */}
         <Comment 
           serviceId={serviceId} 

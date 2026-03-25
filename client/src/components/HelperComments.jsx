@@ -44,7 +44,9 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
         ? `/api/helper-comments/${helperId}?limit=${maxComments}`
         : `/api/helper-comments/${helperId}`;
       
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        credentials: 'include'
+      });
       
       if (!res.ok) {
         const errorData = await res.json();
@@ -113,6 +115,7 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentUser.token}`
         },
+        credentials: 'include',
         body: JSON.stringify({
           content: commentContent,
           helperId,
@@ -155,7 +158,8 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentUser.token}`
-        }
+        },
+        credentials: 'include'
       });
 
       const responseData = await res.json();
@@ -205,6 +209,7 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentUser.token}`
         },
+        credentials: 'include',
         body: JSON.stringify({
           content: replyContent,
           userName: currentUser.username,
@@ -242,7 +247,8 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${currentUser.token}`
-        }
+        },
+        credentials: 'include'
       });
 
       if (!res.ok) {

@@ -323,3 +323,25 @@ export const getListings = async (req, res, next) => {
   }
 };
 
+// Get Similar Listings
+export const getSimilarListings = async (req, res, next) => {
+  try {
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) {
+      return next(errorHandler(404, 'Listing not found!'));
+    }
+
+    const similarListings = await Listing.find({
+      _id: { $ne: req.params.id },
+      type: listing.type,
+      // Optional: try to match address/city if possible
+    })
+      .limit(4)
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(similarListings);
+  } catch (error) {
+    next(error);
+  }
+};
+

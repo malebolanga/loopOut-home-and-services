@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FaCalendarAlt, FaMapMarkerAlt, FaHome, FaMusic, FaTools } from 'react-icons/fa';
+import ImageWithFallback from '../components/ImageWithFallback';
 
 const TripDetails = () => {
   const { id } = useParams();
@@ -259,11 +260,11 @@ const TripDetails = () => {
                         <div key={event._id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-md">
                           {event.imageUrls && event.imageUrls.length > 0 && (
                             <div className="h-48 overflow-hidden">
-                              <img 
+                              <ImageWithFallback 
                                 src={event.imageUrls[0]} 
                                 alt={event.name} 
                                 className="w-full h-full object-cover"
-                                onError={(e) => e.target.src = 'https://via.placeholder.com/300x200?text=Event+Image'}
+                                type="event"
                               />
                             </div>
                           )}
@@ -292,11 +293,11 @@ const TripDetails = () => {
                         <div key={helper._id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-md">
                           {helper.imageUrls && helper.imageUrls.length > 0 && (
                             <div className="h-48 overflow-hidden">
-                              <img 
+                              <ImageWithFallback 
                                 src={helper.imageUrls[0]} 
                                 alt={helper.name} 
                                 className="w-full h-full object-cover"
-                                onError={(e) => e.target.src = 'https://via.placeholder.com/300x200?text=Service+Image'}
+                                type="service"
                               />
                             </div>
                           )}
@@ -325,11 +326,11 @@ const TripDetails = () => {
                         <div key={listing._id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-md">
                           {listing.imageUrls && listing.imageUrls.length > 0 && (
                             <div className="h-48 overflow-hidden">
-                              <img 
+                              <ImageWithFallback 
                                 src={listing.imageUrls[0]} 
                                 alt={listing.name} 
                                 className="w-full h-full object-cover"
-                                onError={(e) => e.target.src = 'https://via.placeholder.com/300x200?text=Accommodation+Image'}
+                                type="property"
                               />
                             </div>
                           )}

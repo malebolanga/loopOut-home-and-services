@@ -110,7 +110,8 @@ export default function Header() {
       const res = await fetch('/api/notifications', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        },
+        credentials: 'include'
       });
 
       if (res.ok) {
@@ -423,6 +424,12 @@ export default function Header() {
                           className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222]"
                         >
                           Wishlists
+                        </button>
+                        <button
+                          onClick={() => handleNavigate('/recently-viewed')}
+                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222]"
+                        >
+                          History
                         </button>
                         <div className="border-t border-[#DDDDDD] my-1"></div>
                         <button

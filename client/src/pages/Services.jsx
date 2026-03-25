@@ -18,12 +18,12 @@ import {
   FaSpinner, FaChild, FaTree, FaWrench, FaBus,
   FaLeaf, FaHome as FaHomeIcon, FaFileImage, FaFilePdf
 } from 'react-icons/fa';
-import { FiShare2, FiMessageSquare } from 'react-icons/fi';
+import { FiShare2, FiMessageSquare, FiMapPin } from 'react-icons/fi';
 import CommentsSidePanelService from '../components/CommentsSidePanelService';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import { useWishlist } from '../hooks/useWishlist';
+import ServiceItem from '../components/ServiceItem';
 
-import Comment from '../components/Comment';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, Thumbs, FreeMode } from 'swiper/modules';
 import 'swiper/css';
@@ -206,12 +206,51 @@ const ServicePage = () => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
+  const [ratings, setRatings] = useState({ cleanliness: 0, communication: 0, overall: 0 });
+  const [topComments, setTopComments] = useState([]);
   const { isFavorite, toggleFavorite } = useWishlist(service, 'service');
   const [showAllServices, setShowAllServices] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [attachments, setAttachments] = useState([]);
+  const [similarServices, setSimilarServices] = useState([]);
+
+  const RECENTLY_VIEWED_KEY = 'recentlyViewed';
+
+  useEffect(() => {
+    if (service) {
+      fetchSimilarServices();
+      saveToHistory(service);
+    }
+  }, [service]);
+
+  const fetchSimilarServices = async () => {
+    try {
+      const res = await fetch(`/api/service/similar/${serviceId}`);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setSimilarServices(data);
+    } catch (error) {
+      console.error('Error fetching similar services:', error);
+    }
+  };
+
+  const saveToHistory = (item) => {
+    try {
+      const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
+      let history = stored ? JSON.parse(stored) : [];
+      history = history.filter(h => h._id !== item._id);
+      history.unshift({
+        ...item,
+        itemType: 'service',
+        viewedAt: new Date().toISOString()
+      });
+      localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(history.slice(0, 20)));
+    } catch (error) {
+      console.error('Error saving history:', error);
+    }
+  };
 
   const [showFullScreenGallery, setShowFullScreenGallery] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
@@ -295,11 +334,49 @@ const ServicePage = () => {
     fetchService();
   }, [serviceId]);
 
+  // Fetch ratings and top comments
+  useEffect(() => {
+    const fetchCommentData = async () => {
+      if (!serviceId) return;
+      try {
+        const res = await fetch(`/api/service-comments/${serviceId}?limit=6`);
+        if (res.ok) {
+          const data = await res.json();
+          setCommentCount(data.totalComments || 0);
+          setTopComments(data.comments || []);
+          if (data.ratings) {
+            setRatings({
+              cleanliness: data.ratings.cleanliness || 0,
+              communication: data.ratings.staff || data.ratings.communication || 0,
+              overall: data.ratings.overall || 0
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching comment data:', err);
+      }
+    };
+    if (serviceId) fetchCommentData();
+  }, [serviceId]);
+
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 100);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const getRelativeTime = (dateString) => {
+    const diffInMs = new Date() - new Date(dateString);
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    if (diffInDays < 1) return 'Today';
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    if (diffInWeeks < 4) return `${diffInWeeks} week${diffInWeeks > 1 ? 's' : ''} ago`;
+    const diffInMonths = Math.floor(diffInDays / 30);
+    if (diffInMonths < 12) return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
+    const diffInYears = Math.floor(diffInDays / 365);
+    return `${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
+  };
 
   const formatContactForWhatsApp = (contact) => {
     if (!contact) return null;
@@ -727,28 +804,33 @@ const ServicePage = () => {
             </div>
 
             {/* Provider Info */}
-            <div className="flex items-start gap-4 py-6 border-b border-gray-200">
-              <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                <img
-                  src={service.imageUrls?.[0] || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=200&q=80'}
-                  alt={service.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-lg font-semibold text-gray-900">Hosted by {service.name}</h2>
-                <p className="text-gray-600">{getProfessionalTitle(service.type)}</p>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {service.security && (
-                    <span className="inline-flex items-center gap-1 text-sm text-gray-600">
-                      <FaCheckCircle className="text-emerald-500" /> Verified
-                    </span>
-                  )}
-                  <span className="inline-flex items-center gap-1 text-sm text-gray-600">
-                    <FaBriefcase className="text-gray-400" /> {enhancedServiceData.yearsExperience}+ years exp
-                  </span>
+            <div className="py-6 border-b border-gray-200">
+              <Link 
+                to={`/user-profile/${service.creator?._id || service.creator || service.userRef}`}
+                className="flex items-start gap-4 hover:opacity-80 transition-opacity"
+              >
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 shadow-sm">
+                  <img
+                    src={service.imageUrls?.[0] || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=200&q=80'}
+                    alt={service.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-              </div>
+                <div className="flex-1">
+                  <h2 className="text-lg font-semibold text-gray-900">Hosted by {service.name}</h2>
+                  <p className="text-gray-600">{getProfessionalTitle(service.type)}</p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {service.security && (
+                      <span className="inline-flex items-center gap-1 text-sm text-gray-600">
+                        <FaCheckCircle className="text-emerald-500" /> Verified
+                      </span>
+                    )}
+                    <span className="inline-flex items-center gap-1 text-sm text-gray-600">
+                      <FaBriefcase className="text-gray-400" /> {enhancedServiceData.yearsExperience}+ years exp
+                    </span>
+                  </div>
+                </div>
+              </Link>
             </div>
 
             {/* Highlights */}
@@ -905,27 +987,117 @@ const ServicePage = () => {
             </div>
 
             {/* Reviews */}
-            <div className="py-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                  <FaStar className="text-rose-500" />
-                  {service.rating || '4.5'} · {commentCount || service.reviewCount || '0'} reviews
+            <div className="pb-6 border-b border-gray-200">
+              <div className="flex items-center gap-2 mb-8">
+                <FaStar className="text-gray-900 text-2xl" />
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (service.rating || '4.5')} · {commentCount} reviews
                 </h2>
-                {commentCount > 3 && (
-                  <button
-                    onClick={() => setShowCommentsPanel(true)}
-                    className="font-semibold text-gray-900 underline underline-offset-4"
-                  >
-                    Show all reviews
-                  </button>
-                )}
               </div>
-              <Comment
-                serviceId={service._id}
-                maxComments={3}
-                onTotalComments={setCommentCount}
-                cardStyle={true}
-              />
+
+              {commentCount > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 mb-8">
+                    {/* Cleanliness */}
+                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
+                      <div className="flex items-center gap-3 text-gray-800">
+                        <FaBroom className="text-xl" />
+                        <span>Cleanliness</span>
+                      </div>
+                      <div className="flex items-center gap-4 w-1/2">
+                        <span className="font-semibold text-sm">{ratings?.cleanliness?.toFixed(1) || '0.0'}</span>
+                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
+                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.cleanliness / 5) * 100 || 0}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                    {/* Communication */}
+                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
+                      <div className="flex items-center gap-3 text-gray-800">
+                        <FaCommentDots className="text-xl" />
+                        <span>Communication</span>
+                      </div>
+                      <div className="flex items-center gap-4 w-1/2">
+                        <span className="font-semibold text-sm">{ratings?.communication?.toFixed(1) || '0.0'}</span>
+                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
+                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.communication / 5) * 100 || 0}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Top Comments Swiper */}
+                  {topComments.length > 0 && (
+                    <div className="mb-8">
+                      <Swiper
+                        spaceBetween={16}
+                        slidesPerView={1.1}
+                        breakpoints={{
+                          640: { slidesPerView: 2.1 },
+                          1024: { slidesPerView: 2.2 }
+                        }}
+                        freeMode={true}
+                        modules={[FreeMode]}
+                        className="-mx-4 px-4 sm:mx-0 sm:px-0"
+                      >
+                        {topComments.map(comment => {
+                          const rating = comment.rating || 5;
+                          return (
+                            <SwiperSlide key={comment._id} className="h-auto">
+                              <div className="h-full bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+                                <div>
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-3">
+                                      <img
+                                        src={comment.userAvatar || '/default-avatar.jpg'}
+                                        alt={comment.userName}
+                                        className="w-12 h-12 rounded-full object-cover border border-gray-100"
+                                        onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
+                                      />
+                                      <div>
+                                        <h4 className="font-semibold text-gray-900 leading-tight">{comment.userName}</h4>
+                                        <p className="text-sm text-gray-500 mt-0.5">{getRelativeTime(comment.createdAt)}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-4 mb-3">
+                                    <div className="flex items-center">
+                                      {[...Array(5)].map((_, i) => (
+                                        <FaStar
+                                          key={i}
+                                          className={`text-[10px] mr-1 ${i < Math.round(rating) ? 'text-gray-900' : 'text-gray-200'}`}
+                                        />
+                                      ))}
+                                    </div>
+                                    {comment.likes?.length > 0 && (
+                                      <div className="flex items-center gap-1 text-xs text-rose-500 font-medium">
+                                        <FaHeart />
+                                        {comment.likes.length}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <p className="text-gray-700 line-clamp-4 leading-relaxed whitespace-pre-line">
+                                    {comment.content}
+                                  </p>
+                                </div>
+                              </div>
+                            </SwiperSlide>
+                          );
+                        })}
+                      </Swiper>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-gray-600 mb-6">No reviews yet. Be the first to leave a review!</p>
+              )}
+
+              <button
+                onClick={() => setShowCommentsPanel(true)}
+                className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
+              >
+                Show all {commentCount} reviews
+              </button>
             </div>
           </div>
 

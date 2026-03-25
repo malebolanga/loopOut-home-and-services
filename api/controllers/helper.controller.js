@@ -123,3 +123,24 @@ export const deleteHelper = async (req, res, next) => {
     next(errorHandler(500, `Failed to delete helper: ${error.message}`));
   }
 };
+
+// Get Similar Helpers
+export const getSimilarHelpers = async (req, res, next) => {
+  try {
+    const helper = await Helper.findById(req.params.id);
+    if (!helper) {
+      return next(errorHandler(404, 'Helper not found!'));
+    }
+
+    const similarHelpers = await Helper.find({
+      _id: { $ne: req.params.id },
+      type: helper.type,
+    })
+      .limit(4)
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(similarHelpers);
+  } catch (error) {
+    next(error);
+  }
+};

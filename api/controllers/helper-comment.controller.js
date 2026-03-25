@@ -1,6 +1,7 @@
-import HelperComment from '../models/helper-comment.model.js';
 import Helper from '../models/helper.model.js';
+import HelperComment from '../models/helper-comment.model.js';
 import { errorHandler } from '../utils/error.js';
+import { createUserNotification } from '../utils/notificationUtils.js';
 
 export const createHelperComment = async (req, res, next) => {
   try {
@@ -31,6 +32,17 @@ export const createHelperComment = async (req, res, next) => {
     if (!helper.comments) helper.comments = [];
     helper.comments.push(comment._id);
     await helper.save();
+
+    // Notify helper owner (userRef is the owner)
+    if (helper.userRef.toString() !== userId) {
+      await createUserNotification(
+        helper.userRef,
+        'comment',
+        'New Profile Review',
+        `${userName || req.user.username} left a review on your helper profile`,
+        { itemId: helperId, itemType: 'helper', commentId: comment._id }
+      );
+    }
 
     res.status(201).json(comment);
   } catch (error) {

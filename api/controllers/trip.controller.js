@@ -108,4 +108,17 @@ export const searchForStop = async (req, res, next) => {
   }
 };
 
-
+export const getUserTrips = async (req, res, next) => {
+  try {
+    if (req.user.id !== req.params.userId) {
+      return next(errorHandler(401, 'You can only view your own trips!'));
+    }
+    
+    const trips = await Trip.find({ userRef: req.params.userId })
+      .sort({ startDate: 1 }); // Sort by upcoming first
+      
+    res.status(200).json(trips);
+  } catch (error) {
+    next(error);
+  }
+};

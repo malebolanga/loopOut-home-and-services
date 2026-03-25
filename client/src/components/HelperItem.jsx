@@ -71,6 +71,7 @@ function HelperItem({ helper, className = "", compactMode = false }) {
   const [isNewHelper, setIsNewHelper] = useState(false);
   const [clickCount, setClickCount] = useState(0);
   const [hasPositivePromo, setHasPositivePromo] = useState(false);
+  const [ratingData, setRatingData] = useState({ average: 0, count: 0 });
 
   // Calculate promo eligibility using useMemo for performance
   const calculatePositivePromo = useMemo(() => {
@@ -109,6 +110,25 @@ function HelperItem({ helper, className = "", compactMode = false }) {
 
     // Set promo eligibility
     setHasPositivePromo(calculatePositivePromo);
+
+    // Fetch real rating from comments
+    if (helper?._id) {
+      const fetchRating = async () => {
+        try {
+          const res = await fetch(`/api/helper-comments/${helper._id}?limit=1`);
+          if (res.ok) {
+            const data = await res.json();
+            setRatingData({
+              average: data.ratings?.overall || 0,
+              count: data.totalComments || 0
+            });
+          }
+        } catch (error) {
+          // silently fail
+        }
+      };
+      fetchRating();
+    }
   }, [helper, calculatePositivePromo]);
 
   // Handle click on the helper card
@@ -389,9 +409,9 @@ function HelperItem({ helper, className = "", compactMode = false }) {
                 <div className="flex items-center text-gray-600">
                   <FaStar className="text-amber-500 text-[12px]" />
                   <span className="font-medium text-gray-900 text-[13px] ml-1">
-                    {calculatedStarRating}
+                    {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
                   </span>
-
+                  {ratingData.count > 0 && <span className="text-[10px] text-gray-400 ml-1">({ratingData.count})</span>}
                 </div>
               </div>
             </div>

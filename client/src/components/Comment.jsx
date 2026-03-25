@@ -10,6 +10,7 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
   const { currentUser } = useSelector((state) => state.user);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState('');
+  const [rating, setRating] = useState(0);
   const [focusedInput, setFocusedInput] = useState(null);
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyContent, setReplyContent] = useState('');
@@ -111,12 +112,14 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
       const body = isService
         ? JSON.stringify({
             content: commentContent,
+            rating,
             serviceId: entityId,
             userName: currentUser.username,
             userAvatar: currentUser.avatar || '/default-avatar.jpg'
           })
         : JSON.stringify({
             content: commentContent,
+            rating,
             listingId: entityId,
             userName: currentUser.username,
             userAvatar: currentUser.avatar || '/default-avatar.jpg'
@@ -138,6 +141,7 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
       }
 
       setCommentContent('');
+      setRating(0);
       setRefreshTrigger(prev => prev + 1);
     } catch (err) {
       setError(err.message || 'Failed to post comment');
@@ -426,8 +430,24 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
                   onFocus={() => setFocusedInput('comment')}
                   onBlur={() => setFocusedInput(null)}
                 />
-                {(focusedInput === 'comment' || commentContent) && (
-                  <div className="flex justify-end mt-1">
+                {(focusedInput === 'comment' || commentContent || rating > 0) && (
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-gray-500 mr-1">Rating:</span>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setRating(star)}
+                          className="focus:outline-none transition-colors"
+                        >
+                          <FaStar
+                            size={14}
+                            className={star <= rating ? 'text-yellow-400' : 'text-gray-300'}
+                          />
+                        </button>
+                      ))}
+                    </div>
                     <button
                       type="submit"
                       className="bg-blue-500 text-white p-1.5 rounded-full hover:bg-blue-600 disabled:opacity-50 transition-colors"
@@ -477,8 +497,24 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
                   onFocus={() => setFocusedInput('comment')}
                   onBlur={() => setFocusedInput(null)}
                 />
-                {(focusedInput === 'comment' || commentContent) && (
-                  <div className="flex justify-end mt-1">
+                {(focusedInput === 'comment' || commentContent || rating > 0) && (
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-gray-500 mr-1">Rating:</span>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setRating(star)}
+                          className="focus:outline-none transition-colors"
+                        >
+                          <FaStar
+                            size={14}
+                            className={star <= rating ? 'text-yellow-400' : 'text-gray-300'}
+                          />
+                        </button>
+                      ))}
+                    </div>
                     <button
                       type="submit"
                       className="bg-blue-500 text-white p-1.5 rounded-full hover:bg-blue-600 disabled:opacity-50 transition-colors"

@@ -5,6 +5,7 @@ import {
   getEvent,
   updateEvent,
   deleteEvent,
+  getSimilarEvents,
 } from '../controllers/event.controller.js';
 import { verifyToken } from '../utils/verifyUser.js';
 
@@ -15,5 +16,6 @@ router.get('/get', getEvents);
 router.get('/:id', getEvent);
 router.put('/:id', verifyToken, updateEvent);
 router.delete('/:id', verifyToken, deleteEvent);
+router.get('/similar/:id', getSimilarEvents);
 
 export default router;

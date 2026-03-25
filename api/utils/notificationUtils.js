@@ -53,3 +53,26 @@ export const createAreaNotifications = async (item, itemType) => {
         console.error('Error creating area notifications:', error);
     }
 };
+
+/**
+ * Creates a notification for a specific user when someone interacts with their content.
+ * @param {String} userId - The recipient of the notification
+ * @param {String} type - The type of notification
+ * @param {String} title - The notification title
+ * @param {String} message - The notification message
+ * @param {Object} data - Additional data (itemId, itemType, etc.)
+ */
+export const createUserNotification = async (userId, type, title, message, data = {}) => {
+    try {
+        const notification = new Notification({
+            userId,
+            type,
+            title,
+            message,
+            data
+        });
+        await notification.save();
+    } catch (error) {
+        console.error('Error creating user notification:', error);
+    }
+};

@@ -1,6 +1,7 @@
-import ServiceComment from '../models/service-comment.model.js';
 import Service from '../models/service.model.js';
+import ServiceComment from '../models/service-comment.model.js';
 import { errorHandler } from '../utils/error.js';
+import { createUserNotification } from '../utils/notificationUtils.js';
 
 export const createServiceComment = async (req, res, next) => {
   try {
@@ -32,6 +33,17 @@ export const createServiceComment = async (req, res, next) => {
     }
     service.comments.push(comment._id);
     await service.save();
+
+    // Notify service owner
+    if (service.creator.toString() !== userId) {
+      await createUserNotification(
+        service.creator,
+        'comment',
+        'New Service Comment',
+        `${userName || req.user.username} commented on your service "${service.name}"`,
+        { itemId: serviceId, itemType: 'service', commentId: comment._id }
+      );
+    }
 
     res.status(201).json(comment);
   } catch (error) {

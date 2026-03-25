@@ -1,6 +1,7 @@
-import EventComment from '../models/event-comment.model.js';
 import Event from '../models/event.model.js';
+import EventComment from '../models/event-comment.model.js';
 import { errorHandler } from '../utils/error.js';
+import { createUserNotification } from '../utils/notificationUtils.js';
 
 export const createEventComment = async (req, res, next) => {
   try {
@@ -29,6 +30,17 @@ export const createEventComment = async (req, res, next) => {
     if (!event.comments) event.comments = [];
     event.comments.push(comment._id);
     await event.save();
+
+    // Notify event owner
+    if (event.userRef.toString() !== userId) {
+      await createUserNotification(
+        event.userRef,
+        'comment',
+        'New Event Comment',
+        `${userName || req.user.username} commented on your event "${event.name}"`,
+        { itemId: eventId, itemType: 'event', commentId: comment._id }
+      );
+    }
 
     res.status(201).json(comment);
   } catch (error) {

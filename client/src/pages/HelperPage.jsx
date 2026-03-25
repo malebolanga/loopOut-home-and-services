@@ -48,6 +48,7 @@ import ImageWithFallback from '../components/ImageWithFallback';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
+import HelperItem from '../components/HelperItem';
 
 export default function HelperPage() {
   const { currentUser } = useSelector((state) => state.user);
@@ -71,6 +72,43 @@ export default function HelperPage() {
   const [totalPrice, setTotalPrice] = useState(0);
   const [ratings, setRatings] = useState({ cleanliness: 0, communication: 0, overall: 0 });
   const [topComments, setTopComments] = useState([]);
+  const [similarHelpers, setSimilarHelpers] = useState([]);
+
+  const RECENTLY_VIEWED_KEY = 'recentlyViewed';
+
+  useEffect(() => {
+    if (helper) {
+      fetchSimilarHelpers();
+      saveToHistory(helper);
+    }
+  }, [helper]);
+
+  const fetchSimilarHelpers = async () => {
+    try {
+      const res = await fetch(`/api/helper/similar/${helper._id}`);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setSimilarHelpers(data);
+    } catch (error) {
+      console.error('Error fetching similar helpers:', error);
+    }
+  };
+
+  const saveToHistory = (item) => {
+    try {
+      const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
+      let history = stored ? JSON.parse(stored) : [];
+      history = history.filter(h => h._id !== item._id);
+      history.unshift({
+        ...item,
+        itemType: 'helper',
+        viewedAt: new Date().toISOString()
+      });
+      localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(history.slice(0, 20)));
+    } catch (error) {
+      console.error('Error saving history:', error);
+    }
+  };
 
   // ==================== SERVICE CONFIGURATION (MOVED UP) ====================
 
@@ -2002,22 +2040,27 @@ export default function HelperPage() {
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Host Info Bar */}
-            <div className="flex items-start justify-between pb-6 border-b border-gray-200">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {getProfessionalTitle(helper.type)} hosted by {helper.name}
-                </h2>
-                <p className="text-gray-600 mt-1">
-                  {helper.host || 5}+ years of experience · Top rated professional
-                </p>
-              </div>
-              <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200">
-                <img
-                  src={helper.imageUrls?.[0] || 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=200&q=80'}
-                  alt={helper.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+            <div className="pb-6 border-b border-gray-200">
+              <Link
+                to={`/user-profile/${helper.userRef?._id || helper.userRef}`}
+                className="flex items-start justify-between hover:opacity-80 transition-opacity"
+              >
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {getProfessionalTitle(helper.type)} hosted by {helper.name}
+                  </h2>
+                  <p className="text-gray-600 mt-1">
+                    {helper.host || 5}+ years of experience · Top rated professional
+                  </p>
+                </div>
+                <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 shadow-sm">
+                  <img
+                    src={helper.imageUrls?.[0] || 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=200&q=80'}
+                    alt={helper.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </Link>
             </div>
 
             {/* Highlights */}
@@ -2347,6 +2390,21 @@ export default function HelperPage() {
               </div>
             </div>
           </div>
+
+          {/* Similar Helpers */}
+          {similarHelpers.length > 0 && (
+            <div className="mt-12 md:mt-16 border-t border-gray-100 pt-10 md:pt-12">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8 flex items-center gap-2">
+                <FaMapMarkerAlt className="text-rose-500" />
+                Other professionals you might need
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {similarHelpers.map((item) => (
+                  <HelperItem key={item._id} helper={item} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </main>
 

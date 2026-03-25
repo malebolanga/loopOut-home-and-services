@@ -24,6 +24,8 @@ import 'swiper/css/zoom';
 import 'swiper/css/thumbs';
 import EventComments from '../components/EventComments';
 import CommentsSidePanelEvent from '../components/CommentsSidePanelEvent';
+import { useWishlist } from '../hooks/useWishlist';
+import EventItem from '../components/EventItem';
 
 export default function EventPage() {
   const { currentUser } = useSelector((state) => state.user);
@@ -102,6 +104,44 @@ export default function EventPage() {
     dislikes: 0,
     userReaction: null
   });
+  const [similarEvents, setSimilarEvents] = useState([]);
+  const { isFavorite, toggleFavorite } = useWishlist(event, 'event');
+
+  const RECENTLY_VIEWED_KEY = 'recentlyViewed';
+
+  useEffect(() => {
+    if (event) {
+      fetchSimilarEvents();
+      saveToHistory(event);
+    }
+  }, [event]);
+
+  const fetchSimilarEvents = async () => {
+    try {
+      const res = await fetch(`/api/event/similar/${id}`);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setSimilarEvents(data);
+    } catch (error) {
+      console.error('Error fetching similar events:', error);
+    }
+  };
+
+  const saveToHistory = (item) => {
+    try {
+      const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
+      let history = stored ? JSON.parse(stored) : [];
+      history = history.filter(h => h._id !== item._id);
+      history.unshift({
+        ...item,
+        itemType: 'event',
+        viewedAt: new Date().toISOString()
+      });
+      localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(history.slice(0, 20)));
+    } catch (error) {
+      console.error('Error saving history:', error);
+    }
+  };
 
   // Helper functions for social media verification
   const generateUsername = (name, platform) => {
@@ -531,6 +571,21 @@ export default function EventPage() {
             </div>
           </div>
         </div>
+
+        {/* Similar Events */}
+        {similarEvents.length > 0 && (
+          <div className="mt-12 md:mt-16 border-t border-gray-100 pt-10 md:pt-12">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8 flex items-center gap-2">
+              <FaCalendarAlt className="text-rose-500" />
+              Other events you might like
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {similarEvents.map((item) => (
+                <EventItem key={item._id} event={item} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -1194,15 +1249,18 @@ export default function EventPage() {
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Organizer Info</h3>
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Link 
+                to={`/user-profile/${event.userRef?._id || event.userRef}`}
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              >
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
                   <FaUser className="text-white text-lg" />
                 </div>
                 <div>
                   <div className="text-sm text-gray-600">Organizer</div>
                   <div className="text-gray-900 font-semibold">{event.organizerName || 'Event Organizer'}</div>
                 </div>
-              </div>
+              </Link>
 
               {event.organizerContact && (
                 <div className="space-y-2">
@@ -1230,6 +1288,21 @@ export default function EventPage() {
             </div>
           </div>
         </div>
+
+        {/* Similar Events */}
+        {similarEvents.length > 0 && (
+          <div className="mt-12 md:mt-16 border-t border-gray-100 pt-10 md:pt-12">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8 flex items-center gap-2">
+              <FaCalendarAlt className="text-rose-500" />
+              Other events you might like
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {similarEvents.map((item) => (
+                <EventItem key={item._id} event={item} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Comments Side Panel */}

@@ -1,6 +1,6 @@
 // src/pages/ExplorePage.jsx
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import SearchInput from '../components/SearchInput';
 import ListingItem from '../components/ListingItem';
@@ -134,6 +134,7 @@ const generateMockItems = (count, type) => {
 
 const ExplorePage = () => {
   const { currentUser } = useSelector((state) => state.user);
+  const navigate = useNavigate();
   const [featuredItems, setFeaturedItems] = useState([]);
   const [trendingItems, setTrendingItems] = useState([]);
   const [nearbyItems, setNearbyItems] = useState([]);
@@ -178,7 +179,21 @@ const ExplorePage = () => {
   useEffect(() => {
     fetchExploreData();
     getUserLocation();
+    loadRecentlyViewed();
   }, [activeCategory]);
+
+  const loadRecentlyViewed = () => {
+    try {
+      const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
+      if (stored) {
+        const items = JSON.parse(stored);
+        // Only show last 4 recently viewed on explore page
+        setRecentlyViewed(items.slice(0, 4));
+      }
+    } catch (error) {
+      console.error('Failed to load recently viewed:', error);
+    }
+  };
 
   // Get user's location using GPS/Geolocation API
   const getUserLocation = () => {
@@ -256,44 +271,28 @@ const ExplorePage = () => {
   const fetchExploreData = async () => {
     setIsLoading(true);
     try {
-      // For development: Use mock data if API is not available
-      if (process.env.NODE_ENV === 'development') {
-        // Generate mock data based on active category
-        const mockFeatured = generateMockItems(6, activeCategory === 'all' ? null : activeCategory);
-        const mockTrending = generateMockItems(6, activeCategory === 'all' ? null : activeCategory);
+      const categoryMap = {
+        all: 'all',
+        properties: 'listing',
+        services: 'service',
+        helpers: 'helper',
+        events: 'event'
+      };
+      const backendCategory = categoryMap[activeCategory] || 'all';
 
-        // Mark some items as featured/trending
-        const featuredData = mockFeatured.map((item, index) => ({
-          ...item,
-          isFeatured: true,
-          title: `Featured: ${item.title}`
-        }));
+      // Fetch Featured from API
+      const featuredRes = await fetch(`/api/explore/featured?category=${backendCategory}&limit=6`);
+      const featuredData = await featuredRes.json();
+      setFeaturedItems(featuredData || []);
 
-        const trendingData = mockTrending.map((item, index) => ({
-          ...item,
-          isTrending: true,
-          title: `Trending: ${item.title}`
-        }));
-
-        setFeaturedItems(featuredData);
-        setTrendingItems(trendingData);
-      } else {
-        // Production: Fetch from API
-        const featuredRes = await fetch(`/api/explore/featured?category=${activeCategory}&limit=6`);
-        const featuredData = await featuredRes.json();
-        setFeaturedItems(featuredData.data || []);
-
-        const trendingRes = await fetch(`/api/explore/trending?category=${activeCategory}&limit=6`);
-        const trendingData = await trendingRes.json();
-        setTrendingItems(trendingData.data || []);
-      }
+      // Fetch Trending from API
+      const trendingRes = await fetch(`/api/explore/trending?category=${backendCategory}&limit=6`);
+      const trendingData = await trendingRes.json();
+      setTrendingItems(trendingData || []);
     } catch (error) {
       console.error('Error fetching explore data:', error);
-      // Fallback to mock data on error
-      const mockFeatured = generateMockItems(6, activeCategory === 'all' ? null : activeCategory);
-      const mockTrending = generateMockItems(6, activeCategory === 'all' ? null : activeCategory);
-      setFeaturedItems(mockFeatured);
-      setTrendingItems(mockTrending);
+      setFeaturedItems([]);
+      setTrendingItems([]);
     } finally {
       setIsLoading(false);
     }
@@ -302,20 +301,16 @@ const ExplorePage = () => {
   // Fetch nearby items based on user's location
   const fetchNearbyItems = async (latitude, longitude, city) => {
     try {
-      // For development: Use mock data if API is not available
-      if (process.env.NODE_ENV === 'development') {
-        const mockNearby = generateMockItems(6, activeCategory === 'all' ? null : activeCategory);
-        const nearbyData = mockNearby.map((item, index) => ({
-          ...item,
-          location: city || 'Nearby Location',
-          title: `Nearby: ${item.title}`
-        }));
-        setNearbyItems(nearbyData);
-        return;
-      }
+      const categoryMap = {
+        all: 'all',
+        properties: 'listing',
+        services: 'service',
+        helpers: 'helper',
+        events: 'event'
+      };
+      const backendCategory = categoryMap[activeCategory] || 'all';
 
-      // Production: Fetch from API
-      let url = `/api/explore/nearby?category=${activeCategory}&limit=6`;
+      let url = `/api/explore/nearby?category=${backendCategory}&limit=6`;
 
       if (latitude && longitude) {
         url += `&lat=${latitude}&lng=${longitude}`;
@@ -327,7 +322,7 @@ const ExplorePage = () => {
 
       const nearbyRes = await fetch(url);
       const nearbyData = await nearbyRes.json();
-      setNearbyItems(nearbyData.data || []);
+      setNearbyItems(nearbyData || []);
     } catch (error) {
       console.error('Error fetching nearby items:', error);
       fetchGenericNearbyItems();
@@ -337,27 +332,21 @@ const ExplorePage = () => {
   // Fetch generic nearby items when location is not available
   const fetchGenericNearbyItems = async () => {
     try {
-      // For development: Use mock data
-      if (process.env.NODE_ENV === 'development') {
-        const mockNearby = generateMockItems(6, activeCategory === 'all' ? null : activeCategory);
-        const nearbyData = mockNearby.map((item, index) => ({
-          ...item,
-          location: 'General Location',
-          title: `Recommended: ${item.title}`
-        }));
-        setNearbyItems(nearbyData);
-        return;
-      }
+      const categoryMap = {
+        all: 'all',
+        properties: 'listing',
+        services: 'service',
+        helpers: 'helper',
+        events: 'event'
+      };
+      const backendCategory = categoryMap[activeCategory] || 'all';
 
-      // Production: Fetch from API
-      const nearbyRes = await fetch(`/api/explore/nearby?category=${activeCategory}&limit=6`);
+      const nearbyRes = await fetch(`/api/explore/nearby?category=${backendCategory}&limit=6`);
       const nearbyData = await nearbyRes.json();
-      setNearbyItems(nearbyData.data || []);
+      setNearbyItems(nearbyData || []);
     } catch (error) {
       console.error('Error fetching generic nearby items:', error);
-      // Ultimate fallback: use mock data
-      const mockNearby = generateMockItems(6, activeCategory === 'all' ? null : activeCategory);
-      setNearbyItems(mockNearby);
+      setNearbyItems([]);
     }
   };
 
@@ -368,12 +357,13 @@ const ExplorePage = () => {
 
   // Render item based on type
   const renderItem = (item) => {
-    switch (item.itemType) {
-      case 'services':
+    const itemType = item.type || 'listing';
+    switch (itemType) {
+      case 'service':
         return <ServiceItem key={item._id} service={item} />;
-      case 'helpers':
+      case 'helper':
         return <HelperItem key={item._id} helper={item} />;
-      case 'events':
+      case 'event':
         return <EventItem key={item._id} event={item} />;
       default:
         return <ListingItem key={item._id} listing={item} />;
@@ -629,6 +619,58 @@ const ExplorePage = () => {
                 </div>
               )}
             </section>
+
+            {/* Recently Viewed */}
+            {recentlyViewed.length > 0 && (
+              <section className="mb-12 md:mb-16">
+                <div className="flex justify-between items-center mb-4 md:mb-6">
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <FiRefreshCw className="w-5 h-5 md:w-6 md:h-6" />
+                    Pick up where you left off
+                  </h2>
+                  <Link
+                    to="/recently-viewed"
+                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium text-sm md:text-base"
+                  >
+                    View history
+                    <FiChevronRight className="w-4 h-4 md:w-5 md:h-5" />
+                  </Link>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                  {recentlyViewed.map((item, index) => (
+                    <div 
+                      key={`${item._id}-${index}`}
+                      className="group relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer"
+                      onClick={() => navigate(`/${item.itemType || item.type || 'listing'}/${item._id}`)}
+                    >
+                      <div className="aspect-[4/3] overflow-hidden">
+                        <img 
+                          src={item.image || item.imageUrls?.[0] || item.images?.[0] || '/placeholder.jpg'} 
+                          alt={item.title || item.name}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        />
+                      </div>
+                      <div className="p-3 md:p-4">
+                        <h3 className="font-bold text-gray-900 text-sm md:text-base line-clamp-1 mb-1">
+                          {item.title || item.name}
+                        </h3>
+                        <p className="text-gray-500 text-xs md:text-sm line-clamp-1 mb-2">
+                          {item.location || item.address}
+                        </p>
+                        <div className="flex items-center justify-between mt-auto">
+                          <span className="text-blue-600 font-bold text-sm">
+                            {item.price ? `R${item.price.toLocaleString()}` : item.regularPrice ? `R${item.regularPrice.toLocaleString()}` : 'Contact'}
+                          </span>
+                          <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-600 uppercase font-bold">
+                            {item.itemType || item.type || 'Item'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* CTA Section */}
             <div className="mt-12 md:mt-16 p-6 md:p-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl text-center">

@@ -198,3 +198,24 @@ export const getServices = async (req, res, next) => {
     next(errorHandler(500, 'Failed to fetch services'));
   }
 };
+
+// Get Similar Services
+export const getSimilarServices = async (req, res, next) => {
+  try {
+    const service = await Service.findById(req.params.id);
+    if (!service) {
+      return next(errorHandler(404, 'Service not found!'));
+    }
+
+    const similarServices = await Service.find({
+      _id: { $ne: req.params.id },
+      type: service.type,
+    })
+      .limit(4)
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(similarServices);
+  } catch (error) {
+    next(errorHandler(500, 'Failed to fetch similar services'));
+  }
+};

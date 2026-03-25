@@ -91,6 +91,8 @@ export default function Notifications() {
         switch (type) {
             case 'booking': return <span className="text-blue-500 bg-blue-100 p-2 rounded-full">📅</span>;
             case 'message': return <span className="text-green-500 bg-green-100 p-2 rounded-full">💬</span>;
+            case 'comment': return <span className="text-amber-500 bg-amber-100 p-2 rounded-full">📝</span>;
+            case 'review': return <span className="text-yellow-500 bg-yellow-100 p-2 rounded-full">⭐</span>;
             case 'system': return <span className="text-purple-500 bg-purple-100 p-2 rounded-full">⚙️</span>;
             case 'new_post': return <span className="text-orange-500 bg-orange-100 p-2 rounded-full">🏠</span>;
             case 'alert': return <span className="text-rose-500 bg-rose-100 p-2 rounded-full">⚠️</span>;
@@ -103,8 +105,18 @@ export default function Notifications() {
             markAsRead(notification._id);
         }
 
-        if (notification.type === 'new_post' && notification.data) {
-            navigate(`/${notification.data.itemType}/${notification.data.itemId}`);
+        if (notification.data) {
+            const { itemType, itemId, raterId } = notification.data;
+            
+            if (notification.type === 'new_post' || notification.type === 'comment') {
+                if (itemType && itemId) {
+                    navigate(`/${itemType}/${itemId}`);
+                }
+            } else if (notification.type === 'review') {
+                // Navigate to the rater's profile or your own profile
+                // For now, let's go to your own profile to see the rating
+                navigate(`/user-profile/${currentUser._id}`);
+            }
         }
     };
 

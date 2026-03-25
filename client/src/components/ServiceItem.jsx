@@ -66,6 +66,7 @@ function ServiceItem({ service, className = "", compactMode = false }) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isNewService, setIsNewService] = useState(false);
   const [clickCount, setClickCount] = useState(0);
+  const [ratingData, setRatingData] = useState({ average: 0, count: 0 });
 
   useEffect(() => {
     if (service?.createdAt) {
@@ -83,6 +84,23 @@ function ServiceItem({ service, className = "", compactMode = false }) {
       } catch (error) {
         console.error('Error reading serviceClicks from localStorage:', error);
       }
+
+      // Fetch accurate rating data
+      const fetchRating = async () => {
+        try {
+          const res = await fetch(`/api/service-comments/${service._id}?limit=1`);
+          if (res.ok) {
+            const data = await res.json();
+            setRatingData({
+              average: data.ratings?.overall || 0,
+              count: data.totalComments || 0
+            });
+          }
+        } catch (error) {
+          // silently fail
+        }
+      };
+      fetchRating();
     }
   }, [service]);
 
@@ -377,9 +395,9 @@ function ServiceItem({ service, className = "", compactMode = false }) {
                 <div className="flex items-center text-gray-600">
                   <FaStar className="text-amber-500 text-[12px]" />
                   <span className="font-medium text-gray-900 text-[13px] ml-1">
-                    {calculatedStarRating}
+                    {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
                   </span>
-
+                  {ratingData.count > 0 && <span className="text-[10px] text-gray-400 ml-1">({ratingData.count})</span>}
                 </div>
               </div>
             </div>

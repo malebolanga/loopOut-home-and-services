@@ -84,3 +84,24 @@ export const deleteEvent = async (req, res, next) => {
   }
 };
 
+// Get Similar Events
+export const getSimilarEvents = async (req, res, next) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) {
+      return next(errorHandler(404, 'Event not found!'));
+    }
+
+    const similarEvents = await Event.find({
+      _id: { $ne: req.params.id },
+      type: event.type,
+    })
+      .limit(4)
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(similarEvents);
+  } catch (error) {
+    next(error);
+  }
+};
+

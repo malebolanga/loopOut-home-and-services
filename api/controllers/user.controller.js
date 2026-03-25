@@ -5,6 +5,7 @@ import Listing from '../models/listing.model.js';
 import Service from '../models/service.model.js';
 import Helper from '../models/helper.model.js';
 import Event from '../models/event.model.js';
+import { createUserNotification } from '../utils/notificationUtils.js';
 
 export const test = (req, res) => {
   res.json({
@@ -267,6 +268,15 @@ export const rateHost = async (req, res, next) => {
         }
       };
       message = `Added your ${action}`;
+      
+      // Notify host
+      await createUserNotification(
+        hostId,
+        'review',
+        'New Profile Rating',
+        `${req.user.username} gave you a ${action}!`,
+        { action, raterId: userId }
+      );
     }
 
     // Update host counts
@@ -339,6 +349,33 @@ export const verifyWhatsApp = async (req, res, next) => {
       success: true,
       message: 'WhatsApp number verified successfully!',
       user: updatedUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPublicUser = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return next(errorHandler(404, 'User not found!'));
+
+    const { password, ...rest } = user._doc;
+
+    // Fetch all user's content concurrently
+    const [listings, services, helpers, events] = await Promise.all([
+      Listing.find({ userRef: req.params.id }),
+      Service.find({ creator: req.params.id }),
+      Helper.find({ userRef: req.params.id }),
+      Event.find({ userRef: req.params.id }),
+    ]);
+
+    res.status(200).json({
+      ...rest,
+      listings,
+      services,
+      helpers,
+      events,
     });
   } catch (error) {
     next(error);
