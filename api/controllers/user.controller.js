@@ -30,7 +30,7 @@ export const updateUser = async (req, res, next) => {
   try {
     // List of allowed fields to update directly
     const allowedFields = [
-      'username', 'email', 'avatar', 'location', 'bio', 'phone',
+      'username', 'email', 'avatar', 'coverPhoto', 'location', 'bio', 'phone',
       'occupation', 'interests', 'website', 'socialMedia',
       'faceData', 'whatsappNumber', 'whatsappVerified',
       'twoFactorEnabled', 'profileVisibility', 'contactVisibility',

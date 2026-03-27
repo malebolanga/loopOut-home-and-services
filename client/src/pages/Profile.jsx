@@ -212,6 +212,9 @@ export default function Profile() {
   const [file, setFile] = useState(undefined);
   const [filePerc, setFilePerc] = useState(0);
   const [fileUploadError, setFileUploadError] = useState(false);
+  const [coverFile, setCoverFile] = useState(undefined);
+  const [coverFilePerc, setCoverFilePerc] = useState(0);
+  const [coverFileUploadError, setCoverFileUploadError] = useState(false);
   const [formData, setFormData] = useState({});
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const [showListingsError, setShowListingsError] = useState(false);
@@ -229,6 +232,7 @@ export default function Profile() {
   const [profileVisibility, setProfileVisibility] = useState(true);
   const [contactVisibility, setContactVisibility] = useState('private');
   const fileRef = useRef(null);
+  const coverFileRef = useRef(null);
   const [activeSection, setActiveSection] = useState("personal");
   const [isHovering, setIsHovering] = useState(false);
   const safeUserEvents = Array.isArray(userEvents) ? userEvents : [];
@@ -269,6 +273,12 @@ export default function Profile() {
       handleFileUpload(file);
     }
   }, [file]);
+
+  useEffect(() => {
+    if (coverFile) {
+      handleCoverUpload(coverFile);
+    }
+  }, [coverFile]);
 
   // Fetch user events and post count
   useEffect(() => {
@@ -577,6 +587,33 @@ export default function Profile() {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
           setFormData((prev) => ({ ...prev, avatar: downloadURL }));
           setFileUploadError(false);
+        });
+      }
+    );
+  };
+
+  const handleCoverUpload = (file) => {
+    const storage = getStorage(app);
+    const fileName = "cover_" + new Date().getTime() + file.name;
+    const storageRef = ref(storage, fileName);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setCoverFilePerc(Math.round(progress));
+        setCoverFileUploadError(false);
+      },
+      (error) => {
+        setCoverFileUploadError(true);
+        console.error("Cover upload error:", error);
+      },
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          setFormData((prev) => ({ ...prev, coverPhoto: downloadURL }));
+          setCoverFileUploadError(false);
         });
       }
     );
@@ -931,6 +968,38 @@ export default function Profile() {
               <>
                 <SectionCard title="Personal info" icon={User}>
                   <div className="max-w-2xl">
+                    {/* Cover Photo Upload */}
+                    <div className="mb-8 p-1 bg-gray-50 rounded-2xl border border-dashed border-[#DDDDDD] overflow-hidden">
+                      <div className="relative h-40 md:h-48 group cursor-pointer" onClick={() => coverFileRef.current.click()}>
+                        <img
+                          src={formData.coverPhoto || currentUser?.coverPhoto || "https://images.unsplash.com/photo-1557683316-973673baf926?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"}
+                          alt="Cover"
+                          className="w-full h-full object-cover rounded-xl transition-opacity hover:opacity-90"
+                        />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-xl">
+                          <div className="bg-white/90 p-3 rounded-full shadow-lg">
+                            <FaCamera className="text-[#FF5A5F] w-6 h-6" />
+                          </div>
+                        </div>
+                        {coverFilePerc > 0 && coverFilePerc < 100 && (
+                          <div className="absolute bottom-4 left-4 right-4 h-1.5 bg-black/30 rounded-full overflow-hidden">
+                            <div className="h-full bg-white transition-all duration-300" style={{ width: `${coverFilePerc}%` }}></div>
+                          </div>
+                        )}
+                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg text-xs font-semibold text-[#484848] shadow-sm flex items-center gap-2">
+                           <FaCamera size={12} />
+                           Change Cover
+                        </div>
+                      </div>
+                      <input
+                        type="file"
+                        hidden
+                        ref={coverFileRef}
+                        accept="image/*"
+                        onChange={(e) => setCoverFile(e.target.files[0])}
+                      />
+                    </div>
+
                     <form onSubmit={handleSubmit} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <InputField

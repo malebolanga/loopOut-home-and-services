@@ -503,7 +503,7 @@ export default function CarWashPage() {
                 <span>·</span>
                 <div className="flex items-center gap-1">
                   <FaAward className="text-rose-500" />
-                  <span>Superhost</span>
+                  <span>{carWash.userRef?.isSuperhost ? 'Superhost' : 'Verified Host'}</span>
                 </div>
                 <span>·</span>
                 <div className="flex items-center gap-1">
@@ -515,15 +515,23 @@ export default function CarWashPage() {
 
             {/* Service Provider Info */}
             <div className="flex items-center gap-4 py-6 border-b border-gray-200">
-              <div className="w-14 h-14 rounded-full bg-gray-200 overflow-hidden">
-                <img 
-                  src={carWash.imageUrls?.[0]} 
-                  alt={carWash.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              <Link to={`/user-profile/${carWash.userRef?._id}`} className="w-14 h-14 rounded-full bg-gray-200 overflow-hidden hover:opacity-80 transition-opacity">
+                {carWash.userRef?.avatar ? (
+                  <img 
+                    src={carWash.userRef.avatar} 
+                    alt={carWash.userRef.username}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                    <FaUser className="text-2xl" />
+                  </div>
+                )}
+              </Link>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Car Wash Professional</h2>
+                <Link to={`/user-profile/${carWash.userRef?._id}`} className="hover:underline">
+                  <h2 className="text-lg font-semibold text-gray-900">{carWash.userRef?.username || 'Car Wash Professional'}</h2>
+                </Link>
                 <p className="text-gray-600">{carWash.host || '5'} years of experience</p>
               </div>
             </div>

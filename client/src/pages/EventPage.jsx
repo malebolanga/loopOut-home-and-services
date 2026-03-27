@@ -1255,17 +1255,28 @@ export default function EventPage() {
                 to={`/user-profile/${event.userRef?._id || event.userRef}`}
                 className="flex items-center gap-4 hover:opacity-80 transition-opacity w-fit"
               >
-                <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 shadow-sm border border-gray-100">
-                  <img
-                    src={event.userRef?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
-                    alt={event.userRef?.username || event.organizerName}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'; }}
-                  />
+                <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 shadow-sm border border-gray-100 bg-gray-50 flex items-center justify-center">
+                  {event.userRef?.avatar ? (
+                    <img
+                      src={event.userRef.avatar}
+                      alt={event.userRef?.username || event.organizerName}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'; }}
+                    />
+                  ) : (
+                    <FaUser className="text-xl text-gray-400" />
+                  )}
                 </div>
                 <div>
                   <div className="text-sm text-gray-600">Organizer</div>
-                  <div className="text-gray-900 font-semibold">{event.userRef?.username || event.organizerName || 'Event Organizer'}</div>
+                  <div className="text-gray-900 font-semibold">
+                    {event.userRef?.username || event.organizerName || 'Event Organizer'}
+                    {event.userRef?.isSuperhost && (
+                      <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-rose-100 text-rose-800">
+                         Superhost
+                      </span>
+                    )}
+                  </div>
                 </div>
               </Link>
 

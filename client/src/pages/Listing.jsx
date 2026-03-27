@@ -50,6 +50,7 @@ import {
   FaWhatsapp,
   FaPhone,
   FaArrowLeft,
+  FaUser,
   FaSpinner,
   FaComment,
   FaTv,
@@ -2072,14 +2073,22 @@ export default function Listing() {
                 to={`/user-profile/${listing.userRef?._id || listing.userRef}`}
                 className="flex items-center gap-4 hover:opacity-80 transition-opacity w-fit"
               >
-                <img
-                  src={listing.userRef?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
-                  alt={listing.userRef?.username}
-                  className="w-12 h-12 lg:w-14 lg:h-14 rounded-full object-cover border border-gray-100 shadow-sm"
-                />
+                {listing.userRef?.avatar ? (
+                  <img
+                    src={listing.userRef.avatar}
+                    alt={listing.userRef.username}
+                    className="w-12 h-12 lg:w-14 lg:h-14 rounded-full object-cover border border-gray-100 shadow-sm"
+                  />
+                ) : (
+                  <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-gray-100 flex items-center justify-center border border-gray-100 shadow-sm text-gray-400">
+                    <FaUser className="text-xl lg:text-2xl" />
+                  </div>
+                )}
                 <div>
                   <h2 className="text-base lg:text-lg font-semibold text-gray-900">Hosted by {listing.userRef?.username || 'Host'}</h2>
-                  <p className="text-gray-600 text-xs lg:text-sm">Superhost · {listing.userRef?.createdAt ? new Date(listing.userRef.createdAt).getFullYear() : '2020'}</p>
+                  <p className="text-gray-600 text-xs lg:text-sm">
+                    {listing.userRef?.isSuperhost ? 'Superhost' : 'Verified Host'} · {listing.userRef?.createdAt ? new Date(listing.userRef.createdAt).getFullYear() : '2020'}
+                  </p>
                 </div>
               </Link>
             </div>

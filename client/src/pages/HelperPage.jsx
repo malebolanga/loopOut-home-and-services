@@ -2050,16 +2050,20 @@ export default function HelperPage() {
                     {getProfessionalTitle(helper.type)} hosted by {helper.userRef?.username || helper.name}
                   </h2>
                   <p className="text-gray-600 mt-1">
-                    {helper.host || 5}+ years of experience · Top rated professional
+                    {helper.userRef?.isSuperhost ? 'Superhost' : 'Verified Host'} · {helper.host || 5}+ years of experience
                   </p>
                 </div>
-                <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 shadow-sm flex-shrink-0 ml-4">
-                  <img
-                    src={helper.userRef?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
-                    alt={helper.userRef?.username || helper.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'; }}
-                  />
+                <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 shadow-sm flex-shrink-0 ml-4 bg-gray-50 flex items-center justify-center">
+                  {helper.userRef?.avatar ? (
+                    <img
+                      src={helper.userRef.avatar}
+                      alt={helper.userRef?.username || helper.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'; }}
+                    />
+                  ) : (
+                    <FaUser className="text-2xl text-gray-400" />
+                  )}
                 </div>
               </Link>
             </div>

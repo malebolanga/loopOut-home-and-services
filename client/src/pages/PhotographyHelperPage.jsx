@@ -350,7 +350,7 @@ export default function PhotographyHelperPage() {
                 <span>•</span>
                 <div className="flex items-center gap-1">
                   <FaMedal className="text-rose-500" />
-                  <span>Superhost Photographer</span>
+                  <span>{helper.userRef?.isSuperhost ? 'Superhost Photographer' : 'Professional Photographer'}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <FaMapMarkerAlt />
@@ -362,15 +362,23 @@ export default function PhotographyHelperPage() {
 
             {/* Host/Photographer Info Bar */}
             <div className="flex items-center gap-4 py-6 border-b border-gray-200">
-              <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200">
-                <img
-                  src={helper.avatar || images[0]}
-                  alt={helper.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              <Link to={`/user-profile/${helper.userRef?._id}`} className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 hover:opacity-80 transition-opacity">
+                {helper.userRef?.avatar ? (
+                  <img
+                    src={helper.userRef.avatar}
+                    alt={helper.userRef.username}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                    <FaUser className="text-2xl" />
+                  </div>
+                )}
+              </Link>
               <div>
-                <h2 className="font-semibold text-gray-900">Hosted by {helper.name}</h2>
+                <Link to={`/user-profile/${helper.userRef?._id}`} className="hover:underline">
+                  <h2 className="font-semibold text-gray-900">Hosted by {helper.userRef?.username || helper.name}</h2>
+                </Link>
                 <p className="text-sm text-gray-600">Professional photographer • {helper.host || '5'} years experience</p>
               </div>
             </div>

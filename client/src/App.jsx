@@ -130,6 +130,7 @@ export default function App() {
 
         {/* User Profile - Specific before dynamic */}
         <Route path="/user/:id" element={<UserProfile />} />
+        <Route path="/user-profile/:id" element={<UserProfile />} />
 
         {/* Specific Listing Routes */}
         <Route path="/list" element={<List />} />
