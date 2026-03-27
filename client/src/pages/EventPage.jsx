@@ -1253,16 +1253,22 @@ export default function EventPage() {
             <div className="space-y-4">
               <Link 
                 to={`/user-profile/${event.userRef?._id || event.userRef}`}
-                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                className="flex items-center gap-4 hover:opacity-80 transition-opacity w-fit"
               >
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
-                  <FaUser className="text-white text-lg" />
+                <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 shadow-sm border border-gray-100">
+                  <img
+                    src={event.userRef?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
+                    alt={event.userRef?.username || event.organizerName}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'; }}
+                  />
                 </div>
                 <div>
                   <div className="text-sm text-gray-600">Organizer</div>
-                  <div className="text-gray-900 font-semibold">{event.organizerName || 'Event Organizer'}</div>
+                  <div className="text-gray-900 font-semibold">{event.userRef?.username || event.organizerName || 'Event Organizer'}</div>
                 </div>
               </Link>
+
 
               {event.organizerContact && (
                 <div className="space-y-2">

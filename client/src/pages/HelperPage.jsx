@@ -2043,25 +2043,27 @@ export default function HelperPage() {
             <div className="pb-6 border-b border-gray-200">
               <Link
                 to={`/user-profile/${helper.userRef?._id || helper.userRef}`}
-                className="flex items-start justify-between hover:opacity-80 transition-opacity"
+                className="flex items-start justify-between hover:opacity-80 transition-opacity w-fit"
               >
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
-                    {getProfessionalTitle(helper.type)} hosted by {helper.name}
+                    {getProfessionalTitle(helper.type)} hosted by {helper.userRef?.username || helper.name}
                   </h2>
                   <p className="text-gray-600 mt-1">
                     {helper.host || 5}+ years of experience · Top rated professional
                   </p>
                 </div>
-                <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 shadow-sm">
+                <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 shadow-sm flex-shrink-0 ml-4">
                   <img
-                    src={helper.imageUrls?.[0] || 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=200&q=80'}
-                    alt={helper.name}
+                    src={helper.userRef?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
+                    alt={helper.userRef?.username || helper.name}
                     className="w-full h-full object-cover"
+                    onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'; }}
                   />
                 </div>
               </Link>
             </div>
+
 
             {/* Highlights */}
             <div className="space-y-4 pb-6 border-b border-gray-200">

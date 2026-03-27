@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { Link } from "react-router-dom";
 import { MdLocationOn } from "react-icons/md";
-import { FaBed, FaBath, FaHeart, FaRegHeart, FaStar, FaUser } from "react-icons/fa";
+import { FaBed, FaBath, FaHeart, FaRegHeart, FaStar, FaUser, FaHome, FaKey, FaTree, FaBuilding, FaMoon, FaCity } from "react-icons/fa";
 import { useState, useMemo, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
@@ -47,6 +47,27 @@ const getPropertyTypeName = (type) => {
     default: return 'Property';
   }
 };
+
+const LISTING_TYPE_CONFIG = {
+  sale:       { icon: FaHome,     bg: 'bg-green-100',  text: 'text-green-700',  label: 'For Sale' },
+  rent:       { icon: FaKey,      bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'For Rent' },
+  'rent-long':{ icon: FaKey,      bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Long Term' },
+  'rent-short':{ icon: FaMoon,    bg: 'bg-rose-100',   text: 'text-rose-700',   label: 'Short Term' },
+  over:       { icon: FaMoon,     bg: 'bg-rose-100',   text: 'text-rose-700',   label: 'Overnight' },
+  land:       { icon: FaTree,     bg: 'bg-amber-100',  text: 'text-amber-700',  label: 'Land Plot' },
+  office:     { icon: FaBuilding, bg: 'bg-purple-100', text: 'text-purple-700', label: 'Office' },
+};
+
+function ListingTypePill({ type }) {
+  const cfg = LISTING_TYPE_CONFIG[type] || { icon: FaCity, bg: 'bg-gray-100', text: 'text-gray-700', label: 'Property' };
+  const Icon = cfg.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${cfg.bg} ${cfg.text}`}>
+      <Icon className="w-2.5 h-2.5" />
+      {cfg.label}
+    </span>
+  );
+}
 
 function ListingItem({ listing, onClick, className = "", compactMode = false }) {
   const { isFavorite, toggleFavorite } = useWishlist(listing, 'listing');
@@ -301,6 +322,9 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
                 <MdLocationOn className="text-rose-600 mr-1 text-xs" />
                 <span className="truncate">{listing.address || 'Address not available'}</span>
               </p>
+              <div className="mt-1.5">
+                <ListingTypePill type={listing.type} />
+              </div>
 
             </div>
 
@@ -430,6 +454,9 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
                 {listing.address || 'Address not available'}
               </span>
             </p>
+            <div className="mt-1.5">
+              <ListingTypePill type={listing.type} />
+            </div>
 
             <div className="flex items-center space-x-2 text-gray-700 text-xs">
               {listing.type !== 'land' && listing.type !== 'office' && (

@@ -124,11 +124,12 @@ export const updateService = async (req, res, next) => {
 // Get Single Service (unchanged)
 export const getService = async (req, res, next) => {
   try {
-    const service = await Service.findById(req.params.id);
+    const service = await Service.findById(req.params.id).populate('userRef');
     if (!service) {
       return next(errorHandler(404, 'Service not found!'));
     }
     res.status(200).json(service);
+
   } catch (error) {
     next(errorHandler(500, 'Failed to get service'));
   }

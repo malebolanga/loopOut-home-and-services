@@ -26,11 +26,12 @@ export const createHelper = async (req, res, next) => {
  */
 export const getHelper = async (req, res, next) => {
   try {
-    const helper = await Helper.findById(req.params.id);
+    const helper = await Helper.findById(req.params.id).populate('userRef');
     if (!helper) {
       return next(errorHandler(404, 'Helper not found!'));
     }
     res.status(200).json(helper);
+
   } catch (error) {
     next(error);
   }

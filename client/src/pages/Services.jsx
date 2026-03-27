@@ -806,19 +806,20 @@ const ServicePage = () => {
             {/* Provider Info */}
             <div className="py-6 border-b border-gray-200">
               <Link 
-                to={`/user-profile/${service.creator?._id || service.creator || service.userRef}`}
-                className="flex items-start gap-4 hover:opacity-80 transition-opacity"
+                to={`/user-profile/${service.userRef?._id || service.userRef || service.creator}`}
+                className="flex items-start gap-4 hover:opacity-80 transition-opacity w-fit"
               >
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 shadow-sm">
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 shadow-sm border border-gray-100">
                   <img
-                    src={service.imageUrls?.[0] || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=200&q=80'}
-                    alt={service.name}
+                    src={service.userRef?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
+                    alt={service.userRef?.username || service.name}
                     className="w-full h-full object-cover"
+                    onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'; }}
                   />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-gray-900">Hosted by {service.name}</h2>
-                  <p className="text-gray-600">{getProfessionalTitle(service.type)}</p>
+                  <h2 className="text-lg font-semibold text-gray-900">Provided by {service.userRef?.username || service.name}</h2>
+                  <p className="text-gray-600 font-medium">{getProfessionalTitle(service.type)}</p>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {service.security && (
                       <span className="inline-flex items-center gap-1 text-sm text-gray-600">
@@ -832,6 +833,7 @@ const ServicePage = () => {
                 </div>
               </Link>
             </div>
+
 
             {/* Highlights */}
             <div className="py-6 border-b border-gray-200 space-y-4">

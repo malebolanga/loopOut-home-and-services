@@ -52,9 +52,10 @@ export const getEvents = async (req, res, next) => {
 
 export const getEvent = async (req, res, next) => {
   try {
-    const event = await Event.findById(req.params.id);
+    const event = await Event.findById(req.params.id).populate('userRef');
     if (!event) return next(errorHandler(404, 'Event not found'));
     res.status(200).json(event);
+
   } catch (error) {
     next(error);
   }

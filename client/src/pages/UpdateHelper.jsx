@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {  FaTimes } from 'react-icons/fa';
+import { FaTimes } from 'react-icons/fa';
+import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
+import { app } from '../firebase';
 
 export default function UpdateHelper() {
   const navigate = useNavigate();
@@ -8,6 +10,7 @@ export default function UpdateHelper() {
   const [helper, setHelper] = useState(null);
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [imageUploadError, setImageUploadError] = useState(null);
@@ -88,36 +91,55 @@ export default function UpdateHelper() {
     setFiles(selectedFiles);
   };
 
+  const storeImage = async (file) => {
+    return new Promise((resolve, reject) => {
+      const storage = getStorage(app);
+      const cleanFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
+      const fileName = `${new Date().getTime()}_${cleanFileName}`;
+      const storageRef = ref(storage, fileName);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(Math.round(progress));
+        },
+        (error) => reject(error),
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          resolve(downloadURL);
+        }
+      );
+    });
+  };
+
   const handleImageSubmit = async () => {
-    if (files.length > 0 && files.length + formData.imageUrls.length <= 10) {
+    if (files.length === 0) {
+      setImageUploadError('Please select at least one image');
+      return;
+    }
+    if (files.length + formData.imageUrls.length > 10) {
+      setImageUploadError('You can only upload up to 10 images per listing');
+      return;
+    }
+
+    try {
       setUploading(true);
       setImageUploadError(null);
-      const uploadPromises = files.map((file) => {
-        // Implement your image upload logic here
-        // This should be similar to your CreateListing.jsx implementation
-        return new Promise((resolve) => {
-          // Simulate upload
-          setTimeout(() => {
-            resolve(URL.createObjectURL(file));
-          }, 1000);
-        });
+      setUploadProgress(0);
+      const urls = await Promise.all(files.map(storeImage));
+      setFormData({
+        ...formData,
+        imageUrls: formData.imageUrls.concat(urls),
       });
-
-      try {
-        const urls = await Promise.all(uploadPromises);
-        setFormData({
-          ...formData,
-          imageUrls: formData.imageUrls.concat(urls),
-        });
-        setFiles([]);
-        setImageUploadError(null);
-      } catch (error) {
-        setImageUploadError('Image upload failed (2MB max per image)');
-      } finally {
-        setUploading(false);
-      }
-    } else {
-      setImageUploadError('You can only upload up to 10 images per listing');
+      setFiles([]);
+      setImageUploadError(null);
+    } catch (err) {
+      setImageUploadError('Image upload failed. Check file size (2MB max per image).');
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -407,7 +429,7 @@ export default function UpdateHelper() {
               onClick={handleImageSubmit}
               className='p-3 text-airbnb-red border border-airbnb-red rounded uppercase hover:shadow-lg disabled:opacity-80'
             >
-              {uploading ? 'Uploading...' : 'Upload'}
+              {uploading ? `Uploading ${uploadProgress}%...` : 'Upload'}
             </button>
           </div>
           {imageUploadError && (

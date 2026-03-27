@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { Link } from "react-router-dom";
 import { MdLocationOn } from "react-icons/md";
-import { FaHeart, FaRegHeart, FaStar, FaUser, FaChild, FaBus } from "react-icons/fa";
+import { FaHeart, FaRegHeart, FaStar, FaUser, FaChild, FaBus, FaBroom, FaWrench, FaTruck, FaLeaf, FaUtensils, FaCog } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useWishlist } from "../hooks/useWishlist";
@@ -25,6 +25,28 @@ const SERVICE_TYPE_COLORS = {
   daycare: "bg-yellow-100 text-yellow-800",
   schoolTransport: "bg-teal-100 text-teal-800"
 };
+
+const SERVICE_ICON_CONFIG = {
+  cleaning:        { icon: FaBroom,    bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Cleaning' },
+  maintenance:     { icon: FaWrench,   bg: 'bg-amber-100',  text: 'text-amber-700',  label: 'Maintenance' },
+  moving:          { icon: FaTruck,    bg: 'bg-purple-100', text: 'text-purple-700', label: 'Moving' },
+  landscaping:     { icon: FaLeaf,     bg: 'bg-green-100',  text: 'text-green-700',  label: 'Landscaping' },
+  catering:        { icon: FaUtensils, bg: 'bg-red-100',    text: 'text-red-700',    label: 'Catering' },
+  daycare:         { icon: FaChild,    bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Day Care' },
+  schoolTransport: { icon: FaBus,      bg: 'bg-teal-100',   text: 'text-teal-700',   label: 'School Transport' },
+  other:           { icon: FaCog,      bg: 'bg-gray-100',   text: 'text-gray-700',   label: 'Other' },
+};
+
+function ServiceTypePill({ type }) {
+  const cfg = SERVICE_ICON_CONFIG[type] || { icon: FaCog, bg: 'bg-gray-100', text: 'text-gray-700', label: 'Service' };
+  const Icon = cfg.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${cfg.bg} ${cfg.text}`}>
+      <Icon className="w-2.5 h-2.5" />
+      {cfg.label}
+    </span>
+  );
+}
 
 const formatPrice = (price) => {
   if (price === undefined || price === null) {
@@ -218,6 +240,31 @@ function ServiceItem({ service, className = "", compactMode = false }) {
     );
   }
 
+  // Get user's first name from username
+  const getUserFirstName = () => {
+    if (!service?.userRef?.username) return 'User';
+    const username = service.userRef.username;
+    const firstName = username.split(/[._\s]/)[0];
+    return firstName.charAt(0).toUpperCase() + firstName.slice(1);
+  };
+
+  const getUserAvatar = () => {
+    if (service?.userRef?.avatar) {
+      return (
+        <img
+          src={service.userRef.avatar}
+          alt={service.userRef.username}
+          className="w-full h-full object-cover"
+        />
+      );
+    }
+    return (
+      <div className="w-full h-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold text-[10px]">
+        {service?.userRef?.username?.charAt(0).toUpperCase() || 'U'}
+      </div>
+    );
+  };
+
   return (
     <Link
       to={`/service/${service._id}`}
@@ -274,6 +321,9 @@ function ServiceItem({ service, className = "", compactMode = false }) {
                     : service.address || 'Location not available'}
                 </span>
               </p>
+              <div className="mt-1.5">
+                <ServiceTypePill type={service.type} />
+              </div>
 
               {service.type === 'daycare' && service.capacity && (
                 <p className="text-gray-600 text-xs flex items-center mt-1">
@@ -324,6 +374,16 @@ function ServiceItem({ service, className = "", compactMode = false }) {
               <FaRegHeart className="w-4 h-4 text-gray-700 group-hover/favorite:text-rose-600" />
             )}
           </button>
+
+          {/* ADDED: User avatar and first name in left corner */}
+          {service?.userRef?._id && (
+            <div className="absolute top-2 left-3 z-[15] flex items-center gap-1.5 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-full shadow-md transition-transform hover:scale-105">
+              <div className="w-5 h-5 rounded-full overflow-hidden border border-white/50">
+                {getUserAvatar()}
+              </div>
+              <span className="text-[10px] font-semibold text-gray-700 leading-none">{getUserFirstName()}</span>
+            </div>
+          )}
 
           <div className="block relative flex-grow-0">
             <div className="relative pb-[75%] bg-gray-100 overflow-hidden rounded-t-xl">
@@ -382,6 +442,9 @@ function ServiceItem({ service, className = "", compactMode = false }) {
               <MdLocationOn className="text-rose-600 mr-1 text-xs" />
               <span className="truncate">{service.address || 'Location not available'}</span>
             </p>
+            <div className="mt-1.5">
+              <ServiceTypePill type={service.type} />
+            </div>
 
             <div className="mt-auto pt-0">
               <div className="flex items-baseline justify-between">

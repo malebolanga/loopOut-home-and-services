@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { Link } from "react-router-dom";
 import { MdCalendarToday } from "react-icons/md";
-import { FaHeart, FaRegHeart, FaStar } from "react-icons/fa";
+import { FaHeart, FaRegHeart, FaStar, FaMusic, FaFutbol, FaPalette, FaUsers, FaUtensils, FaCalendarAlt } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
@@ -22,6 +22,26 @@ const EVENT_TYPE_COLORS = {
   food: "bg-yellow-100 text-yellow-800",
   other: "bg-gray-100 text-gray-800"
 };
+
+const EVENT_ICON_CONFIG = {
+  music:     { icon: FaMusic,        bg: 'bg-purple-100', text: 'text-purple-700', label: 'Music' },
+  sports:    { icon: FaFutbol,       bg: 'bg-green-100',  text: 'text-green-700',  label: 'Sports' },
+  art:       { icon: FaPalette,      bg: 'bg-red-100',    text: 'text-red-700',    label: 'Art' },
+  community: { icon: FaUsers,        bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Community' },
+  food:      { icon: FaUtensils,     bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Food' },
+  other:     { icon: FaCalendarAlt,  bg: 'bg-gray-100',   text: 'text-gray-700',   label: 'Event' },
+};
+
+function EventTypePill({ type }) {
+  const cfg = EVENT_ICON_CONFIG[type] || { icon: FaCalendarAlt, bg: 'bg-gray-100', text: 'text-gray-700', label: 'Event' };
+  const Icon = cfg.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${cfg.bg} ${cfg.text}`}>
+      <Icon className="w-2.5 h-2.5" />
+      {cfg.label}
+    </span>
+  );
+}
 
 const formatPrice = (price) => {
   if (price === undefined || price === null || price === 0) {
@@ -186,6 +206,31 @@ function EventItem({ event, className = "", compactMode = false }) {
     );
   }
 
+  // Get user's first name from username
+  const getUserFirstName = () => {
+    if (!event?.userRef?.username) return 'User';
+    const username = event.userRef.username;
+    const firstName = username.split(/[._\s]/)[0];
+    return firstName.charAt(0).toUpperCase() + firstName.slice(1);
+  };
+
+  const getUserAvatar = () => {
+    if (event?.userRef?.avatar) {
+      return (
+        <img
+          src={event.userRef.avatar}
+          alt={event.userRef.username}
+          className="w-full h-full object-cover"
+        />
+      );
+    }
+    return (
+      <div className="w-full h-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold text-[10px]">
+        {event?.userRef?.username?.charAt(0).toUpperCase() || 'U'}
+      </div>
+    );
+  };
+
   return (
     <Link
       to={`/event/${event._id}`}
@@ -238,6 +283,9 @@ function EventItem({ event, className = "", compactMode = false }) {
                 <MdCalendarToday className="text-blue-500 mr-1 text-xs" />
                 <span className="truncate">{formatDateTime(event.date, event.time)}</span>
               </p>
+              <div className="mt-1.5">
+                <EventTypePill type={event.type} />
+              </div>
 
               <div className="mt-2 flex items-center gap-1 text-sm font-bold text-gray-900">
                 {formatPrice(event.regularPrice)}
@@ -274,6 +322,16 @@ function EventItem({ event, className = "", compactMode = false }) {
               <FaRegHeart className="w-4 h-4 text-gray-700 group-hover/favorite:text-rose-600" />
             )}
           </button>
+
+          {/* ADDED: User avatar and first name in left corner */}
+          {event?.userRef?._id && (
+            <div className="absolute top-2 left-3 z-[15] flex items-center gap-1.5 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-full shadow-md transition-transform hover:scale-105">
+              <div className="w-5 h-5 rounded-full overflow-hidden border border-white/50">
+                {getUserAvatar()}
+              </div>
+              <span className="text-[10px] font-semibold text-gray-700 leading-none">{getUserFirstName()}</span>
+            </div>
+          )}
 
           <div className="block relative flex-grow-0">
             <div className="relative pb-[75%] bg-gray-100 overflow-hidden rounded-t-xl">
@@ -337,6 +395,9 @@ function EventItem({ event, className = "", compactMode = false }) {
                 {formatDateTime(event.date, event.time)}
               </span>
             </p>
+            <div className="mt-1.5">
+              <EventTypePill type={event.type} />
+            </div>
 
 
 

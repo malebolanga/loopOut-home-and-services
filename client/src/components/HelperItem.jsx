@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { Link } from "react-router-dom";
 import { MdLocationOn } from "react-icons/md";
-import { FaHeart, FaRegHeart, FaStar } from "react-icons/fa";
+import { FaHeart, FaRegHeart, FaStar, FaBook, FaHeart as FaHeartSolid, FaWrench, FaBroom, FaStar as FaStarSolid, FaCut, FaCamera, FaUser } from "react-icons/fa";
 import { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import "../styles/ListingDetails.scss";
@@ -27,6 +27,31 @@ const HELPER_TYPE_COLORS = {
   Barber: "bg-red-100 text-red-800", // Added red color scheme
   other: "bg-gray-100 text-gray-800"
 };
+
+const HELPER_ICON_CONFIG = {
+  tutor:        { icon: FaBook,        bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Tutor' },
+  caregiver:    { icon: FaHeartSolid,  bg: 'bg-amber-100',  text: 'text-amber-700',  label: 'Caregiver' },
+  handyman:     { icon: FaWrench,      bg: 'bg-purple-100', text: 'text-purple-700', label: 'Handyman' },
+  cleaner:      { icon: FaBroom,       bg: 'bg-green-100',  text: 'text-green-700',  label: 'Cleaner' },
+  domestic:     { icon: FaBroom,       bg: 'bg-green-100',  text: 'text-green-700',  label: 'Domestic' },
+  maid:         { icon: FaBroom,       bg: 'bg-teal-100',   text: 'text-teal-700',   label: 'Maid' },
+  beauty:       { icon: FaStarSolid,   bg: 'bg-pink-100',   text: 'text-pink-700',   label: 'Beauty' },
+  barber:       { icon: FaCut,         bg: 'bg-red-100',    text: 'text-red-700',    label: 'Barber' },
+  tattoo:       { icon: FaStarSolid,   bg: 'bg-slate-100',  text: 'text-slate-700',  label: 'Tattoo' },
+  photography:  { icon: FaCamera,      bg: 'bg-indigo-100', text: 'text-indigo-700', label: 'Photography' },
+  chef:         { icon: FaUser,        bg: 'bg-orange-100', text: 'text-orange-700', label: 'Chef' },
+};
+
+function HelperTypePill({ type }) {
+  const cfg = HELPER_ICON_CONFIG[type] || { icon: FaUser, bg: 'bg-gray-100', text: 'text-gray-700', label: 'Helper' };
+  const Icon = cfg.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${cfg.bg} ${cfg.text}`}>
+      <Icon className="w-2.5 h-2.5" />
+      {cfg.label}
+    </span>
+  );
+}
 
 const formatPrice = (price) => {
   if (price === undefined || price === null) {
@@ -232,6 +257,31 @@ function HelperItem({ helper, className = "", compactMode = false }) {
     );
   }
 
+  // Get user's first name from username
+  const getUserFirstName = () => {
+    if (!helper?.userRef?.username) return 'User';
+    const username = helper.userRef.username;
+    const firstName = username.split(/[._\s]/)[0];
+    return firstName.charAt(0).toUpperCase() + firstName.slice(1);
+  };
+
+  const getUserAvatar = () => {
+    if (helper?.userRef?.avatar) {
+      return (
+        <img
+          src={helper.userRef.avatar}
+          alt={helper.userRef.username}
+          className="w-full h-full object-cover"
+        />
+      );
+    }
+    return (
+      <div className="w-full h-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold text-[10px]">
+        {helper?.userRef?.username?.charAt(0).toUpperCase() || 'U'}
+      </div>
+    );
+  };
+
   return (
     <Link
       to={`/helper/${helper._id}`}
@@ -290,6 +340,9 @@ function HelperItem({ helper, className = "", compactMode = false }) {
                 <MdLocationOn className="text-rose-600 mr-1 text-xs" />
                 <span className="truncate">{helper.address || 'Location not available'}</span>
               </p>
+              <div className="mt-1.5">
+                <HelperTypePill type={helper.type} />
+              </div>
 
               <div className="mt-2 flex items-center gap-1 text-sm font-bold text-gray-900">
                 {formatPrice(helper.regularPrice)}
@@ -337,6 +390,16 @@ function HelperItem({ helper, className = "", compactMode = false }) {
               <FaRegHeart className="w-4 h-4 text-gray-700 group-hover/favorite:text-rose-600" />
             )}
           </button>
+
+          {/* ADDED: User avatar and first name in left corner */}
+          {helper?.userRef?._id && (
+            <div className="absolute top-2 left-3 z-[35] flex items-center gap-1.5 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-full shadow-md transition-transform hover:scale-105">
+              <div className="w-5 h-5 rounded-full overflow-hidden border border-white/50">
+                {getUserAvatar()}
+              </div>
+              <span className="text-[10px] font-semibold text-gray-700 leading-none">{getUserFirstName()}</span>
+            </div>
+          )}
 
           <div className="block relative flex-grow-0">
             <div className="relative pb-[75%] bg-gray-100 overflow-hidden rounded-t-xl group/image">
@@ -389,6 +452,9 @@ function HelperItem({ helper, className = "", compactMode = false }) {
                   <span className="text-gray-600 text-[13px] truncate">
                     {helper.address || 'Location not available'}
                   </span>
+                </div>
+                <div className="mt-1.5">
+                  <HelperTypePill type={helper.type} />
                 </div>
               </div>
 
