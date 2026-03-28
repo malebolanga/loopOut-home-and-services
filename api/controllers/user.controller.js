@@ -340,7 +340,7 @@ export const verifyWhatsApp = async (req, res, next) => {
           whatsappNumber,
           whatsappVerified: true,
           isVerified: true,
-        },
+          },
       },
       { new: true }
     ).select('-password');
@@ -376,7 +376,81 @@ export const getPublicUser = async (req, res, next) => {
       services,
       helpers,
       events,
+      followersCount: user.followers?.length || 0,
+      followingCount: user.following?.length || 0,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const followUser = async (req, res, next) => {
+  const { id } = req.params;
+  const currentUser = req.user.id;
+
+  if (id === currentUser) {
+    return next(errorHandler(400, 'You cannot follow yourself!'));
+  }
+
+  try {
+    const userToFollow = await User.findById(id);
+    if (!userToFollow) return next(errorHandler(404, 'User not found!'));
+
+    await User.findByIdAndUpdate(id, {
+      $addToSet: { followers: currentUser }
+    });
+
+    await User.findByIdAndUpdate(currentUser, {
+      $addToSet: { following: id }
+    });
+
+    await createUserNotification(
+      id,
+      'system',
+      'New Follower',
+      `${req.user.username} is now following you!`,
+      { followerId: currentUser }
+    );
+
+    res.status(200).json({ success: true, message: 'User followed successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const unfollowUser = async (req, res, next) => {
+  const { id } = req.params;
+  const currentUser = req.user.id;
+
+  try {
+    await User.findByIdAndUpdate(id, {
+      $pull: { followers: currentUser }
+    });
+    await User.findByIdAndUpdate(currentUser, {
+      $pull: { following: id }
+    });
+
+    res.status(200).json({ success: true, message: 'User unfollowed successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getFollowers = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id).populate('followers', 'username avatar bio');
+    if (!user) return next(errorHandler(404, 'User not found!'));
+    res.status(200).json(user.followers);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getFollowing = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id).populate('following', 'username avatar bio');
+    if (!user) return next(errorHandler(404, 'User not found!'));
+    res.status(200).json(user.following);
   } catch (error) {
     next(error);
   }

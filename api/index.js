@@ -40,6 +40,14 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
+// Debug logger for service-related requests
+app.use((req, res, next) => {
+    if (req.url.includes('/api/service') || req.url.includes('/api/carwash')) {
+        console.log(`[DEBUG] Incoming Request: ${req.method} ${req.url}`);
+    }
+    next();
+});
+
 app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/listing', listingRouter);
@@ -68,9 +76,18 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
 });
 
+// Error handling middleware (MUST be last)
 app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
+    
+    // Log full error stack for 500 errors
+    if (statusCode === 500) {
+        console.error('SERVER ERROR STACK:', err.stack || err);
+    } else {
+        console.error('SERVER ERROR:', message);
+    }
+    
     return res.status(statusCode).json({
         success: false,
         statusCode,

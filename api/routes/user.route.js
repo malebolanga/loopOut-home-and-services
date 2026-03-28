@@ -14,7 +14,11 @@ import {
     verifyWhatsApp,
     getPublicUser,
     rateHost,
-    getHostRatings
+    getHostRatings,
+    followUser,
+    unfollowUser,
+    getFollowers,
+    getFollowing
 } from '../controllers/user.controller.js';
 
 import { verifyToken } from '../utils/verifyUser.js';
@@ -57,6 +61,12 @@ router.post('/post-count', verifyToken, getPostCountByBody);
 router.put('/rate-host/:hostId', verifyToken, rateHost);
 router.get('/host-ratings/:hostId', verifyToken, getHostRatings);
 router.post('/verify-whatsapp/:id', verifyToken, verifyWhatsApp);
+
+// Follower routes
+router.put('/follow/:id', verifyToken, followUser);
+router.put('/unfollow/:id', verifyToken, unfollowUser);
+router.get('/followers/:id', getFollowers);
+router.get('/following/:id', getFollowing);
 
 // Route to get public user details (no token required)
 router.get('/public/:id', getPublicUser);

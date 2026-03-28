@@ -48,9 +48,18 @@ export default function Inbox() {
         setSelectedConversation(conv);
         fetchMessages(conversationIdParam);
         setShowMobileChat(true);
+      } else if (conversations.length > 0) {
+        // If not found in list but we have the list, it might be a new conversation
+        // Just fetch messages anyway and fetchConversations will update the list
+        fetchMessages(conversationIdParam);
+        setShowMobileChat(true);
+      } else if (!loading) {
+        // Initial load case where we have the ID but conversations haven't loaded
+        fetchMessages(conversationIdParam);
+        setShowMobileChat(true);
       }
     }
-  }, [conversationIdParam, conversations]);
+  }, [conversationIdParam, conversations, loading]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -179,7 +188,7 @@ export default function Inbox() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto side-panel-scroll">
+        <div className="flex-1 overflow-y-auto side-panel-scroll pb-20 md:pb-0">
           {loading ? (
             <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500"></div></div>
           ) : filteredConversations.length > 0 ? (
@@ -263,7 +272,7 @@ export default function Inbox() {
             </div>
 
             {/* Messages Body */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-gray-50/30 side-panel-scroll">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-gray-50/30 side-panel-scroll pb-20 md:pb-8">
               {messagesLoading && messages.length === 0 ? (
                 <div className="flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500"></div></div>
               ) : messages.map((msg, index) => {
@@ -289,7 +298,7 @@ export default function Inbox() {
             </div>
 
             {/* Message Input */}
-            <div className="p-4 md:p-6 bg-white border-t border-gray-100">
+            <div className="p-4 pb-24 md:pb-6 md:p-6 bg-white border-t border-gray-100">
               <form onSubmit={handleSendMessage} className="flex items-center gap-3 bg-gray-100/50 p-2 rounded-2xl border border-transparent focus-within:border-rose-500/20 focus-within:bg-white transition-all">
                 <input 
                   type="text" 

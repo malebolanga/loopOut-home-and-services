@@ -1,5 +1,6 @@
 import Message from '../models/Message.model.js';
 import Conversation from '../models/Conversation.model.js';
+import User from '../models/user.model.js';
 import { errorHandler } from '../utils/error.js';
 
 export const sendMessage = async (req, res, next) => {
@@ -7,6 +8,15 @@ export const sendMessage = async (req, res, next) => {
   const senderId = req.user.id;
 
   try {
+    const receiver = await User.findById(receiverId);
+    if (!receiver) return next(errorHandler(404, 'User not found!'));
+
+    // Check if sender is a follower of the receiver
+    const isFollower = receiver.followers.includes(senderId);
+    if (!isFollower) {
+        return next(errorHandler(403, 'You can only message users who follow you! Please follow this user first.'));
+    }
+
     // Find or create conversation
     let conversation = await Conversation.findOne({
       participants: { $all: [senderId, receiverId] },
@@ -31,6 +41,9 @@ export const sendMessage = async (req, res, next) => {
     conversation.lastMessageSender = senderId;
     
     // Update unread count for receiver
+    if (!(conversation.unreadCount instanceof Map)) {
+      conversation.unreadCount = new Map();
+    }
     const currentUnread = conversation.unreadCount.get(receiverId.toString()) || 0;
     conversation.unreadCount.set(receiverId.toString(), currentUnread + 1);
 
@@ -38,6 +51,7 @@ export const sendMessage = async (req, res, next) => {
 
     res.status(201).json(newMessage);
   } catch (error) {
+    console.error('sendMessage error:', error);
     next(error);
   }
 };
@@ -54,6 +68,7 @@ export const getConversations = async (req, res, next) => {
 
     res.status(200).json(conversations);
   } catch (error) {
+    console.error('getConversations error:', error);
     next(error);
   }
 };
@@ -73,12 +88,16 @@ export const getMessages = async (req, res, next) => {
 
     const conversation = await Conversation.findById(conversationId);
     if (conversation) {
+      if (!(conversation.unreadCount instanceof Map)) {
+        conversation.unreadCount = new Map();
+      }
       conversation.unreadCount.set(userId.toString(), 0);
       await conversation.save();
     }
 
     res.status(200).json(messages);
   } catch (error) {
+    console.error('getMessages error:', error);
     next(error);
   }
 };
@@ -93,3 +112,40 @@ export const deleteConversation = async (req, res, next) => {
         next(error);
     }
 }
+
+export const getOrCreateConversation = async (req, res, next) => {
+  const { userId: receiverId } = req.params;
+  const senderId = req.user.id;
+
+  if (senderId === receiverId) {
+    return next(errorHandler(400, 'You cannot message yourself!'));
+  }
+
+  try {
+    const receiver = await User.findById(receiverId);
+    if (!receiver) return next(errorHandler(404, 'User not found!'));
+
+    // Check if sender is a follower of the receiver
+    const isFollower = receiver.followers.includes(senderId);
+    if (!isFollower) {
+        return next(errorHandler(403, 'You can only message users who follow you! Please follow this user first.'));
+    }
+
+    let conversation = await Conversation.findOne({
+      participants: { $all: [senderId, receiverId] },
+    }).populate('participants', 'username avatar email');
+
+    if (!conversation) {
+      conversation = await Conversation.create({
+        participants: [senderId, receiverId],
+      });
+      // Populate after creation
+      conversation = await Conversation.findById(conversation._id).populate('participants', 'username avatar email');
+    }
+
+    res.status(200).json(conversation);
+  } catch (error) {
+    console.error('getOrCreateConversation error:', error);
+    next(error);
+  }
+};

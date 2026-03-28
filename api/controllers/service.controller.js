@@ -121,17 +121,28 @@ export const updateService = async (req, res, next) => {
   }
 };
 
-// Get Single Service (unchanged)
+// Get Single Service
 export const getService = async (req, res, next) => {
   try {
-    const service = await Service.findById(req.params.id).populate('userRef');
+    const service = await Service.findById(req.params.id)
+      .populate('userRef')
+      .populate('creator');
+
     if (!service) {
       return next(errorHandler(404, 'Service not found!'));
     }
-    res.status(200).json(service);
 
+    // Convert to plain object to allow safe modification for backward compatibility
+    const serviceData = service.toObject();
+
+    // Ensure userRef is populated if creator exists (backward compatibility)
+    if (!serviceData.userRef && serviceData.creator) {
+      serviceData.userRef = serviceData.creator;
+    }
+
+    res.status(200).json(serviceData);
   } catch (error) {
-    next(errorHandler(500, 'Failed to get service'));
+    next(error);
   }
 };
 
@@ -196,7 +207,7 @@ export const getServices = async (req, res, next) => {
 
     return res.status(200).json(services);
   } catch (error) {
-    next(errorHandler(500, 'Failed to fetch services'));
+    next(error);
   }
 };
 

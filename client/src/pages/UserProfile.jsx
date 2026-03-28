@@ -36,6 +36,9 @@ const UserProfile = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isFollowing, setIsFollowing] = useState(false);
   const [portfolioFilter, setPortfolioFilter] = useState('all');
+  const [showFollowList, setShowFollowList] = useState(null); // 'followers', 'following', or null
+  const [followListData, setFollowListData] = useState([]);
+  const [followListLoading, setFollowListLoading] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -60,16 +63,61 @@ const UserProfile = () => {
     if (id) fetchUserData();
   }, [id]);
 
-  const handleFollow = () => {
-    setIsFollowing(!isFollowing);
-  };
+  useEffect(() => {
+    if (userData && currentUser) {
+      setIsFollowing(userData.followers?.includes(currentUser._id));
+    }
+  }, [userData, currentUser]);
 
-  const handleMessage = () => {
+  const handleFollow = async () => {
     if (!currentUser) {
       navigate('/login');
       return;
     }
-    navigate(`/messages/${id}`);
+
+    try {
+      const endpoint = isFollowing ? `/api/user/unfollow/${id}` : `/api/user/follow/${id}`;
+      const res = await fetch(endpoint, {
+        method: 'PUT',
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsFollowing(!isFollowing);
+        // Update counts manually to avoid another fetch
+        setUserData(prev => ({
+          ...prev,
+          followersCount: isFollowing ? prev.followersCount - 1 : prev.followersCount + 1,
+          followers: isFollowing 
+            ? prev.followers.filter(fid => fid !== currentUser._id)
+            : [...(prev.followers || []), currentUser._id]
+        }));
+      } else {
+        alert(data.message || 'Failed to update follow status');
+      }
+    } catch (error) {
+      console.error('Follow error:', error);
+      alert('An error occurred. Please try again.');
+    }
+  };
+
+  const handleMessage = async () => {
+    // ... (existing code remains SAME)
+  };
+
+  const openFollowList = async (type) => {
+    setShowFollowList(type);
+    setFollowListLoading(true);
+    try {
+      const res = await fetch(`/api/user/${type}/${id}`);
+      const data = await res.json();
+      if (res.ok) {
+        setFollowListData(data);
+      }
+    } catch (error) {
+      console.error(`Error fetching ${type}:`, error);
+    } finally {
+      setFollowListLoading(false);
+    }
   };
 
   if (loading) {
@@ -125,7 +173,7 @@ const UserProfile = () => {
             
             {/* Left: Avatar & Interaction */}
             <div className="flex flex-col items-center flex-shrink-0">
-              <div className="relative group -mt-24 md:-mt-36 mb-6">
+              <div className="relative -mt-24 md:-mt-36 mb-6">
                 <div className="relative p-1.5 bg-white rounded-[2.5rem] shadow-2xl transform transition-transform group-hover:scale-105 duration-500">
                   <img
                     src={userData.avatar}
@@ -300,12 +348,16 @@ const UserProfile = () => {
               {/* Premium Stats Blocks */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: 'Followers', value: userData.followers || 0, icon: <UserGroupIcon className="w-4 h-4" />, color: 'rose' },
+                  { label: 'Followers', value: userData.followersCount || 0, icon: <UserGroupIcon className="w-4 h-4" />, color: 'rose', onClick: () => openFollowList('followers') },
+                  { label: 'Following', value: userData.followingCount || 0, icon: <UserGroupIcon className="w-4 h-4" />, color: 'emerald', onClick: () => openFollowList('following') },
                   { label: 'Portfolio Items', value: (userData.listings?.length || 0) + (userData.services?.length || 0) + (userData.helpers?.length || 0) + (userData.events?.length || 0), icon: <BriefcaseIcon className="w-4 h-4" />, color: 'blue' },
-                  { label: 'Total Likes', value: userData.likeCount, icon: <HeartIcon className="w-4 h-4" />, color: 'pink' },
-                  { label: 'Occupation', value: userData.occupation || 'LoopOut Partner', icon: <BriefcaseIcon className="w-4 h-4" />, color: 'purple' }
+                  { label: 'Total Likes', value: userData.likeCount, icon: <HeartIcon className="w-4 h-4" />, color: 'pink' }
                 ].map((stat, idx) => (
-                  <div key={idx} className="group relative bg-gray-50 hover:bg-white p-4 rounded-2xl border border-gray-100 flex flex-col items-center justify-center transition-all duration-500 hover:shadow-2xl hover:shadow-gray-100 cursor-default overflow-hidden">
+                  <div 
+                    key={idx} 
+                    onClick={stat.onClick}
+                    className={`group relative bg-gray-50 hover:bg-white p-4 rounded-2xl border border-gray-100 flex flex-col items-center justify-center transition-all duration-500 hover:shadow-2xl hover:shadow-gray-100 overflow-hidden ${stat.onClick ? 'cursor-pointer' : 'cursor-default'}`}
+                  >
                     <div className="absolute -right-2 -bottom-2 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-500 scale-[3]">
                       {stat.icon}
                     </div>
@@ -620,6 +672,58 @@ const UserProfile = () => {
           </div>
         </div>
       </div>
+      {/* Follow List Modal */}
+      {showFollowList && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <h3 className="text-xl font-black text-gray-900 capitalize tracking-tight">
+                {showFollowList}
+              </h3>
+              <button 
+                onClick={() => setShowFollowList(null)}
+                className="p-2 hover:bg-white rounded-full transition-colors bg-gray-100 shadow-sm"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto p-4 space-y-3 custom-scrollbar">
+              {followListLoading ? (
+                <div className="py-12 flex justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500"></div>
+                </div>
+              ) : followListData.length > 0 ? (
+                followListData.map((user) => (
+                  <Link
+                    key={user._id}
+                    to={`/user-profile/${user._id}`}
+                    onClick={() => setShowFollowList(null)}
+                    className="flex items-center gap-4 p-4 hover:bg-rose-50 rounded-[1.5rem] transition-all group border border-transparent hover:border-rose-100"
+                  >
+                    <img 
+                      src={user.avatar} 
+                      alt={user.username} 
+                      className="w-12 h-12 rounded-2xl object-cover shadow-md group-hover:scale-110 transition-transform duration-500" 
+                    />
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-900 group-hover:text-rose-600 transition-colors">{user.username}</p>
+                      <p className="text-xs text-gray-400 line-clamp-1 font-medium">{user.bio || 'LoopOut Member'}</p>
+                    </div>
+                    <ChevronRightIcon className="w-5 h-5 text-gray-300 group-hover:text-rose-400 transition-colors" />
+                  </Link>
+                ))
+              ) : (
+                <div className="py-12 text-center">
+                  <UserGroupIcon className="w-12 h-12 text-gray-100 mx-auto mb-3" />
+                  <p className="text-gray-400 font-bold">No users found</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
