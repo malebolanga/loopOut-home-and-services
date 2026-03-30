@@ -35,7 +35,7 @@ import {
   StarIcon as StarIconSolid,
   HeartIcon as HeartIconSolid,
 } from '@heroicons/react/24/solid';
-import { FaCar, FaBreadSlice, FaHouseUser, FaCut, FaTruckMoving, FaGraduationCap, FaHandsWash, FaBroom, FaChalkboardTeacher, FaHome, FaBed, FaUtensils, FaLeaf, FaBolt, FaShoePrints, FaWater, FaPaw } from "react-icons/fa";
+import { FaCar, FaBreadSlice, FaHouseUser, FaCut, FaTruckMoving, FaGraduationCap, FaHandsWash, FaBroom, FaChalkboardTeacher, FaHome, FaBed, FaUtensils, FaLeaf, FaBolt, FaShoePrints, FaWater, FaPaw, FaApple, FaGooglePlay } from "react-icons/fa";
 import ImageGallery from '../components/ImageGallery';
 import useLocationCoords from '../hooks/useGeolocation';
 
@@ -1103,6 +1103,70 @@ const MobileAppHomepage = ({
               ))}
             </div>
           </motion.section>
+
+          {/* Download App Banner */}
+          <section className="mt-16 mb-8 bg-gray-900 rounded-3xl p-10 lg:p-14 overflow-hidden relative flex flex-col md:flex-row items-center justify-between">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500 rounded-full blur-3xl opacity-20 -mr-20 -mt-20 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500 rounded-full blur-3xl opacity-20 -ml-20 -mb-20 pointer-events-none"></div>
+            
+            <div className="relative z-10 md:w-1/2 text-left mb-10 md:mb-0">
+              <div className="inline-block bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4">
+                Available Now
+              </div>
+              <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6 tracking-tight leading-tight">LoopOut is better on the app</h2>
+              <p className="text-gray-300 mb-8 max-w-md text-base lg:text-lg leading-relaxed">Get real-time notifications, exclusive app-only deals, and discover exactly what you need with our AI-powered search. Download now for iOS and Android.</p>
+              <div className="flex flex-wrap gap-4">
+                <a href="#" className="flex items-center gap-3 bg-white text-black px-6 py-3 rounded-xl hover:bg-gray-100 transition-colors shadow-lg hover:-translate-y-1 transform duration-200">
+                  <FaApple className="text-3xl" />
+                  <div className="flex flex-col text-left">
+                    <span className="text-[10px] uppercase font-semibold leading-none text-gray-500 pb-0.5">Download on the</span>
+                    <span className="text-base font-bold leading-none">App Store</span>
+                  </div>
+                </a>
+                <a href="#" className="flex items-center gap-3 bg-white text-black px-6 py-3 rounded-xl hover:bg-gray-100 transition-colors shadow-lg hover:-translate-y-1 transform duration-200">
+                  <FaGooglePlay className="text-3xl text-emerald-500" />
+                  <div className="flex flex-col text-left">
+                    <span className="text-[10px] uppercase font-semibold leading-none text-gray-500 pb-0.5">GET IT ON</span>
+                    <span className="text-base font-bold leading-none">Google Play</span>
+                  </div>
+                </a>
+              </div>
+            </div>
+            <div className="relative z-10 md:w-5/12 flex justify-center hidden md:flex">
+              <div className="w-[260px] h-[520px] bg-gray-800 rounded-[3rem] border-8 border-gray-700 shadow-2xl overflow-hidden relative -mb-24 lg:-mb-10 mr-4 transform rotate-12 hover:rotate-0 transition-transform duration-500">
+                <div className="absolute top-0 inset-x-0 h-7 bg-gray-700 w-32 mx-auto rounded-b-2xl flex items-center justify-center gap-2 z-20">
+                  <div className="w-12 h-1.5 bg-gray-800 rounded-full"></div>
+                  <div className="w-1.5 h-1.5 bg-gray-800 rounded-full"></div>
+                </div>
+                <div className="w-full h-full bg-gradient-to-br from-rose-500 to-indigo-600 p-6 flex flex-col items-center justify-center text-center relative z-10">
+                   <div className="absolute inset-0 bg-black/10"></div>
+                   
+                   <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-xl mb-6 relative z-10">
+                    <span className="text-4xl font-black text-rose-500">L</span>
+                  </div>
+                  <h3 className="text-white font-bold text-2xl mb-2 relative z-10">LoopOut</h3>
+                  <p className="text-white/90 text-sm text-center px-4 relative z-10">Discover homes, services, and experiences instantly.</p>
+                  
+                  <div className="mt-8 w-full space-y-3 relative z-10">
+                    <div className="w-full h-24 bg-white/20 backdrop-blur-md rounded-2xl p-3 flex gap-3">
+                       <div className="w-12 h-12 bg-white/30 rounded-xl"></div>
+                       <div className="flex-1 space-y-2">
+                         <div className="w-full h-3 bg-white/30 rounded-full"></div>
+                         <div className="w-2/3 h-3 bg-white/30 rounded-full"></div>
+                       </div>
+                    </div>
+                    <div className="w-full h-24 bg-white/20 backdrop-blur-md rounded-2xl p-3 flex gap-3">
+                       <div className="w-12 h-12 bg-white/30 rounded-xl"></div>
+                       <div className="flex-1 space-y-2">
+                         <div className="w-full h-3 bg-white/30 rounded-full"></div>
+                         <div className="w-2/3 h-3 bg-white/30 rounded-full"></div>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         </main>
       </div>
     );
@@ -1371,6 +1435,24 @@ const MobileAppHomepage = ({
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Mobile Promo Banner: Become a Provider */}
+        <section className="mb-4 mt-8 bg-gradient-to-br from-rose-500 to-rose-700 rounded-3xl p-6 overflow-hidden relative shadow-lg text-white">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full blur-3xl opacity-20 -mr-10 -mt-10 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-yellow-300 rounded-full blur-3xl opacity-20 -ml-10 -mb-10 pointer-events-none"></div>
+            
+            <div className="relative z-10 flex flex-col items-center text-center">
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 border border-white/30 shadow-inner">
+                 <FaHouseUser className="text-3xl text-white" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2 tracking-tight">Earn with LoopOut</h2>
+              <p className="text-white/90 mb-6 text-sm px-2 leading-relaxed">Turn your space, skills, or services into extra income. Join thousands of providers today.</p>
+              
+              <button onClick={() => navigate('/become')} className="w-full bg-white text-rose-600 font-bold py-3.5 px-6 rounded-xl shadow-lg active:scale-95 transition-all duration-150">
+                Get Started
+              </button>
+            </div>
         </section>
       </main>
 

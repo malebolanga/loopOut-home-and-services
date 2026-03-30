@@ -729,7 +729,7 @@ const ServicePage = () => {
         {service.imageUrls?.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-full p-2">
             <div
-              className="md:col-span-2 md:row-span-2 relative rounded-xl overflow-hidden cursor-pointer group"
+              className="md:col-span-2 md:row-span-2 relative rounded-xl overflow-hidden cursor-pointer"
               onClick={() => openFullScreenGallery(0)}
             >
               <img
@@ -746,7 +746,7 @@ const ServicePage = () => {
             {service.imageUrls.slice(1, 5).map((url, index) => (
               <div
                 key={index}
-                className="relative rounded-xl overflow-hidden cursor-pointer group hidden md:block"
+                className="relative rounded-xl overflow-hidden cursor-pointer  hidden md:block"
                 onClick={() => openFullScreenGallery(index + 1)}
               >
                 <img
