@@ -1096,7 +1096,7 @@ const SearchPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* Slide-Open Search Panel */}
       <SlideOpenSearch
         isOpen={isSearchPanelOpen}

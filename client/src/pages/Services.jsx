@@ -690,7 +690,7 @@ const ServicePage = () => {
   const serviceHighlights = currentServiceConfig?.highlights || [];
 
   return (
-    <div className="min-h-screen bg-white pb-20 lg:pb-0">
+    <div className="min-h-screen pb-20 lg:pb-0">
       {/* Navigation Header */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -786,7 +786,7 @@ const ServicePage = () => {
               <h1 className="text-3xl font-semibold text-gray-900 mb-2">{service.name}</h1>
               <div className="flex flex-wrap items-center gap-4 text-gray-600">
                 <span className="flex items-center gap-1">
-                  <FaStar className="text-rose-500" />
+                  <FaStar className="text-[#FFB400]" />
                   <span className="font-semibold text-gray-900">{service.rating || '4.5'}</span>
                   <span>({service.reviewCount || '0'} reviews)</span>
                 </span>
@@ -991,7 +991,7 @@ const ServicePage = () => {
             {/* Reviews */}
             <div className="pb-6 border-b border-gray-200">
               <div className="flex items-center gap-2 mb-8">
-                <FaStar className="text-gray-900 text-2xl" />
+                <FaStar className="text-[#FFB400] text-2xl drop-shadow-sm" />
                 <h2 className="text-2xl font-semibold text-gray-900">
                   {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (service.rating || '4.5')} · {commentCount} reviews
                 </h2>
@@ -1046,28 +1046,29 @@ const ServicePage = () => {
                           const rating = comment.rating || 5;
                           return (
                             <SwiperSlide key={comment._id} className="h-auto">
-                              <div className="h-full bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
-                                <div>
-                                  <div className="flex items-center justify-between mb-3">
+                              <div className="h-full bg-gradient-to-br from-[#F8F9FA] to-white border border-[#EBEBEB] rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#FFB400]/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <div className="relative z-10">
+                                  <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-3">
                                       <img
                                         src={comment.userAvatar || '/default-avatar.jpg'}
                                         alt={comment.userName}
-                                        className="w-12 h-12 rounded-full object-cover border border-gray-100"
+                                        className="w-12 h-12 rounded-full object-cover border border-gray-100 shadow-sm"
                                         onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
                                       />
                                       <div>
-                                        <h4 className="font-semibold text-gray-900 leading-tight">{comment.userName}</h4>
-                                        <p className="text-sm text-gray-500 mt-0.5">{getRelativeTime(comment.createdAt)}</p>
+                                        <h4 className="font-semibold text-[#222222] leading-tight">{comment.userName}</h4>
+                                        <p className="text-sm text-[#717171] mt-0.5">{getRelativeTime(comment.createdAt)}</p>
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-4 mb-3">
+                                  <div className="flex items-center gap-4 mb-4">
                                     <div className="flex items-center">
                                       {[...Array(5)].map((_, i) => (
                                         <FaStar
                                           key={i}
-                                          className={`text-[10px] mr-1 ${i < Math.round(rating) ? 'text-gray-900' : 'text-gray-200'}`}
+                                          className={`text-[12px] mr-1 ${i < Math.round(rating) ? 'text-[#FFB400]' : 'text-gray-200'}`}
                                         />
                                       ))}
                                     </div>

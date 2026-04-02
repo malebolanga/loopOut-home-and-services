@@ -387,7 +387,7 @@ const ExplorePage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Add padding top to account for fixed header */}
       <div className="pt-2 md:pt-4">
         <main className="pt-4 pb-4">

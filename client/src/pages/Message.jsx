@@ -165,7 +165,7 @@ export default function Message() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-800 my-7">Help & Support</h1>
         <div className="flex justify-center py-10">
           <FaSpinner className="animate-spin text-5xl text-blue-500" />
@@ -176,7 +176,7 @@ export default function Message() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="max-w-xl mx-auto relative bg-white rounded-3xl shadow-xl p-6 sm:p-8">
         {/* Custom Notification */}
         {notification.show && (

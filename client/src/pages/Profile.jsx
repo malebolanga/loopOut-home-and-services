@@ -818,7 +818,7 @@ export default function Profile() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="min-h-screen pb-20">
       {/* Airbnb-style Header - Fixed at top */}
       <div className="border-b border-[#DDDDDD] fixed top-0 left-0 right-0 bg-white z-40 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-4">

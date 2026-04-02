@@ -335,6 +335,15 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
                   { type: listing.type }
                 )}
               </div>
+              <div className="flex flex-col items-end">
+                <div className="flex items-center text-gray-600">
+                  <span className="font-medium text-gray-900 text-[12px] mr-0.5">
+                    {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
+                  </span>
+                  <FaStar className="text-amber-500 text-[10px]" />
+                </div>
+                {ratingData.count > 0 && <span className="text-[9px] text-gray-400 mt-0.5">({ratingData.count} rev)</span>}
+              </div>
               <button
                 onClick={(e) => { e.preventDefault(); setShowShareOptions(!showShareOptions); }}
                 className="p-1 text-gray-400 hover:text-blue-600 transition-colors"

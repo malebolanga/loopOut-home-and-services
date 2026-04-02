@@ -50,7 +50,7 @@ export default function Newsroom() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Hero Section */}
       <div className="bg-airbnb-red text-white py-20 px-6">
         <div className="max-w-6xl mx-auto">

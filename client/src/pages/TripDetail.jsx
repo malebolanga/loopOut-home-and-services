@@ -159,7 +159,7 @@ const TripDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+    <div className="min-h-screen from-blue-50 to-indigo-100 py-8 px-4">
       {/* Reminder Notifications */}
       {showReminder && (
         <div className="fixed top-4 right-4 z-50 bg-white shadow-lg rounded-lg p-4 border-l-4 border-red-500 max-w-md animate-fadeIn">

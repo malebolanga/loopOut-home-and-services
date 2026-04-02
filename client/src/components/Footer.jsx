@@ -83,6 +83,7 @@ const Footer = () => {
               <h5 className="text-gray-900 font-medium text-sm uppercase">Company</h5>
               <ul className="space-y-3">
                 <li><Link to="/about" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">About</Link></li>
+                <li><Link to="/pricing" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Pricing</Link></li>
                 <li><Link to="/careers" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Careers</Link></li>
                 <li><Link to="/press" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Press</Link></li>
               </ul>

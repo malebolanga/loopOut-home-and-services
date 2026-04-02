@@ -1372,7 +1372,7 @@ export default function CreateListing() {
 
   if (loading && !showPromotionPopup) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
@@ -1383,7 +1383,7 @@ export default function CreateListing() {
 
   if (postLimitReached) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl border border-gray-200 p-8 text-center shadow-lg">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <ExclamationTriangleIcon className="w-8 h-8 text-gray-600" />
@@ -1409,7 +1409,7 @@ export default function CreateListing() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* Airbnb-style Header */}
       <header>
         <div className="sticky top-0 z-50 bg-white border-b border-[#DDDDDD]">

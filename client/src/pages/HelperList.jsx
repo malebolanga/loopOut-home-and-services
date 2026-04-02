@@ -99,7 +99,7 @@ export default function HelperDetails() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-16 pb-32 flex items-center justify-center">
+      <div className="min-h-screen from-gray-50 to-white pt-16 pb-32 flex items-center justify-center">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-airbnb-red"></div>
         <p className="ml-4 text-lg text-gray-700">Loading {typeLabels[type]}...</p>
       </div>

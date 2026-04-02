@@ -88,6 +88,7 @@ function EventItem({ event, className = "", compactMode = false }) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isNewEvent, setIsNewEvent] = useState(false);
   const [clickCount, setClickCount] = useState(0);
+  const [ratingData, setRatingData] = useState({ average: 0, count: 0 });
 
   useEffect(() => {
     if (event?.createdAt) {
@@ -105,6 +106,23 @@ function EventItem({ event, className = "", compactMode = false }) {
       } catch (error) {
         console.error('Error reading eventClicks from localStorage:', error);
       }
+
+      // Fetch accurate rating data
+      const fetchRating = async () => {
+        try {
+          const res = await fetch(`/api/event-comments/${event._id}?limit=1`);
+          if (res.ok) {
+            const data = await res.json();
+            setRatingData({
+              average: data.ratings?.overall || 0,
+              count: data.totalComments || 0
+            });
+          }
+        } catch (error) {
+          // silently fail
+        }
+      };
+      fetchRating();
     }
   }, [event]);
 
@@ -287,8 +305,17 @@ function EventItem({ event, className = "", compactMode = false }) {
                 <EventTypePill type={event.type} />
               </div>
 
-              <div className="mt-2 flex items-center gap-1 text-sm font-bold text-gray-900">
-                {formatPrice(event.regularPrice)}
+              <div className="mt-2 flex items-center justify-between w-full">
+                <span className="text-sm font-bold text-gray-900">
+                  {formatPrice(event.regularPrice)}
+                </span>
+                <div className="flex items-center text-gray-600">
+                  <span className="font-medium text-gray-900 text-[12px] mr-0.5">
+                    {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
+                  </span>
+                  <FaStar className="text-amber-500 text-[10px]" />
+                  {ratingData.count > 0 && <span className="text-[9px] text-gray-400 ml-1">({ratingData.count})</span>}
+                </div>
               </div>
             </div>
           </div>
@@ -399,29 +426,28 @@ function EventItem({ event, className = "", compactMode = false }) {
               <EventTypePill type={event.type} />
             </div>
 
-
-
             <div className="mt-auto pt-0">
               <div className="flex items-baseline justify-between">
                 <div className="flex items-baseline">
                   <span className="text-[15px] font-semibold text-gray-900">
                     {formatPrice(event.regularPrice)}
                   </span>
-
                 </div>
 
                 <div className="flex items-center text-gray-600">
                   <FaStar className="text-amber-500 text-[12px]" />
                   <span className="font-medium text-gray-900 text-[13px] ml-1">
-                    {calculatedStarRating}
+                    {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
                   </span>
-
+                  {ratingData.count > 0 && (
+                    <span className="text-[10px] text-gray-400 ml-1">
+                      ({ratingData.count})
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-
-
         </>
       )}
     </Link>

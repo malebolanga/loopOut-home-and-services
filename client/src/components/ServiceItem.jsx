@@ -339,8 +339,17 @@ function ServiceItem({ service, className = "", compactMode = false }) {
                 </p>
               )}
 
-              <div className="mt-2 flex items-center gap-1 text-sm font-bold text-gray-900">
-                {formatPrice(service.regularPrice)}
+              <div className="mt-2 flex items-center justify-between w-full">
+                <span className="text-sm font-bold text-gray-900">
+                  {formatPrice(service.regularPrice)}
+                </span>
+                <div className="flex items-center text-gray-600">
+                  <span className="font-medium text-gray-900 text-[12px] mr-0.5">
+                    {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
+                  </span>
+                  <FaStar className="text-amber-500 text-[10px]" />
+                  {ratingData.count > 0 && <span className="text-[9px] text-gray-400 ml-1">({ratingData.count})</span>}
+                </div>
               </div>
             </div>
           </div>

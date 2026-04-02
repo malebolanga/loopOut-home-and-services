@@ -108,7 +108,7 @@ export default function Users() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <FaSpinner className="animate-spin text-6xl text-blue-600 mb-4" />
           <p className="text-lg text-gray-700 font-medium">Loading community members. Please wait...</p>
@@ -149,7 +149,7 @@ export default function Users() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8 relative">
+    <div className="min-h-screen from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8 relative">
       <div className="max-w-7xl mx-auto p-6 bg-white rounded-xl shadow-2xl">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">

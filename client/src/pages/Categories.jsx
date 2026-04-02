@@ -238,7 +238,7 @@ const Categories = () => {
   const subcategoryGridCols = isDesktop ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-1';
 
   return (
-    <div className="min-h-screen bg-white pb-0">
+    <div className="min-h-screen pb-0">
       {/* Header - Sticky */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
         <div className={`${isDesktop ? 'px-6 max-w-7xl mx-auto' : 'px-4'} py-4`}>

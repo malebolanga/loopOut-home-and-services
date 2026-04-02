@@ -280,7 +280,7 @@ export default function WishList() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center">
           <div className="w-12 h-12 rounded-full bg-[#FF5A5F] flex items-center justify-center mb-4 animate-pulse">
             <TbHeartFilled className="w-6 h-6 text-white" />
@@ -292,7 +292,7 @@ export default function WishList() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* Wishlist Navigation — fixed at top, hides the global Header */}
       <div className="fixed top-0 left-0 right-0 z-[60] bg-white border-b border-[#DDDDDD]">
         <div className="max-w-[1600px] mx-auto px-6 sm:px-2 lg:px-12">

@@ -32,7 +32,7 @@ const SafetyProperties = {
 
 export default function ComprehensivePropertySafetyPolicy() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-700 text-white py-20 px-6">
         <div className="max-w-6xl mx-auto text-center">

@@ -145,7 +145,7 @@ export default function List() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#E61E4D] via-[#E31C5F] to-[#D70466] flex items-center justify-center mx-auto mb-4 animate-pulse">
             <FaHome className="text-white text-xl" />
@@ -158,7 +158,7 @@ export default function List() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* Airbnb-style Header */}
       <div className="sticky top-0 z-50 bg-white border-b border-[#DDDDDD]">
         <div className="max-w-[1280px] mx-auto px-0 lg:px-10">

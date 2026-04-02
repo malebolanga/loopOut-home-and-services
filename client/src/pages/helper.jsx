@@ -112,7 +112,7 @@ export default function Helper() {
   // Render loading state
   if (loading) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+      <main className="min-h-screen from-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
             {/* Skeleton for header */}
@@ -150,7 +150,7 @@ export default function Helper() {
   // Render error state
   if (error || !helper) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+      <main className="min-h-screen from-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
             <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md">
@@ -177,7 +177,7 @@ export default function Helper() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <main className="min-h-screen from-slate-50 to-white">
       {/* Breadcrumb Navigation */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">

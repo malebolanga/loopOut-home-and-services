@@ -110,11 +110,38 @@ const PrivateTutorDetailsPage = () => {
         setLoading(true);
         setError(null);
         
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 800));
+        const res = await fetch(`/api/helper/get/${tutorId}`);
+        if (!res.ok) {
+          // If we can't find it as a helper, try looking in services just in case
+          const serviceRes = await fetch(`/api/service/get/${tutorId}`);
+          if (!serviceRes.ok) throw new Error('Failed to fetch tutor details');
+          const serviceData = await serviceRes.json();
+          setTutor({
+            ...mockTutor,
+            ...serviceData,
+            name: serviceData.name || mockTutor.name,
+            title: serviceData.type || mockTutor.title,
+            features: { ...mockTutor.features, ...(serviceData.features || {}) },
+            images: serviceData.imageUrls?.length ? serviceData.imageUrls : mockTutor.images,
+          });
+          return;
+        }
         
-        // Using mock data for this example
-        setTutor(mockTutor);
+        const data = await res.json();
+        
+        // Merge with mockTutor for any incomplete UI fields we might need
+        setTutor({
+          ...mockTutor,
+          ...data,
+          name: data.name || mockTutor.name,
+          title: data.category || data.type || mockTutor.title,
+          description: data.description || mockTutor.description,
+          features: { ...mockTutor.features, ...(data.features || {}) },
+          subjects: data.subjects || mockTutor.subjects,
+          provider: { ...mockTutor.provider, ...(data.userRef || {}) },
+          images: data.imageUrls?.length > 0 ? data.imageUrls : mockTutor.images,
+          contact: data.contact || data.phone || mockTutor.contact
+        });
       } catch (err) {
         console.error('Fetch error:', err);
         setError(err.message || 'Failed to fetch tutor details');
@@ -133,8 +160,23 @@ const PrivateTutorDetailsPage = () => {
 
   const handleBookingSubmit = (e) => {
     e.preventDefault();
-    alert(`Booking request sent for ${tutor.name} on ${bookingData.date} at ${bookingData.time} for ${bookingData.subject}`);
-    // Here you would typically send the booking data to your API
+    const contact = tutor.contact || "0000000000";
+    const digitsOnly = String(contact).replace(/\D/g, '');
+    const whatsappNumber = digitsOnly.startsWith('0') ? '27' + digitsOnly.substring(1) : digitsOnly;
+    
+    let message = `*🎓 NEW TUTOR BOOKING REQUEST* 🎓\n\n`;
+    message += `*👤 Tutor:* ${tutor.name}\n`;
+    message += `*📚 Subject:* ${bookingData.subject}\n`;
+    if (bookingData.grade) message += `*📊 Grade/Level:* ${bookingData.grade}\n`;
+    message += `*📅 Date:* ${bookingData.date}\n`;
+    message += `*⏰ Time:* ${bookingData.time}\n\n`;
+    if (bookingData.message) {
+      message += `*📝 Goals/Message:* ${bookingData.message}\n`;
+    }
+    message += `\n_This request was sent via LoopOut Tutor Booking_`;
+
+    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
   };
 
   if (loading) {

@@ -224,7 +224,7 @@ const SmartSearchPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
+    <div className="min-h-screen pb-12">
       {/* Sticky Search Header */}
       <div className={`sticky top-0 z-50 transition-all duration-300 ${isSearchSticky ? 'shadow-lg' : ''}`}>
         {/* Main Search Bar */}

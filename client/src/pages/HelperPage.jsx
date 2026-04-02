@@ -807,14 +807,17 @@ export default function HelperPage() {
       return;
     }
     if (ratingLoading) return;
-    if (currentUser._id === helper.userRef) {
+    
+    const helperUserId = helper.userRef?._id || helper.userRef;
+    
+    if (currentUser._id === helperUserId) {
       alert("You cannot rate yourself!");
       return;
     }
 
     try {
       setRatingLoading(true);
-      const res = await fetch(`/api/user/rate-host/${helper.userRef}`, {
+      const res = await fetch(`/api/user/rate-host/${helperUserId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1129,9 +1132,12 @@ export default function HelperPage() {
     const fetchStatuses = async () => {
       if (!helper || !currentUser) return;
 
+      const helperUserId = helper.userRef?._id || helper.userRef;
+      if (!helperUserId) return;
+
       try {
         // Fetch Host Ratings
-        const ratingRes = await fetch(`/api/user/host-ratings/${helper.userRef}`, {
+        const ratingRes = await fetch(`/api/user/host-ratings/${helperUserId}`, {
             headers: { 'Authorization': `Bearer ${currentUser.token}` }
         });
         if (ratingRes.ok) {
@@ -1833,7 +1839,7 @@ export default function HelperPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-white">
+      <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-rose-500 mx-auto"></div>
           <p className="mt-4 text-lg text-gray-600 font-medium">Loading professional details...</p>
@@ -1971,7 +1977,7 @@ export default function HelperPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* Navigation */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-sm' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-0 lg:px-8">
@@ -2013,7 +2019,7 @@ export default function HelperPage() {
           </h1>
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <div className="flex items-center gap-1">
-              <FaStar className="text-rose-500" />
+              <FaStar className="text-[#FFB400]" />
            
                 <h2 className="text-sm font-semibold text-gray-900">
                   {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}   -   {commentCount}  reviews
@@ -2158,7 +2164,7 @@ export default function HelperPage() {
             {/* Reviews Summary */}
             <div className="pb-6 border-b border-gray-200">
               <div className="flex items-center gap-2 mb-8">
-                <FaStar className="text-gray-900 text-2xl" />
+                <FaStar className="text-[#FFB400] text-2xl drop-shadow-sm" />
                 <h2 className="text-2xl font-semibold text-gray-900">
                   {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')} · {commentCount} reviews
                 </h2>
@@ -2214,28 +2220,29 @@ export default function HelperPage() {
                           
                           return (
                           <SwiperSlide key={comment._id} className="h-auto">
-                            <div className="h-full bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
-                              <div>
-                                <div className="flex items-center justify-between mb-3">
+                            <div className="h-full bg-gradient-to-br from-[#F8F9FA] to-white border border-[#EBEBEB] rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+                              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#FFB400]/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                              <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-4">
                                   <div className="flex items-center gap-3">
                                     <img 
                                       src={comment.userAvatar || '/default-avatar.jpg'} 
                                       alt={comment.userName}
-                                      className="w-12 h-12 rounded-full object-cover border border-gray-100"
+                                      className="w-12 h-12 rounded-full object-cover border border-gray-100 shadow-sm"
                                       onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
                                     />
                                     <div>
-                                      <h4 className="font-semibold text-gray-900 leading-tight">{comment.userName}</h4>
-                                      <p className="text-sm text-gray-500 mt-0.5">{getRelativeTime(comment.createdAt)}</p>
+                                      <h4 className="font-semibold text-[#222222] leading-tight">{comment.userName}</h4>
+                                      <p className="text-sm text-[#717171] mt-0.5">{getRelativeTime(comment.createdAt)}</p>
                                     </div>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-4 mb-3">
+                                <div className="flex items-center gap-4 mb-4">
                                   <div className="flex items-center">
                                     {[...Array(5)].map((_, i) => (
                                       <FaStar 
                                         key={i} 
-                                        className={`text-[10px] mr-1 ${i < Math.round(rating) ? 'text-gray-900' : 'text-gray-200'}`} 
+                                        className={`text-[12px] mr-1 ${i < Math.round(rating) ? 'text-[#FFB400]' : 'text-gray-200'}`} 
                                       />
                                     ))}
                                   </div>
@@ -2292,7 +2299,7 @@ export default function HelperPage() {
                     <span className="text-gray-600"> / service</span>
                   </div>
                   <div className="flex items-center gap-1 text-sm">
-                    <FaStar className="text-rose-500" />
+                    <FaStar className="text-[#FFB400]" />
                     <span className="font-semibold">{helper.rating || '4.5'}</span>
                   </div>
                 </div>

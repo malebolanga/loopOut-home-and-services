@@ -142,7 +142,7 @@ export default function PropertyListings() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+      <div className="min-h-screen from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
         <div className="max-w-md mx-auto text-center">
           <div className="relative inline-block mb-6">
             <div className="w-24 h-24 rounded-full bg-blue-50 flex items-center justify-center mx-auto">

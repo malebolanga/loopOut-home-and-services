@@ -229,7 +229,7 @@ const TripSearch = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4 relative">
+    <div className="min-h-screen from-blue-50 to-indigo-100 py-8 px-4 relative">
       {/* Plan Sidebar */}
       <div className={`fixed inset-y-0 right-0 w-full md:w-96 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${showPlanSidebar ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="h-full flex flex-col">

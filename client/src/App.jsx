@@ -57,6 +57,7 @@ import Adiver from "./pages/Adiver";
 import LifestyleDecor from "./pages/LifestyleDecor";
 import Users from './pages/Users';
 import UserListings from './pages/UserListings';
+import Pricing from './pages/Pricing';
 
 // Payment & Promotion
 import PromotionSelection from './pages/PromotionSelection';
@@ -186,6 +187,7 @@ export default function App() {
         <Route path="/safetyhelper" element={<SafetyHelper />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/pricing" element={<Pricing />} />
         <Route path="/become" element={<Become />} />
         <Route path="/adiver" element={<Adiver />} />
         <Route path="/lifestyle-decor" element={<LifestyleDecor />} />

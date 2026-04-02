@@ -890,7 +890,7 @@ const MobileAppHomepage = ({
 
   if (isDesktop) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen">
         <style>{`
           .scrollbar-hide::-webkit-scrollbar { display: none; }
           .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -1174,7 +1174,7 @@ const MobileAppHomepage = ({
 
   // Mobile View
   return (
-    <div className="min-h-screen bg-white pb-32">
+    <div className="min-h-screen pb-32">
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
