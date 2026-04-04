@@ -77,7 +77,7 @@ import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import WishList from "./WishListProfile";
 import MyListing from "./MyListing";
-import { Camera, CheckCircle, X, MessageCircle, Mail, Phone, ChevronRight, Globe, Shield, Bell, User, Home, Heart, List, Settings, LogOut, Plus, Trash2, Edit3, MapPin, Calendar, Star, Award, HelpCircle, Download, ChartBarIcon, Gift } from 'lucide-react';
+import { Camera, CheckCircle, X, MessageCircle, Mail, Phone, ChevronRight, Globe, Shield, Bell, User, Home, Heart, List, Settings, LogOut, Plus, Trash2, Edit3, MapPin, Calendar, Star, Award, HelpCircle, Download, ChartBarIcon, Gift, Wallet } from 'lucide-react';
 
 // Airbnb Color Palette
 const colors = {

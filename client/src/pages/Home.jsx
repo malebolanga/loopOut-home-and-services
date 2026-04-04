@@ -35,9 +35,11 @@ import {
   StarIcon as StarIconSolid,
   HeartIcon as HeartIconSolid,
 } from '@heroicons/react/24/solid';
-import { FaCar, FaBreadSlice, FaHouseUser, FaCut, FaTruckMoving, FaGraduationCap, FaHandsWash, FaBroom, FaChalkboardTeacher, FaHome, FaBed, FaUtensils, FaLeaf, FaBolt, FaShoePrints, FaWater, FaPaw, FaApple, FaGooglePlay } from "react-icons/fa";
+import { FaCar, FaBreadSlice, FaHouseUser, FaCut, FaTruckMoving, FaGraduationCap, FaHandsWash, FaBroom, FaChalkboardTeacher, FaHome, FaBed, FaUtensils, FaLeaf, FaBolt, FaShoePrints, FaWater, FaPaw, FaApple, FaGooglePlay, FaShoppingBasket, FaCalendarCheck, FaFire } from "react-icons/fa";
 import ImageGallery from '../components/ImageGallery';
 import useLocationCoords from '../hooks/useGeolocation';
+import LoopOutPulse from '../components/LoopOutPulse';
+import MyBookingsConsumer from '../components/MyBookingsConsumer';
 
 import { 
   calculateDistance, 
@@ -110,144 +112,163 @@ const TOP_CATEGORIES = [
   {
     id: 'barber',
     name: 'Barbershop',
-    image: 'https://images.pexels.com/photos/897262/pexels-photo-897262.jpeg',
+    image: '/3d_barber_icon_1775252950749.png',
     count: '1,234',
-    color: 'from-gray-900 to-gray-700'
+    color: 'from-gray-900 to-gray-700',
+    emoji: '💈'
   },
   {
     id: 'baker',
     name: 'Baker',
     image: 'https://plus.unsplash.com/premium_photo-1759145128249-96ba5361d5d9?fm=jpg&q=60&w=800&auto=format&fit=crop',
     count: '856',
-    color: 'from-amber-600 to-orange-500'
+    color: 'from-amber-600 to-orange-500',
+    emoji: '🥐'
   },
   {
     id: 'carwash',
     name: 'Car Wash',
     image: 'https://images.pexels.com/photos/6873098/pexels-photo-6873098.jpeg',
     count: '23',
-    color: 'from-blue-600 to-cyan-500'
+    color: 'from-blue-600 to-cyan-500',
+    emoji: '🧼'
   },
   {
     id: 'delivery',
     name: 'Delivery',
     image: 'https://images.unsplash.com/photo-1617347454431-f49d7ff5c3b1?fm=jpg&q=60&w=800&auto=format&fit=crop',
     count: '3,567',
-    color: 'from-green-600 to-emerald-500'
+    color: 'from-green-600 to-emerald-500',
+    emoji: '📦'
   },
   {
     id: 'photograph',
     name: 'Photography',
-    image: 'https://images.pexels.com/photos/1088491/pexels-photo-1088491.jpeg',
+    image: '/3d_helper_icon_1775252697443.png',
     count: '892',
-    color: 'from-indigo-600 to-purple-500'
+    color: 'from-indigo-600 to-purple-600',
+    emoji: '📸'
   },
   {
     id: 'transport',
     name: 'Transport',
     image: 'https://plus.unsplash.com/premium_photo-1661963219843-f1a50a6cfcd3?fm=jpg&q=60&w=800&auto=format&fit=crop',
     count: '1,567',
-    color: 'from-red-600 to-rose-500'
+    color: 'from-red-600 to-rose-500',
+    emoji: '🚕'
   },
   {
     id: 'tattor Artise',
     name: 'Tattoo artist',
     image: 'https://images.pexels.com/photos/1304469/pexels-photo-1304469.jpeg',
     count: '2,109',
-    color: 'from-teal-600 to-cyan-500'
+    color: 'from-teal-600 to-cyan-500',
+    emoji: '🎨'
   },
   {
     id: 'domestic',
     name: 'Domestic Work',
-    image: 'https://plus.unsplash.com/premium_photo-1667520405114-47d3677f966e?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: '/3d_maid_icon_1775252783278.png',
     count: '1,445',
-    color: 'from-pink-600 to-rose-500'
+    color: 'from-pink-600 to-rose-500',
+    emoji: '🧹'
   },
   {
     id: 'tutor',
     name: 'Private Tutor',
     image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?fm=jpg&q=60&w=800&auto=format&fit=crop',
     count: '678',
-    color: 'from-violet-600 to-purple-500'
+    color: 'from-violet-600 to-purple-500',
+    emoji: '📖'
   },
   {
     id: 'rental',
     name: 'Rental',
-    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: '/3d_home_icon_1775252451792.png',
     count: '4,321',
-    color: 'from-orange-600 to-amber-500'
+    color: 'from-orange-600 to-amber-500',
+    emoji: '🏠'
   },
   {
     id: 'guesthouse',
     name: 'Guest House',
     image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?fm=jpg&q=60&w=800&auto=format&fit=crop',
     count: '1,234',
-    color: 'from-cyan-600 to-blue-500'
+    color: 'from-cyan-600 to-blue-500',
+    emoji: '🏡'
   },
   {
     id: 'hair',
     name: 'Hair & Style',
     image: 'https://images.unsplash.com/photo-1634449571010-02389ed0f9b0?fm=jpg&q=60&w=800&auto=format&fit=crop',
     count: '3,890',
-    color: 'from-fuchsia-600 to-pink-500'
+    color: 'from-fuchsia-600 to-pink-500',
+    emoji: '💇'
   },
   {
     id: 'nails',
     name: 'Nails',
     image: 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?fm=jpg&q=60&w=800&auto=format&fit=crop',
     count: '2,456',
-    color: 'from-rose-400 to-pink-400'
+    color: 'from-rose-400 to-pink-400',
+    emoji: '💅'
   },
   {
     id: 'massage',
     name: 'Massage',
     image: 'https://images.unsplash.com/photo-1600334129128-685c5582fd35?fm=jpg&q=60&w=800&auto=format&fit=crop',
     count: '1,678',
-    color: 'from-emerald-600 to-teal-500'
+    color: 'from-emerald-600 to-teal-500',
+    emoji: '💆'
   },
   {
     id: 'tattoo',
     name: 'Tattoo Artist',
     image: 'https://images.unsplash.com/photo-1552627019-947c3789ffb5?fm=jpg&q=60&w=800&auto=format&fit=crop',
     count: '445',
-    color: 'from-slate-800 to-gray-900'
+    color: 'from-slate-800 to-gray-900',
+    emoji: '💉'
   },
   {
     id: 'chef',
     name: 'Private Chef',
     image: 'https://plus.unsplash.com/premium_photo-1682097301631-902c29a12a21?fm=jpg&q=60&w=800&auto=format&fit=crop',
     count: '334',
-    color: 'from-orange-500 to-red-500'
+    color: 'from-orange-500 to-red-500',
+    emoji: '👨‍🍳'
   },
   {
     id: 'landscaping',
     name: 'Landscaping',
     image: 'https://images.unsplash.com/photo-1597201278257-3687be27d954?fm=jpg&q=60&w=800&auto=format&fit=crop',
     count: '889',
-    color: 'from-green-700 to-emerald-600'
+    color: 'from-green-700 to-emerald-600',
+    emoji: '🌳'
   },
   {
     id: 'electrician',
     name: 'Electrician',
-    image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: '/3d_services_icon_1775252517283.png',
     count: '1,123',
-    color: 'from-yellow-500 to-amber-500'
+    color: 'from-yellow-500 to-amber-500',
+    emoji: '⚡'
   },
   {
     id: 'nanny',
     name: 'Nanny',
-    image: 'https://images.unsplash.com/photo-1581579135012-7ff8957bd0ae?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: '/3d_helper_icon_1775252697443.png',
     count: '642',
-    color: 'from-rose-400 to-pink-400'
+    color: 'from-rose-400 to-pink-400',
+    emoji: '🧸'
   },
   // New helper types
   {
     id: 'sneaker',
     name: 'Sneaker Cleaner',
-    image: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: '/3d_cleaning_icon_1775252731929.png',
     count: '567',
     color: 'from-indigo-600 to-purple-600',
-    icon: <FaShoePrints />
+    emoji: '👟'
   },
   {
     id: 'washingmat',
@@ -255,7 +276,7 @@ const TOP_CATEGORIES = [
     image: 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?fm=jpg&q=60&w=800&auto=format&fit=crop',
     count: '234',
     color: 'from-cyan-600 to-blue-600',
-    icon: <FaWater />
+    emoji: '🧺'
   },
   {
     id: 'animals',
@@ -263,7 +284,63 @@ const TOP_CATEGORIES = [
     image: 'https://images.unsplash.com/photo-1450778869180-41d0601e046e?fm=jpg&q=60&w=800&auto=format&fit=crop',
     count: '789',
     color: 'from-amber-600 to-orange-500',
-    icon: <FaPaw />
+    emoji: '🐾'
+  },
+  {
+    id: 'grocery',
+    name: 'Grocery Runner',
+    image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '1,200',
+    color: 'from-green-500 to-emerald-500',
+    emoji: '🍎'
+  },
+  {
+    id: 'laundry',
+    name: 'Laundry',
+    image: 'https://images.unsplash.com/photo-1545173153-5dd921a1fefc?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '850',
+    color: 'from-blue-400 to-cyan-400',
+    emoji: '🧼'
+  },
+  {
+    id: 'pharmacy',
+    name: 'Pharmacy Drop',
+    image: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '430',
+    color: 'from-red-400 to-rose-400',
+    emoji: '💊'
+  },
+  {
+    id: 'events',
+    name: 'Events',
+    image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '120+',
+    color: 'from-indigo-600 to-purple-600',
+    emoji: '🎟️'
+  },
+  {
+    id: 'beachfront',
+    name: 'Beachfront',
+    image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '89',
+    color: 'from-blue-400 to-cyan-400',
+    emoji: '🏖️'
+  },
+  {
+    id: 'cabin',
+    name: 'Log Cabin',
+    image: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '76',
+    color: 'from-orange-800 to-brown-600',
+    emoji: '🪵'
+  },
+  {
+    id: 'trending',
+    name: 'Trending',
+    image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '210',
+    color: 'from-red-600 to-orange-500',
+    emoji: '🚀'
   }
 ];
 
@@ -409,46 +486,78 @@ class AIRecommendationEngine {
 
 // --- FRESHA-STYLE CATEGORY CARD COMPONENT ---
 const FreshaCategoryCard = ({ category, onClick, index }) => {
+  const [rotate, setRotate] = useState({ x: 0, y: 0 });
+
+  const onMouseMove = (e) => {
+    const card = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - card.left) / card.width;
+    const y = (e.clientY - card.top) / card.height;
+    setRotate({ x: (y - 0.5) * 30, y: (x - 0.5) * -30 });
+  };
+
+  const onMouseLeave = () => setRotate({ x: 0, y: 0 });
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.4 }}
-      whileHover={{ y: -8, scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      transition={{ delay: index * 0.05, duration: 0.5 }}
+      whileHover={{ y: -15, scale: 1.05 }}
+      whileTap={{ scale: 0.96 }}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
       onClick={() => onClick(category)}
-      className="group cursor-pointer relative overflow-hidden rounded-2xl bg-white shadow-sm hover:shadow-xl transition-all duration-300"
+      style={{
+        perspective: 1200,
+        rotateX: rotate.x,
+        rotateY: rotate.y,
+        transformStyle: "preserve-3d"
+      }}
+      className="group cursor-pointer relative overflow-hidden rounded-[3rem] bg-white shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-all duration-300 border border-gray-100"
     >
-      {/* Image Container */}
-      <div className="relative aspect-[4/5] overflow-hidden">
-        <ImageGallery
-          imageUrls={[category.image]}
-          alt={category.name}
-          type="category"
-        />
+      <div className="relative aspect-[4/5] overflow-hidden p-6 bg-gradient-to-br from-white via-gray-50 to-gray-100 flex flex-col items-center justify-center">
+        {/* Elite 3D Background Shadow */}
+        <div className={`absolute -inset-4 bg-gradient-to-r ${category.color} opacity-0 group-hover:opacity-25 blur-3xl transition-opacity duration-500 -z-10`} />
+        
+        {/* Floating 3D Icon Section */}
+        <motion.div 
+          animate={{ y: [0, -12, 0] }}
+          transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+          className="relative z-10 w-32 h-32 flex items-center justify-center"
+          style={{ transform: "translateZ(80px)" }}
+        >
+          {/* 3D Glass Sphere Backing */}
+          <div className="absolute inset-0 bg-white/40 backdrop-blur-md rounded-full border border-white/60 shadow-inner group-hover:scale-110 transition-transform duration-500" />
+          
+          <div className="relative z-20 text-6xl drop-shadow-[0_10px_10px_rgba(0,0,0,0.2)] group-hover:scale-125 transition-transform duration-500 animate-pulse-slow">
+            {category.emoji || '✨'}
+          </div>
 
-        {/* Gradient Overlay */}
-        <div className={`absolute inset-0 bg-gradient-to-t ${category.color} opacity-60 mix-blend-multiply`} />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          {/* Isometric Overlay Image IF EXISTS */}
+          {category.image.startsWith('/') && (
+             <img
+               src={category.image}
+               alt={category.name}
+               className="absolute inset-0 w-full h-full object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30"
+             />
+          )}
+        </motion.div>
 
-        {/* Content */}
-        <div className="absolute inset-0 flex flex-col justify-end p-4">
-          <h3 className="text-white font-bold text-lg mb-1 group-hover:translate-y-0 transition-transform">
+        {/* Info Section */}
+        <div className="absolute inset-x-0 bottom-0 p-8 text-center bg-gradient-to-t from-white via-white/90 to-transparent z-40">
+          <h3 className="text-gray-900 font-black text-xl mb-1 tracking-tight uppercase group-hover:text-rose-600 transition-colors">
             {category.name}
           </h3>
-          <div className="flex items-center gap-2 text-white/90 text-sm">
-            <span className="bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-full text-xs font-medium">
-              {category.count} providers
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">
+              {category.count} active
             </span>
           </div>
         </div>
 
-        {/* Hover Icon */}
-        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="bg-white/90 backdrop-blur-md p-2 rounded-full">
-            <ArrowTrendingUpIcon className="w-4 h-4 text-gray-900" />
-          </div>
-        </div>
+        {/* Interactive Highlight */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-20 pointer-events-none bg-gradient-to-tr from-transparent via-white to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
       </div>
     </motion.div>
   );
@@ -688,6 +797,66 @@ const TopCategoriesSection = ({ navigate }) => {
   );
 };
 
+// --- ELITE HELPER CARD ---
+const EliteHelperCard = ({ helper, onClick }) => {
+  return (
+    <motion.div
+      whileHover={{ y: -8, scale: 1.05 }}
+      onClick={onClick}
+      className="group cursor-pointer flex flex-col items-center p-4 bg-white rounded-[2.5rem] shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-50"
+    >
+      <div className="relative mb-4">
+        {/* Elite Glow Effect */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-rose-500 to-amber-500 rounded-full opacity-20 group-hover:opacity-40 blur-md transition-opacity duration-500" />
+        
+        <div className="relative w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-100 flex items-center justify-center">
+          <ImageGallery
+            imageUrls={helper.imageUrls || []}
+            alt={helper.name}
+            type="avatar"
+          />
+        </div>
+        
+        {/* Verified Badge with Pulse */}
+        <div className="absolute bottom-1 right-2 w-8 h-8 bg-rose-500 rounded-full flex items-center justify-center border-2 border-white shadow-lg animate-bounce-slow">
+          <CheckCircleIcon className="w-5 h-5 text-white" />
+          <motion.div 
+            animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+            className="absolute inset-0 bg-rose-500 rounded-full -z-10"
+          />
+        </div>
+      </div>
+
+      <div className="text-center w-full">
+        <h3 className="font-bold text-gray-900 text-lg group-hover:text-rose-600 transition-colors truncate px-2">
+          {helper.name}
+        </h3>
+        <span className="inline-block bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-[0.1em] px-2 py-0.5 rounded-full mb-2">
+          {helper.type}
+        </span>
+        
+        <div className="flex items-center justify-center gap-3 mt-2 border-t border-gray-50 pt-3">
+          <div className="flex flex-col items-center">
+            <div className="flex items-center gap-1">
+              <StarIconSolid className="w-3.5 h-3.5 text-amber-500" />
+              <span className="text-sm font-bold text-gray-900">{helper.rating || '4.9'}</span>
+            </div>
+            <span className="text-[10px] text-gray-400 font-medium">RATING</span>
+          </div>
+          
+          <div className="w-[1px] h-6 bg-gray-100" />
+          
+          <div className="flex flex-col items-center">
+            <span className="text-sm font-bold text-gray-900">R{helper.regularPrice}</span>
+            <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap">STARTING</span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 // --- Main Views ---
 
 const DesktopHeroSearch = ({ searchTerm, setSearchTerm, handleSearchSubmit, navigate, currentLocation }) => {
@@ -854,6 +1023,7 @@ const MobileAppHomepage = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('Homes');
   const [showAIInsights, setShowAIInsights] = useState(true);
+  const [isBookingsOpen, setIsBookingsOpen] = useState(false);
 
   useEffect(() => {
     const checkScreenSize = () => { setIsDesktop(window.innerWidth >= 1024); };
@@ -906,6 +1076,11 @@ const MobileAppHomepage = ({
           {/* FRESHA-STYLE TOP CATEGORIES SECTION */}
           <TopCategoriesSection navigate={navigate} />
 
+          {/* LoopOut Pulse (Live Community Feed) */}
+          <div className="mb-10">
+            <LoopOutPulse />
+          </div>
+
           {/* Location Status Indicator */}
           {locationStatus && (
             <div className="mb-8 p-4 bg-rose-50 rounded-2xl border border-rose-100 flex items-center justify-between">
@@ -926,6 +1101,48 @@ const MobileAppHomepage = ({
           )}
 
           <DesktopPopularDestinations navigate={navigate} />
+
+          {/* THE DAILY LOOP - NEW FEATURE */}
+          <section className="mb-16">
+            <div className="flex justify-between items-end mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">The Daily Loop</h2>
+                <p className="text-gray-500 mt-1">Daily essentials brought to your door</p>
+              </div>
+              <button 
+                onClick={() => navigate('/search?category=daily&type=services')}
+                className="text-sm font-semibold underline hover:text-rose-500 transition-colors"
+              >
+                View all daily
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {[
+                { id: 'grocery', name: 'Groceries', desc: 'Fresh items in 60m', icon: <FaShoppingBasket />, color: 'bg-green-500', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80' },
+                { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <FaHandsWash />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1545173153-5dd921a1fefc?auto=format&fit=crop&w=400&q=80' },
+                { id: 'pharmacy', name: 'Pharmacy', desc: 'Medication drop-off', icon: <FaFire />, color: 'bg-rose-500', img: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=400&q=80' },
+                { id: 'water', name: 'Water & Gas', desc: 'Refills delivered', icon: <FaWater />, color: 'bg-cyan-500', img: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?auto=format&fit=crop&w=400&q=80' }
+              ].map((item) => (
+                <motion.div
+                  key={item.id}
+                  whileHover={{ y: -8 }}
+                  onClick={() => navigate(`/search?category=${item.id}&type=services`)}
+                  className="group cursor-pointer relative h-48 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
+                >
+                  <img src={item.img} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={item.name} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute inset-0 p-6 flex flex-col justify-end">
+                    <div className={`${item.color} w-10 h-10 rounded-xl flex items-center justify-center text-white mb-3 shadow-lg`}>
+                       {item.icon}
+                    </div>
+                    <h3 className="text-white font-bold text-xl">{item.name}</h3>
+                    <p className="text-white/70 text-xs">{item.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </section>
 
           <div className="flex items-center gap-8 overflow-x-auto pb-4 mb-8 border-b border-gray-200 scrollbar-hide">
             {categories.map((cat) => (
@@ -1011,30 +1228,13 @@ const MobileAppHomepage = ({
                 {[...Array(8)].map((_, i) => <div key={i} className="aspect-square bg-gray-200 rounded-3xl animate-pulse" />)}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-x-6 gap-y-12">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-12 px-4">
                 {featuredHelpers.slice(0, 8).map((helper) => (
-                  <div key={helper._id} onClick={() => navigate(`/helper/${helper._id}`)} className="cursor-pointer flex flex-col gap-3 ">
-                    <div className="relative aspect-square overflow-hidden rounded-3xl bg-gray-200 w-48 h-48 mx-auto border-2 border-gray-100 group-hover:border-rose-200 transition-all duration-300">
-                      <ImageGallery
-                        imageUrls={helper.imageUrls || []}
-                        alt={helper.name}
-                        type="avatar"
-                      />
-                      <div className="absolute bottom-2 right-2 w-7 h-7 bg-rose-500 rounded-full flex items-center justify-center border-2 border-white shadow-md">
-                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <h3 className="font-semibold text-gray-900 group-hover:text-rose-600 transition-colors">{helper.name}</h3>
-                      <p className="text-gray-500 text-sm uppercase tracking-wider font-medium">{helper.type}</p>
-                      <div className="flex items-center justify-center gap-1 mt-1">
-                        <StarIconSolid className="w-3.5 h-3.5 text-rose-500" />
-                        <span className="text-sm font-semibold">{helper.rating}</span>
-                        <span className="text-gray-300 px-1">|</span>
-                        <span className="font-bold text-sm text-gray-900">R{helper.regularPrice}</span>
-                      </div>
-                    </div>
-                  </div>
+                  <EliteHelperCard 
+                    key={helper._id} 
+                    helper={helper} 
+                    onClick={() => navigate(`/helper/${helper._id}`)} 
+                  />
                 ))}
               </div>
             )}
@@ -1104,6 +1304,42 @@ const MobileAppHomepage = ({
             </div>
           </motion.section>
 
+          {/* HOW IT WORKS SECTION */}
+          <section className="mt-20 mb-20 px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">How LoopOut works</h2>
+              <p className="text-gray-500">The easiest way to find and book services in Polokwane</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mx-auto">
+              {[
+                { 
+                  icon: <MagnifyingGlassIcon className="w-10 h-10 text-rose-500" />, 
+                  title: "1. Discover", 
+                  desc: "Use our AI-powered search to find the perfect stay, helper, or service near you." 
+                },
+                { 
+                  icon: <SparklesIcon className="w-10 h-10 text-amber-500" />, 
+                  title: "2. Personalize", 
+                  desc: "Select options that fit your schedule and budget. See verified reviews and ratings." 
+                },
+                { 
+                  icon: <CheckCircleIcon className="w-10 h-10 text-green-500" />, 
+                  title: "3. Book & Enjoy", 
+                  desc: "Book instantly via WhatsApp and enjoy professional services from the best in the city." 
+                }
+              ].map((step, i) => (
+                <div key={i} className="flex flex-col items-center text-center group">
+                  <div className="mb-6 p-6 bg-white rounded-3xl shadow-sm border border-gray-100 group-hover:shadow-xl group-hover:-translate-y-2 transition-all duration-300">
+                    {step.icon}
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">{step.title}</h3>
+                  <p className="text-gray-500 leading-relaxed">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
           {/* Download App Banner */}
           <section className="mt-16 mb-8 bg-gray-900 rounded-3xl p-10 lg:p-14 overflow-hidden relative flex flex-col md:flex-row items-center justify-between">
             <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500 rounded-full blur-3xl opacity-20 -mr-20 -mt-20 pointer-events-none"></div>
@@ -1168,6 +1404,47 @@ const MobileAppHomepage = ({
             </div>
           </section>
         </main>
+
+        {/* Floating Smart Concierge */}
+        <motion.div
+           initial={{ scale: 0, opacity: 0 }}
+           animate={{ scale: 1, opacity: 1 }}
+           whileHover={{ scale: 1.1, rotate: 10 }}
+           whileTap={{ scale: 0.9 }}
+           onClick={() => navigate('/ai-help-center')}
+           className="fixed bottom-8 right-8 z-[100] cursor-pointer group"
+        >
+          <div className="absolute -inset-2 bg-gradient-to-r from-rose-600 to-pink-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 animate-pulse" />
+          <div className="relative bg-rose-600 text-white p-4 rounded-full shadow-2xl flex items-center justify-center border-2 border-white/20">
+            <SparklesIcon className="w-8 h-8" />
+            <div className="absolute right-full mr-4 bg-white px-4 py-2 rounded-2xl shadow-xl text-gray-900 font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0">
+               Need help finding something? <span>✨</span>
+            </div>
+          </div>
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
+        </motion.div>
+
+        {/* Floating My Bookings Button */}
+        <motion.div
+           initial={{ scale: 0, opacity: 0 }}
+           animate={{ scale: 1, opacity: 1 }}
+           whileHover={{ scale: 1.1 }}
+           whileTap={{ scale: 0.9 }}
+           onClick={() => setIsBookingsOpen(true)}
+           className="fixed bottom-28 right-8 z-[100] cursor-pointer group"
+        >
+          <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 shadow-xl" />
+          <div className="relative bg-white text-gray-900 p-4 rounded-full shadow-2xl flex items-center justify-center border border-gray-100">
+            <FaCalendarCheck className="w-8 h-8 text-blue-600" />
+            <div className="absolute right-full mr-4 bg-gray-900 text-white px-4 py-2 rounded-2xl shadow-xl text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+               Track your requests <span>🚚</span>
+            </div>
+          </div>
+          <div className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] text-white font-bold">2</div>
+        </motion.div>
+
+        {/* Bookings Modal */}
+        <MyBookingsConsumer isOpen={isBookingsOpen} onClose={() => setIsBookingsOpen(false)} />
       </div>
     );
   }
