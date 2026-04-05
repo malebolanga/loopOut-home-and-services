@@ -56,7 +56,7 @@ export const calculateBookingDetails = async (req, res) => {
 // Create booking
 export const createBooking = async (req, res) => {
   try {
-    const { userId, listingId, helperId, serviceId, startDate, endDate, totalPrice, phone, message } = req.body;
+    const { userId, listingId, helperId, serviceId, startDate, endDate, totalPrice, phone, message, subtype } = req.body;
 
     // Validate input
     const mainId = listingId || helperId || serviceId;
@@ -75,6 +75,7 @@ export const createBooking = async (req, res) => {
       totalPrice,
       phone,
       message,
+      subtype,
       status: 'pending'
     });
 
@@ -162,6 +163,23 @@ export const getHostBookings = async (req, res) => {
     .populate('service')
     .populate('user')
     .sort({ createdAt: -1 });
+    
+    res.json(bookings);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Get bookings requested by a user
+export const getUserBookings = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const bookings = await Booking.find({ user: userId })
+      .populate('listing')
+      .populate('helper')
+      .populate('service')
+      .populate('user')
+      .sort({ createdAt: -1 });
     
     res.json(bookings);
   } catch (error) {

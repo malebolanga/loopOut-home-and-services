@@ -15,6 +15,7 @@ const bookingSchema = new mongoose.Schema({
   },
   phone: { type: String },
   message: { type: String },
+  subtype: { type: String },
   createdAt: { type: Date, default: Date.now }
 });
 

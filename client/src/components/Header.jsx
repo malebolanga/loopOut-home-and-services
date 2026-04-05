@@ -58,6 +58,7 @@ export default function Header() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [prevUnreadCount, setPrevUnreadCount] = useState(0);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(() => localStorage.getItem('loopOutSound') !== 'false');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('San Francisco');
@@ -124,7 +125,11 @@ export default function Header() {
         
         // If we have new unread notifications, ring the bell
         if (newUnreadCount > prevUnreadCount) {
-          notificationSound.current.play().catch(e => console.log('Audio play failed:', e));
+          if (isSoundEnabled) {
+            notificationSound.current.play().catch(e => {
+              console.log('Audio play failed (interaction required):', e);
+            });
+          }
           
           if (Notification.permission === 'granted' && document.hidden) {
             const latest = data.notifications?.[0];
@@ -152,10 +157,27 @@ export default function Header() {
       Notification.requestPermission();
     }
 
+    // Function to unlock audio on first interaction
+    const unlockAudio = () => {
+      notificationSound.current.play().then(() => {
+        notificationSound.current.pause();
+        notificationSound.current.currentTime = 0;
+        document.removeEventListener('click', unlockAudio);
+        document.removeEventListener('touchstart', unlockAudio);
+      }).catch(() => {});
+    };
+
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
+
     // Set up polling for real-time alerts
     const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
     
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    };
   }, [fetchNotifications]);
 
   // Close dropdowns when clicking outside

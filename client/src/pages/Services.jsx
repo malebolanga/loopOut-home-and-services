@@ -673,6 +673,7 @@ const ServicePage = () => {
           totalPrice: totalPrice,
           phone: bookingData.phone,
           message: bookingData.specialRequirements || result.fullMessage,
+          subtype: service.type === 'carwash' ? (bookingData.carWashType || 'Car Wash') : service.type,
           status: 'pending'
         };
 

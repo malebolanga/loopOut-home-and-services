@@ -144,6 +144,7 @@ export default function DemoDashboard() {
   const [bookings, setBookings] = useState([]);
   const [filter, setFilter] = useState('all');
   const [viewType, setViewType] = useState('all'); 
+  const [dashboardMode, setDashboardMode] = useState('hosting'); // 'hosting' or 'requests'
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -152,7 +153,11 @@ export default function DemoDashboard() {
       if (!currentUser?._id) return;
       try {
         setLoading(true);
-        const res = await fetch(`/api/bookings/host/${currentUser._id}`);
+        const endpoint = dashboardMode === 'hosting' 
+          ? `/api/bookings/host/${currentUser._id}`
+          : `/api/bookings/user/${currentUser._id}`;
+          
+        const res = await fetch(endpoint);
         if (res.ok) {
           const data = await res.json();
           // Map backend data to dashboard format
@@ -160,7 +165,7 @@ export default function DemoDashboard() {
             ...b,
             date: new Date(b.startDate).toISOString().split('T')[0],
             time: new Date(b.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            clientName: b.user?.username || 'Guest',
+            clientName: dashboardMode === 'hosting' ? (b.user?.username || 'Guest') : (b.listing?.name || b.helper?.name || b.service?.name || 'Item'),
             clientPhone: b.phone || 'N/A',
             type: b.listing ? 'listing' : (b.helper ? 'helper' : 'service'),
             listingDetails: b.listing,
@@ -168,19 +173,20 @@ export default function DemoDashboard() {
             serviceDetails: b.service,
             location: b.listing?.address || b.helper?.address || b.service?.address || b.location || 'N/A',
             totalAmount: b.totalPrice,
+            subtype: b.subtype || '',
             specialRequirements: b.message || ''
           }));
           setBookings(formatted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
         }
       } catch (error) {
-        console.error('Error fetching host bookings:', error);
+        console.error('Error fetching bookings:', error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchBookings();
-  }, [currentUser]);
+  }, [currentUser, dashboardMode]);
 
   const updateBookingStatus = async (bookingId, newStatus) => {
     try {
@@ -298,15 +304,28 @@ export default function DemoDashboard() {
         {/* Header with Title and Notification */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
            <div>
-              <h1 className="text-5xl font-black text-gray-900 tracking-tight mb-2">Host Dashboard</h1>
-              <p className="text-gray-500 font-medium text-lg flex items-center gap-2">
-                Manage your stays, services, and client messages
-              </p>
+              <h1 className="text-5xl font-black text-gray-900 tracking-tight mb-2">
+                {dashboardMode === 'hosting' ? 'Host Dashboard' : 'My Requests'}
+              </h1>
+              <div className="flex bg-gray-100 p-1.5 rounded-2xl w-fit mt-4 flex-wrap">
+                 <button 
+                   onClick={() => setDashboardMode('hosting')}
+                   className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${dashboardMode === 'hosting' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                 >
+                   Hosting Portfolio
+                 </button>
+                 <button 
+                   onClick={() => setDashboardMode('requests')}
+                   className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${dashboardMode === 'requests' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                 >
+                   My Activity
+                 </button>
+              </div>
            </div>
            
            <div className="flex items-center gap-6">
               {/* Notification Bell */}
-              <div className="relative group cursor-pointer">
+              <div className="relative  cursor-pointer">
                 <div className="w-16 h-16 bg-white rounded-[2rem] shadow-xl border border-gray-100 flex items-center justify-center text-gray-400 group-hover:text-rose-500 transition-all duration-300">
                   <FaBell className="text-2xl animate-pulse" />
                 </div>
@@ -461,6 +480,7 @@ export default function DemoDashboard() {
             filteredBookings.map((booking, idx) => (
               <motion.div 
                 key={booking._id}
+                id={`booking-${booking._id}`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.05 }}
@@ -501,6 +521,13 @@ export default function DemoDashboard() {
                               {getServiceType(booking)}
                             </p>
                           </div>
+                          {booking.subtype && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-rose-100 shadow-sm">
+                                {booking.subtype}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -654,63 +681,122 @@ export default function DemoDashboard() {
     </div>
   );
 }
-
 const BookingCalendar = ({ bookings }) => {
   const [currentDate, setCurrentDate] = useState(new Date(2024, 11, 1)); // December 2024 for demo
+  const [calView, setCalView] = useState('month'); // 'month' or 'day'
   
   const daysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
   
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   
-  const renderDays = () => {
+  const scrollToBooking = (id) => {
+    const element = document.getElementById(`booking-${id}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      element.classList.add('ring-4', 'ring-rose-500/30', 'ring-offset-4', 'transition-all');
+      setTimeout(() => {
+        element.classList.remove('ring-4', 'ring-rose-500/30', 'ring-offset-4');
+      }, 2000);
+    }
+  };
+
+  const renderMonthView = () => {
     const totalDays = daysInMonth(currentDate.getFullYear(), currentDate.getMonth());
     const startDay = firstDayOfMonth(currentDate.getFullYear(), currentDate.getMonth());
     const days = [];
     
-    // Empty slots for previous month
     for (let i = 0; i < startDay; i++) {
-      days.push(<div key={`empty-${i}`} className="h-32 border-b border-r border-gray-100 bg-gray-50/30" />);
+      days.push(<div key={`empty-${i}`} className="min-h-[80px] border-b border-r border-gray-100 bg-gray-50/30" />);
     }
     
-    // Days of current month
     for (let day = 1; day <= totalDays; day++) {
       const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const dayBookings = bookings.filter(b => b.date === dateStr && b.status !== 'cancelled');
       
       days.push(
-        <div key={day} className="h-32 border-b border-r border-gray-100 p-2 relative hover:bg-rose-50/20 transition-colors">
-          <span className={`text-sm font-black ${dayBookings.length > 0 ? 'text-gray-900' : 'text-gray-300'}`}>
-            {day}
-          </span>
-          <div className="mt-1 space-y-1 overflow-hidden">
-            {dayBookings.map((b, i) => (
-              <motion.div 
+        <div key={day} className="min-h-[80px] border-b border-r border-gray-100 p-2 relative hover:bg-rose-50/20 transition-colors">
+          <div className="flex justify-between items-start">
+            <span className={`text-sm font-black ${dayBookings.length > 0 ? 'text-gray-900' : 'text-gray-300'}`}>
+              {day}
+            </span>
+            {dayBookings.length > 0 && (
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+            )}
+          </div>
+          <div className="mt-1 space-y-1">
+            {dayBookings.slice(0, 1).map((b, i) => (
+              <div 
                 key={i}
-                initial={{ opacity: 0, x: -5 }}
-                animate={{ opacity: 1, x: 0 }}
-                className={`text-[9px] font-black uppercase tracking-tighter px-1.5 py-1 rounded-md truncate border-l-2 ${
-                  b.type === 'listing' ? 'bg-rose-50 text-rose-700 border-rose-500' : 'bg-blue-50 text-blue-700 border-blue-500'
-                }`}
+                onClick={() => scrollToBooking(b._id)}
+                className="text-[8px] font-black uppercase tracking-tighter px-1 py-0.5 rounded bg-rose-50 text-rose-700 border-l border-rose-500 truncate cursor-pointer"
               >
-                {b.time} - {b.clientName}
-              </motion.div>
+                {b.time}
+              </div>
             ))}
+            {dayBookings.length > 1 && (
+              <button className="text-[7px] font-bold text-gray-400 hover:text-rose-500 uppercase">+{dayBookings.length - 1} more</button>
+            )}
           </div>
         </div>
       );
     }
-    
     return days;
+  };
+
+  const renderDayView = () => {
+    const totalDays = daysInMonth(currentDate.getFullYear(), currentDate.getMonth());
+    return (
+      <div className="flex overflow-x-auto p-6 gap-4 scrollbar-hide bg-gray-50/50">
+        {Array.from({ length: totalDays }, (_, i) => i + 1).map(day => {
+          const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const dayBookings = bookings.filter(b => b.date === dateStr && b.status !== 'cancelled');
+          return (
+            <div key={day} className="flex-shrink-0 w-32 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Day {day}</p>
+               <div className="space-y-2">
+                 {dayBookings.length > 0 ? dayBookings.map((b, i) => (
+                   <div 
+                     key={i}
+                     onClick={() => scrollToBooking(b._id)}
+                     className="p-2 bg-rose-50 rounded-xl border-l-2 border-rose-500 cursor-pointer hover:bg-rose-100 transition-all"
+                   >
+                     <p className="text-[9px] font-black text-gray-900 leading-tight">{b.time}</p>
+                     <p className="text-[8px] font-bold text-rose-600 truncate">{b.clientName}</p>
+                   </div>
+                 )) : (
+                   <p className="text-[8px] font-medium text-gray-300 italic">No bookings</p>
+                 )}
+               </div>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   return (
     <div className="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden mb-12">
-      {/* Calendar Header */}
-      <div className="p-8 bg-gray-900 text-white flex items-center justify-between">
-        <h3 className="text-xl font-black uppercase tracking-widest">
-          {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-        </h3>
+      <div className="p-8 bg-gray-900 text-white flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+           <h3 className="text-xl font-black uppercase tracking-widest">
+             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+           </h3>
+           <div className="flex bg-white/10 p-1 rounded-xl w-fit mt-3">
+              <button 
+                onClick={() => setCalView('month')}
+                className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${calView === 'month' ? 'bg-white text-gray-900 shadow-sm' : 'text-white/50 hover:text-white'}`}
+              >
+                Month View
+              </button>
+              <button 
+                onClick={() => setCalView('day')}
+                className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${calView === 'day' ? 'bg-white text-gray-900 shadow-sm' : 'text-white/50 hover:text-white'}`}
+              >
+                Day Scroll
+              </button>
+           </div>
+        </div>
         <div className="flex gap-2">
           <button 
             onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
@@ -727,19 +813,21 @@ const BookingCalendar = ({ bookings }) => {
         </div>
       </div>
       
-      {/* Weekdays */}
-      <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-100">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-          <div key={d} className="py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-r border-gray-100 last:border-r-0">
-            {d}
+      {calView === 'month' ? (
+        <>
+          <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-100">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+              <div key={d} className="py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-r border-gray-100 last:border-r-0">
+                {d}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      
-      {/* Grid */}
-      <div className="grid grid-cols-7 border-l border-gray-100">
-        {renderDays()}
-      </div>
+          <div className="grid grid-cols-7 border-l border-gray-100">
+            {renderMonthView()}
+          </div>
+        </>
+      ) : renderDayView()}
     </div>
   );
-};
+};
+;

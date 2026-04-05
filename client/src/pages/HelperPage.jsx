@@ -1554,6 +1554,7 @@ export default function HelperPage() {
       totalPrice: totalPrice,
       phone: bookingData.phone,
       message: message,
+      subtype: helper.type,
       status: 'pending',
       type: 'helper'
     };
@@ -1731,6 +1732,7 @@ export default function HelperPage() {
       totalPrice: totalPrice,
       phone: bookingData.phone,
       message: bookingData.specialRequirements || message,
+      subtype: bookingData.selectedServices.length > 0 ? bookingData.selectedServices.join(', ') : helper.type,
       status: 'pending',
       type: 'helper'
     };
