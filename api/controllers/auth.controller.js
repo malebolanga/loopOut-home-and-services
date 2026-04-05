@@ -23,14 +23,14 @@ export const signin = async (req, res, next) => {
     const validPassword = bcryptjs.compareSync(password, validUser.password);
     if (!validPassword) return next(errorHandler(401, 'Wrong credentials!'));
     const token = jwt.sign({ id: validUser._id }, process.env.JWT_SECRET, {
-      expiresIn: '30d' // 30 days expiration
+      expiresIn: '365d' // 1 year expiration
     });
     const { password: pass, ...rest } = validUser._doc;
     res
       .cookie('access_token', token, {
         httpOnly: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        sameSite: 'strict',
+        maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
+        sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production'
       })
       .status(200)
@@ -45,14 +45,14 @@ export const google = async (req, res, next) => {
     const user = await User.findOne({ email: req.body.email });
     if (user) {
       const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-        expiresIn: '30d' // 30 days expiration
+        expiresIn: '365d' // 1 year expiration
       });
       const { password: pass, ...rest } = user._doc;
       res
         .cookie('access_token', token, {
           httpOnly: true,
-          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-          sameSite: 'strict',
+          maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
+          sameSite: 'lax',
           secure: process.env.NODE_ENV === 'production'
         })
         .status(200)
@@ -72,14 +72,14 @@ export const google = async (req, res, next) => {
       });
       await newUser.save();
       const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-        expiresIn: '30d' // 30 days expiration
+        expiresIn: '365d' // 1 year expiration
       });
       const { password: pass, ...rest } = newUser._doc;
       res
         .cookie('access_token', token, {
           httpOnly: true,
-          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-          sameSite: 'strict',
+          maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
+          sameSite: 'lax',
           secure: process.env.NODE_ENV === 'production'
         })
         .status(200)
@@ -110,6 +110,14 @@ export const validateToken = async (req, res, next) => {
 
       const user = await User.findById(decoded.id).select('-password');
       if (!user) return res.status(200).json({ valid: false });
+
+      // Auto-refresh the cookie to keep the session alive
+      res.cookie('access_token', token, {
+        httpOnly: true,
+        maxAge: 365 * 24 * 60 * 60 * 1000, // Refresh to 1 year
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production'
+      });
 
       res.status(200).json({
         valid: true,

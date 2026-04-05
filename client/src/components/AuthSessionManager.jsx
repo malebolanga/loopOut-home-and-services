@@ -1,0 +1,43 @@
+import { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { signOutUserSuccess } from '../redux/user/userSlice';
+
+/**
+ * Periodically validates the session in the background
+ * to keep the slide-window cookie alive for 1 year.
+ */
+export default function AuthSessionManager() {
+  const { currentUser } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Validate every 4 hours
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/auth/validate-token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          if (!data.valid) {
+            // Only sign out if the server explicitly says it's invalid
+            // (e.g. user deleted from DB)
+            dispatch(signOutUserSuccess());
+          }
+        }
+      } catch (error) {
+        console.error('Background session refresh failed:', error);
+      }
+    }, 1000 * 60 * 60 * 4); // 4 hours
+
+    return () => clearInterval(interval);
+  }, [currentUser, dispatch]);
+
+  return null;
+}

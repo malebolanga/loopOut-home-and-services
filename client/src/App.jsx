@@ -2,6 +2,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import PrivateRoute from "./components/PrivateRoute";
+import AuthSessionManager from "./components/AuthSessionManager";
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { signOutUserSuccess } from "./redux/user/userSlice";
 
 // Core Pages
 import Home from "./pages/Home";
@@ -113,8 +117,31 @@ import Categories from './pages/Categories';
 import 'leaflet/dist/leaflet.css';
 
 export default function App() {
+  const { currentUser } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const validateTokenOnMount = async () => {
+      if (!currentUser) return;
+      try {
+        const res = await fetch('/api/auth/validate-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (!data.valid) {
+          dispatch(signOutUserSuccess());
+        }
+      } catch (error) {
+        console.error('Initial session check failed:', error);
+      }
+    };
+    validateTokenOnMount();
+  }, [dispatch, currentUser]);
+
   return (
     <BrowserRouter>
+      <AuthSessionManager />
       <Header />
       <Routes>
         {/* Core Routes - Specific paths first */}

@@ -137,6 +137,74 @@ const helperTypeIcons = {
   photography: FaStar,
   carwash: FaCut
 };
+const cleanMessage = (msg) => {
+  if (!msg) return '';
+  // Remove Accept/Decline links and any http links
+  return msg
+    .replace(/Accept:\s*https?:\/\/\S+/gi, '')
+    .replace(/Decline:\s*https?:\/\/\S+/gi, '')
+    .replace(/https?:\/\/\S+/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+// Global style for hiding scrollbars while allowing scroll (for whole dashboard)
+const hideScrollbarStyle = `
+  .dashboard-container::-webkit-scrollbar,
+  .dashboard-container *::-webkit-scrollbar {
+    display: none !important;
+  }
+  .dashboard-container,
+  .dashboard-container * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+`;
+
+const ClientRequestNote = ({ message }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const words = message.split(' ');
+  const shouldShowReadMore = words.length > 20; // Approx 2 lines
+
+  return (
+    <div className="mt-8 pt-6 border-t border-gray-50 flex items-start gap-4 transition-all">
+       <div className="w-8 h-8 rounded-full bg-[#E7FCE3] flex items-center justify-center text-[#25D366] flex-shrink-0 shadow-sm border border-[#25D366]/20 mt-1">
+          <FaWhatsapp size={14} />
+       </div>
+       <div className="bg-gray-50/80 px-4 py-3 rounded-2xl rounded-tl-none border border-gray-100 flex-1 shadow-sm max-w-[90%] transition-all overflow-hidden">
+          <p className="text-[10px] font-black text-[#075E54] uppercase tracking-widest mb-1 opacity-70">Client Requested</p>
+          <div className={`text-xs font-bold text-gray-700 leading-relaxed italic transition-all duration-500 ${!isExpanded ? 'line-clamp-2' : ''}`}>
+             "{message}"
+          </div>
+          
+          {(shouldShowReadMore || message.length > 100) && (
+            <button 
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="mt-2 text-[10px] font-black text-rose-500 uppercase tracking-widest hover:text-rose-600 transition-colors"
+            >
+              {isExpanded ? 'Read Less' : 'Read More'}
+            </button>
+          )}
+
+          {/* Key info badges */}
+          {(message.toLowerCase().includes('bbq') || 
+            message.toLowerCase().includes('braai') ||
+            message.toLowerCase().includes('electric') ||
+            message.toLowerCase().includes('food')) && (
+            <div className="mt-3 flex flex-wrap gap-2">
+               {['BBQ', 'Braai', 'Electricity', 'Power', 'Food', 'Dietary'].map(key => 
+                 message.toLowerCase().includes(key.toLowerCase()) && (
+                   <span key={key} className="px-2 py-1 bg-white/60 text-[8px] font-black uppercase text-gray-400 rounded-md border border-gray-200">
+                     {key}
+                   </span>
+                 )
+               )}
+            </div>
+          )}
+       </div>
+    </div>
+  );
+};
 
 export default function DashBoard() {
   const { currentUser } = useSelector((state) => state.user);
@@ -161,7 +229,7 @@ export default function DashBoard() {
         const res = await fetch(endpoint);
         if (res.ok) {
           const data = await res.json();
-          // Map backend data to dashboard format
+
           const formatted = data.map(b => ({
             ...b,
             date: new Date(b.startDate).toISOString().split('T')[0],
@@ -175,7 +243,7 @@ export default function DashBoard() {
             location: b.listing?.address || b.helper?.address || b.service?.address || b.location || 'N/A',
             totalAmount: b.totalPrice,
             subtype: b.subtype || '',
-            specialRequirements: b.message || ''
+            specialRequirements: cleanMessage(b.message || '')
           }));
           setBookings(formatted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
         }
@@ -323,7 +391,8 @@ export default function DashBoard() {
   });
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-8 dashboard-container">
+      <style>{hideScrollbarStyle}</style>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         {/* Header with Title and Notification */}
@@ -553,7 +622,7 @@ export default function DashBoard() {
         </div>
 
         {/* Bookings List */}
-        <div className="space-y-6">
+        <div className="space-y-10">
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -577,7 +646,7 @@ export default function DashBoard() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-500 group mb-6"
+                className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-500 group"
               >
                 <div className="p-8">
                   {/* Status & ID Row */}
@@ -599,7 +668,7 @@ export default function DashBoard() {
                   {/* Main Content Grid */}
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                     {/* Item Info */}
-                    <div className="lg:col-span-4 border-r border-gray-50 pr-8">
+                    <div className="lg:col-span-4 lg:border-r border-gray-50 lg:pr-8 min-w-0">
                       <div className="flex items-start gap-5">
                         <div className="w-20 h-20 rounded-[1.5rem] bg-gray-50 flex items-center justify-center text-3xl shadow-inner group-hover:scale-110 transition-transform duration-500">
                            {getServiceIcon(booking)}
@@ -616,7 +685,7 @@ export default function DashBoard() {
                           </div>
                           {booking.subtype && (
                             <div className="mt-3 flex flex-wrap gap-2">
-                              <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-rose-100 shadow-sm">
+                              <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-rose-100 shadow-sm truncate max-w-full">
                                 {booking.subtype}
                               </span>
                             </div>
@@ -626,14 +695,14 @@ export default function DashBoard() {
                     </div>
 
                     {/* Booking Details */}
-                    <div className="lg:col-span-4 space-y-6">
+                    <div className="lg:col-span-4 min-w-0 space-y-6">
                       <div className="flex items-center gap-4">
                          <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm">
                             <FaCalendar size={14} />
                          </div>
-                         <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Date & Time</p>
-                            <p className="text-[15px] font-bold text-gray-900">{formatDate(booking.date)} at {booking.time}</p>
+                         <div className="min-w-0">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5 whitespace-nowrap">Date & Time</p>
+                            <p className="text-[15px] font-bold text-gray-900 truncate">{formatDate(booking.date)} at {booking.time}</p>
                          </div>
                       </div>
                       <div className="flex items-center gap-4">
@@ -641,29 +710,29 @@ export default function DashBoard() {
                             <FaMapMarkerAlt size={14} />
                          </div>
                          <div className="flex-1 min-w-0">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Location</p>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5 whitespace-nowrap">Location</p>
                             <a 
-                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.location)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[15px] font-bold text-rose-600 hover:text-rose-700 hover:underline transition-all block truncate"
-                              title={`${booking.location}`}
-                            >
-                              {booking.location}
-                            </a>
+                               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.location)}`}
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               className="text-[15px] font-bold text-rose-600 hover:text-rose-700 hover:underline transition-all block truncate"
+                               title={`${booking.location}`}
+                             >
+                               {booking.location}
+                             </a>
                          </div>
                       </div>
                     </div>
 
                     {/* Client Info & Actions */}
-                    <div className="lg:col-span-4 bg-gray-50/80 backdrop-blur-sm rounded-[2rem] p-6 flex flex-col justify-between border border-white">
+                    <div className="lg:col-span-4 bg-gray-50/80 backdrop-blur-sm rounded-[2rem] p-6 flex flex-col justify-between border border-white min-w-0">
                       <div className="flex items-center gap-4 mb-6">
-                        <div className="w-12 h-12 rounded-full bg-white shadow-md border-4 border-gray-100 flex items-center justify-center text-gray-400">
+                        <div className="w-12 h-12 rounded-full bg-white shadow-md border-4 border-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0">
                           <FaUser size={18} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-base font-black text-gray-900 leading-none mb-1 truncate">{booking.clientName}</p>
-                          <p className="text-xs font-bold text-rose-500 tracking-wide">{booking.clientPhone}</p>
+                          <p className="text-xs font-bold text-rose-500 tracking-wide truncate">{booking.clientPhone}</p>
                         </div>
                       </div>
 
@@ -707,12 +776,7 @@ export default function DashBoard() {
 
                   {/* Requirements Note */}
                   {booking.specialRequirements && (
-                    <div className="mt-8 pt-8 border-t border-gray-50 flex items-start gap-4">
-                       <div className="w-2 h-full bg-amber-400 rounded-full" />
-                       <p className="text-sm font-medium text-gray-500 italic py-1 leading-relaxed">
-                         " {booking.specialRequirements} "
-                       </p>
-                    </div>
+                    <ClientRequestNote message={booking.specialRequirements} />
                   )}
                 </div>
               </motion.div>
