@@ -77,7 +77,7 @@ import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import WishList from "./WishListProfile";
 import MyListing from "./MyListing";
-import { Camera, CheckCircle, X, MessageCircle, Mail, Phone, ChevronRight, Globe, Shield, Bell, User, Home, Heart, List, Settings, LogOut, Plus, Trash2, Edit3, MapPin, Calendar, Star, Award, HelpCircle, Download, ChartBarIcon, Gift, Wallet } from 'lucide-react';
+import { Camera, CheckCircle, X, MessageCircle, Mail, Phone, ChevronRight, Globe, Shield, Bell, User, Home, Heart, List, Settings, LogOut, Plus, Trash2, Edit3, MapPin, Calendar, Star, Award, HelpCircle, Download, BarChart, Gift, Wallet } from 'lucide-react';
 
 // Airbnb Color Palette
 const colors = {
@@ -1345,7 +1345,7 @@ export default function Profile() {
                       className="p-6 border border-[#DDDDDD] rounded-xl hover:border-[#FF5A5F] hover:shadow-md transition-all text-left group"
                     >
                       <div className="w-12 h-12 rounded-full bg-[#F7F7F7] flex items-center justify-center mb-4 group-hover:bg-[#FF5A5F]/10">
-                        <ChartBarIcon size={24} className="text-[#FF5A5F]" />
+                        <BarChart size={24} className="text-[#FF5A5F]" />
                       </div>
                       <h4 className="font-semibold text-[#484848] mb-1">Dashboard</h4>
                       <p className="text-sm text-[#767676]">View performance insights</p>

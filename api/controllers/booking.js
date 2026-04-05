@@ -1,9 +1,8 @@
-// controllers/bookingController.js
-const Booking = require('../models/Booking');
-const Listing = require('../pages/Listing');
+import Booking from '../models/Booking.js';
+import Listing from '../models/listing.model.js';
 
 // Calculate price and validate dates
-const calculateBookingDetails = async (req, res) => {
+export const calculateBookingDetails = async (req, res) => {
   try {
     const { listingId, startDate, endDate } = req.body;
     
@@ -48,9 +47,9 @@ const calculateBookingDetails = async (req, res) => {
 };
 
 // Create booking
-const createBooking = async (req, res) => {
+export const createBooking = async (req, res) => {
   try {
-    const { userId, listingId, startDate, endDate, totalPrice } = req.body;
+    const { userId, listingId, startDate, endDate, totalPrice, phone, message } = req.body;
 
     // Validate input
     if (!userId || !listingId || !startDate || !endDate || !totalPrice) {
@@ -64,6 +63,8 @@ const createBooking = async (req, res) => {
       startDate,
       endDate,
       totalPrice,
+      phone,
+      message,
       status: 'pending'
     });
 
@@ -79,7 +80,61 @@ const createBooking = async (req, res) => {
   }
 };
 
-module.exports = {
-  calculateBookingDetails,
-  createBooking
+// Get booked dates for a listing
+export const getBookedDates = async (req, res) => {
+  try {
+    const { listingId } = req.params;
+    const bookings = await Booking.find({ 
+      listing: listingId,
+      status: { $in: ['pending', 'confirmed', 'approved'] }
+    });
+    
+    // Extract dates
+    const bookedDates = bookings.map(b => ({
+      start: b.startDate,
+      end: b.endDate
+    }));
+    
+    res.json(bookedDates);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Get bookings for a host
+export const getHostBookings = async (req, res) => {
+  try {
+    const { hostId } = req.params;
+    
+    // First find all listings for this host
+    const listings = await Listing.find({ userRef: hostId });
+    const listingIds = listings.map(l => l._id);
+    
+    // Find all bookings for these listings
+    const bookings = await Booking.find({ 
+      listing: { $in: listingIds } 
+    }).populate('listing').populate('user');
+    
+    res.json(bookings);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Update booking status
+export const updateBookingStatus = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const { status } = req.body;
+    
+    const updatedBooking = await Booking.findByIdAndUpdate(
+      bookingId,
+      { status },
+      { new: true }
+    );
+    
+    res.json(updatedBooking);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
 };

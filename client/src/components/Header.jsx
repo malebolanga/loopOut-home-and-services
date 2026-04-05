@@ -27,7 +27,9 @@ import {
   FiChevronDown,
   FiDollarSign,
   FiCheck,
-  FiList
+  FiList,
+  FiLayout,
+  FiPieChart
 } from "react-icons/fi";
 
 import {
@@ -364,6 +366,14 @@ export default function Header() {
                   <FiGlobe className="w-4 h-4" />
                 </button>
 
+                {/* Wishlist Icon - Desktop */}
+                <button
+                  onClick={() => handleNavigate('/wishlist')}
+                  className="relative p-3 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
+                >
+                  <FiHeart className="w-4 h-4" />
+                </button>
+
                 {/* Notification Bell Icon - Desktop */}
                 <button
                   onClick={() => handleNavigate('/notifications')}
@@ -448,9 +458,17 @@ export default function Header() {
                         </button>
                         <button
                           onClick={() => handleNavigate('/host')}
-                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222]"
+                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
                         >
+                          <FiHome className="w-4 h-4" />
                           Manage listings
+                        </button>
+                        <button
+                          onClick={() => handleNavigate('/dashboard')}
+                          className="px-4 py-3 hover:bg-rose-50 transition text-left text-rose-600 flex items-center gap-2 font-black uppercase tracking-widest text-[10px]"
+                        >
+                          <FiLayout className="w-4 h-4" />
+                          Host Dashboard
                         </button>
                         <button
                           onClick={() => handleNavigate('/messages')}
@@ -695,12 +713,12 @@ export default function Header() {
             <span className="text-[10px] mt-1 font-medium">Explore</span>
           </Link>
           <Link
-            to="/wishlist"
-            onClick={() => console.log('Mobile nav: Wishlists clicked')}
-            className={`flex flex-col items-center p-2 ${location.pathname === '/wishlist' ? 'text-[#FF5A5F]' : 'text-[#717171]'}`}
+            to="/dashboard"
+            onClick={() => console.log('Mobile nav: Dashboard clicked')}
+            className={`flex flex-col items-center p-2 ${location.pathname === '/dashboard' ? 'text-[#FF5A5F]' : 'text-[#717171]'}`}
           >
-            <FiHeart className="w-6 h-6" />
-            <span className="text-[10px] mt-1 font-medium">Wishlists</span>
+            <FiLayout className="w-6 h-6" />
+            <span className="text-[10px] mt-1 font-medium">Dashboard</span>
           </Link>
           <Link
             to={currentUser ? `/${currentUser._id}/create-listing` : '/sign-in'}

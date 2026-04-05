@@ -1,12 +1,12 @@
-// routes/bookingRoutes.js
-const express = require('express');
+import express from 'express';
+import { calculateBookingDetails, createBooking, getBookedDates, getHostBookings, updateBookingStatus } from '../controllers/booking.js';
+
 const router = express.Router();
-const bookingController = require('../controllers/bookingController');
 
-// Calculate booking details
-router.post('/calculate', bookingController.calculateBookingDetails);
+router.post('/calculate', calculateBookingDetails);
+router.post('/', createBooking);
+router.get('/booked-dates/:listingId', getBookedDates);
+router.get('/host/:hostId', getHostBookings);
+router.post('/update/:bookingId', updateBookingStatus);
 
-// Create booking
-router.post('/', bookingController.createBooking);
-
-module.exports = router;
+export default router;

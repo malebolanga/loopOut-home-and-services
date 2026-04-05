@@ -183,7 +183,8 @@ const ADVERTISING_PLATFORMS = [
 ];
 
 // WhatsApp Booking Modal Component for different property types
-const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates }) => {
+const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDates = [] }) => {
+  const { currentUser } = useSelector((state) => state.user);
   const [bookingDetails, setBookingDetails] = useState({
     fullName: '',
     email: '',
@@ -288,12 +289,22 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates }) => {
   };
 
   // Generate time options
-  const generateTimeOptions = () => {
+  const generateTimeOptions = (isEnd = false) => {
     const times = [];
     for (let hour = 0; hour < 24; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
         const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        times.push(timeString);
+        
+        const isBooked = bookedDates.some(range => {
+          if (!isOffice) return false;
+          const start = new Date(range.start);
+          const end = new Date(range.end);
+          const currentCheck = new Date(bookingDetails.selectedDate);
+          currentCheck.setHours(hour, minute, 0, 0);
+          return currentCheck >= start && currentCheck < (isEnd ? end : end);
+        });
+
+        if (!isBooked) times.push(timeString);
       }
     }
     return times;
@@ -558,11 +569,33 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates }) => {
       message += `_This inquiry was sent via LoopOut_`;
     }
 
+    // Save booking to Database
+    try {
+      const bookingData = {
+        userId: currentUser?._id || "guest",
+        listingId: listing._id,
+        startDate: isOvernight ? bookingDetails.checkIn : bookingDetails.selectedDate + "T" + bookingDetails.startTime,
+        endDate: isOvernight ? bookingDetails.checkOut : bookingDetails.selectedDate + "T" + bookingDetails.endTime,
+        totalPrice: totalPrice,
+        phone: bookingDetails.phone,
+        message: bookingDetails.specialRequests || message,
+        status: 'pending'
+      };
+
+      await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingData)
+      });
+    } catch (saveError) {
+      console.error('Failed to save booking to database:', saveError);
+    }
+
     // Send via WhatsApp
     const whatsappNumber = formatPhoneNumberForWhatsApp(hostPhone);
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    const whatsappFinalUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
-    window.open(whatsappUrl, '_blank');
+    window.open(whatsappFinalUrl, '_blank');
 
     setTimeout(() => {
       setIsSubmitting(false);
@@ -1330,6 +1363,7 @@ export default function Listing() {
   const [listing, setListing] = useState(null);
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
   const [similarListings, setSimilarListings] = useState([]);
+  const [bookedDates, setBookedDates] = useState([]);
 
   const RECENTLY_VIEWED_KEY = 'recentlyViewed';
 
@@ -1487,13 +1521,22 @@ export default function Listing() {
   };
 
   const validatePhone = (phone) => /^0\d{9}$/.test(phone);
-
-  const generateTimeOptions = () => {
+  const generateTimeOptions = (isEnd = false) => {
     const times = [];
     for (let hour = 0; hour < 24; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
         const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        times.push(timeString);
+        
+        const isBooked = bookedDates.some(range => {
+          if (listing?.type !== 'office') return false;
+          const start = new Date(range.start);
+          const end = new Date(range.end);
+          const currentCheck = new Date(selectedDate);
+          currentCheck.setHours(hour, minute, 0, 0);
+          return currentCheck >= start && currentCheck < end; 
+        });
+
+        if (!isBooked) times.push(timeString);
       }
     }
     return times;
@@ -1818,7 +1861,22 @@ export default function Listing() {
       }
     };
 
-    if (listingId) fetchListing();
+    const fetchBookedDates = async () => {
+      try {
+        const res = await fetch(`/api/bookings/booked-dates/${listingId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setBookedDates(data);
+        }
+      } catch (error) {
+        console.error('Error fetching booked dates:', error);
+      }
+    };
+
+    if (listingId) {
+      fetchListing();
+      fetchBookedDates();
+    }
   }, [listingId, navigate]);
 
   useEffect(() => {
@@ -2145,6 +2203,21 @@ export default function Listing() {
                         value={dateRange}
                         selectRange={true}
                         minDate={new Date()}
+                        tileDisabled={({ date, view }) => {
+                          if (view === 'month') {
+                            return bookedDates.some(range => {
+                              const start = new Date(range.start);
+                              const end = new Date(range.end);
+                              // Set all to midnight for precise comparison
+                              const current = new Date(date);
+                              current.setHours(0, 0, 0, 0);
+                              start.setHours(0, 0, 0, 0);
+                              end.setHours(0, 0, 0, 0);
+                              return current >= start && current <= end;
+                            });
+                          }
+                          return false;
+                        }}
                         className="rounded-xl border border-gray-200 shadow-sm w-full"
                       />
                     </div>
@@ -2173,7 +2246,7 @@ export default function Listing() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
                         <select value={endTime} onChange={(e) => setEndTime(e.target.value)}
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm">
-                          {generateTimeOptions().map(time => <option key={time} value={time}>{time}</option>)}
+                          {generateTimeOptions(true).map(time => <option key={time} value={time}>{time}</option>)}
                         </select>
                       </div>
                     </div>
@@ -2445,6 +2518,7 @@ export default function Listing() {
         listing={listing}
         isOpen={showBookingModal}
         onClose={() => setShowBookingModal(false)}
+        bookedDates={bookedDates}
         initialDates={{
           checkIn: dateRange && dateRange[0] ? new Date(dateRange[0].getTime() - dateRange[0].getTimezoneOffset() * 60000).toISOString().split('T')[0] : '',
           checkOut: dateRange && dateRange[1] ? new Date(dateRange[1].getTime() - dateRange[1].getTimezoneOffset() * 60000).toISOString().split('T')[0] : '',

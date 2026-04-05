@@ -502,34 +502,46 @@ const FreshaCategoryCard = ({ category, onClick, index }) => {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.5 }}
-      whileHover={{ y: -15, scale: 1.05 }}
-      whileTap={{ scale: 0.96 }}
+      whileHover={{ 
+        y: -20, 
+        scale: 1.08,
+        rotate: [0, -1, 1, 0],
+        transition: { duration: 0.3 }
+      }}
+      whileTap={{ scale: 0.94 }}
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
       onClick={() => onClick(category)}
       style={{
-        perspective: 1200,
+        perspective: 1500,
         rotateX: rotate.x,
         rotateY: rotate.y,
         transformStyle: "preserve-3d"
       }}
-      className="group cursor-pointer relative overflow-hidden rounded-[3rem] bg-white shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-all duration-300 border border-gray-100"
+      className="group cursor-pointer relative overflow-hidden rounded-[3.5rem] bg-white shadow-sm hover:shadow-[0_30px_60px_rgba(0,0,0,0.18)] transition-all duration-500 border border-gray-100"
     >
       <div className="relative aspect-[4/5] overflow-hidden p-6 bg-gradient-to-br from-white via-gray-50 to-gray-100 flex flex-col items-center justify-center">
-        {/* Elite 3D Background Shadow */}
-        <div className={`absolute -inset-4 bg-gradient-to-r ${category.color} opacity-0 group-hover:opacity-25 blur-3xl transition-opacity duration-500 -z-10`} />
+        {/* Elite 3D Background Shadow - Emotional Pulse */}
+        <div className={`absolute -inset-10 bg-gradient-to-r ${category.color} opacity-0 group-hover:opacity-30 blur-[4rem] transition-opacity duration-700 -z-10 animate-pulse-slow`} />
         
         {/* Floating 3D Icon Section */}
         <motion.div 
-          animate={{ y: [0, -12, 0] }}
-          transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-          className="relative z-10 w-32 h-32 flex items-center justify-center"
-          style={{ transform: "translateZ(80px)" }}
+          animate={{ 
+            y: [0, -15, 0],
+            rotate: [0, 5, -5, 0]
+          }}
+          transition={{ 
+            repeat: Infinity, 
+            duration: 5, 
+            ease: "easeInOut" 
+          }}
+          className="relative z-10 w-40 h-40 flex items-center justify-center"
+          style={{ transform: "translateZ(100px)" }}
         >
-          {/* 3D Glass Sphere Backing */}
-          <div className="absolute inset-0 bg-white/40 backdrop-blur-md rounded-full border border-white/60 shadow-inner group-hover:scale-110 transition-transform duration-500" />
+          {/* 3D Glass Sphere Backing with Emotional Glow */}
+          <div className="absolute inset-0 bg-white/50 backdrop-blur-xl rounded-full border border-white/80 shadow-[inset_0_0_20px_white] group-hover:scale-110 group-hover:bg-white/70 transition-all duration-700" />
           
-          <div className="relative z-20 text-6xl drop-shadow-[0_10px_10px_rgba(0,0,0,0.2)] group-hover:scale-125 transition-transform duration-500 animate-pulse-slow">
+          <div className="relative z-20 text-7xl drop-shadow-[0_15px_15px_rgba(0,0,0,0.25)] group-hover:scale-125 group-hover:rotate-6 transition-transform duration-700">
             {category.emoji || '✨'}
           </div>
 
