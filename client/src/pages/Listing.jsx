@@ -259,9 +259,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       const basePrice = listing.regularPrice * nights * bookingDetails.rooms;
       const breakfastPrice = bookingDetails.breakfast ? 150 * nights * bookingDetails.guests : 0;
       const extraGuestFee = bookingDetails.guests > 2 ? (bookingDetails.guests - 2) * 200 * nights : 0;
-      const cleaningFee = 450;
-      const serviceFee = 350;
-      return basePrice + breakfastPrice + extraGuestFee + cleaningFee + serviceFee;
+      return basePrice + breakfastPrice + extraGuestFee;
     }
 
     if (isOffice) {
@@ -278,7 +276,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
   // Format phone number for WhatsApp
   const formatPhoneNumberForWhatsApp = (phone) => {
     if (!phone) return '';
-    const digits = phone.replace(/\D/g, '');
+    const digits = String(phone).replace(/\D/g, '');
     if (digits.startsWith('0') && digits.length === 10) return '27' + digits.substring(1);
     return digits;
   };
@@ -326,7 +324,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
 
     if (!bookingDetails.phone.trim()) {
       newErrors.phone = 'Phone number is required';
-    } else if (!/^[0-9+\-\s()]{10,}$/.test(bookingDetails.phone.replace(/\D/g, ''))) {
+    } else if (!/^[0-9+\-\s()]{10,}$/.test(String(bookingDetails.phone).replace(/\D/g, ''))) {
       newErrors.phone = 'Please enter a valid phone number';
     }
 
@@ -422,151 +420,121 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       const breakfastSubtotal = bookingDetails.breakfast ? 150 * nights * bookingDetails.guests : 0;
       const extraGuestSubtotal = bookingDetails.guests > 2 ? 200 * (bookingDetails.guests - 2) * nights : 0;
 
-      message = `*🏨 NEW OVERNIGHT BOOKING REQUEST* 🏨%0A%0A`;
+      message = `*✨ NEW BOOKING REQUEST ✨*%0A%0A`;
       message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*LISTING DETAILS*%0A`;
+      message += `*📍 LISTING SUMMARY*%0A`;
       message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `🏠 *Listing:* ${listing?.name || 'Not specified'}%0A`;
-      message += `📍 *Location:* ${listing?.address || 'Not specified'}%0A`;
+      message += `🏠 *Property:* ${listing?.name}%0A`;
+      message += `📍 *Address:* ${listing?.address}%0A`;
       const mapLink = generateMapLink(listing?.address);
-      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
-      message += `💰 *Rate:* R${listing?.regularPrice?.toLocaleString()}/night%0A%0A`;
+      if (mapLink) message += `🗺️ *Location:* ${mapLink}%0A`;
+      message += `💰 *Daily Rate:* R${listing?.regularPrice?.toLocaleString()}%0A%0A`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*GUEST INFORMATION*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `👤 *Name:* ${bookingDetails.fullName}%0A`;
-      message += `📧 *Email:* ${bookingDetails.email}%0A`;
-      message += `📞 *Phone:* ${bookingDetails.phone}%0A%0A`;
+      message += `*👤 GUEST DETAILS*%0A`;
+      message += `• *Name:* ${bookingDetails.fullName}%0A`;
+      message += `• *Contact:* ${bookingDetails.phone}%0A%0A`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*BOOKING DETAILS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*📅 STAY INFORMATION*%0A`;
       message += `📅 *Check-in:* ${formatDate(bookingDetails.checkIn)}%0A`;
       message += `📅 *Check-out:* ${formatDate(bookingDetails.checkOut)}%0A`;
-      message += `🌙 *Nights:* ${nights}%0A`;
-      message += `👥 *Guests:* ${bookingDetails.guests} (${bookingDetails.children} children)%0A`;
+      message += `🌙 *Duration:* ${nights} night(s)%0A`;
       message += `🚪 *Rooms:* ${bookingDetails.rooms}%0A`;
-      message += `🍳 *Breakfast:* ${bookingDetails.breakfast ? '✅ Yes' : '❌ No'}%0A`;
-      message += `🐾 *Pets:* ${bookingDetails.pets ? '✅ Yes' : '❌ No'}%0A%0A`;
+      message += `👥 *Occupancy:* ${bookingDetails.guests} Guest(s)%0A%0A`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*PRICE BREAKDOWN*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `💰 *Room Rate:* R${listing.regularPrice.toLocaleString()} × ${nights} nights × ${bookingDetails.rooms} room(s)%0A`;
-      message += `   *Subtotal:* R${roomSubtotal.toLocaleString()}%0A`;
+      message += `*💳 PRICE BREAKDOWN*%0A`;
+      message += `------------------------------------%0A`;
+      message += `Base Rate: R${listing.regularPrice.toLocaleString()} × ${nights}N × ${bookingDetails.rooms}R%0A`;
+      message += `*Subtotal:* R${roomSubtotal.toLocaleString()}%0A`;
 
       if (bookingDetails.breakfast) {
-        message += `🍳 *Breakfast:* R150 × ${bookingDetails.guests} guests × ${nights} nights%0A`;
-        message += `   *Subtotal:* R${breakfastSubtotal.toLocaleString()}%0A`;
+        message += `Breakfast: R150 × ${bookingDetails.guests}G × ${nights}N%0A`;
+        message += `*Subtotal:* R${breakfastSubtotal.toLocaleString()}%0A`;
       }
       if (bookingDetails.guests > 2) {
-        message += `👥 *Extra Guest Fee:* R200 × ${bookingDetails.guests - 2} guests × ${nights} nights%0A`;
-        message += `   *Subtotal:* R${extraGuestSubtotal.toLocaleString()}%0A`;
+        message += `Extra Guest: R200 × ${bookingDetails.guests - 2}G × ${nights}N%0A`;
+        message += `*Subtotal:* R${extraGuestSubtotal.toLocaleString()}%0A`;
       }
-      message += `🧹 *Cleaning Fee:* R450%0A`;
-      message += `🛠️ *Service Fee:* R350%0A%0A`;
 
       message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*TOTAL AMOUNT*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `💵 *Total:* R${totalPrice.toLocaleString()}%0A%0A`;
+      message += `💰 *TOTAL AMOUNT: R${totalPrice.toLocaleString()}*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A%0A`;
 
       if (bookingDetails.specialRequests) {
-        message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-        message += `*SPECIAL REQUESTS*%0A`;
-        message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-        message += `${bookingDetails.specialRequests}%0A%0A`;
+        message += `*📝 GUEST NOTE:*%0A`;
+        message += `_"${bookingDetails.specialRequests}"_%0A%0A`;
       }
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*⚡ QUICK ACTIONS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      if (acceptLink) message += `✅ *ACCEPT BOOKING:*%0A${acceptLink}%0A%0A`;
-      if (declineLink) message += `❌ *DECLINE BOOKING:*%0A${declineLink}%0A%0A`;
+      message += `*⚡ HOST ACTIONS:*%0A`;
+      if (acceptLink) message += `✅ *CONFIRM:* ${acceptLink}%0A`;
+      if (declineLink) message += `❌ *DECLINE:* ${declineLink}%0A%0A`;
 
-      message += `*Verification Code:* ${verificationCode}%0A`;
-      message += `_This booking request was sent via LoopOut_`;
+      message += `*Verification Code:* \`${verificationCode}\`%0A`;
+      message += `_Powered by LoopOut Platform_`;
     } else if (isOffice) {
       // Office space message
-      message = `*🏢 OFFICE SPACE BOOKING REQUEST* 🏢%0A%0A`;
+      message = `*🏢 OFFICE SPACE BOOKING ✨*%0A%0A`;
       message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*LISTING DETAILS*%0A`;
+      message += `*📍 OFFICE SUMMARY*%0A`;
       message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `🏢 *Office:* ${listing?.name || 'Not specified'}%0A`;
-      message += `📍 *Location:* ${listing?.address || 'Not specified'}%0A`;
+      message += `🏢 *Space:* ${listing?.name}%0A`;
+      message += `📍 *Address:* ${listing?.address}%0A`;
       const mapLink = generateMapLink(listing?.address);
-      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
-      message += `💰 *Rate:* R${listing?.regularPrice?.toLocaleString()}/hour%0A%0A`;
+      if (mapLink) message += `🗺️ *Location:* ${mapLink}%0A`;
+      message += `💰 *Hourly Rate:* R${listing?.regularPrice?.toLocaleString()}%0A%0A`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*GUEST INFORMATION*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `👤 *Name:* ${bookingDetails.fullName}%0A`;
-      message += `📧 *Email:* ${bookingDetails.email}%0A`;
-      message += `📞 *Phone:* ${bookingDetails.phone}%0A%0A`;
+      message += `*👤 CLIENT DETAILS*%0A`;
+      message += `• *Name:* ${bookingDetails.fullName}%0A`;
+      message += `• *Contact:* ${bookingDetails.phone}%0A%0A`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*BOOKING DETAILS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*📅 SESSION INFO*%0A`;
       message += `📅 *Date:* ${formatDate(bookingDetails.selectedDate)}%0A`;
       message += `⏰ *Time:* ${bookingDetails.startTime} - ${bookingDetails.endTime}%0A`;
-      message += `⏱️ *Hours:* ${hours.toFixed(1)} hours%0A%0A`;
+      message += `⏱️ *Duration:* ${hours.toFixed(1)} hour(s)%0A%0A`;
 
+      message += `*💳 PRICE SUMMARY*%0A`;
+      message += `Base Rate: R${listing.regularPrice.toLocaleString()} × ${hours.toFixed(1)}H%0A`;
       message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*PRICE DETAILS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `💰 *Rate:* R${listing.regularPrice.toLocaleString()}/hour × ${hours.toFixed(1)} hours%0A`;
-      message += `💵 *Total:* R${totalPrice.toLocaleString()}%0A%0A`;
+      message += `💰 *TOTAL AMOUNT: R${totalPrice.toLocaleString()}*%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━%0A%0A`;
 
       if (bookingDetails.specialRequests) {
-        message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-        message += `*SPECIAL REQUESTS*%0A`;
-        message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-        message += `${bookingDetails.specialRequests}%0A%0A`;
+        message += `*📝 GUEST NOTE:*%0A`;
+        message += `_"${bookingDetails.specialRequests}"_%0A%0A`;
       }
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*⚡ QUICK ACTIONS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      if (acceptLink) message += `✅ *ACCEPT BOOKING:*%0A${acceptLink}%0A%0A`;
-      if (declineLink) message += `❌ *DECLINE BOOKING:*%0A${declineLink}%0A%0A`;
+      message += `*⚡ HOST ACTIONS:*%0A`;
+      if (acceptLink) message += `✅ *ACCEPT:* ${acceptLink}%0A`;
+      if (declineLink) message += `❌ *DECLINE:* ${declineLink}%0A%0A`;
 
-      message += `*Verification Code:* ${verificationCode}%0A`;
-      message += `_This booking request was sent via LoopOut_`;
+      message += `*Verification Code:* \`${verificationCode}\`%0A`;
+      message += `_Powered by LoopOut Platform_`;
     } else if (isSale || isRent) {
       // Sale or Rent inquiry message
-      message = `*🏠 PROPERTY LISTING INQUIRY* 🏠%0A%0A`;
+      message = `*🏠 PROPERTY INQUIRY ✨*%0A%0A`;
       message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*LISTING DETAILS*%0A`;
+      message += `*📍 PROPERTY OVERVIEW*%0A`;
       message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `🏠 *Listing:* ${listing?.name || 'Not specified'}%0A`;
-      message += `📍 *Location:* ${listing?.address || 'Not specified'}%0A`;
+      message += `🏠 *Property:* ${listing?.name}%0A`;
+      message += `📍 *Location:* ${listing?.address}%0A`;
       const mapLink = generateMapLink(listing?.address);
       if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
-      message += `💰 *Price:* R${listing?.regularPrice?.toLocaleString()}${isRent ? '/month' : ''}%0A`;
-      message += `📋 *Type:* ${isSale ? 'For Sale' : 'For Rent'}%0A%0A`;
+      message += `💰 *Listed Price:* R${listing?.regularPrice?.toLocaleString()}${isRent ? '/mo' : ''}%0A`;
+      message += `📋 *Offering:* ${isSale ? 'For Sale' : 'For Rent'}%0A%0A`;
+
+      message += `*👤 INQUIRER DETAILS*%0A`;
+      message += `• *Name:* ${bookingDetails.fullName}%0A`;
+      message += `• *Contact:* ${bookingDetails.phone}%0A%0A`;
+
+      message += `*📝 INQUIRY MESSAGE*%0A`;
+      message += `_"${bookingDetails.specialRequests || "I'm interested in this listing. Please provide more information."}"_%0A%0A`;
 
       message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*CONTACT INFORMATION*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `👤 *Name:* ${bookingDetails.fullName}%0A`;
-      message += `📧 *Email:* ${bookingDetails.email}%0A`;
-      message += `📞 *Phone:* ${bookingDetails.phone}%0A%0A`;
+      message += `*⚡ HOST ACTIONS:*%0A`;
+      if (acceptLink) message += `✅ *AVAILABLE:* ${acceptLink}%0A`;
+      if (declineLink) message += `❌ *NOT AVAILABLE:* ${declineLink}%0A%0A`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*INQUIRY MESSAGE*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `${bookingDetails.specialRequests || "I'm interested in this listing. Please provide more information."}%0A%0A`;
-
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*⚡ QUICK ACTIONS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      if (acceptLink) message += `✅ *AVAILABLE:*%0A${acceptLink}%0A%0A`;
-      if (declineLink) message += `❌ *NOT AVAILABLE:*%0A${declineLink}%0A%0A`;
-
-      message += `*Verification Code:* ${verificationCode}%0A`;
-      message += `_This inquiry was sent via LoopOut_`;
+      message += `*Verification Code:* \`${verificationCode}\`%0A`;
+      message += `_Powered by LoopOut Platform_`;
     }
 
     // Save booking to Database
@@ -1002,15 +970,6 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                       </div>
                     )}
 
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Cleaning Fee:</span>
-                      <span className="font-medium">R450</span>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Service Fee:</span>
-                      <span className="font-medium">R350</span>
-                    </div>
                   </>
                 )}
 
@@ -1401,18 +1360,13 @@ export default function Listing() {
     }
   };
 
-  const [mealPlan, setMealPlan] = useState('breakfast');
+  const [mealPlan, setMealPlan] = useState('none');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
   const [isExpanded, setIsExpanded] = useState(false);
   const [isNearExpanded, setIsNearExpanded] = useState(false);
-  const [dateRange, setDateRange] = useState(() => {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 3);
-    return [today, tomorrow];
-  });
+  const [dateRange, setDateRange] = useState([new Date(), null]);
 
   const [uiState, setUiState] = useState({
     loading: true,
@@ -1492,8 +1446,6 @@ export default function Listing() {
   });
 
   const breakfastPrice = 250;
-  const cleaningFee = 450;
-  const serviceFee = 350;
 
   const nights = dateRange[0] && dateRange[1]
     ? Math.ceil((dateRange[1].getTime() - dateRange[0].getTime()) / (1000 * 60 * 60 * 24))
@@ -1984,7 +1936,7 @@ export default function Listing() {
   // Calculate prices
   const roomTotal = listing.regularPrice * nights;
   const breakfastTotal = mealPlan === 'breakfast' ? breakfastPrice * nights : 0;
-  const grandTotal = roomTotal + breakfastTotal + cleaningFee + serviceFee;
+  const grandTotal = roomTotal + breakfastTotal;
 
   return (
     <div className="min-h-screen">
@@ -2552,12 +2504,14 @@ export default function Listing() {
         <div className="flex items-center justify-between">
           <div>
             <span className="text-xl font-bold text-gray-900">
-              R{isOvernight && nights > 0 ? grandTotal.toLocaleString() :
+              R{isOvernight ? (nights > 0 ? grandTotal.toLocaleString() : '0.00') :
                 isOffice && totalHours > 0 ? totalPrice :
                   listing.regularPrice.toLocaleString()}
             </span>
             <span className="text-gray-600 text-sm">
-              {isOvernight ? ' / total' : isOffice ? ' / booking' : isRent ? ' / month' : ''}
+              {isOvernight ? (nights > 0 ? ' / total' : '') : 
+               isOffice ? ' / booking' : 
+               isRent ? ' / month' : ''}
             </span>
           </div>
           <button

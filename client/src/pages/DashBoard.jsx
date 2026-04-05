@@ -16,7 +16,7 @@ import {
   FaCut,
   FaUtensils,
   FaSearch,
- 
+  FaBell,
   FaWhatsapp,
   FaMapMarkerAlt,
   FaStar,
@@ -130,7 +130,12 @@ const helperTypeIcons = {
   domestic: FaHome,
   maid: FaHome,
   tutor: FaUser,
-  tattoo: FaStar
+  tattoo: FaStar,
+  sneaker: FaCut,
+  washingmat: FaHome,
+  animals: FaStar,
+  photography: FaStar,
+  carwash: FaCut
 };
 
 export default function DemoDashboard() {
@@ -157,12 +162,15 @@ export default function DemoDashboard() {
             time: new Date(b.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             clientName: b.user?.username || 'Guest',
             clientPhone: b.phone || 'N/A',
-            type: b.listing ? 'listing' : 'helper',
+            type: b.listing ? 'listing' : (b.helper ? 'helper' : 'service'),
             listingDetails: b.listing,
+            helperDetails: b.helper,
+            serviceDetails: b.service,
+            location: b.listing?.address || b.helper?.address || b.service?.address || b.location || 'N/A',
             totalAmount: b.totalPrice,
             specialRequirements: b.message || ''
           }));
-          setBookings(formatted);
+          setBookings(formatted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
         }
       } catch (error) {
         console.error('Error fetching host bookings:', error);
@@ -194,7 +202,7 @@ export default function DemoDashboard() {
   const getServiceType = (booking) => {
     if (booking.type === 'listing') {
       return booking.listingDetails?.type === 'over' ? 'Overnight Stay' : 'Property Rental';
-    } else {
+    } else if (booking.type === 'helper') {
       const helperType = booking.helperDetails?.type;
       const typeNames = {
         barber: 'Barber Service',
@@ -203,9 +211,23 @@ export default function DemoDashboard() {
         domestic: 'Domestic Help',
         maid: 'Cleaning Service',
         tutor: 'Tutoring',
-        tattoo: 'Tattoo Art'
+        tattoo: 'Tattoo Art',
+        sneaker: 'Sneaker Clean',
+        washingmat: 'Mat Washer',
+        animals: 'Animal Care',
+        photography: 'Photography'
       };
       return typeNames[helperType] || 'Professional Service';
+    } else {
+      const serviceType = booking.serviceDetails?.type;
+      const typeNames = {
+        carwash: 'Car Wash Detailing',
+        cleaning: 'House Cleaning',
+        catering: 'Event Catering',
+        daycare: 'Daycare Service',
+        schoolTransport: 'School Transport'
+      };
+      return typeNames[serviceType] || 'Specialized Service';
     }
   };
 
@@ -213,10 +235,14 @@ export default function DemoDashboard() {
     if (booking.type === 'listing') {
       const Icon = typeIcons.listing;
       return <Icon className="text-blue-500" />;
-    } else {
+    } else if (booking.type === 'helper') {
       const helperType = booking.helperDetails?.type;
       const Icon = helperTypeIcons[helperType] || FaUser;
       return <Icon className="text-green-500" />;
+    } else {
+      const serviceType = booking.serviceDetails?.type;
+      const Icon = helperTypeIcons[serviceType] || FaUtensils;
+      return <Icon className="text-rose-500" />;
     }
   };
 
@@ -245,7 +271,7 @@ export default function DemoDashboard() {
     pending: bookings.filter(b => b.status === 'pending').length,
     confirmed: bookings.filter(b => b.status === 'confirmed').length,
     stays: bookings.filter(b => b.type === 'listing').length,
-    services: bookings.filter(b => b.type === 'helper').length
+    services: bookings.filter(b => b.type !== 'listing').length
   };
 
   const filteredBookings = bookings.filter(booking => {
@@ -260,7 +286,7 @@ export default function DemoDashboard() {
     const matchesView = 
       viewType === 'all' || 
       (viewType === 'stays' && booking.type === 'listing') || 
-      (viewType === 'services' && booking.type === 'helper');
+      (viewType === 'services' && booking.type !== 'listing');
       
     return matchesSearch && matchesFilter && matchesView;
   });
@@ -269,11 +295,61 @@ export default function DemoDashboard() {
     <div className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Booking Dashboard</h1>
-          <p className="text-gray-600 mt-2">
-            Manage all your property and service bookings in one place
-          </p>
+        {/* Header with Title and Notification */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
+           <div>
+              <h1 className="text-5xl font-black text-gray-900 tracking-tight mb-2">Host Dashboard</h1>
+              <p className="text-gray-500 font-medium text-lg flex items-center gap-2">
+                Manage your stays, services, and client messages
+              </p>
+           </div>
+           
+           <div className="flex items-center gap-6">
+              {/* Notification Bell */}
+              <div className="relative group cursor-pointer">
+                <div className="w-16 h-16 bg-white rounded-[2rem] shadow-xl border border-gray-100 flex items-center justify-center text-gray-400 group-hover:text-rose-500 transition-all duration-300">
+                  <FaBell className="text-2xl animate-pulse" />
+                </div>
+                {stats.pending > 0 && (
+                  <div className="absolute -top-1 -right-1 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] font-black border-4 border-white shadow-lg animate-bounce">
+                    {stats.pending}
+                  </div>
+                )}
+                
+                {/* Notification Dropdown (Hover) */}
+                <div className="absolute top-20 right-0 w-80 bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 opacity-0 translate-y-4 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-50">
+                  <h4 className="font-black text-gray-900 mb-4 flex items-center justify-between">
+                    Alert Center
+                    <span className="px-3 py-1 bg-rose-100 text-rose-600 rounded-full text-[10px]">NEW</span>
+                  </h4>
+                  <div className="space-y-4">
+                    {stats.pending > 0 ? (
+                      <div className="flex items-center gap-4 p-3 bg-rose-50 rounded-2xl border border-rose-100">
+                        <div className="w-10 h-10 bg-rose-500 rounded-xl flex items-center justify-center text-white">
+                          <FaCalendar size={14} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-black text-rose-900 leading-tight">Action Required</p>
+                          <p className="text-[10px] font-bold text-rose-700 mt-0.5">{stats.pending} pending requests waiting.</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-400 font-medium text-center py-4">All caught up! ✨</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 bg-white/80 backdrop-blur-sm px-6 py-4 rounded-[2rem] border border-gray-100 shadow-sm">
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-rose-500 p-0.5 shadow-md">
+                   <img src={currentUser?.avatar || 'https://via.placeholder.com/150'} alt="Host" className="w-full h-full object-cover rounded-full" />
+                </div>
+                <div className="hidden sm:block">
+                  <p className="text-sm font-black text-gray-900 leading-none mb-1">{currentUser?.username}</p>
+                  <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Premium Host</p>
+                </div>
+              </div>
+           </div>
         </div>
 
         {/* Stats Cards */}
@@ -392,18 +468,18 @@ export default function DemoDashboard() {
               >
                 <div className="p-8">
                   {/* Status & ID Row */}
-                  <div className="flex justify-between items-center mb-8">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                    <div className="flex flex-wrap items-center gap-3">
                       <span className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${statusColors[booking.status]}`}>
                         {booking.status}
                       </span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                         Ref: #{booking._id}
                       </span>
                     </div>
-                    <div className="text-right">
-                      <p className="text-3xl font-black text-gray-900 leading-none">R{booking.totalAmount}</p>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">{booking.type === 'listing' ? 'Overnight Rate' : 'Service Fee'}</p>
+                    <div className="text-left md:text-right bg-rose-50/50 px-6 py-4 rounded-[1.5rem] border border-rose-100 shadow-sm min-w-[160px]">
+                      <p className="text-2xl md:text-3xl font-black text-rose-600 leading-none">R{Number(booking.totalAmount).toLocaleString()}</p>
+                      <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest mt-2">{booking.type === 'listing' ? 'Overnight Booking' : 'Service Appointment'}</p>
                     </div>
                   </div>
 
@@ -446,7 +522,15 @@ export default function DemoDashboard() {
                          </div>
                          <div className="flex-1 min-w-0">
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Location</p>
-                            <p className="text-[15px] font-bold text-gray-900 truncate">{booking.location}</p>
+                            <a 
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.location)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[15px] font-bold text-rose-600 hover:text-rose-700 hover:underline transition-all block truncate"
+                              title="Click for navigation directions"
+                            >
+                              {booking.location}
+                            </a>
                          </div>
                       </div>
                     </div>

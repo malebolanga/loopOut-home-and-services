@@ -273,6 +273,16 @@ const ServicePage = () => {
     vehicleModel: '',
     vehicleYear: '',
     licensePlate: '',
+    // Car Wash Detailing Options
+    carWashType: 'full', // full, hoover, washHoover
+    thoroughHoover: false,
+    engineCleaning: false,
+    matCleaning: false,
+    carSeatCleaning: false,
+    bodyPolish: false,
+    tirePolish: false,
+    backPolish: false,
+    interiorPolish: false,
     foodProvided: 'no',
     electricityProvided: 'no'
   });
@@ -535,12 +545,28 @@ const ServicePage = () => {
 
     if (requiresVehicleType && bookingData.vehicleType) {
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `*🚗 VEHICLE DETAILS*\n`;
+      message += `*🚗 VEHICLE & DETAILING*\n`;
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       message += `🚗 *Type:* ${VEHICLE_TYPES.find(v => v.id === bookingData.vehicleType)?.name}\n`;
       if (bookingData.vehicleMake) message += `🔖 *Make:* ${bookingData.vehicleMake}\n`;
-      if (bookingData.vehicleModel) message += `🚘 *Model:* ${bookingData.vehicleModel}\n`;
       if (bookingData.licensePlate) message += `🆔 *Plate:* ${bookingData.licensePlate}\n`;
+      
+      const washTypes = { full: 'Full Car Wash', hoover: 'Hoover Only', washHoover: 'Wash + Hoover' };
+      message += `🧼 *Wash:* ${washTypes[bookingData.carWashType] || 'Standard'}\n`;
+      
+      let cleaningDetails = [];
+      if (bookingData.thoroughHoover) cleaningDetails.push('Thorough Hoover');
+      if (bookingData.engineCleaning) cleaningDetails.push('Engine Cleaning');
+      if (bookingData.matCleaning) cleaningDetails.push('Mat Cleaning');
+      if (bookingData.carSeatCleaning) cleaningDetails.push('Car Seat Cleaning');
+      if (cleaningDetails.length > 0) message += `🧹 *Deep Clean:* ${cleaningDetails.join(', ')}\n`;
+
+      let polishDetails = [];
+      if (bookingData.bodyPolish) polishDetails.push('Body');
+      if (bookingData.tirePolish) polishDetails.push('Tire');
+      if (bookingData.backPolish) polishDetails.push('Back');
+      if (bookingData.interiorPolish) polishDetails.push('Interior');
+      if (polishDetails.length > 0) message += `✨ *Polish:* ${polishDetails.join(', ')}\n`;
       message += `\n`;
     }
 
@@ -582,9 +608,12 @@ const ServicePage = () => {
     if (declineLink) message += `❌ *DECLINE BOOKING:*\n${declineLink}\n\n`;
 
     message += `🔐 *Verification Code:* ${verificationCode}\n`;
-    message += `_This booking request was sent via LoopOut_`;
+    message += `_Powered by LoopOut Platform_`;
 
-    return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    return { 
+      url: `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`,
+      fullMessage: message 
+    };
   };
 
   const handleQuickBooking = async () => {
@@ -601,7 +630,7 @@ const ServicePage = () => {
       return;
     }
 
-    const url = await buildWhatsAppMessage(true);
+    const { url } = await buildWhatsAppMessage(true);
     if (url) window.open(url, '_blank');
   };
 
@@ -631,11 +660,36 @@ const ServicePage = () => {
 
     setIsUploading(true);
 
-    const url = await buildWhatsAppMessage(false);
-    if (url) window.open(url, '_blank');
+    try {
+      const result = await buildWhatsAppMessage(false);
+      
+      if (result && result.url) {
+        // Save to Database first
+        const bookingToSave = {
+          userId: currentUser?._id || "guest",
+          serviceId: service._id,
+          startDate: bookingData.date + "T" + bookingData.time,
+          endDate: bookingData.date + "T" + bookingData.time, // Same day for services
+          totalPrice: totalPrice,
+          phone: bookingData.phone,
+          message: bookingData.specialRequirements || result.fullMessage,
+          status: 'pending'
+        };
 
-    setIsUploading(false);
-    closeBookingModal();
+        await fetch('/api/bookings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bookingToSave)
+        });
+
+        window.open(result.url, '_blank');
+      }
+    } catch (saveError) {
+      console.error('Failed to save booking or process WhatsApp:', saveError);
+    } finally {
+      setIsUploading(false);
+      closeBookingModal();
+    }
   };
 
   if (loading) {
@@ -1438,6 +1492,67 @@ const ServicePage = () => {
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                         placeholder="e.g. ABC 123 GP"
                       />
+                    </div>
+
+                    {/* Car Wash Detailing Selection */}
+                    <div className="pt-4 border-t border-gray-100">
+                      <label className="block text-sm font-bold text-gray-900 mb-3">🛠️ Select Wash Type</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {[
+                          { id: 'full', label: 'Full Car Wash' },
+                          { id: 'hoover', label: 'Hoover Only' },
+                          { id: 'washHoover', label: 'Wash + Hoover' }
+                        ].map((mode) => (
+                          <button
+                            key={mode.id}
+                            type="button"
+                            onClick={() => setBookingData(prev => ({ ...prev, carWashType: mode.id }))}
+                            className={`px-3 py-2 text-xs font-bold rounded-lg border transition-all ${bookingData.carWashType === mode.id ? 'bg-rose-500 text-white border-rose-500 shadow-md transform scale-105' : 'bg-white text-gray-600 border-gray-200 hover:border-rose-200'}`}
+                          >
+                            {mode.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <label className="block text-sm font-bold text-gray-900 mt-6 mb-3">🧹 Add Extra Cleaning</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { id: 'thoroughHoover', label: 'Thorough Hoover' },
+                          { id: 'engineCleaning', label: 'Engine Cleaning' },
+                          { id: 'matCleaning', label: 'Mat Cleaning' },
+                          { id: 'carSeatCleaning', label: 'Car Seat Cleaning' }
+                        ].map(opt => (
+                          <label key={opt.id} className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200">
+                            <input
+                              type="checkbox"
+                              checked={bookingData[opt.id]}
+                              onChange={(e) => setBookingData(prev => ({ ...prev, [opt.id]: e.target.checked }))}
+                              className="w-4 h-4 accent-rose-500"
+                            />
+                            <span className="text-xs font-semibold text-gray-700">{opt.label}</span>
+                          </label>
+                        ))}
+                      </div>
+
+                      <label className="block text-sm font-bold text-gray-900 mt-6 mb-3">✨ Add Polish Services</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { id: 'bodyPolish', label: 'Body Polish' },
+                          { id: 'tirePolish', label: 'Tire Polish' },
+                          { id: 'backPolish', label: 'Back Polish' },
+                          { id: 'interiorPolish', label: 'Interior Polish' }
+                        ].map(opt => (
+                          <label key={opt.id} className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200">
+                            <input
+                              type="checkbox"
+                              checked={bookingData[opt.id]}
+                              onChange={(e) => setBookingData(prev => ({ ...prev, [opt.id]: e.target.checked }))}
+                              className="w-4 h-4 accent-rose-500"
+                            />
+                            <span className="text-xs font-semibold text-gray-700">{opt.label}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>

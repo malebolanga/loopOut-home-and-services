@@ -57,9 +57,11 @@ export default function Header() {
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [prevUnreadCount, setPrevUnreadCount] = useState(0);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('San Francisco');
+  const notificationSound = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
 
   // Currency and Language states
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
@@ -118,16 +120,42 @@ export default function Header() {
 
       if (res.ok) {
         const data = await res.json();
+        const newUnreadCount = data.unreadCount || 0;
+        
+        // If we have new unread notifications, ring the bell
+        if (newUnreadCount > prevUnreadCount) {
+          notificationSound.current.play().catch(e => console.log('Audio play failed:', e));
+          
+          if (Notification.permission === 'granted' && document.hidden) {
+            const latest = data.notifications?.[0];
+            new Notification(latest?.title || 'LoopOut Alert', {
+              body: latest?.message || 'You have a new notification',
+              icon: '/favicon.ico'
+            });
+          }
+        }
+        
         setNotifications(data.notifications || []);
-        setUnreadCount(data.unreadCount || 0);
+        setUnreadCount(newUnreadCount);
+        setPrevUnreadCount(newUnreadCount);
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
-  }, [currentUser]);
+  }, [currentUser, prevUnreadCount]);
 
   useEffect(() => {
     fetchNotifications();
+    
+    // Request notification permission
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    // Set up polling for real-time alerts
+    const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+    
+    return () => clearInterval(interval);
   }, [fetchNotifications]);
 
   // Close dropdowns when clicking outside

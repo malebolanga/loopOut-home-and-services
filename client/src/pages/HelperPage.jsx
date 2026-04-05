@@ -1544,6 +1544,26 @@ export default function HelperPage() {
     message += `_Sent via loopOut_`;
 
     const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
+    
+    // Save to Database first
+    const bookingToSave = {
+      userId: currentUser?._id || "guest",
+      helperId: helper._id,
+      startDate: bookingData.date + "T" + (bookingData.time || "00:00"),
+      endDate: bookingData.date + "T" + (bookingData.time || "00:00"),
+      totalPrice: totalPrice,
+      phone: bookingData.phone,
+      message: message,
+      status: 'pending',
+      type: 'helper'
+    };
+
+    fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bookingToSave)
+    }).catch(err => console.error('Failed to save quick booking:', err));
+
     window.open(whatsappUrl, '_blank');
   };
 
@@ -1701,6 +1721,26 @@ export default function HelperPage() {
 
     // Open WhatsApp with properly encoded message
     const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${encodeURIComponent(message)}`;
+    
+    // Save to Database first
+    const bookingToSave = {
+      userId: currentUser?._id || "guest",
+      helperId: helper._id,
+      startDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
+      endDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
+      totalPrice: totalPrice,
+      phone: bookingData.phone,
+      message: bookingData.specialRequirements || message,
+      status: 'pending',
+      type: 'helper'
+    };
+
+    fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bookingToSave)
+    }).catch(err => console.error('Failed to save booking:', err));
+
     window.open(whatsappUrl, '_blank');
 
     // Close the booking form overlay after sending
