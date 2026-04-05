@@ -221,6 +221,14 @@ export default function HelperPage() {
       { id: 'horseCare', name: 'Horse Care', icon: <FaHorse className="text-brown-500" /> }
     ];
 
+    const transportOptions = [
+      { id: 'schoolTransport', name: 'School Transport', icon: <FaCar className="text-yellow-500" /> },
+      { id: 'privateRide', name: 'Private Ride', icon: <FaCar className="text-blue-500" /> },
+      { id: 'furnitureRemoval', name: 'Furniture Removal', icon: <FaTruck className="text-orange-500" /> },
+      { id: 'delivery', name: 'Delivery', icon: <FaBriefcase className="text-green-500" /> },
+      { id: 'intercity', name: 'Inter-city Trip', icon: <FaArrowRight className="text-indigo-500" /> }
+    ];
+
     switch (type) {
       case 'beauty':
       case 'spa':
@@ -246,6 +254,8 @@ export default function HelperPage() {
         return washingmatOptions;
       case 'animals':
         return animalOptions;
+      case 'transport':
+        return transportOptions;
       default:
         return [];
     }
@@ -285,7 +295,8 @@ export default function HelperPage() {
       photography: 'Photographer',
       sneaker: 'Sneaker Cleaner',
       washingmat: 'Mat Washer',
-      animals: 'Animal Care Professional'
+      animals: 'Animal Care Professional',
+      transport: 'Transport Service'
     };
     return titles[type] || 'Professional';
   };
@@ -307,6 +318,7 @@ export default function HelperPage() {
       sneaker: 'indigo',
       washingmat: 'cyan',
       animals: 'amber',
+      transport: 'orange',
       default: 'red'
     };
     return themes[type] || themes.default;
@@ -1596,7 +1608,7 @@ export default function HelperPage() {
 
     // Validate service selection
     if (
-      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals') &&
+      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals' || helper.type === 'transport') &&
       bookingData.selectedServices.length === 0
     ) {
       alert("Please select at least one service you need.");
@@ -1724,6 +1736,24 @@ export default function HelperPage() {
     const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${encodeURIComponent(message)}`;
     
     // Save to Database first
+    // Create a very descriptive subtype for the dashboard/cart
+    let bookingSubtype = helper.type;
+    if (bookingData.selectedServices.length > 0) {
+      bookingSubtype = bookingData.selectedServices.map(s => {
+        // Find the service name from options
+        const opt = serviceOptions.find(o => o.id === s);
+        return opt ? opt.name : s;
+      }).join(', ');
+    }
+    
+    // Add specific transport details if available
+    if (helper.type === 'transport' && bookingData.specialRequirements) {
+      const requirements = bookingData.specialRequirements.toLowerCase();
+      if (requirements.includes('pretor') && requirements.includes('johan')) {
+        bookingSubtype = `Route: Pretoria ↔ JHB`;
+      }
+    }
+
     const bookingToSave = {
       userId: currentUser?._id || "guest",
       helperId: helper._id,
@@ -1732,7 +1762,7 @@ export default function HelperPage() {
       totalPrice: totalPrice,
       phone: bookingData.phone,
       message: bookingData.specialRequirements || message,
-      subtype: bookingData.selectedServices.length > 0 ? bookingData.selectedServices.join(', ') : helper.type,
+      subtype: bookingSubtype,
       status: 'pending',
       type: 'helper'
     };

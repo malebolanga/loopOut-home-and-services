@@ -665,6 +665,19 @@ const ServicePage = () => {
       
       if (result && result.url) {
         // Save to Database first
+        // Create a descriptive subtype for better display in the dashboard/cart
+        let bookingSubtype = service.type;
+        if (service.type === 'carwash') {
+          const vehicleLabel = VEHICLE_TYPES.find(v => v.id === bookingData.vehicleType)?.name || 'Car';
+          const washTypes = { full: 'Full Wash', hoover: 'Hoover', washHoover: 'Wash & Hoover' };
+          const washLabel = washTypes[bookingData.carWashType] || 'Wash';
+          bookingSubtype = `${vehicleLabel} - ${washLabel}`;
+        } else if (service.type === 'cleaning') {
+          bookingSubtype = 'House Cleaning';
+        } else if (service.type === 'schoolTransport') {
+          bookingSubtype = 'School Transport';
+        }
+
         const bookingToSave = {
           userId: currentUser?._id || "guest",
           serviceId: service._id,
@@ -673,7 +686,7 @@ const ServicePage = () => {
           totalPrice: totalPrice,
           phone: bookingData.phone,
           message: bookingData.specialRequirements || result.fullMessage,
-          subtype: service.type === 'carwash' ? (bookingData.carWashType || 'Car Wash') : service.type,
+          subtype: bookingSubtype,
           status: 'pending'
         };
 

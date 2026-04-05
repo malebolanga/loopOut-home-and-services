@@ -138,13 +138,14 @@ const helperTypeIcons = {
   carwash: FaCut
 };
 
-export default function DemoDashboard() {
+export default function DashBoard() {
   const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [filter, setFilter] = useState('all');
   const [viewType, setViewType] = useState('all'); 
   const [dashboardMode, setDashboardMode] = useState('hosting'); // 'hosting' or 'requests'
+  const [scheduleView, setScheduleView] = useState('list'); // 'list', 'calendar', or 'sliding'
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -188,52 +189,76 @@ export default function DemoDashboard() {
     fetchBookings();
   }, [currentUser, dashboardMode]);
 
-  const updateBookingStatus = async (bookingId, newStatus) => {
+  const scrollToBooking = (bookingId) => {
+    const element = document.getElementById(`booking-${bookingId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Brief highlight effect
+      element.classList.add('ring-4', 'ring-rose-500/30', 'scale-[1.02]');
+      setTimeout(() => element.classList.remove('ring-4', 'ring-rose-500/30', 'scale-[1.02]'), 2000);
+    }
+  };
+
+  const handleStatusUpdate = async (bookingId, newStatus) => {
     try {
       const res = await fetch(`/api/bookings/update/${bookingId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({ 
+          status: newStatus,
+          cancelledBy: newStatus === 'cancelled' ? 'host' : undefined
+        })
       });
       if (res.ok) {
-        setBookings(prev => prev.map(booking =>
-          booking._id === bookingId ? { ...booking, status: newStatus } : booking
-        ));
+        setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: newStatus } : b));
       }
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error('Failed to update status:', error);
     }
   };
 
   const getServiceType = (booking) => {
     if (booking.type === 'listing') {
-      return booking.listingDetails?.type === 'over' ? 'Overnight Stay' : 'Property Rental';
+      return booking.listingDetails?.type === 'over' ? 'Stay' : 'Rent';
     } else if (booking.type === 'helper') {
       const helperType = booking.helperDetails?.type;
       const typeNames = {
-        barber: 'Barber Service',
-        chef: 'Chef Service',
-        beauty: 'Beauty Service',
-        domestic: 'Domestic Help',
-        maid: 'Cleaning Service',
-        tutor: 'Tutoring',
-        tattoo: 'Tattoo Art',
-        sneaker: 'Sneaker Clean',
-        washingmat: 'Mat Washer',
-        animals: 'Animal Care',
-        photography: 'Photography'
+        barber: 'Barber',
+        chef: 'Chef',
+        beauty: 'Beauty',
+        domestic: 'Domestic',
+        maid: 'Cleaning',
+        tutor: 'Tutor',
+        tattoo: 'Tattoo',
+        sneaker: 'Sneaker',
+        washingmat: 'Mat Wash',
+        animals: 'Pet Care',
+        photography: 'Photo'
       };
-      return typeNames[helperType] || 'Professional Service';
+      return typeNames[helperType] || 'Pro Service';
     } else {
       const serviceType = booking.serviceDetails?.type;
       const typeNames = {
-        carwash: 'Car Wash Detailing',
-        cleaning: 'House Cleaning',
-        catering: 'Event Catering',
-        daycare: 'Daycare Service',
-        schoolTransport: 'School Transport'
+        carwash: 'Wash',
+        cleaning: 'Clean',
+        catering: 'Catering',
+        daycare: 'Daycare',
+        schoolTransport: 'School',
+        laundry: 'Laundry',
+        transport: 'Trip',
+        beauty: 'Beauty'
       };
-      return typeNames[serviceType] || 'Specialized Service';
+      
+      let displayType = typeNames[serviceType] || 'Service';
+      
+      // Keep subtype but ensure it's abbreviated if long
+      if (serviceType === 'carwash' && booking.subtype) {
+        displayType = `${booking.subtype}`;
+      } else if (serviceType === 'transport' && booking.subtype) {
+        displayType = `${booking.subtype}`;
+      }
+      
+      return displayType;
     }
   };
 
@@ -427,6 +452,74 @@ export default function DemoDashboard() {
           </button>
         </div>
 
+        {/* Schedule Perspective Toggles */}
+        <div className="flex items-center justify-between mb-8 bg-white p-4 rounded-[2rem] border border-gray-100 shadow-sm overflow-x-auto scrollbar-hide">
+           <div className="flex items-center gap-2">
+              <div className="p-3 bg-rose-50 rounded-xl text-rose-600">
+                 <FaCalendar size={18} />
+              </div>
+              <div>
+                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Schedule View</p>
+                
+              </div>
+           </div>
+           
+           <div className="flex bg-gray-50 p-1.5 rounded-2xl">
+              <button 
+                onClick={() => setScheduleView('list')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${scheduleView === 'list' ? 'bg-white text-gray-900 shadow-md' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                List
+              </button>
+              <button 
+                onClick={() => setScheduleView('sliding')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${scheduleView === 'sliding' ? 'bg-white text-gray-900 shadow-md' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                Sliding Dates
+              </button>
+              <button 
+                onClick={() => setScheduleView('calendar')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${scheduleView === 'calendar' ? 'bg-white text-gray-900 shadow-md' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                Full Calendar
+              </button>
+           </div>
+        </div>
+
+        {/* Sliding Dates Strip (Visible when selected) */}
+        <AnimatePresence>
+          {scheduleView === 'sliding' && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden mb-12"
+            >
+              <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 p-8">
+                 <h3 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-3">
+                   Upcoming Schedule
+                   <span className="px-3 py-1 bg-rose-100 text-rose-600 rounded-full text-[10px] uppercase">Daily View</span>
+                 </h3>
+                 <SlidingDatesStrip bookings={bookings} onBookingClick={scrollToBooking} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Full Calendar View (Visible when selected) */}
+        <AnimatePresence>
+          {scheduleView === 'calendar' && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden mb-12"
+            >
+              <BookingCalendar bookings={bookings} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Filters and Search */}
         <div className="flex flex-col lg:flex-row gap-6 items-center justify-between mb-8">
           <div className="flex flex-wrap gap-3">
@@ -517,7 +610,7 @@ export default function DemoDashboard() {
                           </h3>
                           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 rounded-full">
                             <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                            <p className="text-[10px] font-black text-rose-600 uppercase tracking-tight">
+                            <p className="text-[10px] font-black text-rose-600 uppercase tracking-tight truncate">
                               {getServiceType(booking)}
                             </p>
                           </div>
@@ -554,7 +647,7 @@ export default function DemoDashboard() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-[15px] font-bold text-rose-600 hover:text-rose-700 hover:underline transition-all block truncate"
-                              title="Click for navigation directions"
+                              title={`${booking.location}`}
                             >
                               {booking.location}
                             </a>
@@ -568,8 +661,8 @@ export default function DemoDashboard() {
                         <div className="w-12 h-12 rounded-full bg-white shadow-md border-4 border-gray-100 flex items-center justify-center text-gray-400">
                           <FaUser size={18} />
                         </div>
-                        <div>
-                          <p className="text-base font-black text-gray-900 leading-none mb-1">{booking.clientName}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-base font-black text-gray-900 leading-none mb-1 truncate">{booking.clientName}</p>
                           <p className="text-xs font-bold text-rose-500 tracking-wide">{booking.clientPhone}</p>
                         </div>
                       </div>
@@ -585,14 +678,14 @@ export default function DemoDashboard() {
                         {booking.status === 'pending' && (
                           <div className="flex gap-2">
                             <button 
-                              onClick={() => updateBookingStatus(booking._id, 'confirmed')}
+                              onClick={() => handleStatusUpdate(booking._id, 'confirmed')}
                               className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm group/btn"
                               title="Approve"
                             >
                               <FaCheck size={16} className="group-hover/btn:scale-125 transition-transform" />
                             </button>
                             <button 
-                              onClick={() => updateBookingStatus(booking._id, 'cancelled')}
+                              onClick={() => handleStatusUpdate(booking._id, 'cancelled')}
                               className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-rose-600 hover:bg-rose-50 transition-all shadow-sm group/btn"
                               title="Decline"
                             >
@@ -602,7 +695,7 @@ export default function DemoDashboard() {
                         )}
                         {booking.status === 'confirmed' && (
                           <button 
-                            onClick={() => updateBookingStatus(booking._id, 'completed', true)}
+                            onClick={() => handleStatusUpdate(booking._id, 'completed')}
                             className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-lg shadow-blue-200"
                           >
                             Check Out
@@ -646,11 +739,13 @@ export default function DemoDashboard() {
               </div>
            </div>
            
-           <BookingCalendar bookings={bookings} />
+           {scheduleView === 'list' && (
+             <BookingCalendar bookings={bookings} />
+           )}
         </div>
 
         {/* Demo Info */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-6">
+        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-4 mb-14">
           <h3 className="text-lg font-semibold text-blue-900 mb-2">Demo Information</h3>
           <p className="text-blue-700">
             This is a demo dashboard showing how WhatsApp bookings would appear. In a real application, 
@@ -681,6 +776,75 @@ export default function DemoDashboard() {
     </div>
   );
 }
+
+const SlidingDatesStrip = ({ bookings, onBookingClick }) => {
+  const [dates, setDates] = useState([]);
+  
+  useEffect(() => {
+    const today = new Date();
+    const futureDates = [];
+    for (let i = 0; i < 30; i++) {
+      const d = new Date();
+      d.setDate(today.getDate() + i);
+      futureDates.push(d);
+    }
+    setDates(futureDates);
+  }, []);
+
+  const formatDateLabel = (date) => {
+    return date.toLocaleDateString('en-ZA', { day: 'numeric' });
+  };
+  
+  const formatDayLabel = (date) => {
+    return date.toLocaleDateString('en-ZA', { weekday: 'short' });
+  };
+
+  return (
+    <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide">
+      {dates.map((date, idx) => {
+        const dateStr = date.toISOString().split('T')[0];
+        const dayBookings = bookings.filter(b => b.date === dateStr && b.status !== 'cancelled');
+        const isToday = new Date().toISOString().split('T')[0] === dateStr;
+
+        return (
+          <div 
+            key={idx} 
+            className={`flex-shrink-0 w-24 rounded-[2rem] p-4 flex flex-col items-center justify-between gap-3 border transition-all ${
+              isToday ? 'bg-gray-900 text-white border-gray-900 shadow-lg' : 'bg-gray-50 text-gray-500 border-transparent hover:bg-white hover:border-gray-200'
+            }`}
+          >
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
+              {formatDayLabel(date)}
+            </span>
+            <span className="text-2xl font-black">
+              {formatDateLabel(date)}
+            </span>
+            
+            <div className="flex -space-x-2">
+              {dayBookings.length > 0 ? (
+                dayBookings.slice(0, 3).map((b, i) => (
+                  <div 
+                    key={i}
+                    onClick={() => onBookingClick(b._id)}
+                    className="w-8 h-8 rounded-full bg-rose-500 border-2 border-white flex items-center justify-center text-[10px] text-white font-black cursor-pointer hover:scale-110 transition-transform shadow-sm"
+                    title={`${b.clientName} - ${b.time}`}
+                  >
+                    {b.clientName.charAt(0)}
+                  </div>
+                ))
+              ) : (
+                <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center opacity-40">
+                  <span className="text-[10px]">•</span>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const BookingCalendar = ({ bookings }) => {
   const [currentDate, setCurrentDate] = useState(new Date(2024, 11, 1)); // December 2024 for demo
   const [calView, setCalView] = useState('month'); // 'month' or 'day'

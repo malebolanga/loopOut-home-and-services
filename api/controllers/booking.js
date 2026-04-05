@@ -191,15 +191,73 @@ export const getUserBookings = async (req, res) => {
 export const updateBookingStatus = async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const { status } = req.body;
+    const { status, cancelledBy } = req.body; // cancelledBy: 'host' or 'user'
     
-    const updatedBooking = await Booking.findByIdAndUpdate(
-      bookingId,
-      { status },
-      { new: true }
-    );
+    // Find the booking and populate necessary fields
+    const booking = await Booking.findById(bookingId)
+      .populate('listing')
+      .populate('helper')
+      .populate('service')
+      .populate('user');
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    const previousStatus = booking.status;
+    booking.status = status;
+    await booking.save();
     
-    res.json(updatedBooking);
+    // Create notification if status changed, especially to 'cancelled'
+    if (status === 'cancelled' || status !== previousStatus) {
+      try {
+        let recipientId;
+        let title = 'Booking Update';
+        let messageText = `The status of your booking for "${booking.listing?.name || booking.helper?.name || booking.service?.name}" has been updated to ${status}.`;
+
+        const item = booking.listing || booking.helper || booking.service;
+        const hostId = item?.userRef;
+        const clientId = booking.user?._id;
+
+        // Determine recipient
+        if (status === 'cancelled') {
+           title = 'Booking Cancelled';
+           if (cancelledBy === 'user') {
+             // User cancelled -> Notify Host
+             recipientId = hostId;
+             messageText = `Client ${booking.user?.username || 'User'} has cancelled their booking for "${item?.name}".`;
+           } else {
+             // Host cancelled -> Notify User
+             recipientId = clientId;
+             messageText = `Professional ${item?.name || 'Host'} has cancelled your booking.`;
+           }
+        } else if (status === 'confirmed') {
+           title = 'Booking Confirmed';
+           recipientId = clientId;
+           messageText = `Your booking for "${item?.name}" has been confirmed by the professional!`;
+        } else {
+           // Generic update: notify the other party
+           // If current user is host, notify user. If user, notify host.
+           // However, usually only host updates status here.
+           recipientId = clientId;
+        }
+
+        if (recipientId) {
+          const newNotif = new Notification({
+            userId: recipientId,
+            type: 'booking',
+            title,
+            message: messageText,
+            data: { bookingId: booking._id, status }
+          });
+          await newNotif.save();
+        }
+      } catch (notifErr) {
+        console.error('Failed to create status update notification:', notifErr);
+      }
+    }
+    
+    res.json(booking);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }

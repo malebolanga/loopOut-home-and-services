@@ -14,11 +14,15 @@ import {
   FaStar,
   FaCalendarAlt,
   FaListUl,
-  FaChevronLeft
+  FaChevronLeft,
+  FaHome,
+  FaCar,
+  FaExclamationTriangle
 } from 'react-icons/fa';
+import { useSelector } from 'react-redux';
 
 const ScheduleCalendar = ({ bookings }) => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date(2024, 11, 1));
   
   const daysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = (month, year) => new Date(year, month, 1).getDay();
@@ -26,14 +30,14 @@ const ScheduleCalendar = ({ bookings }) => {
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-  const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
-  const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
+  const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
 
   const bookingDays = bookings.map(b => {
-     const d = new Date();
-     if(b.date === 'Tomorrow') d.setDate(d.getDate() + 1);
-     return d.getDate();
-  });
+     const d = new Date(b.date);
+     if (!isNaN(d.getTime())) return d.getDate();
+     return null;
+  }).filter(d => d !== null);
 
   const renderDays = () => {
     const totalDays = daysInMonth(currentDate.getMonth(), currentDate.getFullYear());
@@ -45,7 +49,7 @@ const ScheduleCalendar = ({ bookings }) => {
     }
 
     for (let i = 1; i <= totalDays; i++) {
-      const hasBooking = bookingDays.includes(i) && currentDate.getMonth() === new Date().getMonth();
+      const hasBooking = bookingDays.includes(i);
       cells.push(
         <div key={i} className="relative h-12 w-full flex items-center justify-center">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${hasBooking ? 'bg-rose-500 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-100'}`}>
@@ -82,18 +86,15 @@ const ScheduleCalendar = ({ bookings }) => {
       <div className="mt-8">
         <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4 px-1">Upcoming Requests</h4>
         <div className="space-y-3">
-          {bookings.map(b => (
+          {bookings.length > 0 ? bookings.map(b => (
             <div key={b.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 group">
-               <div className={`w-2 h-10 rounded-full ${b.color}`} />
+               <div className={`w-2 h-10 rounded-full ${b.color || 'bg-rose-500'}`} />
                <div className="flex-1">
-                 <p className="text-sm font-bold text-gray-900 group-hover:text-rose-600 transition-colors">{b.title}</p>
+                 <p className="text-sm font-bold text-gray-900 group-hover:text-rose-600 transition-colors uppercase truncate">{b.title}</p>
                  <p className="text-[10px] text-gray-500 font-medium">{b.date} • {b.time}</p>
                </div>
-               <div className="px-2 py-1 bg-white rounded-lg text-[10px] font-bold text-gray-400 border border-gray-100 shadow-sm uppercase">
-                  {b.status}
-               </div>
             </div>
-          ))}
+          )) : <p className="text-xs text-gray-400 italic text-center">No bookings for this month</p>}
         </div>
       </div>
     </div>
@@ -106,7 +107,8 @@ const BookingStatus = ({ status }) => {
     assigned: { color: 'text-blue-500', bg: 'bg-blue-50', label: 'Pro Assigned', progress: 50 },
     enroute: { color: 'text-indigo-500', bg: 'bg-indigo-50', label: 'En-route', progress: 75 },
     ongoing: { color: 'text-rose-500', bg: 'bg-rose-50', label: 'Service Ongoing', progress: 90 },
-    completed: { color: 'text-green-500', bg: 'bg-green-50', label: 'Completed', progress: 100 }
+    completed: { color: 'text-green-500', bg: 'bg-green-50', label: 'Completed', progress: 100 },
+    cancelled: { color: 'text-red-500', bg: 'bg-red-50', label: 'Cancelled', progress: 0 }
   };
 
   const config = configs[status] || configs.pending;
@@ -139,18 +141,22 @@ const BookingCard = ({ booking, onCancel }) => {
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-4">
-          <div className={`p-4 rounded-2xl ${booking.color} text-white shadow-lg`}>
+          <div className={`p-4 rounded-2xl ${booking.color || 'bg-rose-500'} text-white shadow-lg`}>
             {booking.icon}
           </div>
-          <div>
-            <h4 className="font-bold text-gray-900 text-lg leading-none mb-1">{booking.title}</h4>
-            <div className="flex items-center gap-2 text-gray-500 text-sm">
-              <FaCalendarCheck className="text-xs" />
-              <span>{booking.date} • {booking.time}</span>
+          <div className="min-w-0">
+            <h4 className="font-bold text-gray-900 text-lg leading-none mb-1 truncate">{booking.title}</h4>
+            <div className="flex items-center gap-2 text-gray-500 text-sm whitespace-nowrap">
+              <FaCalendarCheck className="text-xs flex-shrink-0" />
+              <span className="truncate">{booking.date} • {booking.time}</span>
             </div>
           </div>
         </div>
-        <button onClick={() => onCancel(booking.id)} className="text-gray-300 hover:text-red-500 transition-colors p-2">
+        <button 
+          onClick={() => onCancel(booking.id)} 
+          className="text-gray-300 hover:text-red-500 transition-colors p-2"
+          disabled={booking.status === 'cancelled'}
+        >
           <FaTimes />
         </button>
       </div>
@@ -160,12 +166,12 @@ const BookingCard = ({ booking, onCancel }) => {
         
         <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-full bg-white border-2 border-white shadow-sm overflow-hidden">
-               <img src={booking.proAvatar} alt={booking.proName} className="w-full h-full object-cover" />
+             <div className="w-10 h-10 rounded-full bg-white border-2 border-white shadow-sm overflow-hidden text-center">
+               <img src={booking.proAvatar} alt={booking.proName} className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://i.pravatar.cc/150?u=pro'} />
              </div>
-             <div>
+             <div className="min-w-0">
                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Your Professional</p>
-               <p className="text-sm font-bold text-gray-900">{booking.proName}</p>
+               <p className="text-sm font-bold text-gray-900 line-clamp-1 truncate">{booking.proName}</p>
              </div>
           </div>
           <a 
@@ -181,36 +187,59 @@ const BookingCard = ({ booking, onCancel }) => {
 };
 
 const MyBookingsConsumer = ({ isOpen, onClose }) => {
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'calendar'
-  const [activeBookings, setActiveBookings] = useState([
-    {
-      id: 1,
-      title: 'Grocery Delivery',
-      proName: 'John Phiri',
-      proAvatar: 'https://i.pravatar.cc/150?u=john',
-      proWhatsapp: '27712345678',
-      status: 'enroute',
-      icon: <FaShoppingBasket />,
-      color: 'bg-green-500',
-      date: 'Today',
-      time: '14:30'
-    },
-    {
-      id: 2,
-      title: 'Laundry Pickup',
-      proName: 'Sarah Mokoena',
-      proAvatar: 'https://i.pravatar.cc/150?u=sarah',
-      proWhatsapp: '27781234567',
-      status: 'pending',
-      icon: <FaHandsWash />,
-      color: 'bg-blue-500',
-      date: 'Tomorrow',
-      time: '09:00'
-    }
-  ]);
+  const [viewMode, setViewMode] = useState('list');
+  const { currentUser } = useSelector((state) => state.user);
+  const [activeBookings, setActiveBookings] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleCancel = (id) => {
-    setActiveBookings(prev => prev.filter(b => b.id !== id));
+  useEffect(() => {
+    const fetchMyBookings = async () => {
+      if (!currentUser?._id || !isOpen) return;
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/bookings/user/${currentUser?._id}`);
+        if (res.ok) {
+          const data = await res.json();
+          const formatted = data.map(b => ({
+            id: b._id,
+            title: b.listing?.name || b.helper?.name || b.service?.name || 'Service Request',
+            status: b.status || 'pending',
+            date: new Date(b.startDate).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }),
+            time: new Date(b.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            proName: b.listing ? (b.listing.userRef?.username || 'Host') : (b.helper?.name || b.service?.name || 'Pro'),
+            proAvatar: b.listing?.imageUrls?.[0] || b.helper?.imageUrls?.[0] || b.service?.imageUrls?.[0] || 'https://i.pravatar.cc/150?u=pro',
+            proWhatsapp: b.phone || 'N/A',
+            icon: b.listing ? <FaHome /> : (b.service?.type === 'carwash' ? <FaCar /> : <FaHandsWash />),
+            color: b.listing ? 'bg-rose-500' : 'bg-blue-500',
+            subtype: b.subtype || ''
+          }));
+          setActiveBookings(formatted.sort((a, b) => new Date(b.startDate) - new Date(a.startDate)));
+        }
+      } catch (error) {
+        console.error('Error fetching consumer bookings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMyBookings();
+  }, [currentUser, isOpen]);
+
+  const handleCancel = async (id) => {
+    try {
+      const res = await fetch(`/api/bookings/update/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          status: 'cancelled',
+          cancelledBy: 'user'
+        })
+      });
+      if (res.ok) {
+        setActiveBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b));
+      }
+    } catch (error) {
+      console.error('Failed to cancel booking:', error);
+    }
   };
 
   return (
@@ -260,7 +289,12 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
             </div>
 
             <div className="space-y-6">
-              {activeBookings.length > 0 ? (
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <div className="w-12 h-12 border-4 border-rose-500/20 border-t-rose-500 rounded-full animate-spin mb-4" />
+                  <p className="text-gray-400 text-sm font-medium">Fetching your schedule...</p>
+                </div>
+              ) : activeBookings.length > 0 ? (
                 <AnimatePresence mode="wait">
                   {viewMode === 'list' ? (
                     <motion.div 
@@ -268,7 +302,7 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
-                      className="space-y-6"
+                      className="space-y-6 px-1"
                     >
                       {activeBookings.map(booking => (
                         <BookingCard key={booking.id} booking={booking} onCancel={handleCancel} />
@@ -300,18 +334,18 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
                   </button>
                 </div>
               )}
-            </div>
 
-            {activeBookings.length > 0 && (
-              <div className="mt-12 p-6 bg-gradient-to-br from-gray-900 to-gray-800 rounded-[2.5rem] text-white overflow-hidden relative shadow-2xl">
-                <FaStar className="absolute top-4 right-4 text-rose-500 text-4xl opacity-20 rotate-12" />
-                <h3 className="text-lg font-bold mb-2 relative z-10">Rate your last service</h3>
-                <p className="text-gray-400 text-sm mb-4 relative z-10">Help the LoopOut community find the best professionals.</p>
-                <button className="w-full py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl font-bold hover:bg-white/20 transition-colors relative z-10">
-                  Give Feedback
-                </button>
-              </div>
-            )}
+              {activeBookings.length > 0 && (
+                <div className="mt-12 p-6 bg-gradient-to-br from-gray-900 to-gray-800 rounded-[2.5rem] text-white overflow-hidden relative shadow-2xl">
+                  <FaStar className="absolute top-4 right-4 text-rose-500 text-4xl opacity-20 rotate-12" />
+                  <h3 className="text-lg font-bold mb-2 relative z-10">Rate your last service</h3>
+                  <p className="text-gray-400 text-sm mb-4 relative z-10">Help the LoopOut community find the best professionals.</p>
+                  <button className="w-full py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl font-bold hover:bg-white/20 transition-colors relative z-10">
+                    Give Feedback
+                  </button>
+                </div>
+              )}
+            </div>
           </motion.div>
         </>
       )}
