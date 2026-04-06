@@ -30,3 +30,19 @@ export const getWishlistBackend = async () => {
     return [];
   }
 };
+export const voteWishlistItem = async (itemId, itemType, voteType) => {
+  try {
+    const response = await fetch('/api/wishlist/vote', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ itemId, itemType, voteType }),
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error voting on item:', error);
+    return { success: false, message: error.message };
+  }
+};

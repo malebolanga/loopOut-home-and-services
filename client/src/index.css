@@ -91,3 +91,13 @@ body {
   transform: translateY(20px);
   transition: opacity 500ms, transform 500ms;
 }
+
+/* Custom Utilities */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

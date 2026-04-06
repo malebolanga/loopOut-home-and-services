@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
 import { app } from "../firebase";
 import { useSelector } from "react-redux";
@@ -67,129 +68,135 @@ const PawIcon = ({ className = "w-4 h-4" }) => (
 
 // Airbnb-style UI Components
 const SectionCard = ({ title, children, className = "" }) => (
-  <div className={`bg-white rounded-2xl border border-gray-200 p-6 md:p-8 ${className}`}>
-    {title && (
-      <h2 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-6 md:mb-8">
-        {title}
-      </h2>
-    )}
+  <motion.div
+    initial={{ opacity: 0, y: 30 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.8, ease: "easeOut" }}
+    className={`bg-white/80 backdrop-blur-2xl rounded-[3rem] border border-white/40 p-8 md:p-14 shadow-[0_30px_100px_rgba(0,0,0,0.03)] hover:shadow-[0_40px_120px_rgba(0,0,0,0.06)] transition-all duration-700 ${className}`}
+  >
+    <h2 className="text-4xl font-black text-gray-900 mb-10 tracking-tight leading-tight">{title}</h2>
     {children}
-  </div>
+  </motion.div>
 );
 
 const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, placeholder, required = false, className = "", rows = 4, helpText = "", children = null }) => (
-  <div className={className}>
-    <label className="block text-base font-medium text-gray-900 mb-2">
+  <div className={`group/form ${className}`}>
+    <label className="block text-[10px] font-black text-gray-400 group-focus-within/form:text-rose-500 uppercase tracking-[0.25em] mb-4 ml-2 transition-colors">
       {label}
-      {required && <span className="text-[#FF5A5F] ml-1">*</span>}
+      {required && <span className="text-rose-500 ml-2 font-bold opacity-60">*Required</span>}
     </label>
-    {type === "textarea" ? (
-      <textarea
-        id={id}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 resize-none hover:border-gray-400"
-        rows={rows}
-      />
-    ) : type === "number" ? (
-      <input
-        type="number"
-        id={id}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 hover:border-gray-400"
-      />
-    ) : type === "select" ? (
-      <select
-        id={id}
-        value={value}
-        onChange={onChange}
-        required={required}
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 bg-white hover:border-gray-400"
-      >
-        {placeholder && <option value="">{placeholder}</option>}
-        {children}
-      </select>
-    ) : (
-      <input
-        type={type}
-        id={id}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 hover:border-gray-400"
-      />
-    )}
-    {helpText && (
-      <p className="mt-2 text-sm text-gray-500">{helpText}</p>
-    )}
+    <div className="relative group/input">
+      {type === "textarea" ? (
+        <textarea
+          id={id}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          required={required}
+          className="w-full px-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white transition-all duration-700 resize-none hover:border-gray-100 shadow-sm"
+          rows={rows}
+        />
+      ) : type === "number" ? (
+        <div className="relative group/num">
+           <input
+            type="number"
+            id={id}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            required={required}
+            className="w-full pl-16 pr-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white transition-all duration-700 hover:border-gray-100 font-black text-lg shadow-sm"
+          />
+          <div className="absolute left-7 top-1/2 -translate-y-1/2 text-rose-500 font-black text-xl group-focus-within/num:scale-110 transition-transform">R</div>
+        </div>
+      ) : type === "select" ? (
+        <select
+          id={id}
+          value={value}
+          onChange={onChange}
+          required={required}
+          className="w-full px-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white transition-all duration-700 hover:border-gray-100 font-bold shadow-sm appearance-none"
+        >
+          {placeholder && <option value="">{placeholder}</option>}
+          {children}
+        </select>
+      ) : (
+        <div className="relative group/text">
+           {Icon && <Icon className="absolute left-7 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400 group-focus-within/text:text-rose-500 transition-all duration-500" />}
+           <input
+            type={type}
+            id={id}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            required={required}
+            className={`w-full ${Icon ? 'pl-16' : 'px-8'} pr-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white transition-all duration-700 hover:border-gray-100 font-bold shadow-sm`}
+          />
+        </div>
+      )}
+      {children}
+    </div>
+    {helpText && <p className="mt-4 text-xs font-bold text-gray-400 ml-4 italic opacity-80">{helpText}</p>}
   </div>
 );
 
 const CategoryCard = ({ id, icon: Icon, label, description, selected, onSelect }) => (
-  <button
-    type="button"
+  <div
     onClick={() => onSelect(id)}
     className={`
-      flex flex-col p-6 rounded-xl border-2 transition-all duration-200 w-full text-left
+      relative group cursor-pointer p-8 rounded-[2.5rem] border-4 transition-all duration-500 overflow-hidden
       ${selected 
-        ? 'border-black bg-gray-50' 
-        : 'border-gray-200 hover:border-gray-400 bg-white'
-      }
+        ? 'border-gray-900 bg-gray-900 text-white shadow-2xl scale-[1.02]' 
+        : 'border-gray-50 bg-gray-50/50 hover:bg-white hover:border-gray-200 hover:shadow-xl'}
     `}
   >
     <div className={`
-      p-3 rounded-full mb-4 w-fit
-      ${selected ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}
+      w-20 h-20 rounded-[1.7rem] flex items-center justify-center mb-10 transition-all duration-500 transform group-hover:rotate-12
+      ${selected ? 'bg-rose-500 text-white' : 'bg-white text-gray-400 group-hover:text-rose-500 shadow-lg'}
     `}>
-      <Icon className="w-6 h-6" />
+      <Icon className="w-10 h-10" />
     </div>
-    <h3 className="font-semibold text-lg text-gray-900 mb-1">{label}</h3>
-    <p className="text-gray-500 text-sm leading-relaxed">{description}</p>
+    
+    <div className="relative z-10">
+      <h3 className={`text-2xl font-black mb-3 tracking-tight ${selected ? 'text-white' : 'text-gray-900'}`}>{label}</h3>
+      <p className={`text-sm font-medium leading-relaxed ${selected ? 'text-gray-400' : 'text-gray-500 group-hover:text-gray-700'}`}>{description}</p>
+    </div>
+
     {selected && (
-      <div className="mt-4 flex items-center gap-2 text-black font-medium text-sm">
-        <CheckCircleIcon className="w-5 h-5" />
-        Selected
+      <div className="absolute top-0 right-0 p-6">
+        <SparklesIcon className="w-8 h-8 text-rose-500 opacity-20" />
       </div>
     )}
-  </button>
+  </div>
 );
 
-const TypeCard = ({ id, label, emoji, description, selected, onSelect }) => (
-  <button
-    type="button"
+const TypeCard = ({ id, label, icon: Icon, emoji, selected, onSelect }) => (
+  <div
     onClick={() => onSelect(id)}
     className={`
-      p-6 border-2 rounded-xl transition-all duration-200 w-full text-left
+      p-8 rounded-[2.5rem] border-4 transition-all duration-700 cursor-pointer flex flex-col items-center justify-center text-center group relative overflow-hidden
       ${selected 
-        ? 'border-black bg-gray-50' 
-        : 'border-gray-200 hover:border-gray-400 bg-white'
-      }
+        ? 'border-gray-900 bg-gray-900 text-white shadow-2xl scale-[1.05]' 
+        : 'border-gray-50 bg-white/40 backdrop-blur-md hover:bg-white hover:border-gray-200 hover:shadow-xl'}
     `}
   >
-    <span className="text-3xl mb-3 block">{emoji}</span>
-    <h4 className="font-semibold text-lg text-gray-900 mb-1">{label}</h4>
-    <p className="text-gray-500 text-sm">{description}</p>
-    {selected && (
-      <div className="mt-4 flex items-center gap-2 text-black font-medium text-sm">
-        <CheckCircleIcon className="w-5 h-5" />
-        Selected
-      </div>
-    )}
-  </button>
+    <div className={`
+      w-16 h-16 rounded-[1.2rem] flex items-center justify-center mb-6 transition-all duration-500 transform group-hover:-rotate-12
+      ${selected ? 'bg-rose-500 text-white' : 'bg-gray-50 text-gray-400 group-hover:text-rose-500 shadow-sm'}
+    `}>
+       {emoji ? <span className="text-3xl">{emoji}</span> : <Icon className="w-8 h-8" />}
+    </div>
+    <span className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${selected ? 'text-rose-400' : 'text-gray-400'}`}>Selection</span>
+    <span className={`text-sm font-black uppercase tracking-[0.1em] ${selected ? 'text-white' : 'text-gray-900'}`}>{label}</span>
+  </div>
 );
 
 const AmenityCard = ({ id, label, emoji, checked, onChange }) => (
   <label className={`
-    flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all duration-200
+    flex items-center gap-4 p-6 border-4 rounded-[2rem] cursor-pointer transition-all duration-500 group
     ${checked 
-      ? 'border-black bg-gray-50' 
-      : 'border-gray-200 hover:border-gray-400 bg-white'
+      ? 'border-gray-900 bg-gray-900 text-white shadow-2xl scale-[1.02]' 
+      : 'border-gray-50 bg-white/40 backdrop-blur-md hover:bg-white hover:border-gray-200 hover:shadow-xl'
     }
   `}>
     <input
@@ -199,23 +206,20 @@ const AmenityCard = ({ id, label, emoji, checked, onChange }) => (
       onChange={onChange}
       className="hidden"
     />
-    <span className="text-2xl">{emoji}</span>
-    <span className="font-medium text-gray-900 flex-1">{label}</span>
     <div className={`
-      w-6 h-6 rounded border-2 flex items-center justify-center transition-all duration-200
-      ${checked 
-        ? 'bg-black border-black' 
-        : 'bg-white border-gray-300'
-      }
+      w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500
+      ${checked ? 'bg-rose-500 text-white' : 'bg-gray-50 text-gray-400 group-hover:text-rose-500'}
     `}>
-      {checked && <CheckCircleIcon className="w-4 h-4 text-white" />}
+       <span className="text-2xl">{emoji}</span>
     </div>
+    <span className={`text-sm font-bold tracking-tight ${checked ? 'text-white' : 'text-gray-900'}`}>{label}</span>
+    {checked && <CheckCircleIcon className="w-5 h-5 text-rose-500 ml-auto" />}
   </label>
 );
 
 const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFiles = 10, label, uploading, uploadProgress }) => (
-  <div className="space-y-4">
-    <div className="flex flex-col gap-4">
+  <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <input
         type="file"
         id={`${type}-upload`}
@@ -228,77 +232,114 @@ const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFi
       <label
         htmlFor={`${type}-upload`}
         className={`
-          p-8 md:p-12 border-2 border-dashed rounded-xl flex flex-col items-center justify-center 
-          cursor-pointer transition-all duration-200 min-h-[200px]
-          ${uploading ? 'border-gray-200 bg-gray-50' : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'}
+          relative group p-12 md:p-20 border-4 border-dashed rounded-[3rem] flex flex-col items-center justify-center 
+          cursor-pointer transition-all duration-500 min-h-[300px] overflow-hidden
+          ${uploading ? 'border-gray-100 bg-gray-50' : 'border-gray-100 hover:border-rose-500 hover:bg-rose-50/30'}
         `}
       >
+        <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        
         {type === 'image' ? (
           <>
-            <div className="p-4 bg-gray-100 rounded-full mb-4">
-              <CameraIcon className="w-8 h-8 text-gray-600" />
+            <div className="w-20 h-20 bg-rose-500 text-white rounded-3xl mb-8 flex items-center justify-center shadow-2xl shadow-rose-200 group-hover:rotate-12 transition-transform duration-500">
+              <CameraIcon className="w-10 h-10" />
             </div>
-            <span className="text-gray-900 font-medium text-lg mb-1">{label || "Add photos"}</span>
-            <span className="text-gray-500 text-sm">Drag and drop or click to upload</span>
-            <span className="text-gray-400 text-xs mt-2">PNG, JPG up to 2MB each</span>
+            <span className="text-gray-900 font-black text-2xl mb-2 tracking-tight">{label || "Captivate with Photos"}</span>
+            <span className="text-gray-400 font-bold text-sm tracking-wide">Drag and drop or tap to browse your gallery</span>
+            <div className="mt-8 flex items-center gap-3 px-5 py-2.5 bg-white rounded-full shadow-sm border border-gray-50">
+               <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Recommended: 16:9 Aspect Ratio</span>
+            </div>
           </>
         ) : (
           <>
-            <div className="p-4 bg-gray-100 rounded-full mb-4">
-              <VideoCameraIcon className="w-8 h-8 text-gray-600" />
+            <div className="w-20 h-20 bg-gray-900 text-white rounded-3xl mb-8 flex items-center justify-center shadow-2xl shadow-gray-200 group-hover:-rotate-12 transition-transform duration-500">
+              <VideoCameraIcon className="w-10 h-10" />
             </div>
-            <span className="text-gray-900 font-medium text-lg mb-1">{label || "Add a video"}</span>
-            <span className="text-gray-500 text-sm">MP4 or MOV up to 50MB</span>
+            <span className="text-gray-900 font-black text-2xl mb-2 tracking-tight">{label || "Cinematic Showcase"}</span>
+            <span className="text-gray-400 font-bold text-sm tracking-wide">Bring your listing to life with high-quality video</span>
           </>
         )}
       </label>
+      
       {filesCount > 0 && (
-        <button
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
           type="button"
           onClick={onSubmit}
-          className="w-full py-3 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
+          className="w-full py-5 bg-gray-900 text-white rounded-3xl font-black uppercase tracking-[0.2em] shadow-2xl shadow-gray-200 hover:bg-rose-600 transition-all duration-300 transform active:scale-95"
           disabled={uploading}
         >
-          {uploading ? `Uploading ${Math.round(uploadProgress)}%...` : `Upload ${filesCount} file${filesCount > 1 ? 's' : ''}`}
-        </button>
+          {uploading ? (
+             <div className="flex items-center justify-center gap-3">
+                <div className="w-2 h-2 bg-white rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-.3s]" />
+                <div className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-.5s]" />
+                <span>Processing {Math.round(uploadProgress)}%</span>
+             </div>
+          ) : `Deploy ${filesCount} Masterpiece${filesCount > 1 ? 's' : ''}`}
+        </motion.button>
       )}
     </div>
   </div>
 );
 
-const StepProgress = ({ currentStep }) => (
-  <div className="mb-8 md:mb-12">
-    <div className="flex items-center justify-between max-w-2xl mx-auto">
-      {[1, 2, 3, 4, 5, 6].map((step, index) => (
-        <div key={step} className="flex items-center flex-1">
-          <div className={`
-            w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300
-            ${step < currentStep ? 'bg-black text-white' :
-              step === currentStep ? 'bg-black text-white ring-4 ring-gray-200' :
-              'bg-white border-2 border-gray-300 text-gray-400'
-            }
-          `}>
-            {step < currentStep ? <CheckCircleIcon className="w-5 h-5" /> : step}
-          </div>
-          {step < 6 && (
-            <div className={`
-              h-0.5 flex-1 mx-2 transition-all duration-300
-              ${step < currentStep ? 'bg-black' : 'bg-gray-200'}
-            `} />
-          )}
-        </div>
-      ))}
+const StepProgress = ({ currentStep }) => {
+  const steps = [
+    { label: "Category", icon: MapIcon },
+    { label: "Type", icon: TagIcon },
+    { label: "Details", icon: InformationCircleIcon },
+    { label: "Features", icon: SparklesIcon },
+    { label: "Media", icon: CameraIcon },
+    { label: "Review", icon: CheckCircleIcon }
+  ];
+
+  return (
+    <div className="mb-16 md:mb-20 overflow-x-auto scrollbar-hide">
+      <div className="flex items-center justify-between min-w-[700px] max-w-4xl mx-auto px-4">
+        {steps.map((step, index) => {
+          const stepNum = index + 1;
+          const isActive = stepNum === currentStep;
+          const isCompleted = stepNum < currentStep;
+          const StepIcon = step.icon;
+
+          return (
+            <div key={index} className="flex flex-col items-center flex-1 relative">
+              {/* Connector Line */}
+              {index < steps.length - 1 && (
+                <div className={`absolute top-6 left-1/2 w-full h-[3px] transition-all duration-700 ${isCompleted ? 'bg-rose-500' : 'bg-gray-100'}`} />
+              )}
+
+              {/* Step Circle */}
+              <div className={`
+                w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 relative z-10 shadow-lg
+                ${isCompleted ? 'bg-rose-500 text-white' : 
+                  isActive ? 'bg-gray-900 text-white scale-125 ring-8 ring-gray-50 shadow-gray-200' : 
+                  'bg-white border-2 border-gray-100 text-gray-300'}
+              `}>
+                {isCompleted ? <CheckCircleIcon className="w-6 h-6" /> : <StepIcon className="w-5 h-5" />}
+              </div>
+
+              {/* Label */}
+              <div className="mt-4 text-center">
+                <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${isActive || isCompleted ? 'text-gray-900' : 'text-gray-400'}`}>
+                  {step.label}
+                </span>
+                {isActive && (
+                   <motion.div 
+                     layoutId="step-indicator"
+                     className="h-1 w-4 bg-rose-500 mx-auto mt-1 rounded-full" 
+                   />
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
-    <div className="flex justify-between mt-4 text-xs font-medium text-gray-500 max-w-2xl mx-auto px-2">
-      <span className={currentStep >= 1 ? 'text-black' : ''}>Category</span>
-      <span className={currentStep >= 2 ? 'text-black' : ''}>Type</span>
-      <span className={currentStep >= 3 ? 'text-black' : ''}>Details</span>
-      <span className={currentStep >= 4 ? 'text-black' : ''}>Amenities</span>
-      <span className={currentStep >= 5 ? 'text-black' : ''}>Photos</span>
-      <span className={currentStep >= 6 ? 'text-black' : ''}>Review</span>
-    </div>
-  </div>
-);
+  );
+};
 
 export default function CreateListing() {
   const { currentUser } = useSelector((state) => state.user);
@@ -1372,12 +1413,18 @@ export default function CreateListing() {
 
   if (loading && !showPromotionPopup) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <main className="min-h-screen bg-gray-50/50 pb-20 overflow-x-hidden relative">
+      {/* Cinematic Mesh Background */}
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-rose-500/10 rounded-full blur-[150px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -1409,10 +1456,17 @@ export default function CreateListing() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative overflow-x-hidden bg-gray-50">
+      {/* Cinematic Animated Background */}
+      <div className="fixed inset-0 -z-10 pointer-events-none">
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-rose-500/5 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/5 rounded-full blur-[120px] animate-pulse [animation-delay:3s]" />
+        <div className="absolute top-[40%] left-[30%] w-[30%] h-[30%] bg-purple-500/5 rounded-full blur-[100px] animate-pulse [animation-delay:1.5s]" />
+      </div>
+
       {/* Airbnb-style Header */}
       <header>
-        <div className="sticky top-0 z-50 bg-white border-b border-[#DDDDDD]">
+        <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#DDDDDD]">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between h-20">
               <button 
@@ -2272,42 +2326,49 @@ export default function CreateListing() {
             )}
 
             {/* Navigation Buttons - Airbnb Style */}
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 pt-6 pb-8 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 md:border-t-0 md:pt-0 md:pb-0 md:static flex justify-between items-center">
+            <div className="sticky bottom-0 bg-white/80 backdrop-blur-xl border-t border-gray-200 pt-6 pb-8 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 md:border-t-0 md:pt-0 md:pb-0 md:static flex justify-between items-center">
               <button
                 type="button"
-                onClick={handlePrevStep}
+                onClick={() => {
+                  setDirection('back');
+                  setFadeIn(false);
+                  setTimeout(() => {
+                    setCurrentStep(currentStep - 1);
+                    setFadeIn(true);
+                  }, 300);
+                }}
                 className={`
-                  px-6 py-3 rounded-lg font-medium transition-all duration-200 underline underline-offset-4
-                  ${currentStep > 1 ? 'text-gray-900 hover:text-gray-600' : 'invisible'}
+                  px-10 py-5 rounded-[2rem] font-black uppercase tracking-[0.2em] transition-all duration-500 text-[10px]
+                  ${currentStep > 1 ? 'text-gray-900 hover:bg-gray-100' : 'invisible'}
                 `}
               >
-                Back
+                Go Back
               </button>
               
               {currentStep < 6 ? (
                 <button
                   type="button"
                   onClick={handleNextStep}
-                  className="px-8 py-4 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 transition-all duration-200 flex items-center gap-2"
+                  className="px-10 py-5 bg-gray-900 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-gray-200 hover:bg-rose-600 transition-all active:scale-95 flex items-center justify-center gap-3 group"
                 >
-                  Next
-                  <ArrowRightIcon className="w-5 h-5" />
+                  <span className="text-[10px]">Next Masterpiece</span>
+                  <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                 </button>
               ) : (
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-8 py-4 bg-[#FF5A5F] text-white rounded-lg font-semibold hover:bg-[#E14E50] transition-all duration-200 flex items-center gap-2 disabled:opacity-70"
+                  className="px-12 py-5 bg-rose-500 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-rose-200 hover:bg-gray-900 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-70 group"
                 >
                   {loading ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      Publishing...
+                      <span className="text-[10px]">Deploying...</span>
                     </>
                   ) : (
                     <>
-                      <SparklesIcon className="w-5 h-5" />
-                      Publish listing
+                      <SparklesIcon className="w-5 h-5 transition-transform group-hover:rotate-12" />
+                      <span className="text-[10px]">Finalize Listing</span>
                     </>
                   )}
                 </button>
@@ -2326,88 +2387,133 @@ export default function CreateListing() {
 
       {/* Upload Progress Modal */}
       {uploading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Uploading...</h3>
-              <p className="text-gray-600 mb-4">{Math.round(uploadProgress)}% complete</p>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-black h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${uploadProgress}%` }}
-                ></div>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-xl flex items-center justify-center z-[100] p-6">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white rounded-[3rem] p-12 max-w-md w-full shadow-2xl relative overflow-hidden"
+          >
+            <div className="absolute top-0 left-0 w-full h-2 bg-gray-100">
+               <motion.div 
+                 className="h-full bg-rose-500"
+                 initial={{ width: 0 }}
+                 animate={{ width: `${uploadProgress}%` }}
+               />
+            </div>
+            
+            <div className="text-center relative z-10">
+              <div className="w-24 h-24 bg-rose-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner overflow-hidden">
+                <motion.div
+                  animate={{ 
+                    rotate: 360,
+                    scale: [1, 1.1, 1]
+                  }}
+                  transition={{ 
+                    rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+                    scale: { duration: 1, repeat: Infinity }
+                  }}
+                  className="text-rose-500"
+                >
+                  <SparklesIcon className="w-10 h-10" />
+                </motion.div>
+              </div>
+              <h3 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">Deploying...</h3>
+              <p className="text-gray-400 font-bold text-sm uppercase tracking-widest mb-6">Masterpiece {Math.round(uploadProgress)}% Complete</p>
+              
+              <div className="flex items-center justify-center gap-2">
+                 {[1, 2, 3].map(i => (
+                    <motion.div
+                      key={i}
+                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                      className="w-2 h-2 bg-rose-500 rounded-full"
+                    />
+                 ))}
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
       {/* Promotion Popup */}
       {showPromotionPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl my-auto">
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-xl flex items-center justify-center z-[110] p-6 overflow-y-auto">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white rounded-[3.5rem] max-w-3xl w-full overflow-hidden shadow-2xl my-auto border border-gray-100"
+          >
             {promotionSteps === 0 && (
-              <div className="p-8 md:p-12 text-center">
-                <div className="w-16 h-16 bg-[#FF5A5F]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <SparklesIcon className="w-8 h-8 text-[#FF5A5F]" />
+              <div className="p-12 md:p-16 text-center bg-gradient-to-b from-rose-50/50 to-white">
+                <div className="w-24 h-24 bg-rose-500 text-white rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-2xl shadow-rose-200 rotate-12 transition-transform hover:rotate-0">
+                  <SparklesIcon className="w-12 h-12" />
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-3">You're all set! 🎉</h3>
-                <p className="text-gray-600 mb-8 text-lg">
-                  Boost your listing's visibility with our promotion packages.
+                <h3 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight leading-tight">
+                   Your listing is <br /> <span className="text-rose-500">Live & Legends</span>! 🎉
+                </h3>
+                <p className="text-gray-500 font-medium mb-12 text-lg max-w-md mx-auto leading-relaxed">
+                  Now, give it the spotlight it deserves. Boost your visibility to reach thousands more.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <div className="flex flex-col sm:flex-row gap-5 justify-center">
                   <button
                     onClick={() => setPromotionSteps(1)}
-                    className="px-8 py-4 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+                    className="px-10 py-5 bg-gray-900 text-white rounded-[1.5rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-gray-200 hover:bg-rose-600 transition-all active:scale-95 flex items-center justify-center gap-3"
                   >
-                    Promote now
+                    🚀 Promote Now
                   </button>
                   <button
                     onClick={() => navigate(`/listing/${newListingId}`)}
-                    className="px-8 py-4 border border-black text-black rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                    className="px-10 py-5 bg-white border-2 border-gray-100 text-gray-400 rounded-[1.5rem] font-black uppercase tracking-[0.2em] hover:bg-gray-50 hover:text-gray-900 transition-all active:scale-95"
                   >
-                    Skip for now
+                    Discover it
                   </button>
                 </div>
               </div>
             )}
 
             {promotionSteps === 1 && (
-              <div className="p-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Choose your promotion</h3>
-                <p className="text-gray-600 mb-8">Select a package that fits your needs</p>
+              <div className="p-10 md:p-14">
+                <h3 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">Choose your <span className="text-rose-500">Boost</span></h3>
+                <p className="text-gray-500 font-medium mb-12">Select a masterpiece package that fits your ambition</p>
                 
-                <div className="grid md:grid-cols-2 gap-4 mb-8">
+                <div className="grid md:grid-cols-2 gap-6 mb-12">
                   {[
-                    { id: 'standard', price: 40, multiplier: '25x', days: '7 days', features: ['25x more visibility', 'Featured in category', '7-day promotion'] },
-                    { id: 'premium', price: 100, multiplier: '80x', days: '14 days', features: ['80x more visibility', 'Homepage feature', '14-day promotion', 'Priority support'] }
+                    { id: 'standard', price: 40, multiplier: '25x', days: '7 days', features: ['25x visibility multiplier', 'Featured category placement', 'Professional badge', '7 days of prime spot'] },
+                    { id: 'premium', price: 100, multiplier: '80x', days: '14 days', features: ['80x visibility multiplier', 'Homepage spotlight feature', 'Elite gold badge', '14 days of prime spot', 'Priority expert support'] }
                   ].map((pkg) => (
                     <div
                       key={pkg.id}
                       onClick={() => setPromotionPackage(pkg.id)}
                       className={`
-                        p-6 border-2 rounded-xl cursor-pointer transition-all duration-200
-                        ${promotionPackage === pkg.id ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-400'}
+                        p-8 border-4 rounded-[2.5rem] cursor-pointer transition-all duration-500 relative overflow-hidden group
+                        ${promotionPackage === pkg.id 
+                          ? 'border-gray-900 bg-gray-900 text-white shadow-2xl scale-[1.03]' 
+                          : 'border-gray-50 hover:border-gray-200 bg-gray-50/50 hover:bg-white'}
                       `}
                     >
-                      <div className="flex justify-between items-start mb-4">
+                      <div className="flex justify-between items-start mb-6">
                         <div>
-                          <h4 className="font-bold text-lg capitalize">{pkg.id}</h4>
-                          <p className="text-gray-500 text-sm">{pkg.multiplier} more visibility</p>
+                          <h4 className={`font-black text-2xl capitalize mb-1 ${promotionPackage === pkg.id ? 'text-white' : 'text-gray-900'}`}>{pkg.id}</h4>
+                          <div className={`text-[10px] font-bold uppercase tracking-widest ${promotionPackage === pkg.id ? 'text-rose-400' : 'text-rose-500'}`}>{pkg.multiplier} Reach Expansion</div>
                         </div>
                         <div className="text-right">
-                          <span className="text-2xl font-bold">R{pkg.price}</span>
+                          <span className={`text-3xl font-black ${promotionPackage === pkg.id ? 'text-white' : 'text-gray-900'}`}>R{pkg.price}</span>
                         </div>
                       </div>
-                      <ul className="space-y-2">
+                      <ul className="space-y-3">
                         {pkg.features.map((feat, i) => (
-                          <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                            <CheckCircleIcon className="w-4 h-4 text-green-600" />
-                            {feat}
+                          <li key={i} className="flex items-center gap-3 text-sm font-medium">
+                            <CheckCircleIcon className={`w-5 h-5 ${promotionPackage === pkg.id ? 'text-rose-500' : 'text-rose-400'}`} />
+                            <span className={promotionPackage === pkg.id ? 'text-gray-300' : 'text-gray-600'}>{feat}</span>
                           </li>
                         ))}
                       </ul>
+
+                      {promotionPackage === pkg.id && (
+                         <div className="absolute top-0 right-0 p-3">
+                            <SparklesIcon className="w-8 h-8 text-rose-500 opacity-20 rotate-12" />
+                         </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -2527,7 +2633,7 @@ export default function CreateListing() {
                 </div>
               </div>
             )}
-          </div>
+            </motion.div>
         </div>
       )}
     </div>

@@ -130,7 +130,7 @@ const EVENTS_CATEGORY_CONFIG = {
 // Main Search Type Configuration
 const SEARCH_TYPE_CONFIG = {
   all: {
-    label: 'All',
+    label: 'Everything',
     icon: Sparkles,
     color: 'from-gray-900 to-gray-800',
     bgColor: 'bg-gray-900',
@@ -147,7 +147,7 @@ const SEARCH_TYPE_CONFIG = {
     subTypes: PROPERTY_TYPE_CONFIG
   },
   services: {
-    label: 'Services',
+    label: 'Professional Services',
     icon: Wrench,
     color: 'from-blue-500 to-blue-600',
     bgColor: 'bg-blue-500',
@@ -156,7 +156,7 @@ const SEARCH_TYPE_CONFIG = {
     subTypes: SERVICES_CATEGORY_CONFIG
   },
   helpers: {
-    label: 'Helpers',
+    label: 'Local Helpers',
     icon: Users,
     color: 'from-amber-500 to-amber-600',
     bgColor: 'bg-amber-500',
@@ -165,7 +165,7 @@ const SEARCH_TYPE_CONFIG = {
     subTypes: HELPER_CATEGORY_CONFIG
   },
   events: {
-    label: 'Events',
+    label: 'Exclusive Events',
     icon: Calendar,
     color: 'from-purple-500 to-purple-600',
     bgColor: 'bg-purple-500',
@@ -253,23 +253,23 @@ const SlideOpenSearch = ({
             className="fixed top-0 left-0 right-0 bg-white z-50 shadow-2xl rounded-b-3xl max-h-[85vh] flex flex-col"
           >
             {/* Header - Fixed */}
-            <div className="flex-shrink-0 bg-white border-b border-gray-100 px-4 py-4 flex items-center gap-3">
+            <div className="flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-5 flex items-center gap-4">
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-all active:scale-90"
               >
-                <ArrowLeft className="w-5 h-5 text-gray-700" />
+                <ArrowLeft className="w-5 h-5 text-gray-900" />
               </button>
 
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div className="flex-1 relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-rose-500 transition-colors" />
                 <input
                   ref={inputRef}
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search for anything..."
-                  className="w-full pl-10 pr-10 py-3 bg-gray-100 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all"
+                  placeholder="What are you looking for?"
+                  className="w-full pl-12 pr-12 py-5 bg-gray-50 border-2 border-transparent rounded-[1.5rem] text-gray-900 font-bold placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:bg-white focus:border-rose-500 transition-all shadow-inner"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       onSearch();
@@ -658,35 +658,39 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
     return (
       <motion.div
         variants={itemVariants}
-        whileHover={{ x: 5 }}
+        whileHover={{ x: 10, scale: 1.01 }}
         onClick={onClick}
-        className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer border border-gray-100 flex gap-4"
+        className="bg-white rounded-[2rem] p-6 shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer border border-gray-100 flex gap-6 group overflow-hidden relative"
       >
-        <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-rose-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+        
+        <div className="w-32 h-32 rounded-2xl overflow-hidden flex-shrink-0 shadow-lg group-hover:rotate-3 transition-transform duration-500">
           <ImageWithFallback
             src={getImageUrl()}
             imageUrls={getAllImages()}
             type={itemType === 'listing' ? 'property' : (itemType === 'helper' ? 'helper' : (itemType === 'event' ? 'event' : 'service'))}
             alt={item.name || item.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-start gap-2">
-            <div className="min-w-0">
-              <h3 className="font-bold text-gray-900 truncate">{item.name || item.title}</h3>
-              <p className="text-gray-500 text-sm flex items-center gap-1 truncate">
-                <MapPin className="w-3 h-3 flex-shrink-0" />
-                <span className="truncate">{getLocation()}</span>
-              </p>
+        <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+          <div>
+            <div className="flex justify-between items-start gap-4">
+              <div className="min-w-0">
+                <h3 className="text-xl font-black text-gray-900 truncate tracking-tight group-hover:text-rose-500 transition-colors">{item.name || item.title}</h3>
+                <p className="text-gray-400 font-bold text-xs flex items-center gap-1.5 mt-1 uppercase tracking-widest">
+                  <MapPin className="w-3.5 h-3.5 text-rose-500" />
+                  <span className="truncate">{getLocation()}</span>
+                </p>
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }}
+                className="w-10 h-10 bg-gray-50 flex items-center justify-center rounded-xl shadow-inner hover:bg-rose-50 hover:text-rose-500 transition-all active:scale-90"
+              >
+                {isLiked ? <Heart className="w-5 h-5 text-rose-500 fill-rose-500" /> : <Heart className="w-5 h-5 text-gray-400" />}
+              </button>
             </div>
-            <button
-              onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }}
-              className="p-1.5 hover:bg-gray-100 rounded-full flex-shrink-0"
-            >
-              {isLiked ? <Heart className="w-4 h-4 text-rose-500 fill-rose-500" /> : <Heart className="w-4 h-4 text-gray-400" />}
-            </button>
           </div>
 
           <div className="flex items-center gap-3 mt-2 text-sm text-gray-600 flex-wrap">
@@ -712,36 +716,91 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
   return (
     <motion.div
       variants={itemVariants}
+      whileHover={{ y: -12 }}
+      whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer h-full flex flex-col group"
+      className="bg-white rounded-[3rem] overflow-hidden shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all duration-700 cursor-pointer h-full flex flex-col group border border-gray-50/50"
     >
-      <div className="relative h-48 overflow-hidden bg-gray-200">
+      <div className="relative h-72 overflow-hidden bg-gray-50">
         <ImageWithFallback
           src={getImageUrl()}
           imageUrls={getAllImages()}
           type={itemType === 'listing' ? 'property' : (itemType === 'helper' ? 'helper' : (itemType === 'event' ? 'event' : 'service'))}
           alt={item.name || item.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
         />
-        <button
-          onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }}
-          className="absolute top-3 right-3 p-1.5 bg-white/90 hover:bg-white rounded-full shadow-sm transition-colors"
-        >
-          {isLiked ? <Heart className="w-4 h-4 text-rose-500 fill-rose-500" /> : <Heart className="w-4 h-4 text-gray-600" />}
-        </button>
-      </div>
-
-      <div className="p-3 flex-1 flex flex-col">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-gray-900 truncate text-sm">{item.name || item.title}</h3>
-          <div className="flex items-center gap-1 text-xs flex-shrink-0">
-            <Star className="w-3 h-3 text-gray-900 fill-current" />
-            <span className="text-gray-900">{getRating().toFixed(1)}</span>
+        
+        {/* Type Badge */}
+        <div className="absolute top-6 left-6 z-10">
+          <div className="bg-white/80 backdrop-blur-xl px-4 py-2 rounded-2xl shadow-xl flex items-center gap-3 border border-white/20">
+            <div className={`w-2 h-2 rounded-full ${mainConfig.bgColor} shadow-[0_0_10px_rgba(255,255,255,1)] animate-pulse`} />
+            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-900">
+               {mainConfig.label}
+            </span>
           </div>
         </div>
-        <p className="text-gray-500 text-xs truncate mt-1">{getLocation()}</p>
-        <div className="mt-auto pt-2">
-          <span className="font-semibold text-gray-900 text-base">{getPrice()}</span>
+
+        {/* Favorite Button */}
+        <button
+          onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }}
+          className="absolute top-6 right-6 z-10 w-12 h-12 flex items-center justify-center bg-white/80 backdrop-blur-xl hover:bg-white rounded-[1.2rem] shadow-xl transition-all active:scale-90 group/fav"
+        >
+          <Heart className={`w-6 h-6 transition-colors ${isLiked ? 'text-rose-500 fill-rose-500' : 'text-gray-400 group-hover/fav:text-rose-400'}`} />
+        </button>
+
+        {/* Gradient Overlay */}
+        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      </div>
+
+      <div className="p-6 flex-1 flex flex-col">
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <div className="flex-1 min-w-0">
+             <h3 className="font-black text-gray-900 text-lg leading-tight group-hover:text-rose-600 transition-colors truncate">
+               {item.name || item.title}
+             </h3>
+             <div className="flex items-center gap-1.5 text-gray-400 mt-1">
+                <MapPin className="w-3 h-3 text-rose-500" />
+                <p className="text-xs font-bold truncate uppercase tracking-wider">{getLocation()}</p>
+             </div>
+          </div>
+          <div className="flex items-center gap-1.5 bg-rose-50 px-2.5 py-1.5 rounded-xl flex-shrink-0">
+            <Star className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+            <span className="text-[11px] font-black text-rose-700">{getRating().toFixed(1)}</span>
+          </div>
+        </div>
+
+        {/* Attributes Row */}
+        <div className="flex items-center gap-3 mb-6 flex-wrap">
+           {itemType === 'properties' && (
+             <>
+               <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-xl">
+                 <Bed className="w-3.5 h-3.5 text-gray-400" />
+                 <span className="text-[11px] font-black text-gray-600">{item.bedrooms || 0} Beds</span>
+               </div>
+               <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-xl">
+                 <Bath className="w-3.5 h-3.5 text-gray-400" />
+                 <span className="text-[11px] font-black text-gray-600">{item.bathrooms || 0} Baths</span>
+               </div>
+             </>
+           )}
+           {subConfig && (
+              <div className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest ${subConfig.color || 'bg-gray-100 text-gray-500'}`}>
+                 {subConfig.label || itemSubType}
+              </div>
+           )}
+        </div>
+
+        <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50">
+          <div>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Starting From</p>
+            <div className="flex items-baseline gap-1">
+               <span className="text-2xl font-black text-gray-900 tracking-tight">{getPrice()}</span>
+               {itemType === 'properties' && !getPrice().includes('/mo') && <span className="text-[10px] font-bold text-gray-400">/total</span>}
+            </div>
+          </div>
+          <button className="w-12 h-12 rounded-2xl bg-gray-900 text-white flex items-center justify-center shadow-lg shadow-gray-200 hover:bg-rose-600 transition-all group-hover:rotate-12">
+             <ChevronDown className="w-5 h-5 -rotate-90" />
+          </button>
         </div>
       </div>
     </motion.div>
@@ -749,14 +808,24 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
 };
 
 const EmptyState = ({ onClear }) => (
-  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-8 text-center border border-gray-100">
-    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-      <Search className="w-8 h-8 text-gray-400" />
+  <motion.div 
+    initial={{ opacity: 0, scale: 0.9 }} 
+    animate={{ opacity: 1, scale: 1 }} 
+    className="bg-white rounded-[3rem] p-16 text-center border border-gray-50 shadow-2xl shadow-rose-100 max-w-2xl mx-auto"
+  >
+    <div className="w-24 h-24 bg-rose-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
+      <Search className="w-10 h-10 text-rose-500" />
     </div>
-    <h3 className="text-lg font-bold text-gray-900 mb-2">No results found</h3>
-    <p className="text-sm text-gray-600 mb-4">Try adjusting your search or filters</p>
-    <button onClick={onClear} className="px-5 py-2 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors text-sm">
-      Clear all filters
+    <h3 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">No results in this loop</h3>
+    <p className="text-gray-500 font-medium mb-10 leading-relaxed">
+      We couldn't find exactly what you're looking for. <br />
+      Try broadening your search or resetting your filters.
+    </p>
+    <button 
+      onClick={onClear} 
+      className="px-10 py-5 bg-gray-900 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-rose-600 transition-all shadow-xl shadow-gray-200 active:scale-95"
+    >
+      Reset all filters
     </button>
   </motion.div>
 );

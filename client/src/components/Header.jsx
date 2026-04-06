@@ -379,6 +379,9 @@ export default function Header() {
     }
   };
 
+  // Hide header on wishlist page
+  if (location.pathname === '/wishlist') return null;
+
   return (
     <>
       {/* Airbnb-style Header */}
