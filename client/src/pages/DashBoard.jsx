@@ -111,11 +111,16 @@ const mockBookings = [
   }
 ];
 
-const statusColors = {
-  pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  confirmed: 'bg-green-100 text-green-800 border-green-200',
-  cancelled: 'bg-red-100 text-red-800 border-red-200',
-  completed: 'bg-blue-100 text-blue-800 border-blue-200'
+const statusConfig = {
+  pending: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: 'Pending Approval' },
+  confirmed: { color: 'bg-green-100 text-green-800 border-green-200', label: 'Confirmed' },
+  approved: { color: 'bg-green-100 text-green-800 border-green-200', label: 'Approved' },
+  assigned: { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Pro Assigned' },
+  enroute: { color: 'bg-indigo-100 text-indigo-800 border-indigo-200', label: 'En-route' },
+  ongoing: { color: 'bg-rose-100 text-rose-800 border-rose-200', label: 'Ongoing Service' },
+  completed: { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Completed' },
+  cancelled: { color: 'bg-red-100 text-red-800 border-red-200', label: 'Cancelled' },
+  declined: { color: 'bg-red-100 text-red-800 border-red-200', label: 'Declined' }
 };
 
 const typeIcons = {
@@ -216,6 +221,8 @@ export default function DashBoard() {
   const [scheduleView, setScheduleView] = useState('list'); // 'list', 'calendar', or 'sliding'
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -257,6 +264,38 @@ export default function DashBoard() {
     fetchBookings();
   }, [currentUser, dashboardMode]);
 
+  const fetchNotifications = async () => {
+    if (!currentUser?._id) return;
+    try {
+      const res = await fetch('/api/notifications'); // The route handles user.id via verifyToken
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data.notifications || []);
+        setUnreadCount(data.unreadCount || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 120000); // Check every 2 minutes
+    return () => clearInterval(interval);
+  }, [currentUser]);
+
+  const markAllAsRead = async () => {
+    try {
+      const res = await fetch('/api/notifications/read', { method: 'POST' });
+      if (res.ok) {
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        setUnreadCount(0);
+      }
+    } catch (error) {
+      console.error('Error marking as read:', error);
+    }
+  };
+
   const scrollToBooking = (bookingId) => {
     const element = document.getElementById(`booking-${bookingId}`);
     if (element) {
@@ -274,7 +313,7 @@ export default function DashBoard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           status: newStatus,
-          cancelledBy: newStatus === 'cancelled' ? 'host' : undefined
+          cancelledBy: newStatus === 'cancelled' ? (dashboardMode === 'hosting' ? 'host' : 'user') : undefined
         })
       });
       if (res.ok) {
@@ -418,36 +457,58 @@ export default function DashBoard() {
            </div>
            
            <div className="flex items-center gap-6">
-              {/* Notification Bell */}
-              <div className="relative  cursor-pointer">
-                <div className="w-16 h-16 bg-white rounded-[2rem] shadow-xl border border-gray-100 flex items-center justify-center text-gray-400 group-hover:text-rose-500 transition-all duration-300">
-                  <FaBell className="text-2xl animate-pulse" />
+              <div className="relative">
+                <div 
+                  onClick={markAllAsRead}
+                  className="w-16 h-16 bg-white rounded-[2rem] shadow-xl border border-gray-100 flex items-center justify-center text-gray-400 group-hover:text-rose-500 transition-all duration-300 cursor-pointer"
+                >
+                  <FaBell className={`text-2xl ${unreadCount > 0 ? 'animate-bounce text-rose-500' : ''}`} />
                 </div>
-                {stats.pending > 0 && (
-                  <div className="absolute -top-1 -right-1 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] font-black border-4 border-white shadow-lg animate-bounce">
-                    {stats.pending}
+                {unreadCount > 0 && (
+                  <div className="absolute -top-1 -right-1 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] font-black border-4 border-white shadow-lg">
+                    {unreadCount}
                   </div>
                 )}
                 
-                {/* Notification Dropdown (Hover) */}
+                {/* Notification Dropdown */}
                 <div className="absolute top-20 right-0 w-80 bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 opacity-0 translate-y-4 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-50">
-                  <h4 className="font-black text-gray-900 mb-4 flex items-center justify-between">
-                    Alert Center
-                    <span className="px-3 py-1 bg-rose-100 text-rose-600 rounded-full text-[10px]">NEW</span>
-                  </h4>
-                  <div className="space-y-4">
-                    {stats.pending > 0 ? (
-                      <div className="flex items-center gap-4 p-3 bg-rose-50 rounded-2xl border border-rose-100">
-                        <div className="w-10 h-10 bg-rose-500 rounded-xl flex items-center justify-center text-white">
-                          <FaCalendar size={14} />
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-black text-gray-900 flex items-center gap-2">
+                       Alert Center
+                       {unreadCount > 0 && <span className="px-2 py-0.5 bg-rose-100 text-rose-600 rounded-full text-[8px]">{unreadCount} NEW</span>}
+                    </h4>
+                    <button 
+                      onClick={markAllAsRead}
+                      className="text-[10px] font-bold text-gray-400 hover:text-rose-500 uppercase tracking-widest"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3 max-h-[350px] overflow-y-auto scrollbar-hide pr-1">
+                    {notifications.length > 0 ? (
+                      notifications.map((notif, idx) => (
+                        <div 
+                          key={notif._id || idx}
+                          className={`p-3 rounded-2xl border transition-all ${notif.read ? 'bg-white border-gray-50' : 'bg-rose-50/30 border-rose-100'}`}
+                        >
+                           <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs ${
+                                notif.type === 'booking' ? 'bg-amber-100 text-amber-600' : 
+                                notif.type === 'message' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
+                              }`}>
+                                {notif.type === 'booking' ? <FaCalendar /> : <FaBell />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                 <p className="text-[11px] font-black text-gray-900 truncate uppercase tracking-tight">{notif.title || 'System Alert'}</p>
+                                 <p className="text-[10px] text-gray-500 line-clamp-2 mt-0.5">{notif.message}</p>
+                                 <p className="text-[8px] text-gray-400 mt-1 font-bold">{getTimeAgo(notif.createdAt)}</p>
+                              </div>
+                           </div>
                         </div>
-                        <div>
-                          <p className="text-xs font-black text-rose-900 leading-tight">Action Required</p>
-                          <p className="text-[10px] font-bold text-rose-700 mt-0.5">{stats.pending} pending requests waiting.</p>
-                        </div>
-                      </div>
+                      ))
                     ) : (
-                      <p className="text-sm text-gray-400 font-medium text-center py-4">All caught up! ✨</p>
+                      <p className="text-[11px] text-gray-400 font-medium text-center py-6">Your alert center is currently quiet ✨</p>
                     )}
                   </div>
                 </div>
@@ -652,8 +713,8 @@ export default function DashBoard() {
                   {/* Status & ID Row */}
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                     <div className="flex flex-wrap items-center gap-3">
-                      <span className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${statusColors[booking.status]}`}>
-                        {booking.status}
+                      <span className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${statusConfig[booking.status]?.color || 'bg-gray-100 text-gray-800'}`}>
+                        {statusConfig[booking.status]?.label || booking.status}
                       </span>
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                         Ref: #{booking._id}
@@ -735,42 +796,87 @@ export default function DashBoard() {
                           <p className="text-xs font-bold text-rose-500 tracking-wide truncate">{booking.clientPhone}</p>
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <button 
                           onClick={() => window.open(`https://wa.me/${booking.clientPhone.replace(/\s/g, '')}`, '_blank')}
-                          className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white text-[10px] font-black uppercase tracking-widest py-4 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-200"
+                          className="flex-1 min-w-[120px] bg-[#25D366] hover:bg-[#128C7E] text-white text-[10px] font-black uppercase tracking-widest py-4 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-200"
                         >
                           <FaWhatsapp size={16} />
                           Message
                         </button>
-                        {booking.status === 'pending' && (
-                          <div className="flex gap-2">
-                            <button 
-                              onClick={() => handleStatusUpdate(booking._id, 'confirmed')}
-                              className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm group/btn"
-                              title="Approve"
-                            >
-                              <FaCheck size={16} className="group-hover/btn:scale-125 transition-transform" />
-                            </button>
-                            <button 
-                              onClick={() => handleStatusUpdate(booking._id, 'cancelled')}
-                              className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-rose-600 hover:bg-rose-50 transition-all shadow-sm group/btn"
-                              title="Decline"
-                            >
-                              <FaTimes size={16} className="group-hover/btn:scale-125 transition-transform" />
-                            </button>
-                          </div>
-                        )}
-                        {booking.status === 'confirmed' && (
-                          <button 
-                            onClick={() => handleStatusUpdate(booking._id, 'completed')}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-lg shadow-blue-200"
-                          >
-                            Check Out
-                          </button>
+                        
+                        {dashboardMode === 'hosting' ? (
+                          <>
+                            {booking.status === 'pending' && (
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={() => handleStatusUpdate(booking._id, 'confirmed')}
+                                  className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm group/btn"
+                                  title="Approve"
+                                >
+                                  <FaCheck size={16} className="group-hover/btn:scale-125 transition-transform" />
+                                </button>
+                                <button 
+                                  onClick={() => handleStatusUpdate(booking._id, 'declined')}
+                                  className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-rose-600 hover:bg-rose-50 transition-all shadow-sm group/btn"
+                                  title="Decline"
+                                >
+                                  <FaTimes size={16} className="group-hover/btn:scale-125 transition-transform" />
+                                </button>
+                              </div>
+                            )}
+                            
+                            {(booking.status === 'confirmed' || booking.status === 'approved') && booking.type !== 'listing' && (
+                              <button 
+                                onClick={() => handleStatusUpdate(booking._id, 'assigned')}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-lg"
+                              >
+                                Assign Pro
+                              </button>
+                            )}
+
+                            {booking.status === 'assigned' && (
+                              <button 
+                                onClick={() => handleStatusUpdate(booking._id, 'enroute')}
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-lg"
+                              >
+                                En-route
+                              </button>
+                            )}
+
+                            {booking.status === 'enroute' && (
+                              <button 
+                                onClick={() => handleStatusUpdate(booking._id, 'ongoing')}
+                                className="bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-lg"
+                              >
+                                Start Service
+                              </button>
+                            )}
+
+                            {(booking.status === 'confirmed' || booking.status === 'approved' || booking.status === 'ongoing') && (
+                              <button 
+                                onClick={() => handleStatusUpdate(booking._id, 'completed')}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-lg"
+                              >
+                                {booking.type === 'listing' ? 'Check Out' : 'Done'}
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          /* My Requests Perspective Actions */
+                          <>
+                            {['pending', 'confirmed', 'approved', 'assigned'].includes(booking.status) && (
+                              <button 
+                                onClick={() => handleStatusUpdate(booking._id, 'cancelled')}
+                                className="bg-white border border-gray-100 text-rose-600 hover:bg-rose-50 text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-sm"
+                              >
+                                Cancel Request
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
+
                     </div>
                   </div>
 

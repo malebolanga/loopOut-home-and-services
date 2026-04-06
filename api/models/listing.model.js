@@ -172,8 +172,18 @@ const listingSchema = new mongoose.Schema(
       ref: 'Comment'
     }],
     
-
-   
+    isPromoted: {
+      type: Boolean,
+      default: false
+    },
+    promotionPackage: {
+      type: String,
+      enum: ['standard', 'premium', null],
+      default: null
+    },
+    promotionExpiry: {
+      type: Date
+    }
 
   },
   { timestamps: true }

@@ -9,26 +9,41 @@ const router = express.Router();
  * In production this would integrate with a payment gateway.
  * For now it simulates a successful payment and navigates the user forward.
  */
+import { generatePayfastData } from '../utils/payfast.js';
+
+/**
+ * POST /api/promotion/payment
+ * Handles listing promotion packages (Standard R40, Featured R100).
+ * Generates a PayFast redirect URL and fields.
+ */
 router.post('/payment', verifyToken, async (req, res) => {
   try {
-    const { userId, listingId, package: pkg, paymentMethod, amount } = req.body;
+    const { userId, listingId, package: pkg, name, email, amount } = req.body;
 
     if (!userId || !listingId) {
       return res.status(400).json({ success: false, message: 'userId and listingId are required' });
     }
 
-    // TODO: Integrate real payment gateway here (e.g. PayFast/Stripe).
-    // For now simulate a successful payment.
+    // Generate PayFast data for either R40 (Standard) or R100 (Premium)
+    const payfast = generatePayfastData({
+      merchant_id: process.env.PAYFAST_MERCHANT_ID,
+      merchant_key: process.env.PAYFAST_MERCHANT_KEY,
+      amount: amount || (pkg === 'premium' ? '100.00' : '40.00'),
+      item_name: `${pkg?.toUpperCase()} Promotion - Listing #${listingId}`,
+      name_first: name || 'LoopOut',
+      name_last: 'User',
+      email_address: email || 'user@example.com',
+      m_payment_id: `promo-pkg-${listingId}-${Date.now()}`,
+    });
+
     return res.status(200).json({
       success: true,
-      message: `Promotion payment of R${amount} for ${pkg} package processed successfully`,
-      listingId,
-      package: pkg,
-      paymentMethod,
+      message: 'Promotion payment session generated',
+      payfast
     });
   } catch (error) {
-    console.error('Promotion payment error:', error);
-    return res.status(500).json({ success: false, message: 'Promotion payment processing failed' });
+    console.error('Promotion payment generation error:', error);
+    return res.status(500).json({ success: false, message: 'Could not initialize promotion payment' });
   }
 });
 

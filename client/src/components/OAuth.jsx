@@ -23,8 +23,9 @@ export default function OAuth() {
       const res = await fetch('/api/auth/google', {
         method: 'POST',
         headers: {
-          'Content-type': 'application/json',
+          'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           name: result.user.displayName,
           email: result.user.email,
@@ -47,6 +48,8 @@ export default function OAuth() {
         errorMessage = 'Sign-in popup was closed before completion.';
       } else if (error.code === 'auth/network-request-failed') {
         errorMessage = 'Network error. Please check your connection.';
+      } else if (error.code === 'auth/unauthorized-domain') {
+        errorMessage = 'This domain is not authorized for Google Sign-in. Please add it to the Firebase Console.';
       }
       dispatch(signInFailure(errorMessage));
     }

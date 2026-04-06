@@ -1,7 +1,7 @@
 // src/services/AI.service.js
-export default {
+const AI = {
   // Add missing methods
-  calculateEngagementScore: (path, userId) => {
+  calculateEngagementScore(path, userId) {
     // Temporary implementation
     const baseScores = {
       'for-rent': 0.8,
@@ -15,14 +15,14 @@ export default {
     return baseScores[path] || 0.5;
   },
 
-  generateHarmoniousColor: (baseColor) => {
+  generateHarmoniousColor(baseColor) {
     return baseColor ? `${baseColor}cc` : '#1f2937';
   },
 
-  registerMenuInteractions: (element, callbacks) => {
+  registerMenuInteractions(element, callbacks) {
     // Simple click-outside implementation
     const handleClick = (e) => {
-      if (!element.contains(e.target)) {
+      if (element && !element.contains(e.target)) {
         callbacks.onClose();
       }
     };
@@ -37,7 +37,7 @@ export default {
   RecommendationBadge: () => <div>⭐</div>,
 
   // Keep existing implementations
-  generateColorScheme: (userPreference) => {
+  generateColorScheme(userPreference) {
     const defaultColors = {
       headerBg: '#ffffff',
       logo: '#1f2937',
@@ -56,16 +56,52 @@ export default {
     };
   },
 
-  prioritizeMenuItems: (items, userId) => {
+  prioritizeMenuItems(items, userId) {
     return [...items].sort((a, b) => 
       this.calculateEngagementScore(b.path, userId) - 
       this.calculateEngagementScore(a.path, userId)
     );
   },
 
-  // Rest of the existing methods remain the same
-  predictSearchIntent: async (searchHistory) => {/*...*/},
-  predictScrollThreshold: () => {/*...*/},
-  trackUserEvent: (eventType, userId) => {/*...*/},
-  throttle: (func, limit) => {/*...*/}
+  // Implement functional mocks for predicted methods
+  async predictSearchIntent(searchHistory) {
+    if (!searchHistory || searchHistory.length === 0) return 'general';
+    const lastSearch = searchHistory[searchHistory.length - 1].toLowerCase();
+    if (lastSearch.includes('rent') || lastSearch.includes('stay')) return 'rental';
+    if (lastSearch.includes('buy') || lastSearch.includes('home')) return 'purchase';
+    if (lastSearch.includes('help') || lastSearch.includes('clean')) return 'service';
+    return 'general';
+  },
+
+  predictScrollThreshold() {
+    // Common behavior: user might be interested in more content after scrolling 70%
+    return 0.7;
+  },
+
+  trackUserEvent(eventType, userId) {
+    console.log(`[AI Event Tracked]: ${eventType} for user ${userId || 'anonymous'}`);
+    // In a real app, this would send data to an analytics endpoint
+  },
+
+  throttle(func, limit) {
+    let lastFunc;
+    let lastRan;
+    return function(...args) {
+      if (!lastRan) {
+        func.apply(this, args);
+        lastRan = Date.now();
+      } else {
+        clearTimeout(lastFunc);
+        lastFunc = setTimeout(() => {
+          if ((Date.now() - lastRan) >= limit) {
+            func.apply(this, args);
+            lastRan = Date.now();
+          }
+        }, limit - (Date.now() - lastRan));
+      }
+    };
+  }
 };
+
+export default AI;
+

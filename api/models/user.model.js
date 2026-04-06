@@ -67,6 +67,26 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Service'
     }],
+    reviews: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Review'
+    }],
+    comments: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Comment'
+    }],
+    isPromoted: {
+      type: Boolean,
+      default: false
+    },
+    promotionPackage: {
+      type: String,
+      enum: ['standard', 'premium', null],
+      default: null
+    },
+    promotionExpiry: {
+      type: Date
+    },
     helpers: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Helper'
@@ -127,7 +147,11 @@ const userSchema = new mongoose.Schema({
     following: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
-    }]
+    }],
+    listingLimit: {
+        type: Number,
+        default: 1
+    }
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);

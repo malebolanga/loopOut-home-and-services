@@ -4,6 +4,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
+import { app } from "../firebase";
 import { useWishlist } from '../hooks/useWishlist';
 import { Link } from "react-router-dom";
 import {
@@ -1364,21 +1366,42 @@ export default function HelperPage() {
     setAttachments(attachments.filter((_, i) => i !== index));
   };
 
-  // Upload files to cloud storage (mock implementation)
+  // Upload files to cloud storage (Firebase Storage)
   const uploadFilesToCloud = async (files) => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    setIsUploading(true);
+    try {
+      const storage = getStorage(app);
+      const uploadPromises = files.map(file => {
+        return new Promise((resolve, reject) => {
+          const cleanFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
+          const fileName = `${new Date().getTime()}_${cleanFileName}`;
+          const storageRef = ref(storage, `attachments/${fileName}`);
+          const uploadTask = uploadBytesResumable(storageRef, file);
 
-    return files.map(file => {
-      // Create a mock URL for demonstration
-      const mockUrl = `https://example.com/uploads/${Date.now()}_${file.name}`;
-      return {
-        name: file.name,
-        url: mockUrl,
-        type: file.type.startsWith('image/') ? 'image' : 'pdf',
-        size: file.size
-      };
-    });
+          uploadTask.on(
+            "state_changed",
+            null, // Could add progress tracking here if needed
+            (error) => reject(error),
+            async () => {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              resolve({
+                name: file.name,
+                url: downloadURL,
+                type: file.type.startsWith('image/') ? 'image' : 'pdf',
+                size: file.size
+              });
+            }
+          );
+        });
+      });
+
+      return await Promise.all(uploadPromises);
+    } catch (error) {
+      console.error('File upload error:', error);
+      throw error;
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // ================================ BOOKING START HERE================

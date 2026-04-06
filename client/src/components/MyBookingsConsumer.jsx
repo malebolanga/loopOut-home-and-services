@@ -104,11 +104,14 @@ const ScheduleCalendar = ({ bookings }) => {
 const BookingStatus = ({ status }) => {
   const configs = {
     pending: { color: 'text-amber-500', bg: 'bg-amber-50', label: 'Finding a Pro', progress: 25 },
-    assigned: { color: 'text-blue-500', bg: 'bg-blue-50', label: 'Pro Assigned', progress: 50 },
+    confirmed: { color: 'text-emerald-500', bg: 'bg-emerald-50', label: 'Confirmed', progress: 50 },
+    approved: { color: 'text-emerald-500', bg: 'bg-emerald-50', label: 'Approved', progress: 50 },
+    assigned: { color: 'text-blue-500', bg: 'bg-blue-50', label: 'Pro Assigned', progress: 60 },
     enroute: { color: 'text-indigo-500', bg: 'bg-indigo-50', label: 'En-route', progress: 75 },
     ongoing: { color: 'text-rose-500', bg: 'bg-rose-50', label: 'Service Ongoing', progress: 90 },
     completed: { color: 'text-green-500', bg: 'bg-green-50', label: 'Completed', progress: 100 },
-    cancelled: { color: 'text-red-500', bg: 'bg-red-50', label: 'Cancelled', progress: 0 }
+    cancelled: { color: 'text-red-500', bg: 'bg-red-50', label: 'Cancelled', progress: 0 },
+    declined: { color: 'text-red-500', bg: 'bg-red-50', label: 'Declined', progress: 0 }
   };
 
   const config = configs[status] || configs.pending;

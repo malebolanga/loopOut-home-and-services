@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
+import { app } from "../firebase";
 import { Link } from "react-router-dom";
 import {
   FaStar, FaMapMarkerAlt, FaPhone, FaWhatsapp,
@@ -477,15 +479,42 @@ const ServicePage = () => {
     setAttachments(attachments.filter((_, i) => i !== index));
   };
 
-  // Upload files to cloud storage (mock implementation)
+  // Upload files to cloud storage (Firebase Storage)
   const uploadFilesToCloud = async (files) => {
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    return files.map(file => ({
-      name: file.name,
-      url: `https://example.com/uploads/${Date.now()}_${file.name}`,
-      type: file.type.startsWith('image/') ? 'image' : 'pdf',
-      size: file.size
-    }));
+    setIsUploading(true);
+    try {
+      const storage = getStorage(app);
+      const uploadPromises = files.map(file => {
+        return new Promise((resolve, reject) => {
+          const cleanFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
+          const fileName = `${new Date().getTime()}_${cleanFileName}`;
+          const storageRef = ref(storage, `attachments/${fileName}`);
+          const uploadTask = uploadBytesResumable(storageRef, file);
+
+          uploadTask.on(
+            "state_changed",
+            null, // No UI progress tracking currently in Services.jsx
+            (error) => reject(error),
+            async () => {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              resolve({
+                name: file.name,
+                url: downloadURL,
+                type: file.type.startsWith('image/') ? 'image' : 'pdf',
+                size: file.size
+              });
+            }
+          );
+        });
+      });
+
+      return await Promise.all(uploadPromises);
+    } catch (error) {
+      console.error('File upload error:', error);
+      throw error;
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const buildWhatsAppMessage = async (isQuick = false) => {

@@ -7,31 +7,68 @@ import Event from '../models/event.model.js';
 
 const router = express.Router();
 
+import { generatePayfastData } from '../utils/payfast.js';
+
 /**
  * POST /api/payment
  * Handles pay-per-listing upgrade (R35).
- * In production this would integrate with a payment gateway (e.g. PayFast/Stripe).
- * For now it simply marks the user's limit as extended by recording the payment intent.
+ * Generates a PayFast redirect URL and fields.
  */
 router.post('/', verifyToken, async (req, res) => {
   try {
-    const { userId, amount } = req.body;
+    const { userId, amount, name, email } = req.body;
 
     if (!userId) {
       return res.status(400).json({ success: false, message: 'userId is required' });
     }
 
-    // TODO: Integrate real payment gateway here.
-    // For now we simulate a successful payment so the UI can proceed.
+    // Generate PayFast data
+    const payfast = generatePayfastData({
+      merchant_id: process.env.PAYFAST_MERCHANT_ID,
+      merchant_key: process.env.PAYFAST_MERCHANT_KEY,
+      amount: amount || '35.00',
+      item_name: 'Standard Listing Upgrade',
+      name_first: name || 'LoopOut',
+      name_last: 'User',
+      email_address: email || 'user@example.com',
+      m_payment_id: `listing-up-${userId}-${Date.now()}`,
+    });
+
     return res.status(200).json({
       success: true,
-      message: 'Payment processed successfully',
-      amount: amount || 35,
-      userId,
+      message: 'PayFast session generated',
+      payfast
     });
   } catch (error) {
-    console.error('Payment error:', error);
-    return res.status(500).json({ success: false, message: 'Payment processing failed' });
+    console.error('Payment generation error:', error);
+    return res.status(500).json({ success: false, message: 'Could not initialize payment' });
+  }
+});
+
+/**
+ * POST /api/payment/itn
+ * PayFast Instant Transaction Notification (Webhook).
+ * PayFast calls this to confirm a payment was actually completed.
+ */
+router.post('/itn', async (req, res) => {
+  try {
+    const itnData = req.body;
+    console.log('[PAYMENT ITN] Data received from PayFast:', itnData);
+    
+    // 1. Verify the signature (Production Requirement)
+    // 2. Check payment status
+    if (itnData.payment_status === 'COMPLETE') {
+      // 3. Update listing limits in Database
+      // Find the user by its userId embedded in m_payment_id (or as custom field)
+      // For now we just log it as success.
+      console.log(`[PAYMENT SUCCESS] Listing upgrade confirmed for payment ID: ${itnData.m_payment_id}`);
+    }
+
+    // PayFast expects a 200 OK after receiving ITN
+    res.status(200).send('OK');
+  } catch (error) {
+    console.error('ITN Error:', error);
+    res.status(500).send('Error');
   }
 });
 

@@ -62,6 +62,8 @@ export default function Header() {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('San Francisco');
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const lastScrollY = useRef(0);
   const notificationSound = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
 
   // Currency and Language states
@@ -211,6 +213,27 @@ export default function Header() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showSearch]);
+
+  // Toggle bottom nav visibility on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const isScrollingUp = currentScrollY < lastScrollY.current;
+      
+      if (currentScrollY < 50) {
+        setIsNavVisible(true);
+      } else if (isScrollingUp) {
+        setIsNavVisible(true);
+      } else {
+        setIsNavVisible(false);
+      }
+      
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Suggestions debouncing
   useEffect(() => {
@@ -752,7 +775,7 @@ export default function Header() {
       </header>
 
       {/* Mobile Bottom Navigation - Airbnb Style */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#DDDDDD] pb-safe">
+      <div className={`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white  pb-safe transition-transform duration-300 ${isNavVisible ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="flex justify-around items-center py-2">
           <Link
             to="/"

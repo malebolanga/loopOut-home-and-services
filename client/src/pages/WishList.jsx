@@ -816,7 +816,7 @@ function AirbnbCard({ item, removingId, removeFromWishlist }) {
   };
 
   const getViewUrl = () => {
-    const baseUrl = 'http://localhost:5173';
+    const baseUrl = window.location.origin;
     switch (item.type) {
       case 'listing': return `${baseUrl}/listing/${item._id}`;
       case 'service': return `${baseUrl}/service/${item._id}`;
