@@ -51,6 +51,7 @@ import {
   FaPhone,
   FaArrowLeft,
   FaUser,
+  FaTag,
   FaSpinner,
   FaComment,
   FaTv,
@@ -58,12 +59,13 @@ import {
   FaChevronDown,
   FaBed,
   FaPaperPlane,
+  FaReceipt,
   FaEnvelope,
+  FaRegCommentDots,
   FaTimes,
   FaChevronLeft,
   FaChevronRight,
   FaExpand,
-  FaRegCommentDots,
   FaExternalLinkAlt,
   FaUserFriends,
   FaFacebook,
@@ -415,110 +417,91 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
     let message = '';
 
     if (isOvernight) {
-      // Overnight stay message
+      // Overnight stay message - Professional Formatting
       const roomSubtotal = listing.regularPrice * nights * bookingDetails.rooms;
       const breakfastSubtotal = bookingDetails.breakfast ? 150 * nights * bookingDetails.guests : 0;
       const extraGuestSubtotal = bookingDetails.guests > 2 ? 200 * (bookingDetails.guests - 2) * nights : 0;
 
-      message = `*✨ NEW BOOKING REQUEST ✨*%0A%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*📍 LISTING SUMMARY*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message = `*🛎️ NEW BOOKING REQUEST 🏡*%0A%0A`;
+      message += `*━━━━━━━━━━━━━━━━━━━━*%0A`;
+      message += `*📍 PROPERTY INFORMATION*%0A`;
+      message += `*━━━━━━━━━━━━━━━━━━━━*%0A`;
       message += `🏠 *Property:* ${listing?.name}%0A`;
-      message += `📍 *Address:* ${listing?.address}%0A`;
+      message += `📌 *Address:* ${listing?.address}%0A`;
       const mapLink = generateMapLink(listing?.address);
-      if (mapLink) message += `🗺️ *Location:* ${mapLink}%0A`;
-      message += `💰 *Daily Rate:* R${listing?.regularPrice?.toLocaleString()}%0A%0A`;
+      if (mapLink) message += `🗺️ *Map View:* ${mapLink}%0A`;
+      message += `💰 *Base Rate:* R${listing?.regularPrice?.toLocaleString()} / night%0A%0A`;
 
-      message += `*👤 GUEST DETAILS*%0A`;
-      message += `• *Name:* ${bookingDetails.fullName}%0A`;
-      message += `• *Contact:* ${bookingDetails.phone}%0A%0A`;
+      message += `*👤 GUEST INFORMATION*%0A`;
+      message += `• *Inquirer:* ${bookingDetails.fullName}%0A`;
+      message += `• *Phone:* ${bookingDetails.phone}%0A`;
+      message += `• *Rooms:* ${bookingDetails.rooms} Room(s)%0A`;
+      message += `• *Occupancy:* ${bookingDetails.guests} Guest(s)%0A%0A`;
 
-      message += `*📅 STAY INFORMATION*%0A`;
-      message += `📅 *Check-in:* ${formatDate(bookingDetails.checkIn)}%0A`;
-      message += `📅 *Check-out:* ${formatDate(bookingDetails.checkOut)}%0A`;
-      message += `🌙 *Duration:* ${nights} night(s)%0A`;
-      message += `🚪 *Rooms:* ${bookingDetails.rooms}%0A`;
-      message += `👥 *Occupancy:* ${bookingDetails.guests} Guest(s)%0A%0A`;
+      message += `*📅 STAY DETAILS*%0A`;
+      message += `➡️ *Check-in:* ${formatDate(bookingDetails.checkIn)}%0A`;
+      message += `⬅️ *Check-out:* ${formatDate(bookingDetails.checkOut)}%0A`;
+      message += `🌙 *Duration:* ${nights} Night(s)%0A%0A`;
 
-      message += `*💳 PRICE BREAKDOWN*%0A`;
+      message += `*💳 FINANCIAL SUMMARY*%0A`;
       message += `------------------------------------%0A`;
-      message += `Base Rate: R${listing.regularPrice.toLocaleString()} × ${nights}N × ${bookingDetails.rooms}R%0A`;
-      message += `*Subtotal:* R${roomSubtotal.toLocaleString()}%0A`;
-
+      message += `• Room Fee: R${listing.regularPrice.toLocaleString()} × ${nights}N × ${bookingDetails.rooms}R%0A`;
       if (bookingDetails.breakfast) {
-        message += `Breakfast: R150 × ${bookingDetails.guests}G × ${nights}N%0A`;
-        message += `*Subtotal:* R${breakfastSubtotal.toLocaleString()}%0A`;
+        message += `• Breakfast: R150 × ${bookingDetails.guests}G × ${nights}N%0A`;
       }
       if (bookingDetails.guests > 2) {
-        message += `Extra Guest: R200 × ${bookingDetails.guests - 2}G × ${nights}N%0A`;
-        message += `*Subtotal:* R${extraGuestSubtotal.toLocaleString()}%0A`;
+        message += `• Extra Guest: R200 × ${bookingDetails.guests - 2}G × ${nights}N%0A`;
       }
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `💰 *TOTAL AMOUNT: R${totalPrice.toLocaleString()}*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A%0A`;
+      message += `*━━━━━━ TOTAL ━━━━━━*%0A`;
+      message += `💰 *R${totalPrice.toLocaleString()}*%0A`;
+      message += `*━━━━━━━━━━━━━━━━━━━━*%0A%0A`;
 
       if (bookingDetails.specialRequests) {
-        message += `*📝 GUEST NOTE:*%0A`;
+        message += `*📝 GUEST SPECIAL REQUESTS:*%0A`;
         message += `_"${bookingDetails.specialRequests}"_%0A%0A`;
       }
 
-      message += `*⚡ HOST ACTIONS:*%0A`;
-      if (acceptLink) message += `✅ *CONFIRM:* ${acceptLink}%0A`;
-      if (declineLink) message += `❌ *DECLINE:* ${declineLink}%0A%0A`;
+      message += `*⚡ HOST QUICK ACTIONS:*%0A`;
+      if (acceptLink) message += `✅ *ACCEPT BOOKING:* ${acceptLink}%0A`;
+      if (declineLink) message += `❌ *DECLINE REQUEST:* ${declineLink}%0A%0A`;
 
       message += `*Verification Code:* \`${verificationCode}\`%0A`;
-      message += `_Powered by LoopOut Platform_`;
+      message += `_Sent via LoopOut Premium Platform_`;
     } else if (isOffice) {
-      // Office space message
-      message = `*🏢 OFFICE SPACE BOOKING ✨*%0A%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*📍 OFFICE SUMMARY*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      // Office space message - Professional Formatting
+      message = `*🏢 OFFICE SPACE BOOKING 📑*%0A%0A`;
+      message += `*━━━━━━━━━━━━━━━━━━━━*%0A`;
+      message += `*📍 OFFICE INFORMATION*%0A`;
+      message += `*━━━━━━━━━━━━━━━━━━━━*%0A`;
       message += `🏢 *Space:* ${listing?.name}%0A`;
-      message += `📍 *Address:* ${listing?.address}%0A`;
+      message += `📍 *Location:* ${listing?.address}%0A`;
       const mapLink = generateMapLink(listing?.address);
-      if (mapLink) message += `🗺️ *Location:* ${mapLink}%0A`;
-      message += `💰 *Hourly Rate:* R${listing?.regularPrice?.toLocaleString()}%0A%0A`;
+      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
+      message += `💰 *Hourly Rate:* R${listing?.regularPrice?.toLocaleString()} / hour%0A%0A`;
 
-      message += `*👤 CLIENT DETAILS*%0A`;
+      message += `*👤 CLIENT INFORMATION*%0A`;
       message += `• *Name:* ${bookingDetails.fullName}%0A`;
       message += `• *Contact:* ${bookingDetails.phone}%0A%0A`;
 
-      message += `*📅 SESSION INFO*%0A`;
+      message += `*📅 BOOKING SESSION*%0A`;
       message += `📅 *Date:* ${formatDate(bookingDetails.selectedDate)}%0A`;
-      message += `⏰ *Time:* ${bookingDetails.startTime} - ${bookingDetails.endTime}%0A`;
-      message += `⏱️ *Duration:* ${hours.toFixed(1)} hour(s)%0A%0A`;
-
-      message += `*💳 PRICE SUMMARY*%0A`;
-      message += `Base Rate: R${listing.regularPrice.toLocaleString()} × ${hours.toFixed(1)}H%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `💰 *TOTAL AMOUNT: R${totalPrice.toLocaleString()}*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A%0A`;
-
-      if (bookingDetails.specialRequests) {
-        message += `*📝 GUEST NOTE:*%0A`;
-        message += `_"${bookingDetails.specialRequests}"_%0A%0A`;
-      }
-
-      message += `*⚡ HOST ACTIONS:*%0A`;
       if (acceptLink) message += `✅ *ACCEPT:* ${acceptLink}%0A`;
       if (declineLink) message += `❌ *DECLINE:* ${declineLink}%0A%0A`;
 
       message += `*Verification Code:* \`${verificationCode}\`%0A`;
       message += `_Powered by LoopOut Platform_`;
     } else if (isSale || isRent) {
-      // Sale or Rent inquiry message
-      message = `*🏠 PROPERTY INQUIRY ✨*%0A%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      // Sale or Rent inquiry message - Professional Formatting
+      message = `*🏠 PROPERTY INQUIRY 📬*%0A%0A`;
+      message += `*━━━━━━━━━━━━━━━━━━━━*%0A`;
       message += `*📍 PROPERTY OVERVIEW*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+      message += `*━━━━━━━━━━━━━━━━━━━━*%0A`;
       message += `🏠 *Property:* ${listing?.name}%0A`;
       message += `📍 *Location:* ${listing?.address}%0A`;
       const mapLink = generateMapLink(listing?.address);
-      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
-      message += `💰 *Listed Price:* R${listing?.regularPrice?.toLocaleString()}${isRent ? '/mo' : ''}%0A`;
+      if (mapLink) message += `🗺️ *View Map:* ${mapLink}%0A`;
+      message += `💰 *Listed Price:* R${listing?.regularPrice?.toLocaleString()}${isRent ? '/month' : ''}%0A`;
       message += `📋 *Offering:* ${isSale ? 'For Sale' : 'For Rent'}%0A%0A`;
 
       message += `*👤 INQUIRER DETAILS*%0A`;
@@ -526,15 +509,15 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       message += `• *Contact:* ${bookingDetails.phone}%0A%0A`;
 
       message += `*📝 INQUIRY MESSAGE*%0A`;
-      message += `_"${bookingDetails.specialRequests || "I'm interested in this listing. Please provide more information."}"_%0A%0A`;
+      message += `_"${bookingDetails.specialRequests || "I'm interested in this property. Please provide more information."}"_%0A%0A`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*⚡ HOST ACTIONS:*%0A`;
+      message += `*━━━━━━━━━━━━━━━━━━━━*%0A`;
+      message += `*⚡ HOST QUICK ACTIONS:*%0A`;
       if (acceptLink) message += `✅ *AVAILABLE:* ${acceptLink}%0A`;
-      if (declineLink) message += `❌ *NOT AVAILABLE:* ${declineLink}%0A%0A`;
+      if (declineLink) message += `❌ *UNAVAILABLE:* ${declineLink}%0A%0A`;
 
       message += `*Verification Code:* \`${verificationCode}\`%0A`;
-      message += `_Powered by LoopOut Platform_`;
+      message += `_Sent via LoopOut Premium Platform_`;
     }
 
     // Save booking to Database
@@ -616,24 +599,29 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8 mx-4">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              {isOvernight && 'Book Your Stay'}
-              {isOffice && 'Book Office Space'}
-              {(isSale || isRent) && 'Inquire About Property'}
-            </h2>
-            <p className="text-gray-500 text-sm mt-1">
-              {isOvernight && 'Fill in your details to request a booking'}
-              {isOffice && 'Fill in your details to reserve office space'}
-              {(isSale || isRent) && 'Fill in your details to contact the seller'}
-            </p>
+        <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-100 p-8 rounded-t-2xl flex justify-between items-center z-10">
+          <div className="flex items-center gap-4">
+             <div className="w-12 h-12 rounded-2xl bg-rose-500 flex items-center justify-center text-white shadow-lg shadow-rose-100">
+                <FaHome size={20} />
+             </div>
+             <div>
+               <h2 className="text-2xl font-black text-gray-900 tracking-tight">
+                 {isOvernight && 'Reservation Unit'}
+                 {isOffice && 'Workspace Suite'}
+                 {(isSale || isRent) && 'Property Portfolio'}
+               </h2>
+               <p className="text-gray-400 text-xs mt-1 uppercase font-black tracking-widest opacity-60">
+                 {isOvernight && 'Secure your overnight luxury stay'}
+                 {isOffice && 'Professional office booking environment'}
+                 {(isSale || isRent) && 'Direct inquiry to listing proprietor'}
+               </p>
+             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="w-10 h-10 bg-gray-50 hover:bg-gray-100 rounded-full flex items-center justify-center transition-all active:scale-90"
           >
-            <FaTimes className="text-xl text-gray-500" />
+            <FaTimes className="text-lg text-gray-400" />
           </button>
         </div>
 
@@ -941,48 +929,81 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
 
           {/* Price Summary - Only for overnight and office */}
           {((isOvernight && nights > 0) || (isOffice && hours > 0)) && (
-            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-              <h4 className="font-semibold text-gray-900">Price Summary</h4>
+            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6 space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                <FaReceipt className="text-gray-400" />
+                <h4 className="font-bold text-gray-900 uppercase text-xs tracking-widest">Pricing Breakdown</h4>
+              </div>
 
-              <div className="space-y-2 text-sm">
+              <div className="space-y-3 text-sm">
                 {isOvernight && (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Room Rate:</span>
-                      <span className="font-medium">R{listing.regularPrice.toLocaleString()} × {nights} nights × {bookingDetails.rooms} room(s)</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Room Subtotal:</span>
-                      <span className="font-medium">R{(listing.regularPrice * nights * bookingDetails.rooms).toLocaleString()}</span>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                      <div className="flex items-center gap-3">
+                         <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500">
+                            <FaHome size={14} />
+                         </div>
+                         <div>
+                            <p className="font-bold text-gray-900">Room Rate</p>
+                            <p className="text-[10px] text-gray-500 uppercase font-black">R{listing.regularPrice.toLocaleString()} × {nights} Nights</p>
+                         </div>
+                      </div>
+                      <span className="font-black text-gray-900">R{(listing.regularPrice * nights * bookingDetails.rooms).toLocaleString()}</span>
                     </div>
 
                     {bookingDetails.breakfast && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Breakfast:</span>
-                        <span className="font-medium">R{(150 * bookingDetails.guests * nights).toLocaleString()}</span>
+                      <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-3">
+                           <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500">
+                              <FaCoffee size={14} />
+                           </div>
+                           <div>
+                              <p className="font-bold text-gray-900">Breakfast Plan</p>
+                              <p className="text-[10px] text-gray-500 uppercase font-black">R150 × {bookingDetails.guests} Guests</p>
+                           </div>
+                        </div>
+                        <span className="font-black text-gray-900">R{(150 * bookingDetails.guests * nights).toLocaleString()}</span>
                       </div>
                     )}
 
                     {bookingDetails.guests > 2 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Extra Guest Fee:</span>
-                        <span className="font-medium">R{(200 * (bookingDetails.guests - 2) * nights).toLocaleString()}</span>
+                      <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-3">
+                           <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+                              <FaUsers size={14} />
+                           </div>
+                           <div>
+                              <p className="font-bold text-gray-900">Extra Guest Fee</p>
+                              <p className="text-[10px] text-gray-500 uppercase font-black">R200 × {bookingDetails.guests - 2} Guests</p>
+                           </div>
+                        </div>
+                        <span className="font-black text-gray-900">R{(200 * (bookingDetails.guests - 2) * nights).toLocaleString()}</span>
                       </div>
                     )}
-
-                  </>
-                )}
-
-                {isOffice && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Office Rate:</span>
-                    <span className="font-medium">R{listing.regularPrice.toLocaleString()}/hour × {hours.toFixed(1)} hours</span>
                   </div>
                 )}
 
-                <div className="pt-3 border-t border-gray-200 flex justify-between font-semibold text-lg">
-                  <span>Total:</span>
-                  <span className="text-rose-600">R{totalPrice.toLocaleString()}</span>
+                {isOffice && (
+                  <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                    <div className="flex items-center gap-3">
+                       <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
+                          <FaClock size={14} />
+                       </div>
+                       <div>
+                          <p className="font-bold text-gray-900">Office Usage</p>
+                          <p className="text-[10px] text-gray-500 uppercase font-black">R{listing.regularPrice.toLocaleString()}/hour × {hours.toFixed(1)}H</p>
+                       </div>
+                    </div>
+                    <span className="font-black text-gray-900">R{totalPrice.toLocaleString()}</span>
+                  </div>
+                )}
+
+                <div className="pt-4 mt-2 border-t border-dashed border-gray-300 flex justify-between items-center">
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Valuation</p>
+                    <p className="text-2xl font-black text-gray-900">Calculated Pay</p>
+                  </div>
+                  <span className="text-3xl font-black text-rose-600">R{totalPrice.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -990,11 +1011,19 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
 
           {/* Sale/Rent Price Display */}
           {(isSale || isRent) && (
-            <div className="bg-gray-50 rounded-xl p-4">
+            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Property Price:</span>
-                <span className="font-semibold text-lg text-rose-600">
-                  R{listing.regularPrice.toLocaleString()}{isRent ? '/month' : ''}
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500">
+                      <FaTag size={16} />
+                   </div>
+                   <div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Listing Value</p>
+                      <p className="text-sm font-bold text-gray-900">{isSale ? 'Full Property Price' : 'Monthly Rental'}</p>
+                   </div>
+                </div>
+                <span className="text-3xl font-black text-rose-600">
+                  R{listing.regularPrice.toLocaleString()}{isRent ? '/mo' : ''}
                 </span>
               </div>
             </div>
@@ -1173,42 +1202,66 @@ const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Contact Method</label>
-            <div className="grid grid-cols-3 gap-2">
+            <label className="block text-sm font-black text-gray-400 uppercase tracking-widest mb-3">Choice of Connection</label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <button onClick={() => setContactMethod('internal')}
-                  className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-2 transition-all ${contactMethod === 'internal' ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-400'}`}>
-                  <FaRegCommentDots className={`text-2xl ${contactMethod === 'internal' ? 'text-rose-500' : 'text-gray-400'}`} />
-                  <span className="text-sm font-medium">Message</span>
+                  className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${contactMethod === 'internal' ? 'border-rose-500 bg-rose-50/50 shadow-lg shadow-rose-100 scale-[1.02]' : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'}`}>
+                  <div className={`p-2 rounded-xl ${contactMethod === 'internal' ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                    <FaRegCommentDots className="text-xl" />
+                  </div>
+                  <span className={`text-[10px] font-black uppercase tracking-tight ${contactMethod === 'internal' ? 'text-rose-600' : 'text-gray-500'}`}>Direct</span>
                 </button>
+
               {availableMethods.includes('whatsapp') && (
                 <button onClick={() => setContactMethod('whatsapp')}
-                  className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-2 transition-all ${contactMethod === 'whatsapp' ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-400'}`}>
-                  <FaWhatsapp className={`text-2xl ${contactMethod === 'whatsapp' ? 'text-green-600' : 'text-gray-400'}`} />
-                  <span className="text-sm font-medium">WhatsApp</span>
+                  className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${contactMethod === 'whatsapp' ? 'border-emerald-500 bg-emerald-50/50 shadow-lg shadow-emerald-100 scale-[1.02]' : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'}`}>
+                  <div className={`p-2 rounded-xl ${contactMethod === 'whatsapp' ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                    <FaWhatsapp className="text-xl" />
+                  </div>
+                  <span className={`text-[10px] font-black uppercase tracking-tight ${contactMethod === 'whatsapp' ? 'text-emerald-600' : 'text-gray-500'}`}>WhatsApp</span>
                 </button>
               )}
+
               {availableMethods.includes('email') && (
                 <button onClick={() => setContactMethod('email')}
-                  className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-2 transition-all ${contactMethod === 'email' ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-400'}`}>
-                  <FaEnvelope className={`text-2xl ${contactMethod === 'email' ? 'text-gray-900' : 'text-gray-400'}`} />
-                  <span className="text-sm font-medium">Email</span>
+                  className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${contactMethod === 'email' ? 'border-blue-500 bg-blue-50/50 shadow-lg shadow-blue-100 scale-[1.02]' : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'}`}>
+                  <div className={`p-2 rounded-xl ${contactMethod === 'email' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                    <FaEnvelope className="text-xl" />
+                  </div>
+                  <span className={`text-[10px] font-black uppercase tracking-tight ${contactMethod === 'email' ? 'text-blue-600' : 'text-gray-500'}`}>Email</span>
                 </button>
               )}
+
               {availableMethods.includes('call') && (
                 <button onClick={() => setContactMethod('call')}
-                  className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-2 transition-all ${contactMethod === 'call' ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-400'}`}>
-                  <FaPhone className={`text-2xl ${contactMethod === 'call' ? 'text-gray-900' : 'text-gray-400'}`} />
-                  <span className="text-sm font-medium">Call</span>
+                  className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${contactMethod === 'call' ? 'border-orange-500 bg-orange-50/50 shadow-lg shadow-orange-100 scale-[1.02]' : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'}`}>
+                  <div className={`p-2 rounded-xl ${contactMethod === 'call' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                    <FaPhone className="text-xl" />
+                  </div>
+                  <span className={`text-[10px] font-black uppercase tracking-tight ${contactMethod === 'call' ? 'text-orange-600' : 'text-gray-500'}`}>Call Host</span>
                 </button>
               )}
             </div>
 
-            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Host contact details:</p>
-              <div className="space-y-1">
-                {formattedDisplayNumber && <p className="text-sm font-medium text-gray-900">📱 {formattedDisplayNumber}</p>}
-                {listing?.email && <p className="text-sm font-medium text-gray-900">✉️ {listing.email}</p>}
-                {!formattedDisplayNumber && !listing?.email && <p className="text-sm text-gray-500 italic">No contact information provided</p>}
+            <div className="mt-6 p-5 bg-gray-50 border border-gray-100 rounded-3xl">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Proprietor Credentials</p>
+              <div className="space-y-2">
+                {formattedDisplayNumber && (
+                   <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-rose-500 shadow-sm border border-gray-100">
+                         <FaPhone size={12} />
+                      </div>
+                      <p className="text-sm font-bold text-gray-900">{formattedDisplayNumber}</p>
+                   </div>
+                )}
+                {listing?.email && (
+                   <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-blue-500 shadow-sm border border-gray-100">
+                         <FaEnvelope size={12} />
+                      </div>
+                      <p className="text-sm font-bold text-gray-900">{listing.email}</p>
+                   </div>
+                )}
               </div>
             </div>
           </div>

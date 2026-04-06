@@ -785,28 +785,46 @@ export default function DashBoard() {
                       </div>
                     </div>
 
-                    {/* Client Info & Actions */}
-                    <div className="lg:col-span-4 bg-gray-50/80 backdrop-blur-sm rounded-[2rem] p-6 flex flex-col justify-between border border-white min-w-0">
-                      <div className="flex items-center gap-4 mb-6">
-                        <div className="w-12 h-12 rounded-full bg-white shadow-md border-4 border-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0">
-                          <FaUser size={18} />
+                    {/* Premium WhatsApp Contact Card - Hosting View */}
+                    <div className="lg:col-span-4 relative group/card min-w-0">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-green-600 rounded-[2rem] opacity-0 group-hover/card:opacity-10 transition-opacity blur-lg" />
+                      <div className="relative h-full flex flex-col justify-between p-6 bg-white border border-gray-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500">
+                        <div className="flex items-center gap-4 mb-6">
+                           <div className="relative">
+                             <div className="w-14 h-14 rounded-full bg-white border-4 border-emerald-50 shadow-inner overflow-hidden flex items-center justify-center text-gray-400">
+                               <FaUser size={20} />
+                             </div>
+                             <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center shadow-lg">
+                                <FaWhatsapp className="text-white text-[10px]" />
+                             </div>
+                           </div>
+                           <div className="min-w-0">
+                             <p className="text-[10px] text-emerald-600 font-black uppercase tracking-[0.2em] mb-1">Requested By</p>
+                             <h4 className="text-base font-black text-gray-900 leading-none truncate">{booking.clientName}</h4>
+                             <div className="flex items-center gap-2 mt-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="text-[11px] font-bold text-gray-400">{booking.clientPhone}</span>
+                             </div>
+                           </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-base font-black text-gray-900 leading-none mb-1 truncate">{booking.clientName}</p>
-                          <p className="text-xs font-bold text-rose-500 tracking-wide truncate">{booking.clientPhone}</p>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-3">
-                        <button 
-                          onClick={() => window.open(`https://wa.me/${booking.clientPhone.replace(/\s/g, '')}`, '_blank')}
-                          className="flex-1 min-w-[120px] bg-[#25D366] hover:bg-[#128C7E] text-white text-[10px] font-black uppercase tracking-widest py-4 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-200"
-                        >
-                          <FaWhatsapp size={16} />
-                          Message
-                        </button>
                         
-                        {dashboardMode === 'hosting' ? (
-                          <>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <button 
+                            onClick={() => window.open(`tel:${booking.clientPhone.replace(/\s/g, '')}`, '_self')}
+                            className="w-12 h-12 flex-shrink-0 flex items-center justify-center bg-gray-50 text-gray-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all border border-transparent hover:border-rose-100 shadow-sm"
+                          >
+                            <FaPhone className="text-sm" />
+                          </button>
+                          <button 
+                            onClick={() => window.open(`https://wa.me/${booking.clientPhone.replace(/\s/g, '')}`, '_blank')}
+                            className="flex-1 min-w-[120px] bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest py-4 rounded-2xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-200 flex items-center justify-center gap-2"
+                          >
+                            <FaWhatsapp size={16} />
+                            WhatsApp Message
+                          </button>
+
+                          {dashboardMode === 'hosting' ? (
+                            <>
                             {booking.status === 'pending' && (
                               <div className="flex gap-2">
                                 <button 
@@ -875,9 +893,10 @@ export default function DashBoard() {
                             )}
                           </>
                         )}
+                        </div>
                       </div>
-
                     </div>
+
                   </div>
 
                   {/* Requirements Note */}

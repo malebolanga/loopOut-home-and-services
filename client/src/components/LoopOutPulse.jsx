@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FaBolt, 
@@ -9,7 +9,7 @@ import {
   FaMapMarkerAlt
 } from 'react-icons/fa';
 
-const PulseItem = ({ item }) => {
+const PulseItem = forwardRef(({ item }, ref) => {
   const getIcon = (type) => {
     switch (type) {
       case 'booking': return <FaCalendarCheck className="text-green-500" />;
@@ -22,6 +22,7 @@ const PulseItem = ({ item }) => {
 
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
@@ -39,7 +40,7 @@ const PulseItem = ({ item }) => {
       </div>
     </motion.div>
   );
-};
+});
 
 const LoopOutPulse = () => {
   const [items, setItems] = useState([
@@ -92,9 +93,9 @@ const LoopOutPulse = () => {
           <span>LIVE PULSE</span>
         </div>
         
-        <div className="flex gap-3">
-          <AnimatePresence mode="popLayout">
-            {items.map((item) => (
+        <div className="flex gap-4">
+          <AnimatePresence mode="wait">
+            {items.slice(0, 1).map((item) => (
               <PulseItem key={item.id} item={item} />
             ))}
           </AnimatePresence>
@@ -102,8 +103,8 @@ const LoopOutPulse = () => {
       </div>
       
       {/* Decorative Gradient Overlays */}
-      <div className="absolute top-0 right-0 h-full w-20 bg-gradient-to-l from-white to-transparent pointer-events-none" />
-      <div className="absolute top-0 left-0 h-full w-20 bg-gradient-to-r from-white to-transparent pointer-events-none" />
+      <div className="absolute top-0 right-0 h-full w-12 bg-gradient-to-l from-white to-transparent pointer-events-none" />
+      <div className="absolute top-0 left-0 h-full w-12 bg-gradient-to-r from-white to-transparent pointer-events-none" />
     </div>
   );
 };

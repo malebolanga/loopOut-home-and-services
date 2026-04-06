@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo, cloneElement } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -518,7 +518,7 @@ const FreshaCategoryCard = ({ category, onClick, index }) => {
         rotateY: rotate.y,
         transformStyle: "preserve-3d"
       }}
-      className="group cursor-pointer relative overflow-hidden rounded-[3.5rem] bg-white shadow-sm hover:shadow-[0_30px_60px_rgba(0,0,0,0.18)] transition-all duration-500 border border-gray-100"
+      className="cursor-pointer relative overflow-hidden rounded-[3.5rem] bg-white shadow-sm hover:shadow-[0_30px_60px_rgba(0,0,0,0.18)] transition-all duration-500 border border-gray-100"
     >
       <div className="relative aspect-[4/5] overflow-hidden p-6 bg-gradient-to-br from-white via-gray-50 to-gray-100 flex flex-col items-center justify-center">
         {/* Elite 3D Background Shadow - Emotional Pulse */}
@@ -815,7 +815,7 @@ const EliteHelperCard = ({ helper, onClick }) => {
     <motion.div
       whileHover={{ y: -8, scale: 1.05 }}
       onClick={onClick}
-      className="group cursor-pointer flex flex-col items-center p-4 bg-white rounded-[2.5rem] shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-50"
+      className="cursor-pointer flex flex-col items-center p-4 bg-white rounded-[2.5rem] shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-50"
     >
       <div className="relative mb-4">
         {/* Elite Glow Effect */}
@@ -1132,7 +1132,7 @@ const MobileAppHomepage = ({
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {[
                 { id: 'grocery', name: 'Groceries', desc: 'Fresh items in 60m', icon: <FaShoppingBasket />, color: 'bg-green-500', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80' },
-                { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <FaHandsWash />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1545173153-5dd921a1fefc?auto=format&fit=crop&w=400&q=80' },
+                { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <FaHandsWash />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1635274605638-d44babc08a4f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
                 { id: 'pharmacy', name: 'Pharmacy', desc: 'Medication drop-off', icon: <FaFire />, color: 'bg-rose-500', img: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=400&q=80' },
                 { id: 'water', name: 'Water & Gas', desc: 'Refills delivered', icon: <FaWater />, color: 'bg-cyan-500', img: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?auto=format&fit=crop&w=400&q=80' }
               ].map((item) => (
@@ -1424,7 +1424,7 @@ const MobileAppHomepage = ({
            whileHover={{ scale: 1.1, rotate: 10 }}
            whileTap={{ scale: 0.9 }}
            onClick={() => navigate('/ai-help-center')}
-           className="fixed bottom-8 right-8 z-[100] cursor-pointer group"
+           className="fixed bottom-8 right-8 z-[100] cursor-pointer "
         >
           <div className="absolute -inset-2 bg-gradient-to-r from-rose-600 to-pink-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 animate-pulse" />
           <div className="relative bg-rose-600 text-white p-4 rounded-full shadow-2xl flex items-center justify-center border-2 border-white/20">
@@ -1443,7 +1443,7 @@ const MobileAppHomepage = ({
            whileHover={{ scale: 1.1 }}
            whileTap={{ scale: 0.9 }}
            onClick={() => setIsBookingsOpen(true)}
-           className="fixed bottom-28 right-8 z-[100] cursor-pointer group"
+           className="fixed bottom-28 right-8 z-[100] cursor-pointer "
         >
           <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 shadow-xl" />
           <div className="relative bg-white text-gray-900 p-4 rounded-full shadow-2xl flex items-center justify-center border border-gray-100">
@@ -1522,6 +1522,11 @@ const MobileAppHomepage = ({
           </div>
         </section>
 
+        {/* LoopOut Pulse (Live Community Feed) - Mobile */}
+        <div className="mb-6 -mx-4">
+          <LoopOutPulse />
+        </div>
+
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-rose-500 rounded-2xl p-6 mb-6 relative overflow-hidden">
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-3">
@@ -1569,6 +1574,49 @@ const MobileAppHomepage = ({
             </button>
           ))}
         </div>
+
+        {/* THE DAILY LOOP - NEW FEATURE (Mobile) */}
+        <section className="mb-10">
+          <div className="flex justify-between items-end mb-5">
+            <div>
+              <h2 className="font-black text-gray-900 text-xl tracking-tight">The Daily Loop</h2>
+              <p className="text-xs text-gray-500 mt-1 uppercase font-bold tracking-widest opacity-60">Essentials brought to your door</p>
+            </div>
+            <button 
+              onClick={() => navigate('/search?category=daily&type=services')}
+              className="text-xs font-semibold text-rose-500 underline"
+            >
+              View all
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { id: 'grocery', name: 'Groceries', desc: 'Fresh items in 60m', icon: <FaShoppingBasket />, color: 'bg-green-500', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80' },
+                { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <FaHandsWash />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1635274605638-d44babc08a4f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+             
+              { id: 'pharmacy', name: 'Pharmacy', desc: 'Medication drop-off', icon: <FaFire />, color: 'bg-rose-500', img: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=400&q=80' },
+              { id: 'water', name: 'Water & Gas', desc: 'Refills delivered', icon: <FaWater />, color: 'bg-cyan-500', img: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?auto=format&fit=crop&w=400&q=80' }
+            ].map((item) => (
+              <motion.div
+                key={item.id}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => navigate(`/search?category=${item.id}&type=services`)}
+                className="group cursor-pointer relative h-32 rounded-2xl overflow-hidden shadow-sm border border-gray-100"
+              >
+                <img src={item.img} className="absolute inset-0 w-full h-full object-cover" alt={item.name} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute inset-0 p-3 flex flex-col justify-end">
+                  <div className={`${item.color} w-8 h-8 rounded-lg flex items-center justify-center text-white mb-2 shadow-lg`}>
+                     {cloneElement(item.icon, { size: 14 })}
+                  </div>
+                  <h3 className="text-white font-bold text-sm">{item.name}</h3>
+                  <p className="text-white/70 text-[10px] leading-tight truncate">{item.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
 
         {showAIInsights && aiRecommendations && (
           <SmartRecommendations recommendations={aiRecommendations} insights={aiInsights} loading={loadingProperties && loadingServices} onItemClick={onItemClick} />
@@ -1745,9 +1793,28 @@ const MobileAppHomepage = ({
         </section>
       </main>
 
-      <button onClick={() => {/* Open chat */ }} className="fixed bottom-24 right-4 bg-gray-900 text-white p-4 rounded-full shadow-xl hover:scale-105 transition-transform z-50">
-        <SparklesIcon className="w-6 h-6" />
-      </button>
+      {/* Floating Track Requests Button - Mobile */}
+      <motion.div
+         initial={{ scale: 0, opacity: 0 }}
+         animate={{ scale: 1, opacity: 1 }}
+         whileHover={{ scale: 1.1 }}
+         whileTap={{ scale: 0.9 }}
+         onClick={() => setIsBookingsOpen(true)}
+         className="fixed bottom-24 right-4 z-[100] cursor-pointer "
+      >
+        <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 shadow-xl" />
+        <div className="relative bg-white text-gray-900 p-4 rounded-full shadow-2xl flex items-center justify-center border border-gray-100">
+          <FaCalendarCheck className="w-8 h-8 text-blue-600" />
+          {/* Tooltip moved above the button to avoid side-overlapping on mobile */}
+          <div className="absolute bottom-full right-0 mb-4 bg-gray-900 text-white px-4 py-2 rounded-2xl shadow-xl text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
+             Track your requests <span>🚚</span>
+          </div>
+        </div>
+        <div className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] text-white font-bold">2</div>
+      </motion.div>
+
+      {/* Bookings Modal */}
+      <MyBookingsConsumer isOpen={isBookingsOpen} onClose={() => setIsBookingsOpen(false)} />
     </div>
   );
 };

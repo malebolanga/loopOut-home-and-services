@@ -17,7 +17,9 @@ import {
   FaChevronLeft,
   FaHome,
   FaCar,
-  FaExclamationTriangle
+  FaExclamationTriangle,
+  FaPhone,
+  FaUser
 } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 
@@ -167,22 +169,46 @@ const BookingCard = ({ booking, onCancel }) => {
       <div className="space-y-4">
         <BookingStatus status={booking.status} />
         
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-          <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-full bg-white border-2 border-white shadow-sm overflow-hidden text-center">
-               <img src={booking.proAvatar} alt={booking.proName} className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://i.pravatar.cc/150?u=pro'} />
-             </div>
-             <div className="min-w-0">
-               <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Your Professional</p>
-               <p className="text-sm font-bold text-gray-900 line-clamp-1 truncate">{booking.proName}</p>
-             </div>
+        {/* Premium WhatsApp Contact Card */}
+        <div className="relative group/card">
+          <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-green-600 rounded-[2rem] opacity-0 group-hover/card:opacity-10 transition-opacity blur-lg" />
+          <div className="relative flex items-center justify-between p-5 bg-white border border-gray-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500">
+            <div className="flex items-center gap-4">
+               <div className="relative">
+                 <div className="w-14 h-14 rounded-full bg-white border-4 border-emerald-50 shadow-inner overflow-hidden flex items-center justify-center">
+                   <img src={booking.proAvatar} alt={booking.proName} className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://i.pravatar.cc/150?u=pro'} />
+                 </div>
+                 <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center shadow-lg">
+                    <FaWhatsapp className="text-white text-[10px]" />
+                 </div>
+               </div>
+               <div className="min-w-0">
+                 <p className="text-[10px] text-emerald-600 font-black uppercase tracking-[0.2em] mb-1">Your Professional</p>
+                 <h4 className="text-base font-black text-gray-900 leading-none truncate">{booking.proName}</h4>
+                 <div className="flex items-center gap-2 mt-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[11px] font-bold text-gray-400">Available on WhatsApp</span>
+                 </div>
+               </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <a 
+                href={`tel:${booking.proWhatsapp}`}
+                className="w-12 h-12 flex items-center justify-center bg-gray-50 text-gray-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all border border-transparent hover:border-rose-100 shadow-sm"
+              >
+                <FaPhone className="text-sm" />
+              </a>
+              <a 
+                href={`https://wa.me/${booking.proWhatsapp.replace(/\s/g, '')}`} 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 flex items-center justify-center bg-emerald-500 text-white rounded-2xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-200"
+              >
+                <FaWhatsapp className="text-xl" />
+              </a>
+            </div>
           </div>
-          <a 
-            href={`https://wa.me/${booking.proWhatsapp}`} 
-            className="bg-green-500 text-white p-3 rounded-xl hover:bg-green-600 transition-colors shadow-md"
-          >
-            <FaWhatsapp className="text-lg" />
-          </a>
         </div>
       </div>
     </motion.div>
