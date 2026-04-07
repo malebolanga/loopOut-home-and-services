@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo, cloneElement } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   HomeIcon,
@@ -811,57 +812,96 @@ const TopCategoriesSection = ({ navigate }) => {
 
 // --- ELITE HELPER CARD ---
 const EliteHelperCard = ({ helper, onClick }) => {
+  const formatPrice = () => {
+    return `R${helper.regularPrice}`;
+  };
+
   return (
     <motion.div
-      whileHover={{ y: -8, scale: 1.05 }}
+      whileHover={{ y: -4, scale: 1.02 }}
       onClick={onClick}
-      className="cursor-pointer flex flex-col items-center p-4 bg-white rounded-[2.5rem] shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-50"
+      className="cursor-pointer relative group overflow-hidden rounded-2xl w-full shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100/50"
     >
-      <div className="relative mb-4">
-        {/* Elite Glow Effect */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-rose-500 to-amber-500 rounded-full opacity-20 group-hover:opacity-40 blur-md transition-opacity duration-500" />
+      <div className="relative aspect-[4/5] w-full bg-gray-200">
+        <ImageGallery
+          imageUrls={helper.imageUrls || []}
+          alt={helper.name}
+          type="avatar"
+        />
         
-        <div className="relative w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-100 flex items-center justify-center">
-          <ImageGallery
-            imageUrls={helper.imageUrls || []}
-            alt={helper.name}
-            type="avatar"
-          />
+        {/* Verified Badge - Always Visible */}
+        <div className="absolute top-3 left-3 bg-rose-500 text-white rounded-full p-1.5 shadow-lg z-20">
+          <CheckCircleIcon className="w-3.5 h-3.5" />
         </div>
+
+        {/* Dark overlay that appears on hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
         
-        {/* Verified Badge with Pulse */}
-        <div className="absolute bottom-1 right-2 w-8 h-8 bg-rose-500 rounded-full flex items-center justify-center border-2 border-white shadow-lg animate-bounce-slow">
-          <CheckCircleIcon className="w-5 h-5 text-white" />
-          <motion.div 
-            animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-            className="absolute inset-0 bg-rose-500 rounded-full -z-10"
-          />
+        {/* Information that appears on hover */}
+        <div className="absolute inset-0 p-5 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-6 group-hover:translate-y-0 text-white z-20 pointer-events-none">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="font-bold text-xl leading-tight truncate mr-2 drop-shadow-xl">{helper.address || "South Africa"}</h3>
+            {helper.rating && (
+              <div className="flex items-center gap-1 text-sm font-semibold shrink-0 bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-md shadow-lg border border-white/20">
+                <StarIconSolid className="w-3.5 h-3.5 text-amber-400" />
+                <span>{helper.rating?.toFixed(2) || '4.9'}</span>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mb-3">
+             <span className="inline-block bg-white/20 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-[0.1em] px-2 py-0.5 rounded-full border border-white/20">
+              {helper.type}
+            </span>
+          </div>
+          <p className="text-white/90 text-sm truncate mb-4 drop-shadow-md font-medium">{helper.name}</p>
+          <div className="font-black text-lg drop-shadow-xl bg-white text-gray-900 w-fit px-4 py-1.5 rounded-full shadow-xl">
+            {formatPrice()}
+          </div>
         </div>
       </div>
+    </motion.div>
+  );
+};
 
-      <div className="text-center w-full">
-        <h3 className="font-bold text-gray-900 text-lg group-hover:text-rose-600 transition-colors truncate px-2">
-          {helper.name}
-        </h3>
-        <span className="inline-block bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-[0.1em] px-2 py-0.5 rounded-full mb-2">
-          {helper.type}
-        </span>
+// --- RECENTLY ADDED ELITE CARD ---
+const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
+  const formatPrice = () => {
+    const price = item.price || item.regularPrice;
+    if (type === 'property' && (item.type === 'sale' || item.type === 'land')) {
+      return `R${price?.toLocaleString()}`;
+    }
+    return `R${price}`;
+  };
+
+  return (
+    <motion.div
+      whileHover={{ y: -4, scale: 1.02 }}
+      onClick={onClick}
+      className="cursor-pointer relative group overflow-hidden rounded-2xl w-full shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100/50"
+    >
+      <div className="relative aspect-[4/5] w-full bg-gray-200">
+        <ImageGallery
+          imageUrls={item.imageUrls || []}
+          alt={item.name}
+          type={type}
+        />
+        {/* Dark overlay that appears on hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
         
-        <div className="flex items-center justify-center gap-3 mt-2 border-t border-gray-50 pt-3">
-          <div className="flex flex-col items-center">
-            <div className="flex items-center gap-1">
-              <StarIconSolid className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-sm font-bold text-gray-900">{helper.rating || '4.9'}</span>
-            </div>
-            <span className="text-[10px] text-gray-400 font-medium">RATING</span>
+        {/* Information that appears on hover */}
+        <div className="absolute inset-0 p-5 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-6 group-hover:translate-y-0 text-white z-20 pointer-events-none">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="font-bold text-xl leading-tight truncate mr-2 drop-shadow-xl">{item.address || "South Africa"}</h3>
+            {item.rating && (
+              <div className="flex items-center gap-1 text-sm font-semibold shrink-0 bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-md shadow-lg border border-white/20">
+                <StarIconSolid className="w-3.5 h-3.5 text-amber-400" />
+                <span>{item.rating?.toFixed(2)}</span>
+              </div>
+            )}
           </div>
-          
-          <div className="w-[1px] h-6 bg-gray-100" />
-          
-          <div className="flex flex-col items-center">
-            <span className="text-sm font-bold text-gray-900">R{helper.regularPrice}</span>
-            <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap">STARTING</span>
+          <p className="text-white/90 text-sm truncate mb-4 drop-shadow-md font-medium">{item.name}</p>
+          <div className="font-black text-lg drop-shadow-xl bg-white text-gray-900 w-fit px-4 py-1.5 rounded-full shadow-xl">
+            {formatPrice()}
           </div>
         </div>
       </div>
@@ -1029,7 +1069,7 @@ const MobileAppHomepage = ({
   loadingProperties, loadingServices, loadingHelpers, loadingEvents,
   stats, onItemClick, recentlyViewedItems, onRecentlyViewedLike,
   currentLocation = 'South Africa', navigate, aiRecommendations, aiInsights, aiTrendData, onAISuggestionClick,
-  recentlyAddedItems, locationStatus
+  recentlyAddedItems, locationStatus, requestCount = 0
 }) => {
   const [isDesktop, setIsDesktop] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -1165,9 +1205,7 @@ const MobileAppHomepage = ({
             ))}
           </div>
 
-          {showAIInsights && aiRecommendations && (
-            <SmartRecommendations recommendations={aiRecommendations} insights={aiInsights} loading={loadingProperties && loadingServices} onItemClick={onItemClick} />
-          )}
+
 
           {recentlyViewedItems.length > 0 && (
             <section className="mb-16">
@@ -1192,7 +1230,7 @@ const MobileAppHomepage = ({
               <SectionTitle title="Recently added" />
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {recentlyAddedItems.slice(0, 8).map((item) => (
-                  <AirbnbCard
+                  <RecentlyAddedCard
                     key={item._id}
                     item={item}
                     type={item.itemType === 'listing' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property') : item.itemType}
@@ -1424,12 +1462,12 @@ const MobileAppHomepage = ({
            whileHover={{ scale: 1.1, rotate: 10 }}
            whileTap={{ scale: 0.9 }}
            onClick={() => navigate('/ai-help-center')}
-           className="fixed bottom-8 right-8 z-[100] cursor-pointer "
+           className="group fixed bottom-8 right-8 z-[100] cursor-pointer "
         >
           <div className="absolute -inset-2 bg-gradient-to-r from-rose-600 to-pink-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 animate-pulse" />
           <div className="relative bg-rose-600 text-white p-4 rounded-full shadow-2xl flex items-center justify-center border-2 border-white/20">
             <SparklesIcon className="w-8 h-8" />
-            <div className="absolute right-full mr-4 bg-white px-4 py-2 rounded-2xl shadow-xl text-gray-900 font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0">
+            <div className="absolute right-full mr-4 bg-white px-4 py-2 rounded-2xl shadow-xl text-gray-900 font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 pointer-events-none">
                Need help finding something? <span>✨</span>
             </div>
           </div>
@@ -1443,16 +1481,20 @@ const MobileAppHomepage = ({
            whileHover={{ scale: 1.1 }}
            whileTap={{ scale: 0.9 }}
            onClick={() => setIsBookingsOpen(true)}
-           className="fixed bottom-28 right-8 z-[100] cursor-pointer "
+           className="group fixed bottom-28 right-8 z-[100] cursor-pointer "
         >
           <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 shadow-xl" />
           <div className="relative bg-white text-gray-900 p-4 rounded-full shadow-2xl flex items-center justify-center border border-gray-100">
             <FaCalendarCheck className="w-8 h-8 text-blue-600" />
-            <div className="absolute right-full mr-4 bg-gray-900 text-white px-4 py-2 rounded-2xl shadow-xl text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute right-full mr-4 bg-gray-900 text-white px-4 py-2 rounded-2xl shadow-xl text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 pointer-events-none">
                Track your requests <span>🚚</span>
             </div>
           </div>
-          <div className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] text-white font-bold">2</div>
+          {requestCount > 0 && (
+            <div className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-rose-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] text-white font-bold shadow-lg z-10 transition-transform duration-300 group-hover:scale-110 animate-pulse">
+              {requestCount}
+            </div>
+          )}
         </motion.div>
 
         {/* Bookings Modal */}
@@ -1618,25 +1660,19 @@ const MobileAppHomepage = ({
           </div>
         </section>
 
-        {showAIInsights && aiRecommendations && (
-          <SmartRecommendations recommendations={aiRecommendations} insights={aiInsights} loading={loadingProperties && loadingServices} onItemClick={onItemClick} />
-        )}
+
 
         {recentlyAddedItems.length > 0 && (
           <section className="mb-8">
             <h2 className="font-semibold text-gray-900 mb-4">Recently added</h2>
-            <div className="flex overflow-x-auto gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
+            <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 scrollbar-hide snap-x">
               {recentlyAddedItems.slice(0, 5).map((item) => (
-                <div key={item._id} onClick={() => onItemClick(item, item.itemType)} className="flex-shrink-0 w-36 cursor-pointer">
-                  <div className="relative aspect-[3/2] rounded-xl overflow-hidden mb-2 bg-gray-200">
-                    <ImageGallery
-                      imageUrls={item.imageUrls || []}
-                      alt={item.name}
-                      type={item.itemType === 'listing' ? 'property' : item.itemType}
-                    />
-                  </div>
-                  <p className="font-medium text-sm truncate">{item.name}</p>
-                  <p className="text-sm text-gray-500">R{item.price || item.regularPrice}</p>
+                <div key={item._id} className="flex-shrink-0 w-56 snap-start">
+                  <RecentlyAddedCard
+                    item={item}
+                    type={item.itemType === 'listing' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property') : item.itemType}
+                    onClick={() => onItemClick(item, item.itemType)}
+                  />
                 </div>
               ))}
             </div>
@@ -1753,22 +1789,11 @@ const MobileAppHomepage = ({
           </div>
           <div className="flex overflow-x-auto gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
             {featuredHelpers.slice(0, 8).map((helper) => (
-              <div key={helper._id} onClick={() => navigate(`/helper/${helper._id}`)} className="flex-shrink-0 w-32 text-center cursor-pointer">
-                <div className="relative w-32 h-32 mx-auto mb-2 aspect-square rounded-2xl overflow-hidden border-2 border-gray-50 bg-gray-100">
-                  <ImageGallery
-                    imageUrls={helper.imageUrls || []}
-                    alt={helper.name}
-                    type="avatar"
-                  />
-                  <div className="absolute bottom-1 right-1 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center border-2 border-white">
-                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                  </div>
-                </div>
-                <p className="font-medium text-sm truncate">{helper.name}</p>
-                <p className="text-xs text-gray-500 truncate">{helper.type}</p>
-                <div className="flex items-center justify-center mt-0.5">
-                  <span className="text-xs font-semibold">R{helper.regularPrice}</span>
-                </div>
+              <div key={helper._id} className="flex-shrink-0 w-56 snap-start">
+                <EliteHelperCard 
+                  helper={helper} 
+                  onClick={() => navigate(`/helper/${helper._id}`)} 
+                />
               </div>
             ))}
           </div>
@@ -1800,7 +1825,7 @@ const MobileAppHomepage = ({
          whileHover={{ scale: 1.1 }}
          whileTap={{ scale: 0.9 }}
          onClick={() => setIsBookingsOpen(true)}
-         className="fixed bottom-24 right-4 z-[100] cursor-pointer "
+         className=" fixed bottom-24 right-4 z-[100] cursor-pointer "
       >
         <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 shadow-xl" />
         <div className="relative bg-white text-gray-900 p-4 rounded-full shadow-2xl flex items-center justify-center border border-gray-100">
@@ -1810,7 +1835,11 @@ const MobileAppHomepage = ({
              Track your requests <span>🚚</span>
           </div>
         </div>
-        <div className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] text-white font-bold">2</div>
+        {requestCount > 0 && (
+          <div className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-rose-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] text-white font-bold shadow-sm z-10">
+            {requestCount}
+          </div>
+        )}
       </motion.div>
 
       {/* Bookings Modal */}
@@ -1824,6 +1853,7 @@ const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const aiEngine = useRef(new AIRecommendationEngine());
+  const { currentUser } = useSelector((state) => state.user);
 
   const [featuredProperties, setFeaturedProperties] = useState(MOCK_PROPERTIES);
   const [featuredServices, setFeaturedServices] = useState(MOCK_SERVICES);
@@ -1840,6 +1870,26 @@ const Home = () => {
   const [aiInsights, setAiInsights] = useState([]);
   const [recentlyViewedItems, setRecentlyViewedItems] = useState([]);
   const [currentLocation, setCurrentLocation] = useState('South Africa');
+  const [requestCount, setRequestCount] = useState(0);
+
+  useEffect(() => {
+    const fetchBookingCount = async () => {
+      if (!currentUser?._id) return;
+      try {
+        const res = await fetch(`/api/bookings/user/${currentUser._id}`);
+        if (res.ok) {
+          const data = await res.json();
+          const activeBookings = data.filter(b => b.status !== 'completed' && b.status !== 'cancelled' && b.status !== 'declined');
+          setRequestCount(activeBookings.length);
+        }
+      } catch (error) {
+        console.error('Failed to fetch booking count:', error);
+      }
+    };
+    fetchBookingCount();
+    const interval = setInterval(fetchBookingCount, 60000);
+    return () => clearInterval(interval);
+  }, [currentUser]);
 
   useEffect(() => {
     const loadRecentlyViewed = () => {
@@ -1906,13 +1956,11 @@ const Home = () => {
       ...events.map(e => ({ ...e, routeType: 'event' }))
     ].filter(Boolean);
     return aiEngine.current.generatePersonalizedRecommendations(allItems, {
-      location: currentLocation,
-      preferences: aiEngine.current.userPreferences
+      recentSearch: location.search
     });
   };
 
   const { coords, city, error: geoError, loading: geoLoading } = useLocationCoords();
-
   const [locationStatus, setLocationStatus] = useState(null);
 
   useEffect(() => {
@@ -1923,15 +1971,12 @@ const Home = () => {
         helpers: new AbortController(),
         events: new AbortController()
       };
-
       const timeoutId = setTimeout(() => {
         Object.values(controllers).forEach(controller => controller.abort());
       }, API_TIMEOUT);
 
-      // Determine search location
       const searchCoords = coords || POLOKWANE_COORDS;
       const detectedCity = city || (coords ? null : "Polokwane");
-      const radius = DISTANCE_TIERS.EVERYWHERE; // Fetch all to allow frontend tiered filtering
 
       const fetchPromises = [
         fetch(`/api/listing/get?limit=50&sort=createdAt&order=desc`, {
@@ -1943,27 +1988,27 @@ const Home = () => {
               if (localMatches.length > 0) {
                 setFeaturedProperties(localMatches.slice(0, DATA_FETCH_LIMIT));
                 setLocationStatus({
-                  title: `Showing listings in ${detectedCity || "your area"}`,
-                  description: "Found immediate matches in your local area."
+                  title: `Top Homes in ${detectedCity}`,
+                  description: "Showing the best properties within your immediate area."
                 });
               } else {
                 const nearby = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.NEARBY, detectedCity);
                 if (nearby.length > 0) {
                   setFeaturedProperties(nearby.slice(0, DATA_FETCH_LIMIT));
                   setLocationStatus({
-                    title: `Showing listings within 50km of ${detectedCity || "your location"}`,
-                    description: "No direct city matches found, showing nearby results."
+                    title: `Homes near ${detectedCity}`,
+                    description: "No direct matches in your city, showing nearby neighborhoods."
                   });
                 } else {
                   const regional = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.REGIONAL, detectedCity);
                   setFeaturedProperties(regional.slice(0, DATA_FETCH_LIMIT));
                   setLocationStatus({
-                    title: `Showing results near ${detectedCity || "your location"}`,
-                    description: "No local matches found, expanded search radius to 100km."
+                    title: "Homes in South Africa",
+                    description: "No local matches found, showing trending homes nationwide."
                   });
                 }
               }
-            } 
+            }
           })
           .catch(() => { }).finally(() => setLoadingProperties(false)),
 
@@ -2054,6 +2099,7 @@ const Home = () => {
       aiTrendData={null}
       onAISuggestionClick={(suggestion) => { navigate(`/search?searchTerm=${encodeURIComponent(suggestion)}&type=all&ai=1`); }}
       locationStatus={locationStatus}
+      requestCount={requestCount}
     />
   );
 };

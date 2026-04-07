@@ -1009,7 +1009,7 @@ const SlidingDatesStrip = ({ bookings, onBookingClick }) => {
               {formatDateLabel(date)}
             </span>
             
-            <div className="flex -space-x-2">
+            <div className="flex -space-x-2 max-w-full px-1 overflow-visible">
               {dayBookings.length > 0 ? (
                 dayBookings.slice(0, 3).map((b, i) => (
                   <div 
@@ -1084,7 +1084,7 @@ const BookingCalendar = ({ bookings }) => {
                 onClick={() => scrollToBooking(b._id)}
                 className="text-[8px] font-black uppercase tracking-tighter px-1 py-0.5 rounded bg-rose-50 text-rose-700 border-l border-rose-500 truncate cursor-pointer"
               >
-                {b.time}
+                {b.time} - {b.clientName}
               </div>
             ))}
             {dayBookings.length > 1 && (
@@ -1112,7 +1112,7 @@ const BookingCalendar = ({ bookings }) => {
                    <div 
                      key={i}
                      onClick={() => scrollToBooking(b._id)}
-                     className="p-2 bg-rose-50 rounded-xl border-l-2 border-rose-500 cursor-pointer hover:bg-rose-100 transition-all"
+                     className="p-2 bg-rose-50 rounded-xl border-l-2 border-rose-500 cursor-pointer hover:bg-rose-100 transition-all min-w-0 overflow-hidden"
                    >
                      <p className="text-[9px] font-black text-gray-900 leading-tight">{b.time}</p>
                      <p className="text-[8px] font-bold text-rose-600 truncate">{b.clientName}</p>

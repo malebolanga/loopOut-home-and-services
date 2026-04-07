@@ -6,31 +6,38 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
 
 import {
-  FiSearch,
-  FiBell,
-  FiHeart,
-  FiUser,
-  FiPlusCircle,
-  FiLogOut,
-  FiSettings,
-  FiHelpCircle,
-  FiMenu,
-  FiMap,
-  FiX,
-  FiMessageCircle,
-  FiGlobe,
-  FiHome,
-  FiBriefcase,
-  FiCalendar,
-  FiUsers,
-  FiChevronLeft,
-  FiChevronDown,
-  FiDollarSign,
-  FiCheck,
-  FiList,
-  FiLayout,
-  FiPieChart
-} from "react-icons/fi";
+  MagnifyingGlassIcon,
+  HeartIcon,
+  GlobeAltIcon,
+  BellIcon,
+  UserCircleIcon,
+  Bars3Icon,
+  ChatBubbleLeftRightIcon,
+  Squares2X2Icon,
+  PlusIcon,
+  PlusCircleIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronDownIcon,
+  CheckIcon,
+  QueueListIcon,
+  UserIcon,
+  HomeIcon,
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
+  QuestionMarkCircleIcon,
+  ChartPieIcon,
+  MapPinIcon
+} from '@heroicons/react/24/outline';
+
+import {
+  MagnifyingGlassIcon as MagnifyingGlassIconSolid,
+  HeartIcon as HeartIconSolid,
+  BellIcon as BellIconSolid,
+  UserCircleIcon as UserCircleIconSolid,
+  ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid,
+  Squares2X2Icon as Squares2X2IconSolid,
+} from '@heroicons/react/24/solid';
 
 import {
   generateSuggestions,
@@ -411,8 +418,8 @@ export default function Header() {
                     <div className="text-sm font-semibold px-6 flex-1 truncate text-[#222222]">
                       Start your search
                     </div>
-                    <div className="p-2 bg-gradient-to-r from-[#E61E4D] via-[#E31C5F] to-[#D70466] rounded-full text-white flex-shrink-0">
-                      <FiSearch className="w-4 h-4" />
+                    <div className="p-2.5 bg-[#FF385C] rounded-full text-white flex-shrink-0">
+                      <MagnifyingGlassIcon className="w-4.5 h-4.5 stroke-[3px]" />
                     </div>
                   </div>
                 </div>
@@ -439,7 +446,7 @@ export default function Header() {
                   }}
                   className="language-button p-4 md:py-1 md:px-2 border-[1px] border-[#DDDDDD] flex flex-row items-center gap-3 rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
                 >
-                  <FiGlobe className="w-4 h-4" />
+                  <GlobeAltIcon className="w-5 h-5" />
                 </button>
 
                 {/* Wishlist Icon - Desktop */}
@@ -447,7 +454,7 @@ export default function Header() {
                   onClick={() => handleNavigate('/wishlist')}
                   className="relative p-3 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
                 >
-                  <FiHeart className="w-4 h-4" />
+                  <HeartIcon className="w-5 h-5 stroke-[2px]" />
                 </button>
 
                 {/* Notification Bell Icon - Desktop */}
@@ -455,10 +462,10 @@ export default function Header() {
                   onClick={() => handleNavigate('/notifications')}
                   className="relative p-3 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
                 >
-                  <FiBell className="w-4 h-4" />
+                  <BellIcon className="w-5 h-5 stroke-[2px]" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-[#FF5A5F] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
-                      {unreadCount > 9 ? '9+' : unreadCount}
+                    <span className="absolute -top-1.5 -right-1.5 bg-[#FF385C] text-white text-[10px] min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full border-2 border-white shadow-sm z-10 font-bold">
+                      {unreadCount}
                     </span>
                   )}
                 </button>
@@ -472,15 +479,21 @@ export default function Header() {
                   }}
                   className="p-4 md:py-1 md:px-2 border-[1px] border-[#DDDDDD] flex flex-row items-center gap-3 rounded-full cursor-pointer hover:shadow-md transition bg-white text-[#717171]"
                 >
-                  <FiMenu className="w-4 h-4" />
+                  <Bars3Icon className="w-5 h-5" />
                   <div className="hidden md:block">
                     {currentUser ? (
-                      <div className="w-8 h-8 rounded-full bg-[#222222] flex items-center justify-center text-white text-sm font-semibold">
-                        {currentUser.username?.charAt(0)?.toUpperCase()}
-                      </div>
+                      <img 
+                        src={currentUser.avatar} 
+                        alt="profile" 
+                        className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
+                        }}
+                      />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-[#717171] flex items-center justify-center">
-                        <FiUser className="w-4 h-4 text-white" />
+                        <UserIcon className="w-5 h-5 text-white" />
                       </div>
                     )}
                   </div>
@@ -522,34 +535,35 @@ export default function Header() {
                           onClick={() => handleNavigate(`/${currentUser._id}/listings`)}
                           className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
                         >
-                          <FiList className="w-4 h-4" />
+                          <QueueListIcon className="w-4 h-4" />
                           User Listings
                         </button>
                         <button
                           onClick={() => handleNavigate('/list')}
                           className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
                         >
-                          <FiList className="w-4 h-4" />
+                          <QueueListIcon className="w-4 h-4" />
                           My Listings
                         </button>
                         <button
                           onClick={() => handleNavigate('/host')}
                           className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
                         >
-                          <FiHome className="w-4 h-4" />
+                          <HomeIcon className="w-4 h-4" />
                           Manage listings
                         </button>
                         <button
                           onClick={() => handleNavigate('/dashboard')}
                           className="px-4 py-3 hover:bg-rose-50 transition text-left text-rose-600 flex items-center gap-2 font-black uppercase tracking-widest text-[10px]"
                         >
-                          <FiLayout className="w-4 h-4" />
+                          <Squares2X2Icon className="w-4 h-4" />
                           Host Dashboard
                         </button>
                         <button
                           onClick={() => handleNavigate('/messages')}
-                          className="px-4 py-3 hover:bg-gray-100 transition flex justify-between items-center text-left text-[#222222]"
+                          className="px-4 py-3 hover:bg-gray-100 transition flex items-center gap-2 text-left text-[#222222]"
                         >
+                          <ChatBubbleLeftRightIcon className="w-4 h-4" />
                           <span>Messages</span>
                         </button>
                         <button
@@ -558,7 +572,7 @@ export default function Header() {
                         >
                           <span>Notifications</span>
                           {unreadCount > 0 && (
-                            <span className="bg-[#FF5A5F] text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                            <span className="bg-[#FF385C] text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-bold">
                               {unreadCount}
                             </span>
                           )}
@@ -566,8 +580,9 @@ export default function Header() {
                         <div className="border-t border-[#DDDDDD] my-1"></div>
                         <button
                           onClick={handleSignOut}
-                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222]"
+                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
                         >
+                          <ArrowRightOnRectangleIcon className="w-4 h-4" />
                           Log out
                         </button>
                       </>
@@ -575,27 +590,31 @@ export default function Header() {
                       <>
                         <button
                           onClick={() => handleNavigate('/sign-up')}
-                          className="px-4 py-3 hover:bg-gray-100 transition font-semibold text-left text-[#222222]"
+                          className="px-4 py-3 hover:bg-gray-100 transition font-semibold text-left text-[#222222] flex items-center gap-2"
                         >
+                          <PlusCircleIcon className="w-4 h-4" />
                           Sign up
                         </button>
                         <button
                           onClick={() => handleNavigate('/sign-in')}
-                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222]"
+                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
                         >
+                          <ArrowRightOnRectangleIcon className="w-4 h-4" />
                           Log in
                         </button>
                         <div className="border-t border-[#DDDDDD] my-1"></div>
                         <button
                           onClick={() => handleNavigate('/host')}
-                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222]"
+                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
                         >
+                          <HomeIcon className="w-4 h-4" />
                           loopOut your home
                         </button>
                         <button
                           onClick={() => handleNavigate('/help')}
-                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222]"
+                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
                         >
+                          <QuestionMarkCircleIcon className="w-4 h-4" />
                           Help Center
                         </button>
                       </>
@@ -624,7 +643,7 @@ export default function Header() {
                         <span>{language.name}</span>
                       </div>
                       {selectedLanguage === language.name && (
-                        <FiCheck className="w-4 h-4 text-[#FF5A5F]" />
+                        <CheckIcon className="w-4 h-4 text-[#FF5A5F]" />
                       )}
                     </button>
                   ))}
@@ -662,7 +681,7 @@ export default function Header() {
                     type="submit"
                     className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl p-2 transition-all flex items-center justify-center min-w-[50px] h-[50px] shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
                   >
-                    <FiSearch className="w-5 h-5" />
+                    <MagnifyingGlassIcon className="w-5 h-5 stroke-[2.5px]" />
                   </button>
                 </form>
 
@@ -690,7 +709,7 @@ export default function Header() {
                           className="w-full px-6 py-3 flex items-center gap-4 hover:bg-gray-50 transition-colors text-left group"
                         >
                           <div className={`p-2 rounded-lg ${item.isHistory ? 'bg-gray-100' : 'bg-rose-50'} text-gray-500`}>
-                            {item.isHistory ? <FiMap className="w-4 h-4" /> : <FiSearch className="w-4 h-4 text-rose-500" />}
+                            {item.isHistory ? <MapPinIcon className="w-4 h-4" /> : <MagnifyingGlassIcon className="w-4 h-4 text-rose-500" />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-semibold text-gray-900 truncate">
@@ -700,7 +719,7 @@ export default function Header() {
                               {item.type || 'All'}
                             </div>
                           </div>
-                          <FiChevronLeft className="w-4 h-4 text-gray-300 group-hover:text-gray-900 transition-colors rotate-180" />
+                          <ChevronLeftIcon className="w-4 h-4 text-gray-300 group-hover:text-gray-900 transition-colors rotate-180" />
                         </button>
                       ))}
                     </div>
@@ -732,7 +751,7 @@ export default function Header() {
                         }}
                         className="group flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-full border border-gray-200 hover:border-gray-300 transition-all text-left"
                       >
-                        <FiSearch className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
+                        <MagnifyingGlassIcon className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
                         <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
                           {item.term}
                         </span>
@@ -782,59 +801,73 @@ export default function Header() {
         <div className="flex justify-around items-center py-2">
           <Link
             to="/"
-            onClick={() => console.log('Mobile nav: Explore clicked')}
-            className={`flex flex-col items-center p-2 ${location.pathname === '/' ? 'text-[#FF5A5F]' : 'text-[#717171]'}`}
+            className={`flex flex-col items-center p-2 transition-colors duration-200 ${location.pathname === '/' ? 'text-[#FF385C]' : 'text-[#717171]'}`}
           >
-            <FiSearch className="w-6 h-6" />
-            <span className="text-[10px] mt-1 font-medium">Explore</span>
+            {location.pathname === '/' ? (
+              <MagnifyingGlassIconSolid className="w-6 h-6" />
+            ) : (
+              <MagnifyingGlassIcon className="w-6 h-6 stroke-[2px]" />
+            )}
+            <span className={`text-[10px] mt-1 font-semibold ${location.pathname === '/' ? 'text-[#FF385C]' : 'text-[#717171]'}`}>Explore</span>
           </Link>
           <Link
             to="/dashboard"
-            onClick={() => console.log('Mobile nav: Dashboard clicked')}
-            className={`flex flex-col items-center p-2 ${location.pathname === '/dashboard' ? 'text-[#FF5A5F]' : 'text-[#717171]'}`}
+            className={`flex flex-col items-center p-2 transition-colors duration-200 ${location.pathname === '/dashboard' ? 'text-[#FF385C]' : 'text-[#717171]'}`}
           >
-            <FiLayout className="w-6 h-6" />
-            <span className="text-[10px] mt-1 font-medium">Dashboard</span>
+            {location.pathname === '/dashboard' ? (
+              <Squares2X2IconSolid className="w-6 h-6" />
+            ) : (
+              <Squares2X2Icon className="w-6 h-6 stroke-[2px]" />
+            )}
+            <span className={`text-[10px] mt-1 font-semibold ${location.pathname === '/dashboard' ? 'text-[#FF385C]' : 'text-[#717171]'}`}>Dashboard</span>
           </Link>
           <Link
             to={currentUser ? `/${currentUser._id}/create-listing` : '/sign-in'}
-            onClick={() => console.log('Mobile nav: Create clicked')}
-            className="flex flex-col items-center p-2 text-[#717171]"
+            className="flex flex-col items-center p-2 text-[#717171] "
           >
-            <div className="w-12 h-12 bg-gradient-to-r from-[#E61E4D] via-[#E31C5F] to-[#D70466] rounded-full flex items-center justify-center -mt-6 border-4 border-white shadow-lg">
-              <FiPlusCircle className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-gradient-to-br from-[#FF385C] to-[#E31C5F] rounded-full flex items-center justify-center -mt-8 border-[5px] border-white shadow-[0_4px_12px_rgba(0,0,0,0.15)] group-active:scale-90 transition-transform">
+              <PlusIcon className="w-7 h-7 text-white stroke-[3px]" />
             </div>
-            <span className="text-[10px] mt-1 font-medium">Create</span>
+            <span className="text-[10px] mt-1 font-semibold">Create</span>
           </Link>
           <Link
             to="/messages"
-            onClick={() => console.log('Mobile nav: Inbox clicked')}
-            className={`flex flex-col items-center p-2 ${location.pathname === '/messages' ? 'text-[#FF5A5F]' : 'text-[#717171]'}`}
+            className={`flex flex-col items-center p-2 transition-colors duration-200 ${location.pathname === '/messages' ? 'text-[#FF385C]' : 'text-[#717171]'}`}
           >
             <div className="relative">
-              <FiMessageCircle className="w-6 h-6" />
+              {location.pathname === '/messages' ? (
+                <ChatBubbleLeftRightIconSolid className="w-6 h-6" />
+              ) : (
+                <ChatBubbleLeftRightIcon className="w-6 h-6 stroke-[2px]" />
+              )}
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#FF5A5F] text-white text-[8px] w-4 h-4 flex items-center justify-center rounded-full">
-                  {unreadCount > 9 ? '9+' : unreadCount}
+                <span className="absolute -top-1.5 -right-1.5 bg-[#FF385C] text-white text-[9px] min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full border-2 border-white font-bold">
+                  {unreadCount}
                 </span>
               )}
             </div>
-            <span className="text-[10px] mt-1 font-medium">Inbox</span>
+            <span className={`text-[10px] mt-1 font-semibold ${location.pathname === '/messages' ? 'text-[#FF385C]' : 'text-[#717171]'}`}>Inbox</span>
           </Link>
           <button
             onClick={handleMobileProfileClick}
-            className={`flex flex-col items-center p-2 ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'text-[#FF5A5F]' : 'text-[#717171]'}`}
+            className={`flex flex-col items-center p-2 transition-colors duration-200 ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'text-[#FF385C]' : 'text-[#717171]'}`}
           >
-            <div className="w-6 h-6 rounded-full bg-[#DDDDDD] flex items-center justify-center overflow-hidden">
+            <div className={`w-7 h-7 rounded-full border-[1.5px] overflow-hidden flex items-center justify-center ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'border-[#FF385C]' : 'border-gray-200'}`}>
               {currentUser ? (
-                <span className="text-xs font-bold text-[#222222]">
-                  {currentUser.username?.charAt(0)?.toUpperCase()}
-                </span>
+                <img 
+                  src={currentUser.avatar} 
+                  alt="profile" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
+                  }}
+                />
               ) : (
-                <FiUser className="w-4 h-4 text-[#717171]" />
+                <UserCircleIcon className="w-full h-full text-gray-400" />
               )}
             </div>
-            <span className="text-[10px] mt-1 font-medium">Profile</span>
+            <span className={`text-[10px] mt-1 font-semibold ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'text-[#FF385C]' : 'text-[#717171]'}`}>Profile</span>
           </button>
         </div>
       </div>
