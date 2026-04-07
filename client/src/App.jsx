@@ -106,6 +106,7 @@ import PhotographyHelperPage from './pages/PhotographyHelperPage';
 import TripSearch from './pages/TripSearch';
 import TripDetail from './pages/TripDetail';
 import Trips from './pages/Trips';
+import Trip from './pages/Trip';
 
 import SmartSearchPage from './pages/SmartSearchPage';
 import ExplorePage from "./pages/ExplorePage";
@@ -176,6 +177,7 @@ export default function App() {
 
         {/* Trip Routes */}
         <Route path="/trips" element={<Trips />} />
+        <Route path="/trip" element={<Trip />} />
         <Route path="/trip/:id" element={<TripDetail />} />
         <Route path="/plan-trip" element={<TripSearch />} />
 

@@ -392,7 +392,7 @@ export default function Header() {
   return (
     <>
       {/* Airbnb-style Header */}
-      <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-[#DDDDDD]">
+      <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-white ">
         <div className="max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-2 px-4">
           <div className="flex flex-row items-center justify-between gap-3 md:gap-0 h-20">
 
@@ -513,10 +513,16 @@ export default function Header() {
                           {currentUser.username}
                         </div>
                         <button
+                          onClick={() => handleNavigate('/trip')}
+                          className="px-4 py-3 hover:bg-gray-100 transition font-semibold text-left text-[#FF385C]"
+                        >
+                          Plan a Trip
+                        </button>
+                        <button
                           onClick={() => handleNavigate('/trips')}
                           className="px-4 py-3 hover:bg-gray-100 transition font-semibold text-left text-[#222222]"
                         >
-                          Trips
+                          My Trips
                         </button>
                         <button
                           onClick={() => handleNavigate('/wishlist')}
