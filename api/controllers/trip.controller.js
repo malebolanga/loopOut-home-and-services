@@ -15,12 +15,14 @@ export const createTrip = async (req, res, next) => {
     }
 
     // Convert string IDs to ObjectIds
-    tripData.stops = tripData.stops.map(stop => ({
-      ...stop,
-      events: stop.events.map(id => new mongoose.Types.ObjectId(id)),
-      helpers: stop.helpers.map(id => new mongoose.Types.ObjectId(id)),
-      listings: stop.listings.map(id => new mongoose.Types.ObjectId(id))
-    }));
+    if (tripData.stops) {
+      tripData.stops = tripData.stops.map(stop => ({
+        ...stop,
+        events: (stop.events || []).map(id => new mongoose.Types.ObjectId(id)),
+        helpers: (stop.helpers || []).map(id => new mongoose.Types.ObjectId(id)),
+        listings: (stop.listings || []).map(id => new mongoose.Types.ObjectId(id))
+      }));
+    }
 
     const newTrip = new Trip(tripData);
     await newTrip.save();

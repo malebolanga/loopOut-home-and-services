@@ -21,8 +21,12 @@ router.get('/', verifyToken, async(req, res) => {
             unreadCount
         });
     } catch (error) {
-        console.error('Error fetching notifications:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('SERVER ERROR STACK (Notifications):', error.stack || error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Internal server error',
+            error: error.message 
+        });
     }
 });
 
@@ -41,8 +45,12 @@ router.post('/read', verifyToken, async(req, res) => {
 
         res.json({ success: true });
     } catch (error) {
-        console.error('Error marking notifications as read:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('SERVER ERROR STACK (MarkRead):', error.stack || error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Internal server error',
+            error: error.message 
+        });
     }
 });
 

@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import {
   MagnifyingGlassIcon,
@@ -27,7 +28,10 @@ import {
   ArrowRightOnRectangleIcon,
   QuestionMarkCircleIcon,
   ChartPieIcon,
-  MapPinIcon
+  MapPinIcon,
+  SparklesIcon,
+  UserGroupIcon,
+  BriefcaseIcon
 } from '@heroicons/react/24/outline';
 
 import {
@@ -67,6 +71,7 @@ export default function Header() {
   const [prevUnreadCount, setPrevUnreadCount] = useState(0);
   const [isSoundEnabled, setIsSoundEnabled] = useState(() => localStorage.getItem('loopOutSound') !== 'false');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showCreateDropdown, setShowCreateDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('San Francisco');
   const [isNavVisible, setIsNavVisible] = useState(true);
@@ -84,6 +89,7 @@ export default function Header() {
   });
 
   const profileDropdownRef = useRef(null);
+  const createDropdownRef = useRef(null);
   const searchInputRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const headerRef = useRef(null);
@@ -202,6 +208,10 @@ export default function Header() {
     const handleClickOutside = (e) => {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target)) {
         setShowProfileDropdown(false);
+      }
+
+      if (createDropdownRef.current && !createDropdownRef.current.contains(e.target)) {
+        setShowCreateDropdown(false);
       }
 
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target) && !e.target.closest('.mobile-menu-button')) {
@@ -445,6 +455,59 @@ export default function Header() {
                   loopOut your home
                 </button>
 
+                <button
+                  onClick={() => handleNavigate('/trip')}
+                  className="hidden lg:flex items-center gap-2 text-sm font-semibold py-2.5 px-5 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 transition cursor-pointer border border-rose-100"
+                >
+                  <SparklesIcon className="w-4 h-4" />
+                  <span>Plan a Trip</span>
+                </button>
+
+                <div className="relative" ref={createDropdownRef}>
+                  <button
+                    onClick={() => setShowCreateDropdown(!showCreateDropdown)}
+                    className="hidden xl:flex items-center gap-2 text-sm font-semibold py-2.5 px-5 rounded-full bg-gray-50 text-gray-700 hover:bg-gray-100 transition cursor-pointer border border-gray-200"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                    <span>Create</span>
+                  </button>
+
+                  <AnimatePresence>
+                    {showCreateDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute top-full right-0 mt-3 w-64 bg-white rounded-3xl shadow-2xl border border-gray-100 py-4 z-50 overflow-hidden"
+                      >
+                        {[
+                          { label: 'Create Stay', icon: HomeIcon, tab: 'stays' },
+                          { label: 'Create Helper', icon: UserGroupIcon, tab: 'online' },
+                          { label: 'Create Event', icon: BellIcon, tab: 'events' },
+                          { label: 'Create Service', icon: BriefcaseIcon, tab: 'experiences' }
+                        ].map((item, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              handleNavigate(currentUser ? `/${currentUser._id}/create-listing?tab=${item.tab}` : '/sign-in');
+                              setShowCreateDropdown(false);
+                            }}
+                            className="w-full px-6 py-4 hover:bg-rose-50 transition-colors flex items-center gap-4 text-left group"
+                          >
+                            <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-all">
+                               <item.icon className="w-5 h-5" />
+                            </div>
+                            <div>
+                               <p className="text-sm font-black text-[#222222]">{item.label}</p>
+                               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Start Now</p>
+                            </div>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
                 {/* Globe Icon */}
                 <button
                   onClick={() => {
@@ -521,18 +584,6 @@ export default function Header() {
                           {currentUser.username}
                         </div>
                         <button
-                          onClick={() => handleNavigate('/trip')}
-                          className="px-4 py-3 hover:bg-gray-100 transition font-semibold text-left text-[#FF385C]"
-                        >
-                          Plan a Trip
-                        </button>
-                        <button
-                          onClick={() => handleNavigate('/trips')}
-                          className="px-4 py-3 hover:bg-gray-100 transition font-semibold text-left text-[#222222]"
-                        >
-                          My Trips
-                        </button>
-                        <button
                           onClick={() => handleNavigate('/wishlist')}
                           className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222]"
                         >
@@ -542,9 +593,16 @@ export default function Header() {
                           onClick={() => handleNavigate('/recently-viewed')}
                           className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222]"
                         >
-                          History
+                          Recently Viewed
                         </button>
                         <div className="border-t border-[#DDDDDD] my-1"></div>
+                        <button
+                          onClick={() => handleNavigate(`/${currentUser._id}/create-listing`)}
+                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
+                        >
+                          <PlusIcon className="w-4 h-4" />
+                          Create a Listing
+                        </button>
                         <button
                           onClick={() => handleNavigate(`/${currentUser._id}/listings`)}
                           className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
@@ -553,11 +611,11 @@ export default function Header() {
                           User Listings
                         </button>
                         <button
-                          onClick={() => handleNavigate('/list')}
+                          onClick={() => handleNavigate('/trips')}
                           className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
                         >
                           <QueueListIcon className="w-4 h-4" />
-                          My Listings
+                          My Trips
                         </button>
                         <button
                           onClick={() => handleNavigate('/host')}
@@ -825,24 +883,24 @@ export default function Header() {
             <span className={`text-[10px] mt-1 font-semibold ${location.pathname === '/' ? 'text-[#FF385C]' : 'text-[#717171]'}`}>Explore</span>
           </Link>
           <Link
-            to="/dashboard"
-            className={`flex flex-col items-center p-2 transition-colors duration-200 ${location.pathname === '/dashboard' ? 'text-[#FF385C]' : 'text-[#717171]'}`}
+            to="/trips"
+            className={`flex flex-col items-center p-2 transition-colors duration-200 ${location.pathname === '/trips' ? 'text-[#FF385C]' : 'text-[#717171]'}`}
           >
-            {location.pathname === '/dashboard' ? (
-              <Squares2X2IconSolid className="w-6 h-6" />
+            {location.pathname === '/trips' ? (
+              <QueueListIcon className="w-6 h-6 text-[#FF385C]" />
             ) : (
-              <Squares2X2Icon className="w-6 h-6 stroke-[2px]" />
+              <QueueListIcon className="w-6 h-6 stroke-[2px]" />
             )}
-            <span className={`text-[10px] mt-1 font-semibold ${location.pathname === '/dashboard' ? 'text-[#FF385C]' : 'text-[#717171]'}`}>Dashboard</span>
+            <span className={`text-[10px] mt-1 font-semibold ${location.pathname === '/trips' ? 'text-[#FF385C]' : 'text-[#717171]'}`}>Trips</span>
           </Link>
           <Link
-            to={currentUser ? `/${currentUser._id}/create-listing` : '/sign-in'}
+            to="/trip"
             className="flex flex-col items-center p-2 text-[#717171] "
           >
             <div className="w-12 h-12 bg-gradient-to-br from-[#FF385C] to-[#E31C5F] rounded-full flex items-center justify-center -mt-8 border-[5px] border-white shadow-[0_4px_12px_rgba(0,0,0,0.15)] group-active:scale-90 transition-transform">
-              <PlusIcon className="w-7 h-7 text-white stroke-[3px]" />
+              <SparklesIcon className="w-7 h-7 text-white stroke-[3px]" />
             </div>
-            <span className="text-[10px] mt-1 font-semibold">Create</span>
+            <span className="text-[10px] mt-1 font-semibold">Plan</span>
           </Link>
           <Link
             to="/messages"
