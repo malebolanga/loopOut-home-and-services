@@ -41,11 +41,13 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-// Debug logger for service-related requests
+// General API Request Logger
 app.use((req, res, next) => {
-    if (req.url.includes('/api/service') || req.url.includes('/api/carwash')) {
-        console.log(`[DEBUG] Incoming Request: ${req.method} ${req.url}`);
-    }
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        console.log(`[API] ${req.method} ${req.url} - ${res.statusCode} (${duration}ms)`);
+    });
     next();
 });
 

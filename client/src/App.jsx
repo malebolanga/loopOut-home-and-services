@@ -129,8 +129,11 @@ export default function App() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
         });
+        
+        if (!res.ok) return;
+
         const data = await res.json();
-        if (!data.valid) {
+        if (data.success === false || !data.valid) {
           dispatch(signOutUserSuccess());
         }
       } catch (error) {

@@ -105,8 +105,9 @@ export const validateToken = async (req, res, next) => {
     const token = req.cookies.access_token;
     if (!token) return res.status(200).json({ valid: false });
 
-    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
-      if (err) return res.status(200).json({ valid: false });
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if (!decoded) return res.status(200).json({ valid: false });
 
       const user = await User.findById(decoded.id).select('-password');
       if (!user) return res.status(200).json({ valid: false });
@@ -128,7 +129,10 @@ export const validateToken = async (req, res, next) => {
           avatar: user.avatar
         }
       });
-    });
+    } catch (jwtError) {
+      // If it's a JWT error, it's just invalid
+      return res.status(200).json({ valid: false });
+    }
   } catch (error) {
     next(error);
   }

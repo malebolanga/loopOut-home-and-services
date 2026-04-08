@@ -121,10 +121,18 @@ export default function Header() {
     if (!currentUser) return;
 
     try {
+      const token = localStorage.getItem('token') || '';
+      const headers = { 
+        'Content-Type': 'application/json'
+      };
+      
+      // Only attach if it's a real token, not 'null' string or empty
+      if (token && token !== 'null') {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch('/api/notifications', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
+        headers,
         credentials: 'include'
       });
 

@@ -65,8 +65,15 @@ export default function SignIn() {
           method: 'POST',
           credentials: 'include'
         });
+
+        if (!res.ok) {
+           console.warn('Initial session validation check failed on server:', res.status);
+           dispatch(signInFailure(null));
+           return;
+        }
+
         const data = await res.json();
-        if (data.valid) {
+        if (data && data.valid) {
           dispatch(signInSuccess(data.user));
           navigate('/');
         } else {
