@@ -409,9 +409,9 @@ export default function Header() {
 
   return (
     <>
-      {/* Airbnb-style Header */}
-      <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-white ">
-        <div className="max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-2 px-4">
+      {/* Airbnb-style Header with Glassmorphism */}
+      <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100/50">
+        <div className="max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-6 px-4">
           <div className="flex flex-row items-center justify-between gap-3 md:gap-0 h-20">
 
             <Link
@@ -422,21 +422,22 @@ export default function Header() {
               <BrandLogo className="h-8 w-auto" />
             </Link>
 
-            {/* Center: Simplified Search Bar */}
-            <div className={`flex-1 max-w-[850px] mx-auto px-4 transition-opacity duration-200 ${showSearch ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            {/* Center: Simplified Search Bar - Elevated Design */}
+            <div className={`flex-1 max-w-[850px] mx-auto px-4 transition-all duration-300 ${showSearch ? 'opacity-0 -translate-y-2 pointer-events-none' : 'opacity-100 translate-y-0'}`}>
               <div
                 onClick={() => {
                   console.log('Search bar clicked - opening search modal');
                   setShowSearch(true);
                 }}
-                className="search-trigger w-full md:w-auto md:min-w-[300px] mx-auto cursor-pointer"
+                className="search-trigger w-full md:w-auto md:min-w-[320px] mx-auto cursor-pointer "
               >
-                <div className="border rounded-full py-2 pl-6 pr-2 shadow-sm hover:shadow-md transition cursor-pointer border-[#DDDDDD] bg-white">
+                <div className="border border-gray-200/60 rounded-full py-2 pl-6 pr-2 shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.1)] transition-all duration-300 cursor-pointer bg-white/90 group-hover:bg-white">
                   <div className="flex flex-row items-center justify-between">
-                    <div className="text-sm font-semibold px-6 flex-1 truncate text-[#222222]">
-                      Start your search
+                    <div className="flex flex-col flex-1 truncate px-4">
+                       <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[#FF385C]">Discovery Hub</span>
+                       <span className="text-sm font-bold text-[#222222]">Start your search</span>
                     </div>
-                    <div className="p-2.5 bg-[#FF385C] rounded-full text-white flex-shrink-0">
+                    <div className="p-3 bg-[#FF385C] rounded-full text-white flex-shrink-0 shadow-lg group-hover:scale-105 transition-transform">
                       <MagnifyingGlassIcon className="w-4.5 h-4.5 stroke-[3px]" />
                     </div>
                   </div>
@@ -457,18 +458,18 @@ export default function Header() {
 
                 <button
                   onClick={() => handleNavigate('/trip')}
-                  className="hidden lg:flex items-center gap-2 text-sm font-semibold py-2.5 px-5 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 transition cursor-pointer border border-rose-100"
+                  className="hidden lg:flex items-center gap-2 text-xs font-black uppercase tracking-widest py-3 px-6 rounded-full bg-gradient-to-br from-rose-50 to-rose-100 text-rose-600 hover:from-rose-500 hover:to-rose-600 hover:text-white transition-all duration-300 cursor-pointer border border-rose-200 shadow-sm hover:shadow-rose-200 hover:shadow-lg active:scale-95"
                 >
                   <SparklesIcon className="w-4 h-4" />
-                  <span>Plan a Trip</span>
+                  <span>AI TRIP</span>
                 </button>
 
                 <div className="relative" ref={createDropdownRef}>
                   <button
                     onClick={() => setShowCreateDropdown(!showCreateDropdown)}
-                    className="hidden xl:flex items-center gap-2 text-sm font-semibold py-2.5 px-5 rounded-full bg-gray-50 text-gray-700 hover:bg-gray-100 transition cursor-pointer border border-gray-200"
+                    className="hidden xl:flex items-center gap-2 text-xs font-black uppercase tracking-widest py-3 px-6 rounded-full bg-gray-950 text-white hover:bg-black transition-all duration-300 cursor-pointer shadow-lg active:scale-95"
                   >
-                    <PlusIcon className="w-4 h-4" />
+                    <PlusIcon className="w-4 h-4 stroke-[3px]" />
                     <span>Create</span>
                   </button>
 
@@ -492,7 +493,7 @@ export default function Header() {
                               handleNavigate(currentUser ? `/${currentUser._id}/create-listing?tab=${item.tab}` : '/sign-in');
                               setShowCreateDropdown(false);
                             }}
-                            className="w-full px-6 py-4 hover:bg-rose-50 transition-colors flex items-center gap-4 text-left group"
+                            className="w-full px-6 py-4 hover:bg-rose-50 transition-colors flex items-center gap-4 text-left "
                           >
                             <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-all">
                                <item.icon className="w-5 h-5" />
@@ -571,94 +572,103 @@ export default function Header() {
                 </button>
               </div>
 
-              {/* Profile Dropdown - Airbnb Style (Desktop only) */}
-              {showProfileDropdown && (
-                <div className="absolute rounded-xl shadow-lg w-[240px] bg-white overflow-hidden right-0 top-12 text-sm border border-[#DDDDDD]">
-                  <div className="flex flex-col cursor-pointer">
-                    {currentUser ? (
-                      <>
-                        <div
-                          className="px-4 py-3 font-semibold border-b border-[#DDDDDD] hover:bg-gray-100 transition text-[#222222]"
-                          onClick={() => handleNavigate('/profile')}
-                        >
-                          {currentUser.username}
-                        </div>
-                        <button
-                          onClick={() => handleNavigate('/wishlist')}
-                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222]"
-                        >
-                          Wishlists
-                        </button>
-                        <button
-                          onClick={() => handleNavigate('/recently-viewed')}
-                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222]"
-                        >
-                          Recently Viewed
-                        </button>
-                        <div className="border-t border-[#DDDDDD] my-1"></div>
-                        <button
-                          onClick={() => handleNavigate(`/${currentUser._id}/create-listing`)}
-                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
-                        >
-                          <PlusIcon className="w-4 h-4" />
-                          Create a Listing
-                        </button>
-                        <button
-                          onClick={() => handleNavigate(`/${currentUser._id}/listings`)}
-                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
-                        >
-                          <QueueListIcon className="w-4 h-4" />
-                          User Listings
-                        </button>
-                        <button
-                          onClick={() => handleNavigate('/trips')}
-                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
-                        >
-                          <QueueListIcon className="w-4 h-4" />
-                          My Trips
-                        </button>
-                        <button
-                          onClick={() => handleNavigate('/host')}
-                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
-                        >
-                          <HomeIcon className="w-4 h-4" />
-                          Manage listings
-                        </button>
-                        <button
-                          onClick={() => handleNavigate('/dashboard')}
-                          className="px-4 py-3 hover:bg-rose-50 transition text-left text-rose-600 flex items-center gap-2 font-black uppercase tracking-widest text-[10px]"
-                        >
-                          <Squares2X2Icon className="w-4 h-4" />
-                          Host Dashboard
-                        </button>
-                        <button
-                          onClick={() => handleNavigate('/messages')}
-                          className="px-4 py-3 hover:bg-gray-100 transition flex items-center gap-2 text-left text-[#222222]"
-                        >
-                          <ChatBubbleLeftRightIcon className="w-4 h-4" />
-                          <span>Messages</span>
-                        </button>
-                        <button
-                          onClick={() => handleNavigate('/notifications')}
-                          className="px-4 py-3 hover:bg-gray-100 transition flex justify-between items-center text-left text-[#222222]"
-                        >
-                          <span>Notifications</span>
-                          {unreadCount > 0 && (
-                            <span className="bg-[#FF385C] text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-bold">
-                              {unreadCount}
-                            </span>
-                          )}
-                        </button>
-                        <div className="border-t border-[#DDDDDD] my-1"></div>
-                        <button
-                          onClick={handleSignOut}
-                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
-                        >
-                          <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                          Log out
-                        </button>
-                      </>
-                    ) : (
+              {/* User Profile Dropdown - Refined App Style */}
+              <AnimatePresence>
+                {showProfileDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                    className="absolute rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] w-[300px] bg-white overflow-hidden right-0 top-14 border border-gray-100 p-2 z-[60]"
+                  >
+                    <div className="flex flex-col">
+                      {currentUser ? (
+                        <>
+                          <div
+                            className="p-6 bg-gradient-to-br from-gray-50 to-white rounded-[1.5rem] mb-2 flex items-center gap-4 border border-gray-100 group cursor-pointer hover:border-rose-200 transition-all"
+                            onClick={() => handleNavigate('/profile')}
+                          >
+                            <img 
+                              src={currentUser.avatar} 
+                              className="w-12 h-12 rounded-full object-cover ring-2 ring-rose-500 ring-offset-2"
+                              alt="Profile"
+                            />
+                            <div className="flex-1 min-w-0">
+                               <p className="text-sm font-black text-[#222222] truncate">{currentUser.username}</p>
+                               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">View Account</p>
+                            </div>
+                          </div>
+                          
+                          <div className="p-2 space-y-1">
+                            <button
+                              onClick={() => handleNavigate('/dashboard')}
+                              className="w-full px-5 py-3.5 bg-gray-950 hover:bg-black rounded-[1.2rem] transition-all flex items-center justify-between group shadow-lg mb-2"
+                            >
+                              <div className="flex items-center gap-3">
+                                 <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                                    <Squares2X2Icon className="w-4 h-4 text-white" />
+                                 </div>
+                                 <span className="text-xs font-black uppercase tracking-widest text-white">Master Dashboard</span>
+                              </div>
+                              <ChevronRightIcon className="w-4 h-4 text-white/40 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                            
+                            <div className="grid grid-cols-3 gap-1 px-1">
+                               <button onClick={() => handleNavigate('/wishlist')} className="p-4 rounded-xl hover:bg-gray-50 flex flex-col items-center gap-2 border border-transparent hover:border-gray-100 transition-all group">
+                                  <HeartIcon className="w-5 h-5 text-gray-400 group-hover:text-[#FF385C]" />
+                                  <span className="text-[8px] font-black uppercase tracking-tighter">Wishlist</span>
+                               </button>
+                               <button onClick={() => handleNavigate(`/${currentUser._id}/listings`)} className="p-4 rounded-xl hover:bg-gray-50 flex flex-col items-center gap-2 border border-transparent hover:border-gray-100 transition-all group">
+                                  <QueueListIcon className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+                                  <span className="text-[8px] font-black uppercase tracking-tighter">My Listings</span>
+                               </button>
+                               <button onClick={() => handleNavigate('/messages')} className="p-4 rounded-xl hover:bg-gray-50 flex flex-col items-center gap-2 border border-transparent hover:border-gray-100 transition-all group">
+                                  <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-400 group-hover:text-green-500" />
+                                  <span className="text-[8px] font-black uppercase tracking-tighter">Messages</span>
+                               </button>
+                            </div>
+
+                            <div className="h-px bg-gray-50 my-2 mx-4" />
+
+                            <button onClick={() => handleNavigate(`/${currentUser._id}/create-listing`)} className="w-full px-4 py-3 hover:bg-rose-50 rounded-xl transition-all flex items-center justify-between group">
+                               <div className="flex items-center gap-3">
+                                  <PlusCircleIcon className="w-5 h-5 text-[#FF385C] group-hover:scale-110 transition-transform" />
+                                  <span className="text-xs font-black uppercase tracking-widest text-gray-700">Create Listing</span>
+                               </div>
+                               <ChevronRightIcon className="w-3 h-3 text-gray-300 group-hover:translate-x-1 transition-transform" />
+                            </button>
+
+                            <button onClick={() => handleNavigate('/notifications')} className="w-full px-4 py-3 hover:bg-gray-50 rounded-xl transition-all flex items-center justify-between group">
+                               <div className="flex items-center gap-3">
+                                  <div className="relative">
+                                     <BellIcon className="w-5 h-5 text-gray-400" />
+                                     {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#FF385C] rounded-full border border-white" />}
+                                  </div>
+                                  <span className="text-xs font-bold text-gray-700">Notifications</span>
+                               </div>
+                               <span className="text-[10px] font-black bg-gray-100 px-2 py-1 rounded-md text-gray-500">{unreadCount}</span>
+                            </button>
+
+                            <button onClick={() => handleNavigate('/trips')} className="w-full px-4 py-3 hover:bg-gray-50 rounded-xl transition-all flex items-center justify-between group">
+                               <div className="flex items-center gap-3">
+                                  <MapPinIcon className="w-5 h-5 text-gray-400" />
+                                  <span className="text-xs font-bold text-gray-700">My Expeditions</span>
+                               </div>
+                               <ChevronRightIcon className="w-3 h-3 text-gray-300 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                          </div>
+
+                          <div className="mt-2 pt-2 border-t border-gray-50">
+                            <button
+                              onClick={handleSignOut}
+                              className="w-full px-5 py-4 hover:bg-gray-100 rounded-xl transition-all flex items-center gap-3 text-gray-500 italic"
+                            >
+                              <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                              <span className="text-xs font-black uppercase tracking-widest">Sign Out</span>
+                            </button>
+                          </div>
+                        </>
+                      ) : (
                       <>
                         <button
                           onClick={() => handleNavigate('/sign-up')}
@@ -692,8 +702,9 @@ export default function Header() {
                       </>
                     )}
                   </div>
-                </div>
+                </motion.div>
               )}
+            </AnimatePresence>
 
               {/* Language Dropdown */}
               {showLanguageDropdown && (
@@ -850,7 +861,7 @@ export default function Header() {
                           navigate(url);
                           setShowSearch(false);
                         }}
-                        className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition group"
+                        className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition "
                       >
                         <div className="w-12 h-12 flex items-center justify-center bg-gray-50 group-hover:bg-white border border-gray-200 group-hover:border-gray-300 rounded-xl transition-all shadow-sm group-hover:shadow-md group-hover:-translate-y-0.5">
                           <span className="text-xl">{category.icon}</span>
@@ -868,81 +879,137 @@ export default function Header() {
         )}
       </header>
 
-      {/* Mobile Bottom Navigation - Airbnb Style */}
-      <div className={`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white  pb-safe transition-transform duration-300 ${isNavVisible ? 'translate-y-0' : 'translate-y-full'}`}>
-        <div className="flex justify-around items-center py-2">
-          <Link
-            to="/"
-            className={`flex flex-col items-center p-2 transition-colors duration-200 ${location.pathname === '/' ? 'text-[#FF385C]' : 'text-[#717171]'}`}
+      {/* Mobile Bottom Navigation - Elevated "Dock" with Emotion & Effects */}
+      <AnimatePresence>
+        {isNavVisible && (
+          <motion.div 
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+            className="md:hidden fixed bottom-6 left-6 right-6 z-40 bg-white/90 backdrop-blur-3xl rounded-[2.5rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] border border-white/50 pb-safe"
           >
-            {location.pathname === '/' ? (
-              <MagnifyingGlassIconSolid className="w-6 h-6" />
-            ) : (
-              <MagnifyingGlassIcon className="w-6 h-6 stroke-[2px]" />
-            )}
-            <span className={`text-[10px] mt-1 font-semibold ${location.pathname === '/' ? 'text-[#FF385C]' : 'text-[#717171]'}`}>Explore</span>
-          </Link>
-          <Link
-            to="/trips"
-            className={`flex flex-col items-center p-2 transition-colors duration-200 ${location.pathname === '/trips' ? 'text-[#FF385C]' : 'text-[#717171]'}`}
-          >
-            {location.pathname === '/trips' ? (
-              <QueueListIcon className="w-6 h-6 text-[#FF385C]" />
-            ) : (
-              <QueueListIcon className="w-6 h-6 stroke-[2px]" />
-            )}
-            <span className={`text-[10px] mt-1 font-semibold ${location.pathname === '/trips' ? 'text-[#FF385C]' : 'text-[#717171]'}`}>Trips</span>
-          </Link>
-          <Link
-            to="/trip"
-            className="flex flex-col items-center p-2 text-[#717171] "
-          >
-            <div className="w-12 h-12 bg-gradient-to-br from-[#FF385C] to-[#E31C5F] rounded-full flex items-center justify-center -mt-8 border-[5px] border-white shadow-[0_4px_12px_rgba(0,0,0,0.15)] group-active:scale-90 transition-transform">
-              <SparklesIcon className="w-7 h-7 text-white stroke-[3px]" />
+            <div className="flex justify-around items-center h-20 px-4 relative">
+              {[
+                { to: '/', label: 'Explore', icon: MagnifyingGlassIcon, solidIcon: MagnifyingGlassIconSolid },
+                { to: '/trips', label: 'Trips', icon: QueueListIcon, solidIcon: QueueListIcon },
+              ].map((item, idx) => {
+                const isActive = location.pathname === item.to;
+                return (
+                  <Link
+                    key={idx}
+                    to={item.to}
+                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 relative ${isActive ? 'text-[#FF385C]' : 'text-gray-400'}`}
+                  >
+                    <motion.div 
+                      whileTap={{ scale: 0.8 }}
+                      className={`p-2.5 rounded-2xl relative z-10 ${isActive ? 'bg-rose-50' : 'bg-transparent'}`}
+                    >
+                       {isActive ? <item.solidIcon className="w-6 h-6" /> : <item.icon className="w-6 h-6 stroke-[2.2px]" />}
+                       {isActive && (
+                         <motion.div 
+                           layoutId="activeGlow"
+                           className="absolute inset-0 bg-[#FF385C]/10 rounded-2xl blur-md"
+                           initial={false}
+                           transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                         />
+                       )}
+                    </motion.div>
+                    <span className={`text-[10px] font-black uppercase tracking-widest leading-none ${isActive ? 'opacity-100' : 'opacity-60'}`}>{item.label}</span>
+                  </Link>
+                );
+              })}
+              
+              <Link
+                to="/trip"
+                className="flex flex-col items-center -mt-12 relative z-50"
+              >
+                <button className="flex flex-col items-center">
+                  <motion.div 
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    whileTap={{ scale: 0.9, rotate: -5 }}
+                    className="relative"
+                  >
+                    <div className="absolute inset-0 bg-[#FF385C] blur-[25px] opacity-20 group-hover:opacity-40 transition-opacity animate-pulse" />
+                    <div className="w-16 h-16 bg-[#222222] rounded-[1.5rem] flex items-center justify-center  relative z-10 overflow-hidden">
+                      <motion.div
+                        animate={{ 
+                          rotate: [0, 360],
+                        }}
+                        transition={{ 
+                          duration: 8, 
+                          repeat: Infinity, 
+                          ease: "linear" 
+                        }}
+                        className="absolute inset-0 bg-gradient-to-tr from-[#FF385C]/20 to-transparent opacity-50"
+                      />
+                      <SparklesIcon className="w-7 h-7 text-white stroke-[3px]" />
+                    </div>
+                  </motion.div>
+                  <span className="text-[10px] mt-2 font-black uppercase tracking-widest text-[#222222] italic">Architect</span>
+                </button>
+              </Link>
+
+              {[
+                { to: '/messages', label: 'Inbox', icon: ChatBubbleLeftRightIcon, solidIcon: ChatBubbleLeftRightIconSolid, count: unreadCount },
+              ].map((item, idx) => {
+                const isActive = location.pathname === item.to;
+                return (
+                  <Link
+                    key={idx}
+                    to={item.to}
+                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 relative ${isActive ? 'text-[#FF385C]' : 'text-gray-400'}`}
+                  >
+                    <motion.div 
+                      whileTap={{ scale: 0.8 }}
+                      className={`relative p-2.5 rounded-2xl ${isActive ? 'bg-rose-50' : 'bg-transparent'}`}
+                    >
+                      {isActive ? <item.solidIcon className="w-6 h-6" /> : <item.icon className="w-6 h-6 stroke-[2.2px]" />}
+                      {isActive && (
+                        <motion.div 
+                          layoutId="activeGlow"
+                          className="absolute inset-0 bg-[#FF385C]/10 rounded-2xl blur-md"
+                          initial={false}
+                          transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                        />
+                      )}
+                      {item.count > 0 && (
+                        <motion.span 
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute top-1.5 right-1.5 bg-[#FF385C] text-white text-[9px] min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full border-2 border-white font-black z-20"
+                        >
+                          {item.count}
+                        </motion.span>
+                      )}
+                    </motion.div>
+                    <span className={`text-[10px] font-black uppercase tracking-widest leading-none ${isActive ? 'opacity-100' : 'opacity-60'}`}>{item.label}</span>
+                  </Link>
+                );
+              })}
+              
+              <button
+                onClick={handleMobileProfileClick}
+                className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'text-[#FF385C]' : 'text-gray-400'}`}
+              >
+                <motion.div 
+                  whileTap={{ scale: 0.8 }}
+                  className={`p-2.5 rounded-2xl transition-all ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'bg-rose-50' : 'bg-transparent'}`}
+                >
+                  <div className={`w-6 h-6 rounded-full border-[1.5px] overflow-hidden flex items-center justify-center ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'border-[#FF385C]' : 'border-gray-200'}`}>
+                    {currentUser ? (
+                      <img src={currentUser.avatar} alt="profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <UserCircleIcon className="w-full h-full" />
+                    )}
+                  </div>
+                </motion.div>
+                <span className="text-[10px] font-black uppercase tracking-widest leading-none">Vault</span>
+              </button>
             </div>
-            <span className="text-[10px] mt-1 font-semibold">Plan</span>
-          </Link>
-          <Link
-            to="/messages"
-            className={`flex flex-col items-center p-2 transition-colors duration-200 ${location.pathname === '/messages' ? 'text-[#FF385C]' : 'text-[#717171]'}`}
-          >
-            <div className="relative">
-              {location.pathname === '/messages' ? (
-                <ChatBubbleLeftRightIconSolid className="w-6 h-6" />
-              ) : (
-                <ChatBubbleLeftRightIcon className="w-6 h-6 stroke-[2px]" />
-              )}
-              {unreadCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-[#FF385C] text-white text-[9px] min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full border-2 border-white font-bold">
-                  {unreadCount}
-                </span>
-              )}
-            </div>
-            <span className={`text-[10px] mt-1 font-semibold ${location.pathname === '/messages' ? 'text-[#FF385C]' : 'text-[#717171]'}`}>Inbox</span>
-          </Link>
-          <button
-            onClick={handleMobileProfileClick}
-            className={`flex flex-col items-center p-2 transition-colors duration-200 ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'text-[#FF385C]' : 'text-[#717171]'}`}
-          >
-            <div className={`w-7 h-7 rounded-full border-[1.5px] overflow-hidden flex items-center justify-center ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'border-[#FF385C]' : 'border-gray-200'}`}>
-              {currentUser ? (
-                <img 
-                  src={currentUser.avatar} 
-                  alt="profile" 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
-                  }}
-                />
-              ) : (
-                <UserCircleIcon className="w-full h-full text-gray-400" />
-              )}
-            </div>
-            <span className={`text-[10px] mt-1 font-semibold ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'text-[#FF385C]' : 'text-[#717171]'}`}>Profile</span>
-          </button>
-        </div>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Spacer for fixed header */}
       <div className="h-20"></div>

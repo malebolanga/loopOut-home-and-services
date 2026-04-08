@@ -26,7 +26,10 @@ import {
   ChatBubbleBottomCenterIcon,
   NewspaperIcon,
   CpuChipIcon,
-  PlayIcon
+  PlayIcon,
+  CameraIcon,
+  HandThumbUpIcon,
+  FireIcon
 } from '@heroicons/react/24/outline';
 
 const Trip = () => {
@@ -45,7 +48,15 @@ const Trip = () => {
   const [searchStatus, setSearchStatus] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [dbResults, setDbResults] = useState({ accommodation: [], helpers: [], entertainment: [], services: [], news: [] });
+  const [dbResults, setDbResults] = useState({ 
+    accommodation: [], 
+    helpers: [], 
+    entertainment: [], 
+    services: [], 
+    news: [], 
+    aiPick: null,
+    safety: null 
+  });
 
   const newsData = {
     'polokwane': [
@@ -79,7 +90,10 @@ const Trip = () => {
     { id: 'domestic', label: 'Helper', icon: <PaintBrushIcon className="w-5 h-5" /> },
     { id: 'salon', label: 'Beauty', icon: <ScissorsIcon className="w-5 h-5" /> },
     { id: 'massage', label: 'Massage', icon: <BoltIcon className="w-5 h-5" /> },
-    { id: 'carwash', label: 'Car Wash', icon: <TruckIcon className="w-5 h-5" /> }
+    { id: 'carwash', label: 'Car Wash', icon: <TruckIcon className="w-5 h-5" /> },
+    { id: 'chef', label: 'Private Chef', icon: <FireIcon className="w-5 h-5" /> },
+    { id: 'photo', label: 'Photographer', icon: <CameraIcon className="w-5 h-5" /> },
+    { id: 'sneaker', label: 'Sneaker Cleaner', icon: <SparklesIcon className="w-5 h-5" /> }
   ];
 
   const lifestyleOptions = [
@@ -137,12 +151,37 @@ const Trip = () => {
         eventsRes.ok ? eventsRes.json() : []
       ]);
 
+      const restaurantPicks = {
+        'polokwane': { 
+          name: "Saskia Restaurant", 
+          vibe: "Upscale Fusion", 
+          image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=800",
+          description: "The crown jewel of Polokwane dining. Perfect for that 'Social Vibe' with a touch of elegance." 
+        },
+        'global': { 
+          name: "Skyline Lounge", 
+          vibe: "Urban Chic", 
+          image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=800",
+          description: "Top-rated social spot for the best city views and vibes." 
+        }
+      };
+
+      const safetyData = {
+        'polokwane': { level: 'Moderate', color: 'orange', tip: "AI Advisory: Stick to secure precincts like Meropa; exercise caution in Westburg after dusk." },
+        'global': { level: 'Low', color: 'green', tip: "AI Advisory: General safety standards apply. Stay within verified zones." }
+      };
+
       setDbResults({
         accommodation: listings.filter(l => rentalDurationType === 'long' ? l.type === 'rent' : l.type !== 'rent').slice(0, 4),
         helpers: helpers.slice(0, 4),
         services: services.slice(0, 4),
         entertainment: events.slice(0, 4),
-        news: newsData[destination.toLowerCase()] || newsData.global
+        news: newsData[destination.toLowerCase()] ? [
+          ...newsData[destination.toLowerCase()],
+          { id: 99, title: `AI UPDATE: New ${destination} Social Vibe trending at ${restaurantPicks[destination.toLowerCase()]?.name || 'Local Bistro'}`, date: "Just Now", tag: "AI Trend" }
+        ] : newsData.global,
+        aiPick: restaurantPicks[destination.toLowerCase()] || restaurantPicks.global,
+        safety: safetyData[destination.toLowerCase()] || safetyData.global
       });
 
       setIsSearching(false);
@@ -456,28 +495,75 @@ const Trip = () => {
                   </div>
                </section>
 
-               <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 px-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 px-4">
                   <section>
                     <div className="flex items-center gap-4 mb-10 font-black italic"><UserGroupIcon className="w-10 h-10 text-[#FF385C]" /><h2 className="text-4xl uppercase tracking-tighter">Local Crew</h2></div>
                     <div className="grid grid-cols-1 gap-6">
-                       {dbResults.helpers.concat(dbResults.services.slice(0, 2)).map((item, idx) => (
-                         <div key={item._id || item.id || `helper-sr-${idx}`} className="bg-white p-8 rounded-[3rem] shadow-2xl flex items-center gap-8 border border-gray-50 hover:scale-105 transition-all">
-                            <img src={item.image || "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=400"} className="w-20 h-20 rounded-[1.5rem] object-cover shadow-xl ring-4 ring-gray-50" />
-                            <div><h4 className="font-black text-[#222222] leading-none text-xl">{item.name || 'Pro'}</h4><p className="text-[10px] font-black text-[#FF385C] uppercase tracking-[0.3em] mt-3 italic">{item.type || 'Service'}</p></div>
+                       {dbResults.helpers.concat(dbResults.services).slice(0, 4).map((item, idx) => (
+                         <div key={item._id || item.id || `helper-sr-${idx}`} className="bg-white p-8 rounded-[3rem] shadow-2xl flex items-center gap-8 border border-gray-50 hover:scale-105 transition-all group">
+                            <div className="relative w-24 h-24 flex-shrink-0">
+                               <img 
+                                 src={item.image || (item.type?.toLowerCase().includes('car') ? "https://images.unsplash.com/photo-1601362840469-51e4d8d59085?auto=format&fit=crop&q=80&w=400" : "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=400")} 
+                                 className="w-full h-full rounded-3xl object-cover shadow-xl ring-4 ring-gray-50 group-hover:ring-[#FF385C]/20 transition-all" 
+                               />
+                               <div className="absolute -top-2 -right-2 bg-white p-1.5 rounded-full shadow-lg border border-gray-50">
+                                  <BoltIcon className="w-4 h-4 text-[#FF385C]" />
+                               </div>
+                            </div>
+                            <div>
+                               <h4 className="font-black text-[#222222] leading-none text-xl group-hover:text-[#FF385C] transition-colors">{item.name || 'Pro Personnel'}</h4>
+                               <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mt-3 italic">{item.type || item.category || 'Expert Service'}</p>
+                            </div>
                          </div>
                        ))}
                     </div>
                   </section>
-                  <section>
-                    <div className="flex items-center gap-4 mb-10 font-black italic"><MusicalNoteIcon className="w-10 h-10 text-[#FF385C]" /><h2 className="text-4xl uppercase tracking-tighter">Vibe Hub</h2></div>
-                    <div className="grid grid-cols-1 gap-6">
-                       {dbResults.entertainment.map((item, idx) => (
-                         <div key={item._id || item.id || `event-sr-${idx}`} className="bg-white overflow-hidden rounded-[3rem] shadow-2xl border border-gray-50 flex h-36 group">
-                            <img src={item.image} className="w-40 h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                            <div className="p-8 flex flex-col justify-center"><h4 className="font-black text-[#222222] leading-tight text-2xl group-hover:text-[#FF385C] transition-colors">{item.name}</h4><p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] mt-3 italic">{item.type}</p></div>
-                         </div>
-                       ))}
+                  <section className="space-y-12">
+                    <div>
+                      <div className="flex items-center gap-4 mb-10 font-black italic"><MusicalNoteIcon className="w-10 h-10 text-[#FF385C]" /><h2 className="text-4xl uppercase tracking-tighter">Vibe Hub</h2></div>
+                      <div className="grid grid-cols-1 gap-6">
+                         {dbResults.entertainment.map((item, idx) => (
+                           <div key={item._id || item.id || `event-sr-${idx}`} className="bg-white overflow-hidden rounded-[3rem] shadow-2xl border border-gray-50 flex h-36 group">
+                              <img src={item.image || "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=400"} className="w-40 h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                              <div className="p-8 flex flex-col justify-center"><h4 className="font-black text-[#222222] leading-tight text-2xl group-hover:text-[#FF385C] transition-colors">{item.name}</h4><p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] mt-3 italic">{item.type}</p></div>
+                           </div>
+                         ))}
+                      </div>
                     </div>
+
+                    {dbResults.aiPick && (
+                      <div className="bg-gradient-to-br from-[#222222] to-black rounded-[3.5rem] shadow-2xl relative overflow-hidden group">
+                        <div className="h-64 overflow-hidden relative">
+                           <img src={dbResults.aiPick.image} className="w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-[3s]" />
+                           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                           <div className="absolute top-0 right-0 p-8">
+                             <SparklesIcon className="w-12 h-12 text-[#FF385C] animate-pulse" />
+                           </div>
+                        </div>
+                        <div className="p-10 -mt-20 relative z-10">
+                          <span className="text-[10px] font-black text-[#FF385C] uppercase tracking-[0.4em] mb-4 block italic">AI Social Pick</span>
+                          <h3 className="text-4xl font-black text-white italic tracking-tighter mb-2 leading-none">{dbResults.aiPick.name}</h3>
+                          <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-8">{dbResults.aiPick.vibe}</p>
+                          <p className="text-gray-300 text-sm leading-relaxed mb-10 line-clamp-2">{dbResults.aiPick.description}</p>
+                          <button className="w-full py-5 bg-white text-black rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-[#FF385C] hover:text-white transition-all shadow-xl">Reserve Social Experience</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {dbResults.safety && (
+                      <div className={`p-10 rounded-[3rem] border-4 border-dashed relative overflow-hidden transition-all ${dbResults.safety.level === 'Moderate' ? 'bg-orange-50 border-orange-200' : 'bg-green-50 border-green-200'}`}>
+                         <div className="flex items-center gap-6 mb-6">
+                            <BoltIcon className={`w-10 h-10 ${dbResults.safety.level === 'Moderate' ? 'text-orange-500' : 'text-green-500'}`} />
+                            <div>
+                               <h4 className="text-2xl font-black italic tracking-tighter uppercase leading-none">Safety Analytics</h4>
+                               <span className={`text-[10px] font-black uppercase tracking-widest mt-2 block ${dbResults.safety.level === 'Moderate' ? 'text-orange-600' : 'text-green-600'}`}>
+                                  Risk Level: {dbResults.safety.level}
+                               </span>
+                            </div>
+                         </div>
+                         <p className="text-gray-600 text-sm leading-relaxed italic font-bold">"{dbResults.safety.tip}"</p>
+                      </div>
+                    )}
                   </section>
                </div>
 
