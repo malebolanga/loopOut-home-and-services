@@ -1,21 +1,20 @@
 // src/components/PageTransition.jsx
-import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 
 const PageTransition = ({ children }) => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    setIsVisible(false);
-    const timer = setTimeout(() => {
-      setIsVisible(true);
-    }, 10);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
-    <div className={`transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+    <motion.div
+      initial={{ opacity: 0, y: 10, scale: 0.99 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -10, scale: 1.01 }}
+      transition={{ 
+        duration: 0.4, 
+        ease: [0.22, 1, 0.36, 1] // Custom cubic-bezier for a premium feel
+      }}
+      className="w-full h-full"
+    >
       {children}
-    </div>
+    </motion.div>
   );
 };
 

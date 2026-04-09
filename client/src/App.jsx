@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+// src/App.jsx
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import PrivateRoute from "./components/PrivateRoute";
@@ -6,6 +7,8 @@ import AuthSessionManager from "./components/AuthSessionManager";
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { signOutUserSuccess } from "./redux/user/userSlice";
+import { AnimatePresence } from 'framer-motion';
+import PageTransition from './components/PageTransition';
 
 // Core Pages
 import Home from "./pages/Home";
@@ -14,7 +17,6 @@ import SignUp from "./pages/SignUp";
 import Profile from "./pages/Profile";
 import Search from "./pages/Search";
 import Message from "./pages/Message";
-
 
 // Dashboard Page
 import DashBoard from "./pages/DashBoard";
@@ -117,6 +119,123 @@ import Categories from './pages/Categories';
 
 import 'leaflet/dist/leaflet.css';
 
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Core Routes - Specific paths first */}
+        <Route path="/" element={<PageTransition><Home /></PageTransition>} />
+        <Route path="/sign-in" element={<PageTransition><SignIn /></PageTransition>} />
+        <Route path="/sign-up" element={<PageTransition><SignUp /></PageTransition>} />
+        <Route path="/search" element={<PageTransition><Search /></PageTransition>} />
+        <Route path="/messages" element={<PageTransition><Inbox /></PageTransition>} />
+        <Route path="/smart-search" element={<PageTransition><SmartSearchPage /></PageTransition>} />
+
+        <Route path="/dashboard" element={<PageTransition><DashBoard /></PageTransition>} />
+        <Route path="/explore" element={<PageTransition><ExplorePage /></PageTransition>} />
+        <Route path="/categories" element={<PageTransition><Categories /></PageTransition>} />
+
+        {/* User Profile - Specific before dynamic */}
+        <Route path="/user/:id" element={<PageTransition><UserProfile /></PageTransition>} />
+        <Route path="/user-profile/:id" element={<PageTransition><UserProfile /></PageTransition>} />
+
+        {/* Specific Listing Routes */}
+        <Route path="/list" element={<PageTransition><List /></PageTransition>} />
+        <Route path="/listings/:type" element={<PageTransition><ListingsPage /></PageTransition>} />
+        <Route path="/for-rent" element={<PageTransition><ForRent /></PageTransition>} />
+        <Route path="/for-sale" element={<PageTransition><ForSale /></PageTransition>} />
+        <Route path="/helper-list" element={<PageTransition><HelperList /></PageTransition>} />
+        <Route path="/commercial" element={<PageTransition><Commercial /></PageTransition>} />
+        <Route path="/overnight" element={<PageTransition><OverNight /></PageTransition>} />
+        <Route path="/listing/:listingId" element={<PageTransition><Listing /></PageTransition>} />
+        <Route path="/helper-home-page" element={<PageTransition><HelpersHomePage /></PageTransition>} />
+        <Route path="/event-home-page" element={<PageTransition><EventsHomePage /></PageTransition>} />
+        <Route path="/listing-home-page" element={<PageTransition><ListingsHomePage /></PageTransition>} />
+        <Route path="/service-home-page" element={<PageTransition><ServicesHomePage /></PageTransition>} />
+
+        {/* Trip Routes */}
+        <Route path="/trips" element={<PageTransition><Trips /></PageTransition>} />
+        <Route path="/trip" element={<PageTransition><Trip /></PageTransition>} />
+        <Route path="/trip/:id" element={<PageTransition><TripDetail /></PageTransition>} />
+        <Route path="/plan-trip" element={<PageTransition><TripSearch /></PageTransition>} />
+
+        {/* Service Routes */}
+        <Route path="/carwash/:id" element={<PageTransition><CarWashPage /></PageTransition>} />
+        <Route path="/photography/:id" element={<PageTransition><PhotographyHelperPage /></PageTransition>} />
+        <Route path="/helper/:id" element={<PageTransition><HelperPage /></PageTransition>} />
+        <Route path="/event/:id" element={<PageTransition><EventPage /></PageTransition>} />
+        <Route path="/privatetutor/:privatetutorId" element={<PageTransition><PrivateTutor /></PageTransition>} />
+        <Route path="/service/:serviceId" element={<PageTransition><Services /></PageTransition>} />
+        <Route path="/update-helper/:helperId" element={<PageTransition><UpdateHelper /></PageTransition>} />
+        <Route path="/update-service/:serviceId" element={<PageTransition><UpdateService /></PageTransition>} />
+
+        {/* User Routes */}
+        <Route path="/wishlist" element={<PageTransition><Wishlist /></PageTransition>} />
+        <Route path="/users" element={<PageTransition><Users /></PageTransition>} />
+        <Route path="/events/:id" element={<PageTransition><Events /></PageTransition>} />
+        <Route path="/notifications" element={<PageTransition><Notifications /></PageTransition>} />
+        <Route path="/messages/:id" element={<PageTransition><Inbox /></PageTransition>} />
+
+        {/* Dynamic User Routes */}
+        <Route path="/:userId/list" element={<PageTransition><MyListing /></PageTransition>} />
+        <Route path="/:userId/listings" element={<PageTransition><UserListings /></PageTransition>} />
+        <Route path="/listings/user/:id" element={<PageTransition><UserListings /></PageTransition>} />
+
+        {/* Content & AI Routes */}
+        <Route path="/ai" element={<PageTransition><Ai /></PageTransition>} />
+        <Route path="/content" element={<PageTransition><Content /></PageTransition>} />
+        <Route path="/first-time-buyers" element={<PageTransition><ArticlePages /></PageTransition>} />
+        <Route path="/help-center" element={<PageTransition><AIHelpCenter /></PageTransition>} />
+
+        {/* Informational Routes */}
+        <Route path="/propertysafety" element={<PageTransition><PropertySafety /></PageTransition>} />
+        <Route path="/safetyservices" element={<PageTransition><SafetyServices /></PageTransition>} />
+        <Route path="/safetyhelper" element={<PageTransition><SafetyHelper /></PageTransition>} />
+        <Route path="/about" element={<PageTransition><About /></PageTransition>} />
+        <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
+        <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
+        <Route path="/become" element={<PageTransition><Become /></PageTransition>} />
+        <Route path="/adiver" element={<PageTransition><Adiver /></PageTransition>} />
+        <Route path="/lifestyle-decor" element={<PageTransition><LifestyleDecor /></PageTransition>} />
+
+        {/* Payment & Promotion */}
+        <Route path="/promote" element={<PageTransition><PromotionSelection /></PageTransition>} />
+        <Route path="/payment" element={<PageTransition><PaymentMethod /></PageTransition>} />
+
+        {/* Help & Resources */}
+        <Route path="/sitemap" element={<PageTransition><SiteMap /></PageTransition>} />
+        <Route path="/login-required" element={<PageTransition><LoginRequiredPage /></PageTransition>} />
+        <Route path="/terms" element={<PageTransition><TermsOfService /></PageTransition>} />
+        <Route path="/privacy" element={<PageTransition><PrivacyPolicy /></PageTransition>} />
+        <Route path="/aboutloop" element={<PageTransition><AboutLoop /></PageTransition>} />
+        <Route path="/cookies" element={<PageTransition><CookiePolicy /></PageTransition>} />
+        <Route path="/investors" element={<PageTransition><Investors /></PageTransition>} />
+        <Route path="/trust" element={<PageTransition><TrustAndSafety /></PageTransition>} />
+        <Route path="/community" element={<PageTransition><CommunityCenter /></PageTransition>} />
+        <Route path="/responsible" element={<PageTransition><ResponsibleHosting /></PageTransition>} />
+        <Route path="/host-experience" element={<PageTransition><HostExperience /></PageTransition>} />
+        <Route path="/host" element={<PageTransition><HostYourHome /></PageTransition>} />
+        <Route path="/hosting-resources" element={<PageTransition><HostingResources /></PageTransition>} />
+        <Route path="/diversity-belonging" element={<PageTransition><DiversityPage /></PageTransition>} />
+        <Route path="/how-it-works" element={<PageTransition><HowItWorks /></PageTransition>} />
+        <Route path="/newsroom" element={<PageTransition><Newsroom /></PageTransition>} />
+        <Route path="/recently-viewed" element={<PageTransition><RecentlyViewedPage /></PageTransition>} />
+
+        {/* Private Routes */}
+        <Route element={<PrivateRoute />}>
+          <Route path="/sale" element={<PageTransition><Sale /></PageTransition>} />
+          <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
+          <Route path="/:userId/create-listing" element={<PageTransition><CreateListing /></PageTransition>} />
+          <Route path="/update-listing/:listingId" element={<PageTransition><UpdateListing /></PageTransition>} />
+        </Route>
+
+        <Route path="/private" element={<PageTransition><Private /></PageTransition>} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
 export default function App() {
   const { currentUser } = useSelector((state) => state.user);
   const dispatch = useDispatch();
@@ -147,121 +266,8 @@ export default function App() {
     <BrowserRouter>
       <AuthSessionManager />
       <Header />
-      <Routes>
-        {/* Core Routes - Specific paths first */}
-        <Route path="/" element={<Home />} />
-        <Route path="/sign-in" element={<SignIn />} />
-        <Route path="/sign-up" element={<SignUp />} />
-        <Route path="/search" element={<Search />} />
-        <Route path="/messages" element={<Inbox />} />
-        <Route path="/smart-search" element={<SmartSearchPage />} />
-
-        <Route path="/dashboard" element={<DashBoard />} />
-        <Route path="/explore" element={<ExplorePage />} />
-        <Route path="/categories" element={<Categories />} />
-
-        {/* User Profile - Specific before dynamic */}
-        <Route path="/user/:id" element={<UserProfile />} />
-        <Route path="/user-profile/:id" element={<UserProfile />} />
-
-        {/* Specific Listing Routes */}
-        <Route path="/list" element={<List />} />
-        <Route path="/listings/:type" element={<ListingsPage />} />
-        <Route path="/for-rent" element={<ForRent />} />
-        <Route path="/for-sale" element={<ForSale />} />
-        <Route path="/helper-list" element={<HelperList />} />
-        <Route path="/commercial" element={<Commercial />} />
-        <Route path="/overnight" element={<OverNight />} />
-        <Route path="/listing/:listingId" element={<Listing />} />
-        <Route path="/helper-home-page" element={<HelpersHomePage />} />
-        <Route path="/event-home-page" element={<EventsHomePage />} />
-        <Route path="/listing-home-page" element={<ListingsHomePage />} />
-        <Route path="/service-home-page" element={<ServicesHomePage />} />
-
-        {/* Trip Routes */}
-        <Route path="/trips" element={<Trips />} />
-        <Route path="/trip" element={<Trip />} />
-        <Route path="/trip/:id" element={<TripDetail />} />
-        <Route path="/plan-trip" element={<TripSearch />} />
-
-        {/* Service Routes - IMPORTANT: Order matters! More specific routes first */}
-        <Route path="/carwash/:id" element={<CarWashPage />} />
-        <Route path="/photography/:id" element={<PhotographyHelperPage />} />
-        <Route path="/helper/:id" element={<HelperPage />} />
-        <Route path="/event/:id" element={<EventPage />} />
-        <Route path="/privatetutor/:privatetutorId" element={<PrivateTutor />} />
-        <Route path="/service/:serviceId" element={<Services />} />
-        <Route path="/update-helper/:helperId" element={<UpdateHelper />} />
-        <Route path="/update-service/:serviceId" element={<UpdateService />} />
-
-        {/* User Routes - Keep these after more specific routes */}
-        <Route path="/wishlist" element={<Wishlist />} />
-        <Route path="/users" element={<Users />} />
-        <Route path="/events/:id" element={<Events />} />
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/messages" element={<Inbox />} />
-        <Route path="/messages/:id" element={<Inbox />} />
-
-        {/* Dynamic User Routes - These come last to avoid conflict */}
-        <Route path="/:userId/list" element={<MyListing />} />
-        <Route path="/:userId/listings" element={<UserListings />} />
-        <Route path="/listings/user/:id" element={<UserListings />} />
-
-        {/* Content & AI Routes */}
-        <Route path="/ai" element={<Ai />} />
-        <Route path="/content" element={<Content />} />
-        <Route path="/first-time-buyers" element={<ArticlePages />} />
-        <Route path="/help-center" element={<AIHelpCenter />} />
-
-        {/* Informational Routes */}
-        <Route path="/propertysafety" element={<PropertySafety />} />
-        <Route path="/safetyservices" element={<SafetyServices />} />
-        <Route path="/safetyhelper" element={<SafetyHelper />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/pricing" element={<Pricing />} />
-        <Route path="/become" element={<Become />} />
-        <Route path="/adiver" element={<Adiver />} />
-        <Route path="/lifestyle-decor" element={<LifestyleDecor />} />
-
-        {/* Payment & Promotion */}
-        <Route path="/promote" element={<PromotionSelection />} />
-        <Route path="/payment" element={<PaymentMethod />} />
-
-        {/* Help & Resources */}
-        <Route path="/sitemap" element={<SiteMap />} />
-        <Route path="/login-required" element={<LoginRequiredPage />} />
-        <Route path="/terms" element={<TermsOfService />} />
-        <Route path="/privacy" element={<PrivacyPolicy />} />
-        <Route path="/aboutloop" element={<AboutLoop />} />
-        <Route path="/cookies" element={<CookiePolicy />} />
-        <Route path="/investors" element={<Investors />} />
-        <Route path="/trust" element={<TrustAndSafety />} />
-        <Route path="/community" element={<CommunityCenter />} />
-        <Route path="/responsible" element={<ResponsibleHosting />} />
-        <Route path="/host-experience" element={<HostExperience />} />
-        <Route path="/host" element={<HostYourHome />} />
-        <Route path="/hosting-resources" element={<HostingResources />} />
-        <Route path="/diversity-belonging" element={<DiversityPage />} />
-        <Route path="/how-it-works" element={<HowItWorks />} />
-        <Route path="/newsroom" element={<Newsroom />} />
-        <Route path="/recently-viewed" element={<RecentlyViewedPage />} />
-
-        {/* Private Routes - Protected by authentication */}
-        <Route element={<PrivateRoute />}>
-          <Route path="/sale" element={<Sale />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/:userId/create-listing" element={<CreateListing />} />
-          <Route path="/update-listing/:listingId" element={<UpdateListing />} />
-        </Route>
-
-        {/* Additional Routes */}
-        <Route path="/private" element={<Private />} />
-
-        {/* Fallback/404 Route - Uncomment if you have a NotFound component */}
-        {/* <Route path="*" element={<NotFound />} /> */}
-      </Routes>
+      <AnimatedRoutes />
       <Footer />
     </BrowserRouter>
   );
-}
+}

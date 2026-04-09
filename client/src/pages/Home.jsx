@@ -935,23 +935,23 @@ const DesktopHeroSearch = ({ searchTerm, setSearchTerm, handleSearchSubmit, navi
         </div>
 
         <div className="max-w-4xl mx-auto">
-          <motion.form initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} onSubmit={handleSearchSubmit} className="relative">
-            <div className="bg-white rounded-full shadow-2xl flex items-center p-2">
-              <div className="flex-1 flex items-center px-6 border-r border-gray-200">
-                <MapIcon className="w-5 h-5 text-gray-400 mr-3" />
+          <motion.form initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} onSubmit={handleSearchSubmit} className="relative group/form">
+            <div className="bg-white rounded-full shadow-[0_30px_70px_-15px_rgba(0,0,0,0.25)] flex items-center p-4 hover:shadow-2xl transition-all duration-300">
+              <div className="flex-1 flex items-center px-8 border-r border-gray-200">
+                <MapIcon className="w-6 h-6 text-gray-400 mr-4" />
                 <div className="flex flex-col">
-                  <label className="text-xs font-bold text-gray-900">Where</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-[#FF385C] mb-0.5">Where</label>
                   <input
                     type="text"
                     placeholder="Search destinations"
-                    className="outline-none text-sm text-gray-600 placeholder-gray-400 w-full"
+                    className="outline-none text-lg text-gray-900 placeholder-gray-400 w-full font-bold"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
               </div>
-              <button type="submit" className="bg-rose-500 hover:bg-rose-600 text-white rounded-full p-4 ml-2 transition-colors">
-                <MagnifyingGlassIcon className="w-6 h-6" />
+              <button type="submit" className="bg-rose-500 hover:bg-rose-600 text-white rounded-full p-6 ml-4 transition-all hover:scale-105 active:scale-95 shadow-lg">
+                <MagnifyingGlassIcon className="w-8 h-8 stroke-[3px]" />
               </button>
             </div>
           </motion.form>

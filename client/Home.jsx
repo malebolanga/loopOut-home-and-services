@@ -8,6 +8,7 @@ import { Fade } from "react-slideshow-image";
 import { useInView } from "react-intersection-observer";
 import "react-slideshow-image/dist/styles.css";
 import "../styles/breakpoints.scss";
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaHeart,
   FaStar,
@@ -390,9 +391,7 @@ const ErrorMessage = ({ message, onRetry }) => (
   </div>
 );
 
-/** 
- * ServiceCategoriesSlide Component: Displays a horizontal slider for service or helper categories.
- */
+// ServiceCategoriesSlide Component: Displays a horizontal slider for service or helper categories.
 const ServiceCategoriesSlide = ({ type, onSelectCategory }) => {
   const categories =
     type === "services"
@@ -419,60 +418,59 @@ const ServiceCategoriesSlide = ({ type, onSelectCategory }) => {
         : "Discover Local Events";
 
   return (
-    <div className="mb-8">
-      <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 text-center">
+    <div className="mb-12">
+      <motion.h2 
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        className="text-2xl md:text-3xl font-black text-[#222222] mb-8 text-center italic tracking-tighter"
+      >
         {title}
-      </h2>
+      </motion.h2>
       <Swiper
         slidesPerView={3}
-        spaceBetween={10}
+        spaceBetween={15}
         navigation={false}
         pagination={{ clickable: true }}
         modules={[Pagination]}
-        className="mySwiper !pb-8"
+        className="mySwiper !pb-12"
         breakpoints={{
-          640: {
-            slidesPerView: 4,
-            spaceBetween: 15,
-          },
-          768: {
-            slidesPerView: 5,
-            spaceBetween: 20,
-          },
-          1024: {
-            slidesPerView: 6,
-            spaceBetween: 25,
-          },
-          1280: {
-            slidesPerView: 7,
-            spaceBetween: 25,
-          },
+          640: { slidesPerView: 4, spaceBetween: 20 },
+          768: { slidesPerView: 5, spaceBetween: 25 },
+          1024: { slidesPerView: 6, spaceBetween: 30 },
+          1280: { slidesPerView: 8, spaceBetween: 30 },
         }}
       >
         {Object.entries(categories).map(([key, { label, icon }]) => (
-          <SwiperSlide key={key} className="flex justify-center">
-            <button
+          <SwiperSlide key={key} className="flex justify-center p-2">
+            <motion.button
+              whileHover={{ scale: 1.1, y: -5 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => onSelectCategory(key)}
-              className="flex flex-col items-center justify-center w-24 sm:w-28 focus:outline-none group"
+              className="flex flex-col items-center justify-center w-24 sm:w-32 focus:outline-none group"
             >
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-gray-300 group-hover:border-blue-500 transition-colors duration-200 flex items-center justify-center relative">
+              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-[2.5rem] overflow-hidden border-4 border-white shadow-lg group-hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)] group-hover:border-[#FF385C]/20 transition-all duration-300 flex items-center justify-center relative bg-white">
                 {categoryImages[key] ? (
                   <img
                     src={categoryImages[key]}
                     alt={label}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                 ) : (
-                  <span className="text-4xl text-gray-600 group-hover:text-blue-600 transition-colors duration-200">
+                  <span className="text-4xl text-gray-400 group-hover:text-[#FF385C] transition-colors duration-300 transform group-hover:rotate-12">
                     {icon}
                   </span>
                 )}
-                <div className="absolute inset-0 rounded-full group-hover:bg-black/10 transition-colors"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <p className="text-xs sm:text-sm font-medium text-gray-700 mt-2 text-center group-hover:text-blue-600 transition-colors duration-200 line-clamp-2">
+              <p className="text-[10px] sm:text-[11px] font-black text-gray-400 mt-4 text-center uppercase tracking-widest group-hover:text-[#222222] transition-colors duration-200 line-clamp-2">
                 {label}
               </p>
-            </button>
+              <motion.div 
+                initial={{ scaleX: 0 }}
+                whileHover={{ scaleX: 1 }}
+                className="h-1 w-12 bg-[#FF385C] rounded-full mt-2"
+              />
+            </motion.button>
           </SwiperSlide>
         ))}
       </Swiper>

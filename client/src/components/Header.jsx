@@ -128,10 +128,10 @@ export default function Header() {
 
     try {
       const token = localStorage.getItem('token') || '';
-      const headers = { 
+      const headers = {
         'Content-Type': 'application/json'
       };
-      
+
       // Only attach if it's a real token, not 'null' string or empty
       if (token && token !== 'null') {
         headers['Authorization'] = `Bearer ${token}`;
@@ -145,7 +145,7 @@ export default function Header() {
       if (res.ok) {
         const data = await res.json();
         const newUnreadCount = data.unreadCount || 0;
-        
+
         // If we have new unread notifications, ring the bell
         if (newUnreadCount > prevUnreadCount) {
           if (isSoundEnabled) {
@@ -153,7 +153,7 @@ export default function Header() {
               console.log('Audio play failed (interaction required):', e);
             });
           }
-          
+
           if (Notification.permission === 'granted' && document.hidden) {
             const latest = data.notifications?.[0];
             new Notification(latest?.title || 'LoopOut Alert', {
@@ -162,7 +162,7 @@ export default function Header() {
             });
           }
         }
-        
+
         setNotifications(data.notifications || []);
         setUnreadCount(newUnreadCount);
         setPrevUnreadCount(newUnreadCount);
@@ -174,7 +174,7 @@ export default function Header() {
 
   useEffect(() => {
     fetchNotifications();
-    
+
     // Request notification permission
     if (Notification.permission === 'default') {
       Notification.requestPermission();
@@ -187,7 +187,7 @@ export default function Header() {
         notificationSound.current.currentTime = 0;
         document.removeEventListener('click', unlockAudio);
         document.removeEventListener('touchstart', unlockAudio);
-      }).catch(() => {});
+      }).catch(() => { });
     };
 
     document.addEventListener('click', unlockAudio);
@@ -195,7 +195,7 @@ export default function Header() {
 
     // Set up polling for real-time alerts
     const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
-    
+
     return () => {
       clearInterval(interval);
       document.removeEventListener('click', unlockAudio);
@@ -244,7 +244,7 @@ export default function Header() {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const isScrollingUp = currentScrollY < lastScrollY.current;
-      
+
       if (currentScrollY < 50) {
         setIsNavVisible(true);
       } else if (isScrollingUp) {
@@ -252,7 +252,7 @@ export default function Header() {
       } else {
         setIsNavVisible(false);
       }
-      
+
       lastScrollY.current = currentScrollY;
     };
 
@@ -409,8 +409,8 @@ export default function Header() {
 
   return (
     <>
-      {/* Airbnb-style Header with Glassmorphism */}
-      <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100/50">
+      {/* Floating Glass Header - Matches Bottom Dock Aesthetic */}
+      <header ref={headerRef} className="fixed top-6 left-6 right-6 z-50 bg-white/80 backdrop-blur-3xl rounded-[2.5rem] border border-white/40 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)] overflow-visible">
         <div className="max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-6 px-4">
           <div className="flex flex-row items-center justify-between gap-3 md:gap-0 h-20">
 
@@ -431,11 +431,11 @@ export default function Header() {
                 }}
                 className="search-trigger w-full md:w-auto md:min-w-[320px] mx-auto cursor-pointer "
               >
-                <div className="border border-gray-200/60 rounded-full py-2 pl-6 pr-2 shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.1)] transition-all duration-300 cursor-pointer bg-white/90 group-hover:bg-white">
+                <div className="rounded-full py-2 pl-6 pr-2 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all duration-300 cursor-pointer bg-white group-hover:scale-[1.02]">
                   <div className="flex flex-row items-center justify-between">
                     <div className="flex flex-col flex-1 truncate px-4">
-                       <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[#FF385C]">Discovery Hub</span>
-                       <span className="text-sm font-bold text-[#222222]">Start your search</span>
+                      <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[#FF385C]">Discovery Hub</span>
+                      <span className="text-sm font-bold text-[#222222]">Start your search</span>
                     </div>
                     <div className="p-3 bg-[#FF385C] rounded-full text-white flex-shrink-0 shadow-lg group-hover:scale-105 transition-transform">
                       <MagnifyingGlassIcon className="w-4.5 h-4.5 stroke-[3px]" />
@@ -479,7 +479,7 @@ export default function Header() {
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute top-full right-0 mt-3 w-64 bg-white rounded-3xl shadow-2xl border border-gray-100 py-4 z-50 overflow-hidden"
+                        className="absolute top-full right-0 mt-3 w-72 bg-white rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border border-gray-100 py-5 z-50 overflow-hidden"
                       >
                         {[
                           { label: 'Create Stay', icon: HomeIcon, tab: 'stays' },
@@ -496,11 +496,11 @@ export default function Header() {
                             className="w-full px-6 py-4 hover:bg-rose-50 transition-colors flex items-center gap-4 text-left "
                           >
                             <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-all">
-                               <item.icon className="w-5 h-5" />
+                              <item.icon className="w-5 h-5" />
                             </div>
                             <div>
-                               <p className="text-sm font-black text-[#222222]">{item.label}</p>
-                               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Start Now</p>
+                              <p className="text-sm font-black text-[#222222]">{item.label}</p>
+                              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Start Now</p>
                             </div>
                           </button>
                         ))}
@@ -554,9 +554,9 @@ export default function Header() {
                   <Bars3Icon className="w-5 h-5" />
                   <div className="hidden md:block">
                     {currentUser ? (
-                      <img 
-                        src={currentUser.avatar} 
-                        alt="profile" 
+                      <img
+                        src={currentUser.avatar}
+                        alt="profile"
                         className="w-8 h-8 rounded-full object-cover border border-gray-200"
                         onError={(e) => {
                           e.target.onerror = null;
@@ -579,7 +579,7 @@ export default function Header() {
                     initial={{ opacity: 0, scale: 0.95, y: 10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                    className="absolute rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] w-[300px] bg-white overflow-hidden right-0 top-14 border border-gray-100 p-2 z-[60]"
+                    className="absolute rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] w-[320px] bg-white overflow-hidden right-0 top-14 border border-gray-100 p-3 z-[60]"
                   >
                     <div className="flex flex-col">
                       {currentUser ? (
@@ -588,73 +588,73 @@ export default function Header() {
                             className="p-6 bg-gradient-to-br from-gray-50 to-white rounded-[1.5rem] mb-2 flex items-center gap-4 border border-gray-100 group cursor-pointer hover:border-rose-200 transition-all"
                             onClick={() => handleNavigate('/profile')}
                           >
-                            <img 
-                              src={currentUser.avatar} 
+                            <img
+                              src={currentUser.avatar}
                               className="w-12 h-12 rounded-full object-cover ring-2 ring-rose-500 ring-offset-2"
                               alt="Profile"
                             />
                             <div className="flex-1 min-w-0">
-                               <p className="text-sm font-black text-[#222222] truncate">{currentUser.username}</p>
-                               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">View Account</p>
+                              <p className="text-sm font-black text-[#222222] truncate">{currentUser.username}</p>
+                              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">View Account</p>
                             </div>
                           </div>
-                          
+
                           <div className="p-2 space-y-1">
                             <button
                               onClick={() => handleNavigate('/dashboard')}
                               className="w-full px-5 py-3.5 bg-gray-950 hover:bg-black rounded-[1.2rem] transition-all flex items-center justify-between group shadow-lg mb-2"
                             >
                               <div className="flex items-center gap-3">
-                                 <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-                                    <Squares2X2Icon className="w-4 h-4 text-white" />
-                                 </div>
-                                 <span className="text-xs font-black uppercase tracking-widest text-white">Master Dashboard</span>
+                                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                                  <Squares2X2Icon className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="text-xs font-black uppercase tracking-widest text-white">Master Dashboard</span>
                               </div>
                               <ChevronRightIcon className="w-4 h-4 text-white/40 group-hover:translate-x-1 transition-transform" />
                             </button>
-                            
+
                             <div className="grid grid-cols-3 gap-1 px-1">
-                               <button onClick={() => handleNavigate('/wishlist')} className="p-4 rounded-xl hover:bg-gray-50 flex flex-col items-center gap-2 border border-transparent hover:border-gray-100 transition-all group">
-                                  <HeartIcon className="w-5 h-5 text-gray-400 group-hover:text-[#FF385C]" />
-                                  <span className="text-[8px] font-black uppercase tracking-tighter">Wishlist</span>
-                               </button>
-                               <button onClick={() => handleNavigate(`/${currentUser._id}/listings`)} className="p-4 rounded-xl hover:bg-gray-50 flex flex-col items-center gap-2 border border-transparent hover:border-gray-100 transition-all group">
-                                  <QueueListIcon className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
-                                  <span className="text-[8px] font-black uppercase tracking-tighter">My Listings</span>
-                               </button>
-                               <button onClick={() => handleNavigate('/messages')} className="p-4 rounded-xl hover:bg-gray-50 flex flex-col items-center gap-2 border border-transparent hover:border-gray-100 transition-all group">
-                                  <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-400 group-hover:text-green-500" />
-                                  <span className="text-[8px] font-black uppercase tracking-tighter">Messages</span>
-                               </button>
+                              <button onClick={() => handleNavigate('/wishlist')} className="p-4 rounded-xl hover:bg-gray-50 flex flex-col items-center gap-2 border border-transparent hover:border-gray-100 transition-all group">
+                                <HeartIcon className="w-5 h-5 text-gray-400 group-hover:text-[#FF385C]" />
+                                <span className="text-[8px] font-black uppercase tracking-tighter">Wishlist</span>
+                              </button>
+                              <button onClick={() => handleNavigate(`/${currentUser._id}/listings`)} className="p-4 rounded-xl hover:bg-gray-50 flex flex-col items-center gap-2 border border-transparent hover:border-gray-100 transition-all group">
+                                <QueueListIcon className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+                                <span className="text-[8px] font-black uppercase tracking-tighter">My Listings</span>
+                              </button>
+                              <button onClick={() => handleNavigate('/messages')} className="p-4 rounded-xl hover:bg-gray-50 flex flex-col items-center gap-2 border border-transparent hover:border-gray-100 transition-all group">
+                                <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-400 group-hover:text-green-500" />
+                                <span className="text-[8px] font-black uppercase tracking-tighter">Messages</span>
+                              </button>
                             </div>
 
                             <div className="h-px bg-gray-50 my-2 mx-4" />
 
                             <button onClick={() => handleNavigate(`/${currentUser._id}/create-listing`)} className="w-full px-4 py-3 hover:bg-rose-50 rounded-xl transition-all flex items-center justify-between group">
-                               <div className="flex items-center gap-3">
-                                  <PlusCircleIcon className="w-5 h-5 text-[#FF385C] group-hover:scale-110 transition-transform" />
-                                  <span className="text-xs font-black uppercase tracking-widest text-gray-700">Create Listing</span>
-                               </div>
-                               <ChevronRightIcon className="w-3 h-3 text-gray-300 group-hover:translate-x-1 transition-transform" />
+                              <div className="flex items-center gap-3">
+                                <PlusCircleIcon className="w-5 h-5 text-[#FF385C] group-hover:scale-110 transition-transform" />
+                                <span className="text-xs font-black uppercase tracking-widest text-gray-700">Create Listing</span>
+                              </div>
+                              <ChevronRightIcon className="w-3 h-3 text-gray-300 group-hover:translate-x-1 transition-transform" />
                             </button>
 
                             <button onClick={() => handleNavigate('/notifications')} className="w-full px-4 py-3 hover:bg-gray-50 rounded-xl transition-all flex items-center justify-between group">
-                               <div className="flex items-center gap-3">
-                                  <div className="relative">
-                                     <BellIcon className="w-5 h-5 text-gray-400" />
-                                     {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#FF385C] rounded-full border border-white" />}
-                                  </div>
-                                  <span className="text-xs font-bold text-gray-700">Notifications</span>
-                               </div>
-                               <span className="text-[10px] font-black bg-gray-100 px-2 py-1 rounded-md text-gray-500">{unreadCount}</span>
+                              <div className="flex items-center gap-3">
+                                <div className="relative">
+                                  <BellIcon className="w-5 h-5 text-gray-400" />
+                                  {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#FF385C] rounded-full border border-white" />}
+                                </div>
+                                <span className="text-xs font-bold text-gray-700">Notifications</span>
+                              </div>
+                              <span className="text-[10px] font-black bg-gray-100 px-2 py-1 rounded-md text-gray-500">{unreadCount}</span>
                             </button>
 
                             <button onClick={() => handleNavigate('/trips')} className="w-full px-4 py-3 hover:bg-gray-50 rounded-xl transition-all flex items-center justify-between group">
-                               <div className="flex items-center gap-3">
-                                  <MapPinIcon className="w-5 h-5 text-gray-400" />
-                                  <span className="text-xs font-bold text-gray-700">My Expeditions</span>
-                               </div>
-                               <ChevronRightIcon className="w-3 h-3 text-gray-300 group-hover:translate-x-1 transition-transform" />
+                              <div className="flex items-center gap-3">
+                                <MapPinIcon className="w-5 h-5 text-gray-400" />
+                                <span className="text-xs font-bold text-gray-700">My Expeditions</span>
+                              </div>
+                              <ChevronRightIcon className="w-3 h-3 text-gray-300 group-hover:translate-x-1 transition-transform" />
                             </button>
                           </div>
 
@@ -669,48 +669,48 @@ export default function Header() {
                           </div>
                         </>
                       ) : (
-                      <>
-                        <button
-                          onClick={() => handleNavigate('/sign-up')}
-                          className="px-4 py-3 hover:bg-gray-100 transition font-semibold text-left text-[#222222] flex items-center gap-2"
-                        >
-                          <PlusCircleIcon className="w-4 h-4" />
-                          Sign up
-                        </button>
-                        <button
-                          onClick={() => handleNavigate('/sign-in')}
-                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
-                        >
-                          <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                          Log in
-                        </button>
-                        <div className="border-t border-[#DDDDDD] my-1"></div>
-                        <button
-                          onClick={() => handleNavigate('/host')}
-                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
-                        >
-                          <HomeIcon className="w-4 h-4" />
-                          loopOut your home
-                        </button>
-                        <button
-                          onClick={() => handleNavigate('/help')}
-                          className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
-                        >
-                          <QuestionMarkCircleIcon className="w-4 h-4" />
-                          Help Center
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                        <>
+                          <button
+                            onClick={() => handleNavigate('/sign-up')}
+                            className="px-4 py-3 hover:bg-gray-100 transition font-semibold text-left text-[#222222] flex items-center gap-2"
+                          >
+                            <PlusCircleIcon className="w-4 h-4" />
+                            Sign up
+                          </button>
+                          <button
+                            onClick={() => handleNavigate('/sign-in')}
+                            className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
+                          >
+                            <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                            Log in
+                          </button>
+                          <div className="border-t border-[#DDDDDD] my-1"></div>
+                          <button
+                            onClick={() => handleNavigate('/host')}
+                            className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
+                          >
+                            <HomeIcon className="w-4 h-4" />
+                            loopOut your home
+                          </button>
+                          <button
+                            onClick={() => handleNavigate('/help')}
+                            className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
+                          >
+                            <QuestionMarkCircleIcon className="w-4 h-4" />
+                            Help Center
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Language Dropdown */}
               {showLanguageDropdown && (
                 <div
                   ref={languageDropdownRef}
-                  className="absolute rounded-xl shadow-lg w-[240px] bg-white overflow-hidden right-0 top-12 text-sm border border-[#DDDDDD] max-h-[400px] overflow-y-auto hidden md:block"
+                  className="absolute rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] w-[260px] bg-white overflow-hidden right-0 top-12 text-sm border border-gray-100 max-h-[400px] overflow-y-auto hidden md:block z-[60]"
                 >
                   <div className="p-4 border-b border-[#DDDDDD] font-semibold text-[#222222]">
                     Choose a language
@@ -738,12 +738,12 @@ export default function Header() {
 
         {/* Full Screen Search Modal - Simplified */}
         {showSearch && (
-          <div className="search-container absolute top-20 left-0 right-0 bg-white border-b border-gray-200 shadow-xl py-6 animate-[fadeIn_0.2s_ease-in-out]">
-            <div className="max-w-3xl mx-auto px-6">
+          <div className="search-container absolute top-[calc(100%+1rem)] left-0 right-0 bg-white shadow-[0_40px_80px_-15px_rgba(0,0,0,0.25)] py-12 px-8 rounded-[3rem] animate-[slideDown_0.4s_cubic-bezier(0.16,1,0.3,1)] z-[100]">
+            <div className="max-w-4xl mx-auto px-6">
               {/* Search Input - Larger & Cleaner */}
               <div className="relative">
-                <form onSubmit={handleSearch} className="bg-white rounded-2xl shadow-md border border-gray-200 flex items-center p-2 hover:shadow-lg transition-shadow">
-                  <div className="flex-1 px-6 py-4">
+                <form onSubmit={handleSearch} className="relative group/form bg-white rounded-[3rem] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] flex items-center p-3 hover:shadow-2xl transition-all duration-500">
+                  <div className="flex-1 px-8 py-6">
                     <label className="block text-xs font-semibold text-gray-900 uppercase tracking-wider mb-1">Search</label>
                     <input
                       ref={searchInputRef}
@@ -751,7 +751,7 @@ export default function Header() {
                       placeholder="Where to?"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-transparent outline-none text-gray-900 text-lg placeholder-gray-400 font-medium"
+                      className="w-full bg-transparent outline-none text-gray-900 text-3xl placeholder-gray-400 font-black tracking-tight"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
@@ -762,15 +762,15 @@ export default function Header() {
                   </div>
                   <button
                     type="submit"
-                    className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl p-2 transition-all flex items-center justify-center min-w-[50px] h-[50px] shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+                    className="bg-rose-600 hover:bg-rose-700 text-white rounded-2xl p-4 transition-all flex items-center justify-center min-w-[70px] h-[70px] shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
                   >
-                    <MagnifyingGlassIcon className="w-5 h-5 stroke-[2.5px]" />
+                    <MagnifyingGlassIcon className="w-8 h-8 stroke-[3px]" />
                   </button>
                 </form>
 
                 {/* --- Suggestions Dropdown --- */}
                 {suggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 bg-white mt-2 rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] animate-[slideDown_0.2s_ease-out]">
+                  <div className="absolute top-full left-0 right-0 bg-white mt-4 rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden z-[100] animate-[slideDown_0.3s_ease-out]">
                     <div className="py-2">
                       {suggestions.map((item, index) => (
                         <button
@@ -789,7 +789,7 @@ export default function Header() {
                             setSearchTerm('');
                             setSuggestions([]);
                           }}
-                          className="w-full px-6 py-3 flex items-center gap-4 hover:bg-gray-50 transition-colors text-left group"
+                          className="w-full px-6 py-4 flex items-center gap-4 hover:bg-rose-500/5 transition-all duration-300 text-left group/item border-b border-gray-50 last:border-0"
                         >
                           <div className={`p-2 rounded-lg ${item.isHistory ? 'bg-gray-100' : 'bg-rose-50'} text-gray-500`}>
                             {item.isHistory ? <MapPinIcon className="w-4 h-4" /> : <MagnifyingGlassIcon className="w-4 h-4 text-rose-500" />}
@@ -832,7 +832,7 @@ export default function Header() {
                           navigate(url);
                           setShowSearch(false);
                         }}
-                        className="group flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-full border border-gray-200 hover:border-gray-300 transition-all text-left"
+                        className="group flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-full transition-all text-left"
                       >
                         <MagnifyingGlassIcon className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
                         <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
@@ -863,7 +863,7 @@ export default function Header() {
                         }}
                         className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition "
                       >
-                        <div className="w-12 h-12 flex items-center justify-center bg-gray-50 group-hover:bg-white border border-gray-200 group-hover:border-gray-300 rounded-xl transition-all shadow-sm group-hover:shadow-md group-hover:-translate-y-0.5">
+                        <div className="w-12 h-12 flex items-center justify-center bg-gray-50 group-hover:bg-white rounded-xl transition-all shadow-sm group-hover:shadow-md group-hover:-translate-y-0.5">
                           <span className="text-xl">{category.icon}</span>
                         </div>
                         <span className="text-xs font-medium text-gray-600 group-hover:text-gray-900 text-center leading-tight">
@@ -880,7 +880,7 @@ export default function Header() {
       </header>
       <AnimatePresence>
         {isNavVisible && (
-          <motion.div 
+          <motion.div
             initial={{ y: 120, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 120, opacity: 0 }}
@@ -888,24 +888,24 @@ export default function Header() {
             className="md:hidden fixed bottom-6 left-6 right-6 z-50 rounded-[2.8rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] overflow-visible"
           >
             <div className="absolute inset-0 bg-white/80 backdrop-blur-3xl rounded-[2.8rem] border border-white/40" />
-            
-            <div className="flex justify-around items-center h-20 px-6 relative z-10">
+
+            <div className="flex justify-around items-center h-17 px-6 relative z-10">
               {/* Active Tab Indicator Pill */}
               <div className="absolute inset-0 flex justify-around items-center px-6 pointer-events-none">
-                 {[0, 1, 2, 3].map((_, i) => (
-                   <div key={i} className="flex-1 flex justify-center h-full items-center">
-                      { (i === 0 && location.pathname === '/') || 
-                        (i === 1 && location.pathname === '/trips') || 
-                        (i === 2 && location.pathname === '/messages') || 
-                        (i === 3 && (location.pathname === '/profile' || location.pathname === '/sign-in')) ? (
-                        <motion.div 
-                          layoutId="navTab"
-                          className="w-14 h-14 bg-rose-500/10 rounded-2xl blur-sm"
-                          transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                        />
-                      ) : null }
-                   </div>
-                 ))}
+                {[0, 1, 2, 3].map((_, i) => (
+                  <div key={i} className="flex-1 flex justify-center h-full items-center">
+                    {(i === 0 && location.pathname === '/') ||
+                      (i === 1 && location.pathname === '/trips') ||
+                      (i === 2 && location.pathname === '/messages') ||
+                      (i === 3 && (location.pathname === '/profile' || location.pathname === '/sign-in')) ? (
+                      <motion.div
+                        layoutId="navTab"
+                        className="w-14 h-14 bg-rose-500/10 rounded-2xl blur-sm"
+                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                      />
+                    ) : null}
+                  </div>
+                ))}
               </div>
 
               <Link to="/" className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${location.pathname === '/' ? 'text-rose-600' : 'text-gray-400'}`}>
@@ -917,16 +917,16 @@ export default function Header() {
 
               <Link to="/trips" className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${location.pathname === '/trips' ? 'text-rose-600' : 'text-gray-400'}`}>
                 <motion.div whileTap={{ scale: 0.85 }}>
-                   <QueueListIcon className={`w-6 h-6 ${location.pathname === '/trips' ? 'stroke-[2.5px]' : 'stroke-[2px]'}`} />
+                  <QueueListIcon className={`w-6 h-6 ${location.pathname === '/trips' ? 'stroke-[2.5px]' : 'stroke-[2px]'}`} />
                 </motion.div>
                 <span className="text-[9px] font-black uppercase tracking-widest">Trips</span>
               </Link>
-              
+
               <Link
                 to="/trip"
-                className="relative -mt-14 flex flex-col items-center group"
+                className="relative -mt-8 flex flex-col items-center"
               >
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   className="relative"
@@ -955,12 +955,12 @@ export default function Header() {
                 </motion.div>
                 <span className="text-[9px] font-black uppercase tracking-widest text-center">Inbox</span>
               </Link>
-              
+
               <button
                 onClick={handleMobileProfileClick}
                 className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'text-rose-600' : 'text-gray-400'}`}
               >
-                <motion.div 
+                <motion.div
                   whileTap={{ scale: 0.85 }}
                   className={`w-10 h-10 rounded-2xl border-2 transition-all duration-300 ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'border-rose-500 ring-4 ring-rose-500/10' : 'border-gray-200'}`}
                 >
@@ -979,9 +979,9 @@ export default function Header() {
         )}
       </AnimatePresence>
 
-      {/* Spacer for fixed header */}
-      <div className="h-20"></div>
-      <div className="md:hidden h-20"></div>
+      {/* Spacer for floating top header */}
+      <div className="h-32"></div>
+      <div className="md:hidden h-6"></div>
     </>
   );
 }
