@@ -788,32 +788,32 @@ const ServicePage = () => {
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
-      {/* Navigation Header */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-transparent'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+      {/* Navigation Header - Transparent on top of image */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-50/90 backdrop-blur-md shadow-sm border-b border-slate-200/50' : 'bg-transparent'}`}>
+        <div className="max-w-screen-xl mx-auto px-4 md:px-6">
+          <div className="flex items-center justify-between h-16 md:h-20">
             <button
               onClick={() => navigate(-1)}
-              className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100 text-gray-900' : 'hover:bg-white/20 text-white'}`}
+              className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
             >
-              <FaArrowLeft className="text-xl" />
+              <FaArrowLeft className="text-lg" />
             </button>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={handleShare}
-                className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100 text-gray-900' : 'hover:bg-white/20 text-white'}`}
+                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
               >
-                <FiShare2 className="text-xl" />
+                <FiShare2 className="text-lg" />
               </button>
               <button
                 onClick={toggleFavorite}
-                className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}
+                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 backdrop-blur-sm'}`}
               >
                 {isFavorite ? (
-                  <FaHeart className="text-xl text-rose-500" />
+                  <FaHeart className="text-lg text-rose-500" />
                 ) : (
-                  <FaRegHeart className={`text-xl ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
+                  <FaRegHeart className={`text-lg ${isScrolled ? 'text-slate-900' : 'text-white'}`} />
                 )}
               </button>
             </div>
@@ -821,54 +821,54 @@ const ServicePage = () => {
         </div>
       </nav>
 
-      {/* Hero Image Gallery */}
-      <div className="relative h-[50vh] md:h-[60vh] bg-gray-900">
+      {/* Hero Image Gallery - Full Width */}
+      <div className="relative h-[400px] md:h-[500px] lg:h-[600px] bg-slate-900 overflow-hidden">
         {service.imageUrls?.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-full p-2">
+          <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-full w-full">
             <div
-              className="md:col-span-2 md:row-span-2 relative rounded-xl overflow-hidden cursor-pointer"
+              className="md:col-span-2 md:row-span-2 relative cursor-pointer group overflow-hidden"
               onClick={() => openFullScreenGallery(0)}
             >
               <img
                 src={service.imageUrls[0]}
                 alt={service.name}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 onError={(e) => {
                   e.target.src = 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=80';
                 }}
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
             </div>
 
             {service.imageUrls.slice(1, 5).map((url, index) => (
               <div
                 key={index}
-                className="relative rounded-xl overflow-hidden cursor-pointer  hidden md:block"
+                className="relative cursor-pointer hidden md:block group overflow-hidden"
                 onClick={() => openFullScreenGallery(index + 1)}
               >
                 <img
                   src={url}
                   alt={`${service.name} ${index + 2}`}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                   onError={(e) => {
                     e.target.src = 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=600&q=80';
                   }}
                 />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
               </div>
             ))}
 
             <button
               onClick={() => openFullScreenGallery(0)}
-              className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 hover:bg-white transition-colors shadow-lg"
+              className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50"
             >
-              <FaImages />
-              Show all photos
+              <FaImages className="text-lg" />
+              <span>Show all {service.imageUrls.length} photos</span>
             </button>
           </div>
         ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-            <FaImages className="text-6xl text-gray-400" />
+          <div className="w-full h-full bg-slate-200 flex items-center justify-center">
+            <FaImages className="text-6xl text-slate-400" />
           </div>
         )}
       </div>

@@ -404,13 +404,27 @@ export default function Header() {
     }
   };
 
-  // Hide header on wishlist page
-  if (location.pathname === '/wishlist') return null;
+  // Hide header and bottom menu on specific pages
+  if (
+    location.pathname === '/wishlist' ||
+    location.pathname.startsWith('/listing/') ||
+    location.pathname.startsWith('/helper/') ||
+    location.pathname.startsWith('/service/') ||
+    location.pathname.startsWith('/event/')
+  ) {
+    return null;
+  }
 
   return (
     <>
       {/* Floating Glass Header - Matches Bottom Dock Aesthetic */}
-      <header ref={headerRef} className="fixed top-6 left-6 right-6 z-50 bg-white/80 backdrop-blur-3xl rounded-[2.5rem] border border-white/40 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)] overflow-visible">
+      <motion.header
+        initial={{ y: 0 }}
+        animate={{ y: isNavVisible ? 0 : -120 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 120 }}
+        ref={headerRef}
+        className="fixed top-6 left-6 right-6 z-50 bg-slate-50/80 backdrop-blur-3xl rounded-[2.5rem] border border-white/40 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.1)] overflow-visible"
+      >
         <div className="max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-6 px-4">
           <div className="flex flex-row items-center justify-between gap-3 md:gap-0 h-20">
 
@@ -431,7 +445,7 @@ export default function Header() {
                 }}
                 className="search-trigger w-full md:w-auto md:min-w-[320px] mx-auto cursor-pointer "
               >
-                <div className="rounded-full py-2 pl-6 pr-2 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all duration-300 cursor-pointer bg-white group-hover:scale-[1.02]">
+                <div className="rounded-full py-2 pl-6 pr-2 shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer bg-slate-100/50 group-hover:scale-[1.02]">
                   <div className="flex flex-row items-center justify-between">
                     <div className="flex flex-col flex-1 truncate px-4">
                       <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[#FF385C]">Discovery Hub</span>
@@ -549,7 +563,7 @@ export default function Header() {
                     setShowProfileDropdown(!showProfileDropdown);
                     setShowLanguageDropdown(false);
                   }}
-                  className="p-4 md:py-1 md:px-2 border-[1px] border-[#DDDDDD] flex flex-row items-center gap-3 rounded-full cursor-pointer hover:shadow-md transition bg-white text-[#717171]"
+                  className="p-4 md:py-1 md:px-2 border-[1px] border-[#DDDDDD] flex flex-row items-center gap-3 rounded-full cursor-pointer hover:shadow-md transition bg-slate-100/50 text-[#717171]"
                 >
                   <Bars3Icon className="w-5 h-5" />
                   <div className="hidden md:block">
@@ -579,7 +593,7 @@ export default function Header() {
                     initial={{ opacity: 0, scale: 0.95, y: 10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                    className="absolute rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] w-[320px] bg-white overflow-hidden right-0 top-14 border border-gray-100 p-3 z-[60]"
+                    className="absolute rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] w-[320px] bg-slate-50 overflow-hidden right-0 top-14 border border-gray-100 p-3 z-[60]"
                   >
                     <div className="flex flex-col">
                       {currentUser ? (
@@ -738,11 +752,11 @@ export default function Header() {
 
         {/* Full Screen Search Modal - Simplified */}
         {showSearch && (
-          <div className="search-container absolute top-[calc(100%+1rem)] left-0 right-0 bg-white shadow-[0_40px_80px_-15px_rgba(0,0,0,0.25)] py-12 px-8 rounded-[3rem] animate-[slideDown_0.4s_cubic-bezier(0.16,1,0.3,1)] z-[100]">
+          <div className="search-container absolute top-[calc(100%+1rem)] left-0 right-0 bg-slate-50 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.25)] py-12 px-8 rounded-[3rem] animate-[slideDown_0.4s_cubic-bezier(0.16,1,0.3,1)] z-[100]">
             <div className="max-w-4xl mx-auto px-6">
               {/* Search Input - Larger & Cleaner */}
               <div className="relative">
-                <form onSubmit={handleSearch} className="relative group/form bg-white rounded-[3rem] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] flex items-center p-3 hover:shadow-2xl transition-all duration-500">
+                <form onSubmit={handleSearch} className="relative group/form bg-slate-50 rounded-[3rem] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] flex items-center p-3 hover:shadow-2xl transition-all duration-500">
                   <div className="flex-1 px-8 py-6">
                     <label className="block text-xs font-semibold text-gray-900 uppercase tracking-wider mb-1">Search</label>
                     <input
@@ -877,7 +891,7 @@ export default function Header() {
             </div>
           </div>
         )}
-      </header>
+      </motion.header>
       <AnimatePresence>
         {isNavVisible && (
           <motion.div

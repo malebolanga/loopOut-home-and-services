@@ -35,6 +35,7 @@ import {
   FaStar,
   FaCheckCircle,
   FaMapMarkerAlt,
+  FaImages,
   FaParking,
   FaSwimmingPool,
   FaWifi,
@@ -1990,36 +1991,44 @@ export default function Listing() {
   const roomTotal = listing.regularPrice * nights;
   const breakfastTotal = mealPlan === 'breakfast' ? breakfastPrice * nights : 0;
   const grandTotal = roomTotal + breakfastTotal;
-
   return (
     <div className="min-h-screen">
       {/* Navigation Header */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-sm' : 'bg-transparent'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <button onClick={() => navigate(-1)} className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}>
-              <FaArrowLeft className={`text-xl ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
+      {/* Navigation Header - Transparent on top of image */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-50/90 backdrop-blur-md shadow-sm border-b border-slate-200/50' : 'bg-transparent'}`}>
+        <div className="max-w-screen-xl mx-auto px-4 md:px-6">
+          <div className="flex items-center justify-between h-16 md:h-20">
+            <button 
+              onClick={() => navigate(-1)} 
+              className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
+            >
+              <FaArrowLeft className="text-lg" />
             </button>
 
             <div className="flex items-center gap-2">
-              <button onClick={handleShare} className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}>
-                <FiShare2 className={`text-xl ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
+              <button 
+                onClick={handleShare} 
+                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
+              >
+                <FiShare2 className="text-lg" />
               </button>
-              <button onClick={toggleFavorite} className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}>
-                {isFavorite ? <FaHeart className="text-xl text-rose-500" /> : <FiHeart className={`text-xl ${isScrolled ? 'text-gray-900' : 'text-white'}`} />}
+              <button 
+                onClick={toggleFavorite} 
+                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 backdrop-blur-sm'}`}
+              >
+                {isFavorite ? <FaHeart className="text-lg text-rose-500" /> : <FiHeart className={`text-lg ${isScrolled ? 'text-slate-900' : 'text-white'}`} />}
               </button>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Image Gallery Grid - KEPT EXACTLY AS YOU WANTED */}
-      <div className="relative pt-0">
-        <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-[300px] md:h-[400px] lg:h-[500px] max-w-screen-xl mx-auto px-4 md:px-6">
-
+      {/* Image Gallery Grid - Full Width Airbnb Style */}
+      <div className="relative w-full overflow-hidden bg-slate-900">
+        <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-[400px] md:h-[500px] lg:h-[600px] w-full">
           {/* Main Image - Takes left half (2 cols, 2 rows) */}
           <div
-            className="md:col-span-2 md:row-span-2 relative overflow-hidden cursor-pointer group rounded-l-xl md:rounded-l-2xl md:rounded-r-none"
+            className="md:col-span-2 md:row-span-2 relative overflow-hidden cursor-pointer group"
             onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
           >
             <ImageWithFallback
@@ -2027,49 +2036,36 @@ export default function Listing() {
               imageUrls={listing.imageUrls}
               alt={listing.name}
               type="property"
-              className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
           </div>
 
           {/* Side Images - 2x2 grid on right */}
-          {listing.imageUrls.slice(1, 5).map((url, index) => {
-            // Determine border radius based on position
-            const getBorderRadius = () => {
-              if (index === 0) return 'rounded-tr-xl md:rounded-tr-2xl'; // Top right
-              if (index === 1) return 'rounded-none'; // Top middle-right
-              if (index === 2) return 'rounded-none'; // Bottom middle-right
-              if (index === 3) return 'rounded-br-xl md:rounded-br-2xl'; // Bottom right
-              return '';
-            };
-
-            return (
-              <div
-                key={index}
-                className={`relative overflow-hidden cursor-pointer hidden md:block ${getBorderRadius()}`}
-                onClick={() => { setGalleryIndex(index + 1); setShowFullGallery(true); }}
-              >
-                <ImageWithFallback
-                  src={url}
-                  imageUrls={listing.imageUrls.slice(index + 1)}
-                  alt={`${listing.name} ${index + 2}`}
-                  type="property"
-                  className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
-              </div>
-            );
-          })}
+          {listing.imageUrls.slice(1, 5).map((url, index) => (
+            <div
+              key={index}
+              className="relative overflow-hidden cursor-pointer hidden md:block group"
+              onClick={() => { setGalleryIndex(index + 1); setShowFullGallery(true); }}
+            >
+              <ImageWithFallback
+                src={url}
+                imageUrls={listing.imageUrls.slice(index + 1)}
+                alt={`${listing.name} ${index + 2}`}
+                type="property"
+                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
+            </div>
+          ))}
 
           {/* Show All Photos Button */}
           <button
             onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
-            className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-2.5 rounded-lg font-medium text-sm text-gray-800 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg border border-gray-200"
+            className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
-            Show all photos
+            <FaImages className="text-lg" />
+            <span>Show all {listing.imageUrls.length} photos</span>
           </button>
         </div>
       </div>

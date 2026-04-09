@@ -71,6 +71,16 @@ const Footer = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Hide footer on specific detail pages
+  if (
+    location.pathname.startsWith('/listing/') ||
+    location.pathname.startsWith('/helper/') ||
+    location.pathname.startsWith('/service/') ||
+    location.pathname.startsWith('/event/')
+  ) {
+    return null;
+  }
+
   return (
     <>
   

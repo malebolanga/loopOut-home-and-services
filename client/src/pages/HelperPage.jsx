@@ -1999,105 +1999,33 @@ export default function HelperPage() {
 
   const serviceEquipmentOptions = equipmentOptions[helper.type] || equipmentOptions.default;
 
-  // Airbnb-style image gallery layout
-  const renderImageGallery = () => {
-    if (!helper.imageUrls || helper.imageUrls.length === 0) return null;
-
-    const images = helper.imageUrls;
-    const mainImage = images[0];
-    const sideImages = images.slice(1, 5);
-
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] rounded-xl overflow-hidden mb-0">
-        {/* Main large image */}
-        <div
-          className="relative h-full cursor-pointer group"
-          onClick={() => openFullScreenGallery(0)}
-        >
-          <img
-            src={mainImage}
-            alt={helper.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            onError={(e) => {
-              e.target.src = 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80';
-            }}
-          />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-        </div>
-
-        {/* Side images grid */}
-        <div className="hidden md:grid grid-cols-2 gap-2 h-full">
-          {sideImages.map((url, index) => (
-            <div
-              key={index}
-              className="relative h-full cursor-pointer group overflow-hidden"
-              onClick={() => openFullScreenGallery(index + 1)}
-            >
-              <img
-                src={url}
-                alt={`${helper.name} ${index + 2}`}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                onError={(e) => {
-                  e.target.src = 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=400&q=80';
-                }}
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-
-              {/* Show all photos button on last image */}
-              {index === 3 && images.length > 5 && (
-                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <span className="text-white font-semibold flex items-center gap-2">
-                    <FaExpand /> Show all photos
-                  </span>
-                </div>
-              )}
-            </div>
-          ))}
-
-          {/* Fill empty slots if less than 4 side images */}
-          {sideImages.length < 4 && Array(4 - sideImages.length).fill(null).map((_, i) => (
-            <div key={`empty-${i}`} className="bg-gray-100 h-full" />
-          ))}
-        </div>
-
-        {/* Mobile: Show all photos button */}
-        <button
-          onClick={() => openFullScreenGallery(0)}
-          className="md:hidden absolute bottom-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-lg"
-        >
-          <FaExpand /> Show all photos
-        </button>
-      </div>
-    );
-  };
-
   return (
-    <div className="min-h-screen">
-      {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-sm' : 'bg-transparent'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-0 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+    <div className="min-h-screen bg-slate-50">
+      {/* Navigation - Transparent on top of image */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-50/90 backdrop-blur-md shadow-sm border-b border-slate-200/50' : 'bg-transparent'}`}>
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="flex items-center justify-between h-16 md:h-20">
             <button
               onClick={() => navigate(-1)}
-              className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}
+              className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
             >
-              <FaArrowLeft className={`text-xl ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
+              <FaArrowLeft className="text-xl" />
             </button>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={handleShare}
-                className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}
+                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
               >
-                <FiShare2 className={`text-xl ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
+                <FiShare2 className="text-xl" />
               </button>
               <button
                 onClick={toggleFavorite}
-                className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}
+                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 backdrop-blur-sm'}`}
               >
                 {isFavorite ?
                   <FaHeart className="text-xl text-rose-500" /> :
-                  <FiHeart className={`text-xl ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
+                  <FiHeart className={`text-xl ${isScrolled ? 'text-slate-900' : 'text-white'}`} />
                 }
               </button>
             </div>
@@ -2105,36 +2033,60 @@ export default function HelperPage() {
         </div>
       </nav>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-        {/* Header Section */}
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-2">
+      {/* Image Gallery - Full Width */}
+      <div className="w-full">
+        {/* Airbnb-style image gallery layout */}
+        {helper.imageUrls && helper.imageUrls.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] lg:h-[600px] w-full bg-slate-900 overflow-hidden">
+            <div className="relative h-full cursor-pointer group overflow-hidden" onClick={() => openFullScreenGallery(0)}>
+              <img src={helper.imageUrls[0]} alt={helper.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
+            </div>
+            <div className="hidden md:grid grid-cols-2 gap-2 h-full">
+              {helper.imageUrls.slice(1, 5).map((url, index) => (
+                <div key={index} className="relative h-full cursor-pointer group overflow-hidden" onClick={() => openFullScreenGallery(index + 1)}>
+                  <img src={url} alt={`${helper.name} ${index + 2}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
+                </div>
+              ))}
+              {helper.imageUrls.length < 5 && Array(4 - Math.min(4, helper.imageUrls.length - 1)).fill(null).map((_, i) => (
+                <div key={`empty-${i}`} className="bg-slate-800 h-full" />
+              ))}
+            </div>
+            <button onClick={() => openFullScreenGallery(0)} className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50 z-10">
+              <FaExpand /> Show all {helper.imageUrls.length} photos
+            </button>
+          </div>
+        )}
+      </div>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Content Section */}
+        <div className="mb-10 pt-8 border-b border-slate-200/60 pb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
             {getProfessionalTitle(helper.type)} services by {helper.name}
           </h1>
-          <div className="flex flex-wrap items-center gap-4 text-sm">
-            <div className="flex items-center gap-1">
-              <FaStar className="text-[#FFB400]" />
-           
-                <h2 className="text-sm font-semibold text-gray-900">
-                  {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}   -   {commentCount}  reviews
-                </h2>
+          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
+            <div className="flex items-center gap-2">
+              <FaStar className="text-amber-400" />
+              <span className="font-semibold text-slate-900 text-base">
+                {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}
+              </span>
+              <span>·</span>
+              <span className="underline hover:text-slate-900 transition-colors cursor-pointer">{commentCount} reviews</span>
             </div>
-            <span className="text-gray-300">·</span>
-            <div className="flex items-center gap-1 text-gray-700">
+            <span className="text-slate-300">·</span>
+            <div className="flex items-center gap-2 text-slate-700">
               <FaMedal className="text-rose-500" />
-              <span>Superhelper</span>
+              <span className="font-medium">Superhelper</span>
             </div>
-            <span className="text-gray-300">·</span>
-            <div className="flex items-center gap-1 text-gray-700 underline cursor-pointer">
-              <FaMapMarkerAlt />
+            <span className="text-slate-300">·</span>
+            <div className="flex items-center gap-2 text-slate-700 underline font-medium cursor-pointer hover:text-slate-900 transition-colors">
+              <FaMapMarkerAlt className="text-slate-400" />
               <span>{helper.address || 'Johannesburg, South Africa'}</span>
             </div>
           </div>
         </div>
-
-        {/* Image Gallery */}
-        {renderImageGallery()}
 
         {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mt-8">

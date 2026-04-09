@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 import PrivateRoute from "./components/PrivateRoute";
 import AuthSessionManager from "./components/AuthSessionManager";
 import { useEffect } from "react";
+import ScrollToTop from "./components/ScrollToTop";
 import { useSelector, useDispatch } from "react-redux";
 import { signOutUserSuccess } from "./redux/user/userSlice";
 import { AnimatePresence } from 'framer-motion';
@@ -264,6 +265,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthSessionManager />
       <Header />
       <AnimatedRoutes />

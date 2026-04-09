@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 // eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
   FaMapMarkerAlt, FaPhone, FaUser,
@@ -13,10 +13,10 @@ import {
   FaTimes,
   FaFileImage, FaFilePdf, FaMusic, FaFutbol, FaPalette,
   FaUsers as FaCommunity, FaEllipsisH,
-  FaStar, FaSpinner, FaCheckCircle,
+  FaStar, FaSpinner, FaCheckCircle, FaHeart,
   FaInstagram, FaFacebook, FaLinkedin, FaTwitter
 } from 'react-icons/fa';
-import {  } from 'react-icons/fi';
+import { FiShare2, FiHeart } from 'react-icons/fi';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Zoom, Thumbs } from 'swiper/modules';
 import 'swiper/css';
@@ -38,6 +38,7 @@ export default function EventPage() {
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [attachments, setAttachments] = useState([]);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
   // Social Media Verification States
@@ -109,6 +110,12 @@ export default function EventPage() {
   const { isFavorite, toggleFavorite } = useWishlist(event, 'event');
 
   const RECENTLY_VIEWED_KEY = 'recentlyViewed';
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 100);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (event) {
@@ -618,22 +625,80 @@ export default function EventPage() {
   const eventTypeInfo = getEventTypeInfo(event.type);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Navigation Button */}
-      <div className="fixed bottom-4 left-4 z-50">
-        <button
-          onClick={() => {
-            const routeMap = {
-              default: '/event-home-page'
-            };
-            navigate(routeMap[event?.type?.toLowerCase()] || routeMap.default);
-          }}
-          className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
-          title="Go back to listings"
+    <div className="min-h-screen bg-slate-50">
+      {/* Navigation Header - Transparent on top of image */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-50/90 backdrop-blur-md shadow-sm border-b border-slate-200/50' : 'bg-transparent'}`}>
+        <div className="max-w-screen-xl mx-auto px-4 md:px-6">
+          <div className="flex items-center justify-between h-16 md:h-20">
+            <button
+              onClick={() => navigate(-1)}
+              className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
+            >
+              <FaArrowLeft className="text-lg" />
+            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({ title: event.name, url: window.location.href });
+                  } else {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Link copied!');
+                  }
+                }}
+                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
+              >
+                <FiShare2 className="text-lg" />
+              </button>
+              <button
+                onClick={toggleFavorite}
+                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 backdrop-blur-sm'}`}
+              >
+                {isFavorite ? <FaHeart className="text-lg text-rose-500" /> : <FiHeart className={`text-lg ${isScrolled ? 'text-slate-900' : 'text-white'}`} />}
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Image Gallery - Full Width */}
+      <div className="relative w-full overflow-hidden bg-slate-900">
+        <Swiper
+          modules={[Navigation, Zoom]}
+          navigation={true}
+          zoom={true}
+          className="h-[400px] md:h-[500px] lg:h-[600px] w-full"
         >
-          <FaArrowLeft className="text-xl" />
-        </button>
+          {event.imageUrls && event.imageUrls.map((url, index) => (
+            <SwiperSlide key={index}>
+              <div className="swiper-zoom-container h-full w-full">
+                <img
+                  src={url}
+                  alt={`${event.name} - Image ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </SwiperSlide>
+          ))}
+          {!event.imageUrls?.length && (
+            <SwiperSlide>
+              <div className="h-full w-full bg-slate-800 flex items-center justify-center">
+                <FaFileImage className="text-7xl text-slate-600" />
+              </div>
+            </SwiperSlide>
+          )}
+        </Swiper>
+        
+        {/* Gallery Counter */}
+        {event.imageUrls?.length > 0 && (
+          <div className="absolute bottom-6 right-6 z-10 bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-xl text-xs font-bold tracking-widest border border-white/10">
+            {event.imageUrls.length} PHOTOS
+          </div>
+        )}
       </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
 
       {/* Floating Action Buttons */}
       {(event.organizerContact || whatsappNumber) && (
@@ -852,67 +917,7 @@ export default function EventPage() {
             </div>
           </div>
 
-          {/* Image Gallery */}
-          {event.imageUrls && event.imageUrls.length > 0 && (
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Event Gallery</h3>
-                <p className="text-gray-600 text-sm">View photos from the event</p>
-              </div>
-
-              <div className="space-y-4">
-                {/* Main Swiper */}
-                <Swiper
-                  modules={[Navigation, Zoom, Thumbs]}
-                  navigation={true}
-                  zoom={true}
-                  thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
-                  className="rounded-lg overflow-hidden"
-                >
-                  {event.imageUrls.map((url, index) => (
-                    <SwiperSlide key={index}>
-                      <div className="swiper-zoom-container">
-                        <img
-                          src={url}
-                          alt={`${event.name} - Image ${index + 1}`}
-                          className="w-full h-64 sm:h-80 md:h-96 object-cover"
-                          onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found';
-                          }}
-                        />
-                      </div>
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
-
-                {/* Thumbnail Swiper */}
-                {event.imageUrls.length > 1 && (
-                  <Swiper
-                    modules={[Thumbs]}
-                    watchSlidesProgress={true}
-                    onSwiper={setThumbsSwiper}
-                    spaceBetween={8}
-                    slidesPerView={4}
-                    freeMode={true}
-                    className="thumbs-swiper mt-4"
-                  >
-                    {event.imageUrls.map((url, index) => (
-                      <SwiperSlide key={index}>
-                        <img
-                          src={url}
-                          alt={`Thumbnail ${index + 1}`}
-                          className="w-full h-16 object-cover rounded cursor-pointer border-2 border-transparent hover:border-blue-500 transition-colors"
-                          onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/100x75?text=Image+Not+Found';
-                          }}
-                        />
-                      </SwiperSlide>
-                    ))}
-                  </Swiper>
-                )}
-              </div>
-            </div>
-          )}
+          {/* About Section - Replaced Gallery which was here */}
 
           {/* Description Section */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
@@ -1307,8 +1312,9 @@ export default function EventPage() {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Similar Events */}
+      {/* Similar Events */}
         {similarEvents.length > 0 && (
           <div className="mt-12 md:mt-16 border-t border-gray-100 pt-10 md:pt-12">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8 flex items-center gap-2">
