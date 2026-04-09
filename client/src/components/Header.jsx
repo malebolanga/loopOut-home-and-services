@@ -878,125 +878,93 @@ export default function Header() {
           </div>
         )}
       </header>
-
-      {/* Mobile Bottom Navigation - Elevated "Dock" with Emotion & Effects */}
       <AnimatePresence>
         {isNavVisible && (
           <motion.div 
-            initial={{ y: 100, opacity: 0 }}
+            initial={{ y: 120, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-            className="md:hidden fixed bottom-6 left-6 right-6 z-40 bg-white/90 backdrop-blur-3xl rounded-[2.5rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] border border-white/50 pb-safe"
+            exit={{ y: 120, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 120 }}
+            className="md:hidden fixed bottom-6 left-6 right-6 z-50 rounded-[2.8rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] overflow-visible"
           >
-            <div className="flex justify-around items-center h-20 px-4 relative">
-              {[
-                { to: '/', label: 'Explore', icon: MagnifyingGlassIcon, solidIcon: MagnifyingGlassIconSolid },
-                { to: '/trips', label: 'Trips', icon: QueueListIcon, solidIcon: QueueListIcon },
-              ].map((item, idx) => {
-                const isActive = location.pathname === item.to;
-                return (
-                  <Link
-                    key={idx}
-                    to={item.to}
-                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 relative ${isActive ? 'text-[#FF385C]' : 'text-gray-400'}`}
-                  >
-                    <motion.div 
-                      whileTap={{ scale: 0.8 }}
-                      className={`p-2.5 rounded-2xl relative z-10 ${isActive ? 'bg-rose-50' : 'bg-transparent'}`}
-                    >
-                       {isActive ? <item.solidIcon className="w-6 h-6" /> : <item.icon className="w-6 h-6 stroke-[2.2px]" />}
-                       {isActive && (
-                         <motion.div 
-                           layoutId="activeGlow"
-                           className="absolute inset-0 bg-[#FF385C]/10 rounded-2xl blur-md"
-                           initial={false}
-                           transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                         />
-                       )}
-                    </motion.div>
-                    <span className={`text-[10px] font-black uppercase tracking-widest leading-none ${isActive ? 'opacity-100' : 'opacity-60'}`}>{item.label}</span>
-                  </Link>
-                );
-              })}
+            <div className="absolute inset-0 bg-white/80 backdrop-blur-3xl rounded-[2.8rem] border border-white/40" />
+            
+            <div className="flex justify-around items-center h-20 px-6 relative z-10">
+              {/* Active Tab Indicator Pill */}
+              <div className="absolute inset-0 flex justify-around items-center px-6 pointer-events-none">
+                 {[0, 1, 2, 3].map((_, i) => (
+                   <div key={i} className="flex-1 flex justify-center h-full items-center">
+                      { (i === 0 && location.pathname === '/') || 
+                        (i === 1 && location.pathname === '/trips') || 
+                        (i === 2 && location.pathname === '/messages') || 
+                        (i === 3 && (location.pathname === '/profile' || location.pathname === '/sign-in')) ? (
+                        <motion.div 
+                          layoutId="navTab"
+                          className="w-14 h-14 bg-rose-500/10 rounded-2xl blur-sm"
+                          transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                        />
+                      ) : null }
+                   </div>
+                 ))}
+              </div>
+
+              <Link to="/" className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${location.pathname === '/' ? 'text-rose-600' : 'text-gray-400'}`}>
+                <motion.div whileTap={{ scale: 0.85 }}>
+                  {location.pathname === '/' ? <MagnifyingGlassIconSolid className="w-6 h-6" /> : <MagnifyingGlassIcon className="w-6 h-6 stroke-[2.2px]" />}
+                </motion.div>
+                <span className="text-[9px] font-black uppercase tracking-widest">Explore</span>
+              </Link>
+
+              <Link to="/trips" className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${location.pathname === '/trips' ? 'text-rose-600' : 'text-gray-400'}`}>
+                <motion.div whileTap={{ scale: 0.85 }}>
+                   <QueueListIcon className={`w-6 h-6 ${location.pathname === '/trips' ? 'stroke-[2.5px]' : 'stroke-[2px]'}`} />
+                </motion.div>
+                <span className="text-[9px] font-black uppercase tracking-widest">Trips</span>
+              </Link>
               
               <Link
                 to="/trip"
-                className="flex flex-col items-center -mt-12 relative z-50"
+                className="relative -mt-14 flex flex-col items-center group"
               >
-                <button className="flex flex-col items-center">
-                  <motion.div 
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    whileTap={{ scale: 0.9, rotate: -5 }}
-                    className="relative"
-                  >
-                    <div className="absolute inset-0 bg-[#FF385C] blur-[25px] opacity-20 group-hover:opacity-40 transition-opacity animate-pulse" />
-                    <div className="w-16 h-16 bg-[#222222] rounded-[1.5rem] flex items-center justify-center  relative z-10 overflow-hidden">
-                      <motion.div
-                        animate={{ 
-                          rotate: [0, 360],
-                        }}
-                        transition={{ 
-                          duration: 8, 
-                          repeat: Infinity, 
-                          ease: "linear" 
-                        }}
-                        className="absolute inset-0 bg-gradient-to-tr from-[#FF385C]/20 to-transparent opacity-50"
-                      />
-                      <SparklesIcon className="w-7 h-7 text-white stroke-[3px]" />
-                    </div>
-                  </motion.div>
-                  <span className="text-[10px] mt-2 font-black uppercase tracking-widest text-[#222222] italic">Architect</span>
-                </button>
+                <motion.div 
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="relative"
+                >
+                  <div className="absolute inset-0 bg-rose-500 blur-[25px] opacity-40 animate-pulse" />
+                  <div className="w-18 h-18 bg-gray-950 rounded-[1.8rem] flex items-center justify-center border-[4px] border-white shadow-2xl relative z-10 overflow-hidden">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-x-0 inset-y-0 bg-gradient-to-tr from-rose-500/30 to-transparent"
+                    />
+                    <SparklesIcon className="w-8 h-8 text-white stroke-[2.5px]" />
+                  </div>
+                </motion.div>
+                <span className="text-[9px] mt-2 font-black uppercase tracking-[0.2em] text-gray-950 italic">Architect</span>
               </Link>
 
-              {[
-                { to: '/messages', label: 'Inbox', icon: ChatBubbleLeftRightIcon, solidIcon: ChatBubbleLeftRightIconSolid, count: unreadCount },
-              ].map((item, idx) => {
-                const isActive = location.pathname === item.to;
-                return (
-                  <Link
-                    key={idx}
-                    to={item.to}
-                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 relative ${isActive ? 'text-[#FF385C]' : 'text-gray-400'}`}
-                  >
-                    <motion.div 
-                      whileTap={{ scale: 0.8 }}
-                      className={`relative p-2.5 rounded-2xl ${isActive ? 'bg-rose-50' : 'bg-transparent'}`}
-                    >
-                      {isActive ? <item.solidIcon className="w-6 h-6" /> : <item.icon className="w-6 h-6 stroke-[2.2px]" />}
-                      {isActive && (
-                        <motion.div 
-                          layoutId="activeGlow"
-                          className="absolute inset-0 bg-[#FF385C]/10 rounded-2xl blur-md"
-                          initial={false}
-                          transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                        />
-                      )}
-                      {item.count > 0 && (
-                        <motion.span 
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute top-1.5 right-1.5 bg-[#FF385C] text-white text-[9px] min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full border-2 border-white font-black z-20"
-                        >
-                          {item.count}
-                        </motion.span>
-                      )}
-                    </motion.div>
-                    <span className={`text-[10px] font-black uppercase tracking-widest leading-none ${isActive ? 'opacity-100' : 'opacity-60'}`}>{item.label}</span>
-                  </Link>
-                );
-              })}
+              <Link to="/messages" className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${location.pathname === '/messages' ? 'text-rose-600' : 'text-gray-400'}`}>
+                <motion.div whileTap={{ scale: 0.85 }} className="relative">
+                  {location.pathname === '/messages' ? <ChatBubbleLeftRightIconSolid className="w-6 h-6" /> : <ChatBubbleLeftRightIcon className="w-6 h-6 stroke-[2.2px]" />}
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white text-[8px] min-w-[15px] h-3.5 flex items-center justify-center rounded-full border border-white font-black px-0.5">
+                      {unreadCount}
+                    </span>
+                  )}
+                </motion.div>
+                <span className="text-[9px] font-black uppercase tracking-widest text-center">Inbox</span>
+              </Link>
               
               <button
                 onClick={handleMobileProfileClick}
-                className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'text-[#FF385C]' : 'text-gray-400'}`}
+                className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'text-rose-600' : 'text-gray-400'}`}
               >
                 <motion.div 
-                  whileTap={{ scale: 0.8 }}
-                  className={`p-2.5 rounded-2xl transition-all ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'bg-rose-50' : 'bg-transparent'}`}
+                  whileTap={{ scale: 0.85 }}
+                  className={`w-10 h-10 rounded-2xl border-2 transition-all duration-300 ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'border-rose-500 ring-4 ring-rose-500/10' : 'border-gray-200'}`}
                 >
-                  <div className={`w-6 h-6 rounded-full border-[1.5px] overflow-hidden flex items-center justify-center ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'border-[#FF385C]' : 'border-gray-200'}`}>
+                  <div className="w-full h-full rounded-[0.8rem] overflow-hidden">
                     {currentUser ? (
                       <img src={currentUser.avatar} alt="profile" className="w-full h-full object-cover" />
                     ) : (
@@ -1004,7 +972,7 @@ export default function Header() {
                     )}
                   </div>
                 </motion.div>
-                <span className="text-[10px] font-black uppercase tracking-widest leading-none">Vault</span>
+                <span className="text-[9px] font-black uppercase tracking-widest">Vault</span>
               </button>
             </div>
           </motion.div>
@@ -1013,7 +981,7 @@ export default function Header() {
 
       {/* Spacer for fixed header */}
       <div className="h-20"></div>
-      <div className="md:hidden h-16"></div>
+      <div className="md:hidden h-20"></div>
     </>
   );
 }
