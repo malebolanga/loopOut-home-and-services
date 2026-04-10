@@ -333,18 +333,18 @@ const Trip = () => {
             >
               <h2 className="text-5xl font-black mb-16 tracking-tighter">Exploration Squad</h2>
               <div className="flex flex-col items-center">
-                <div className="glass p-16 rounded-[4.5rem] shadow-2xl inline-flex items-center gap-16 relative overflow-hidden">
+                <div className="glass p-6 sm:p-16 px-8 sm:px-16 rounded-[2.5rem] sm:rounded-[4.5rem] shadow-2xl inline-flex items-center gap-6 sm:gap-16 relative overflow-hidden w-full max-w-full sm:w-auto overflow-x-auto justify-center">
                    <button 
                      onClick={() => setGuests(Math.max(1, guests - 1))} 
-                     className="w-20 h-20 rounded-full flex items-center justify-center text-5xl font-black text-gray-200 hover:bg-rose-50 hover:text-rose-500 border border-transparent hover:border-rose-100 transition-all"
+                     className="w-12 h-12 sm:w-20 sm:h-20 rounded-full flex items-center justify-center text-3xl sm:text-5xl font-black text-gray-200 hover:bg-rose-50 hover:text-rose-500 border border-transparent hover:border-rose-100 transition-all shrink-0"
                    >-</button>
-                   <div className="flex flex-col items-center relative z-10">
-                      <span className="text-[10rem] font-black leading-none text-gradient">{guests}</span>
-                      <span className="text-xs font-black text-gray-400 uppercase tracking-[0.8em] mt-4">Expeditionists</span>
+                   <div className="flex flex-col items-center relative z-10 mx-2 sm:mx-0">
+                      <span className="text-7xl sm:text-[10rem] font-black leading-none text-gradient">{guests}</span>
+                      <span className="text-[8px] sm:text-xs font-black text-gray-400 uppercase tracking-[0.4em] sm:tracking-[0.8em] mt-4">Expeditionists</span>
                    </div>
                    <button 
                      onClick={() => setGuests(guests + 1)} 
-                     className="w-20 h-20 rounded-full flex items-center justify-center text-4xl font-black text-gray-200 hover:bg-rose-50 hover:text-rose-500 border border-transparent hover:border-rose-100 transition-all"
+                     className="w-12 h-12 sm:w-20 sm:h-20 rounded-full flex items-center justify-center text-3xl sm:text-5xl font-black text-gray-200 hover:bg-rose-50 hover:text-rose-500 border border-transparent hover:border-rose-100 transition-all shrink-0"
                    >+</button>
                 </div>
                 
@@ -403,7 +403,7 @@ const Trip = () => {
                 <motion.div 
                   whileHover={{ y: -10, scale: 1.02 }}
                   onClick={() => { setRentalDurationType('short'); setStep(5); }} 
-                  className={`p-16 rounded-[4rem] cursor-pointer border-4 transition-all relative overflow-hidden group ${rentalDurationType === 'short' ? 'bg-white border-[#FF385C] shadow-3xl' : 'glass border-transparent hover:border-gray-200'}`}
+                  className={`p-8 sm:p-16 rounded-[2.5rem] sm:rounded-[4rem] cursor-pointer border-4 transition-all relative overflow-hidden group ${rentalDurationType === 'short' ? 'bg-white border-[#FF385C] shadow-3xl' : 'glass border-transparent hover:border-gray-200'}`}
                 >
                    <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-10 mx-auto transition-all ${rentalDurationType === 'short' ? 'bg-[#FF385C] text-white' : 'bg-gray-100 text-gray-300'}`}>
                       <ClockIcon className="w-12 h-12" />
@@ -416,7 +416,7 @@ const Trip = () => {
                 <motion.div 
                   whileHover={{ y: -10, scale: 1.02 }}
                   onClick={() => { setRentalDurationType('long'); setStep(5); }} 
-                  className={`p-16 rounded-[4rem] cursor-pointer border-4 transition-all relative overflow-hidden group ${rentalDurationType === 'long' ? 'bg-white border-[#FF385C] shadow-3xl' : 'glass border-transparent hover:border-gray-200'}`}
+                  className={`p-8 sm:p-16 rounded-[2.5rem] sm:rounded-[4rem] cursor-pointer border-4 transition-all relative overflow-hidden group ${rentalDurationType === 'long' ? 'bg-white border-[#FF385C] shadow-3xl' : 'glass border-transparent hover:border-gray-200'}`}
                 >
                    <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-10 mx-auto transition-all ${rentalDurationType === 'long' ? 'bg-[#FF385C] text-white' : 'bg-gray-100 text-gray-300'}`}>
                       <HomeModernIcon className="w-12 h-12" />
@@ -439,7 +439,7 @@ const Trip = () => {
                     key={idx} 
                     whileTap={{ scale: 0.9 }}
                     onClick={() => handleToggle(setAccommodationType, opt.id)} 
-                    className={`p-12 rounded-[3.5rem] border-4 transition-all flex flex-col items-center justify-center shadow-xl relative overflow-hidden ${accommodationType.includes(opt.id) ? 'bg-[#222222] border-[#222222] text-white shadow-[#222222]/30' : 'glass border-transparent text-gray-400 hover:border-gray-100'}`}
+                    className={`p-6 sm:p-12 rounded-[2rem] sm:rounded-[3.5rem] border-4 transition-all flex flex-col items-center justify-center shadow-xl relative overflow-hidden ${accommodationType.includes(opt.id) ? 'bg-[#222222] border-[#222222] text-white shadow-[#222222]/30' : 'glass border-transparent text-gray-400 hover:border-gray-100'}`}
                   >
                     <div className={`mb-6 transition-transform group-hover:scale-110 ${accommodationType.includes(opt.id) ? 'text-rose-500' : ''}`}>{opt.icon}</div>
                     <span className="font-black text-xs uppercase tracking-[0.4em]">{opt.label}</span>
@@ -465,7 +465,7 @@ const Trip = () => {
                    <div 
                     key={idx} 
                     onClick={() => handleToggle(setSelectedServices, opt.id)} 
-                    className={`p-10 rounded-[3rem] cursor-pointer border-4 transition-all flex flex-col items-center group relative overflow-hidden ${selectedServices.includes(opt.id) ? 'bg-white border-rose-500 text-[#222222] shadow-2xl scale-105' : 'glass border-transparent text-gray-300'}`}
+                    className={`p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] cursor-pointer border-4 transition-all flex flex-col items-center group relative overflow-hidden ${selectedServices.includes(opt.id) ? 'bg-white border-rose-500 text-[#222222] shadow-2xl scale-105' : 'glass border-transparent text-gray-300'}`}
                    >
                       <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all ${selectedServices.includes(opt.id) ? 'bg-rose-500 text-white rotate-6' : 'bg-gray-50'}`}>
                         {opt.icon}
@@ -491,7 +491,7 @@ const Trip = () => {
                     key={idx} 
                     whileHover={{ scale: 1.05 }}
                     onClick={() => handleToggle(setSelectedEntertainment, opt.id)} 
-                    className={`p-12 rounded-[4rem] cursor-pointer border-4 transition-all flex flex-col items-center justify-center ${selectedEntertainment.includes(opt.id) ? 'bg-[#222222] border-[#222222] text-white shadow-3xl' : 'glass border-transparent text-gray-300'}`}
+                    className={`p-6 sm:p-12 rounded-[2rem] sm:rounded-[4rem] cursor-pointer border-4 transition-all flex flex-col items-center justify-center ${selectedEntertainment.includes(opt.id) ? 'bg-[#222222] border-[#222222] text-white shadow-3xl' : 'glass border-transparent text-gray-300'}`}
                    >
                       <div className="mb-6 scale-150">{opt.icon}</div>
                       <span className="font-black text-[9px] uppercase tracking-[0.3em] text-center mt-4">{opt.label}</span>
@@ -509,19 +509,19 @@ const Trip = () => {
               <p className="text-gray-400 font-black uppercase tracking-[0.8em] text-[10px] mb-16 italic">Defining stay trajectory</p>
               
               <div className="flex flex-col items-center">
-                <div className="glass p-20 rounded-[5rem] shadow-3xl inline-flex items-center gap-20 relative px-28">
+                <div className="glass p-8 sm:p-20 rounded-[2.5rem] sm:rounded-[5rem] shadow-3xl inline-flex items-center gap-8 sm:gap-20 relative px-8 sm:px-28 w-full max-w-full sm:w-auto justify-center shrink-0">
                   <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/5 via-transparent to-orange-500/5 pointer-events-none" />
                   <button 
                     onClick={() => setDuration(Math.max(1, duration - 1))} 
-                    className="text-9xl font-black text-gray-100 hover:text-rose-500 transition-all transform hover:scale-125 hover:-translate-x-4"
+                    className="text-6xl sm:text-9xl font-black text-gray-100 hover:text-rose-500 transition-all transform hover:scale-125 hover:-translate-x-4 shrink-0"
                   >-</button>
-                  <div className="flex flex-col items-center relative z-10">
-                     <span className="text-[12rem] font-black text-gradient leading-none tracking-tighter px-4">{duration}</span>
-                     <span className="text-xs font-black text-gray-300 uppercase tracking-[1em] mt-8">{rentalDurationType === 'short' ? 'Days' : 'Months'} Scope</span>
+                  <div className="flex flex-col items-center relative z-10 mx-2 sm:mx-0">
+                     <span className="text-[6rem] sm:text-[12rem] font-black text-gradient leading-none tracking-tighter sm:px-4">{duration}</span>
+                     <span className="text-[9px] sm:text-xs font-black text-gray-300 uppercase tracking-[0.4em] sm:tracking-[1em] mt-4 sm:mt-8 text-center">{rentalDurationType === 'short' ? 'Days' : 'Months'} Scope</span>
                   </div>
                   <button 
                     onClick={() => setDuration(duration + 1)} 
-                    className="text-9xl font-black text-gray-100 hover:text-rose-500 transition-all transform hover:scale-125 hover:translate-x-4"
+                    className="text-6xl sm:text-9xl font-black text-gray-100 hover:text-rose-500 transition-all transform hover:scale-125 hover:translate-x-4 shrink-0"
                   >+</button>
                 </div>
                 
@@ -595,9 +595,9 @@ const Trip = () => {
                      <motion.div 
                        key={item._id || item.id || `acc-${idx}`} 
                        whileHover={{ y: -15 }}
-                       className="group bg-white rounded-[3.5rem] overflow-hidden shadow-2xl border border-white flex flex-col h-[520px] relative pointer-events-auto"
+                       className="group bg-white rounded-[2rem] md:rounded-[3.5rem] overflow-hidden shadow-2xl border border-white flex flex-col h-auto md:h-[520px] relative pointer-events-auto"
                      >
-                        <div className="h-[340px] overflow-hidden relative">
+                        <div className="h-[200px] md:h-[340px] overflow-hidden relative">
                            <img src={item.imageUrls?.[0] || item.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[3s]" alt="Property" />
                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-700 flex flex-col justify-end p-12">
                               <p className="text-rose-400 font-black uppercase tracking-[0.4em] text-[10px] mb-4 italic">Luxury Level: Elite</p>
@@ -606,7 +606,7 @@ const Trip = () => {
                            </div>
                            <div className="absolute top-8 left-8 glass px-6 py-2 rounded-full font-black text-[9px] uppercase tracking-widest text-black shadow-xl">Verified Architect Choice</div>
                         </div>
-                        <div className="p-10 flex items-center justify-between bg-white flex-grow relative">
+                        <div className="p-6 md:p-10 flex items-center justify-between bg-white flex-grow relative gap-2">
                            <div className="flex flex-col gap-2">
                               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic flex items-center gap-3">
                                 <HomeIcon className="w-5 h-5 text-rose-500" /> {item.bedrooms || 'Premium'} Unit
@@ -630,7 +630,7 @@ const Trip = () => {
                   <div className="flex items-center gap-6 mb-16 px-6 font-black italic"><div className="w-14 h-1 bg-[#222222] rounded-full"/><h2 className="text-4xl uppercase tracking-tighter">Satellite Insider Feed</h2></div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-2">
                      {dbResults.news.map((item, idx) => (
-                       <div key={item.id || `news-${idx}`} className="glass p-12 rounded-[3.5rem] shadow-2xl border border-white hover:bg-[#222222] transition-all group h-[320px] flex flex-col justify-between cursor-pointer">
+                       <div key={item.id || `news-${idx}`} className="glass p-6 sm:p-12 rounded-[2rem] sm:rounded-[3.5rem] shadow-2xl border border-white hover:bg-[#222222] transition-all group h-auto sm:h-[320px] min-h-[200px] flex flex-col justify-between cursor-pointer gap-4">
                           <span className="px-5 py-2 bg-rose-500 text-white rounded-full text-[9px] font-black uppercase self-start tracking-widest group-hover:bg-white group-hover:text-black transition-all shadow-lg shadow-rose-500/20">{item.tag}</span>
                           <h4 className="text-3xl font-black text-[#222222] leading-none tracking-tighter group-hover:text-white transition-colors">{item.title}</h4>
                           <div className="flex items-center gap-3 text-[10px] font-black text-gray-300 uppercase tracking-widest group-hover:text-gray-500">
@@ -647,8 +647,8 @@ const Trip = () => {
                     <div className="flex items-center gap-4 mb-12 font-black italic"><div className="w-10 h-1 bg-rose-500 rounded-full" /><h2 className="text-4xl uppercase tracking-tighter">Tactical Crew</h2></div>
                     <div className="grid grid-cols-1 gap-8">
                        {dbResults.helpers.concat(dbResults.services).slice(0, 4).map((item, idx) => (
-                         <div key={idx} className="glass p-10 rounded-[3.5rem] shadow-2xl flex items-center gap-10 border border-white hover:translate-x-4 transition-all group cursor-pointer">
-                            <div className="relative w-32 h-32 flex-shrink-0">
+                         <div key={idx} className="glass p-6 sm:p-10 rounded-[2rem] sm:rounded-[3.5rem] shadow-2xl flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-10 border border-white hover:translate-x-4 transition-all group cursor-pointer text-center sm:text-left">
+                            <div className="relative w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 mx-auto sm:mx-0">
                                <img 
                                  src={item.image || "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=400"} 
                                  className="w-full h-full rounded-[2.5rem] object-cover shadow-2xl ring-8 ring-white/50 group-hover:ring-rose-500/20 transition-all" 
@@ -675,9 +675,9 @@ const Trip = () => {
                       </div>
                       <div className="grid grid-cols-1 gap-8">
                          {dbResults.entertainment.map((item, idx) => (
-                           <div key={idx} className="glass overflow-hidden rounded-[3.5rem] shadow-2xl border border-white flex items-center h-44 group hover:bg-black transition-all cursor-pointer">
-                              <img src={item.image || "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=400"} className="w-48 h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-80 group-hover:opacity-100" />
-                              <div className="p-10 flex flex-col justify-center flex-1">
+                           <div key={idx} className="glass overflow-hidden rounded-[2rem] sm:rounded-[3.5rem] shadow-2xl border border-white flex items-center h-32 sm:h-44 group hover:bg-black transition-all cursor-pointer">
+                              <img src={item.image || "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=400"} className="w-32 sm:w-48 h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-80 group-hover:opacity-100" />
+                              <div className="p-4 sm:p-10 flex flex-col justify-center flex-1">
                                  <h4 className="font-black text-[#222222] group-hover:text-white transition-all text-3xl tracking-tighter leading-none mb-4 italic">{item.name}</h4>
                                  <div className="flex items-center justify-between">
                                     <span className="text-[9px] font-black text-rose-500 uppercase tracking-[0.3em] italic">{item.type}</span>
@@ -697,9 +697,9 @@ const Trip = () => {
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="bg-[#222222] rounded-[5rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.6)] relative overflow-hidden group border border-white/5"
+                        className="bg-[#222222] rounded-[2.5rem] sm:rounded-[5rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.6)] relative overflow-hidden group border border-white/5"
                       >
-                        <div className="h-80 overflow-hidden relative">
+                        <div className="h-48 sm:h-80 overflow-hidden relative">
                            <img src={dbResults.aiPick.image} className="w-full h-full object-cover opacity-50 group-hover:scale-110 transition-transform duration-[5s]" alt="AI Highlight" />
                            <div className="absolute inset-0 bg-gradient-to-t from-[#222222] via-transparent to-transparent" />
                            <div className="absolute top-12 right-12">
@@ -708,8 +708,8 @@ const Trip = () => {
                              </div>
                            </div>
                         </div>
-                        <div className="p-14 -mt-24 relative z-10">
-                          <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.6em] mb-6 block italic">Neural Social Protocol</span>
+                        <div className="p-8 sm:p-14 -mt-12 sm:-mt-24 relative z-10">
+                          <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.6em] mb-4 sm:mb-6 block italic">Neural Social Protocol</span>
                           <h3 className="text-5xl font-black text-white italic tracking-tighter mb-4 leading-none">{dbResults.aiPick.name}</h3>
                           <div className="flex items-center gap-4 mb-10">
                              <span className="text-gray-400 font-black uppercase tracking-widest text-[11px] px-6 py-2 border border-white/10 rounded-full">{dbResults.aiPick.vibe}</span>
@@ -722,7 +722,7 @@ const Trip = () => {
 
                     {/* Safety Analytics */}
                     {dbResults.safety && (
-                      <div className={`p-14 rounded-[4rem] border-4 border-dashed relative overflow-hidden transition-all shadow-2xl ${dbResults.safety.level === 'Moderate' ? 'bg-orange-50/50 border-orange-200' : 'bg-green-50/50 border-green-200'}`}>
+                      <div className={`p-8 sm:p-14 rounded-[2.5rem] sm:rounded-[4rem] border-4 border-dashed relative overflow-hidden transition-all shadow-2xl ${dbResults.safety.level === 'Moderate' ? 'bg-orange-50/50 border-orange-200' : 'bg-green-50/50 border-green-200'}`}>
                          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/50 rounded-full blur-[40px]" />
                          <div className="flex items-center gap-8 mb-8 relative z-10">
                             <div className={`w-20 h-20 rounded-[1.8rem] flex items-center justify-center shadow-lg ${dbResults.safety.level === 'Moderate' ? 'bg-orange-500 text-white shadow-orange-500/30' : 'bg-green-500 text-white shadow-green-500/30'}`}>
