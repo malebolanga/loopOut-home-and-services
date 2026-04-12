@@ -2339,104 +2339,110 @@ export default function HelperPage() {
           {/* Right Column - Booking Card */}
           <div className="lg:col-span-1">
             <div className="top-24 py-12">
-              <div className="border border-gray-200 rounded-xl shadow-lg p-6 bg-white">
-                <div className="flex items-end justify-between mb-6">
+              {/* Masterpiece Booking Card */}
+              <div className="border border-gray-100 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 bg-white sticky top-24">
+                <div className="flex items-end justify-between mb-8 pb-6 border-b border-gray-50">
                   <div>
-                    <span className="text-2xl font-semibold text-gray-900">R{helper.regularPrice}</span>
-                    <span className="text-gray-600"> / service</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 block mb-1">Service Rate</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-black text-gray-950 tracking-tighter">R{helper.regularPrice}</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">/ service</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 text-sm">
-                    <FaStar className="text-[#FFB400]" />
-                    <span className="font-semibold">{helper.rating || '4.5'}</span>
+                  <div className="flex items-center gap-2 bg-rose-50 px-3 py-2 rounded-2xl">
+                    <StarIconSolid className="w-4 h-4 text-rose-500" />
+                    <span className="text-xs font-black text-rose-700">{helper.rating || '4.5'}</span>
                   </div>
                 </div>
 
-                {/* Quick Booking Form */}
-                <div className="border border-gray-300 rounded-lg mb-4 overflow-hidden">
-                  <div className="grid grid-cols-2 border-b border-gray-300">
-                    <div className="p-3 border-r border-gray-300">
-                      <label className="block text-xs font-bold text-gray-900 uppercase">Date</label>
+                {/* Quick Booking Options */}
+                <div className="space-y-4 mb-8">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
+                      <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Deployment Date</label>
                       <input
                         type="date"
                         name="date"
                         value={bookingData.date}
                         onChange={handleBookingChange}
                         min={new Date().toISOString().split('T')[0]}
-                        className="w-full text-sm text-gray-700 outline-none mt-1"
+                        className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none"
                       />
                     </div>
-                    <div className="p-3">
-                      <label className="block text-xs font-bold text-gray-900 uppercase">Time</label>
+                    <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
+                      <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Time Frame</label>
                       <input
                         type="time"
                         name="time"
                         value={bookingData.time}
                         onChange={handleBookingChange}
-                        className="w-full text-sm text-gray-700 outline-none mt-1"
+                        className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none"
                       />
                     </div>
                   </div>
-                  <div className="p-3">
-                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Your Name</label>
+                  <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
+                    <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Personnel Name</label>
                     <input
                       type="text"
                       name="name"
                       value={bookingData.name}
                       onChange={handleBookingChange}
-                      placeholder="Full name"
-                      className="w-full text-sm text-gray-700 outline-none"
+                      placeholder="Full Designation"
+                      className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none placeholder-gray-300"
                     />
                   </div>
                 </div>
 
-                <button
-                  onClick={openBookingFormOverlay}
-                  className="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-lg transition-colors mb-3"
-                >
-                  Check availability
-                </button>
+                <div className="space-y-3 mb-8">
+                  <button
+                    onClick={openBookingFormOverlay}
+                    className="w-full py-5 bg-gray-950 hover:bg-black text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[1.5rem] transition-all shadow-xl active:scale-95"
+                  >
+                    Check Availability
+                  </button>
 
-                <button
-                  onClick={handleInternalMessage}
-                  className="w-full py-3 bg-white border border-gray-900 text-gray-900 font-semibold rounded-lg hover:bg-gray-50 transition-colors mb-4 flex items-center justify-center gap-2"
-                >
-                  <FaRegCommentDots /> Message Host
-                </button>
-
-                <div className="text-center text-gray-500 text-sm mb-4">
-                  You won't be charged yet
+                  <button
+                    onClick={handleInternalMessage}
+                    className="w-full py-4 bg-white border border-gray-100 text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-[1.2rem] hover:bg-gray-50 transition-all flex items-center justify-center gap-3"
+                  >
+                    <FaRegCommentDots className="text-rose-500" /> Secure Message
+                  </button>
                 </div>
 
-                <div className="space-y-3 text-sm">
+                <div className="text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-8 italic">
+                   Professional Protocol: Zero Upfront Charge
+                </div>
+
+                <div className="space-y-4 pt-6 border-t border-gray-50">
                   {bookingData.selectedServices.length > 0 ? (
                     bookingData.selectedServices.map(id => {
                       const s = serviceOptions.find(opt => opt.id === id);
                       return s ? (
-                        <div key={id} className="flex justify-between">
-                          <span className="underline">{s.name}</span>
-                          <span>R{s.price}</span>
+                        <div key={id} className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-gray-500">{s.name}</span>
+                          <span className="text-xs font-black text-gray-950">R{s.price}</span>
                         </div>
                       ) : null;
                     })
                   ) : (
-                    <div className="flex justify-between">
-                      <span className="underline">Base: R{helper.regularPrice} × 1 day</span>
-                      <span>R{helper.regularPrice}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-gray-500 italic">Base Deployment</span>
+                      <span className="text-xs font-black text-gray-950">R{helper.regularPrice}</span>
                     </div>
                   )}
                   {helper.travelFee > 0 && (
-                    <div className="flex justify-between">
-                      <span className="underline">Travel fee</span>
-                      <span>R{helper.travelFee}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-gray-500 italic">Deployment Fee</span>
+                      <span className="text-xs font-black text-gray-950">R{helper.travelFee}</span>
                     </div>
                   )}
-                  <div className="flex justify-between">
-                    <span className="underline">Service fee (10%)</span>
-                    <span>R{Math.round((totalPrice - helper.travelFee) / 1.1 * 0.1)}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-gray-500">Service Fee (10%)</span>
+                    <span className="text-xs font-black text-gray-950">R{Math.round((totalPrice - (helper.travelFee || 0)) / 1.1 * 0.1)}</span>
                   </div>
-                  <div className="border-t border-gray-200 pt-3 flex justify-between font-semibold text-gray-900">
-                    <span>Total before taxes</span>
-                    <span>R{totalPrice}</span>
+                  <div className="mt-4 p-4 bg-gray-900 rounded-2xl flex justify-between items-center">
+                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Total Estimate</span>
+                    <span className="text-lg font-black text-rose-500 italic tracking-tighter">R{totalPrice}</span>
                   </div>
                 </div>
               </div>

@@ -909,79 +909,129 @@ const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
   );
 };
 
-// --- Main Views ---
-
-const DesktopHeroSearch = ({ searchTerm, setSearchTerm, handleSearchSubmit, navigate, currentLocation }) => {
-  const searchCategories = [
-    { key: 'properties', label: 'Rent', icon: '🏠', subtext: 'over 1,000+ options' },
-    { key: 'properties', label: 'Long stays', icon: '⏳', subtext: '30+ days minimum' },
-    { key: 'helpers', label: 'Helpers', icon: '👷', subtext: 'Professional services' },
-    { key: 'services', label: 'Services', icon: '✨', subtext: 'Various offerings' }
-  ];
-
+// --- PREMIUM LOOP OUT HERO ---
+const LoopOutHomeHero = ({ navigate }) => {
   return (
-    <motion.div key="desktop-hero" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative bg-rose-500 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-rose-600 to-pink-600"></div>
-      <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center"></div>
+    <div className="relative h-[650px] w-full overflow-hidden bg-gray-900">
+      {/* Background with Ambient Motion */}
+      <motion.div 
+        initial={{ scale: 1.1, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 1.8, ease: "easeOut" }}
+        className="absolute inset-0"
+      >
+        <img 
+          src="/loopout_hero_bg.png" 
+          alt="LoopOut Elite Experience" 
+          className="w-full h-full object-cover"
+        />
+        {/* Elite Overlay Gradients */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-r from-rose-900/40 via-transparent to-indigo-900/40" />
+      </motion.div>
 
-      <div className="relative max-w-7xl mx-auto px-8 py-20">
-        <div className="text-center mb-12">
-          <motion.h1 initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="text-5xl font-semibold text-white mb-4 tracking-tight">
-            Find your next stay
-          </motion.h1>
-          <motion.p initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-xl text-white/90 max-w-2xl mx-auto font-light">
-            Discover homes, services, and experiences around you
-          </motion.p>
-        </div>
+      {/* Hero Content */}
+      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
+        <motion.div
+           initial={{ y: 40, opacity: 0 }}
+           animate={{ y: 0, opacity: 1 }}
+           transition={{ delay: 0.6, duration: 0.8 }}
+           className="max-w-4xl"
+        >
+          {/* Tagline */}
+          <motion.div
+            initial={{ opacity: 0, letterSpacing: "0.5em" }}
+            animate={{ opacity: 1, letterSpacing: "0.2em" }}
+            transition={{ delay: 0.8, duration: 1 }}
+            className="inline-block px-5 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white text-[10px] font-black tracking-[0.25em] uppercase mb-8 shadow-2xl"
+          >
+            Everything is in the Loop
+          </motion.div>
 
-        <div className="max-w-4xl mx-auto">
-          <motion.form initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} onSubmit={handleSearchSubmit} className="relative group/form">
-            <div className="bg-white rounded-full shadow-[0_30px_70px_-15px_rgba(0,0,0,0.25)] flex items-center p-4 hover:shadow-2xl transition-all duration-300">
-              <div className="flex-1 flex items-center px-8 border-r border-gray-200">
-                <MapIcon className="w-6 h-6 text-gray-400 mr-4" />
-                <div className="flex flex-col">
-                  <label className="text-xs font-black uppercase tracking-widest text-[#FF385C] mb-0.5">Where</label>
-                  <input
-                    type="text"
-                    placeholder="Search destinations"
-                    className="outline-none text-lg text-gray-900 placeholder-gray-400 w-full font-bold"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+          <h1 className="text-6xl lg:text-8xl font-black text-white mb-8 tracking-tighter leading-[0.9] drop-shadow-2xl">
+            EXPERIENCE <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-pink-400 to-rose-400 animate-gradient-x">
+               INFINITE FLOW
+            </span>
+          </h1>
+
+          <p className="text-xl lg:text-2xl text-white/80 max-w-2xl mx-auto mb-12 font-medium leading-relaxed drop-shadow-lg">
+            The elite portal connecting you to premium homes, professional helpers, and world-class daily services.
+          </p>
+          
+
+          <div className="flex flex-wrap items-center justify-center gap-6">
+             <motion.button 
+               whileHover={{ scale: 1.05, y: -5 }}
+               whileTap={{ scale: 0.95 }}
+               onClick={() => navigate('/listing-home-page')}
+               className="group relative px-10 py-5 bg-white text-gray-900 rounded-[2rem] font-black shadow-[0_20px_40px_rgba(0,0,0,0.3)] transition-all overflow-hidden"
+             >
+                <div className="relative z-10 flex items-center gap-3">
+                  <HomeIcon className="w-6 h-6" />
+                  EXPLORE HOMES
                 </div>
-              </div>
-              <button type="submit" className="bg-rose-500 hover:bg-rose-600 text-white rounded-full p-6 ml-4 transition-all hover:scale-105 active:scale-95 shadow-lg">
-                <MagnifyingGlassIcon className="w-8 h-8 stroke-[3px]" />
-              </button>
-            </div>
-          </motion.form>
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity" />
+             </motion.button>
 
-          <div className="grid grid-cols-4 gap-4 mt-8">
-            {searchCategories.map((category, idx) => (
-              <motion.button
-                key={`search-cat-${category.label}-${idx}`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + idx * 0.1 }}
-                whileHover={{ scale: 1.02, y: -2 }}
-                onClick={() => navigate(`/search?type=${category.key}&address=${encodeURIComponent(currentLocation)}`)}
-                className="bg-white/10 backdrop-blur-md rounded-2xl p-4 text-white hover:bg-white/20 transition-all border border-white/20 text-left group"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-3xl group-hover:scale-110 transition-transform">{category.icon}</span>
-                  <div>
-                    <div className="font-semibold text-lg">{category.label}</div>
-                    <div className="text-sm opacity-80 font-light">{category.subtext}</div>
-                  </div>
+             <motion.button 
+               whileHover={{ scale: 1.05, y: -5 }}
+               whileTap={{ scale: 0.95 }}
+               onClick={() => navigate('/helper-home-page')}
+               className="group relative px-10 py-5 bg-rose-600 text-white rounded-[2rem] font-black shadow-[0_20px_40px_rgba(225,29,72,0.3)] transition-all overflow-hidden border border-rose-500/50"
+             >
+                <div className="relative z-10 flex items-center gap-3">
+                  <UserGroupIcon className="w-6 h-6" />
+                  FIND HELPERS
                 </div>
-              </motion.button>
-            ))}
+                <div className="absolute inset-0 bg-gradient-to-r from-rose-700 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+             </motion.button>
           </div>
+        </motion.div>
+      </div>
+
+      {/* Floating 3D Elements Placeholder (Abstract UI) */}
+      <motion.div 
+        animate={{ 
+          y: [0, -20, 0],
+          rotate: [0, 5, 0]
+        }}
+        transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+        className="absolute top-1/4 left-10 w-20 h-20 rounded-3xl bg-white/5 backdrop-blur-3xl border border-white/10 hidden lg:block"
+      />
+      <motion.div 
+        animate={{ 
+          y: [0, 20, 0],
+          rotate: [0, -10, 0]
+        }}
+        transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
+        className="absolute bottom-1/4 right-10 w-32 h-32 rounded-full bg-rose-500/10 backdrop-blur-3xl border border-rose-500/20 hidden lg:block"
+      />
+
+      {/* Hero Stats/Features Bar */}
+      <div className="absolute bottom-0 inset-x-0 bg-black/20 backdrop-blur-2xl border-t border-white/10 py-8 z-20 hidden md:block">
+        <div className="max-w-7xl mx-auto px-12 flex justify-between items-center">
+           {[
+             { label: "VERIFIED HOMES", value: "1.2k+", icon: <HomeIcon className="w-5 h-5 text-rose-400" /> },
+             { label: "EXPERT HELPERS", value: "850+", icon: <UserGroupIcon className="w-5 h-5 text-blue-400" /> },
+             { label: "DAILY SERVICES", value: "24/7", icon: <SparklesIcon className="w-5 h-5 text-amber-400" /> },
+             { label: "LOCAL EVENTS", value: "100+", icon: <FireIcon className="w-5 h-5 text-orange-400" /> }
+           ].map((stat, i) => (
+             <div key={i} className="flex items-center gap-4 group">
+                <div className="p-3 bg-white/10 rounded-2xl group-hover:bg-white/20 transition-colors">{stat.icon}</div>
+                <div>
+                   <div className="text-white text-xl font-black leading-tight tracking-tight">{stat.value}</div>
+                   <div className="text-white/40 text-[9px] font-black tracking-[0.2em]">{stat.label}</div>
+                </div>
+             </div>
+           ))}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
+
+
 
 const DesktopPopularDestinations = ({ navigate }) => {
   const popularDestinations = [
@@ -1122,7 +1172,7 @@ const MobileAppHomepage = ({
           *::-webkit-scrollbar { display: none; }
         `}</style>
 
-        <DesktopHeroSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} handleSearchSubmit={handleSearchSubmit} navigate={navigate} currentLocation={currentLocation} />
+        <LoopOutHomeHero navigate={navigate} />
 
         <main className="max-w-7xl mx-auto px-8 py-12">
           {/* FRESHA-STYLE TOP CATEGORIES SECTION */}
@@ -1569,29 +1619,42 @@ const MobileAppHomepage = ({
           <LoopOutPulse />
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-rose-500 rounded-2xl p-6 mb-6 relative overflow-hidden">
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-3">
-              <SparklesIcon className="w-5 h-5 text-white" />
-              <span className="text-white/90 text-sm font-medium">AI-Powered Search</span>
-            </div>
-            <h2 className="text-2xl font-semibold text-white mb-2">Find your perfect space</h2>
-            <p className="text-white/80 text-sm mb-4">Discover homes, services, and experiences</p>
-
-            <div className="flex flex-wrap gap-2 mb-4">
-              {['Smart homes', 'Best deals', 'Near me', 'Trending'].map((tag) => (
-                <button key={tag} onClick={() => navigate(`/search?searchTerm=${tag}&type=all`)} className="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm transition-colors">
-                  {tag}
-                </button>
-              ))}
-            </div>
-
-            <button onClick={() => navigate('/search?ai=1')} className="bg-white text-gray-900 px-5 py-2.5 rounded-full font-medium text-sm hover:bg-gray-50 transition-colors flex items-center gap-2 w-fit">
-              <SparklesIcon className="w-4 h-4" />
-              AI Explore
-            </button>
+        {/* Mobile Elite Banner */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          className="relative h-72 rounded-[2.5rem] overflow-hidden mb-8 group shadow-2xl"
+          onClick={() => navigate('/ai-help-center')}
+        >
+          <img 
+            src="/loopout_hero_bg.png" 
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+            alt="LoopOut Experience" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+          <div className="absolute inset-0 p-8 flex flex-col justify-end">
+             <div className="flex items-center gap-2 mb-3">
+                <SparklesIcon className="w-5 h-5 text-rose-400" />
+                <span className="text-white/60 text-[11px] font-black tracking-[0.2em] uppercase">EXPERIENCE THE LOOP</span>
+             </div>
+             <h2 className="text-3xl font-black text-white leading-[0.9] mb-3 tracking-tighter">
+               YOUR CITY. <br />
+               <span className="text-rose-400">YOUR CHOICE.</span>
+             </h2>
+             <p className="text-white/70 text-sm font-medium mb-6 leading-relaxed max-w-[240px]">
+               The elite portal for premium homes and verified professional support.
+             </p>
+             <div className="flex items-center gap-3">
+                <div className="px-6 py-3 bg-white text-gray-900 rounded-2xl text-xs font-black shadow-xl">
+                  AI EXPLORE
+                </div>
+                <div className="w-10 h-10 rounded-2xl bg-rose-500/20 backdrop-blur-md border border-rose-500/30 flex items-center justify-center">
+                   <ChevronRightIcon className="w-5 h-5 text-white" />
+                </div>
+             </div>
           </div>
         </motion.div>
+
 
         {/* Mobile Location Status Indicator */}
         {locationStatus && (
@@ -1605,6 +1668,7 @@ const MobileAppHomepage = ({
             </div>
           </div>
         )}
+
 
         <div className="flex overflow-x-auto gap-4 pb-4 mb-6 -mx-4 px-4 scrollbar-hide">
           {categories.map((cat) => (

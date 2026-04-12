@@ -404,79 +404,47 @@ export default function Header() {
     }
   };
 
-  // Hide header and bottom menu on specific pages
-  if (
-    location.pathname === '/wishlist' ||
-    location.pathname.startsWith('/listing/') ||
-    location.pathname.startsWith('/helper/') ||
-    location.pathname.startsWith('/service/') ||
-    location.pathname.startsWith('/event/')
-  ) {
-    return null;
-  }
+  const hiddenRoutes = ['/profile', '/wishlist'];
+  const hiddenPrefixes = ['/user/', '/user-profile/', '/listing/', '/helper/', '/service/', '/event/'];
+  
+  const isHeaderHidden = 
+    hiddenRoutes.includes(location.pathname) || 
+    hiddenPrefixes.some(prefix => location.pathname.startsWith(prefix));
+
+  // Completely hide on some specific pages if needed, 
+  // but for now let's just use the flag for the elements.
 
   return (
     <>
       {/* Floating Glass Header - Matches Bottom Dock Aesthetic */}
-      <motion.header
-        initial={{ y: 0 }}
-        animate={{ y: isNavVisible ? 0 : -120 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 120 }}
-        ref={headerRef}
-        className="fixed top-6 left-6 right-6 z-50 bg-slate-50/80 backdrop-blur-3xl rounded-[2.5rem] border border-white/40 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.1)] overflow-visible"
-      >
-        <div className="max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-6 px-4">
-          <div className="flex flex-row items-center justify-between gap-3 md:gap-0 h-20">
-
-            <Link
-              to="/"
-              className="hidden md:block cursor-pointer"
-              onClick={() => console.log('Logo clicked - navigating to /')}
-            >
-              <BrandLogo className="h-8 w-auto" />
-            </Link>
-
-            {/* Center: Simplified Search Bar - Elevated Design */}
-            <div className={`flex-1 max-w-[850px] mx-auto px-4 transition-all duration-300 ${showSearch ? 'opacity-0 -translate-y-2 pointer-events-none' : 'opacity-100 translate-y-0'}`}>
-              <div
-                onClick={() => {
-                  console.log('Search bar clicked - opening search modal');
-                  setShowSearch(true);
-                }}
-                className="search-trigger w-full md:w-auto md:min-w-[320px] mx-auto cursor-pointer "
+      {!isHeaderHidden && (
+        <motion.header
+          initial={{ y: 0 }}
+          animate={{ y: isNavVisible ? 0 : -120 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 120 }}
+          ref={headerRef}
+          className="fixed top-8 left-0 right-0 z-[100] overflow-visible bg-transparent"
+        >
+        <div className="max-w-[2520px] mx-auto xl:px-20 md:px-10 px-8">
+          <div className="flex flex-row items-center justify-between h-12">
+            
+            {/* Left: Icon-Triggered Search */}
+            <div className={`transition-all duration-300 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
+              <button
+                onClick={() => setShowSearch(true)}
+                className="group relative flex items-center justify-center w-14 h-14 rounded-full bg-white shadow-[0_15px_35px_-10px_rgba(225,29,72,0.15)] hover:shadow-2xl hover:scale-110 transition-all duration-500 active:scale-95 border border-rose-100"
               >
-                <div className="rounded-full py-2 pl-6 pr-2 shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer bg-slate-100/50 group-hover:scale-[1.02]">
-                  <div className="flex flex-row items-center justify-between">
-                    <div className="flex flex-col flex-1 truncate px-4">
-                      <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[#FF385C]">Discovery Hub</span>
-                      <span className="text-sm font-bold text-[#222222]">Start your search</span>
-                    </div>
-                    <div className="p-3 bg-[#FF385C] rounded-full text-white flex-shrink-0 shadow-lg group-hover:scale-105 transition-transform">
-                      <MagnifyingGlassIcon className="w-4.5 h-4.5 stroke-[3px]" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+                <div className="absolute inset-0 bg-rose-500 opacity-0 group-hover:opacity-10 rounded-full blur-md transition-opacity" />
+                <MagnifyingGlassIcon className="w-7 h-7 text-rose-600 stroke-[2.5px]" />
+              </button>
             </div>
+
+            {/* Center: Spacer */}
+            <div className="flex-1"></div>
 
             {/* Right: User Menu */}
             <div className="relative" ref={profileDropdownRef}>
               <div className="flex flex-row items-center gap-3">
-                {/* loopOut your home - Desktop */}
-                <button
-                  onClick={() => handleNavigate('/host')}
-                  className="hidden md:block text-sm font-semibold py-3 px-4 rounded-full hover:bg-gray-100 transition cursor-pointer text-[#222222]"
-                >
-                  loopOut your home
-                </button>
-
-                <button
-                  onClick={() => handleNavigate('/trip')}
-                  className="hidden lg:flex items-center gap-2 text-xs font-black uppercase tracking-widest py-3 px-6 rounded-full bg-gradient-to-br from-rose-50 to-rose-100 text-rose-600 hover:from-rose-500 hover:to-rose-600 hover:text-white transition-all duration-300 cursor-pointer border border-rose-200 shadow-sm hover:shadow-rose-200 hover:shadow-lg active:scale-95"
-                >
-                  <SparklesIcon className="w-4 h-4" />
-                  <span>AI TRIP</span>
-                </button>
 
                 <div className="relative" ref={createDropdownRef}>
                   <button
@@ -563,10 +531,10 @@ export default function Header() {
                     setShowProfileDropdown(!showProfileDropdown);
                     setShowLanguageDropdown(false);
                   }}
-                  className="p-4 md:py-1 md:px-2 border-[1px] border-[#DDDDDD] flex flex-row items-center gap-3 rounded-full cursor-pointer hover:shadow-md transition bg-slate-100/50 text-[#717171]"
+                  className="flex flex-row items-center justify-center w-14 h-14 bg-white rounded-full cursor-pointer shadow-[0_15px_35px_-10px_rgba(225,29,72,0.15)] hover:shadow-2xl hover:scale-110 transition-all duration-500 animate-in fade-in zoom-in border border-rose-100 text-rose-600"
                 >
-                  <Bars3Icon className="w-5 h-5" />
-                  <div className="hidden md:block">
+                  <Bars3Icon className="w-7 h-7 stroke-[2.5px]" />
+                  <div className="hidden">
                     {currentUser ? (
                       <img
                         src={currentUser.avatar}
@@ -749,149 +717,112 @@ export default function Header() {
             </div>
           </div>
         </div>
+      </motion.header>
+    )}
 
-        {/* Full Screen Search Modal - Simplified */}
-        {showSearch && (
-          <div className="search-container absolute top-[calc(100%+1rem)] left-0 right-0 bg-slate-50 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.25)] py-12 px-8 rounded-[3rem] animate-[slideDown_0.4s_cubic-bezier(0.16,1,0.3,1)] z-[100]">
-            <div className="max-w-4xl mx-auto px-6">
-              {/* Search Input - Larger & Cleaner */}
-              <div className="relative">
-                <form onSubmit={handleSearch} className="relative group/form bg-slate-50 rounded-[3rem] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] flex items-center p-3 hover:shadow-2xl transition-all duration-500">
-                  <div className="flex-1 px-8 py-6">
-                    <label className="block text-xs font-semibold text-gray-900 uppercase tracking-wider mb-1">Search</label>
-                    <input
-                      ref={searchInputRef}
-                      type="text"
-                      placeholder="Where to?"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-transparent outline-none text-gray-900 text-3xl placeholder-gray-400 font-black tracking-tight"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleSearch();
-                        }
-                      }}
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="bg-rose-600 hover:bg-rose-700 text-white rounded-2xl p-4 transition-all flex items-center justify-center min-w-[70px] h-[70px] shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-                  >
-                    <MagnifyingGlassIcon className="w-8 h-8 stroke-[3px]" />
-                  </button>
-                </form>
+    {/* Full Screen Search Modal - Refactored for Stability */}
+    <AnimatePresence>
+      {showSearch && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="search-container fixed inset-x-6 top-24 bottom-6 bg-slate-50/95 backdrop-blur-3xl shadow-[0_40px_80px_-15px_rgba(0,0,0,0.25)] py-12 px-8 rounded-[3rem] z-[100] overflow-y-auto"
+        >
+          <div className="max-w-4xl mx-auto px-6">
+            <div className="relative">
+              <form onSubmit={handleSearch} className="relative group/form bg-white rounded-[3rem] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] flex items-center p-3 hover:shadow-2xl transition-all duration-500">
+                <div className="flex-1 px-8 py-6">
+                  <label className="block text-xs font-semibold text-gray-900 uppercase tracking-wider mb-1">Search</label>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Where to?"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-transparent outline-none text-gray-900 text-3xl placeholder-gray-400 font-black tracking-tight"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSearch();
+                      }
+                    }}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="bg-rose-600 hover:bg-rose-700 text-white rounded-2xl p-4 transition-all flex items-center justify-center min-w-[70px] h-[70px] shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                >
+                  <MagnifyingGlassIcon className="w-8 h-8 stroke-[3px]" />
+                </button>
+              </form>
 
-                {/* --- Suggestions Dropdown --- */}
-                {suggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 bg-white mt-4 rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden z-[100] animate-[slideDown_0.3s_ease-out]">
-                    <div className="py-2">
-                      {suggestions.map((item, index) => (
-                        <button
-                          key={index}
-                          onClick={() => {
-                            setSearchTerm(item.term);
-                            // Execute search immediately
-                            const extracted = extractFiltersFromQuery(item.term);
-                            const urlParams = new URLSearchParams();
-                            urlParams.set('searchTerm', item.term);
-                            urlParams.set('type', item.type || extracted.type || 'all');
-                            urlParams.set('address', extracted.location || currentLocation);
-                            Object.entries(extracted).forEach(([k, v]) => { if (k !== 'type' && k !== 'location') urlParams.set(k, v); });
-                            navigate(`/search?${urlParams.toString()}`);
-                            setShowSearch(false);
-                            setSearchTerm('');
-                            setSuggestions([]);
-                          }}
-                          className="w-full px-6 py-4 flex items-center gap-4 hover:bg-rose-500/5 transition-all duration-300 text-left group/item border-b border-gray-50 last:border-0"
-                        >
-                          <div className={`p-2 rounded-lg ${item.isHistory ? 'bg-gray-100' : 'bg-rose-50'} text-gray-500`}>
-                            {item.isHistory ? <MapPinIcon className="w-4 h-4" /> : <MagnifyingGlassIcon className="w-4 h-4 text-rose-500" />}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-gray-900 truncate">
-                              {item.term}
-                            </div>
-                            <div className="text-xs text-gray-500 capitalize">
-                              {item.type || 'All'}
-                            </div>
-                          </div>
-                          <ChevronLeftIcon className="w-4 h-4 text-gray-300 group-hover:text-gray-900 transition-colors rotate-180" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Recent Searches - Compact Pills */}
-              {searchHistory.length > 0 && !searchTerm && (
-                <div className="mt-6">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Recent</h3>
-                    <button
-                      onClick={clearSearchHistory}
-                      className="text-xs font-medium text-gray-400 hover:text-gray-900 transition-colors"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {searchHistory.slice(0, 6).map((item, index) => (
+              {suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 bg-white mt-4 rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden z-[100]">
+                  <div className="py-2">
+                    {suggestions.map((item, index) => (
                       <button
                         key={index}
                         onClick={() => {
-                          const url = `/search?searchTerm=${encodeURIComponent(item.term)}&type=${item.type}&address=${encodeURIComponent(currentLocation)}`;
-                          console.log('Recent search clicked - navigating to:', url);
-                          navigate(url);
+                          setSearchTerm(item.term);
+                          const extracted = extractFiltersFromQuery(item.term);
+                          const urlParams = new URLSearchParams();
+                          urlParams.set('searchTerm', item.term);
+                          urlParams.set('type', item.type || extracted.type || 'all');
+                          urlParams.set('address', extracted.location || currentLocation);
+                          Object.entries(extracted).forEach(([k, v]) => { if (k !== 'type' && k !== 'location') urlParams.set(k, v); });
+                          navigate(`/search?${urlParams.toString()}`);
                           setShowSearch(false);
+                          setSearchTerm('');
+                          setSuggestions([]);
                         }}
-                        className="group flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-full transition-all text-left"
+                        className="w-full px-6 py-4 flex items-center gap-4 hover:bg-rose-500/5 transition-all duration-300 text-left group/item border-b border-gray-50 last:border-0"
                       >
-                        <MagnifyingGlassIcon className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
-                        <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                          {item.term}
-                        </span>
-                        <span className="text-xs text-gray-400 capitalize">
-                          {item.type}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Search by Category - Compact Grid */}
-              {!searchTerm && (
-                <div className="mt-8">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Categories</h3>
-                  <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
-                    {searchCategories.map((category) => (
-                      <button
-                        key={category.key}
-                        onClick={() => {
-                          const url = `/search?type=${category.key}&address=${encodeURIComponent(currentLocation)}`;
-                          console.log('Category clicked - navigating to:', url);
-                          navigate(url);
-                          setShowSearch(false);
-                        }}
-                        className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition "
-                      >
-                        <div className="w-12 h-12 flex items-center justify-center bg-gray-50 group-hover:bg-white rounded-xl transition-all shadow-sm group-hover:shadow-md group-hover:-translate-y-0.5">
-                          <span className="text-xl">{category.icon}</span>
+                        <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center group-hover/item:bg-rose-500 group-hover/item:text-white transition-all">
+                          <MagnifyingGlassIcon className="w-5 h-5" />
                         </div>
-                        <span className="text-xs font-medium text-gray-600 group-hover:text-gray-900 text-center leading-tight">
-                          {category.label}
-                        </span>
+                        <div className="flex-1">
+                          <p className="text-sm font-black text-gray-900 group-hover/item:text-rose-600 transition-colors">{item.term}</p>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{item.type || 'All Categories'}</p>
+                        </div>
+                        <ChevronLeftIcon className="w-4 h-4 text-gray-300 group-hover:text-gray-900 transition-colors rotate-180" />
                       </button>
                     ))}
                   </div>
                 </div>
               )}
             </div>
+
+            {!searchTerm && (
+              <div className="mt-8 pt-8 border-t border-gray-100">
+                <p className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-[#FF385C] mb-6">Popular Categories</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-2">
+                  {searchCategories.map((category) => (
+                    <button
+                      key={category.key}
+                      onClick={() => {
+                        console.log('Category clicked:', category.key);
+                        navigate(`/search?type=${category.key}`);
+                        setShowSearch(false);
+                      }}
+                      className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition group"
+                    >
+                      <div className="w-12 h-12 flex items-center justify-center bg-gray-100 group-hover:bg-white rounded-xl transition-all shadow-sm group-hover:shadow-md group-hover:-translate-y-0.5">
+                        <span className="text-xl">{category.icon}</span>
+                      </div>
+                      <span className="text-xs font-medium text-gray-600 group-hover:text-gray-900 text-center leading-tight">
+                        {category.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </motion.header>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
       <AnimatePresence>
         {isNavVisible && (
           <motion.div
@@ -899,7 +830,7 @@ export default function Header() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 120, opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 120 }}
-            className="md:hidden fixed bottom-6 left-6 right-6 z-50 rounded-[2.8rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] overflow-visible"
+            className="md:hidden fixed bottom-6 left-6 right-6 z-[1000] rounded-[2.8rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] overflow-visible"
           >
             <div className="absolute inset-0 bg-white/80 backdrop-blur-3xl rounded-[2.8rem] border border-white/40" />
 
@@ -908,10 +839,10 @@ export default function Header() {
               <div className="absolute inset-0 flex justify-around items-center px-6 pointer-events-none">
                 {[0, 1, 2, 3].map((_, i) => (
                   <div key={i} className="flex-1 flex justify-center h-full items-center">
-                    {(i === 0 && location.pathname === '/') ||
+                    {( (i === 0 && location.pathname === '/') ||
                       (i === 1 && location.pathname === '/trips') ||
                       (i === 2 && location.pathname === '/messages') ||
-                      (i === 3 && (location.pathname === '/profile' || location.pathname === '/sign-in')) ? (
+                      (i === 3 && (location.pathname === '/profile' || location.pathname === '/sign-in')) ) ? (
                       <motion.div
                         layoutId="navTab"
                         className="w-14 h-14 bg-rose-500/10 rounded-2xl blur-sm"
@@ -955,7 +886,7 @@ export default function Header() {
                     <SparklesIcon className="w-8 h-8 text-white stroke-[2.5px]" />
                   </div>
                 </motion.div>
-                <span className="text-[9px] mt-2 font-black uppercase tracking-[0.2em] text-gray-950 italic">Architect</span>
+                <span className="text-[9px] -mt-1 font-bold uppercase tracking-[0.1em] text-gray-950 italic">Masterpiece</span>
               </Link>
 
               <Link to="/messages" className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${location.pathname === '/messages' ? 'text-rose-600' : 'text-gray-400'}`}>
@@ -993,9 +924,11 @@ export default function Header() {
         )}
       </AnimatePresence>
 
-      {/* Spacer for floating top header */}
-      <div className="h-32"></div>
-      <div className="md:hidden h-6"></div>
+      {!isHeaderHidden && (
+        <>
+          <div className="h-28 md:h-32"></div>
+        </>
+      )}
     </>
   );
 }

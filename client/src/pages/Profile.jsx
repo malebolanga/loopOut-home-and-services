@@ -818,20 +818,24 @@ export default function Profile() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
 
   return (
-    <div className="min-h-screen pb-20">
-      {/* Airbnb-style Header - Fixed at top */}
-      <div className="border-b border-[#DDDDDD] fixed top-0 left-0 right-0 bg-white z-40 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-[#484848]">Account</h1>
+    <div className="min-h-screen pb-32 bg-slate-50">
+      {/* Account Header - Static and Ultra-Compact */}
+      <div className="max-w-6xl mx-auto px-6 pt-24 mb-6">
+        <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
+          <h1 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em]">Account Settings</h1>
+          <div className="flex-1 h-px bg-gray-100"></div>
+          <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
+             <User size={12} className="text-gray-400" />
+          </div>
         </div>
       </div>
 
-      {/* Main Content with top padding to account for fixed header */}
-      <div className="max-w-6xl mx-auto px-4 pt-0 py-8">
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Sidebar - Airbnb Style */}
           <div className="lg:col-span-3">
-            <div className=" top-28">
+            <div className="sticky top-28">
               {/* Profile Summary Card */}
               <div className="bg-white rounded-xl border border-[#DDDDDD] p-6 mb-6 text-center">
                 <div className="relative inline-block mb-4">

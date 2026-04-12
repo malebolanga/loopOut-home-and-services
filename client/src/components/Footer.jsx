@@ -73,6 +73,9 @@ const Footer = () => {
 
   // Hide footer on specific detail pages
   if (
+    location.pathname === '/profile' ||
+    location.pathname.startsWith('/user/') ||
+    location.pathname.startsWith('/user-profile/') ||
     location.pathname.startsWith('/listing/') ||
     location.pathname.startsWith('/helper/') ||
     location.pathname.startsWith('/service/') ||

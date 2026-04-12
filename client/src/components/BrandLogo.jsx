@@ -62,7 +62,7 @@ const BrandLogo = ({ className = "h-8 w-auto", showText = true, textColor = "tex
             </div>
 
             {showText && (
-                <div className="flex flex-col -gap-1">
+                <div className="hidden md:flex flex-col -gap-1">
                     <span className={`text-[26px] font-black tracking-[-0.04em] leading-none ${textColor}`}>
                         loop<span className="text-[#E61E4D]">Out</span>
                     </span>

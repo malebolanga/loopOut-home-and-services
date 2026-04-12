@@ -192,253 +192,7 @@ const itemVariants = {
   }
 };
 
-// Slide-Open Search Panel Component
-const SlideOpenSearch = ({
-  isOpen,
-  onClose,
-  searchTerm,
-  setSearchTerm,
-  onSearch,
-  selectedCategory,
-  onCategoryClick,
-  recentSearches = []
-}) => {
-  const inputRef = useRef(null);
-
-  // Focus input when opened
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      setTimeout(() => inputRef.current.focus(), 100);
-    }
-  }, [isOpen]);
-
-  // Handle escape key
-  useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-    }
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isOpen, onClose]);
-
-  const clearSearch = () => {
-    setSearchTerm('');
-    inputRef.current?.focus();
-  };
-
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
-          />
-
-          {/* Slide Panel */}
-          <motion.div
-            initial={{ y: -20, opacity: 0, scale: 0.95 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: -20, opacity: 0, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed top-0 left-0 right-0 bg-white z-50 shadow-2xl rounded-b-3xl max-h-[85vh] flex flex-col"
-          >
-            {/* Header - Fixed */}
-            <div className="flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-5 flex items-center gap-4">
-              <button
-                onClick={onClose}
-                className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-all active:scale-90"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-900" />
-              </button>
-
-              <div className="flex-1 relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-rose-500 transition-colors" />
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="What are you looking for?"
-                  className="w-full pl-12 pr-12 py-5 bg-gray-50 border-2 border-transparent rounded-[1.5rem] text-gray-900 font-bold placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:bg-white focus:border-rose-500 transition-all shadow-inner"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      onSearch();
-                      onClose();
-                    }
-                  }}
-                />
-                {searchTerm && (
-                  <button
-                    onClick={clearSearch}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full transition-colors"
-                  >
-                    <X className="w-4 h-4 text-gray-500" />
-                  </button>
-                )}
-              </div>
-
-              <button
-                onClick={() => { onSearch(); onClose(); }}
-                className="px-6 py-3 bg-rose-500 hover:bg-rose-600 text-white font-medium rounded-xl transition-colors whitespace-nowrap"
-              >
-                Search
-              </button>
-            </div>
-
-            {/* Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              {/* Selected Category Badge */}
-              {selectedCategory && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">Searching in:</span>
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-sm font-medium">
-                    {(() => {
-                      const cat = ALL_CATEGORIES.find(c => c.id === selectedCategory);
-                      if (!cat) return selectedCategory;
-                      const Icon = cat.icon;
-                      return (
-                        <>
-                          <Icon className="w-3 h-3" />
-                          {cat.label}
-                        </>
-                      );
-                    })()}
-                  </span>
-                  <button
-                    onClick={() => onCategoryClick && onCategoryClick(null)}
-                    className="text-xs text-gray-400 hover:text-gray-600 underline"
-                  >
-                    Clear
-                  </button>
-                </div>
-              )}
-
-              {/* Recent Searches */}
-              {recentSearches.length > 0 && !searchTerm && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <RotateCcw className="w-4 h-4" />
-                    Recent Searches
-                  </h3>
-                  <div className="space-y-2">
-                    {recentSearches.map((search, index) => (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          setSearchTerm(search);
-                          onSearch();
-                          onClose();
-                        }}
-                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-left group"
-                      >
-                        <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-gray-200 transition-colors">
-                          <Search className="w-4 h-4 text-gray-500" />
-                        </div>
-                        <span className="text-gray-700 font-medium flex-1 truncate">{search}</span>
-                        <ArrowUpDown className="w-4 h-4 text-gray-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Popular Categories Grid */}
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">Popular Categories</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {ALL_CATEGORIES.slice(0, 8).map((category) => {
-                    const Icon = category.icon;
-                    const isSelected = selectedCategory === category.id;
-                    return (
-                      <button
-                        key={category.id}
-                        onClick={() => {
-                          onCategoryClick && onCategoryClick(category);
-                          onClose();
-                        }}
-                        className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${isSelected
-                          ? 'border-rose-500 bg-rose-50 text-rose-700'
-                          : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'
-                          }`}
-                      >
-                        <div className={`p-2 rounded-xl ${category.color}`}>
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        <span className="text-xs font-medium text-center leading-tight">
-                          {category.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* All Categories List */}
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">All Categories</h3>
-                <div className="space-y-1">
-                  {ALL_CATEGORIES.map((category) => {
-                    const Icon = category.icon;
-                    const isSelected = selectedCategory === category.id;
-                    return (
-                      <button
-                        key={category.id}
-                        onClick={() => {
-                          onCategoryClick && onCategoryClick(category);
-                          onClose();
-                        }}
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl transition-colors text-left ${isSelected ? 'bg-rose-50 text-rose-700' : 'hover:bg-gray-50'
-                          }`}
-                      >
-                        <div className={`p-2 rounded-lg ${category.color} flex-shrink-0`}>
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm truncate">{category.label}</div>
-                          <div className="text-xs text-gray-500 truncate">{category.description}</div>
-                        </div>
-                        {isSelected && <Check className="w-5 h-5 text-rose-500 flex-shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Quick Filters */}
-              <div className="pt-4 border-t border-gray-100">
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Filters</h3>
-                <div className="flex flex-wrap gap-2">
-                  <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium text-gray-700 transition-colors">
-                    Under R1000
-                  </button>
-                  <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium text-gray-700 transition-colors">
-                    Top Rated
-                  </button>
-                  <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium text-gray-700 transition-colors">
-                    Available Now
-                  </button>
-                  <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium text-gray-700 transition-colors">
-                    Near Me
-                  </button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-};
+// No SlideOpenSearch needed - Using normal header input
 
 // Category Dropdown Component (for compact view)
 const CategoryDropdown = ({
@@ -1155,7 +909,6 @@ const SearchPage = () => {
     navigate(`/search?${urlParams.toString()}`);
   };
 
-  // Get display text for selected category
   const getSelectedCategoryLabel = () => {
     if (selectedCategory) {
       const category = ALL_CATEGORIES.find(c => c.id === selectedCategory);
@@ -1166,117 +919,86 @@ const SearchPage = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Slide-Open Search Panel */}
-      <SlideOpenSearch
-        isOpen={isSearchPanelOpen}
-        onClose={() => setIsSearchPanelOpen(false)}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        onSearch={handleSearch}
-        selectedCategory={selectedCategory}
-        onCategoryClick={handleCategorySelect}
-        recentSearches={recentSearches}
-      />
-
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-[60] bg-white border-b border-[#DDDDDD]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-3">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 max-w-3xl relative">
-                {/* Enhanced Search Bar with Click-to-Expand */}
-                <div className="flex items-center bg-white border border-gray-300 rounded-full shadow-sm hover:shadow-md transition-shadow relative">
-
-                  {/* Category Selector Button */}
-                  <button
-                    onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                    className="flex-shrink-0 px-4 py-2.5 text-left hover:bg-gray-100 rounded-l-full transition-colors border-r border-gray-300 flex items-center gap-1 min-w-[120px]"
-                  >
-                    <div className="truncate">
-                      <div className="text-[10px] font-bold text-gray-900">Category</div>
-                      <div className="text-xs text-gray-500 truncate flex items-center gap-1">
-                        {selectedCategory ? (
-                          <>
-                            {(() => {
-                              const cat = ALL_CATEGORIES.find(c => c.id === selectedCategory);
-                              const Icon = cat?.icon || Sparkles;
-                              return <Icon className="w-3 h-3 flex-shrink-0" />;
-                            })()}
-                            <span className="truncate max-w-[80px]">{getSelectedCategoryLabel()}</span>
-                          </>
-                        ) : (
-                          'All'
-                        )}
-                      </div>
-                    </div>
-                    <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform flex-shrink-0 ${showCategoryDropdown ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {/* Search Input - Click to open slide panel */}
-                  <div
-                    className="flex-1 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
-                    onClick={() => setIsSearchPanelOpen(true)}
-                  >
-                    <div className="text-[10px] font-bold text-gray-900">Search</div>
-                    <div className="w-full text-xs text-gray-700 truncate">
-                      {searchTerm || 'Anything...'}
-                    </div>
-                  </div>
-
-                  {/* Location Quick Button */}
-                  <button
-                    onClick={() => setShowFilters(true)}
-                    className="flex-shrink-0 px-3 py-2 text-left hover:bg-gray-100 transition-colors border-l border-gray-300 hidden sm:block"
-                  >
-                    <div className="text-[10px] font-bold text-gray-900">Where</div>
-                    <div className="text-xs text-gray-500 truncate max-w-[80px]">
-                      {filters.location || 'Anywhere'}
-                    </div>
-                  </button>
-
-                  {/* Search Button */}
-                  <button
-                    onClick={handleSearch}
-                    className="m-1 p-2 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors flex-shrink-0"
-                  >
-                    <SearchIcon className="w-4 h-4" />
-                  </button>
+      {/* Professional Masterpiece Header */}
+      <div className="fixed top-0 left-0 right-0 z-[60] bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="px-4 py-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-1 bg-gray-50 rounded-[2rem] border border-gray-100/50 shadow-inner flex items-center p-1.5 focus-within:ring-2 focus-within:ring-rose-500/20 transition-all duration-500">
+                {/* Search Discovery */}
+                <div className="flex-1 px-6 py-2 border-r border-gray-200/60 flex flex-col justify-center min-w-0">
+                  <label className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 mb-0.5">Discovery</label>
+                  <input
+                    type="text"
+                    placeholder="Search results..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="bg-transparent border-none focus:ring-0 text-sm font-black text-gray-950 placeholder-gray-300 p-0 truncate"
+                  />
                 </div>
-
-                {/* Category Dropdown */}
-                <AnimatePresence>
-                  {showCategoryDropdown && (
-                    <CategoryDropdown
-                      isOpen={showCategoryDropdown}
-                      onClose={() => setShowCategoryDropdown(false)}
-                      onSelect={handleCategorySelect}
-                      selectedCategory={selectedCategory}
-                      searchQuery={categorySearchQuery}
-                      setSearchQuery={setCategorySearchQuery}
-                    />
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button onClick={() => setShowFilters(true)} className="flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-lg hover:border-gray-900 hover:bg-gray-50 transition-colors">
-                  <SlidersHorizontal className="w-4 h-4" />
-                  <span className="font-medium text-xs hidden sm:inline">Filters</span>
+                {/* Location Persistence */}
+                <div className="flex-1 px-6 py-2 flex flex-col justify-center min-w-0">
+                  <label className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 mb-0.5">Location</label>
+                  <input
+                    type="text"
+                    placeholder="Where in Loop?"
+                    value={filters.location}
+                    onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="bg-transparent border-none focus:ring-0 text-sm font-black text-gray-950 placeholder-gray-300 p-0 truncate"
+                  />
+                </div>
+                {/* Minimalist Control */}
+                <button
+                  onClick={handleSearch}
+                  className="w-11 h-11 bg-gray-950 hover:bg-rose-600 text-white rounded-2xl transition-all flex items-center justify-center flex-shrink-0 shadow-lg active:scale-90"
+                >
+                  <SearchIcon className="w-4 h-4 stroke-[3px]" />
                 </button>
-
-                <div className="hidden md:flex items-center bg-gray-100 rounded-lg p-0.5">
-                  <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}>
-                    <Grid3X3 className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}>
-                    <List className="w-4 h-4" />
-                  </button>
-                </div>
               </div>
+
+              {/* Advanced Filter Control */}
+              <button
+                onClick={() => setShowFilters(true)}
+                className="w-14 h-14 bg-white border border-gray-100 rounded-[1.5rem] flex items-center justify-center text-gray-900 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95"
+              >
+                <SlidersHorizontal className="w-5 h-5 stroke-[2.5px]" />
+              </button>
             </div>
+          </div>
+
+          {/* Masterpiece Category Bar - Horizontal Edge-to-Edge */}
+          <div className="relative border-t border-gray-50 flex items-center overflow-x-auto scrollbar-hide scroll-smooth px-6 py-3 gap-8">
+            <button
+               onClick={() => handleCategorySelect(null)}
+               className={`flex-shrink-0 flex flex-col items-center gap-2 group transition-all duration-300 ${!selectedCategory ? 'text-gray-950 scale-105' : 'text-gray-400 hover:text-gray-900 hover:scale-105'}`}
+            >
+               <Sparkles className="w-5 h-5 transition-transform group-hover:rotate-12" />
+               <span className="text-[9px] font-black uppercase tracking-widest leading-none">All</span>
+               {!selectedCategory && <motion.div layoutId="catActive" className="w-1 h-1 rounded-full bg-rose-500" />}
+            </button>
+            {ALL_CATEGORIES.map((category) => {
+              const Icon = category.icon;
+              const isSelected = selectedCategory === category.id;
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => handleCategorySelect(category)}
+                  className={`flex-shrink-0 flex flex-col items-center gap-2 group transition-all duration-300 ${isSelected ? 'text-gray-950 scale-105' : 'text-gray-400 hover:text-gray-900 hover:scale-105'}`}
+                >
+                  <Icon className="w-5 h-5 transition-transform group-hover:rotate-12" />
+                  <span className="text-[9px] font-black uppercase tracking-widest leading-none whitespace-nowrap">{category.label}</span>
+                  {isSelected && <motion.div layoutId="catActive" className="w-1 h-1 rounded-full bg-rose-500" />}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
+
+      {/* Header Spacer */}
+      <div className="h-40 md:h-44"></div>
 
       {/* Results Count */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
