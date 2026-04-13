@@ -19,15 +19,20 @@ const useLocationCoords = () => {
           `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`,
           {
             headers: {
-              'Accept-Language': 'en'
+              'Accept-Language': 'en',
+              'User-Agent': 'LoopOut-App'
             }
           }
         );
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
-        const detectedCity = data.address.city || data.address.town || data.address.suburb || data.address.village || data.address.municipality;
-        setCity(detectedCity);
+        if (data && data.address) {
+          const detectedCity = data.address.city || data.address.town || data.address.suburb || data.address.village || data.address.municipality || data.address.state;
+          setCity(detectedCity);
+        }
       } catch (err) {
-        console.error("Reverse geocoding failed:", err);
+        console.warn("Reverse geocoding unavailable:", err.message);
+        // Fallback or leave as null - don't let it break the flow
       }
     };
 

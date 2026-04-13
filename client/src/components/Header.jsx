@@ -31,7 +31,10 @@ import {
   MapPinIcon,
   SparklesIcon,
   UserGroupIcon,
-  BriefcaseIcon
+  BriefcaseIcon,
+  XMarkIcon,
+  BuildingOfficeIcon,
+  HomeModernIcon
 } from '@heroicons/react/24/outline';
 
 import {
@@ -61,6 +64,7 @@ import {
 export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchType, setSearchType] = useState('properties');
   const [showSearch, setShowSearch] = useState(false);
   const [searchHistory, setSearchHistory] = useState(() => getSearchHistory());
   const [suggestions, setSuggestions] = useState([]);
@@ -325,7 +329,7 @@ export default function Header() {
     // Build search parameters
     const urlParams = new URLSearchParams();
     urlParams.set('searchTerm', searchTerm);
-    urlParams.set('type', extractedFilters.type || 'all');
+    urlParams.set('type', extractedFilters.type || searchType || 'properties');
     urlParams.set('address', extractedFilters.location || currentLocation);
 
     // Join other extracted filters
@@ -432,7 +436,7 @@ export default function Header() {
             <div className={`transition-all duration-300 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
               <button
                 onClick={() => setShowSearch(true)}
-                className="group relative flex items-center justify-center w-14 h-14 rounded-full bg-white shadow-[0_15px_35px_-10px_rgba(225,29,72,0.15)] hover:shadow-2xl hover:scale-110 transition-all duration-500 active:scale-95 border border-rose-100"
+                className="search-trigger group relative flex items-center justify-center w-14 h-14 rounded-full bg-white shadow-[0_15px_35px_-10px_rgba(225,29,72,0.15)] hover:shadow-2xl hover:scale-110 transition-all duration-500 active:scale-95 border border-rose-100"
               >
                 <div className="absolute inset-0 bg-rose-500 opacity-0 group-hover:opacity-10 rounded-full blur-md transition-opacity" />
                 <MagnifyingGlassIcon className="w-7 h-7 text-rose-600 stroke-[2.5px]" />
@@ -720,106 +724,168 @@ export default function Header() {
       </motion.header>
     )}
 
-    {/* Full Screen Search Modal - Refactored for Stability */}
+    {/* Full Screen Elite Search Modal - Airbnb Style */}
     <AnimatePresence>
       {showSearch && (
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="search-container fixed inset-x-6 top-24 bottom-6 bg-slate-50/95 backdrop-blur-3xl shadow-[0_40px_80px_-15px_rgba(0,0,0,0.25)] py-12 px-8 rounded-[3rem] z-[100] overflow-y-auto"
-        >
-          <div className="max-w-4xl mx-auto px-6">
-            <div className="relative">
-              <form onSubmit={handleSearch} className="relative group/form bg-white rounded-[3rem] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] flex items-center p-3 hover:shadow-2xl transition-all duration-500">
-                <div className="flex-1 px-8 py-6">
-                  <label className="block text-xs font-semibold text-gray-900 uppercase tracking-wider mb-1">Search</label>
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder="Where to?"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-transparent outline-none text-gray-900 text-3xl placeholder-gray-400 font-black tracking-tight"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleSearch();
-                      }
-                    }}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="bg-rose-600 hover:bg-rose-700 text-white rounded-2xl p-4 transition-all flex items-center justify-center min-w-[70px] h-[70px] shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-                >
-                  <MagnifyingGlassIcon className="w-8 h-8 stroke-[3px]" />
-                </button>
-              </form>
-
-              {suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 bg-white mt-4 rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden z-[100]">
-                  <div className="py-2">
-                    {suggestions.map((item, index) => (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          setSearchTerm(item.term);
-                          const extracted = extractFiltersFromQuery(item.term);
-                          const urlParams = new URLSearchParams();
-                          urlParams.set('searchTerm', item.term);
-                          urlParams.set('type', item.type || extracted.type || 'all');
-                          urlParams.set('address', extracted.location || currentLocation);
-                          Object.entries(extracted).forEach(([k, v]) => { if (k !== 'type' && k !== 'location') urlParams.set(k, v); });
-                          navigate(`/search?${urlParams.toString()}`);
-                          setShowSearch(false);
-                          setSearchTerm('');
-                          setSuggestions([]);
-                        }}
-                        className="w-full px-6 py-4 flex items-center gap-4 hover:bg-rose-500/5 transition-all duration-300 text-left group/item border-b border-gray-50 last:border-0"
-                      >
-                        <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center group-hover/item:bg-rose-500 group-hover/item:text-white transition-all">
-                          <MagnifyingGlassIcon className="w-5 h-5" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-black text-gray-900 group-hover/item:text-rose-600 transition-colors">{item.term}</p>
-                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{item.type || 'All Categories'}</p>
-                        </div>
-                        <ChevronLeftIcon className="w-4 h-4 text-gray-300 group-hover:text-gray-900 transition-colors rotate-180" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+        <>
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            onClick={() => setShowSearch(false)} 
+            className="fixed inset-0 bg-gray-900/60 backdrop-blur-md z-[1000]" 
+          />
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="search-container fixed inset-0 bg-gray-50 z-[1001] flex flex-col md:max-w-md md:left-auto md:right-0 md:shadow-2xl overflow-hidden"
+          >
+            <div className="flex-shrink-0 bg-white px-6 pt-12 pb-4 flex items-center justify-between">
+              <div className="flex gap-8 overflow-x-auto scrollbar-hide py-2">
+                {[
+                  { id: 'properties', label: 'Homes', icon: HomeIcon, color: 'rose' },
+                  { id: 'events', label: 'Experiences', icon: MagnifyingGlassIcon, color: 'rose' },
+                  { id: 'services', label: 'Services', icon: UserGroupIcon, color: 'rose' },
+                  { id: 'helpers', label: 'Helpers', icon: BriefcaseIcon, color: 'rose' }
+                ].map((item) => {
+                  const Icon = item.icon;
+                  const isActive = searchType === item.id;
+                  
+                  return (
+                    <button 
+                      key={item.id}
+                      onClick={() => setSearchType(item.id)}
+                      className="flex flex-col items-center gap-2 relative outline-none"
+                    >
+                       <motion.div 
+                         animate={isActive ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : { scale: 1, rotate: 0 }}
+                         transition={{ duration: 0.4, ease: "backOut" }}
+                         className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-900 group-hover:-translate-y-1'}`}
+                       >
+                          <Icon className="w-6 h-6" />
+                       </motion.div>
+                       
+                       <motion.span 
+                         animate={{ opacity: isActive ? 1 : 0.4, scale: isActive ? 1.05 : 1 }}
+                         className={`text-[10px] font-black uppercase tracking-widest transition-colors ${isActive ? 'text-gray-900' : 'text-gray-400'}`}
+                       >
+                         {item.label}
+                       </motion.span>
+                       
+                       {isActive && (
+                         <motion.div 
+                           layoutId="categoryLine" 
+                           className="absolute -bottom-1 w-6 h-1 bg-rose-500 rounded-full" 
+                         />
+                       )}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              <button 
+                onClick={() => setShowSearch(false)}
+                className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors"
+              >
+                <XMarkIcon className="w-5 h-5 text-gray-900" />
+              </button>
             </div>
 
-            {!searchTerm && (
-              <div className="mt-8 pt-8 border-t border-gray-100">
-                <p className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-[#FF385C] mb-6">Popular Categories</p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-2">
-                  {searchCategories.map((category) => (
-                    <button
-                      key={category.key}
-                      onClick={() => {
-                        console.log('Category clicked:', category.key);
-                        navigate(`/search?type=${category.key}`);
-                        setShowSearch(false);
-                      }}
-                      className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition group"
-                    >
-                      <div className="w-12 h-12 flex items-center justify-center bg-gray-100 group-hover:bg-white rounded-xl transition-all shadow-sm group-hover:shadow-md group-hover:-translate-y-0.5">
-                        <span className="text-xl">{category.icon}</span>
-                      </div>
-                      <span className="text-xs font-medium text-gray-600 group-hover:text-gray-900 text-center leading-tight">
-                        {category.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </motion.div>
+            {/* Scrollable Content Area */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+               {/* Section: WHERE? */}
+               <div className="bg-white rounded-[2rem] shadow-xl p-6 border border-gray-100">
+                  <h2 className="text-2xl font-black text-gray-900 mb-6 tracking-tight">Where to?</h2>
+                  
+                  <div className="relative mb-8">
+                     <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                     <input 
+                       type="text"
+                       placeholder="Search destinations"
+                       value={searchTerm}
+                       onChange={(e) => setSearchTerm(e.target.value)}
+                       onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                       className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all outline-none font-medium placeholder-gray-400"
+                     />
+                  </div>
+
+                  <div className="space-y-4">
+                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Suggested destinations</p>
+                     
+                     <button 
+                       onClick={() => { setSearchTerm('Nearby'); handleSearch(); }}
+                       className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-all active:scale-98"
+                     >
+                        <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500">
+                           <MapPinIcon className="w-6 h-6" />
+                        </div>
+                        <div className="text-left">
+                           <p className="text-sm font-bold text-gray-900">Nearby</p>
+                           <p className="text-xs text-gray-500">Find what's around you</p>
+                        </div>
+                     </button>
+
+                     <button 
+                       onClick={() => { setSearchTerm('Cape Town, Western Cape'); handleSearch(); }}
+                       className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-all active:scale-98"
+                     >
+                        <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-500">
+                           <BuildingOfficeIcon className="w-6 h-6" />
+                        </div>
+                        <div className="text-left">
+                           <p className="text-sm font-bold text-gray-900">Cape Town, Western Cape</p>
+                           <p className="text-xs text-gray-500">Popular beach destination</p>
+                        </div>
+                     </button>
+
+                     <button 
+                       onClick={() => { setSearchTerm('Durban, KwaZulu-Natal'); handleSearch(); }}
+                       className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-all active:scale-98"
+                     >
+                        <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-500">
+                           <HomeModernIcon className="w-6 h-6" />
+                        </div>
+                        <div className="text-left">
+                           <p className="text-sm font-bold text-gray-900">Durban, KwaZulu-Natal</p>
+                           <p className="text-xs text-gray-500">For sights like uShaka Marine World</p>
+                        </div>
+                     </button>
+                  </div>
+               </div>
+
+               {/* Collapsed Sections: WHEN and WHO */}
+               <div className="bg-white rounded-[1.5rem] shadow-sm p-5 flex items-center justify-between border border-gray-100 opacity-60">
+                  <span className="text-sm font-bold text-gray-900">When</span>
+                  <span className="text-[11px] font-black uppercase text-gray-400 tracking-wider">Add dates</span>
+               </div>
+
+               <div className="bg-white rounded-[1.5rem] shadow-sm p-5 flex items-center justify-between border border-gray-100 opacity-60">
+                  <span className="text-sm font-bold text-gray-900">Who</span>
+                  <span className="text-[11px] font-black uppercase text-gray-400 tracking-wider">Add guests</span>
+               </div>
+            </div>
+
+            {/* Footer - Search Button */}
+            <div className="flex-shrink-0 bg-white border-t border-gray-100 p-6 flex items-center justify-between">
+               <button 
+                 onClick={() => { setSearchTerm(''); }}
+                 className="text-sm font-bold text-gray-900 underline underline-offset-4 hover:text-rose-600 transition-colors"
+               >
+                 Clear all
+               </button>
+               
+               <button 
+                 onClick={() => { handleSearch(); setShowSearch(false); }}
+                 className="bg-rose-500 hover:bg-rose-600 text-white px-8 py-4 rounded-[1.2rem] flex items-center gap-3 shadow-xl transition-all active:scale-95"
+               >
+                 <MagnifyingGlassIcon className="w-5 h-5 text-white" />
+                 <span className="text-sm font-black uppercase tracking-widest">Search</span>
+               </button>
+            </div>
+          </motion.div>
+        </>
       )}
     </AnimatePresence>
 
@@ -837,12 +903,13 @@ export default function Header() {
             <div className="flex justify-around items-center h-17 px-6 relative z-10">
               {/* Active Tab Indicator Pill */}
               <div className="absolute inset-0 flex justify-around items-center px-6 pointer-events-none">
-                {[0, 1, 2, 3].map((_, i) => (
+                {[0, 1, 2, 3, 4].map((_, i) => (
                   <div key={i} className="flex-1 flex justify-center h-full items-center">
                     {( (i === 0 && location.pathname === '/') ||
                       (i === 1 && location.pathname === '/trips') ||
-                      (i === 2 && location.pathname === '/messages') ||
-                      (i === 3 && (location.pathname === '/profile' || location.pathname === '/sign-in')) ) ? (
+                      (i === 2 && location.pathname === '/trip') ||
+                      (i === 3 && location.pathname === '/messages') ||
+                      (i === 4 && (location.pathname === '/profile' || location.pathname === '/sign-in')) ) ? (
                       <motion.div
                         layoutId="navTab"
                         className="w-14 h-14 bg-rose-500/10 rounded-2xl blur-sm"
@@ -862,7 +929,7 @@ export default function Header() {
 
               <Link to="/trips" className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${location.pathname === '/trips' ? 'text-rose-600' : 'text-gray-400'}`}>
                 <motion.div whileTap={{ scale: 0.85 }}>
-                  <QueueListIcon className={`w-6 h-6 ${location.pathname === '/trips' ? 'stroke-[2.5px]' : 'stroke-[2px]'}`} />
+                  <MapPinIcon className={`w-6 h-6 ${location.pathname === '/trips' ? 'stroke-[2.5px]' : 'stroke-[2px]'}`} />
                 </motion.div>
                 <span className="text-[9px] font-black uppercase tracking-widest">Trips</span>
               </Link>
@@ -886,7 +953,7 @@ export default function Header() {
                     <SparklesIcon className="w-8 h-8 text-white stroke-[2.5px]" />
                   </div>
                 </motion.div>
-                <span className="text-[9px] -mt-1 font-bold uppercase tracking-[0.1em] text-gray-950 italic">Masterpiece</span>
+                <span className="text-[9px] -mt-1 font-black uppercase tracking-[0.1em] text-gray-950 italic">Masterpiece</span>
               </Link>
 
               <Link to="/messages" className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${location.pathname === '/messages' ? 'text-rose-600' : 'text-gray-400'}`}>

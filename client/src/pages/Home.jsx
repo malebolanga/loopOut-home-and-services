@@ -143,6 +143,14 @@ const TOP_CATEGORIES = [
     emoji: '📦'
   },
   {
+    id: 'usedbooks',
+    name: 'Used Books',
+    image: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80',
+    count: '142',
+    color: 'from-orange-600 to-amber-500',
+    emoji: '📚'
+  },
+  {
     id: 'photograph',
     name: 'Photography',
     image: '/3d_helper_icon_1775252697443.png',
@@ -631,9 +639,9 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
     <motion.div
       whileHover={{ y: -4 }}
       onClick={handleClick}
-      className="cursor-pointer flex flex-col gap-3"
+      className="cursor-pointer flex flex-col gap-2 group"
     >
-      <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-200 group">
+      <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100 group">
         <ImageGallery
           imageUrls={item.imageUrls || []}
           alt={item.name}
@@ -642,52 +650,48 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
 
         <button
           onClick={(e) => { e.stopPropagation(); onLike && onLike(item._id, !isLiked); }}
-          className="absolute top-3 right-3 p-2 rounded-full hover:scale-110 transition-transform z-20"
+          className="absolute top-3 right-3 p-2 text-white hover:scale-110 transition-transform z-20 drop-shadow-md"
         >
           {isLiked ? (
-            <HeartIconSolid className="w-6 h-6 text-rose-500 fill-rose-500 drop-shadow-md" />
+            <HeartIconSolid className="w-6 h-6 text-rose-500 fill-rose-500" />
           ) : (
-            <HeartIcon className="w-6 h-6 text-white drop-shadow-md hover:text-rose-500 transition-colors" />
+            <HeartIcon className="w-6 h-6 stroke-[2px]" />
           )}
         </button>
 
         {isGuestFavorite && type === 'property' && (
-          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur px-2 py-1 rounded-md shadow-sm z-20">
-            <span className="text-xs font-bold text-gray-900">Guest favorite</span>
-          </div>
-        )}
-
-        {type === 'property' && item.type && (
-          <div className="absolute top-3 left-3 bg-black/70 backdrop-blur px-2 py-1 rounded-md shadow-sm z-20">
-            <span className="text-xs font-bold text-white">{getPropertyTypeLabel()}</span>
+          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-sm border border-black/5 z-20">
+            <span className="text-[10px] font-bold text-gray-900 uppercase tracking-wider">Guest favorite</span>
           </div>
         )}
       </div>
 
-      <div className="flex flex-col gap-0.5">
-        <div className="flex justify-between items-start">
-          <h3 className="font-semibold text-gray-900 truncate pr-2 text-[15px]">{item.address || 'South Africa'}</h3>
-          <div className="flex items-center gap-1 text-sm shrink-0">
-            <StarIconSolid className="w-3.5 h-3.5 text-gray-900" />
-            <span className="text-gray-900">{item.rating?.toFixed(2) || '4.5'}</span>
+      <div className="flex flex-col pt-1">
+        <div className="flex justify-between items-start gap-2">
+          <h3 className="font-bold text-[15px] text-gray-900 truncate">
+            {item.address || item.name || 'South Africa'}
+          </h3>
+          <div className="flex items-center gap-1 shrink-0">
+            <StarIconSolid className="w-3.5 h-3.5 text-gray-950" />
+            <span className="text-[14px] font-medium text-gray-950">{item.rating?.toFixed(1) || '4.5'}</span>
           </div>
         </div>
-        <p className="text-gray-500 text-[15px] truncate">{item.name}</p>
-        <div className="flex items-center justify-between mt-0.5">
-          <div className="flex items-baseline gap-1">
-            <span className="font-semibold text-gray-900 text-[15px]">{formatPrice()}</span>
-            {type === 'property' && <span className="text-gray-900 text-[15px]">{getPriceSuffix()}</span>}
-          </div>
-          {item._distance && item._distance !== Infinity && !hideDistance && (
-            <div className="flex items-center gap-1 text-[#FF385C] font-medium text-xs">
-              <MapPinIcon className="w-3 h-3" />
-              <span>
-                {item._distance < 1 
-                  ? "Near you" 
-                  : `${Math.round(item._distance)} km away`}
-              </span>
-            </div>
-          )}
+
+        <p className="text-[14px] text-gray-500 truncate">
+          {type === 'property' ? (getPropertyTypeLabel() || 'Property in LoopOut') : (item.category || item.name)}
+        </p>
+
+        {item._distance && item._distance !== Infinity && !hideDistance ? (
+           <p className="text-[14px] text-gray-500">
+             {item._distance < 1 ? "Near you" : `${Math.round(item._distance)} km away`}
+           </p>
+        ) : (
+          <p className="text-[14px] text-gray-500">Recently added</p>
+        )}
+
+        <div className="mt-1 flex items-baseline gap-1">
+           <span className="text-[15px] font-bold text-gray-900">{formatPrice()}</span>
+           <span className="text-[14px] text-gray-900/80">{getPriceSuffix()}</span>
         </div>
       </div>
     </motion.div>
@@ -818,52 +822,47 @@ const EliteHelperCard = ({ helper, onClick }) => {
 
   return (
     <motion.div
-      whileHover={{ y: -4, scale: 1.02 }}
+      whileHover={{ y: -4 }}
       onClick={onClick}
-      className="cursor-pointer relative group overflow-hidden rounded-2xl w-full shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100/50"
+      className="cursor-pointer flex flex-col gap-2 group"
     >
-      <div className="relative aspect-[4/5] w-full bg-gray-200">
+      <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100 group">
         <ImageGallery
           imageUrls={helper.imageUrls || []}
           alt={helper.name}
           type="avatar"
         />
         
-        {/* Verified Badge - Always Visible */}
-        <div className="absolute top-3 left-3 bg-rose-500 text-white rounded-full p-1.5 shadow-lg z-20">
-          <CheckCircleIcon className="w-3.5 h-3.5" />
+        {/* Verified Badge */}
+        <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-sm border border-black/5 z-20 flex items-center gap-1.5">
+          <CheckCircleIcon className="w-3.5 h-3.5 text-rose-500" />
+          <span className="text-[10px] font-bold text-gray-900 uppercase tracking-wider">Verified</span>
+        </div>
+      </div>
+
+      <div className="flex flex-col pt-1">
+        <div className="flex justify-between items-start gap-2">
+          <h3 className="font-bold text-[15px] text-gray-900 truncate">
+             {helper.address || "South Africa"}
+          </h3>
+          <div className="flex items-center gap-1 shrink-0">
+            <StarIconSolid className="w-3.5 h-3.5 text-gray-950" />
+            <span className="text-[14px] font-medium text-gray-950">{helper.rating?.toFixed(1) || '4.5'}</span>
+          </div>
         </div>
 
-        {/* Dark overlay that appears on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
-        
-        {/* Information that appears on hover */}
-        <div className="absolute inset-0 p-5 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-6 group-hover:translate-y-0 text-white z-20 pointer-events-none">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="font-bold text-xl leading-tight truncate mr-2 drop-shadow-xl">{helper.address || "South Africa"}</h3>
-            {helper.rating && (
-              <div className="flex items-center gap-1 text-sm font-semibold shrink-0 bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-md shadow-lg border border-white/20">
-                <StarIconSolid className="w-3.5 h-3.5 text-amber-400" />
-                <span>{helper.rating?.toFixed(2) || '4.9'}</span>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-2 mb-3">
-             <span className="inline-block bg-white/20 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-[0.1em] px-2 py-0.5 rounded-full border border-white/20">
-              {helper.type}
-            </span>
-          </div>
-          <p className="text-white/90 text-sm truncate mb-4 drop-shadow-md font-medium">{helper.name}</p>
-          <div className="font-black text-lg drop-shadow-xl bg-white text-gray-900 w-fit px-4 py-1.5 rounded-full shadow-xl">
-            {formatPrice()}
-          </div>
+        <p className="text-[14px] text-gray-500 truncate">{helper.name}</p>
+        <p className="text-[14px] text-gray-500">{helper.category || 'Professional Helper'}</p>
+
+        <div className="mt-1 flex items-baseline gap-1">
+           <span className="text-[15px] font-bold text-gray-900">{formatPrice()}</span>
+           <span className="text-[14px] text-gray-900/80">/ session</span>
         </div>
       </div>
     </motion.div>
   );
 };
 
-// --- RECENTLY ADDED ELITE CARD ---
 const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
   const formatPrice = () => {
     const price = item.price || item.regularPrice;
@@ -873,36 +872,51 @@ const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
     return `R${price}`;
   };
 
+  const getPriceSuffix = () => {
+    if (type !== 'property') return '';
+    switch (item.type) {
+      case 'rent': return '/ month';
+      case 'over': return '/ night';
+      case 'sale': return '';
+      case 'office': return '/ hour';
+      case 'land': return '';
+      default: return item.type?.includes('rent') ? '/ month' : '';
+    }
+  };
+
   return (
     <motion.div
-      whileHover={{ y: -4, scale: 1.02 }}
+      whileHover={{ y: -4 }}
       onClick={onClick}
-      className="cursor-pointer relative group overflow-hidden rounded-2xl w-full shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100/50"
+      className="cursor-pointer flex flex-col gap-2 group"
     >
-      <div className="relative aspect-[4/5] w-full bg-gray-200">
+      <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100 group">
         <ImageGallery
           imageUrls={item.imageUrls || []}
           alt={item.name}
           type={type}
         />
-        {/* Dark overlay that appears on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
-        
-        {/* Information that appears on hover */}
-        <div className="absolute inset-0 p-5 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-6 group-hover:translate-y-0 text-white z-20 pointer-events-none">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="font-bold text-xl leading-tight truncate mr-2 drop-shadow-xl">{item.address || "South Africa"}</h3>
-            {item.rating && (
-              <div className="flex items-center gap-1 text-sm font-semibold shrink-0 bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-md shadow-lg border border-white/20">
-                <StarIconSolid className="w-3.5 h-3.5 text-amber-400" />
-                <span>{item.rating?.toFixed(2)}</span>
-              </div>
-            )}
-          </div>
-          <p className="text-white/90 text-sm truncate mb-4 drop-shadow-md font-medium">{item.name}</p>
-          <div className="font-black text-lg drop-shadow-xl bg-white text-gray-900 w-fit px-4 py-1.5 rounded-full shadow-xl">
-            {formatPrice()}
-          </div>
+        <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-sm border border-black/5 z-20">
+          <span className="text-[10px] font-bold text-gray-900 uppercase tracking-wider">New Listing</span>
+        </div>
+      </div>
+
+      <div className="flex flex-col pt-1">
+        <div className="flex justify-between items-start gap-2">
+          <h3 className="font-bold text-[15px] text-gray-900 truncate">
+            {item.address || "South Africa"}
+          </h3>
+          {item.rating && (
+            <div className="flex items-center gap-1 shrink-0">
+              <StarIconSolid className="w-3.5 h-3.5 text-gray-950" />
+              <span className="text-[14px] font-medium text-gray-950">{item.rating?.toFixed(1)}</span>
+            </div>
+          )}
+        </div>
+        <p className="text-[14px] text-gray-500 truncate">{item.name}</p>
+        <div className="mt-1 flex items-baseline gap-1">
+           <span className="text-[15px] font-bold text-gray-900">{formatPrice()}</span>
+           <span className="text-[14px] text-gray-900/80">{getPriceSuffix()}</span>
         </div>
       </div>
     </motion.div>
@@ -1224,6 +1238,7 @@ const MobileAppHomepage = ({
                 { id: 'grocery', name: 'Groceries', desc: 'Fresh items in 60m', icon: <FaShoppingBasket />, color: 'bg-green-500', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80' },
                 { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <FaHandsWash />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1635274605638-d44babc08a4f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
                 { id: 'pharmacy', name: 'Pharmacy', desc: 'Medication drop-off', icon: <FaFire />, color: 'bg-rose-500', img: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=400&q=80' },
+                { id: 'usedbooks', name: 'Used Books', desc: 'Sell Uni textbooks', icon: <FaGraduationCap />, color: 'bg-orange-600', img: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80' },
                 { id: 'water', name: 'Water & Gas', desc: 'Refills delivered', icon: <FaWater />, color: 'bg-cyan-500', img: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?auto=format&fit=crop&w=400&q=80' }
               ].map((item) => (
                 <motion.div
@@ -1699,10 +1714,9 @@ const MobileAppHomepage = ({
           <div className="grid grid-cols-2 gap-3">
             {[
               { id: 'grocery', name: 'Groceries', desc: 'Fresh items in 60m', icon: <FaShoppingBasket />, color: 'bg-green-500', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80' },
-                { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <FaHandsWash />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1635274605638-d44babc08a4f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-             
+              { id: 'usedbooks', name: 'Used Books', desc: 'Sell Uni textbooks', icon: <FaGraduationCap />, color: 'bg-orange-600', img: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80' },
+              { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <FaHandsWash />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1635274605638-d44babc08a4f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
               { id: 'pharmacy', name: 'Pharmacy', desc: 'Medication drop-off', icon: <FaFire />, color: 'bg-rose-500', img: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=400&q=80' },
-              { id: 'water', name: 'Water & Gas', desc: 'Refills delivered', icon: <FaWater />, color: 'bg-cyan-500', img: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?auto=format&fit=crop&w=400&q=80' }
             ].map((item) => (
               <motion.div
                 key={item.id}
