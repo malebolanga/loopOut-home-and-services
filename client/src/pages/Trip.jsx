@@ -128,13 +128,11 @@ const Trip = () => {
     
     try {
       // Build search URL with specific destination filter
-      const baseUrl = `/api/listing/get?address=${encodeURIComponent(destination)}&limit=9`;
-      
       const [listingsRes, helpersRes, servicesRes, eventsRes] = await Promise.all([
-        fetch(baseUrl),
-        fetch(`/api/helper/get?limit=6`),
-        fetch(`/api/service/get?limit=6`),
-        fetch(`/api/event/get?limit=6`)
+        fetch(`/api/listing/get?address=${encodeURIComponent(destination)}&limit=9`),
+        fetch(`/api/helper/get?address=${encodeURIComponent(destination)}&limit=6`),
+        fetch(`/api/service/get?location=${encodeURIComponent(destination)}&limit=6`),
+        fetch(`/api/event/get?location=${encodeURIComponent(destination)}&limit=6`)
       ]);
 
       const [listings, helpers, services, events] = await Promise.all([
@@ -233,7 +231,7 @@ const Trip = () => {
             <motion.div key="step1" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} className="max-w-2xl mx-auto text-center">
               <span className="text-[10px] font-black uppercase tracking-[0.4em] text-rose-500 mb-6 block italic">Deployment Target</span>
               <h1 className="text-6xl sm:text-7xl font-black mb-16 tracking-tighter leading-none">Where to?</h1>
-              <div className="relative group">
+              <div className="relative ">
                 <input
                   type="text"
                   placeholder="e.g. Tembisa"
@@ -242,7 +240,7 @@ const Trip = () => {
                   onKeyDown={(e) => e.key === 'Enter' && destination && setStep(2)}
                   className="w-full px-10 py-8 bg-gray-50 border border-gray-100 rounded-[2rem] text-2xl font-black placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-rose-500/5 transition-all text-center"
                 />
-                <button onClick={() => setStep(2)} disabled={!destination} className="mt-12 group flex items-center gap-4 bg-gray-950 text-white px-10 py-5 rounded-full mx-auto hover:bg-rose-500 transition-all active:scale-95 disabled:opacity-20">
+                <button onClick={() => setStep(2)} disabled={!destination} className="mt-12  flex items-center gap-4 bg-gray-950 text-white px-10 py-5 rounded-full mx-auto hover:bg-rose-500 transition-all active:scale-95 disabled:opacity-20">
                    <span className="text-xs font-black uppercase tracking-widest">Next Phase</span>
                    <ChevronRightIcon className="w-4 h-4" />
                 </button>

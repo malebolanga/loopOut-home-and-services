@@ -358,7 +358,7 @@ const MOCK_PROPERTIES = [
   { _id: 'prop-1', name: 'Modern Apartment in City Center', price: 2500, regularPrice: 2500, type: 'rent-long', imageUrls: ['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.5, address: 'Johannesburg' },
   { _id: 'prop-2', name: 'Luxury Villa with Pool', price: 8500000, regularPrice: 8500000, type: 'sale', imageUrls: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8, address: 'Cape Town' },
   { _id: 'prop-3', name: 'Cozy Studio near University', price: 1200, regularPrice: 1200, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.3, address: 'Pretoria' },
-  { _id: 'prop-4', name: 'Modern Office Space', price: 500, regularPrice: 500, type: 'office', imageUrls: ['https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.6, address: 'Sandton' },
+  { _id: 'prop-4', name: 'Modern Office Space', price: 500, regularPrice: 500, type: 'office', imageUrls: ['https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.6, address: 'Polokwane' },
   { _id: 'prop-5', name: 'Family House in Suburbs', price: 3500, regularPrice: 3500, type: 'rent-long', imageUrls: ['https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.7, address: 'Durban' },
   { _id: 'prop-6', name: 'Vacation Beach House', price: 1800, regularPrice: 1800, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1518780664697-55e3ad937233?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9, address: 'Port Elizabeth' },
   { _id: 'prop-7', name: 'Commercial Land Plot', price: 250000, regularPrice: 250000, type: 'land', imageUrls: ['https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.4, address: 'Bloemfontein' },
@@ -639,9 +639,9 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
     <motion.div
       whileHover={{ y: -4 }}
       onClick={handleClick}
-      className="cursor-pointer flex flex-col gap-2 group"
+      className="cursor-pointer flex flex-col gap-2 "
     >
-      <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100 group">
+      <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100 ">
         <ImageGallery
           imageUrls={item.imageUrls || []}
           alt={item.name}
@@ -677,16 +677,14 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
           </div>
         </div>
 
-        <p className="text-[14px] text-gray-500 truncate">
-          {type === 'property' ? (getPropertyTypeLabel() || 'Property in LoopOut') : (item.category || item.name)}
-        </p>
+     
 
         {item._distance && item._distance !== Infinity && !hideDistance ? (
            <p className="text-[14px] text-gray-500">
              {item._distance < 1 ? "Near you" : `${Math.round(item._distance)} km away`}
            </p>
         ) : (
-          <p className="text-[14px] text-gray-500">Recently added</p>
+          <p className="text-[14px] text-gray-500"></p>
         )}
 
         <div className="mt-1 flex items-baseline gap-1">
@@ -824,9 +822,9 @@ const EliteHelperCard = ({ helper, onClick }) => {
     <motion.div
       whileHover={{ y: -4 }}
       onClick={onClick}
-      className="cursor-pointer flex flex-col gap-2 group"
+      className="cursor-pointer flex flex-col gap-2 "
     >
-      <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100 group">
+      <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100 ">
         <ImageGallery
           imageUrls={helper.imageUrls || []}
           alt={helper.name}
@@ -852,7 +850,7 @@ const EliteHelperCard = ({ helper, onClick }) => {
         </div>
 
         <p className="text-[14px] text-gray-500 truncate">{helper.name}</p>
-        <p className="text-[14px] text-gray-500">{helper.category || 'Professional Helper'}</p>
+      
 
         <div className="mt-1 flex items-baseline gap-1">
            <span className="text-[15px] font-bold text-gray-900">{formatPrice()}</span>
@@ -888,9 +886,9 @@ const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
     <motion.div
       whileHover={{ y: -4 }}
       onClick={onClick}
-      className="cursor-pointer flex flex-col gap-2 group"
+      className="cursor-pointer flex flex-col gap-2 "
     >
-      <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100 group">
+      <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100 ">
         <ImageGallery
           imageUrls={item.imageUrls || []}
           alt={item.name}
@@ -936,7 +934,7 @@ const LoopOutHomeHero = ({ navigate }) => {
       >
         <img 
           src="/loopout_hero_bg.png" 
-          alt="LoopOut Elite Experience" 
+          alt="loopOut Elite Experience" 
           className="w-full h-full object-cover"
         />
         {/* Elite Overlay Gradients */}
@@ -979,7 +977,7 @@ const LoopOutHomeHero = ({ navigate }) => {
                whileHover={{ scale: 1.05, y: -5 }}
                whileTap={{ scale: 0.95 }}
                onClick={() => navigate('/listing-home-page')}
-               className="group relative px-10 py-5 bg-white text-gray-900 rounded-[2rem] font-black shadow-[0_20px_40px_rgba(0,0,0,0.3)] transition-all overflow-hidden"
+               className="relative px-10 py-5 bg-white text-gray-900 rounded-[2rem] font-black shadow-[0_20px_40px_rgba(0,0,0,0.3)] transition-all overflow-hidden"
              >
                 <div className="relative z-10 flex items-center gap-3">
                   <HomeIcon className="w-6 h-6" />
@@ -992,7 +990,7 @@ const LoopOutHomeHero = ({ navigate }) => {
                whileHover={{ scale: 1.05, y: -5 }}
                whileTap={{ scale: 0.95 }}
                onClick={() => navigate('/helper-home-page')}
-               className="group relative px-10 py-5 bg-rose-600 text-white rounded-[2rem] font-black shadow-[0_20px_40px_rgba(225,29,72,0.3)] transition-all overflow-hidden border border-rose-500/50"
+               className=" relative px-10 py-5 bg-rose-600 text-white rounded-[2rem] font-black shadow-[0_20px_40px_rgba(225,29,72,0.3)] transition-all overflow-hidden border border-rose-500/50"
              >
                 <div className="relative z-10 flex items-center gap-3">
                   <UserGroupIcon className="w-6 h-6" />
@@ -1245,7 +1243,7 @@ const MobileAppHomepage = ({
                   key={item.id}
                   whileHover={{ y: -8 }}
                   onClick={() => navigate(`/search?category=${item.id}&type=services`)}
-                  className="group cursor-pointer relative h-48 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
+                  className=" cursor-pointer relative h-48 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
                 >
                   <img src={item.img} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={item.name} />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -1444,7 +1442,7 @@ const MobileAppHomepage = ({
                   desc: "Book instantly via WhatsApp and enjoy professional services from the best in the city." 
                 }
               ].map((step, i) => (
-                <div key={i} className="flex flex-col items-center text-center group">
+                <div key={i} className="flex flex-col items-center text-center ">
                   <div className="mb-6 p-6 bg-white rounded-3xl shadow-sm border border-gray-100 group-hover:shadow-xl group-hover:-translate-y-2 transition-all duration-300">
                     {step.icon}
                   </div>
@@ -1527,7 +1525,7 @@ const MobileAppHomepage = ({
            whileHover={{ scale: 1.1, rotate: 10 }}
            whileTap={{ scale: 0.9 }}
            onClick={() => navigate('/ai-help-center')}
-           className="group fixed bottom-8 right-8 z-[100] cursor-pointer "
+           className=" fixed bottom-8 right-8 z-[100] cursor-pointer "
         >
           <div className="absolute -inset-2 bg-gradient-to-r from-rose-600 to-pink-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 animate-pulse" />
           <div className="relative bg-rose-600 text-white p-4 rounded-full shadow-2xl flex items-center justify-center border-2 border-white/20">
@@ -1546,7 +1544,7 @@ const MobileAppHomepage = ({
            whileHover={{ scale: 1.1 }}
            whileTap={{ scale: 0.9 }}
            onClick={() => setIsBookingsOpen(true)}
-           className="group fixed bottom-28 right-8 z-[100] cursor-pointer "
+           className=" fixed bottom-28 right-8 z-[100] cursor-pointer "
         >
           <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 shadow-xl" />
           <div className="relative bg-white text-gray-900 p-4 rounded-full shadow-2xl flex items-center justify-center border border-gray-100">
@@ -1638,7 +1636,7 @@ const MobileAppHomepage = ({
         <motion.div 
           initial={{ opacity: 0, y: 20 }} 
           animate={{ opacity: 1, y: 0 }} 
-          className="relative h-72 rounded-[2.5rem] overflow-hidden mb-8 group shadow-2xl"
+          className="relative h-72 rounded-[2.5rem] overflow-hidden mb-8  shadow-2xl"
           onClick={() => navigate('/ai-help-center')}
         >
           <img 
@@ -1722,7 +1720,7 @@ const MobileAppHomepage = ({
                 key={item.id}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => navigate(`/search?category=${item.id}&type=services`)}
-                className="group cursor-pointer relative h-32 rounded-2xl overflow-hidden shadow-sm border border-gray-100"
+                className="cursor-pointer relative h-32 rounded-2xl overflow-hidden shadow-sm border border-gray-100"
               >
                 <img src={item.img} className="absolute inset-0 w-full h-full object-cover" alt={item.name} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />

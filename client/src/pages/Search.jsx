@@ -300,7 +300,7 @@ const CategoryDropdown = ({
                   <button
                     key={category.id}
                     onClick={() => onSelect(category)}
-                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left group ${isSelected
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left ${isSelected
                       ? 'bg-rose-50 border-rose-200 border'
                       : 'hover:bg-gray-50 border border-transparent'
                       }`}
@@ -403,11 +403,26 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
   };
 
   const getPrice = () => {
-    if (item.price) return `R${item.price}`;
-    if (item.regularPrice) return `R${item.regularPrice}`;
-    if (item.hourlyRate) return `R${item.hourlyRate}/hr`;
-    if (item.dailyRate) return `R${item.dailyRate}/day`;
-    return 'Contact for price';
+    let p = item.price || item.regularPrice || item.hourlyRate || item.dailyRate;
+    if (!p) return 'Contact for price';
+    
+    const formattedPrice = `R${p.toLocaleString()}`;
+
+    if (itemType === 'properties') {
+      if (itemSubType === 'rent') return `${formattedPrice} /month`;
+      if (itemSubType === 'over' || itemSubType === 'guest_house') return `${formattedPrice}  /night`;
+      if (itemSubType === 'office') return `${formattedPrice} /hour`;
+      if (itemSubType === 'sale' || itemSubType === 'land') return `${formattedPrice} /Sale`;
+    }
+    
+    if (itemType === 'services' || itemType === 'helpers') {
+      if (item.dailyRate) return `${formattedPrice} /day`;
+      if (item.hourlyRate) return `${formattedPrice} /hour`;
+    }
+
+    if (itemType === 'events') return `${formattedPrice} per guest`;
+
+    return formattedPrice;
   };
 
   const getRating = () => item.rating || item.averageRating || 4.5;
@@ -417,51 +432,59 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
     return (
       <motion.div
         variants={itemVariants}
-        whileHover={{ x: 8, scale: 1.01 }}
+        whileHover={{ x: 4, y: -2, backgroundColor: '#f9fafb' }}
         onClick={onClick}
-        className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer border border-gray-100 flex gap-5 group overflow-hidden relative"
+        className="bg-white rounded-2xl p-3 hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-100 flex gap-4  overflow-hidden"
       >
-        <div className="w-40 h-40 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50">
+        <div className="w-32 h-32 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 bg-neutral-100">
           <ImageWithFallback
             src={getImageUrl()}
             imageUrls={getAllImages()}
             type={itemType === 'listing' ? 'property' : (itemType === 'helper' ? 'helper' : (itemType === 'event' ? 'event' : 'service'))}
             alt={item.name || item.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         </div>
 
-        <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
-          <div className="flex justify-between items-start">
+        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+          <div className="flex justify-between items-start gap-2">
             <div className="min-w-0">
-              <h3 className="text-lg font-bold text-gray-900 truncate tracking-tight">{item.name || item.title}</h3>
-              <div className="flex items-center gap-1.5 text-gray-500 mt-1">
+              <h3 className="text-base font-bold text-gray-900 truncate tracking-tight group-hover:text-rose-600 transition-colors">
+                {item.name || item.title}
+              </h3>
+              <div className="flex items-center gap-1 text-gray-400 mt-0.5">
                 <MapPin className="w-3 h-3" />
-                <p className="text-xs font-medium truncate">{getLocation()}</p>
+                <p className="text-[11px] font-medium truncate">{getLocation()}</p>
               </div>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <Star className="w-3 h-3 text-gray-950 fill-gray-950" />
-              <span className="text-sm font-medium text-gray-950">{getRating().toFixed(1)}</span>
+            <div className="flex items-center gap-1 shrink-0 bg-gray-50 px-2 py-1 rounded-lg">
+              <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+              <span className="text-xs font-bold text-gray-900">{getRating().toFixed(1)}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 mt-2 text-xs text-gray-500 flex-wrap">
-            {item.bedrooms !== undefined && <span>{item.bedrooms} bedrooms</span>}
-            {item.bedrooms !== undefined && item.bathrooms !== undefined && <span className="text-gray-300">•</span>}
-            {item.bathrooms !== undefined && <span>{item.bathrooms} bathrooms</span>}
+          <div className="flex items-center gap-2 mt-1 text-[11px] text-gray-500 flex-wrap">
+            {item.bedrooms !== undefined && (
+              <span className="bg-gray-50 px-2 py-0.5 rounded-md">{item.bedrooms} bed</span>
+            )}
+            {item.bathrooms !== undefined && (
+              <span className="bg-gray-50 px-2 py-0.5 rounded-md">{item.bathrooms} bath</span>
+            )}
+            {itemType !== 'properties' && subConfig && (
+              <span className="bg-gray-50 px-2 py-0.5 rounded-md">{subConfig.label}</span>
+            )}
           </div>
 
-          <div className="mt-4 flex justify-between items-end">
+          <div className="mt-auto flex justify-between items-end">
              <div className="flex flex-col">
-                <span className="text-sm text-gray-500 font-medium">Starting from</span>
-                <span className="text-lg font-bold text-gray-900">{getPrice()}</span>
+                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Starting from</span>
+                <span className="text-base font-black text-gray-900">{getPrice()}</span>
              </div>
              <button
                onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }}
-               className="p-2.5 rounded-full hover:bg-gray-100 transition-colors"
+               className={`p-2 rounded-full transition-all ${isLiked ? 'bg-rose-50 text-rose-500' : 'bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500'}`}
              >
-               {isLiked ? <Heart className="w-5 h-5 text-rose-500 fill-rose-500" /> : <Heart className="w-5 h-5 text-gray-400" />}
+               <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
              </button>
           </div>
         </div>
@@ -472,23 +495,25 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
   return (
     <motion.div
       variants={itemVariants}
+      whileHover={{ y: -4 }}
       onClick={onClick}
-      className="bg-white rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer h-full flex flex-col group"
+      className="
+      cursor-pointer flex flex-col h-full"
     >
-      <div className="relative aspect-square overflow-hidden bg-gray-100 rounded-2xl">
+      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100 rounded-2xl mb-3 shadow-sm group-hover:shadow-md transition-shadow">
         <ImageWithFallback
           src={getImageUrl()}
           imageUrls={getAllImages()}
           type={itemType === 'listing' ? 'property' : (itemType === 'helper' ? 'helper' : (itemType === 'event' ? 'event' : 'service'))}
           alt={item.name || item.title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         
         {/* Type Badge */}
         {mainConfig && (
-          <div className="absolute top-3 left-3 z-10">
-            <div className="bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-sm border border-black/5">
-              <span className="text-[10px] font-bold text-gray-900 uppercase tracking-wider">
+          <div className="absolute top-2.5 left-2.5 z-10">
+            <div className="bg-white/90 backdrop-blur-md px-2 py-1 rounded-lg border border-white/20 shadow-sm">
+              <span className="text-[9px] font-black text-gray-900 uppercase tracking-widest">
                  {mainConfig.label}
               </span>
             </div>
@@ -498,48 +523,42 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
         {/* Favorite Button */}
         <button
           onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }}
-          className="absolute top-3 right-3 z-10 p-2 text-white hover:scale-110 transition-transform active:scale-95 drop-shadow-md"
+          className="absolute top-2.5 right-2.5 z-10 p-2 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 transition-all active:scale-90"
         >
-          <Heart className={`w-6 h-6 stroke-[2.5px] ${isLiked ? 'text-rose-500 fill-rose-500 stroke-rose-500' : 'text-white'}`} />
+          <Heart className={`w-4 h-4 stroke-[2.5px] ${isLiked ? 'text-rose-500 fill-rose-500 stroke-rose-500' : 'text-white'}`} />
         </button>
-
-        {/* Image Dots Indicator (Fake for aesthetic) */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-           <div className="w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
-           <div className="w-1.5 h-1.5 rounded-full bg-white/60 shadow-sm" />
-           <div className="w-1.5 h-1.5 rounded-full bg-white/60 shadow-sm" />
-        </div>
       </div>
 
-      <div className="py-3 flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col">
         <div className="flex justify-between items-start gap-2">
-          <h3 className="font-bold text-[15px] text-gray-900 truncate flex-1">
+          <h3 className="font-bold text-sm text-gray-900 truncate group-hover:text-rose-600 transition-colors">
             {item.name || item.title}
           </h3>
           <div className="flex items-center gap-1 shrink-0">
-            <Star className="w-3.5 h-3.5 text-gray-950 fill-gray-950" />
-            <span className="text-[14px] font-medium text-gray-950">{getRating().toFixed(1)}</span>
+            <Star className="w-3 h-3 text-gray-900 fill-gray-900" />
+            <span className="text-xs font-bold text-gray-900">{getRating().toFixed(1)}</span>
           </div>
         </div>
 
-        <p className="text-[14px] text-gray-500 mt-0.5 truncate">{getLocation()}</p>
+        <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+          <MapPin className="w-3 h-3 flex-shrink-0" />
+          <p className="text-xs font-medium truncate">{getLocation()}</p>
+        </div>
         
-        <div className="text-[14px] text-gray-500 mt-1 flex gap-1 items-center flex-wrap">
-           {itemType === 'properties' && (
+        <div className="text-[11px] text-gray-400 mt-1 flex gap-1 items-center flex-wrap uppercase font-bold tracking-tight">
+           {itemType === 'properties' ? (
              <>
-               <span>{item.bedrooms || 0} bedrooms</span>
-               <span>•</span>
-               <span>{item.bathrooms || 0} bathrooms</span>
+               <span>{item.bedrooms || 0} Beds</span>
+               <span className="text-gray-300">•</span>
+               <span>{item.bathrooms || 0} Baths</span>
              </>
+           ) : (
+             subConfig && <span>{subConfig.label}</span>
            )}
-           {itemType !== 'properties' && subConfig && <span>{subConfig.label}</span>}
         </div>
 
-        <div className="mt-2 flex items-baseline gap-1">
-           <span className="text-[15px] font-bold text-gray-900">{getPrice()}</span>
-           <span className="text-[14px] text-gray-900/80">
-              {itemType === 'properties' ? '/ night' : ''}
-           </span>
+        <div className="mt-2 text-sm font-black text-gray-900 uppercase">
+           {getPrice()}
         </div>
       </div>
     </motion.div>
@@ -570,9 +589,9 @@ const EmptyState = ({ onClear }) => (
 );
 
 const SkeletonCard = () => (
-  <div className="bg-white rounded-xl overflow-hidden">
-    <div className="h-48 bg-gray-200 animate-pulse" />
-    <div className="p-3 space-y-2">
+  <div className="space-y-3">
+    <div className="aspect-[4/3] bg-gray-200 animate-pulse rounded-2xl" />
+    <div className="space-y-2">
       <div className="flex justify-between">
         <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
         <div className="h-4 bg-gray-200 rounded w-8 animate-pulse" />
@@ -594,13 +613,13 @@ const generateMockData = (urlParams) => {
       if (PROPERTY_TYPE_CONFIG[propType]) {
         mockData.push({
           _id: `p${index}`,
-          name: `${PROPERTY_TYPE_CONFIG[propType].label} in Sandton`,
+          name: `${PROPERTY_TYPE_CONFIG[propType].label} in Polokwane`,
           price: 5000 + (index * 2000),
           itemType: 'properties',
           subType: propType,
           imageUrls: ['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800'],
           rating: 4.5 + (index * 0.1),
-          address: 'Sandton, Johannesburg',
+          address: 'Polokwane, Limpopo',
           bedrooms: 2 + index,
           bathrooms: 1 + index,
         });
@@ -620,7 +639,7 @@ const generateMockData = (urlParams) => {
           subType: helperType,
           imageUrls: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800'],
           rating: 4.7 + (index * 0.05),
-          address: 'Cape Town',
+          address: 'Johannesburg',
           skills: [HELPER_CATEGORY_CONFIG[helperType].label],
         });
       }
@@ -963,8 +982,8 @@ const SearchPage = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className={`grid ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'
-              } gap-4`}
+            className={`grid ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6' : 'grid-cols-1'
+              } gap-x-4 gap-y-8`}
           >
             {listings.map((item, index) => (
               <ResultCard
@@ -1014,7 +1033,7 @@ const SearchPage = () => {
                       <button 
                         key={item.id}
                         onClick={() => setSearchType(item.id)}
-                        className="flex flex-col items-center gap-2 group relative outline-none"
+                        className="flex flex-col items-center gap-2 relative outline-none"
                       >
                          <motion.div 
                            animate={isActive ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : { scale: 1, rotate: 0 }}

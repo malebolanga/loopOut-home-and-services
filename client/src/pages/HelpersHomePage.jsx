@@ -231,11 +231,11 @@ const HelpersHomePage = () => {
                      <button onClick={() => { setActiveTab('all'); setSearchQuery(''); }} className="px-6 py-2.5 border border-gray-900 rounded-lg font-semibold text-gray-900 hover:bg-gray-50 transition-colors">Remove all filters</button>
                   </div>
                ) : (
-                  <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${showMap ? 'xl:grid-cols-3' : 'xl:grid-cols-4'} gap-6`}>
-                     {filteredHelpers.map(helper => (
-                        <HelperItem key={helper._id} helper={helper} compactMode={false} />
-                     ))}
-                  </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
+                      {filteredHelpers.map(helper => (
+                         <HelperItem key={helper._id} helper={helper} compactMode={false} />
+                      ))}
+                   </div>
                )}
             </div>
             

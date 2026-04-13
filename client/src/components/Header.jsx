@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import BrandLogo from './BrandLogo';
+import BrandLogo, { BrandIcon } from './BrandLogo';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import {
@@ -77,7 +77,7 @@ export default function Header() {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState('San Francisco');
+  const [currentLocation, setCurrentLocation] = useState('Polokwane');
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
   const notificationSound = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
@@ -408,7 +408,7 @@ export default function Header() {
     }
   };
 
-  const hiddenRoutes = ['/profile', '/wishlist'];
+  const hiddenRoutes = ['/profile', '/wishlist', '/search'];
   const hiddenPrefixes = ['/user/', '/user-profile/', '/listing/', '/helper/', '/service/', '/event/'];
   
   const isHeaderHidden = 
@@ -436,10 +436,13 @@ export default function Header() {
             <div className={`transition-all duration-300 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
               <button
                 onClick={() => setShowSearch(true)}
-                className="search-trigger group relative flex items-center justify-center w-14 h-14 rounded-full bg-white shadow-[0_15px_35px_-10px_rgba(225,29,72,0.15)] hover:shadow-2xl hover:scale-110 transition-all duration-500 active:scale-95 border border-rose-100"
+                className="search-trigger group relative flex items-center justify-center lg:justify-start lg:pl-3 lg:pr-6 lg:w-auto w-14 h-14 rounded-full bg-white shadow-[0_15px_35px_-10px_rgba(225,29,72,0.15)] hover:shadow-2xl hover:scale-110 transition-all duration-500 active:scale-95 border border-rose-100"
               >
                 <div className="absolute inset-0 bg-rose-500 opacity-0 group-hover:opacity-10 rounded-full blur-md transition-opacity" />
-                <MagnifyingGlassIcon className="w-7 h-7 text-rose-600 stroke-[2.5px]" />
+                <BrandIcon className="w-8 h-8 lg:w-9 lg:h-9" />
+                <span className="hidden lg:block ml-1 text-xl font-black tracking-[-0.04em] text-gray-900">
+                  loop<span className="text-rose-600">Out</span>
+                </span>
               </button>
             </div>
 
@@ -800,7 +803,7 @@ export default function Header() {
                   <h2 className="text-2xl font-black text-gray-900 mb-6 tracking-tight">Where to?</h2>
                   
                   <div className="relative mb-8">
-                     <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                     <BrandIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 grayscale opacity-40" />
                      <input 
                        type="text"
                        placeholder="Search destinations"
@@ -880,7 +883,7 @@ export default function Header() {
                  onClick={() => { handleSearch(); setShowSearch(false); }}
                  className="bg-rose-500 hover:bg-rose-600 text-white px-8 py-4 rounded-[1.2rem] flex items-center gap-3 shadow-xl transition-all active:scale-95"
                >
-                 <MagnifyingGlassIcon className="w-5 h-5 text-white" />
+                 <BrandIcon className="w-6 h-6" color="white" />
                  <span className="text-sm font-black uppercase tracking-widest">Search</span>
                </button>
             </div>
@@ -922,7 +925,7 @@ export default function Header() {
 
               <Link to="/" className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${location.pathname === '/' ? 'text-rose-600' : 'text-gray-400'}`}>
                 <motion.div whileTap={{ scale: 0.85 }}>
-                  {location.pathname === '/' ? <MagnifyingGlassIconSolid className="w-6 h-6" /> : <MagnifyingGlassIcon className="w-6 h-6 stroke-[2.2px]" />}
+                  <BrandIcon className={`w-7 h-7 ${location.pathname === '/' ? '' : 'grayscale opacity-50'}`} />
                 </motion.div>
                 <span className="text-[9px] font-black uppercase tracking-widest">Explore</span>
               </Link>
@@ -944,10 +947,10 @@ export default function Header() {
                   className="relative"
                 >
                   <div className="absolute inset-0 bg-rose-500 blur-[25px] opacity-40 animate-pulse" />
-                  <div className="w-18 h-18 bg-gray-950 rounded-[1.8rem] flex items-center justify-center border-[4px] border-white shadow-2xl relative z-10 overflow-hidden">
+                  <div className="w-12 h-12 bg-gray-950 rounded-[1.8rem] flex items-center justify-center border-[4px] border-white shadow-2xl relative z-10 overflow-hidden">
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                      transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
                       className="absolute inset-x-0 inset-y-0 bg-gradient-to-tr from-rose-500/30 to-transparent"
                     />
                     <SparklesIcon className="w-8 h-8 text-white stroke-[2.5px]" />

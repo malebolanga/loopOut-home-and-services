@@ -265,7 +265,7 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
       onClick={onClick}
       className={`${className} ${compactMode
         ? 'flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg  w-full'
-        : 'rounded-xl  hover:shadow-sm transition-all duration-200 overflow-hidden cursor-pointer w-full relative max-w-sm mx-auto flex flex-col'
+        : ' cursor-pointer flex flex-col h-full'
         }`}
     >
       {compactMode ? (
@@ -337,176 +337,119 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
               </div>
               <div className="flex flex-col items-end">
                 <div className="flex items-center text-gray-600">
-                  <span className="font-medium text-gray-900 text-[12px] mr-0.5">
+                  <span className="font-medium text-gray-900 text-[12px] mr-1">
                     {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
                   </span>
                   <FaStar className="text-amber-500 text-[10px]" />
                 </div>
                 {ratingData.count > 0 && <span className="text-[9px] text-gray-400 mt-0.5">({ratingData.count} rev)</span>}
               </div>
-              <button
-                onClick={(e) => { e.preventDefault(); setShowShareOptions(!showShareOptions); }}
-                className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                aria-label="Share this property"
-              >
-                {/* Share icon would go here */}
-              </button>
             </div>
           </div>
-
-          {showShareOptions && (
-            <div className="absolute right-0 top-8 mt-2 w-40 bg-white rounded-lg shadow-lg z-20 border border-gray-200 divide-y divide-gray-100 text-sm">
-              <div className="py-1">
-                <button onClick={(e) => { e.preventDefault(); shareListing('whatsapp'); }} className=" w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center">
-                  <span className="i-logos-whatsapp-icon mr-2 text-green-500"></span> WhatsApp
-                </button>
-                <button onClick={(e) => { e.preventDefault(); shareListing('facebook'); }} className=" w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center">
-                  <span className="i-logos-facebook mr-2 text-blue-600"></span> Facebook
-                </button>
-                <button onClick={(e) => { e.preventDefault(); shareListing('copy'); }} className=" w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center">
-                  <span className="i-logos-clipboard mr-2 text-gray-500"></span> Copy Link
-                </button>
-              </div>
-            </div>
-          )}
         </>
       ) : (
         <>
-          <button
-            onClick={toggleFavorite}
-            className="absolute top-1 right-3 z-10 p-2 bg-white/90 rounded-full shadow-md hover:bg-white transition-all duration-200 hover:scale-110 group/favorite"
-            aria-label={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
-          >
-            {isFavorite ? (
-              <FaHeart className="w-3 h-3 text-rose-600" />
-            ) : (
-              <FaRegHeart className="w-3 h-3 text-gray-700 group-hover/favorite:text-rose-600" />
-            )}
-          </button>
+          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl mb-2.5 shadow-sm group-hover:shadow-md transition-shadow">
+            <button
+              onClick={toggleFavorite}
+              className="absolute top-2 right-2 z-20 p-1.5 bg-white/20 backdrop-blur-md rounded-full shadow-sm hover:bg-white/40 transition-all hover:scale-110"
+              aria-label={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
+            >
+              {isFavorite ? (
+                <FaHeart className="w-3.5 h-3.5 text-rose-600" />
+              ) : (
+                <FaRegHeart className="w-3.5 h-3.5 text-white" />
+              )}
+            </button>
 
-          {/* ADDED: User avatar and first name in left corner */}
-          {listing?.userRef?._id && (
-            <div className="absolute top-1 left-3 z-10 flex items-center gap-1.5 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-full shadow-md">
-              <div className="w-5 h-5 rounded-full overflow-hidden">
-                {getUserAvatar()}
+            {listing?.userRef?._id && (
+              <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded-full shadow-sm">
+                <div className="w-4 h-4 rounded-full overflow-hidden">
+                  {getUserAvatar()}
+                </div>
+                <span className="text-[9px] font-bold text-gray-900 uppercase tracking-tight">{getUserFirstName()}</span>
               </div>
-              <span className="text-xs font-medium text-gray-700">{getUserFirstName()}</span>
-            </div>
-          )}
+            )}
 
-          <Link
-            to={`/listing/${listing._id}`}
-            className="block relative flex-grow-0"
-            onClick={handleCardClick}
-          >
-            <div className="relative pb-[75%] bg-gray-0 overflow-hidden rounded-t-xl">
+            <Link
+              to={`/listing/${listing._id}`}
+              className="block w-full h-full"
+              onClick={handleCardClick}
+            >
               <Swiper
                 modules={[Pagination, Autoplay]}
-                pagination={{
-                  clickable: true,
-                  dynamicBullets: true,
-                }}
+                pagination={{ clickable: true, dynamicBullets: true }}
                 autoplay={{ delay: 5000, disableOnInteraction: false }}
-                className="absolute inset-0 h-full w-full"
+                className="w-full h-full"
               >
                 {enhancedImages.map((img, index) => (
                   <SwiperSlide key={index}>
-                    <div className="relative h-full w-full">
-                      <ImageWithFallback
-                        src={img.url}
-                        imageUrls={index === 0 ? listing.imageUrls : undefined}
-                        type="property"
-                        alt={`${listing.name || 'Property'} image ${index + 1}`}
-                        className={`w-full h-full rounded-2xl object-cover transition-transform duration-500 ${imageLoaded ? 'scale-100' : 'scale-110'} group-hover:scale-105`}
-                        loading="lazy"
-                        onLoad={() => setImageLoaded(true)}
-                      />
-                      <div className="absolute top-2 left-2 z-10 flex gap-1.5">
-                        <span className="bg-white text-gray-800 px-1.5 py-0.5 text-xs font-semibold rounded-full shadow-md backdrop-blur-sm bg-opacity-70">
-                          {getPropertyTypeName(listing.type)}
-                        </span>
-                        {isNewListing && (
-                          <span className="bg-green-500 text-white px-1.5 py-0.5 text-xs font-semibold rounded-full shadow-md">
-                            NEW
-                          </span>
-                        )}
-                      </div>
-
-                      {/* User avatar link - Standard Mode */}
-                      {listing?.userRef?._id && (
-                        <Link
-                          to={`/user-listings/${listing.userRef._id}`}
-                          className="absolute bottom-2 right-2 z-10 w-8 h-8 rounded-full border-2 border-white shadow-lg transition-transform hover:scale-110"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {getUserAvatar()}
-                        </Link>
-                      )}
-                    </div>
+                    <ImageWithFallback
+                      src={img.url}
+                      imageUrls={index === 0 ? listing.imageUrls : undefined}
+                      type="property"
+                      alt={`${listing.name || 'Property'} image ${index + 1}`}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      loading="lazy"
+                    />
                   </SwiperSlide>
                 ))}
               </Swiper>
+            </Link>
+            
+            <div className="absolute bottom-2 left-2 z-10 flex gap-1">
+              <span className="bg-gray-900/80 backdrop-blur-md text-white px-2 py-0.5 text-[9px] font-black uppercase tracking-widest rounded-md">
+                {getPropertyTypeName(listing.type)}
+              </span>
+              {isNewListing && (
+                <span className="bg-rose-500 text-white px-2 py-0.5 text-[9px] font-black uppercase tracking-widest rounded-md">
+                  NEW
+                </span>
+              )}
             </div>
-          </Link>
+          </div>
 
-          <div className="p-3 flex-grow flex flex-col">
-            <div className="flex justify-between items-start">
-              <h3 className="text-sm font-semibold text-gray-900 truncate max-w-[70%] hover:text-blue-600 transition-colors">
+          <div className="flex-1 flex flex-col">
+            <div className="flex justify-between items-start gap-2">
+              <h3 className="text-sm font-bold text-gray-900 truncate group-hover:text-rose-600 transition-colors">
                 {listing.name || 'Property Name'}
               </h3>
-
+              <div className="flex items-center text-gray-900 shrink-0">
+                <FaStar className="text-amber-500 text-[10px]" />
+                <span className="font-bold text-xs ml-1">
+                  {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
+                </span>
+              </div>
             </div>
 
-            <p className="text-gray-600 text-xs flex items-center">
-              <MdLocationOn className="text-rose-600 mr-1 min-w-fit text-xs" />
-              <span className="truncate hover:text-gray-800 transition-colors">
-                {listing.address || 'Address not available'}
-              </span>
+            <p className="text-gray-500 text-xs flex items-center mt-0.5">
+              <MdLocationOn className="text-rose-500 mr-1 min-w-fit text-[10px]" />
+              <span className="truncate">{listing.address || 'Address not available'}</span>
             </p>
-            <div className="mt-1.5">
-              <ListingTypePill type={listing.type} />
-            </div>
 
-            <div className="flex items-center space-x-2 text-gray-700 text-xs">
+            <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-tight">
               {listing.type !== 'land' && listing.type !== 'office' && (
                 <>
                   <div className="flex items-center gap-1">
-                    <FaBed className="text-gray-500 text-xs" />
-                    <span>{listing.bedrooms || 0}</span>
+                    <FaBed className="text-[10px]" />
+                    <span>{listing.bedrooms || 0} Beds</span>
                   </div>
+                  <span className="text-gray-200">•</span>
                   <div className="flex items-center gap-1">
-                    <FaBath className="text-gray-500 text-xs" />
-                    <span>{listing.bathrooms || 0}</span>
+                    <FaBath className="text-[10px]" />
+                    <span>{listing.bathrooms || 0} Baths</span>
                   </div>
                 </>
               )}
-              {listing.type === 'office' && (
-                <div className="flex items-center gap-1">
-                  <span>{listing.squareMeters || listing.bedrooms || 0} sqm</span>
-                </div>
-              )}
-              {listing.type === 'land' && (
-                <div className="flex items-center gap-1">
-                  <span>{listing.landArea || listing.bathrooms || 0} sqm</span>
-                </div>
-              )}
+              {listing.type === 'office' && <span>{listing.squareMeters || listing.bedrooms || 0} SQM</span>}
+              {listing.type === 'land' && <span>{listing.landArea || listing.bathrooms || 0} SQM</span>}
             </div>
 
-            <div className="flex items-center justify-between pt-1 mt-auto">
-              <div className="text-sm font-bold text-gray-900">
-                {formatPrice(
-                  listing.offer ? listing.discountPrice : listing.regularPrice,
-                  { type: listing.type }
-                )}
-              </div>
-              <div className="flex items-center text-gray-600">
-                <FaStar className="text-amber-500 text-[12px]" />
-                <span className="font-medium text-gray-900 text-[13px] ml-1">
-                  {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
-                </span>
-                {ratingData.count > 0 && <span className="text-[10px] text-gray-400 ml-1">({ratingData.count})</span>}
-              </div>
-
+            <div className="mt-2 text-sm font-black text-gray-900">
+               {formatPrice(
+                 listing.offer ? listing.discountPrice : listing.regularPrice,
+                 { type: listing.type }
+               )}
             </div>
           </div>
         </>
