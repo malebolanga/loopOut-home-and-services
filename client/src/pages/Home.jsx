@@ -38,12 +38,22 @@ import {
   TicketIcon,
   InboxIcon,
   BellIcon,
-  ShoppingBagIcon
+  ShoppingBagIcon,
+  HandThumbUpIcon,
+  HandThumbDownIcon,
+  ChatBubbleOvalLeftEllipsisIcon,
+  ChatBubbleLeftEllipsisIcon
 } from '@heroicons/react/24/outline';
 import {
   StarIcon as StarIconSolid,
   HeartIcon as HeartIconSolid,
+  HandThumbUpIcon as HandThumbUpIconSolid,
+  HandThumbDownIcon as HandThumbDownIconSolid
 } from '@heroicons/react/24/solid';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { FreeMode } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/free-mode';
 import { 
   FaApple, 
   FaGooglePlay
@@ -52,6 +62,7 @@ import ImageGallery from '../components/ImageGallery';
 import useLocationCoords from '../hooks/useGeolocation';
 import LoopOutPulse from '../components/LoopOutPulse';
 import MyBookingsConsumer from '../components/MyBookingsConsumer';
+import LookingForItem from '../components/LookingForItem';
 
 import { 
   calculateDistance, 
@@ -353,6 +364,22 @@ const TOP_CATEGORIES = [
     count: '76',
     color: 'from-orange-800 to-brown-600',
     emoji: '🪵'
+  },
+  {
+    id: 'roommate',
+    name: 'Finding Roommate',
+    image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop',
+    count: '340',
+    color: 'from-emerald-500 to-teal-400',
+    emoji: '👤'
+  },
+  {
+    id: 'nanny-need',
+    name: 'Looking for Nanny',
+    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=300&fit=crop',
+    count: '120',
+    color: 'from-pink-400 to-rose-400',
+    emoji: '🍼'
   },
   {
     id: 'trending',
@@ -765,8 +792,11 @@ const TopCategoriesSection = ({ navigate }) => {
     const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner', 'nanny'];
     const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattor Artise', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician'];
     const properties = ['rental', 'guesthouse'];
+    const needs = ['roommate', 'nanny-need'];
 
-    if (helpers.includes(category.id)) {
+    if (needs.includes(category.id)) {
+      navigate('/looking-for');
+    } else if (helpers.includes(category.id)) {
       navigate(`/search?category=${category.id}&type=helpers`);
     } else if (services.includes(category.id)) {
       navigate(`/search?category=${category.id}&type=services`);
@@ -1089,6 +1119,190 @@ const DesktopPopularDestinations = ({ navigate }) => {
   );
 };
 
+const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
+  const isLiked = currentUser && request.likes?.includes(currentUser._id);
+  const isDisliked = currentUser && request.dislikes?.includes(currentUser._id);
+
+  return (
+    <motion.div 
+      whileHover={{ y: -5 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => navigate(`/looking-for?id=${request._id}`)}
+      className="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-xl shadow-gray-100/30 flex flex-col gap-5 h-full cursor-pointer"
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gray-50 overflow-hidden border border-gray-100 p-0.5 shadow-sm">
+            <img 
+              src={request.userRef?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"} 
+              alt="user" 
+              className="w-full h-full object-cover rounded-lg" 
+            />
+          </div>
+          <div>
+            <h4 className="font-black text-gray-900 text-[13px] leading-tight truncate w-32">
+              {request.userRef?.username || "Neighbor"}
+            </h4>
+            <div className="flex items-center gap-1.5 mt-0.5">
+               <span className="text-[9px] text-gray-400 font-black uppercase tracking-widest">{request.category}</span>
+            </div>
+          </div>
+        </div>
+        <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-lg border border-gray-100">
+           {request.category === 'roommate' ? '👤' : 
+            request.category === 'nanny' ? '🍼' : 
+            request.category === 'pampering' ? '💄' : '✨'}
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <h4 className="font-black text-gray-900 text-sm leading-tight">{request.title}</h4>
+        <div className="flex items-center gap-1.5 opacity-60">
+           <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{request.location}</span>
+        </div>
+      </div>
+
+      <p className="text-gray-600 text-[13px] leading-relaxed line-clamp-3 flex-grow font-medium">
+        {request.description}
+      </p>
+
+      <div className="flex items-center justify-between pt-5 border-t border-gray-50 mt-auto">
+        <div className="flex items-center gap-4">
+          <motion.button 
+            whileTap={{ scale: 0.8 }}
+            onClick={(e) => { e.stopPropagation(); onLike(request._id); }}
+            className={`flex items-center gap-1.5 transition-all ${isLiked ? 'text-rose-500' : 'text-gray-400 hover:text-gray-900'}`}
+          >
+            {isLiked ? <HandThumbUpIconSolid className="w-5 h-5" /> : <HandThumbUpIcon className="w-5 h-5" />}
+            <span className="text-xs font-black">{request.likes?.length || 0}</span>
+          </motion.button>
+          
+          <motion.button 
+            whileTap={{ scale: 0.8 }}
+            onClick={(e) => { e.stopPropagation(); onDislike(request._id); }}
+            className={`flex items-center gap-1.5 transition-all ${isDisliked ? 'text-gray-900' : 'text-gray-400 hover:text-gray-900'}`}
+          >
+            {isDisliked ? <HandThumbDownIconSolid className="w-5 h-5" /> : <HandThumbDownIcon className="w-5 h-5" />}
+            <span className="text-xs font-black">{request.dislikes?.length || 0}</span>
+          </motion.button>
+
+          <div className="w-1 h-1 bg-gray-200 rounded-full" />
+          
+          <div className="flex items-center gap-1.5 text-gray-400">
+             <ChatBubbleLeftEllipsisIcon className="w-5 h-5" />
+             <span className="text-xs font-black">{request.comments?.length || 0} Comments</span>
+          </div>
+        </div>
+
+        <button 
+           onClick={(e) => { e.stopPropagation(); window.open(`https://wa.me/${request.contact}`); }}
+           className="w-10 h-10 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-all flex items-center justify-center shadow-sm"
+        >
+          <ChatBubbleOvalLeftEllipsisIcon className="w-5 h-05" />
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
+const CommunityNeedsSection = ({ navigate }) => {
+  const [needs, setNeeds] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { currentUser } = useSelector((state) => state.user);
+
+  const fetchNeeds = async () => {
+    try {
+      const res = await fetch('/api/looking-for/get?limit=6');
+      if (res.ok) {
+        const data = await res.json();
+        setNeeds(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNeeds();
+  }, []);
+
+  const handleInteraction = async (id, type) => {
+    if (!currentUser) return navigate('/sign-in');
+    try {
+      const res = await fetch(`/api/looking-for/${type}/${id}`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        // Optimistic UI update or re-fetch
+        fetchNeeds();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (loading || needs.length === 0) return null;
+
+  return (
+    <motion.section 
+      initial="hidden" 
+      whileInView="visible" 
+      viewport={{ once: true }} 
+      variants={containerVariants} 
+      className="mb-16 mt-4"
+    >
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-2xl font-black text-gray-900 tracking-tight">Live Community Feed</h2>
+          <p className="text-[11px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-1 opacity-60">Real-time neighbor requests</p>
+        </div>
+        <button 
+          onClick={() => navigate('/looking-for')} 
+          className="px-5 py-2.5 bg-rose-50 text-rose-600 rounded-full text-xs font-black uppercase tracking-widest hover:bg-rose-100 transition-all"
+        >
+          Explore all
+        </button>
+      </div>
+
+      <div className="relative -mx-8 px-8 ">
+        <Swiper
+          modules={[FreeMode]}
+          freeMode={true}
+          slidesPerView={'auto'}
+          spaceBetween={16}
+          className="community-feed-swiper !overflow-visible"
+          breakpoints={{
+            320: { slidesPerView: 1.15, spaceBetween: 12 },
+            640: { slidesPerView: 2.2, spaceBetween: 16 },
+            1024: { slidesPerView: 3.2, spaceBetween: 20 },
+            1280: { slidesPerView: 4, spaceBetween: 24 }
+          }}
+        >
+          {needs.map((need, idx) => (
+            <SwiperSlide key={need._id} className="h-full">
+              <motion.div
+                variants={itemVariants}
+                custom={idx}
+                className="h-full"
+              >
+                <StatusCard 
+                  request={need} 
+                  currentUser={currentUser}
+                  onLike={(id) => handleInteraction(id, 'like')}
+                  onDislike={(id) => handleInteraction(id, 'dislike')}
+                  navigate={navigate}
+                />
+              </motion.div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
+    </motion.section>
+  );
+};
+
 const SmartRecommendations = ({ recommendations, insights, loading, onItemClick }) => {
   if (loading) {
     return (
@@ -1178,6 +1392,7 @@ const MobileAppHomepage = ({
     { icon: '✂️', label: 'Barber', type: 'helpers', category: 'barber' },
     { icon: '👶', label: 'Nanny', type: 'helpers', category: 'nanny' },
     { icon: '🎪', label: 'Events', type: 'events' },
+    { icon: '🤝', label: 'Needs', type: 'looking-for', path: '/looking-for' },
     { icon: '🏖️', label: 'Beachfront', type: 'properties' },
     { icon: '🏕️', label: 'Cabins', type: 'properties' },
     { icon: '🏰', label: 'Trending', type: 'all' },
@@ -1200,11 +1415,6 @@ const MobileAppHomepage = ({
         <main className="max-w-7xl mx-auto px-8 py-12">
           {/* FRESHA-STYLE TOP CATEGORIES SECTION */}
           <TopCategoriesSection navigate={navigate} />
-
-          {/* LoopOut Pulse (Live Community Feed) */}
-          <div className="mb-10">
-            <LoopOutPulse />
-          </div>
 
           {/* Location Status Indicator */}
           {locationStatus && (
@@ -1273,6 +1483,10 @@ const MobileAppHomepage = ({
           <div className="flex items-center gap-8 overflow-x-auto pb-4 mb-8 border-b border-gray-200 scrollbar-hide">
             {categories.map((cat) => (
               <CategoryFilter key={cat.label} {...cat} isActive={activeCategory === cat.label} onClick={() => {
+                if (cat.path) {
+                   navigate(cat.path);
+                   return;
+                }
                 setActiveCategory(cat.label);
                 navigate(cat.category ? `/search?type=${cat.type}&category=${cat.category}` : `/search?type=${cat.type}`);
               }} />
@@ -1344,6 +1558,13 @@ const MobileAppHomepage = ({
               </div>
             )}
           </section>
+
+          {/* LoopOut Pulse (Live Community Feed) */}
+          <div className="mb-10 mt-8">
+            <LoopOutPulse />
+          </div>
+
+          <CommunityNeedsSection navigate={navigate} />
 
           <section className="mb-16">
             <SectionTitle title="Verified helpers" actionText="View all" onAction={() => navigate('/helper-home-page')} />
@@ -1579,7 +1800,7 @@ const MobileAppHomepage = ({
 
   // Mobile View
   return (
-    <div className="min-h-screen pb-32">
+    <div className="min-h-screen bg-[#FDFDFD] pb-32 relative overflow-x-hidden w-full">
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -1637,12 +1858,6 @@ const MobileAppHomepage = ({
             ))}
           </div>
         </section>
-
-        {/* LoopOut Pulse (Live Community Feed) - Mobile */}
-        <div className="mb-6 -mx-4">
-          <LoopOutPulse />
-        </div>
-
         {/* Mobile Elite Banner */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }} 
@@ -1695,8 +1910,18 @@ const MobileAppHomepage = ({
 
 
         <div className="flex overflow-x-auto gap-4 pb-4 mb-6 -mx-4 px-4 scrollbar-hide">
-          {categories.map((cat) => (
-            <button key={cat.label} onClick={() => navigate(cat.category ? `/search?type=${cat.type}&category=${cat.category}` : `/search?type=${cat.type}`)} className="flex flex-col items-center gap-2 min-w-[64px]">
+          {categories.slice(0, 10).map((cat) => (
+            <button 
+              key={cat.label} 
+              onClick={() => {
+                if (cat.path) {
+                    navigate(cat.path);
+                    return;
+                }
+                navigate(cat.category ? `/search?type=${cat.type}&category=${cat.category}` : `/search?type=${cat.type}`);
+              }} 
+              className="flex flex-col items-center gap-2 min-w-[64px]"
+            >
               <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center text-2xl hover:bg-gray-200 transition-colors">
                 {cat.icon}
               </div>
@@ -1832,6 +2057,13 @@ const MobileAppHomepage = ({
             ))}
           </div>
         </section>
+
+        {/* LoopOut Pulse (Live Community Feed) - Mobile */}
+        <div className="mb-6 -mx-4 mt-6">
+          <LoopOutPulse />
+        </div>
+
+        <CommunityNeedsSection navigate={navigate} />
 
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">

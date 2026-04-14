@@ -35,8 +35,7 @@ const commentSchema = new mongoose.Schema({
   },
   listingId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Listing',
-    required: [true, 'Listing ID is required']
+    required: [true, 'Target ID is required']
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,

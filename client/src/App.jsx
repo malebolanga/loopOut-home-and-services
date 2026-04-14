@@ -114,6 +114,8 @@ import Trip from './pages/Trip';
 import SmartSearchPage from './pages/SmartSearchPage';
 import ExplorePage from "./pages/ExplorePage";
 import Inbox from './pages/Inbox';
+import LookingForDiscovery from './pages/LookingForDiscovery';
+import CreateRequest from './pages/CreateRequest';
 
 // Categories page
 import Categories from './pages/Categories';
@@ -154,6 +156,8 @@ const AnimatedRoutes = () => {
         <Route path="/event-home-page" element={<PageTransition><EventsHomePage /></PageTransition>} />
         <Route path="/listing-home-page" element={<PageTransition><ListingsHomePage /></PageTransition>} />
         <Route path="/service-home-page" element={<PageTransition><ServicesHomePage /></PageTransition>} />
+        <Route path="/looking-for" element={<PageTransition><LookingForDiscovery /></PageTransition>} />
+        <Route path="/create-request" element={<PageTransition><CreateRequest /></PageTransition>} />
 
         {/* Trip Routes */}
         <Route path="/trips" element={<PageTransition><Trips /></PageTransition>} />

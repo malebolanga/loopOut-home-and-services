@@ -46,6 +46,7 @@ import {
   InformationCircleIcon,
   PlusIcon,
   MinusIcon,
+  QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
 
 // Custom paw icon
@@ -1543,6 +1544,14 @@ export default function CreateListing() {
                     description="Create and promote local happenings"
                     selected={selectedCategory === 'events'}
                     onSelect={setSelectedCategory}
+                  />
+                  <CategoryCard
+                    id="needs"
+                    icon={QuestionMarkCircleIcon}
+                    label="Post a Need"
+                    description="Looking for something? Ask the community"
+                    selected={selectedCategory === 'needs'}
+                    onSelect={() => navigate('/create-request')}
                   />
                 </div>
               </SectionCard>

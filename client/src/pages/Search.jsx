@@ -41,7 +41,8 @@ import {
   ArrowLeftIcon,
   PuzzlePieceIcon,
   SunIcon,
-  CloudIcon
+  CloudIcon,
+  ChatBubbleBottomCenterTextIcon
 } from '@heroicons/react/24/outline';
 import { 
   StarIcon as StarIconSolid,
@@ -176,6 +177,14 @@ const SEARCH_TYPE_CONFIG = {
     textColor: 'text-purple-600',
     endpoint: 'event',
     subTypes: EVENTS_CATEGORY_CONFIG
+  },
+  'looking-for': {
+    label: 'Community Needs',
+    icon: ChatBubbleBottomCenterTextIcon,
+    color: 'from-rose-500 to-pink-600',
+    bgColor: 'bg-rose-500',
+    textColor: 'text-rose-600',
+    endpoint: 'looking-for'
   }
 };
 
@@ -353,6 +362,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
     if (type === 'service') return 'services';
     if (type === 'helper') return 'helpers';
     if (type === 'event') return 'events';
+    if (type === 'looking-for') return 'looking-for';
     return type;
   };
 
@@ -426,6 +436,36 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
 
   const getRating = () => item.rating || item.averageRating || 4.5;
   const getLocation = () => item.address || item.location || item.city || 'Location not specified';
+
+  if (itemType === 'looking-for') {
+     return (
+       <motion.div
+         variants={itemVariants}
+         whileHover={{ y: -4 }}
+         onClick={onClick}
+         className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm hover:shadow-xl transition-all h-full flex flex-col gap-4"
+       >
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-2xl bg-gray-50 overflow-hidden border border-gray-100 p-0.5">
+                <img src={item.userRef?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"} className="w-full h-full object-cover rounded-[0.9rem]" />
+             </div>
+             <div>
+                <h4 className="text-[13px] font-black text-gray-900 leading-tight truncate w-32">{item.userRef?.username || "Neighbor"}</h4>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{item.category}</p>
+             </div>
+          </div>
+          <h3 className="font-black text-gray-900 text-base leading-tight truncate">{item.title}</h3>
+          <p className="text-xs text-gray-500 line-clamp-2 font-medium leading-relaxed">{item.description}</p>
+          <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50">
+             <div className="flex items-center gap-1.5 text-gray-400">
+                <MapPinIcon className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[80px]">{getLocation()}</span>
+             </div>
+             <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Active Need</span>
+          </div>
+       </motion.div>
+     );
+  }
 
   if (viewMode === 'list') {
     return (
@@ -776,7 +816,7 @@ const SearchPage = () => {
       let endpoints = [];
 
       if (type === 'all') {
-        endpoints = ['listing', 'service', 'helper', 'event'];
+        endpoints = ['listing', 'service', 'helper', 'event', 'looking-for'];
       } else {
         const config = SEARCH_TYPE_CONFIG[type];
         if (config) endpoints = [config.endpoint];

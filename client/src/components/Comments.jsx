@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { FaSpinner, FaEllipsisH, FaHeart, FaRegHeart, FaChevronDown, FaChevronUp, FaStar, FaBroom, FaUserFriends } from 'react-icons/fa';
 import { FiSend } from 'react-icons/fi';
 
-const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = false, cardStyle = false, externalRefreshTrigger = 0 }) => {
+const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, showSummary = false, cardStyle = false, horizontalStyle = false, externalRefreshTrigger = 0 }) => {
   const { currentUser } = useSelector((state) => state.user);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState('');
@@ -425,8 +425,8 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
                 value={commentContent}
                 onChange={(e) => setCommentContent(e.target.value)}
                 placeholder="Write a comment..."
-                className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500"
-                rows={1}
+                className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500 min-h-[80px]"
+                rows={3}
                 disabled={loading.submitting}
                 onFocus={() => setFocusedInput('comment')}
                 onBlur={() => setFocusedInput(null)}
@@ -489,8 +489,8 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
                   value={commentContent}
                   onChange={(e) => setCommentContent(e.target.value)}
                   placeholder="Write a comment..."
-                  className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500"
-                  rows={1}
+                  className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500 min-h-[80px]"
+                  rows={3}
                   disabled={loading.submitting}
                   onFocus={() => setFocusedInput('comment')}
                   onBlur={() => setFocusedInput(null)}
@@ -569,10 +569,10 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
         </div>
       )}
 
-      <div className={`space-y-4 ${cardStyle ? 'grid grid-cols-1 gap-4' : ''}`}>
+      <div className={`${horizontalStyle ? 'flex overflow-x-auto gap-4 pb-4 snap-x no-scrollbar px-2' : cardStyle ? 'grid grid-cols-1 gap-4' : 'space-y-4'}`}>
         {comments.length === 0 && !loading.comments && totalComments === 0 ? (
-          <div className={`text-center py-4 text-gray-500 ${cardStyle ? 'col-span-full' : ''}`}>
-            {cardStyle ? 'No reviews yet' : 'No comments yet. Be the first to comment!'}
+          <div className={`text-center py-4 text-gray-500 ${cardStyle || horizontalStyle ? 'w-full' : ''}`}>
+            {cardStyle || horizontalStyle ? 'No reviews yet' : 'No comments yet. Be the first to comment!'}
           </div>
         ) : (
           comments.map(comment => {
@@ -585,7 +585,9 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
             return (
               <div
                 key={comment._id}
-                className={cardStyle ?
+                className={horizontalStyle ?
+                  'bg-white rounded-xl p-4 shadow-sm border border-gray-200 flex-shrink-0 w-[85%] md:w-[350px] snap-center snap-always h-fit' :
+                  cardStyle ?
                   'bg-white rounded-xl p-4 shadow-sm border border-gray-200' :
                   'border-b border-gray-100 pb-4 last:border-0'
                 }
@@ -685,8 +687,8 @@ const Comments = ({ listingId, maxComments = 3, onTotalComments, showSummary = f
                               value={replyContent}
                               onChange={(e) => setReplyContent(e.target.value)}
                               placeholder="Write a reply..."
-                              className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500 text-sm"
-                              rows={1}
+                              className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500 text-sm min-h-[60px]"
+                              rows={2}
                               disabled={loading.replying}
                               onFocus={() => setFocusedInput('reply')}
                               onBlur={() => setFocusedInput(null)}

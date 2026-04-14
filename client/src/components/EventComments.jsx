@@ -359,8 +359,8 @@ const EventComments = ({ eventId, maxComments = 3, onTotalComments, onRatings, s
                 value={commentContent}
                 onChange={(e) => setCommentContent(e.target.value)}
                 placeholder="Write a comment..."
-                className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500"
-                rows={1}
+                className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500 min-h-[80px]"
+                rows={3}
                 disabled={loading.submitting}
                 onFocus={() => setFocusedInput('comment')}
                 onBlur={() => setFocusedInput(null)}
@@ -407,8 +407,8 @@ const EventComments = ({ eventId, maxComments = 3, onTotalComments, onRatings, s
                   value={commentContent}
                   onChange={(e) => setCommentContent(e.target.value)}
                   placeholder="Write a comment..."
-                  className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500"
-                  rows={1}
+                  className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500 min-h-[80px]"
+                  rows={3}
                   disabled={loading.submitting}
                   onFocus={() => setFocusedInput('comment')}
                   onBlur={() => setFocusedInput(null)}
@@ -576,8 +576,8 @@ const EventComments = ({ eventId, maxComments = 3, onTotalComments, onRatings, s
                               value={replyContent}
                               onChange={(e) => setReplyContent(e.target.value)}
                               placeholder="Write a reply..."
-                              className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500 text-sm"
-                              rows={1}
+                              className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500 text-sm min-h-[60px]"
+                              rows={2}
                               disabled={loading.replying}
                               onFocus={() => setFocusedInput('reply')}
                               onBlur={() => setFocusedInput(null)}

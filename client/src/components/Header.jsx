@@ -474,12 +474,17 @@ export default function Header() {
                           { label: 'Create Stay', icon: HomeIcon, tab: 'stays' },
                           { label: 'Create Helper', icon: UserGroupIcon, tab: 'online' },
                           { label: 'Create Event', icon: BellIcon, tab: 'events' },
-                          { label: 'Create Service', icon: BriefcaseIcon, tab: 'experiences' }
+                          { label: 'Create Service', icon: BriefcaseIcon, tab: 'experiences' },
+                          { label: 'Create Request', icon: QuestionMarkCircleIcon, path: '/create-request' }
                         ].map((item, idx) => (
                           <button
                             key={idx}
                             onClick={() => {
-                              handleNavigate(currentUser ? `/${currentUser._id}/create-listing?tab=${item.tab}` : '/sign-in');
+                              if (item.path) {
+                                handleNavigate(currentUser ? item.path : '/sign-in');
+                              } else {
+                                handleNavigate(currentUser ? `/${currentUser._id}/create-listing?tab=${item.tab}` : '/sign-in');
+                              }
                               setShowCreateDropdown(false);
                             }}
                             className="w-full px-6 py-4 hover:bg-rose-50 transition-colors flex items-center gap-4 text-left "
@@ -751,7 +756,8 @@ export default function Header() {
                   { id: 'properties', label: 'Homes', icon: HomeIcon, color: 'rose' },
                   { id: 'events', label: 'Experiences', icon: MagnifyingGlassIcon, color: 'rose' },
                   { id: 'services', label: 'Services', icon: UserGroupIcon, color: 'rose' },
-                  { id: 'helpers', label: 'Helpers', icon: BriefcaseIcon, color: 'rose' }
+                  { id: 'helpers', label: 'Helpers', icon: BriefcaseIcon, color: 'rose' },
+                  { id: 'looking-for', label: 'Needs', icon: SparklesIcon, color: 'rose', path: '/looking-for' }
                 ].map((item) => {
                   const Icon = item.icon;
                   const isActive = searchType === item.id;
@@ -759,7 +765,14 @@ export default function Header() {
                   return (
                     <button 
                       key={item.id}
-                      onClick={() => setSearchType(item.id)}
+                      onClick={() => {
+                        if (item.path) {
+                          navigate(item.path);
+                          setShowSearch(false);
+                        } else {
+                          setSearchType(item.id);
+                        }
+                      }}
                       className="flex flex-col items-center gap-2 relative outline-none"
                     >
                        <motion.div 

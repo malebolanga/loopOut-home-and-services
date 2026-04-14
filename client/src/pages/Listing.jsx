@@ -26,7 +26,7 @@ import {
   FaShieldAlt, FaHotTub, FaDog, FaBolt, FaSnowflake, FaUserFriends, FaCoffee,
   FaCouch, FaShower, FaWind, FaDesktop, FaTree, FaUmbrellaBeach, FaDumbbell,
   FaSmokingBan, FaHome, FaFacebook, FaInstagram, FaTwitter, FaLinkedin, FaTiktok, FaGlobe,
-  FaHeart, FaWhatsapp
+  FaHeart, FaWhatsapp, FaUsers, FaClock, FaReceipt, FaSpinner
 } from "react-icons/fa";
 import { MdCleanHands, MdOutlineGppGood, MdLogin, MdChat, MdLocationOn, MdAttachMoney, MdKingBed, MdBathtub } from "react-icons/md";
 

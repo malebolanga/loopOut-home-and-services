@@ -1,4 +1,5 @@
 import Listing from '../models/listing.model.js';
+import LookingFor from '../models/lookingFor.model.js';
 import Comment from '../models/comment.model.js';
 import { errorHandler } from '../utils/error.js';
 import { createUserNotification } from '../utils/notificationUtils.js';
@@ -9,17 +10,25 @@ export const createComment = async (req, res, next) => {
     const userId = req.user.id;
 
     if (!content || !listingId) {
-      return next(errorHandler(400, 'Content and listing ID are required'));
+      return next(errorHandler(400, 'Content and target ID are required'));
     }
 
-    const listing = await Listing.findById(listingId);
-    if (!listing) {
-      return next(errorHandler(404, 'Listing not found'));
+    // Check if it's a listing OR a looking-for request
+    let target = await Listing.findById(listingId);
+    let targetType = 'listing';
+    
+    if (!target) {
+      target = await LookingFor.findById(listingId);
+      targetType = 'lookingFor';
+    }
+
+    if (!target) {
+      return next(errorHandler(404, 'Listing or Request not found'));
     }
 
     const comment = new Comment({
       content,
-      listingId,
+      listingId, // keeping the field name as listingId in the DB for now to avoid migration
       userId,
       userName: userName || req.user.username,
       userAvatar: userAvatar || req.user.avatar || '/default-avatar.jpg',
@@ -29,23 +38,23 @@ export const createComment = async (req, res, next) => {
     await comment.save();
 
     // Initialize comments array if it doesn't exist
-    if (!listing.comments) {
-      listing.comments = [];
+    if (!target.comments) {
+      target.comments = [];
     }
-    listing.comments.push(comment._id);
-    await listing.save();
+    target.comments.push(comment._id);
+    await target.save();
 
-    // Notify listing owner
-    if (listing.userRef.toString() !== userId) {
+    // Notify owner
+    const ownerId = targetType === 'listing' ? target.userRef : target.userRef;
+    const itemName = targetType === 'listing' ? target.name : target.title;
+
+    if (ownerId.toString() !== userId) {
       await createUserNotification(
-        listing.userRef,
-        'comment', 
-                   // The enum in model is ['new_post', 'message', 'booking', 'system']. 
-                   // I'll use 'system' for now or update the model.
-                   // Actually, 'booking' fits best for interactions.
+        ownerId,
+        'system',
         'New Comment',
-        `${userName || req.user.username} commented on your listing "${listing.name}"`,
-        { itemId: listingId, itemType: 'listing', commentId: comment._id }
+        `${userName || req.user.username} commented on your ${targetType === 'listing' ? 'listing' : 'request'} "${itemName}"`,
+        { itemId: listingId, itemType: targetType, commentId: comment._id }
       );
     }
 
@@ -63,8 +72,10 @@ export const getComments = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     const listingExists = await Listing.exists({ _id: listingId });
-    if (!listingExists) {
-      return next(errorHandler(404, 'Listing not found'));
+    const requestExists = !listingExists ? await LookingFor.exists({ _id: listingId }) : false;
+
+    if (!listingExists && !requestExists) {
+      return next(errorHandler(404, 'Listing or Request not found'));
     }
 
     const comments = await Comment.find({ listingId })
