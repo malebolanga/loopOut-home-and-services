@@ -30,13 +30,24 @@ import {
   WrenchIcon,
   FireIcon,
   MapPinIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  HomeModernIcon,
+  IdentificationIcon,
+  KeyIcon,
+  PencilIcon,
+  TicketIcon,
+  InboxIcon,
+  BellIcon,
+  ShoppingBagIcon
 } from '@heroicons/react/24/outline';
 import {
   StarIcon as StarIconSolid,
   HeartIcon as HeartIconSolid,
 } from '@heroicons/react/24/solid';
-import { FaCar, FaBreadSlice, FaHouseUser, FaCut, FaTruckMoving, FaGraduationCap, FaHandsWash, FaBroom, FaChalkboardTeacher, FaHome, FaBed, FaUtensils, FaLeaf, FaBolt, FaShoePrints, FaWater, FaPaw, FaApple, FaGooglePlay, FaShoppingBasket, FaCalendarCheck, FaFire } from "react-icons/fa";
+import { 
+  FaApple, 
+  FaGooglePlay
+} from 'react-icons/fa';
 import ImageGallery from '../components/ImageGallery';
 import useLocationCoords from '../hooks/useGeolocation';
 import LoopOutPulse from '../components/LoopOutPulse';
@@ -527,7 +538,7 @@ const FreshaCategoryCard = ({ category, onClick, index }) => {
         rotateY: rotate.y,
         transformStyle: "preserve-3d"
       }}
-      className="cursor-pointer relative overflow-hidden rounded-[3.5rem] bg-white shadow-sm hover:shadow-[0_30px_60px_rgba(0,0,0,0.18)] transition-all duration-500 border border-gray-100"
+      className="cursor-pointer relative overflow-hidden rounded-[3.5rem] shadow-sm hover:shadow-[0_30px_60px_rgba(0,0,0,0.18)] transition-all duration-500 border border-gray-100"
     >
       <div className="relative aspect-[4/5] overflow-hidden p-6 bg-gradient-to-br from-white via-gray-50 to-gray-100 flex flex-col items-center justify-center">
         {/* Elite 3D Background Shadow - Emotional Pulse */}
@@ -1233,11 +1244,11 @@ const MobileAppHomepage = ({
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {[
-                { id: 'grocery', name: 'Groceries', desc: 'Fresh items in 60m', icon: <FaShoppingBasket />, color: 'bg-green-500', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80' },
-                { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <FaHandsWash />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1635274605638-d44babc08a4f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-                { id: 'pharmacy', name: 'Pharmacy', desc: 'Medication drop-off', icon: <FaFire />, color: 'bg-rose-500', img: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=400&q=80' },
-                { id: 'usedbooks', name: 'Used Books', desc: 'Sell Uni textbooks', icon: <FaGraduationCap />, color: 'bg-orange-600', img: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80' },
-                { id: 'water', name: 'Water & Gas', desc: 'Refills delivered', icon: <FaWater />, color: 'bg-cyan-500', img: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?auto=format&fit=crop&w=400&q=80' }
+                { id: 'grocery', name: 'Groceries', desc: 'Fresh items in 60m', icon: <ShoppingBagIcon className="w-5 h-5" />, color: 'bg-green-500', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80' },
+                { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <SparklesIcon className="w-5 h-5" />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1635274605638-d44babc08a4f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+                { id: 'pharmacy', name: 'Pharmacy', desc: 'Medication drop-off', icon: <BoltIcon className="w-5 h-5" />, color: 'bg-rose-500', img: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=400&q=80' },
+                { id: 'usedbooks', name: 'Used Books', desc: 'Sell Uni textbooks', icon: <AcademicCapIcon className="w-5 h-5" />, color: 'bg-orange-600', img: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80' },
+                { id: 'water', name: 'Water & Gas', desc: 'Refills delivered', icon: <GlobeAltIcon className="w-5 h-5" />, color: 'bg-cyan-500', img: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?auto=format&fit=crop&w=400&q=80' }
               ].map((item) => (
                 <motion.div
                   key={item.id}
@@ -1443,7 +1454,7 @@ const MobileAppHomepage = ({
                 }
               ].map((step, i) => (
                 <div key={i} className="flex flex-col items-center text-center ">
-                  <div className="mb-6 p-6 bg-white rounded-3xl shadow-sm border border-gray-100 group-hover:shadow-xl group-hover:-translate-y-2 transition-all duration-300">
+                  <div className="mb-6 p-6 rounded-3xl shadow-sm border border-gray-100 group-hover:shadow-xl group-hover:-translate-y-2 transition-all duration-300">
                     {step.icon}
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">{step.title}</h3>
@@ -1548,7 +1559,7 @@ const MobileAppHomepage = ({
         >
           <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 shadow-xl" />
           <div className="relative bg-white text-gray-900 p-4 rounded-full shadow-2xl flex items-center justify-center border border-gray-100">
-            <FaCalendarCheck className="w-8 h-8 text-blue-600" />
+            <CalendarDaysIcon className="w-8 h-8 text-blue-600" />
             <div className="absolute right-full mr-4 bg-gray-900 text-white px-4 py-2 rounded-2xl shadow-xl text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 pointer-events-none">
                Track your requests <span>🚚</span>
             </div>
@@ -1711,10 +1722,10 @@ const MobileAppHomepage = ({
           
           <div className="grid grid-cols-2 gap-3">
             {[
-              { id: 'grocery', name: 'Groceries', desc: 'Fresh items in 60m', icon: <FaShoppingBasket />, color: 'bg-green-500', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80' },
-              { id: 'usedbooks', name: 'Used Books', desc: 'Sell Uni textbooks', icon: <FaGraduationCap />, color: 'bg-orange-600', img: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80' },
-              { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <FaHandsWash />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1635274605638-d44babc08a4f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-              { id: 'pharmacy', name: 'Pharmacy', desc: 'Medication drop-off', icon: <FaFire />, color: 'bg-rose-500', img: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=400&q=80' },
+              { id: 'grocery', name: 'Groceries', desc: 'Fresh items in 60m', icon: <ShoppingBagIcon className="w-4 h-4" />, color: 'bg-green-500', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80' },
+              { id: 'usedbooks', name: 'Used Books', desc: 'Sell Uni textbooks', icon: <AcademicCapIcon className="w-4 h-4" />, color: 'bg-orange-600', img: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80' },
+              { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <SparklesIcon className="w-4 h-4" />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1635274605638-d44babc08a4f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+              { id: 'pharmacy', name: 'Pharmacy', desc: 'Medication drop-off', icon: <BoltIcon className="w-4 h-4" />, color: 'bg-rose-500', img: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=400&q=80' },
             ].map((item) => (
               <motion.div
                 key={item.id}
@@ -1726,7 +1737,7 @@ const MobileAppHomepage = ({
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute inset-0 p-3 flex flex-col justify-end">
                   <div className={`${item.color} w-8 h-8 rounded-lg flex items-center justify-center text-white mb-2 shadow-lg`}>
-                     {cloneElement(item.icon, { size: 14 })}
+                     {item.icon}
                   </div>
                   <h3 className="text-white font-bold text-sm">{item.name}</h3>
                   <p className="text-white/70 text-[10px] leading-tight truncate">{item.desc}</p>
@@ -1882,7 +1893,7 @@ const MobileAppHomepage = ({
             
             <div className="relative z-10 flex flex-col items-center text-center">
               <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 border border-white/30 shadow-inner">
-                 <FaHouseUser className="text-3xl text-white" />
+                 <HomeModernIcon className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-2xl font-bold mb-2 tracking-tight">Earn with LoopOut</h2>
               <p className="text-white/90 mb-6 text-sm px-2 leading-relaxed">Turn your space, skills, or services into extra income. Join thousands of providers today.</p>
@@ -1905,7 +1916,7 @@ const MobileAppHomepage = ({
       >
         <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 shadow-xl" />
         <div className="relative bg-white text-gray-900 p-4 rounded-full shadow-2xl flex items-center justify-center border border-gray-100">
-          <FaCalendarCheck className="w-8 h-8 text-blue-600" />
+          <CalendarDaysIcon className="w-8 h-8 text-blue-600" />
           {/* Tooltip moved above the button to avoid side-overlapping on mobile */}
           <div className="absolute bottom-full right-0 mb-4 bg-gray-900 text-white px-4 py-2 rounded-2xl shadow-xl text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
              Track your requests <span>🚚</span>

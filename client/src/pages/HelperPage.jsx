@@ -9,32 +9,66 @@ import { app } from "../firebase";
 import { useWishlist } from '../hooks/useWishlist';
 import { Link } from "react-router-dom";
 import {
-  FaStar, FaMapMarkerAlt, FaPhone, FaUser,
-  FaClock, FaShieldAlt, FaUsers,
-  FaGraduationCap, FaWhatsapp,
-  FaExclamationTriangle, FaCheckCircle,
-  FaFlag, FaArrowLeft, FaThumbsUp, FaThumbsDown,
-  FaBandcamp, FaCut, FaTools, FaCar,
-  FaInfoCircle, FaMoneyBillWave, FaTimes,
-  FaFileImage, FaFilePdf, FaUserFriends, FaBroom, FaArrowUp, FaArrowDown,
-  FaCalendar, FaEnvelope, FaBriefcase, FaAward,
-  FaTshirt, FaBroom as FaBroomClean, FaFire, FaBaby, FaGlassCheers, FaEllipsisH,
-  FaPalette, FaSpa, FaHandSparkles, FaHandHoldingHeart, FaRing,
-  FaBrush, FaSprayCan, FaSmile, FaUtensils, FaShoppingBasket, FaCookie,
-  FaInstagram, FaFacebook, FaCheck, FaTimes as FaTimesCircle, FaSpinner,
-  FaLinkedin, FaTwitter, FaCamera, FaHome,
-  FaExpand, FaCompress, FaChevronLeft, FaChevronRight, FaArrowRight,
-  FaUtensilSpoon, FaMugHot, FaWineGlassAlt, FaConciergeBell, FaLeaf, FaSnowflake,
-  FaBoxOpen, FaShippingFast, FaRecycle, FaSeedling, FaFish, FaDrumstickBite,
-  FaPepperHot, FaCheese, FaBreadSlice, FaIceCream, FaCoffee, FaWineBottle,
-  FaWater, FaWind, FaSun, FaCloudRain, FaTemperatureHigh, FaTemperatureLow,
-  FaHeart, FaShareAlt, FaMedal, FaRegClock, FaRegCheckCircle, FaRegStar, FaRegCommentDots,
-  // New icons for sneaker, washingmat, animals
-  FaShoePrints, FaWater as FaWaterDrop, FaPaw, FaDog as FaDogIcon,
-  FaCat, FaHorse, FaDove, FaFish as FaFishIcon, FaBath, FaSoap,
-  FaTint, FaBlender, FaCogs, FaIndustry, FaTruck, FaTshirt as FaTshirtIcon
+  MapPinIcon,
+  StarIcon,
+  HomeIcon,
+  UserIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  SparklesIcon,
+  BoltIcon,
+  ShieldCheckIcon,
+  FlagIcon,
+  CheckCircleIcon,
+  ArrowLeftIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronDownIcon,
+  XMarkIcon,
+  CameraIcon,
+  PhotoIcon,
+  WifiIcon,
+  TruckIcon,
+  KeyIcon,
+  HeartIcon,
+  ShareIcon,
+  Squares2X2Icon,
+  InformationCircleIcon,
+  PaperAirplaneIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  TagIcon,
+  UsersIcon,
+  ChatBubbleLeftRightIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  CheckIcon
+} from '@heroicons/react/24/outline';
+import { 
+  StarIcon as StarIconSolid, 
+  HeartIcon as HeartIconSolid,
+  CheckBadgeIcon
+} from '@heroicons/react/24/solid';
+
+import {
+  FaTshirt, FaBroom, FaFire, FaBaby, FaGlassCheers, FaEllipsisH, FaPalette,
+  FaSpa, FaStar, FaCut, FaGraduationCap, FaChalkboardTeacher, FaBook, FaLanguage,
+  FaPencilAlt, FaHandsWash, FaToolbox, FaWrench, FaTools, FaScrewdriver,
+  FaSnowflake, FaPlug, FaInstagram, FaFacebook, FaTwitter, FaLinkedin, FaTiktok,
+  FaCamera, FaAward, FaBuilding, FaMapMarkerAlt, FaFileAlt, FaBriefcase, FaUserGraduate,
+  FaTrophy, FaCertificate, FaHandSparkles, FaClock, FaCheckCircle, FaTrashAlt, FaLeaf,
+  FaTruck, FaUser, FaPhone, FaWhatsapp, FaInfoCircle, FaShieldAlt,
+  FaHandHoldingHeart, FaRing, FaBrush, FaSmile, FaUtensils, FaCookie, FaShoppingBasket,
+  FaShoePrints, FaSoap, FaTint, FaWater, FaCogs, FaBath, FaSun, FaDog, FaPaw, FaFish,
+  FaUserFriends, FaHome, FaCat, FaDove, FaHorse, FaArrowRight, FaSprayCan, FaWind, FaCar
 } from 'react-icons/fa';
-import { FiShare2, FiHeart } from 'react-icons/fi';
+import { FiShare2, FiMessageSquare, FiMapPin, FiHeart, FiClock, FiStar, FiChevronRight, FiChevronLeft } from 'react-icons/fi';
+import { MdCleanHands, MdOutlineGppGood, MdLogin, MdChat, MdLocationOn, MdAttachMoney, MdVerified } from 'react-icons/md';
+
+// Some icons might be double defined in Fi or Md, so I adjusted the list.
+// FaBroomClean doesn't exist in standard Fa, likely was a typo or specialized set. Using FaBroom.
+
+
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Zoom, Thumbs, Pagination, FreeMode } from 'swiper/modules';
 import 'swiper/css';
@@ -118,7 +152,7 @@ export default function HelperPage() {
   const getServiceOptions = (type) => {
     const baseOptions = [
       { id: 'laundry', name: 'Laundry', icon: <FaTshirt className="text-blue-500" /> },
-      { id: 'cleaning', name: 'Deep Cleaning', icon: <FaBroomClean className="text-green-500" /> },
+      { id: 'cleaning', name: 'Deep Cleaning', icon: <FaBroom className="text-green-500" /> },
       { id: 'ironing', name: 'Ironing', icon: <FaTshirt className="text-purple-500" /> },
       { id: 'yard', name: 'Yard Work', icon: <FaBroom className="text-yellow-600" /> },
       { id: 'cooking', name: 'Meal Prep', icon: <FaFire className="text-red-500" /> },
@@ -193,13 +227,13 @@ export default function HelperPage() {
       { id: 'stainRemoval', name: 'Stain Removal', icon: <FaTint className="text-blue-500" /> },
       { id: 'whitening', name: 'Whitening', icon: <FaStar className="text-yellow-500" /> },
       { id: 'restoration', name: 'Restoration', icon: <FaTools className="text-gray-600" /> },
-      { id: 'waterproofing', name: 'Waterproofing', icon: <FaWaterDrop className="text-cyan-500" /> },
+      { id: 'waterproofing', name: 'Waterproofing', icon: <FaWater className="text-cyan-500" /> },
       { id: 'soleRepair', name: 'Sole Repair', icon: <FaCogs className="text-gray-700" /> },
       { id: 'colorRestore', name: 'Color Restore', icon: <FaPalette className="text-pink-500" /> }
     ];
 
     const washingmatOptions = [
-      { id: 'basicWash', name: 'Basic Wash', icon: <FaWaterDrop className="text-blue-500" /> },
+      { id: 'basicWash', name: 'Basic Wash', icon: <FaWater className="text-blue-500" /> },
       { id: 'deepClean', name: 'Deep Clean', icon: <FaBath className="text-purple-500" /> },
       { id: 'stainRemoval', name: 'Stain Removal', icon: <FaTint className="text-red-500" /> },
       { id: 'sanitizing', name: 'Sanitizing', icon: <FaShieldAlt className="text-green-500" /> },
@@ -210,11 +244,11 @@ export default function HelperPage() {
     ];
 
     const animalOptions = [
-      { id: 'dogWalking', name: 'Dog Walking', icon: <FaDogIcon className="text-amber-600" /> },
+      { id: 'dogWalking', name: 'Dog Walking', icon: <FaDog className="text-amber-600" /> },
       { id: 'petSitting', name: 'Pet Sitting', icon: <FaPaw className="text-amber-500" /> },
       { id: 'grooming', name: 'Grooming', icon: <FaCut className="text-purple-500" /> },
       { id: 'bathing', name: 'Bathing', icon: <FaBath className="text-blue-500" /> },
-      { id: 'feeding', name: 'Feeding', icon: <FaFishIcon className="text-green-500" /> },
+      { id: 'feeding', name: 'Feeding', icon: <FaFish className="text-green-500" /> },
       { id: 'medication', name: 'Medication', icon: <FaShieldAlt className="text-red-500" /> },
       { id: 'training', name: 'Training', icon: <FaGraduationCap className="text-indigo-500" /> },
       { id: 'vetVisits', name: 'Vet Visits', icon: <FaTruck className="text-gray-600" /> },
@@ -557,15 +591,15 @@ export default function HelperPage() {
 
   // Animal care specific options
   const animalTypes = [
-    { id: 'dog', name: 'Dog', icon: <FaDogIcon /> },
+    { id: 'dog', name: 'Dog', icon: <FaDog /> },
     { id: 'cat', name: 'Cat', icon: <FaCat /> },
     { id: 'bird', name: 'Bird', icon: <FaDove /> },
-    { id: 'fish', name: 'Fish', icon: <FaFishIcon /> },
+    { id: 'fish', name: 'Fish', icon: <FaFish /> },
     { id: 'horse', name: 'Horse', icon: <FaHorse /> },
     { id: 'rabbit', name: 'Rabbit', icon: <FaPaw /> },
     { id: 'hamster', name: 'Hamster', icon: <FaPaw /> },
     { id: 'reptile', name: 'Reptile', icon: <FaPaw /> },
-    { id: 'multiple', name: 'Multiple Animals', icon: <FaUsers /> }
+    { id: 'multiple', name: 'Multiple Animals', icon: <FaUserFriends /> }
   ];
 
   // Override these with more detailed versions if needed
@@ -2006,26 +2040,26 @@ export default function HelperPage() {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             <button
-              onClick={() => navigate(-1)}
-              className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
-            >
-              <FaArrowLeft className="text-xl" />
-            </button>
+               onClick={() => navigate(-1)}
+               className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
+             >
+               <ArrowLeftIcon className="w-5 h-5" />
+             </button>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleShare}
-                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
-              >
-                <FiShare2 className="text-xl" />
-              </button>
+             <div className="flex items-center gap-2">
+               <button
+                 onClick={handleShare}
+                 className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
+               >
+                 <ShareIcon className="w-5 h-5" />
+               </button>
               <button
                 onClick={toggleFavorite}
                 className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 backdrop-blur-sm'}`}
               >
                 {isFavorite ?
-                  <FaHeart className="text-xl text-rose-500" /> :
-                  <FiHeart className={`text-xl ${isScrolled ? 'text-slate-900' : 'text-white'}`} />
+                  <HeartIconSolid className="text-xl text-rose-500 w-6 h-6" /> :
+                  <HeartIcon className={`text-xl w-6 h-6 ${isScrolled ? 'text-slate-900' : 'text-white'}`} />
                 }
               </button>
             </div>
@@ -2053,14 +2087,14 @@ export default function HelperPage() {
                 <div key={`empty-${i}`} className="bg-slate-800 h-full" />
               ))}
             </div>
-            <button onClick={() => openFullScreenGallery(0)} className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50 z-10">
-              <FaExpand /> Show all {helper.imageUrls.length} photos
+            <button onClick={() => openFullScreenGallery(0)} className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50 z-10">
+              <Squares2X2Icon className="w-4 h-4" /> Show all {helper.imageUrls.length} photos
             </button>
           </div>
         )}
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-60">
         {/* Content Section */}
         <div className="mb-10 pt-8 border-b border-slate-200/60 pb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
@@ -2068,7 +2102,7 @@ export default function HelperPage() {
           </h1>
           <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
             <div className="flex items-center gap-2">
-              <FaStar className="text-amber-400" />
+              <StarIconSolid className="text-amber-400 w-4 h-4" />
               <span className="font-semibold text-slate-900 text-base">
                 {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}
               </span>
@@ -2077,12 +2111,12 @@ export default function HelperPage() {
             </div>
             <span className="text-slate-300">·</span>
             <div className="flex items-center gap-2 text-slate-700">
-              <FaMedal className="text-rose-500" />
-              <span className="font-medium">Superhelper</span>
+              <CheckBadgeIcon className="text-rose-500 w-4 h-4" />
+              <span className="font-black uppercase tracking-widest text-[10px]">Superhelper</span>
             </div>
             <span className="text-slate-300">·</span>
-            <div className="flex items-center gap-2 text-slate-700 underline font-medium cursor-pointer hover:text-slate-900 transition-colors">
-              <FaMapMarkerAlt className="text-slate-400" />
+            <div className="flex items-center gap-2 text-slate-700 underline font-black uppercase tracking-widest text-[10px] cursor-pointer hover:text-slate-900 transition-colors">
+              <MapPinIcon className="text-slate-400 w-4 h-4" />
               <span>{helper.address || 'Johannesburg, South Africa'}</span>
             </div>
           </div>
@@ -2122,27 +2156,26 @@ export default function HelperPage() {
             </div>
 
 
-            {/* Highlights */}
-            <div className="space-y-4 pb-6 border-b border-gray-200">
+            <div className="space-y-6 pb-8 border-b border-slate-100">
               <div className="flex items-start gap-4">
-                <FaMedal className="text-2xl text-gray-700 mt-1" />
+                <SparklesIcon className="w-6 h-6 text-rose-500 mt-1" />
                 <div>
-                  <h3 className="font-semibold text-gray-900">Top rated professional</h3>
-                  <p className="text-gray-600 text-sm">Highly rated for quality, reliability, and customer satisfaction</p>
+                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Top rated professional</h3>
+                  <p className="text-gray-500 text-xs font-medium mt-1">Highly rated for quality, reliability, and customer satisfaction</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
-                <FaUser className="text-2xl text-gray-700 mt-1" />
+                <ShieldCheckIcon className="w-6 h-6 text-blue-500 mt-1" />
                 <div>
-                  <h3 className="font-semibold text-gray-900">Experienced & Verified</h3>
-                  <p className="text-gray-600 text-sm">Background checked with verified credentials and references</p>
+                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Experienced & Verified</h3>
+                  <p className="text-gray-500 text-xs font-medium mt-1">Background checked with verified credentials and references</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
-                <FaRegClock className="text-2xl text-gray-700 mt-1" />
+                <ClockIcon className="w-6 h-6 text-teal-500 mt-1" />
                 <div>
-                  <h3 className="font-semibold text-gray-900">Flexible scheduling</h3>
-                  <p className="text-gray-600 text-sm">Available 7 days a week with flexible hours to suit your needs</p>
+                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Flexible scheduling</h3>
+                  <p className="text-gray-500 text-xs font-medium mt-1">Available 7 days a week with flexible hours to suit your needs</p>
                 </div>
               </div>
             </div>
@@ -2158,10 +2191,10 @@ export default function HelperPage() {
               {description.length > 300 && (
                 <button
                   onClick={toggleDescription}
-                  className="mt-4 text-gray-900 font-semibold underline flex items-center gap-2"
+                  className="mt-6 text-rose-500 font-black uppercase tracking-[0.2em] text-[10px] flex items-center gap-2"
                 >
                   {showFullDescription ? 'Show less' : 'Show more'}
-                  {showFullDescription ? <FaArrowUp className="text-xs" /> : <FaArrowDown className="text-xs" />}
+                  {showFullDescription ? <ArrowUpIcon className="w-3 h-3" /> : <ArrowDownIcon className="w-3 h-3" />}
                 </button>
               )}
             </div>
@@ -2198,7 +2231,7 @@ export default function HelperPage() {
                         )}
                         {isSelected && (
                           <div className="ml-2 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center">
-                            <FaCheck className="text-white text-[10px]" />
+                            <CheckIcon className="text-white w-3 h-3" />
                           </div>
                         )}
                       </div>
@@ -2211,7 +2244,7 @@ export default function HelperPage() {
             {/* Reviews Summary */}
             <div className="pb-6 border-b border-gray-200">
               <div className="flex items-center gap-2 mb-8">
-                <FaStar className="text-[#FFB400] text-2xl drop-shadow-sm" />
+                <StarIconSolid className="text-[#FFB400] text-2xl drop-shadow-sm w-6 h-6" />
                 <h2 className="text-2xl font-semibold text-gray-900">
                   {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')} · {commentCount} reviews
                 </h2>
@@ -2223,7 +2256,7 @@ export default function HelperPage() {
                     {/* Cleanliness */}
                     <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
                       <div className="flex items-center gap-3 text-gray-800">
-                        <FaBroomClean className="text-xl" />
+                        <FaBroom className="text-xl" />
                         <span>Cleanliness</span>
                       </div>
                       <div className="flex items-center gap-4 w-1/2">
@@ -2236,7 +2269,7 @@ export default function HelperPage() {
                     {/* Communication */}
                     <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
                       <div className="flex items-center gap-3 text-gray-800">
-                        <FaRegCommentDots className="text-xl" />
+                        <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-700" />
                         <span>Communication</span>
                       </div>
                       <div className="flex items-center gap-4 w-1/2">
@@ -2340,7 +2373,7 @@ export default function HelperPage() {
           <div className="lg:col-span-1">
             <div className="top-24 py-12">
               {/* Masterpiece Booking Card */}
-              <div className="border border-gray-100 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 bg-white sticky top-24">
+              <div className="rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 bg-transparent sticky top-24 border border-slate-200/50 mb-12 lg:mb-0">
                 <div className="flex items-end justify-between mb-8 pb-6 border-b border-gray-50">
                   <div>
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 block mb-1">Service Rate</span>
@@ -2403,9 +2436,9 @@ export default function HelperPage() {
 
                   <button
                     onClick={handleInternalMessage}
-                    className="w-full py-4 bg-white border border-gray-100 text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-[1.2rem] hover:bg-gray-50 transition-all flex items-center justify-center gap-3"
+                    className="w-full py-4 bg-white border border-slate-100 text-gray-950 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm"
                   >
-                    <FaRegCommentDots className="text-rose-500" /> Secure Message
+                    <ChatBubbleLeftRightIcon className="w-4 h-4 text-rose-500" /> Secure Message
                   </button>
                 </div>
 
@@ -2447,10 +2480,9 @@ export default function HelperPage() {
                 </div>
               </div>
 
-              {/* Report listing */}
               <div className="mt-4 text-center py-14">
-                <button className="text-gray-500 text-sm underline flex items-center justify-center gap-2 mx-auto">
-                  <FaFlag className="text-xs" />
+                <button className="text-gray-400 text-[10px] font-black uppercase tracking-widest underline underline-offset-8 hover:text-rose-500 transition-colors flex items-center justify-center gap-2 mx-auto">
+                  <FlagIcon className="w-4 h-4" />
                   Report this listing
                 </button>
               </div>
@@ -2460,10 +2492,10 @@ export default function HelperPage() {
 
               {/* Similar Helpers */}
           {similarHelpers.length > 0 && (
-            <div className="mt-12 md:mt-16 border-t border-gray-100 pt-10 md:pt-12">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8 flex items-center gap-2">
-                <FaMapMarkerAlt className="text-rose-500" />
-                Other professionals you might need
+            <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
+              <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter italic uppercase">
+                <MapPinIcon className="text-rose-500 w-6 h-6" />
+                Other professionals in the matrix
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {similarHelpers.map((item) => (
@@ -2481,9 +2513,9 @@ export default function HelperPage() {
           <div className="flex items-center justify-between p-4 text-white">
             <button
               onClick={closeFullScreenGallery}
-              className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              className="p-2.5 bg-white/10 hover:bg-white/20 rounded-full transition-all text-white backdrop-blur-md"
             >
-              <FaTimes className="text-xl" />
+              <XMarkIcon className="w-6 h-6" />
             </button>
             <span className="font-medium">
               {currentGalleryIndex + 1} / {helper.imageUrls.length}
@@ -2496,7 +2528,7 @@ export default function HelperPage() {
               onClick={prevImage}
               className="absolute left-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
             >
-              <FaChevronLeft className="text-xl" />
+              <ChevronLeftIcon className="w-6 h-6" />
             </button>
 
             <img
@@ -2509,7 +2541,7 @@ export default function HelperPage() {
               onClick={nextImage}
               className="absolute right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
             >
-              <FaChevronRight className="text-xl" />
+              <ChevronRightIcon className="w-6 h-6" />
             </button>
           </div>
         </div>
@@ -2518,13 +2550,13 @@ export default function HelperPage() {
       {/* Full Page Booking Form Overlay */}
       {showBookingFormOverlay && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+          <div className="bg-slate-50 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-slate-50 border-b border-gray-200 p-4 flex items-center justify-between">
               <button
                 onClick={closeBookingFormOverlay}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <FaTimes className="text-xl" />
+                <XMarkIcon className="w-6 h-6 text-slate-900" />
               </button>
               <h2 className="text-lg font-semibold">Complete your booking</h2>
               <div className="w-10" />
@@ -2991,7 +3023,7 @@ export default function HelperPage() {
                       <div className="text-rose-600 font-bold text-xs mt-1">R{service.price}</div>
                       {bookingData.selectedServices.includes(service.id) && (
                         <div className="absolute top-2 right-2 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center">
-                          <FaCheck className="text-white text-[10px]" />
+                          <CheckIcon className="text-white w-3 h-3" />
                         </div>
                       )}
                     </button>
@@ -2999,20 +3031,43 @@ export default function HelperPage() {
                 </div>
               </div>
 
+              {/* Total Estimate Summary in Form */}
+              <div className="bg-slate-900 rounded-[2rem] p-6 mb-8 text-white space-y-3">
+                 <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    <span>Base Deployment</span>
+                    <span>R{helper.regularPrice}</span>
+                 </div>
+                 {bookingData.selectedServices.length > 0 && (
+                   <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                      <span>Services Selection</span>
+                      <span>+ R{totalPrice - helper.regularPrice - (helper.travelFee || 0) - Math.round((totalPrice - (helper.travelFee || 0)) / 1.1 * 0.1)}</span>
+                   </div>
+                 )}
+                 <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                    <span>Service Protocol Fee (10%)</span>
+                    <span>R{Math.round((totalPrice - (helper.travelFee || 0)) / 1.1 * 0.1)}</span>
+                 </div>
+                 <div className="h-px bg-white/10 my-2" />
+                 <div className="flex justify-between items-center">
+                    <span className="text-xs font-black uppercase tracking-[0.2em]">Total Estimation</span>
+                    <span className="text-xl font-black text-rose-500 italic">R{totalPrice}</span>
+                 </div>
+              </div>
+
               <button
                 onClick={handleBookingSubmit}
                 disabled={isUploading}
-                className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-3 active:scale-95"
               >
                 {isUploading ? (
                   <>
                     <FaSpinner className="animate-spin" />
-                    Processing...
+                    Initializing Secure Link...
                   </>
                 ) : (
                   <>
-                    <FaWhatsapp className="text-xl" />
-                    Send booking via WhatsApp
+                    <FaWhatsapp className="text-lg" />
+                    Finalize via WhatsApp
                   </>
                 )}
               </button>
@@ -3034,30 +3089,24 @@ export default function HelperPage() {
         </div>
       )}
 
-      {/* Mobile Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:hidden z-40">
+
+      {/* Mobile Bottom Bar - 100% Width & Flush to Bottom */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 lg:hidden z-[1100] shadow-[0_-10px_30px_rgba(0,0,0,0.05)] safe-area-bottom">
         <div className="flex items-center justify-between">
           <div className="flex-1 mr-4">
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-gray-900">R{totalPrice}</span>
-              <span className="text-gray-600 text-xs">Total</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-black text-slate-900 tracking-tighter">R{totalPrice}</span>
+              <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest italic">Total Est.</span>
             </div>
-            {bookingData.selectedServices.length > 0 ? (
-              <div className="text-rose-600 text-xs font-semibold truncate max-w-[150px]">
-                {bookingData.selectedServices.map(id => {
-                  const s = serviceOptions.find(opt => opt.id === id);
-                  return s ? s.name : id;
-                }).join(', ')}
-              </div>
-            ) : (
-              <div className="text-gray-500 text-xs">Per service</div>
-            )}
+            <div className="text-rose-600 text-[10px] font-black uppercase tracking-widest truncate max-w-[160px] opacity-80">
+              {helper?.name}
+            </div>
           </div>
           <button
-            onClick={openBookingFormOverlay}  // Changed from handleQuickBooking to openBookingFormOverlay
-            className="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-colors"
+            onClick={openBookingFormOverlay}
+            className="px-8 py-4 bg-slate-950 hover:bg-black text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
           >
-            Book Now
+            Review & Reserve
           </button>
         </div>
       </div>

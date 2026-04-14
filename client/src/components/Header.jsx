@@ -893,7 +893,7 @@ export default function Header() {
     </AnimatePresence>
 
       <AnimatePresence>
-        {isNavVisible && (
+        {isNavVisible && !isHeaderHidden && (
           <motion.div
             initial={{ y: 120, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}

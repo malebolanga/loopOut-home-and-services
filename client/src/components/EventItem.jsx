@@ -1,7 +1,21 @@
 /* eslint-disable react/prop-types */
 import { Link } from "react-router-dom";
-import { MdCalendarToday } from "react-icons/md";
-import { FaHeart, FaRegHeart, FaStar, FaMusic, FaFutbol, FaPalette, FaUsers, FaUtensils, FaCalendarAlt } from "react-icons/fa";
+import { 
+  StarIcon as StarIconSolid, 
+  HeartIcon as HeartIconSolid,
+  CheckBadgeIcon
+} from '@heroicons/react/24/solid';
+import {
+  MapPinIcon,
+  HeartIcon as HeartIconOutline,
+  SparklesIcon,
+  UserGroupIcon,
+  ClockIcon,
+  UserIcon,
+  TicketIcon,
+  CalendarDaysIcon,
+  ShareIcon
+} from '@heroicons/react/24/outline';
 import { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
@@ -15,29 +29,29 @@ const NEW_EVENT_THRESHOLD_DAYS = 14;
 const CLICKS_PER_STAR = 20;
 
 const EVENT_TYPE_COLORS = {
-  music: "bg-purple-100 text-purple-800",
-  sports: "bg-green-100 text-green-800",
-  art: "bg-red-100 text-red-800",
-  community: "bg-blue-100 text-blue-800",
-  food: "bg-yellow-100 text-yellow-800",
-  other: "bg-gray-100 text-gray-800"
+  music: "bg-purple-50 text-purple-700 border-purple-100",
+  sports: "bg-green-50 text-green-700 border-green-100",
+  art: "bg-red-50 text-red-700 border-red-100",
+  community: "bg-blue-50 text-blue-700 border-blue-100",
+  food: "bg-yellow-50 text-yellow-700 border-yellow-100",
+  other: "bg-gray-50 text-gray-700 border-gray-100"
 };
 
 const EVENT_ICON_CONFIG = {
-  music:     { icon: FaMusic,        bg: 'bg-purple-100', text: 'text-purple-700', label: 'Music' },
-  sports:    { icon: FaFutbol,       bg: 'bg-green-100',  text: 'text-green-700',  label: 'Sports' },
-  art:       { icon: FaPalette,      bg: 'bg-red-100',    text: 'text-red-700',    label: 'Art' },
-  community: { icon: FaUsers,        bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Community' },
-  food:      { icon: FaUtensils,     bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Food' },
-  other:     { icon: FaCalendarAlt,  bg: 'bg-gray-100',   text: 'text-gray-700',   label: 'Event' },
+  music:     { icon: SparklesIcon,        bg: 'bg-purple-100', text: 'text-purple-700', label: 'Music' },
+  sports:    { icon: SparklesIcon,        bg: 'bg-green-100',  text: 'text-green-700',  label: 'Sports' },
+  art:       { icon: SparklesIcon,        bg: 'bg-red-100',    text: 'text-red-700',    label: 'Art' },
+  community: { icon: UserGroupIcon,       bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Community' },
+  food:      { icon: SparklesIcon,        bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Food' },
+  other:     { icon: CalendarDaysIcon,    bg: 'bg-gray-100',   text: 'text-gray-700',   label: 'Event' },
 };
 
 function EventTypePill({ type }) {
-  const cfg = EVENT_ICON_CONFIG[type] || { icon: FaCalendarAlt, bg: 'bg-gray-100', text: 'text-gray-700', label: 'Event' };
+  const cfg = EVENT_ICON_CONFIG[type] || { icon: CalendarDaysIcon, bg: 'bg-gray-100', text: 'text-gray-700', label: 'Event' };
   const Icon = cfg.icon;
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${cfg.bg} ${cfg.text}`}>
-      <Icon className="w-2.5 h-2.5" />
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest ${cfg.bg} ${cfg.text} border border-white/50 backdrop-blur-sm shadow-sm`}>
+      <Icon className="w-3 h-3" />
       {cfg.label}
     </span>
   );
@@ -45,46 +59,35 @@ function EventTypePill({ type }) {
 
 const formatPrice = (price) => {
   if (price === undefined || price === null || price === 0) {
-    return <span className="font-bold text-gray-900">Free</span>;
+    return <span className="font-black text-slate-900">Free</span>;
   }
-
   const formatter = new Intl.NumberFormat("en-ZA", {
     style: "currency",
     currency: "ZAR",
     maximumFractionDigits: 0,
   });
-
   return (
-    <span className="font-bold text-gray-900">
+    <span className="font-black text-slate-900">
       {formatter.format(price)}
-      <span className="text-xs font-normal text-gray-500 ml-1">ticket</span>
+      <span className="text-[10px] font-bold text-slate-400 ml-1 uppercase">ticket</span>
     </span>
   );
 };
 
 const formatDateTime = (dateString, timeString) => {
-  if (!dateString || !timeString) return 'Date not available';
-
+  if (!dateString) return 'TBA';
   try {
-    const dateTimeString = `${dateString}T${timeString}`;
-    const eventDate = new Date(dateTimeString);
-
-    const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+    const eventDate = new Date(dateString);
+    const dateOptions = { month: 'short', day: 'numeric' };
     const formattedDate = eventDate.toLocaleDateString('en-US', dateOptions);
-
-    const timeOptions = { hour: '2-digit', minute: '2-digit' };
-    const formattedTime = eventDate.toLocaleTimeString('en-US', timeOptions);
-
-    return `${formattedDate} • ${formattedTime}`;
+    return `${formattedDate}${timeString ? ` @ ${timeString}` : ''}`;
   } catch (error) {
-    console.error('Error formatting date/time:', error);
-    return 'Invalid date/time';
+    return 'Invalid Date';
   }
 };
 
 function EventItem({ event, className = "", compactMode = false }) {
   const { isFavorite, toggleFavorite } = useWishlist(event, 'event');
-  const [showShareOptions, setShowShareOptions] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isNewEvent, setIsNewEvent] = useState(false);
   const [clickCount, setClickCount] = useState(0);
@@ -92,364 +95,152 @@ function EventItem({ event, className = "", compactMode = false }) {
 
   useEffect(() => {
     if (event?.createdAt) {
-      const creationDate = new Date(event.createdAt);
-      const now = new Date();
-      const diffTime = Math.abs(now.getTime() - creationDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const diffDays = Math.ceil(Math.abs(new Date().getTime() - new Date(event.createdAt).getTime()) / (1000 * 60 * 60 * 24));
       setIsNewEvent(diffDays <= NEW_EVENT_THRESHOLD_DAYS);
     }
-
     if (event?._id) {
-      try {
-        const storedClicks = JSON.parse(localStorage.getItem('eventClicks')) || {};
-        setClickCount(storedClicks[event._id] || 0);
-      } catch (error) {
-        console.error('Error reading eventClicks from localStorage:', error);
-      }
-
-      // Fetch accurate rating data
+      const storedClicks = JSON.parse(localStorage.getItem('eventClicks')) || {};
+      setClickCount(storedClicks[event._id] || 0);
       const fetchRating = async () => {
         try {
           const res = await fetch(`/api/event-comments/${event._id}?limit=1`);
           if (res.ok) {
             const data = await res.json();
-            setRatingData({
-              average: data.ratings?.overall || 0,
-              count: data.totalComments || 0
-            });
+            setRatingData({ average: data.ratings?.overall || 0, count: data.totalComments || 0 });
           }
-        } catch (error) {
-          // silently fail
-        }
+        } catch (error) {}
       };
       fetchRating();
     }
   }, [event]);
 
-  const handleCardClick = async () => {
-    if (!event?._id) return;
-
-    try {
-      // Update view count in local storage
-      const storedClicks = JSON.parse(localStorage.getItem('eventClicks')) || {};
-      const newCount = (storedClicks[event._id] || 0) + 1;
-      storedClicks[event._id] = newCount;
-      localStorage.setItem('eventClicks', JSON.stringify(storedClicks));
-      setClickCount(newCount);
-
-      // Only try to call the API if we're not in development mode
-      if (import.meta.env.MODE !== 'development') {
-        try {
-          const response = await fetch(`/api/event/${event._id}/view`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (!response.ok) {
-            console.error('Failed to update view count on server');
-          }
-        } catch (error) {
-          console.error('Error updating view count on server:', error);
-        }
-      }
-    } catch (error) {
-      console.error('Error updating view count:', error);
-    }
-  };
-
-  const calculatedStarRating = Math.min(5, Math.max(1, Math.floor(clickCount / CLICKS_PER_STAR) + 1));
-
-  const enhancedImages = event?.imageUrls?.length > 0
-    ? event.imageUrls.map((img) => ({ url: img }))
-    : [{ url: "https://placehold.co/600x400/E0E0E0/333333?text=No+Image" }];
-
-  const shareEvent = (platform, e) => {
-    e.preventDefault();
-    if (!event?._id || !event?.type || !event?.name || !event?.address) return;
-
-    const eventUrl = `${window.location.origin}/event/${event._id}`;
-    const shareText = `Check out this ${event.type} event: ${event.name} at ${event.address}`;
-
-    switch (platform) {
-      case 'whatsapp':
-        window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText} ${eventUrl}`)}`, '_blank');
-        break;
-      case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}&quote=${encodeURIComponent(shareText)}`, '_blank');
-        break;
-      case 'copy':
-        navigator.clipboard.writeText(`${shareText} ${eventUrl}`)
-          .then(() => {
-            const messageBox = document.createElement('div');
-            messageBox.innerText = 'Link copied to clipboard!';
-            messageBox.style.cssText = `
-              position: fixed; 
-              top: 50%; 
-              left: 50%; 
-              transform: translate(-50%, -50%);
-              background-color: rgba(0,0,0,0.7); 
-              color: white; 
-              padding: 10px 20px;
-              border-radius: 8px; 
-              z-index: 1000; 
-              font-size: 14px;
-            `;
-            document.body.appendChild(messageBox);
-            setTimeout(() => messageBox.remove(), 3000);
-          })
-          .catch(err => {
-            console.error('Failed to copy link:', err);
-          });
-        break;
-      default:
-        break;
-    }
-    setShowShareOptions(false);
-  };
-
-  if (!event?._id) {
-    return (
-      <div className={`${className} rounded-2xl w-full relative overflow-hidden bg-white p-4 shadow-md transition-all duration-300 hover:shadow-lg h-[420px] max-w-sm mx-auto`}>
-        <div className="animate-pulse">
-          <div className="bg-gray-200 h-48 rounded-xl"></div>
-          <div className="mt-4 space-y-2">
-            <div className="bg-gray-200 h-4 w-3/4 rounded"></div>
-            <div className="bg-gray-200 h-4 w-1/2 rounded"></div>
-            <div className="bg-gray-200 h-6 w-1/3 rounded mt-2"></div>
-          </div>
-        </div>
+  if (!event?._id) return (
+    <div className="bg-slate-50 rounded-[2.5rem] w-full p-4 h-[420px] animate-pulse">
+      <div className="bg-slate-200 h-64 rounded-[2rem]"></div>
+      <div className="mt-6 space-y-3">
+        <div className="bg-slate-200 h-6 w-3/4 rounded-lg"></div>
+        <div className="bg-slate-200 h-4 w-1/2 rounded-lg"></div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  // Get user's first name from username
   const getUserFirstName = () => {
-    if (!event?.userRef?.username) return 'User';
-    const username = event.userRef.username;
-    const firstName = username.split(/[._\s]/)[0];
-    return firstName.charAt(0).toUpperCase() + firstName.slice(1);
-  };
-
-  const getUserAvatar = () => {
-    if (event?.userRef?.avatar) {
-      return (
-        <img
-          src={event.userRef.avatar}
-          alt={event.userRef.username}
-          className="w-full h-full object-cover"
-        />
-      );
-    }
-    return (
-      <div className="w-full h-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold text-[10px]">
-        {event?.userRef?.username?.charAt(0).toUpperCase() || 'U'}
-      </div>
-    );
+    if (!event.userRef?.username) return 'User';
+    const first = event.userRef.username.split(/[._\s]/)[0];
+    return first.charAt(0).toUpperCase() + first.slice(1);
   };
 
   return (
     <Link
       to={`/event/${event._id}`}
-      className={`${className} ${compactMode
-          ? 'flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg w-full'
-          : 'rounded-xl hover:shadow-sm transition-all duration-200 overflow-hidden cursor-pointer w-full relative max-w-sm mx-auto flex flex-col'
-        }`}
-      onClick={handleCardClick}
+      className={`${className} group relative bg-white rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:shadow-[0_32px_64px_rgba(0,0,0,0.08)] hover:-translate-y-2 border border-slate-100 flex flex-col`}
     >
-      {compactMode ? (
-        <>
-          <div className="relative w-24 h-28 flex-shrink-0 rounded-lg overflow-hidden">
-            <ImageWithFallback
-              src={enhancedImages[0]?.url}
-              imageUrls={event.imageUrls}
-              type="event"
-              alt={`${event.name || 'Event'} image`}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-            {isNewEvent && (
-              <span className="absolute top-1 left-1 bg-green-500 text-white px-1.5 py-0.5 text-[10px] font-semibold rounded-full shadow-xs">
-                NEW
-              </span>
-            )}
-          </div>
-
-          <div className="flex-grow flex flex-col justify-between h-full min-w-0">
-            <div>
-              <div className="flex justify-between items-start">
-                <h3 className="text-sm font-semibold text-gray-900 truncate">
-                  {event.name || 'Event Name'}
-                </h3>
-                <button
-                  onClick={toggleFavorite}
-                  className="p-1 text-gray-400 hover:text-rose-600 transition-colors ml-2"
-                  aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-                >
-                  {isFavorite ? <FaHeart className="w-3.5 h-3.5 text-rose-600" /> : <FaRegHeart className="w-3.5 h-3.5" />}
-                </button>
+      {/* Immersive Image Container */}
+      <div className="relative aspect-[4/5] overflow-hidden">
+        <Swiper
+          modules={[Pagination, Autoplay]}
+          pagination={{ clickable: true }}
+          autoplay={{ delay: 5000 + Math.random() * 2000 }}
+          className="h-full w-full"
+        >
+          {event.imageUrls?.map((url, i) => (
+            <SwiperSlide key={i}>
+              <ImageWithFallback
+                src={url}
+                alt={event.name}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+            </SwiperSlide>
+          ))}
+          {!event.imageUrls?.length && (
+            <SwiperSlide>
+              <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                <SparklesIcon className="w-12 h-12 text-slate-200" />
               </div>
+            </SwiperSlide>
+          )}
+        </Swiper>
 
-              {event.type && (
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${EVENT_TYPE_COLORS[event.type] || 'bg-gray-100 text-gray-800'} mt-1 inline-block`}>
-                  {event.type}
-                </span>
+        {/* Top Badges Overlay */}
+        <div className="absolute top-4 inset-x-4 z-20 flex justify-between items-start">
+           <div className="flex flex-col gap-2">
+              {isNewEvent && (
+                <span className="bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest shadow-lg shadow-emerald-500/30 backdrop-blur-md">NEW</span>
               )}
-
-              <p className="text-gray-600 text-xs flex items-center mt-1">
-                <MdCalendarToday className="text-blue-500 mr-1 text-xs" />
-                <span className="truncate">{formatDateTime(event.date, event.time)}</span>
-              </p>
-              <div className="mt-1.5">
-                <EventTypePill type={event.type} />
+              <div className="bg-white/80 backdrop-blur-md px-2 py-1.5 rounded-2xl flex items-center gap-2 border border-white shadow-sm">
+                 <div className="w-6 h-6 rounded-xl overflow-hidden border border-slate-100 flex-shrink-0">
+                    <ImageWithFallback src={event.userRef?.avatar} className="w-full h-full object-cover" />
+                 </div>
+                 <span className="text-[10px] font-bold text-slate-700 pr-1">{getUserFirstName()}</span>
               </div>
+           </div>
 
-              <div className="mt-2 flex items-center justify-between w-full">
-                <span className="text-sm font-bold text-gray-900">
-                  {formatPrice(event.regularPrice)}
-                </span>
-                <div className="flex items-center text-gray-600">
-                  <span className="font-medium text-gray-900 text-[12px] mr-0.5">
-                    {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
-                  </span>
-                  <FaStar className="text-amber-500 text-[10px]" />
-                  {ratingData.count > 0 && <span className="text-[9px] text-gray-400 ml-1">({ratingData.count})</span>}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {showShareOptions && (
-            <div className="absolute right-2 top-8 mt-2 w-40 bg-white rounded-lg shadow-lg z-20 border border-gray-200 divide-y divide-gray-100 text-sm">
-              <div className="py-1">
-                <button onClick={(e) => shareEvent('whatsapp', e)} className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors flex items-center">
-                  WhatsApp
-                </button>
-                <button onClick={(e) => shareEvent('facebook', e)} className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center">
-                  Facebook
-                </button>
-                <button onClick={(e) => shareEvent('copy', e)} className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center">
-                  Copy Link
-                </button>
-              </div>
-            </div>
-          )}
-        </>
-      ) : (
-        <>
-          <button
-            onClick={toggleFavorite}
-            className="absolute top-3 right-3 z-10 p-2 bg-white/90 rounded-full shadow-md hover:bg-white transition-all duration-200 hover:scale-110 group/favorite"
-            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-          >
-            {isFavorite ? (
-              <FaHeart className="w-4 h-4 text-rose-600" />
-            ) : (
-              <FaRegHeart className="w-4 h-4 text-gray-700 group-hover/favorite:text-rose-600" />
-            )}
-          </button>
-
-          {/* ADDED: User avatar and first name in left corner */}
-          {event?.userRef?._id && (
-            <div className="absolute top-2 left-3 z-[15] flex items-center gap-1.5 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-full shadow-md transition-transform hover:scale-105">
-              <div className="w-5 h-5 rounded-full overflow-hidden border border-white/50">
-                {getUserAvatar()}
-              </div>
-              <span className="text-[10px] font-semibold text-gray-700 leading-none">{getUserFirstName()}</span>
-            </div>
-          )}
-
-          <div className="block relative flex-grow-0">
-            <div className="relative pb-[75%] bg-gray-100 overflow-hidden rounded-t-xl">
-              <Swiper
-                modules={[Pagination, Autoplay]}
-                pagination={{
-                  clickable: true,
-                  dynamicBullets: true,
-                }}
-                autoplay={{ delay: 5000, disableOnInteraction: false }}
-                className="absolute inset-0 h-full w-full"
+           <div className="flex items-center gap-2">
+              <button 
+                onClick={(e) => { e.preventDefault(); toggleFavorite(); }} 
+                className={`p-2.5 rounded-2xl backdrop-blur-md border border-white/20 transition-all ${isFavorite ? 'bg-rose-500 text-white' : 'bg-white/20 text-white hover:bg-white/40'}`}
               >
-                {enhancedImages.map((img, index) => (
-                  <SwiperSlide key={index}>
-                    <div className="relative h-full w-full">
-                      <ImageWithFallback
-                        src={img.url}
-                        imageUrls={index === 0 ? event.imageUrls : undefined}
-                        type="event"
-                        alt={`${event.name || 'Event'} image ${index + 1}`}
-                        className={`w-full h-full rounded-2xl object-cover transition-transform duration-500 ${imageLoaded ? 'scale-100' : 'scale-110'} group-hover:scale-105`}
-                        loading="lazy"
-                        onLoad={() => setImageLoaded(true)}
-                      />
-                      <div className="absolute top-2 left-2 z-10 flex gap-1.5">
-                        {event.type && (
-                          <span className={`text-xs px-2 py-1 rounded-full ${EVENT_TYPE_COLORS[event.type] || 'bg-gray-100 text-gray-800'} font-medium`}>
-                            {event.type}
-                          </span>
-                        )}
+                {isFavorite ? <HeartIconSolid className="w-4 h-4" /> : <HeartIconOutline className="w-4 h-4" />}
+              </button>
+           </div>
+        </div>
 
-                        {isNewEvent && (
-                          <span className="bg-green-500 text-white px-2 py-1 text-xs font-semibold rounded-full shadow-md">
-                            NEW
-                          </span>
-                        )}
-                      </div>
+        {/* Bottom Metadata Overlay */}
+        <div className="absolute bottom-4 inset-x-4 z-20">
+           <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-4 border border-white/10 shadow-2xl">
+              <div className="flex items-center justify-between gap-4">
+                 <div className="flex-1 min-w-0">
+                    <div className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60 mb-1">Coming Up</div>
+                    <div className="text-sm font-bold text-white truncate flex items-center gap-2">
+                       <ClockIcon className="w-4 h-4 text-rose-400" />
+                       {formatDateTime(event.date, event.time)}
                     </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </div>
+                 </div>
+                 <div className="text-right">
+                    <div className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60 mb-1">Tickets</div>
+                    <div className="text-sm font-black text-rose-400">{event.regularPrice ? `R${event.regularPrice}` : 'FREE'}</div>
+                 </div>
+              </div>
+           </div>
+        </div>
+      </div>
+
+      {/* Content Body */}
+      <div className="p-6 flex-grow flex flex-col">
+          <div className="flex items-start justify-between gap-4 mb-4">
+             <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-black text-slate-900 tracking-tight leading-tight mb-2 truncate group-hover:text-rose-500 transition-colors">
+                  {event.name || 'Experience Name'}
+                </h3>
+                <div className="flex items-center gap-2">
+                   <MapPinIcon className="w-3.5 h-3.5 text-slate-400" />
+                   <span className="text-xs font-semibold text-slate-400 truncate tracking-tight">{event.address || 'Location TBA'}</span>
+                </div>
+             </div>
+             <div className="flex flex-col items-end gap-1">
+                <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2.5 py-1 rounded-xl font-bold text-[10px] border border-amber-100">
+                   <StarIconSolid className="w-3 h-3" /> {ratingData.count > 0 ? ratingData.average.toFixed(1) : '4.8'}
+                </div>
+                <div className="text-[9px] font-bold text-slate-300 uppercase tracking-tighter">
+                   {ratingData.count > 0 ? `${ratingData.count} Reviews` : 'Top Choice'}
+                </div>
+             </div>
           </div>
 
-          <div className="p-3 flex-grow flex flex-col">
-            <div className="flex justify-between items-start">
-              <h3 className="text-sm font-semibold text-gray-900 truncate max-w-[70%]">
-                {event.name || 'Event Name'}
-              </h3>
-
-              <div className="flex items-center text-xs bg-white/80 backdrop-blur-sm px-2 py-1 rounded-full border border-gray-200">
-                <FaStar className="text-yellow-400" />
-                <span className="ml-1 font-medium">{calculatedStarRating}</span>
-                <span className="text-gray-500 ml-1">({clickCount})</span>
-              </div>
-            </div>
-
-            <p className="text-gray-600 text-xs flex items-center">
-              <MdCalendarToday className="text-blue-500 mr-1 min-w-fit text-xs" />
-              <span className="truncate hover:text-gray-800 transition-colors">
-                {formatDateTime(event.date, event.time)}
-              </span>
-            </p>
-            <div className="mt-1.5">
-              <EventTypePill type={event.type} />
-            </div>
-
-            <div className="mt-auto pt-0">
-              <div className="flex items-baseline justify-between">
-                <div className="flex items-baseline">
-                  <span className="text-[15px] font-semibold text-gray-900">
-                    {formatPrice(event.regularPrice)}
-                  </span>
+          <div className="mt-auto pt-6 flex items-center justify-between border-t border-slate-50">
+             <EventTypePill type={event.type} />
+             <div className="flex items-center gap-3">
+                <div className="flex -space-x-2">
+                   {[1,2,3].map(i => (
+                     <div key={i} className="w-7 h-7 rounded-full border-2 border-white bg-slate-200 overflow-hidden flex items-center justify-center">
+                        <UserIcon className="w-4 h-4 text-slate-400" />
+                     </div>
+                   ))}
                 </div>
-
-                <div className="flex items-center text-gray-600">
-                  <FaStar className="text-amber-500 text-[12px]" />
-                  <span className="font-medium text-gray-900 text-[13px] ml-1">
-                    {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
-                  </span>
-                  {ratingData.count > 0 && (
-                    <span className="text-[10px] text-gray-400 ml-1">
-                      ({ratingData.count})
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{event.capacity || '10+'} Going</span>
+             </div>
           </div>
-        </>
-      )}
+      </div>
     </Link>
   );
 }

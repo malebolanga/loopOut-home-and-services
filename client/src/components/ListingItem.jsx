@@ -1,7 +1,22 @@
 /* eslint-disable react/prop-types */
 import { Link } from "react-router-dom";
-import { MdLocationOn } from "react-icons/md";
-import { FaBed, FaBath, FaHeart, FaRegHeart, FaStar, FaUser, FaHome, FaKey, FaTree, FaBuilding, FaMoon, FaCity } from "react-icons/fa";
+import { 
+  StarIcon as StarIconSolid, 
+  HeartIcon as HeartIconSolid,
+  CheckBadgeIcon
+} from '@heroicons/react/24/solid';
+import {
+  MapPinIcon,
+  HomeIcon,
+  TagIcon,
+  HeartIcon as HeartIconOutline,
+  UserIcon,
+  SparklesIcon,
+  KeyIcon,
+  BuildingOfficeIcon,
+  MoonIcon,
+  Squares2X2Icon
+} from '@heroicons/react/24/outline';
 import { useState, useMemo, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
@@ -49,17 +64,17 @@ const getPropertyTypeName = (type) => {
 };
 
 const LISTING_TYPE_CONFIG = {
-  sale:       { icon: FaHome,     bg: 'bg-green-100',  text: 'text-green-700',  label: 'For Sale' },
-  rent:       { icon: FaKey,      bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'For Rent' },
-  'rent-long':{ icon: FaKey,      bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Long Term' },
-  'rent-short':{ icon: FaMoon,    bg: 'bg-rose-100',   text: 'text-rose-700',   label: 'Short Term' },
-  over:       { icon: FaMoon,     bg: 'bg-rose-100',   text: 'text-rose-700',   label: 'Overnight' },
-  land:       { icon: FaTree,     bg: 'bg-amber-100',  text: 'text-amber-700',  label: 'Land Plot' },
-  office:     { icon: FaBuilding, bg: 'bg-purple-100', text: 'text-purple-700', label: 'Office' },
+  sale:       { icon: HomeIcon,     bg: 'bg-green-100',  text: 'text-green-700',  label: 'For Sale' },
+  rent:       { icon: KeyIcon,      bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'For Rent' },
+  'rent-long':{ icon: KeyIcon,      bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Long Term' },
+  'rent-short':{ icon: MoonIcon,    bg: 'bg-rose-100',   text: 'text-rose-700',   label: 'Short Term' },
+  over:       { icon: MoonIcon,     bg: 'bg-rose-100',   text: 'text-rose-700',   label: 'Overnight' },
+  land:       { icon: SparklesIcon, bg: 'bg-amber-100',  text: 'text-amber-700',  label: 'Land Plot' },
+  office:     { icon: BuildingOfficeIcon, bg: 'bg-purple-100', text: 'text-purple-700', label: 'Office' },
 };
 
 function ListingTypePill({ type }) {
-  const cfg = LISTING_TYPE_CONFIG[type] || { icon: FaCity, bg: 'bg-gray-100', text: 'text-gray-700', label: 'Property' };
+  const cfg = LISTING_TYPE_CONFIG[type] || { icon: Squares2X2Icon, bg: 'bg-gray-100', text: 'text-gray-700', label: 'Property' };
   const Icon = cfg.icon;
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${cfg.bg} ${cfg.text}`}>
@@ -247,7 +262,7 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
 
   if (!listing?._id) {
     return (
-      <div className="rounded-xl w-full relative overflow-hidden bg-white p-3 shadow-md transition-all duration-300 hover:shadow-lg max-w-sm mx-auto min-h-[380px]">
+      <div className="rounded-xl w-full relative overflow-hidden p-3 shadow-md transition-all duration-300 hover:shadow-lg max-w-sm mx-auto min-h-[380px]">
         <div className="animate-pulse">
           <div className="bg-gray-200 h-64 rounded-xl"></div>
           <div className="mt-4 space-y-2">
@@ -314,12 +329,12 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
                   className="p-1 text-gray-400 hover:text-rose-600 transition-colors ml-2"
                   aria-label={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
                 >
-                  {isFavorite ? <FaHeart className="w-3.5 h-3.5 text-rose-600" /> : <FaRegHeart className="w-3.5 h-3.5" />}
+                  {isFavorite ? <HeartIconSolid className="w-3.5 h-3.5 text-rose-600" /> : <HeartIconOutline className="w-3.5 h-3.5" />}
                 </button>
               </div>
 
-              <p className="text-gray-600 text-xs flex items-center mt-1">
-                <MdLocationOn className="text-rose-600 mr-1 text-xs" />
+              <p className="text-gray-600 text-[10px] font-black uppercase tracking-widest flex items-center mt-2.5">
+                <MapPinIcon className="text-rose-600 w-3 h-3 mr-1.5" />
                 <span className="truncate">{listing.address || 'Address not available'}</span>
               </p>
               <div className="mt-1.5">
@@ -336,11 +351,11 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
                 )}
               </div>
               <div className="flex flex-col items-end">
-                <div className="flex items-center text-gray-600">
-                  <span className="font-medium text-gray-900 text-[12px] mr-1">
+                <div className="flex items-center text-gray-900">
+                  <span className="font-black text-gray-900 text-[11px] mr-1.5">
                     {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
                   </span>
-                  <FaStar className="text-amber-500 text-[10px]" />
+                  <StarIconSolid className="text-amber-500 w-3 h-3" />
                 </div>
                 {ratingData.count > 0 && <span className="text-[9px] text-gray-400 mt-0.5">({ratingData.count} rev)</span>}
               </div>
@@ -352,13 +367,13 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
           <div className="relative aspect-[4/3] overflow-hidden rounded-2xl mb-2.5 shadow-sm group-hover:shadow-md transition-shadow">
             <button
               onClick={toggleFavorite}
-              className="absolute top-2 right-2 z-20 p-1.5 bg-white/20 backdrop-blur-md rounded-full shadow-sm hover:bg-white/40 transition-all hover:scale-110"
+              className="absolute top-2 right-2 z-20 p-2 bg-white/10 backdrop-blur-md rounded-full shadow-sm hover:bg-white/30 transition-all hover:scale-110 border border-white/20"
               aria-label={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
             >
               {isFavorite ? (
-                <FaHeart className="w-3.5 h-3.5 text-rose-600" />
+                <HeartIconSolid className="w-4 h-4 text-rose-500" />
               ) : (
-                <FaRegHeart className="w-3.5 h-3.5 text-white" />
+                <HeartIconOutline className="w-4 h-4 text-white" />
               )}
             </button>
 
@@ -409,13 +424,13 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col px-1.5">
             <div className="flex justify-between items-start gap-2">
               <h3 className="text-sm font-bold text-gray-900 truncate group-hover:text-rose-600 transition-colors">
                 {listing.name || 'Property Name'}
               </h3>
               <div className="flex items-center text-gray-900 shrink-0">
-                <FaStar className="text-amber-500 text-[10px]" />
+                <StarIconSolid className="text-amber-500 w-3 h-3" />
                 <span className="font-bold text-xs ml-1">
                   {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
                 </span>
@@ -423,7 +438,7 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
             </div>
 
             <p className="text-gray-500 text-xs flex items-center mt-0.5">
-              <MdLocationOn className="text-rose-500 mr-1 min-w-fit text-[10px]" />
+              <MapPinIcon className="text-rose-500 mr-1 w-3 h-3 min-w-fit" />
               <span className="truncate">{listing.address || 'Address not available'}</span>
             </p>
 
@@ -431,12 +446,12 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
               {listing.type !== 'land' && listing.type !== 'office' && (
                 <>
                   <div className="flex items-center gap-1">
-                    <FaBed className="text-[10px]" />
+                    <HomeIcon className="w-3 h-3" />
                     <span>{listing.bedrooms || 0} Beds</span>
                   </div>
                   <span className="text-gray-200">•</span>
                   <div className="flex items-center gap-1">
-                    <FaBath className="text-[10px]" />
+                    <SparklesIcon className="w-3 h-3" />
                     <span>{listing.bathrooms || 0} Baths</span>
                   </div>
                 </>

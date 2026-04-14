@@ -16,94 +16,20 @@ import GoogleMapComponent from '../components/GoogleMapComponent';
 import { useWishlist } from '../hooks/useWishlist';
 
 
-// Icons imports
-import {
-  MdCleanHands,
-  MdOutlineGppGood,
-  MdLogin,
-  MdChat,
-  MdLocationOn,
-  MdAttachMoney,
-  MdAdsClick,
-  MdKingBed,
-  MdBathtub,
-  MdSquareFoot,
-  MdClose,
-} from "react-icons/md";
-import {
-  FaArrowRight,
-  FaStar,
-  FaCheckCircle,
-  FaMapMarkerAlt,
-  FaImages,
-  FaParking,
-  FaSwimmingPool,
-  FaWifi,
-  FaShieldAlt,
-  FaFlag,
-  FaCookie,
-  FaCoffee,
-  FaStoreAlt,
-  FaMap,
-  FaShower,
-  FaDog,
-  FaBolt,
-  FaWhatsapp,
-  FaPhone,
-  FaArrowLeft,
-  FaUser,
-  FaTag,
-  FaSpinner,
-  FaComment,
-  FaTv,
-  FaWarehouse,
-  FaChevronDown,
-  FaBed,
-  FaPaperPlane,
-  FaReceipt,
-  FaEnvelope,
-  FaRegCommentDots,
-  FaTimes,
-  FaChevronLeft,
-  FaChevronRight,
-  FaExpand,
-  FaExternalLinkAlt,
-  FaUserFriends,
-  FaFacebook,
-  FaTwitter,
-  FaInstagram,
-  FaLinkedin,
-  FaTiktok,
-  FaGlobe,
-  FaHeart,
-  FaCamera,
-  FaUsers,
-  FaCar,
-  FaConciergeBell,
-  FaHotTub,
-  FaFire,
-  FaSnowflake,
-  FaUmbrellaBeach,
-  FaDumbbell,
-  FaDesktop,
-  FaLock,
-  FaSmokingBan,
-  FaWind,
-  FaTree,
-  FaWater,
-  FaCouch,
-  FaUtensils,
-  FaRobot,
-  FaLightbulb,
-  FaClock,
-  FaInfoCircle,
-  FaShare,
-  FaEllipsisH,
-  FaBath,
-  FaHome,
-  FaCalendar,
-} from "react-icons/fa";
+import { HeartIcon, ShareIcon, StarIcon, MapPinIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon, PhoneIcon, EnvelopeIcon, ChatBubbleLeftRightIcon, FlagIcon, UserIcon, CameraIcon, Squares2X2Icon, ArrowLeftIcon, PhotoIcon, UsersIcon, CalendarIcon, ClockIcon, HomeModernIcon, TagIcon, ArrowPathIcon, TicketIcon, BanknotesIcon } from '@heroicons/react/24/outline';
+import { StarIcon as StarIconSolid, HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { FiShare2, FiHeart, FiMessageSquare } from "react-icons/fi";
+
+// Amenity & config icons (domain-specific, no Heroicons equivalent)
+import {
+  FaWifi, FaParking, FaSwimmingPool, FaUtensils, FaFire, FaTv, FaWarehouse,
+  FaShieldAlt, FaHotTub, FaDog, FaBolt, FaSnowflake, FaUserFriends, FaCoffee,
+  FaCouch, FaShower, FaWind, FaDesktop, FaTree, FaUmbrellaBeach, FaDumbbell,
+  FaSmokingBan, FaHome, FaFacebook, FaInstagram, FaTwitter, FaLinkedin, FaTiktok, FaGlobe,
+  FaHeart, FaWhatsapp
+} from "react-icons/fa";
+import { MdCleanHands, MdOutlineGppGood, MdLogin, MdChat, MdLocationOn, MdAttachMoney, MdKingBed, MdBathtub } from "react-icons/md";
+
 
 // Styles
 import "swiper/css";
@@ -600,7 +526,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8 mx-4">
         {/* Header */}
-        <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-100 p-8 rounded-t-2xl flex justify-between items-center z-10">
+        <div className="sticky top-0 bg-slate-50 border-b border-gray-100 p-8 rounded-t-2xl flex justify-between items-center z-10">
           <div className="flex items-center gap-4">
              <div className="w-12 h-12 rounded-2xl bg-rose-500 flex items-center justify-center text-white shadow-lg shadow-rose-100">
                 <FaHome size={20} />
@@ -622,7 +548,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
             onClick={onClose}
             className="w-10 h-10 bg-gray-50 hover:bg-gray-100 rounded-full flex items-center justify-center transition-all active:scale-90"
           >
-            <FaTimes className="text-lg text-gray-400" />
+            <XMarkIcon className="w-6 h-6 text-gray-400" />
           </button>
         </div>
 
@@ -631,7 +557,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
           {/* Guest Information - Always shown */}
           <div className="space-y-4">
             <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <FaUsers className="text-rose-500" />
+              <UsersIcon className="w-5 h-5 text-rose-500" />
               Your Information
             </h3>
 
@@ -698,7 +624,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
               {/* Booking Dates */}
               <div className="space-y-4 pt-4 border-t border-gray-200">
                 <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <FaCalendar className="text-rose-500" />
+                  <CalendarIcon className="w-5 h-5 text-rose-500" />
                   Stay Dates
                 </h3>
 
@@ -752,7 +678,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
               {/* Room & Guest Details */}
               <div className="space-y-4 pt-4 border-t border-gray-200">
                 <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <FaBed className="text-rose-500" />
+                  <HomeModernIcon className="w-5 h-5 text-rose-500" />
                   Room & Guest Details
                 </h3>
 
@@ -844,7 +770,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
             <>
               <div className="space-y-4 pt-4 border-t border-gray-200">
                 <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <FaClock className="text-rose-500" />
+                  <ClockIcon className="w-5 h-5 text-rose-500" />
                   Booking Date & Time
                 </h3>
 
@@ -932,7 +858,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
           {((isOvernight && nights > 0) || (isOffice && hours > 0)) && (
             <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6 space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-                <FaReceipt className="text-gray-400" />
+                <TicketIcon className="w-4 h-4 text-gray-400" />
                 <h4 className="font-bold text-gray-900 uppercase text-xs tracking-widest">Pricing Breakdown</h4>
               </div>
 
@@ -1016,7 +942,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                    <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500">
-                      <FaTag size={16} />
+                      <TagIcon className="w-5 h-5" />
                    </div>
                    <div>
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Listing Value</p>
@@ -1046,7 +972,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
             >
               {isSubmitting ? (
                 <>
-                  <FaSpinner className="animate-spin" />
+                  <ArrowPathIcon className="w-5 h-5 animate-spin" />
                   Sending...
                 </>
               ) : (
@@ -1244,21 +1170,21 @@ const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
               )}
             </div>
 
-            <div className="mt-6 p-5 bg-gray-50 border border-gray-100 rounded-3xl">
+            <div className="mt-6 p-5 bg-slate-50/50 border border-slate-200/50 rounded-3xl">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Proprietor Credentials</p>
               <div className="space-y-2">
                 {formattedDisplayNumber && (
                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-rose-500 shadow-sm border border-gray-100">
-                         <FaPhone size={12} />
+                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-rose-500 shadow-sm border border-slate-200/50">
+                         <PhoneIcon className="w-4 h-4" />
                       </div>
                       <p className="text-sm font-bold text-gray-900">{formattedDisplayNumber}</p>
                    </div>
                 )}
                 {listing?.email && (
                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-blue-500 shadow-sm border border-gray-100">
-                         <FaEnvelope size={12} />
+                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-blue-500 shadow-sm border border-slate-200/50">
+                         <EnvelopeIcon className="w-4 h-4" />
                       </div>
                       <p className="text-sm font-bold text-gray-900">{listing.email}</p>
                    </div>
@@ -2002,7 +1928,7 @@ export default function Listing() {
               onClick={() => navigate(-1)} 
               className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
             >
-              <FaArrowLeft className="text-lg" />
+              <ArrowLeftIcon className="w-5 h-5" />
             </button>
 
             <div className="flex items-center gap-2">
@@ -2010,13 +1936,13 @@ export default function Listing() {
                 onClick={handleShare} 
                 className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
               >
-                <FiShare2 className="text-lg" />
+                <ShareIcon className="w-5 h-5" />
               </button>
               <button 
                 onClick={toggleFavorite} 
                 className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 backdrop-blur-sm'}`}
               >
-                {isFavorite ? <FaHeart className="text-lg text-rose-500" /> : <FiHeart className={`text-lg ${isScrolled ? 'text-slate-900' : 'text-white'}`} />}
+                {isFavorite ? <HeartIconSolid className="w-6 h-6 text-rose-500" /> : <HeartIcon className={`w-6 h-6 ${isScrolled ? 'text-slate-900' : 'text-white'}`} />}
               </button>
             </div>
           </div>
@@ -2064,7 +1990,7 @@ export default function Listing() {
             onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
             className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50"
           >
-            <FaImages className="text-lg" />
+            <PhotoIcon className="w-5 h-5" />
             <span>Show all {listing.imageUrls.length} photos</span>
           </button>
         </div>
@@ -2091,7 +2017,7 @@ export default function Listing() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 mb-2">{listing.name}</h1>
               <div className="flex flex-wrap items-center gap-2 text-gray-600 text-sm lg:text-base">
                 <span className="flex items-center gap-1">
-                  <FaStar className="text-[#FFB400]" />
+                  <StarIconSolid className="text-[#FFB400] w-4 h-4" />
                   <span className="font-semibold text-gray-900">{Number(aiRating.average).toFixed(1)}</span>
                   <span className="underline">{commentCount} reviews</span>
                 </span>
@@ -2140,7 +2066,7 @@ export default function Listing() {
                   />
                 ) : (
                   <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-gray-100 flex items-center justify-center border border-gray-100 shadow-sm text-gray-400">
-                    <FaUser className="text-xl lg:text-2xl" />
+                    <UserIcon className="w-6 h-6 lg:w-7 lg:h-7" />
                   </div>
                 )}
                 <div>
@@ -2259,7 +2185,7 @@ export default function Listing() {
             {/* Reviews */}
             <div className="pb-6 border-b border-gray-200">
               <div className="flex items-center gap-2 mb-8">
-                <FaStar className="text-[#FFB400] text-2xl drop-shadow-sm" />
+                <StarIconSolid className="text-[#FFB400] text-2xl drop-shadow-sm w-7 h-7" />
                 <h2 className="text-2xl font-semibold text-gray-900">
                   {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : Number(aiRating.average).toFixed(1)} · {commentCount} reviews
                 </h2>
@@ -2334,9 +2260,9 @@ export default function Listing() {
                                   <div className="flex items-center gap-4 mb-4">
                                     <div className="flex items-center">
                                       {[...Array(5)].map((_, i) => (
-                                        <FaStar
+                                        <StarIconSolid
                                           key={i}
-                                          className={`text-[12px] mr-1 ${i < Math.round(rating) ? 'text-[#FFB400]' : 'text-gray-200'}`}
+                                          className={`w-3.5 h-3.5 mr-1 ${i < Math.round(rating) ? 'text-[#FFB400]' : 'text-gray-200'}`}
                                         />
                                       ))}
                                     </div>
@@ -2417,7 +2343,7 @@ export default function Listing() {
           {/* Right Column - Booking Card */}
           <div className="lg:col-span-1">
             <div className={`${isScrolled ? 'lg:sticky lg:top-24' : ''} space-y-4`}>
-              <div className="border border-gray-200 rounded-xl shadow-lg p-4 lg:p-6 bg-white">
+              <div className="border border-slate-200/50 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 lg:p-8 bg-transparent">
                 {/* Price Header */}
                 <div className="flex items-baseline justify-between mb-4 lg:mb-6">
                   <div>
@@ -2464,40 +2390,40 @@ export default function Listing() {
               </div>
 
               {/* Contact Info Card */}
-              <div className="border border-gray-200 rounded-xl p-4 lg:p-6 bg-white">
+              <div className="border border-slate-200/50 rounded-3xl p-6 lg:p-8 bg-transparent">
                 <h3 className="font-semibold text-gray-900 mb-3 lg:mb-4">Contact Information</h3>
                 <div className="space-y-2 lg:space-y-3">
                   {formattedDisplayNumber && (
-                    <a href={`tel:${formattedDisplayNumber}`} className="flex items-center gap-3 p-2 lg:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                      <div className="w-8 h-8 lg:w-10 lg:h-10 bg-rose-100 rounded-full flex items-center justify-center">
-                        <FaPhone className="text-rose-600 text-sm lg:text-base" />
+                    <a href={`tel:${formattedDisplayNumber}`} className="flex items-center gap-3 p-2 lg:p-3 bg-slate-50/50 rounded-2xl hover:bg-slate-100 transition-all border border-slate-200/30">
+                      <div className="w-8 h-8 lg:w-10 lg:h-10 bg-rose-100 rounded-full flex items-center justify-center shadow-sm">
+                        <PhoneIcon className="w-4 h-4 text-rose-600" />
                       </div>
                       <div>
-                        <p className="text-xs lg:text-sm text-gray-600">Phone</p>
-                        <p className="font-medium text-gray-900 text-sm lg:text-base">{formattedDisplayNumber}</p>
+                        <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Phone</p>
+                        <p className="font-bold text-gray-900 text-sm lg:text-base tracking-tight">{formattedDisplayNumber}</p>
                       </div>
                     </a>
                   )}
                   {displayEmail && (
-                    <a href={`mailto:${displayEmail}`} className="flex items-center gap-3 p-2 lg:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                      <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                        <FaEnvelope className="text-gray-600 text-sm lg:text-base" />
+                    <a href={`mailto:${displayEmail}`} className="flex items-center gap-3 p-2 lg:p-3 bg-slate-50/50 rounded-2xl hover:bg-slate-100 transition-all border border-slate-200/30">
+                      <div className="w-8 h-8 lg:w-10 lg:h-10 bg-blue-100 rounded-full flex items-center justify-center shadow-sm">
+                        <EnvelopeIcon className="w-4 h-4 text-blue-600" />
                       </div>
                       <div>
-                        <p className="text-xs lg:text-sm text-gray-600">Email</p>
-                        <p className="font-medium text-gray-900 text-sm lg:text-base">{displayEmail}</p>
+                        <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Email</p>
+                        <p className="font-bold text-gray-900 text-sm lg:text-base tracking-tight">{displayEmail}</p>
                       </div>
                     </a>
                   )}
                   {formattedDisplayNumber && (
                     <a href={`https://wa.me/${formatPhoneNumberForWhatsApp(formattedDisplayNumber)}`} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-2 lg:p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-                      <div className="w-8 h-8 lg:w-10 lg:h-10 bg-green-100 rounded-full flex items-center justify-center">
-                        <FaWhatsapp className="text-green-600 text-sm lg:text-base lg:text-xl" />
+                      className="flex items-center gap-3 p-2 lg:p-3 bg-green-50/50 rounded-2xl hover:bg-green-100 transition-all border border-green-200/30">
+                      <div className="w-8 h-8 lg:w-10 lg:h-10 bg-green-100 rounded-full flex items-center justify-center shadow-sm">
+                        <ChatBubbleLeftRightIcon className="w-5 h-5 text-green-600" />
                       </div>
                       <div>
-                        <p className="text-xs lg:text-sm text-gray-600">WhatsApp</p>
-                        <p className="font-medium text-gray-900 text-sm lg:text-base">Message host</p>
+                        <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">WhatsApp</p>
+                        <p className="font-bold text-gray-900 text-sm lg:text-base tracking-tight">Message host</p>
                       </div>
                     </a>
                   )}
@@ -2505,9 +2431,9 @@ export default function Listing() {
               </div>
 
               {/* Report Listing */}
-              <div className="flex items-center justify-center gap-2 text-gray-500 text-xs lg:text-sm">
-                <FaFlag className="text-sm lg:text-lg" />
-                <button className="underline font-medium">Report this listing</button>
+              <div className="flex items-center justify-center gap-2 text-gray-400 text-xs lg:text-sm pt-4">
+                <FlagIcon className="w-4 h-4" />
+                <button className="underline underline-offset-4 font-black uppercase tracking-widest text-[9px] hover:text-rose-500">Report this listing</button>
               </div>
             </div>
           </div>

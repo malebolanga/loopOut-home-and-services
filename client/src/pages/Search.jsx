@@ -4,50 +4,49 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ImageWithFallback from '../components/ImageWithFallback';
 import useLocationCoords from '../hooks/useGeolocation';
 import {
-  Search as SearchIcon,
-  SlidersHorizontal,
-  Map,
-  Grid3X3,
-  List,
-  ArrowUpDown,
-  Heart,
-  Share2,
-  Phone,
-  Mail,
-  Star,
-  MapPin,
-  Bed,
-  Bath,
-  Sparkles,
-  RotateCcw,
-  Compass,
-  Home,
-  Wrench,
-  Users,
-  Calendar,
-  DollarSign,
-  Tag,
-  Building,
-  Search,
-  ChevronDown,
-  X,
-  Camera,
-  Car,
-  Hotel,
-  Paintbrush,
-  GraduationCap,
-  Droplets,
-  Scissors,
-  Flower2,
-  Zap,
-  ChefHat,
-  Truck,
-  Settings,
-  MoreHorizontal,
-  Check,
-  ArrowLeft,
-  Briefcase
-} from 'lucide-react';
+  MagnifyingGlassIcon,
+  AdjustmentsHorizontalIcon,
+  MapIcon,
+  Squares2X2Icon,
+  Bars3Icon,
+  ChevronUpDownIcon,
+  HeartIcon,
+  ShareIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  StarIcon,
+  MapPinIcon,
+  HomeIcon,
+  SparklesIcon,
+  ArrowPathIcon,
+  TicketIcon,
+  WrenchScrewdriverIcon,
+  UserGroupIcon,
+  CalendarIcon,
+  CurrencyDollarIcon,
+  TagIcon,
+  BuildingOfficeIcon,
+  ChevronDownIcon,
+  XMarkIcon,
+  CameraIcon,
+  TruckIcon,
+  WrenchIcon,
+  ScissorsIcon,
+  BriefcaseIcon,
+  AcademicCapIcon,
+  BeakerIcon,
+  BoltIcon,
+  MusicalNoteIcon,
+  CheckIcon,
+  ArrowLeftIcon,
+  PuzzlePieceIcon,
+  SunIcon,
+  CloudIcon
+} from '@heroicons/react/24/outline';
+import { 
+  StarIcon as StarIconSolid,
+  HeartIcon as HeartIconSolid 
+} from '@heroicons/react/24/solid';
 
 const RECENT_SEARCHES_KEY = 'recentPropertySearches';
 const MAX_RECENT_SEARCHES = 5;
@@ -56,34 +55,34 @@ const DEFAULT_LISTING_LIMIT = 12;
 // Enhanced Categories Configuration with all user requested categories
 const ALL_CATEGORIES = [
   // Properties & Accommodation
-  { id: 'guest_house', label: 'Guest House', type: 'properties', icon: Hotel, color: 'bg-purple-100 text-purple-800', description: 'Guest houses & B&Bs' },
-  { id: 'for_rent', label: 'For Rent', type: 'properties', icon: Home, color: 'bg-blue-100 text-blue-800', description: 'Rental properties' },
-  { id: 'for_sale', label: 'For Sale', type: 'properties', icon: Tag, color: 'bg-emerald-100 text-emerald-800', description: 'Properties for sale' },
-  { id: 'vacation', label: 'Vacation Rental', type: 'properties', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Short-term stays' },
+  { id: 'guest_house', label: 'Guest House', type: 'properties', icon: HomeIcon, color: 'bg-purple-100 text-purple-800', description: 'Guest houses & B&Bs' },
+  { id: 'for_rent', label: 'For Rent', type: 'properties', icon: HomeIcon, color: 'bg-blue-100 text-blue-800', description: 'Rental properties' },
+  { id: 'for_sale', label: 'For Sale', type: 'properties', icon: TagIcon, color: 'bg-emerald-100 text-emerald-800', description: 'Properties for sale' },
+  { id: 'vacation', label: 'Vacation Rental', type: 'properties', icon: SparklesIcon, color: 'bg-pink-100 text-pink-800', description: 'Short-term stays' },
 
   // Services
-  { id: 'photography', label: 'Photography', type: 'services', icon: Camera, color: 'bg-indigo-100 text-indigo-800', description: 'Photo & video services' },
-  { id: 'car_wash', label: 'Car Wash', type: 'services', icon: Droplets, color: 'bg-cyan-100 text-cyan-800', description: 'Vehicle cleaning' },
-  { id: 'landscaping', label: 'Landscaping', type: 'services', icon: Flower2, color: 'bg-green-100 text-green-800', description: 'Garden & lawn care' },
-  { id: 'electrician', label: 'Electrician', type: 'services', icon: Zap, color: 'bg-yellow-100 text-yellow-800', description: 'Electrical services' },
-  { id: 'maintenance', label: 'Maintenance', type: 'services', icon: Settings, color: 'bg-gray-100 text-gray-800', description: 'Repair & maintenance' },
-  { id: 'catering', label: 'Catering', type: 'services', icon: ChefHat, color: 'bg-orange-100 text-orange-800', description: 'Event catering' },
-  { id: 'moving', label: 'Moving & Transport', type: 'services', icon: Truck, color: 'bg-amber-100 text-amber-800', description: 'Relocation services' },
+  { id: 'photography', label: 'Photography', type: 'services', icon: CameraIcon, color: 'bg-indigo-100 text-indigo-800', description: 'Photo & video services' },
+  { id: 'car_wash', label: 'Car Wash', type: 'services', icon: BoltIcon, color: 'bg-cyan-100 text-cyan-800', description: 'Vehicle cleaning' },
+  { id: 'landscaping', label: 'Landscaping', type: 'services', icon: SunIcon, color: 'bg-green-100 text-green-800', description: 'Garden & lawn care' },
+  { id: 'electrician', label: 'Electrician', type: 'services', icon: BoltIcon, color: 'bg-yellow-100 text-yellow-800', description: 'Electrical services' },
+  { id: 'maintenance', label: 'Maintenance', type: 'services', icon: WrenchIcon, color: 'bg-gray-100 text-gray-800', description: 'Repair & maintenance' },
+  { id: 'catering', label: 'Catering', type: 'services', icon: BriefcaseIcon, color: 'bg-orange-100 text-orange-800', description: 'Event catering' },
+  { id: 'moving', label: 'Moving & Transport', type: 'services', icon: TruckIcon, color: 'bg-amber-100 text-amber-800', description: 'Relocation services' },
 
   // Helpers
-  { id: 'domestic', label: 'Domestic Help', type: 'helpers', icon: Home, color: 'bg-teal-100 text-teal-800', description: 'Household assistance' },
-  { id: 'tattoo', label: 'Tattoo Artist', type: 'helpers', icon: Paintbrush, color: 'bg-red-100 text-red-800', description: 'Tattoo & piercing' },
-  { id: 'tutor', label: 'Private Tutor', type: 'helpers', icon: GraduationCap, color: 'bg-blue-100 text-blue-800', description: 'Personal teaching' },
-  { id: 'hair', label: 'Hair & Beauty', type: 'helpers', icon: Scissors, color: 'bg-rose-100 text-rose-800', description: 'Salon services' },
-  { id: 'nail', label: 'Nail Services', type: 'helpers', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Manicure & pedicure' },
-  { id: 'chef', label: 'Private Chef', type: 'helpers', icon: ChefHat, color: 'bg-amber-100 text-amber-800', description: 'Personal cooking' },
-  { id: 'barber', label: 'Barber', type: 'helpers', icon: Scissors, color: 'bg-sky-100 text-sky-800', description: 'Men\'s grooming' },
+  { id: 'domestic', label: 'Domestic Help', type: 'helpers', icon: HomeIcon, color: 'bg-teal-100 text-teal-800', description: 'Household assistance' },
+  { id: 'tattoo', label: 'Tattoo Artist', type: 'helpers', icon: PuzzlePieceIcon, color: 'bg-red-100 text-red-800', description: 'Tattoo & piercing' },
+  { id: 'tutor', label: 'Private Tutor', type: 'helpers', icon: AcademicCapIcon, color: 'bg-blue-100 text-blue-800', description: 'Personal teaching' },
+  { id: 'hair', label: 'Hair & Beauty', type: 'helpers', icon: ScissorsIcon, color: 'bg-rose-100 text-rose-800', description: 'Salon services' },
+  { id: 'nail', label: 'Nail Services', type: 'helpers', icon: SparklesIcon, color: 'bg-pink-100 text-pink-800', description: 'Manicure & pedicure' },
+  { id: 'chef', label: 'Private Chef', type: 'helpers', icon: BriefcaseIcon, color: 'bg-amber-100 text-amber-800', description: 'Personal cooking' },
+  { id: 'barber', label: 'Barber', type: 'helpers', icon: ScissorsIcon, color: 'bg-sky-100 text-sky-800', description: 'Men\'s grooming' },
 
   // Transport
-  { id: 'transport', label: 'Transport', type: 'services', icon: Car, color: 'bg-blue-100 text-blue-800', description: 'Transportation services' },
+  { id: 'transport', label: 'Transport', type: 'services', icon: TruckIcon, color: 'bg-blue-100 text-blue-800', description: 'Transportation services' },
 
   // Daily Essentials (for Homepage consistency)
-  { id: 'daily', label: 'Daily Loop', type: 'services', icon: Sparkles, color: 'bg-green-100 text-green-800', description: 'Essentials & daily needs' },
+  { id: 'daily', label: 'Daily Loop', type: 'services', icon: SparklesIcon, color: 'bg-green-100 text-green-800', description: 'Essentials & daily needs' },
 ];
 
 // Property Types Configuration
@@ -136,7 +135,7 @@ const EVENTS_CATEGORY_CONFIG = {
 const SEARCH_TYPE_CONFIG = {
   all: {
     label: 'Everything',
-    icon: Sparkles,
+    icon: SparklesIcon,
     color: 'from-gray-900 to-gray-800',
     bgColor: 'bg-gray-900',
     textColor: 'text-gray-900',
@@ -144,7 +143,7 @@ const SEARCH_TYPE_CONFIG = {
   },
   properties: {
     label: 'Properties',
-    icon: Home,
+    icon: HomeIcon,
     color: 'from-rose-500 to-rose-600',
     bgColor: 'bg-rose-500',
     textColor: 'text-rose-600',
@@ -153,7 +152,7 @@ const SEARCH_TYPE_CONFIG = {
   },
   services: {
     label: 'Professional Services',
-    icon: Wrench,
+    icon: WrenchIcon,
     color: 'from-blue-500 to-blue-600',
     bgColor: 'bg-blue-500',
     textColor: 'text-blue-600',
@@ -162,7 +161,7 @@ const SEARCH_TYPE_CONFIG = {
   },
   helpers: {
     label: 'Local Helpers',
-    icon: Users,
+    icon: UserGroupIcon,
     color: 'from-amber-500 to-amber-600',
     bgColor: 'bg-amber-500',
     textColor: 'text-amber-600',
@@ -171,7 +170,7 @@ const SEARCH_TYPE_CONFIG = {
   },
   events: {
     label: 'Exclusive Events',
-    icon: Calendar,
+    icon: CalendarIcon,
     color: 'from-purple-500 to-purple-600',
     bgColor: 'bg-purple-500',
     textColor: 'text-purple-600',
@@ -265,7 +264,7 @@ const CategoryDropdown = ({
       {/* Search within dropdown - Fixed */}
       <div className="flex-shrink-0 bg-white border-b border-gray-100 p-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             placeholder="Search categories..."
@@ -279,7 +278,7 @@ const CategoryDropdown = ({
               onClick={() => setSearchQuery('')}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full"
             >
-              <X className="w-3 h-3 text-gray-500" />
+              <XMarkIcon className="w-3 h-3 text-gray-500" />
             </button>
           )}
         </div>
@@ -313,7 +312,7 @@ const CategoryDropdown = ({
                         <span className={`font-semibold text-sm truncate ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>
                           {category.label}
                         </span>
-                        {isSelected && <Check className="w-4 h-4 text-rose-500 flex-shrink-0" />}
+                        {isSelected && <CheckIcon className="w-4 h-4 text-rose-500 flex-shrink-0" />}
                       </div>
                       <p className="text-xs text-gray-500 truncate">{category.description}</p>
                     </div>
@@ -326,7 +325,7 @@ const CategoryDropdown = ({
 
         {filteredCategories.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            <Search className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+            <MagnifyingGlassIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
             <p className="text-sm">No categories found</p>
             <p className="text-xs mt-1">Try a different search term</p>
           </div>
@@ -434,7 +433,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
         variants={itemVariants}
         whileHover={{ x: 4, y: -2, backgroundColor: '#f9fafb' }}
         onClick={onClick}
-        className="bg-white rounded-2xl p-3 hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-100 flex gap-4  overflow-hidden"
+        className=" rounded-2xl p-3 hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-100 flex gap-4  overflow-hidden"
       >
         <div className="w-32 h-32 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 bg-neutral-100">
           <ImageWithFallback
@@ -453,12 +452,12 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
                 {item.name || item.title}
               </h3>
               <div className="flex items-center gap-1 text-gray-400 mt-0.5">
-                <MapPin className="w-3 h-3" />
+                <MapPinIcon className="w-3 h-3" />
                 <p className="text-[11px] font-medium truncate">{getLocation()}</p>
               </div>
             </div>
             <div className="flex items-center gap-1 shrink-0 bg-gray-50 px-2 py-1 rounded-lg">
-              <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+              <StarIcon className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
               <span className="text-xs font-bold text-gray-900">{getRating().toFixed(1)}</span>
             </div>
           </div>
@@ -484,7 +483,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
                onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }}
                className={`p-2 rounded-full transition-all ${isLiked ? 'bg-rose-50 text-rose-500' : 'bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500'}`}
              >
-               <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+               <HeartIcon className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
              </button>
           </div>
         </div>
@@ -525,7 +524,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
           onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }}
           className="absolute top-2.5 right-2.5 z-10 p-2 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 transition-all active:scale-90"
         >
-          <Heart className={`w-4 h-4 stroke-[2.5px] ${isLiked ? 'text-rose-500 fill-rose-500 stroke-rose-500' : 'text-white'}`} />
+          <HeartIcon className={`w-4 h-4 stroke-[2.5px] ${isLiked ? 'text-rose-500 fill-rose-500 stroke-rose-500' : 'text-white'}`} />
         </button>
       </div>
 
@@ -535,13 +534,13 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
             {item.name || item.title}
           </h3>
           <div className="flex items-center gap-1 shrink-0">
-            <Star className="w-3 h-3 text-gray-900 fill-gray-900" />
+            <StarIcon className="w-3 h-3 text-gray-900 fill-gray-900" />
             <span className="text-xs font-bold text-gray-900">{getRating().toFixed(1)}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-1 text-gray-500 mt-0.5">
-          <MapPin className="w-3 h-3 flex-shrink-0" />
+          <MapPinIcon className="w-3 h-3 flex-shrink-0" />
           <p className="text-xs font-medium truncate">{getLocation()}</p>
         </div>
         
@@ -569,10 +568,10 @@ const EmptyState = ({ onClear }) => (
   <motion.div 
     initial={{ opacity: 0, scale: 0.9 }} 
     animate={{ opacity: 1, scale: 1 }} 
-    className="bg-white rounded-[3rem] p-16 text-center border border-gray-50 shadow-2xl shadow-rose-100 max-w-2xl mx-auto"
+    className=" rounded-[3rem] p-16 text-center border border-gray-50 shadow-2xl shadow-rose-100 max-w-2xl mx-auto"
   >
     <div className="w-24 h-24 bg-rose-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
-      <Search className="w-10 h-10 text-rose-500" />
+      <MagnifyingGlassIcon className="w-10 h-10 text-rose-500" />
     </div>
     <h3 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">No results in this loop</h3>
     <p className="text-gray-500 font-medium mb-10 leading-relaxed">
@@ -922,22 +921,22 @@ const SearchPage = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-slate-50">
       {/* Airbnb Style Persistent Header */}
-      <div className="fixed top-0 left-0 right-0 z-[60] bg-white border-b border-gray-100 shadow-sm px-4 py-3 md:py-4">
+      <div className="fixed top-0 left-0 right-0 z-[60] bg-white/80 backdrop-blur-md border-b border-slate-200/50 shadow-sm px-4 py-3 md:py-4">
         <div className="max-w-7xl mx-auto flex items-center gap-3">
            
            {/* Search Pill Trigger */}
            <button 
              onClick={() => setShowFilters(true)}
-             className="flex-1 flex items-center gap-4 bg-white border border-gray-200 rounded-full px-5 py-3 shadow-md hover:shadow-lg transition-all active:scale-98 group"
+             className="flex-1 flex items-center gap-4 bg-white border border-slate-200/50 rounded-full px-5 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.05)] hover:shadow-lg transition-all active:scale-98 group"
            >
-              <SearchIcon className="w-5 h-5 text-rose-500" />
+              <MagnifyingGlassIcon className="w-5 h-5 text-rose-500" />
               <div className="flex flex-col items-start overflow-hidden">
-                 <span className="text-sm font-bold text-gray-900 truncate">
+                 <span className="text-sm font-black text-gray-900 truncate leading-none mb-1">
                     {searchTerm || 'Where to?'}
                  </span>
-                 <div className="flex items-center gap-2 text-[10px] text-gray-500 font-medium whitespace-nowrap">
+                 <div className="flex items-center gap-2 text-[10px] text-gray-400 font-black uppercase tracking-widest whitespace-nowrap">
                     <span>{filters.location || 'Anywhere'}</span>
                     <span className="w-1 h-1 rounded-full bg-gray-300" />
                     <span>Any week</span>
@@ -950,55 +949,115 @@ const SearchPage = () => {
            {/* Filter Button */}
            <button 
              onClick={() => setShowFilters(true)}
-             className="w-12 h-12 flex items-center justify-center border border-gray-200 rounded-full hover:bg-gray-50 transition-colors shadow-sm"
+             className="w-12 h-12 flex items-center justify-center rounded-full border border-slate-200/50 bg-white shadow-sm hover:shadow-md transition-all active:scale-90"
            >
-              <SlidersHorizontal className="w-5 h-5 text-gray-900" />
+              <AdjustmentsHorizontalIcon className="w-5 h-5 text-gray-600" />
            </button>
         </div>
       </div>
 
-      {/* Header Spacer */}
-      <div className="h-20 md:h-24"></div>
+      <main className="pt-24 pb-32 px-4 md:px-10 lg:px-20 max-w-[2520px] mx-auto">
+         {/* Categories Bar */}
+         <div className="mb-12 overflow-x-auto no-scrollbar py-2">
+            <div className="flex gap-8 items-center">
+               <button 
+                 onClick={() => { setSelectedCategory('all'); fetchData(); }}
+                 className={`flex flex-col items-center gap-3 min-w-fit transition-all ${!selectedCategory || selectedCategory === 'all' ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}
+               >
+                  <SparklesIcon className="w-6 h-6" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">All Vibes</span>
+                  {(!selectedCategory || selectedCategory === 'all') && <div className="w-6 h-0.5 bg-gray-950 rounded-full" />}
+               </button>
+               
+               {ALL_CATEGORIES.map(cat => (
+                 <button 
+                   key={cat.id}
+                   onClick={() => handleCategorySelect(cat)}
+                   className={`flex flex-col items-center gap-3 min-w-fit transition-all ${selectedCategory === cat.id ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}
+                 >
+                    <cat.icon className="w-6 h-6" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">{cat.label}</span>
+                    {selectedCategory === cat.id && <div className="w-6 h-0.5 bg-gray-950 rounded-full" />}
+                 </button>
+               ))}
+            </div>
+         </div>
 
-      {/* Results Count */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-        <h1 className="text-lg font-semibold text-gray-900">
-          {listings.length} {listings.length === 1 ? 'result' : 'results'}
-          {selectedCategory && (
-            <span className="text-gray-500 font-normal text-sm ml-1">in {getSelectedCategoryLabel()}</span>
-          )}
-          {filters.location && <span className="text-gray-500 font-normal text-sm ml-1">near {filters.location}</span>}
-        </h1>
-      </div>
+         {/* Results Area */}
+         <div className="mb-8 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+               <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight italic">
+                  {listings.length} Results Found
+               </h2>
+               {searchType !== 'all' && (
+                 <span className="px-3 py-1 bg-rose-100 text-rose-600 text-[9px] font-black uppercase tracking-widest rounded-full">
+                    {searchType}
+                 </span>
+               )}
+            </div>
+            
+            <div className="flex items-center gap-2 bg-white/50 border border-slate-200/50 p-1 rounded-full shadow-sm">
+               <button 
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-full transition-all ${viewMode === 'grid' ? 'bg-gray-950 text-white' : 'text-gray-400'}`}
+               >
+                  <Squares2X2Icon className="w-4 h-4" />
+               </button>
+               <button 
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-full transition-all ${viewMode === 'list' ? 'bg-gray-950 text-white' : 'text-gray-400'}`}
+               >
+                  <Bars3Icon className="w-4 h-4" />
+               </button>
+               <button 
+                onClick={() => setViewMode('map')}
+                className={`p-2 rounded-full transition-all ${viewMode === 'map' ? 'bg-gray-950 text-white' : 'text-gray-400'}`}
+               >
+                  <MapIcon className="w-4 h-4" />
+               </button>
+            </div>
+         </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32">
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
-          </div>
-        ) : listings.length > 0 ? (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className={`grid ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6' : 'grid-cols-1'
-              } gap-x-4 gap-y-8`}
-          >
-            {listings.map((item, index) => (
-              <ResultCard
-                key={`${item._id}-${index}`}
-                item={item}
-                index={index}
-                viewMode={viewMode}
-                onClick={() => addToRecentlyViewed(item, item.itemType)}
-              />
-            ))}
-          </motion.div>
-        ) : (
-          <EmptyState onClear={clearFilters} />
-        )}
+         {loading ? (
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xxl:grid-cols-5 gap-8">
+             {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
+           </div>
+         ) : listings.length > 0 ? (
+           <motion.div 
+             variants={containerVariants}
+             initial="hidden"
+             animate="visible"
+             className={`grid gap-x-8 gap-y-12 ${
+               viewMode === 'grid' 
+                 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xxl:grid-cols-5' 
+                 : 'grid-cols-1'
+             }`}
+           >
+             {listings.map((item, idx) => (
+               <ResultCard 
+                 key={item._id || item.id || idx} 
+                 item={item} 
+                 viewMode={viewMode}
+                 onClick={() => addToRecentlyViewed(item, item.itemType)}
+               />
+             ))}
+           </motion.div>
+         ) : (
+           <EmptyState onClear={clearFilters} />
+         )}
       </main>
+
+      {/* Map Toggle Floating Button (Mobile) */}
+      <button 
+        onClick={() => setViewMode(viewMode === 'map' ? 'grid' : 'map')}
+        className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[50] flex items-center gap-2 bg-gray-950 text-white px-6 py-4 rounded-full text-[11px] font-black uppercase tracking-widest shadow-2xl transition-all hover:scale-110 active:scale-95 border border-white/20"
+      >
+        {viewMode === 'map' ? (
+          <><Bars3Icon className="w-4 h-4" /> List View</>
+        ) : (
+          <><MapIcon className="w-4 h-4" /> Show Map View</>
+        )}
+      </button>
 
       {/* Filter Modal */}
       <AnimatePresence>
@@ -1009,22 +1068,22 @@ const SearchPage = () => {
               animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }} 
               onClick={() => setShowFilters(false)} 
-              className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[100]" 
+              className="fixed inset-0 bg-gray-950/40 backdrop-blur-sm z-[100]" 
             />
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-0 bg-gray-50 z-[101] flex flex-col md:max-w-md md:left-auto md:right-0 md:shadow-2xl overflow-hidden"
+              className="fixed inset-0 bg-slate-50 z-[101] flex flex-col md:max-w-md md:left-auto md:right-0 md:shadow-2xl overflow-hidden"
             >
-              <div className="flex-shrink-0 bg-white px-6 pt-12 pb-4 flex items-center justify-between">
+              <div className="flex-shrink-0 bg-white/80 backdrop-blur-md px-6 pt-12 pb-4 border-b border-slate-200/50 flex items-center justify-between">
                 <div className="flex gap-8 overflow-x-auto scrollbar-hide py-2">
                   {[
-                    { id: 'properties', label: 'Homes', icon: Home, color: 'rose' },
-                    { id: 'events', label: 'Experiences', icon: Compass, color: 'rose' },
-                    { id: 'services', label: 'Services', icon: Users, color: 'rose' },
-                    { id: 'helpers', label: 'Helpers', icon: Briefcase, color: 'rose' }
+                    { id: 'properties', label: 'Homes', icon: HomeIcon, color: 'rose' },
+                    { id: 'events', label: 'Experiences', icon: TicketIcon, color: 'rose' },
+                    { id: 'services', label: 'Services', icon: UserGroupIcon, color: 'rose' },
+                    { id: 'helpers', label: 'Helpers', icon: BriefcaseIcon, color: 'rose' }
                   ].map((item) => {
                     const Icon = item.icon;
                     const isActive = searchType === item.id;
@@ -1038,24 +1097,17 @@ const SearchPage = () => {
                          <motion.div 
                            animate={isActive ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : { scale: 1, rotate: 0 }}
                            transition={{ duration: 0.4, ease: "backOut" }}
-                           className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-900 group-hover:-translate-y-1'}`}
+                           className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'bg-white text-gray-400 border border-slate-100'}`}
                          >
                             <Icon className="w-6 h-6" />
                          </motion.div>
                          
                          <motion.span 
                            animate={{ opacity: isActive ? 1 : 0.4, scale: isActive ? 1.05 : 1 }}
-                           className={`text-[10px] font-black uppercase tracking-widest transition-colors ${isActive ? 'text-gray-900' : 'text-gray-400'}`}
+                           className={`text-[9px] font-black uppercase tracking-widest transition-colors ${isActive ? 'text-gray-900' : 'text-gray-400'}`}
                          >
                            {item.label}
                          </motion.span>
-                         
-                         {isActive && (
-                           <motion.div 
-                             layoutId="categoryLineResults" 
-                             className="absolute -bottom-1 w-6 h-1 bg-rose-500 rounded-full" 
-                           />
-                         )}
                       </button>
                     );
                   })}
@@ -1063,100 +1115,100 @@ const SearchPage = () => {
                 
                 <button 
                   onClick={() => setShowFilters(false)}
-                  className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors"
+                  className="w-10 h-10 rounded-full bg-white border border-slate-200/50 flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors"
                 >
-                  <X className="w-5 h-5 text-gray-900" />
+                  <XMarkIcon className="w-5 h-5 text-gray-950" />
                 </button>
               </div>
 
               {/* Scrollable Content Area */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+              <div className="flex-1 overflow-y-auto px-4 py-8 space-y-6">
                  {/* Section: WHERE? */}
-                 <div className="bg-white rounded-[2rem] shadow-xl p-6 border border-gray-100">
-                    <h2 className="text-2xl font-black text-gray-900 mb-6 tracking-tight">Where to?</h2>
+                 <div className="bg-transparent rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 border border-slate-200/50">
+                    <h2 className="text-3xl font-black text-gray-900 mb-8 tracking-tighter italic uppercase">Where to?</h2>
                     
                     <div className="relative mb-8">
-                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                       <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-rose-500" />
                        <input 
                          type="text"
-                         placeholder="Search destinations"
+                         placeholder="Neural destination..."
                          value={filters.location}
                          onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
-                         className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all outline-none font-medium placeholder-gray-400"
+                         className="w-full bg-slate-50/50 border border-slate-200/50 rounded-2xl py-5 pl-12 pr-4 focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all outline-none font-black text-sm uppercase tracking-widest placeholder:text-slate-300"
                        />
                     </div>
 
                     <div className="space-y-4">
-                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Suggested destinations</p>
+                       <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] mb-6">Suggested Hubs</p>
                        
                        <button 
                          onClick={() => setFilters(prev => ({ ...prev, location: 'Nearby' }))}
-                         className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-all active:scale-98"
+                         className="w-full flex items-center gap-5 p-4 rounded-3xl hover:bg-white/50 transition-all border border-transparent hover:border-slate-100 shadow-sm"
                        >
-                          <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500">
-                             <MapPin className="w-6 h-6" />
+                          <div className="w-12 h-12 bg-blue-50/50 rounded-2xl flex items-center justify-center text-blue-500 shadow-inner">
+                             <MapPinIcon className="w-6 h-6" />
                           </div>
                           <div className="text-left">
-                             <p className="text-sm font-bold text-gray-900">Nearby</p>
-                             <p className="text-xs text-gray-500">Find what's around you</p>
+                             <p className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none mb-1">Nearby</p>
+                             <p className="text-[10px] font-bold text-gray-400">SYNC WITH LOCAL COORDINATES</p>
                           </div>
                        </button>
 
                        <button 
                          onClick={() => setFilters(prev => ({ ...prev, location: 'Cape Town, Western Cape' }))}
-                         className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-all active:scale-98"
+                         className="w-full flex items-center gap-5 p-4 rounded-3xl hover:bg-white/50 transition-all border border-transparent hover:border-slate-100 shadow-sm"
                        >
-                          <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-500">
-                             <Building className="w-6 h-6" />
+                          <div className="w-12 h-12 bg-teal-50/50 rounded-2xl flex items-center justify-center text-teal-500 shadow-inner">
+                             <BuildingOfficeIcon className="w-6 h-6" />
                           </div>
                           <div className="text-left">
-                             <p className="text-sm font-bold text-gray-900">Cape Town, Western Cape</p>
-                             <p className="text-xs text-gray-500">Popular beach destination</p>
+                             <p className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none mb-1">Cape Town</p>
+                             <p className="text-[10px] font-bold text-gray-400">COASTAL EXPEDITION HUB</p>
                           </div>
                        </button>
 
                        <button 
                          onClick={() => setFilters(prev => ({ ...prev, location: 'Durban, KwaZulu-Natal' }))}
-                         className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-all active:scale-98"
+                         className="w-full flex items-center gap-5 p-4 rounded-3xl hover:bg-white/50 transition-all border border-transparent hover:border-slate-100 shadow-sm"
                        >
-                          <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-500">
-                             <Hotel className="w-6 h-6" />
+                          <div className="w-12 h-12 bg-orange-50/50 rounded-2xl flex items-center justify-center text-orange-500 shadow-inner">
+                             <HomeIcon className="w-6 h-6" />
                           </div>
                           <div className="text-left">
-                             <p className="text-sm font-bold text-gray-900">Durban, KwaZulu-Natal</p>
-                             <p className="text-xs text-gray-500">For sights like uShaka Marine World</p>
+                             <p className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none mb-1">Durban</p>
+                             <p className="text-[10px] font-bold text-gray-400">SUBTROPICAL ADVENTURE MATRIX</p>
                           </div>
                        </button>
                     </div>
                  </div>
 
                  {/* Collapsed Sections: WHEN and WHO */}
-                 <div className="bg-white rounded-[1.5rem] shadow-sm p-5 flex items-center justify-between border border-gray-100 opacity-60">
-                    <span className="text-sm font-bold text-gray-900">When</span>
-                    <span className="text-[11px] font-black uppercase text-gray-400 tracking-wider">Add dates</span>
+                 <div className="bg-white/50 rounded-[2rem] p-6 flex items-center justify-between border border-slate-100 opacity-60">
+                    <span className="text-xs font-black uppercase tracking-widest text-gray-900">Neural Timeframe</span>
+                    <span className="text-[10px] font-black uppercase text-rose-500 tracking-widest underline underline-offset-4">Configure</span>
                  </div>
 
-                 <div className="bg-white rounded-[1.5rem] shadow-sm p-5 flex items-center justify-between border border-gray-100 opacity-60">
-                    <span className="text-sm font-bold text-gray-900">Who</span>
-                    <span className="text-[11px] font-black uppercase text-gray-400 tracking-wider">Add guests</span>
+                 <div className="bg-white/50 rounded-[2rem] p-6 flex items-center justify-between border border-slate-100 opacity-60">
+                    <span className="text-xs font-black uppercase tracking-widest text-gray-900">Entity Count</span>
+                    <span className="text-[10px] font-black uppercase text-rose-500 tracking-widest underline underline-offset-4">Assign</span>
                  </div>
               </div>
 
               {/* Footer - Search Button */}
-              <div className="flex-shrink-0 bg-white border-t border-gray-100 p-6 flex items-center justify-between">
+              <div className="flex-shrink-0 bg-white/80 backdrop-blur-md border-t border-slate-200/50 p-8 flex items-center justify-between">
                  <button 
                    onClick={() => setFilters({ minPrice: '', maxPrice: '', minRating: '', location: '' })}
-                   className="text-sm font-bold text-gray-900 underline underline-offset-4 hover:text-rose-600 transition-colors"
+                   className="text-[10px] font-black text-gray-400 underline underline-offset-8 hover:text-rose-600 transition-colors uppercase tracking-[0.2em]"
                  >
-                   Clear all
+                   Clear Loop
                  </button>
                  
                  <button 
                    onClick={() => { handleSearch(); setShowFilters(false); }}
-                   className="bg-rose-500 hover:bg-rose-600 text-white px-8 py-4 rounded-[1.2rem] flex items-center gap-3 shadow-xl transition-all active:scale-95"
+                   className="bg-gray-950 text-white px-10 py-5 rounded-[1.5rem] flex items-center gap-4 shadow-[0_20px_50px_rgba(0,0,0,0.2)] hover:bg-rose-500 transition-all active:scale-95 group"
                  >
-                   <Search className="w-5 h-5 text-white" />
-                   <span className="text-sm font-black uppercase tracking-widest">Search</span>
+                   <MagnifyingGlassIcon className="w-5 h-5 text-rose-500 group-hover:text-white transition-colors" />
+                   <span className="text-xs font-black uppercase tracking-widest">Execute Scan</span>
                  </button>
               </div>
             </motion.div>

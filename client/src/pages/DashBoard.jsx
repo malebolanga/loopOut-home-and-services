@@ -5,24 +5,32 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
-  FaCalendar,
-  FaUser,
-  FaPhone,
-  
-  FaClock,
-  FaCheck,
-  FaTimes,
-  FaHome,
-  FaCut,
-  FaUtensils,
-  FaSearch,
-  FaBell,
-  FaWhatsapp,
-  FaMapMarkerAlt,
-  FaStar,
-  FaChevronLeft,
-  FaChevronRight
-} from 'react-icons/fa';
+  CalendarIcon,
+  UserIcon,
+  PhoneIcon,
+  ClockIcon,
+  CheckIcon,
+  XMarkIcon,
+  HomeIcon,
+  ScissorsIcon,
+  BriefcaseIcon,
+  MagnifyingGlassIcon,
+  BellIcon,
+  MapPinIcon,
+  StarIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  UserGroupIcon,
+  SparklesIcon,
+  TicketIcon,
+  CheckBadgeIcon
+} from '@heroicons/react/24/outline';
+import { 
+  StarIcon as StarIconSolid,
+  CheckCircleIcon as CheckCircleIconSolid,
+  XCircleIcon as XCircleIconSolid
+} from '@heroicons/react/24/solid';
+import { FaWhatsapp } from 'react-icons/fa';
 
 // Mock data for demo
 const mockBookings = [
@@ -124,23 +132,23 @@ const statusConfig = {
 };
 
 const typeIcons = {
-  listing: FaHome,
-  helper: FaUser
+  listing: HomeIcon,
+  helper: UserIcon
 };
 
 const helperTypeIcons = {
-  barber: FaCut,
-  chef: FaUtensils,
-  beauty: FaStar,
-  domestic: FaHome,
-  maid: FaHome,
-  tutor: FaUser,
-  tattoo: FaStar,
-  sneaker: FaCut,
-  washingmat: FaHome,
-  animals: FaStar,
-  photography: FaStar,
-  carwash: FaCut
+  barber: ScissorsIcon,
+  chef: BriefcaseIcon,
+  beauty: StarIcon,
+  domestic: HomeIcon,
+  maid: HomeIcon,
+  tutor: UserIcon,
+  tattoo: StarIcon,
+  sneaker: ScissorsIcon,
+  washingmat: HomeIcon,
+  animals: StarIcon,
+  photography: StarIcon,
+  carwash: ScissorsIcon
 };
 const cleanMessage = (msg) => {
   if (!msg) return '';
@@ -375,11 +383,11 @@ export default function DashBoard() {
       return <Icon className="text-blue-500" />;
     } else if (booking.type === 'helper') {
       const helperType = booking.helperDetails?.type;
-      const Icon = helperTypeIcons[helperType] || FaUser;
+      const Icon = helperTypeIcons[helperType] || UserIcon;
       return <Icon className="text-green-500" />;
     } else {
       const serviceType = booking.serviceDetails?.type;
-      const Icon = helperTypeIcons[serviceType] || FaUtensils;
+      const Icon = helperTypeIcons[serviceType] || BriefcaseIcon;
       return <Icon className="text-rose-500" />;
     }
   };
@@ -430,7 +438,7 @@ export default function DashBoard() {
   });
 
   return (
-    <div className="min-h-screen py-8 dashboard-container">
+    <div className="min-h-screen py-8 bg-slate-50 dashboard-container">
       <style>{hideScrollbarStyle}</style>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -460,9 +468,9 @@ export default function DashBoard() {
               <div className="relative">
                 <div 
                   onClick={markAllAsRead}
-                  className="w-16 h-16 bg-white rounded-[2rem] shadow-xl border border-gray-100 flex items-center justify-center text-gray-400 group-hover:text-rose-500 transition-all duration-300 cursor-pointer"
+                  className="w-16 h-16 bg-white/80 backdrop-blur-md rounded-[2rem] shadow-[0_15px_35px_-10px_rgba(0,0,0,0.05)] border border-slate-200/50 flex items-center justify-center text-gray-400 group-hover:text-rose-500 transition-all duration-300 cursor-pointer"
                 >
-                  <FaBell className={`text-2xl ${unreadCount > 0 ? 'animate-bounce text-rose-500' : ''}`} />
+                  <BellIcon className={`w-7 h-7 ${unreadCount > 0 ? 'animate-bounce text-rose-500' : ''}`} />
                 </div>
                 {unreadCount > 0 && (
                   <div className="absolute -top-1 -right-1 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] font-black border-4 border-white shadow-lg">
@@ -497,7 +505,7 @@ export default function DashBoard() {
                                 notif.type === 'booking' ? 'bg-amber-100 text-amber-600' : 
                                 notif.type === 'message' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
                               }`}>
-                                {notif.type === 'booking' ? <FaCalendar /> : <FaBell />}
+                                {notif.type === 'booking' ? <CalendarIcon className="w-4 h-4" /> : <BellIcon className="w-4 h-4" />}
                               </div>
                               <div className="flex-1 min-w-0">
                                  <p className="text-[11px] font-black text-gray-900 truncate uppercase tracking-tight">{notif.title || 'System Alert'}</p>
@@ -529,10 +537,10 @@ export default function DashBoard() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {[
-            { label: 'Total Requests', value: stats.total, icon: FaCalendar, color: 'text-blue-600', bg: 'bg-blue-50' },
-            { label: 'Pending Approval', value: stats.pending, icon: FaClock, color: 'text-amber-600', bg: 'bg-amber-50' },
-            { label: 'Overnight Stays', value: stats.stays, icon: FaHome, color: 'text-rose-600', bg: 'bg-rose-50' },
-            { label: 'Active Services', value: stats.services, icon: FaUser, color: 'text-emerald-600', bg: 'bg-emerald-50' }
+            { label: 'Total Requests', value: stats.total, icon: CalendarIcon, color: 'text-blue-600', bg: 'bg-blue-50' },
+            { label: 'Pending Approval', value: stats.pending, icon: ClockIcon, color: 'text-amber-600', bg: 'bg-amber-50' },
+            { label: 'Overnight Stays', value: stats.stays, icon: HomeIcon, color: 'text-rose-600', bg: 'bg-rose-50' },
+            { label: 'Active Services', value: stats.services, icon: UserIcon, color: 'text-emerald-600', bg: 'bg-emerald-50' }
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -586,7 +594,7 @@ export default function DashBoard() {
         <div className="flex items-center justify-between mb-8 bg-white p-4 rounded-[2rem] border border-gray-100 shadow-sm overflow-x-auto scrollbar-hide">
            <div className="flex items-center gap-2">
               <div className="p-3 bg-rose-50 rounded-xl text-rose-600">
-                 <FaCalendar size={18} />
+                 <CalendarIcon className="w-5 h-5" />
               </div>
               <div>
                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Schedule View</p>
@@ -625,7 +633,7 @@ export default function DashBoard() {
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden mb-12"
             >
-              <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 p-8">
+              <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-200/50 p-8">
                  <h3 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-3">
                    Upcoming Schedule
                    <span className="px-3 py-1 bg-rose-100 text-rose-600 rounded-full text-[10px] uppercase">Daily View</span>
@@ -670,14 +678,14 @@ export default function DashBoard() {
 
           <div className="relative w-full lg:w-80">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-              <FaSearch size={14} />
+              <MagnifyingGlassIcon className="w-4 h-4" />
             </div>
             <input
               type="text"
               placeholder="Search by client or item..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white border border-gray-100 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all outline-none shadow-sm"
+              className="w-full bg-white border border-slate-200/50 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all outline-none shadow-sm"
             />
           </div>
         </div>
@@ -686,16 +694,16 @@ export default function DashBoard() {
         <div className="space-y-10">
           {loading ? (
             <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-rose-500"></div>
             </div>
           ) : filteredBookings.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-xl border-2 border-dashed border-gray-300">
-              <FaCalendar className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-4 text-lg font-medium text-gray-900">No bookings found</h3>
-              <p className="mt-2 text-gray-500">
+            <div className="text-center py-20 bg-white/50 rounded-[3rem] border-2 border-dashed border-slate-200/50">
+              <CalendarIcon className="mx-auto h-12 w-12 text-gray-200" />
+              <h3 className="mt-4 text-xl font-black text-gray-900 italic tracking-tight">No protocol found</h3>
+              <p className="mt-2 text-gray-500 text-sm font-medium">
                 {searchTerm || filter !== 'all' 
                   ? 'Try adjusting your search or filter criteria'
-                  : 'Your bookings will appear here when clients book through WhatsApp'
+                  : 'Your bookings will appear here when clients book through the platform'
                 }
               </p>
             </div>
@@ -707,7 +715,7 @@ export default function DashBoard() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-500 group"
+                className="bg-transparent rounded-[2.5rem] border border-slate-200/50 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden hover:shadow-xl transition-all duration-500 group"
               >
                 <div className="p-8">
                   {/* Status & ID Row */}
@@ -720,7 +728,7 @@ export default function DashBoard() {
                         Ref: #{booking._id}
                       </span>
                     </div>
-                    <div className="text-left md:text-right bg-rose-50/50 px-6 py-4 rounded-[1.5rem] border border-rose-100 shadow-sm min-w-[160px]">
+                    <div className="text-left md:text-right bg-rose-50/50 px-6 py-4 rounded-[1.5rem] border border-rose-100/50 shadow-sm min-w-[160px]">
                       <p className="text-2xl md:text-3xl font-black text-rose-600 leading-none">R{Number(booking.totalAmount).toLocaleString()}</p>
                       <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest mt-2">{booking.type === 'listing' ? 'Overnight Booking' : 'Service Appointment'}</p>
                     </div>
@@ -759,7 +767,7 @@ export default function DashBoard() {
                     <div className="lg:col-span-4 min-w-0 space-y-6">
                       <div className="flex items-center gap-4">
                          <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm">
-                            <FaCalendar size={14} />
+                            <CalendarIcon className="w-5 h-5" />
                          </div>
                          <div className="min-w-0">
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5 whitespace-nowrap">Date & Time</p>
@@ -768,7 +776,7 @@ export default function DashBoard() {
                       </div>
                       <div className="flex items-center gap-4">
                          <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600 shadow-sm">
-                            <FaMapMarkerAlt size={14} />
+                            <MapPinIcon className="w-5 h-5" />
                          </div>
                          <div className="flex-1 min-w-0">
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5 whitespace-nowrap">Location</p>
@@ -792,7 +800,7 @@ export default function DashBoard() {
                         <div className="flex items-center gap-4 mb-6">
                            <div className="relative">
                              <div className="w-14 h-14 rounded-full bg-white border-4 border-emerald-50 shadow-inner overflow-hidden flex items-center justify-center text-gray-400">
-                               <FaUser size={20} />
+                               <UserIcon className="w-6 h-6" />
                              </div>
                              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center shadow-lg">
                                 <FaWhatsapp className="text-white text-[10px]" />
@@ -813,7 +821,7 @@ export default function DashBoard() {
                             onClick={() => window.open(`tel:${booking.clientPhone.replace(/\s/g, '')}`, '_self')}
                             className="w-12 h-12 flex-shrink-0 flex items-center justify-center bg-gray-50 text-gray-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all border border-transparent hover:border-rose-100 shadow-sm"
                           >
-                            <FaPhone className="text-sm" />
+                            <PhoneIcon className="w-5 h-5" />
                           </button>
                           <button 
                             onClick={() => window.open(`https://wa.me/${booking.clientPhone.replace(/\s/g, '')}`, '_blank')}
@@ -832,14 +840,14 @@ export default function DashBoard() {
                                   className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm group/btn"
                                   title="Approve"
                                 >
-                                  <FaCheck size={16} className="group-hover/btn:scale-125 transition-transform" />
+                                  <CheckCircleIconSolid className="w-6 h-6 group-hover/btn:scale-125 transition-transform" />
                                 </button>
                                 <button 
                                   onClick={() => handleStatusUpdate(booking._id, 'declined')}
                                   className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-rose-600 hover:bg-rose-50 transition-all shadow-sm group/btn"
                                   title="Decline"
                                 >
-                                  <FaTimes size={16} className="group-hover/btn:scale-125 transition-transform" />
+                                  <XCircleIconSolid className="w-6 h-6 group-hover/btn:scale-125 transition-transform" />
                                 </button>
                               </div>
                             )}
@@ -1155,13 +1163,13 @@ const BookingCalendar = ({ bookings }) => {
             onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
             className="p-2 hover:bg-white/10 rounded-xl transition-colors"
           >
-            <FaChevronLeft size={14} />
+            <ChevronLeftIcon className="w-5 h-5" />
           </button>
           <button 
             onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
             className="p-2 hover:bg-white/10 rounded-xl transition-colors"
           >
-            <FaChevronRight size={14} />
+            <ChevronRightIcon className="w-5 h-5" />
           </button>
         </div>
       </div>

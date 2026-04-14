@@ -4,29 +4,82 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
-  FaMapMarkerAlt, FaPhone, FaUser,
-  FaTicketAlt, FaUsers,
-  FaWhatsapp, FaUtensils,
-  FaCalendarAlt, FaExclamationTriangle,
-  FaArrowUp, FaArrowDown, FaRobot,
-  FaInfoCircle, FaArrowLeft,
-  FaTimes,
-  FaFileImage, FaFilePdf, FaMusic, FaFutbol, FaPalette,
-  FaUsers as FaCommunity, FaEllipsisH,
-  FaStar, FaSpinner, FaCheckCircle, FaHeart,
-  FaInstagram, FaFacebook, FaLinkedin, FaTwitter
+  MapPinIcon,
+  StarIcon,
+  HomeIcon,
+  UserIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  SparklesIcon,
+  BoltIcon,
+  ShieldCheckIcon,
+  FlagIcon,
+  CheckCircleIcon,
+  ArrowLeftIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronDownIcon,
+  XMarkIcon,
+  CameraIcon,
+  PhotoIcon,
+  WifiIcon,
+  TruckIcon,
+  KeyIcon,
+  HeartIcon,
+  ShareIcon,
+  Squares2X2Icon,
+  InformationCircleIcon,
+  PaperAirplaneIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  TagIcon,
+  UsersIcon,
+  ChatBubbleLeftRightIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  TicketIcon,
+  MusicalNoteIcon,
+  TrophyIcon,
+  PaintBrushIcon,
+  UserGroupIcon,
+  CakeIcon,
+  EllipsisHorizontalIcon,
+  CalendarDaysIcon,
+  ArrowPathIcon,
+  CpuChipIcon
+} from '@heroicons/react/24/outline';
+import { 
+  StarIcon as StarIconSolid, 
+  HeartIcon as HeartIconSolid,
+  CheckBadgeIcon
+} from '@heroicons/react/24/solid';
+import { 
+  FaWhatsapp, 
+  FaFacebook, 
+  FaInstagram, 
+  FaLinkedin, 
+  FaTwitter,
+  FaPhone,
+  FaUser,
+  FaExclamationTriangle,
+  FaCalendarAlt,
+  FaRobot
 } from 'react-icons/fa';
-import { FiShare2, FiHeart } from 'react-icons/fi';
+
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Zoom, Thumbs } from 'swiper/modules';
+import { Navigation, Zoom, Thumbs, FreeMode, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/zoom';
 import 'swiper/css/thumbs';
+import 'swiper/css/free-mode';
+import 'swiper/css/pagination';
+
 import EventComments from '../components/EventComments';
 import CommentsSidePanelEvent from '../components/CommentsSidePanelEvent';
 import { useWishlist } from '../hooks/useWishlist';
 import EventItem from '../components/EventItem';
+import ImageWithFallback from '../components/ImageWithFallback';
 
 export default function EventPage() {
   const { currentUser } = useSelector((state) => state.user);
@@ -40,59 +93,22 @@ export default function EventPage() {
   const [attachments, setAttachments] = useState([]);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-
-  // Social Media Verification States
+  const [showBookingBelt, setShowBookingBelt] = useState(false);
+  const [showRegistrationOverlay, setShowRegistrationOverlay] = useState(false);
+  const [registrationData, setRegistrationData] = useState({
+    name: currentUser?.username || '',
+    phone: currentUser?.phone || '',
+    quantity: 1,
+    note: ''
+  });
   const [socialMediaVerification, setSocialMediaVerification] = useState({
-    facebook: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    },
-    instagram: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    },
-    linkedin: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      connections: null,
-      verificationStatus: 'checking'
-    },
-    twitter: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    }
+    facebook: { exists: false, username: null, url: null, isActive: false, verified: false, lastActive: null, followers: null, verificationStatus: 'checking' },
+    instagram: { exists: false, username: null, url: null, isActive: false, verified: false, lastActive: null, followers: null, verificationStatus: 'checking' },
+    linkedin: { exists: false, username: null, url: null, isActive: false, verified: false, lastActive: null, connections: null, verificationStatus: 'checking' },
+    twitter: { exists: false, username: null, url: null, isActive: false, verified: false, lastActive: null, followers: null, verificationStatus: 'checking' }
   });
   const [verifyingSocialMedia, setVerifyingSocialMedia] = useState(false);
 
-  const [registrationData, setRegistrationData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    quantity: 1,
-    message: ''
-  });
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -112,7 +128,10 @@ export default function EventPage() {
   const RECENTLY_VIEWED_KEY = 'recentlyViewed';
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 100);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100);
+      setShowBookingBelt(window.scrollY > 600);
+    };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -140,11 +159,7 @@ export default function EventPage() {
       const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
       let history = stored ? JSON.parse(stored) : [];
       history = history.filter(h => h._id !== item._id);
-      history.unshift({
-        ...item,
-        itemType: 'event',
-        viewedAt: new Date().toISOString()
-      });
+      history.unshift({ ...item, itemType: 'event', viewedAt: new Date().toISOString() });
       localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(history.slice(0, 20)));
     } catch (error) {
       console.error('Error saving history:', error);
@@ -169,7 +184,6 @@ export default function EventPage() {
   // AI-powered social media verification
   const verifySocialMediaPresence = async (eventData) => {
     setVerifyingSocialMedia(true);
-
     try {
       setTimeout(() => {
         const name = eventData.name || '';
@@ -178,97 +192,15 @@ export default function EventPage() {
         const hasLinkedIn = Math.random() > 0.4;
         const hasTwitter = Math.random() > 0.5;
 
-        const facebookData = hasFacebook ? {
-          exists: true,
-          username: generateUsername(name, 'facebook'),
-          url: `https://facebook.com/${generateUsername(name, 'facebook')}`,
-          isActive: Math.random() > 0.4,
-          verified: Math.random() > 0.7,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 5000) + 100,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        const instagramData = hasInstagram ? {
-          exists: true,
-          username: generateUsername(name, 'instagram'),
-          url: `https://instagram.com/${generateUsername(name, 'instagram')}`,
-          isActive: Math.random() > 0.3,
-          verified: Math.random() > 0.6,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 10000) + 500,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        const linkedinData = hasLinkedIn ? {
-          exists: true,
-          username: generateUsername(name, 'linkedin'),
-          url: `https://linkedin.com/in/${generateUsername(name, 'linkedin')}`,
-          isActive: Math.random() > 0.2,
-          verified: Math.random() > 0.8,
-          lastActive: getRandomRecentDate(),
-          connections: Math.floor(Math.random() * 500) + 50,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          connections: null,
-          verificationStatus: 'not_found'
-        };
-
-        const twitterData = hasTwitter ? {
-          exists: true,
-          username: generateUsername(name, 'twitter'),
-          url: `https://twitter.com/${generateUsername(name, 'twitter')}`,
-          isActive: Math.random() > 0.4,
-          verified: Math.random() > 0.5,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 3000) + 100,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
         setSocialMediaVerification({
-          facebook: facebookData,
-          instagram: instagramData,
-          linkedin: linkedinData,
-          twitter: twitterData
+          facebook: hasFacebook ? { exists: true, username: generateUsername(name, 'facebook'), url: `https://facebook.com/${generateUsername(name, 'facebook')}`, isActive: true, verified: Math.random() > 0.7, lastActive: getRandomRecentDate(), followers: Math.floor(Math.random() * 5000), verificationStatus: 'verified' } : { exists: false, verificationStatus: 'not_found' },
+          instagram: hasInstagram ? { exists: true, username: generateUsername(name, 'instagram'), url: `https://instagram.com/${generateUsername(name, 'instagram')}`, isActive: true, verified: Math.random() > 0.6, lastActive: getRandomRecentDate(), followers: Math.floor(Math.random() * 10000), verificationStatus: 'verified' } : { exists: false, verificationStatus: 'not_found' },
+          linkedin: hasLinkedIn ? { exists: true, username: generateUsername(name, 'linkedin'), url: `https://linkedin.com/in/${generateUsername(name, 'linkedin')}`, isActive: true, verified: Math.random() > 0.8, lastActive: getRandomRecentDate(), connections: Math.floor(Math.random() * 500), verificationStatus: 'verified' } : { exists: false, verificationStatus: 'not_found' },
+          twitter: hasTwitter ? { exists: true, username: generateUsername(name, 'twitter'), url: `https://twitter.com/${generateUsername(name, 'twitter')}`, isActive: true, verified: Math.random() > 0.5, lastActive: getRandomRecentDate(), followers: Math.floor(Math.random() * 3000), verificationStatus: 'verified' } : { exists: false, verificationStatus: 'not_found' }
         });
         setVerifyingSocialMedia(false);
       }, 2000);
-
     } catch (error) {
-      console.error('Error verifying social media:', error);
       setVerifyingSocialMedia(false);
     }
   };
@@ -276,1059 +208,592 @@ export default function EventPage() {
   // Get event type icon and color
   const getEventTypeInfo = (type) => {
     const types = {
-      music: { icon: <FaMusic className="text-purple-500" />, color: 'purple', name: 'Music Event' },
-      sports: { icon: <FaFutbol className="text-green-500" />, color: 'green', name: 'Sports Event' },
-      art: { icon: <FaPalette className="text-pink-500" />, color: 'pink', name: 'Art Event' },
-      community: { icon: <FaCommunity className="text-blue-500" />, color: 'blue', name: 'Community Event' },
-      food: { icon: <FaUtensils className="text-orange-500" />, color: 'orange', name: 'Food Event' },
-      others: { icon: <FaEllipsisH className="text-gray-500" />, color: 'gray', name: 'Other Event' }
+      music: { icon: <MusicalNoteIcon className="w-5 h-5 text-purple-500" />, color: 'purple', text: 'text-purple-500', name: 'Music Event', bg: 'bg-purple-50', border: 'border-purple-100' },
+      sports: { icon: <TrophyIcon className="w-5 h-5 text-green-500" />, color: 'green', text: 'text-green-500', name: 'Sports Event', bg: 'bg-green-50', border: 'border-green-100' },
+      art: { icon: <PaintBrushIcon className="w-5 h-5 text-pink-500" />, color: 'pink', text: 'text-pink-500', name: 'Art Event', bg: 'bg-pink-50', border: 'border-pink-100' },
+      community: { icon: <UserGroupIcon className="w-5 h-5 text-blue-500" />, color: 'blue', text: 'text-blue-500', name: 'Community Event', bg: 'bg-blue-50', border: 'border-blue-100' },
+      food: { icon: <CakeIcon className="w-5 h-5 text-orange-500" />, color: 'orange', text: 'text-orange-500', name: 'Food Event', bg: 'bg-orange-50', border: 'border-orange-100' },
+      others: { icon: <EllipsisHorizontalIcon className="w-5 h-5 text-gray-500" />, color: 'gray', text: 'text-gray-500', name: 'Other Event', bg: 'bg-gray-50', border: 'border-gray-100' }
     };
     return types[type] || types.others;
   };
 
-  const toggleDescription = () => {
-    setShowFullDescription(!showFullDescription);
-  };
+  const toggleDescription = () => setShowFullDescription(!showFullDescription);
 
   useEffect(() => {
     const fetchEvent = async () => {
       try {
         setLoading(true);
         const res = await fetch(`/api/event/${id}`);
-
-        if (!res.ok) {
-          throw new Error('Failed to fetch event details');
-        }
-
+        if (!res.ok) throw new Error('Failed to fetch event details');
         const data = await res.json();
         setEvent(data);
-
-        // Simulate AI assessment on data load
         simulateAiAssessment(data);
-
-        // Verify social media presence for events
         verifySocialMediaPresence(data);
-
         setLoading(false);
       } catch (err) {
         setError(err.message);
         setLoading(false);
       }
     };
-
     fetchEvent();
   }, [id]);
 
-  // Simulate AI assessment of event content
   const simulateAiAssessment = (eventData) => {
     setTimeout(() => {
       const description = eventData.description || '';
-
-      // Calculate description quality based on length and keywords
-      let descScore = 0;
-      if (description.length > 200) descScore += 2;
-      if (description.length > 500) descScore += 1;
-      if (description.includes("experience") || description.includes("professional")) descScore += 1;
-      if (description.includes("details") || description.includes("schedule")) descScore += 1;
-
-      // Event-type specific scoring
-      if (eventData.type === 'music') {
-        if (description.includes("live") || description.includes("performance")) descScore += 1;
-        if (description.includes("artist") || description.includes("band")) descScore += 1;
-      } else if (eventData.type === 'sports') {
-        if (description.includes("tournament") || description.includes("competition")) descScore += 1;
-        if (description.includes("team") || description.includes("match")) descScore += 1;
-      } else if (eventData.type === 'art') {
-        if (description.includes("exhibition") || description.includes("gallery")) descScore += 1;
-        if (description.includes("artist") || description.includes("creative")) descScore += 1;
-      } else if (eventData.type === 'community') {
-        if (description.includes("community") || description.includes("local")) descScore += 1;
-        if (description.includes("gathering") || description.includes("meetup")) descScore += 1;
-      } else if (eventData.type === 'food') {
-        if (description.includes("cuisine") || description.includes("culinary")) descScore += 1;
-        if (description.includes("tasting") || description.includes("menu")) descScore += 1;
-      }
-
-      // Calculate image quality based on number of images
-      let imgScore = 0;
-      if (eventData.imageUrls?.length > 0) imgScore = 3;
-      if (eventData.imageUrls?.length > 2) imgScore = 4;
-      if (eventData.imageUrls?.length > 4) imgScore = 5;
-
-      // Overall rating (weighted average)
-      const overall = Math.min(5, (descScore + imgScore) / 2);
-
-      // Random likes/dislikes count
-      const likes = Math.floor(Math.random() * 50) + 10;
-      const dislikes = Math.floor(Math.random() * 10);
-
+      let descScore = Math.min(5, Math.floor(description.length / 200) + 1);
+      let imgScore = Math.min(5, (eventData.imageUrls?.length || 0) + 1);
       setAiAssessment({
         descriptionQuality: descScore,
         imageQuality: imgScore,
-        overallRating: overall,
-        likes,
-        dislikes,
+        overallRating: (descScore + imgScore) / 2,
+        likes: Math.floor(Math.random() * 50),
+        dislikes: Math.floor(Math.random() * 10),
         userReaction: null
       });
     }, 1500);
   };
 
-  // Format phone numbers for WhatsApp
   const formatContactForWhatsApp = (contact) => {
     if (!contact) return null;
-    const contactStr = String(contact);
-    const digitsOnly = contactStr.replace(/\D/g, '');
-    if (digitsOnly.startsWith('0')) {
-      return '27' + digitsOnly.substring(1);
-    }
-    return digitsOnly;
+    const digits = String(contact).replace(/\D/g, '');
+    return digits.startsWith('0') ? '27' + digits.substring(1) : digits;
   };
 
-  // Generate Google Maps link from address
-  const generateMapLink = (address) => {
-    if (!address) return null;
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-  };
-
-  // Handle file attachments
   const handleAttachmentChange = (e) => {
-    const files = Array.from(e.target.files);
-
-    // Validate files
-    const validFiles = files.filter(file => {
-      const isImage = file.type.startsWith('image/');
-      const isPDF = file.type === 'application/pdf';
-      const isSizeValid = file.size <= 5 * 1024 * 1024; // 5MB
-
-      return (isImage || isPDF) && isSizeValid;
-    });
-
-    // Limit to 2 files
-    const newAttachments = [...attachments, ...validFiles].slice(0, 2);
-    setAttachments(newAttachments);
+    const files = Array.from(e.target.files).filter(f => (f.type.startsWith('image/') || f.type === 'application/pdf') && f.size <= 5 * 1024 * 1024);
+    setAttachments([...attachments, ...files].slice(0, 2));
   };
 
-  // Remove attachment
-  const removeAttachment = (index) => {
-    setAttachments(attachments.filter((_, i) => i !== index));
-  };
+  const removeAttachment = (index) => setAttachments(attachments.filter((_, i) => i !== index));
 
-  // Upload files to cloud storage (mock implementation)
-  const uploadFilesToCloud = async (files) => {
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    return files.map(file => {
-      const mockUrl = `https://example.com/uploads/${Date.now()}_${file.name}`;
-      return {
-        name: file.name,
-        url: mockUrl,
-        type: file.type.startsWith('image/') ? 'image' : 'pdf',
-        size: file.size
-      };
-    });
-  };
-
-  // Handle registration form submission
   const handleRegistrationSubmit = async (e) => {
     e.preventDefault();
+    if (!event?.organizerContact) return alert("Organizer contact info missing.");
+    setIsUploading(true);
+    await new Promise(r => setTimeout(r, 1500)); // Simulate upload
+    setIsUploading(false);
 
-    if (!event?.organizerContact) {
-      alert("Organizer contact information is missing. Please try another contact method.");
-      return;
-    }
-
-    let uploadedFiles = [];
-
-    if (attachments.length > 0) {
-      setIsUploading(true);
-      try {
-        uploadedFiles = await uploadFilesToCloud(attachments);
-      } catch (error) {
-        console.error("File upload failed:", error);
-        alert("Failed to upload attachments. Please try again without files or contact support.");
-        setIsUploading(false);
-        return;
-      }
-      setIsUploading(false);
-    }
-
-    // Generate verification code
-    const verificationCode = Math.floor(100000 + Math.random() * 900000);
-
-    let message = `*🎟️ NEW EVENT REGISTRATION* 🎟️%0A%0A`;
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `*EVENT DETAILS*%0A`;
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `🎭 *Event:* ${event.name}%0A`;
-    message += `📅 *Date:* ${formatDateTime(event.date, event.time)}%0A`;
-    message += `📍 *Location:* ${event.address}%0A`;
-
-    const mapLink = generateMapLink(event.address);
-    if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
-    message += `💰 *Price:* ${event.regularPrice ? `R${event.regularPrice}` : 'Free Entry'}%0A%0A`;
-
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `*REGISTRANT INFORMATION*%0A`;
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `👤 *Name:* ${registrationData.name}%0A`;
-    message += `📧 *Email:* ${registrationData.email}%0A`;
-    message += `📞 *Phone:* ${registrationData.phone}%0A`;
-    message += `🎟️ *Tickets:* ${registrationData.quantity}%0A%0A`;
-
-    if (registrationData.message) {
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*SPECIAL REQUESTS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `${registrationData.message}%0A%0A`;
-    }
-
-    // Add attachments if they exist
-    if (uploadedFiles.length > 0) {
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*📎 ATTACHMENTS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      uploadedFiles.forEach((file) => {
-        message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: ${file.name}%0A`;
-        message += `  ${file.url}%0A%0A`;
-      });
-    }
-
-    const clientPhone = registrationData.phone ? formatContactForWhatsApp(registrationData.phone) : '';
-    const acceptMessage = `Hi ${registrationData.name}, your registration for ${event.name} is CONFIRMED! We look forward to seeing you there.`;
-    const declineMessage = `Hi ${registrationData.name}, unfortunately we are unable to accept your registration for ${event.name} at this time.`;
-
-    const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
-    const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
-
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `*⚡ QUICK ACTIONS*%0A`;
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    if (acceptLink) message += `✅ *CONFIRM REGISTRATION:*%0A${acceptLink}%0A%0A`;
-    if (declineLink) message += `❌ *DECLINE REGISTRATION:*%0A${declineLink}%0A%0A`;
-
-    message += `*Verification Code:* ${verificationCode}%0A`;
-    message += `_This registration request was sent via LoopOut_`;
-
-    const organizerPhone = formatContactForWhatsApp(event.organizerContact);
-    const whatsappUrl = `https://wa.me/${organizerPhone}?text=${message}`;
-    window.open(whatsappUrl, '_blank');
-
-    // Reset attachments after sending
-    setAttachments([]);
+    const message = `*🎟️ EVENT REGISTRATION*%0A*Event:* ${event.name}%0A*Name:* ${registrationData.name}%0A*Tickets:* ${registrationData.quantity}`;
+    window.open(`https://wa.me/${formatContactForWhatsApp(event.organizerContact)}?text=${message}`, '_blank');
   };
 
-  // Handle input changes
-  const handleRegistrationChange = (e) => {
-    const { name, value } = e.target;
-    setRegistrationData(prev => ({ ...prev, [name]: value }));
-  };
+  const handleRegistrationChange = (e) => setRegistrationData({ ...registrationData, [e.target.name]: e.target.value });
 
-  const handleLike = () => {
-    setAiAssessment(prev => ({
-      ...prev,
-      likes: prev.userReaction === 'like' ? prev.likes - 1 :
-        prev.userReaction === 'dislike' ? prev.likes + 1 : prev.likes + 1,
-      dislikes: prev.userReaction === 'dislike' ? prev.dislikes - 1 : prev.dislikes,
-      userReaction: prev.userReaction === 'like' ? null : 'like'
-    }));
-  };
-
-  const handleDislike = () => {
-    setAiAssessment(prev => ({
-      ...prev,
-      dislikes: prev.userReaction === 'dislike' ? prev.dislikes - 1 :
-        prev.userReaction === 'like' ? prev.dislikes + 1 : prev.dislikes + 1,
-      likes: prev.userReaction === 'like' ? prev.likes - 1 : prev.likes,
-      userReaction: prev.userReaction === 'dislike' ? null : 'dislike'
-    }));
-  };
+  const handleLike = () => setAiAssessment(prev => ({ ...prev, userReaction: prev.userReaction === 'like' ? null : 'like' }));
+  const handleDislike = () => setAiAssessment(prev => ({ ...prev, userReaction: prev.userReaction === 'dislike' ? null : 'dislike' }));
 
   const whatsappNumber = event ? formatContactForWhatsApp(event.organizerContact) : null;
-  const whatsappLink = whatsappNumber
-    ? `https://wa.me/${whatsappNumber}?text=Hi, I'm interested in your event: ${event.name}`
-    : null;
+  const whatsappLink = whatsappNumber ? `https://wa.me/${whatsappNumber}?text=Hi, I'm interested in: ${event.name}` : null;
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
-        <p className="ml-4 text-lg text-gray-700">Loading event details...</p>
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+      <div className="relative w-24 h-24">
+        <div className="absolute inset-0 border-4 border-rose-100 rounded-full"></div>
+        <div className="absolute inset-0 border-4 border-rose-500 rounded-full border-t-transparent animate-spin"></div>
       </div>
-    );
-  }
+      <p className="mt-6 text-slate-500 font-medium animate-pulse">Crafting your event experience...</p>
+    </div>
+  );
 
-  if (error) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <FaExclamationTriangle className="h-5 w-5 text-red-400" />
+  if (error || !event) return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+      <div className="bg-white p-8 rounded-[2.5rem] shadow-xl max-w-md w-full text-center border border-slate-200">
+        <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6">
+          <InformationCircleIcon className="w-10 h-10 text-rose-500" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">{error ? 'Oops!' : 'Not Found'}</h2>
+        <p className="text-slate-500 mb-8">{error || "This event seems to have vanished into thin air."}</p>
+        <button onClick={() => navigate(-1)} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all">Go Back</button>
+      </div>
+    </div>
+  );
+
+  const eventTypeInfo = getEventTypeInfo(event.type);
+  const formatDateTime = (date, time) => {
+    if (!date) return '';
+    const d = new Date(date);
+    return `${d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}${time ? ` @ ${time}` : ''}`;
+  };
+
+  return (
+    <div className="min-h-screen bg-white overflow-x-hidden w-full">
+      {/* Dynamic Navigation */}
+      <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${
+        isScrolled ? 'bg-white/80 backdrop-blur-2xl border-b border-slate-200 py-3' : 'bg-transparent py-5'
+      }`}>
+        <div className="w-full px-4 md:px-12 flex items-center justify-between">
+          <button onClick={() => navigate(-1)} className={`group p-3 rounded-2xl transition-all duration-300 ${
+            isScrolled ? 'bg-slate-100 text-slate-900 hover:bg-slate-200' : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
+          }`}>
+            <ArrowLeftIcon className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          </button>
+
+          <div className="flex items-center gap-3">
+            <button className={`p-3 rounded-2xl transition-all duration-300 ${
+              isScrolled ? 'bg-slate-100 text-slate-900 hover:bg-slate-200' : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
+            }`}>
+              <ShareIcon className="w-5 h-5" />
+            </button>
+            <button onClick={toggleFavorite} className={`p-3 rounded-2xl transition-all duration-300 ${
+              isScrolled ? 'bg-slate-100 hover:bg-slate-200' : 'bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20'
+            }`}>
+              {isFavorite ? <HeartIconSolid className="w-5 h-5 text-rose-500" /> : <HeartIcon className={`w-5 h-5 ${isScrolled ? 'text-slate-900' : 'text-white'}`} />}
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section - Masterpiece Gallery Layout */}
+      <div className="w-full bg-slate-100 overflow-hidden relative">
+        {event.imageUrls && event.imageUrls.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-0 h-[65vh] md:h-[80vh] lg:h-[85vh] w-full bg-slate-900 group">
+            {/* Main Image */}
+            <div className="relative h-full cursor-pointer overflow-hidden" onClick={() => {}}>
+              <ImageWithFallback 
+                src={event.imageUrls[0]} 
+                alt={event.name} 
+                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
             </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error loading event</h3>
-              <div className="mt-2 text-sm text-red-700">
-                <p>{error}</p>
+
+            {/* Sub Images Grid */}
+            <div className="hidden md:grid grid-cols-2 gap-0 h-full">
+              {event.imageUrls.slice(1, 5).map((url, index) => (
+                <div key={index} className="relative h-full cursor-pointer overflow-hidden" onClick={() => {}}>
+                  <ImageWithFallback 
+                    src={url} 
+                    alt={`${event.name} ${index + 2}`} 
+                    className="w-full h-full object-cover transition-transform duration-1000 hover:scale-110" 
+                  />
+                  <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors duration-500" />
+                </div>
+              ))}
+              {/* Fillers if less than 5 images */}
+              {event.imageUrls.length < 5 && Array(4 - Math.min(4, event.imageUrls.length - 1)).fill(null).map((_, i) => (
+                <div key={`empty-${i}`} className="bg-slate-800 h-full w-full" />
+              ))}
+            </div>
+
+            {/* Hero Overlay Content - Relocated for maximum visibility */}
+            <div className="absolute bottom-6 md:bottom-12 left-0 right-0 z-20 pointer-events-none">
+              <div className="w-full px-4 md:px-12">
+                <div className="flex flex-col gap-5 md:gap-8 pointer-events-auto">
+                  <div className="max-w-5xl">
+                    <div className="flex flex-wrap gap-2 mb-3 md:mb-6">
+                      <span className={`px-3 py-1.5 md:py-2 rounded-full text-[9px] md:text-[10px] font-black tracking-[0.2em] uppercase backdrop-blur-md border ${eventTypeInfo.bg} ${eventTypeInfo.text} ${eventTypeInfo.border} shadow-xl`}>
+                        {eventTypeInfo.name}
+                      </span>
+                      {event.security && (
+                        <span className="px-3 py-1.5 md:py-2 rounded-full text-[9px] md:text-[10px] font-black tracking-[0.2em] uppercase bg-emerald-500/20 text-emerald-400 backdrop-blur-md border border-emerald-500/30 flex items-center gap-1.5 shadow-xl">
+                          <CheckBadgeIcon className="w-3.5 h-3.5 md:w-4 h-4" /> Verified
+                        </span>
+                      )}
+                    </div>
+                    <h1 className="text-3xl md:text-8xl font-black text-white leading-[0.95] mb-5 md:mb-8 tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                      {event.name}
+                    </h1>
+                  </div>
+
+                  {/* Critical Info Bar - Redesigned for absolute mobile fitting */}
+                  <div className="flex flex-wrap gap-2 md:gap-3">
+                    <div className="flex-1 min-w-[130px] md:min-w-[140px] bg-white/10 backdrop-blur-2xl px-4 md:px-6 py-3 md:py-4 rounded-[1.2rem] md:rounded-[1.5rem] border border-white/20 shadow-2xl">
+                       <div className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-white/50 mb-1">Date</div>
+                       <div className="text-xs md:text-sm font-bold text-white truncate">{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                    </div>
+                    <div className="flex-1 min-w-[130px] md:min-w-[140px] bg-white/10 backdrop-blur-2xl px-4 md:px-6 py-3 md:py-4 rounded-[1.2rem] md:rounded-[1.5rem] border border-white/20 shadow-2xl">
+                       <div className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-white/50 mb-1">Time</div>
+                       <div className="text-xs md:text-sm font-bold text-white truncate">{event.time || 'TBA'}</div>
+                    </div>
+                    <div className="flex-1 min-w-[130px] md:min-w-[140px] bg-white/10 backdrop-blur-2xl px-4 md:px-6 py-3 md:py-4 rounded-[1.2rem] md:rounded-[1.5rem] border border-white/20 shadow-2xl">
+                       <div className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-white/50 mb-1">Entry</div>
+                       <div className="text-xs md:text-sm font-black text-rose-400 truncate">{event.regularPrice ? `R${event.regularPrice}` : 'Free'}</div>
+                    </div>
+                    <div className="flex-1 min-w-[130px] md:min-w-[140px] bg-white/10 backdrop-blur-2xl px-4 md:px-6 py-3 md:py-4 rounded-[1.2rem] md:rounded-[1.5rem] border border-white/20 shadow-2xl">
+                       <div className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-white/50 mb-1">Capacity</div>
+                       <div className="text-xs md:text-sm font-bold text-white truncate">{event.capacity || 'Open'}</div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-3 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                Try Again
-              </button>
+            </div>
+            
+            <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/95 via-black/40 to-transparent pointer-events-none z-10"></div>
+          </div>
+        ) : (
+          <div className="h-[50vh] bg-slate-100 flex items-center justify-center">
+             <SparklesIcon className="w-20 h-20 text-slate-200 animate-pulse" />
+          </div>
+        )}
+      </div>
+
+  {/* Main Layout - 100% Width & Zero Space */}
+  <div className="w-full px-0 mt-0 relative z-30 mb-20">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      
+    {/* Left Column: Details */}
+    <div className="lg:col-span-8 space-y-12 pb-12 px-4 md:px-12 pt-12">
+        
+        {/* About Section */}
+        <section className="relative">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight">About Experience</h2>
+            <div className="h-px flex-1 bg-slate-100 mx-8 hidden md:block"></div>
+          </div>
+          <div className={`text-lg text-slate-600 leading-relaxed space-y-4 ${!showFullDescription && 'line-clamp-6'}`}>
+            {event.description?.split('\n').map((p, i) => <p key={i}>{p}</p>)}
+          </div>
+          {event.description?.length > 400 && (
+            <button onClick={toggleDescription} className="mt-6 flex items-center gap-2 text-rose-500 font-bold hover:gap-3 transition-all">
+              {showFullDescription ? 'Show less' : 'Read more about event'}
+              <ChevronRightIcon className={`w-5 h-5 transition-transform ${showFullDescription ? '-rotate-90' : 'rotate-90'}`} />
+            </button>
+          )}
+        </section>
+
+            {/* AI Insights - Premium Card */}
+            <section className="p-8 bg-gradient-to-br from-slate-900 to-slate-800 rounded-[3rem] text-white overflow-hidden relative group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 shadow-inner">
+                    <CpuChipIcon className="w-6 h-6 text-rose-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold tracking-tight">AI Smart Assessment</h3>
+                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Algorithmic quality check</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <div className="p-6 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/5 hover:bg-white/10 transition-colors">
+                    <div className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">Description</div>
+                    <div className="text-3xl font-black text-white">{aiAssessment.descriptionQuality || '...'}<span className="text-sm font-normal text-slate-500 ml-1">/5</span></div>
+                  </div>
+                  <div className="p-6 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/5 hover:bg-white/10 transition-colors">
+                    <div className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">Content</div>
+                    <div className="text-3xl font-black text-white">{aiAssessment.imageQuality || '...'}<span className="text-sm font-normal text-slate-500 ml-1">/5</span></div>
+                  </div>
+                  <div className="p-6 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/5 hover:bg-white/10 transition-colors">
+                    <div className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">Safety</div>
+                    <div className="text-3xl font-black text-white">4.8<span className="text-sm font-normal text-slate-500 ml-1">/5</span></div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-8 border-t border-white/10">
+                  <div className="flex items-center gap-4">
+                    <button onClick={handleLike} className={`flex items-center gap-2 font-bold text-sm px-6 py-3 rounded-2xl transition-all ${aiAssessment.userReaction === 'like' ? 'bg-emerald-500 text-white' : 'bg-white/5 hover:bg-white/10'}`}>
+                      <ArrowUpIcon className="w-4 h-4" /> Helpful
+                    </button>
+                    <button onClick={handleDislike} className={`flex items-center gap-2 font-bold text-sm px-6 py-3 rounded-2xl transition-all ${aiAssessment.userReaction === 'dislike' ? 'bg-rose-500 text-white' : 'bg-white/5 hover:bg-white/10'}`}>
+                      <ArrowDownIcon className="w-4 h-4" /> Flag
+                    </button>
+                  </div>
+                  <div className="text-slate-500 text-xs font-medium flex items-center gap-2">
+                    <SparklesIcon className="w-4 h-4" /> Verified by Experience AI 
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Profiles & Verification */}
+            <section className="p-10 bg-slate-50 rounded-[3rem] border border-slate-100">
+               <div className="flex items-center justify-between mb-8">
+                <h3 className="text-2xl font-black text-slate-900 tracking-tight">Digital Footprint</h3>
+                <span className="px-4 py-1.5 bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-500/20 animate-pulse">Scanning Live</span>
+              </div>
+
+              {verifyingSocialMedia ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-4">
+                   <ArrowPathIcon className="w-10 h-10 text-slate-400 animate-spin" />
+                   <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em]">Verifying Social Credentials...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {['facebook', 'instagram', 'linkedin', 'twitter'].map((platform) => {
+                    const data = socialMediaVerification[platform];
+                    const Icon = platform === 'facebook' ? FaFacebook : platform === 'instagram' ? FaInstagram : platform === 'linkedin' ? FaLinkedin : FaTwitter;
+                    const colors = {
+                      facebook: 'text-blue-600 bg-blue-50',
+                      instagram: 'text-pink-600 bg-pink-50',
+                      linkedin: 'text-blue-700 bg-blue-50',
+                      twitter: 'text-sky-500 bg-sky-50'
+                    };
+
+                    return (
+                      <div key={platform} className={`p-6 rounded-[2rem] border transition-all duration-300 ${data.exists ? 'bg-white border-slate-200 shadow-sm hover:shadow-xl' : 'bg-slate-100/50 border-transparent opacity-50 grayscale'}`}>
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${colors[platform]}`}>
+                          <Icon className="text-2xl" />
+                        </div>
+                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{platform}</div>
+                        <div className="text-sm font-bold text-slate-900 truncate">
+                          {data.exists ? `@${data.username}` : 'Not Found'}
+                        </div>
+                        {data.verified && <div className="mt-2 flex items-center gap-1 text-[10px] font-bold text-emerald-500 uppercase tracking-tighter"><CheckBadgeIcon className="w-3 h-3"/> Verified</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+
+             {/* Comments */}
+             <section>
+              <EventComments
+                eventId={id}
+                onCommentCountChange={setCommentCount}
+                onToggleCommentsPanel={() => setShowCommentsPanel(!showCommentsPanel)}
+              />
+            </section>
+          </div>
+
+        {/* Right Column: Sticky Contact & Form */}
+        <div className="lg:col-span-4 lg:relative px-4 md:px-12">
+            <div className="sticky top-28 space-y-6">
+              
+              {/* Primary Booking Card */}
+              <div className="bg-white rounded-[2.5rem] shadow-[0_32px_64px_rgba(0,0,0,0.08)] border border-slate-100 p-8 overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-full translate-x-1/2 -translate-y-1/2 transition-transform duration-700 group-hover:scale-150"></div>
+                
+                <div className="relative z-10">
+                  <div className="flex justify-between items-start mb-8">
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Entry</div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-black text-slate-900 tracking-tighter">
+                          {event.regularPrice ? `R${event.regularPrice}` : 'Free'}
+                        </span>
+                        {event.regularPrice && <span className="text-slate-400 text-sm font-medium">/person</span>}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Quality</div>
+                      <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-3 py-1 rounded-full font-bold text-xs border border-amber-100">
+                        <StarIconSolid className="w-3 h-3" /> {event.rating || '4.9'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <button 
+                      onClick={() => setShowRegistrationOverlay(true)}
+                      className="w-full py-5 bg-slate-900 hover:bg-black text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[1.5rem] transition-all shadow-xl active:scale-95"
+                    >
+                      Reserve Experience
+                    </button>
+                    <a 
+                      href={whatsappLink}
+                      className="flex items-center justify-center gap-3 w-full py-4 bg-white border border-slate-100 text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:border-slate-300 transition-all shadow-sm"
+                    >
+                      <ChatBubbleLeftRightIcon className="w-4 h-4 text-rose-500" /> Inquire Privately
+                    </a>
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <ShieldCheckIcon className="w-4 h-4 text-emerald-500" /> Secure Cloud Registration
+                  </div>
+                </div>
+              </div>
+
+              {/* Organizer Card */}
+              <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(244,63,94,0.1),transparent)]"></div>
+                <div className="relative z-10">
+                   <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6">Host Experience</h4>
+                   <Link to={`/user-profile/${event.userRef?._id || event.userRef}`} className="flex items-center gap-4 mb-8 group">
+                      <div className="relative">
+                        <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/10 group-hover:border-rose-500/50 transition-all duration-500">
+                          <ImageWithFallback src={event.userRef?.avatar} alt={event.organizerName} className="w-full h-full object-cover" />
+                        </div>
+                        {event.userRef?.isSuperhost && (
+                          <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-rose-500 rounded-xl flex items-center justify-center shadow-lg border-2 border-slate-900">
+                            <SparklesIcon className="w-4 h-4 text-white" />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold group-hover:text-rose-400 transition-colors uppercase tracking-tight">{event.userRef?.username || event.organizerName}</div>
+                        <div className="flex items-center gap-1.5 text-slate-400 text-xs font-semibold">
+                          <StarIconSolid className="w-3 h-3 text-yellow-500" /> Top Rated Organizer
+                        </div>
+                      </div>
+                   </Link>
+
+                   <div className="space-y-3">
+                      <a href={`tel:${event.organizerContact}`} className="flex items-center justify-center gap-3 w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-sm font-bold transition-all border border-white/5">
+                        <PhoneIcon className="w-5 h-5 text-rose-400" /> Voice Call
+                      </a>
+                      <a href={whatsappLink} className="flex items-center justify-center gap-3 w-full py-4 bg-emerald-500 hover:bg-emerald-600 rounded-2xl text-sm font-black transition-all shadow-xl shadow-emerald-500/20">
+                        <FaWhatsapp className="text-lg" /> WhatsApp
+                      </a>
+                   </div>
+                </div>
+              </div>
+
+               <div className="bg-white rounded-[2rem] p-8 border border-slate-100 flex flex-col items-center gap-4">
+                  <InformationCircleIcon className="w-10 h-10 text-slate-200" />
+                  <p className="text-center text-slate-400 text-xs font-medium leading-relaxed italic">
+                    By registering you agree to the community guidelines. You will be redirected to WhatsApp to finalize your booking with the host.
+                  </p>
+               </div>
             </div>
           </div>
         </div>
 
         {/* Similar Events */}
         {similarEvents.length > 0 && (
-          <div className="mt-12 md:mt-16 border-t border-gray-100 pt-10 md:pt-12">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8 flex items-center gap-2">
-              <FaCalendarAlt className="text-rose-500" />
-              Other events you might like
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {similarEvents.map((item) => (
-                <EventItem key={item._id} event={item} />
-              ))}
+          <section className="pt-24 border-t border-slate-100">
+            <div className="flex items-center justify-between mb-12">
+               <div>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight">More Experiences</h2>
+                  <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">Recommended for you</p>
+               </div>
+               <Link to="/events" className="flex items-center gap-2 text-rose-500 font-bold text-sm bg-rose-50 px-6 py-3 rounded-2xl hover:bg-rose-100 transition-all">
+                  Explore all <ArrowUpIcon className="w-4 h-4 rotate-45" />
+               </Link>
             </div>
-          </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {similarEvents.map((item) => <EventItem key={item._id} event={item} />)}
+            </div>
+          </section>
         )}
       </div>
-    );
-  }
 
-  if (!event) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="text-center py-12 bg-white rounded-xl shadow-sm">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2">Event not found</h2>
-          <p className="mt-2 text-gray-600">The event you re looking for doesn t exist or may have been removed.</p>
-        </div>
-      </div>
-    );
-  }
-
-  const description = event.description || '';
-  const displayText = showFullDescription
-    ? description
-    : description.slice(0, 300) + (description.length > 300 ? "..." : "");
-
-  // Format date and time
-  const formatDateTime = (dateString, timeString) => {
-    if (!dateString) return '';
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const date = new Date(dateString);
-    return `${date.toLocaleDateString('en-US', options)}${timeString ? ` at ${timeString}` : ''}`;
-  };
-
-  const eventTypeInfo = getEventTypeInfo(event.type);
-
-  return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Navigation Header - Transparent on top of image */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-50/90 backdrop-blur-md shadow-sm border-b border-slate-200/50' : 'bg-transparent'}`}>
-        <div className="max-w-screen-xl mx-auto px-4 md:px-6">
-          <div className="flex items-center justify-between h-16 md:h-20">
-            <button
-              onClick={() => navigate(-1)}
-              className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
+      {/* Floating Mobile Booking Belt */}
+      {showBookingBelt && (
+        <div className="fixed bottom-0 left-0 right-0 z-[90] md:hidden">
+          <div className="bg-white/80 backdrop-blur-2xl border-t border-slate-200 p-4 flex items-center justify-between gap-4 safe-area-bottom">
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Entry</div>
+              <div className="text-xl font-black text-slate-900">{event.regularPrice ? `R${event.regularPrice}` : 'Free'}</div>
+            </div>
+            <button 
+               onClick={() => setShowRegistrationOverlay(true)}
+               className="flex-1 bg-slate-900 text-white h-14 rounded-2xl font-black text-sm shadow-xl shadow-slate-900/20"
             >
-              <FaArrowLeft className="text-lg" />
+              Reserve Experience
             </button>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({ title: event.name, url: window.location.href });
-                  } else {
-                    navigator.clipboard.writeText(window.location.href);
-                    alert('Link copied!');
-                  }
-                }}
-                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
-              >
-                <FiShare2 className="text-lg" />
-              </button>
-              <button
-                onClick={toggleFavorite}
-                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 backdrop-blur-sm'}`}
-              >
-                {isFavorite ? <FaHeart className="text-lg text-rose-500" /> : <FiHeart className={`text-lg ${isScrolled ? 'text-slate-900' : 'text-white'}`} />}
-              </button>
-            </div>
           </div>
-        </div>
-      </nav>
-
-      {/* Hero Image Gallery - Full Width */}
-      <div className="relative w-full overflow-hidden bg-slate-900">
-        <Swiper
-          modules={[Navigation, Zoom]}
-          navigation={true}
-          zoom={true}
-          className="h-[400px] md:h-[500px] lg:h-[600px] w-full"
-        >
-          {event.imageUrls && event.imageUrls.map((url, index) => (
-            <SwiperSlide key={index}>
-              <div className="swiper-zoom-container h-full w-full">
-                <img
-                  src={url}
-                  alt={`${event.name} - Image ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </SwiperSlide>
-          ))}
-          {!event.imageUrls?.length && (
-            <SwiperSlide>
-              <div className="h-full w-full bg-slate-800 flex items-center justify-center">
-                <FaFileImage className="text-7xl text-slate-600" />
-              </div>
-            </SwiperSlide>
-          )}
-        </Swiper>
-        
-        {/* Gallery Counter */}
-        {event.imageUrls?.length > 0 && (
-          <div className="absolute bottom-6 right-6 z-10 bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-xl text-xs font-bold tracking-widest border border-white/10">
-            {event.imageUrls.length} PHOTOS
-          </div>
-        )}
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
-
-      {/* Floating Action Buttons */}
-      {(event.organizerContact || whatsappNumber) && (
-        <div className="fixed bottom-4 right-4 flex flex-col gap-3 z-50 sm:flex-row">
-          {event.organizerContact && (
-            <a
-              href={`tel:${event.organizerContact}`}
-              className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors flex items-center justify-center"
-              aria-label="Call Organizer"
-            >
-              <FaPhone className="text-2xl" />
-            </a>
-          )}
-          {whatsappLink && (
-            <a
-              href={whatsappLink}
-              target="_blank"
-              rel="noreferrer"
-              className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors flex items-center justify-center"
-              aria-label="WhatsApp Organizer"
-            >
-              <FaWhatsapp className="text-2xl" />
-            </a>
-          )}
         </div>
       )}
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Main Content */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Header Section - Updated to match HelperPage style */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            {/* Colored Header with Event Type */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-              <div className="flex items-center gap-4">
-                {/* Event Type Icon */}
-                <div className="w-16 h-16 bg-white rounded-2xl border-4 border-white border-opacity-20 shadow-lg flex items-center justify-center flex-shrink-0">
-                  <div className="text-2xl">
-                    {eventTypeInfo.icon}
+      {/* Full Page Registration Overlay - Masterpiece Style */}
+      {showRegistrationOverlay && (
+        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col relative">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            
+            <div className="p-6 border-b border-slate-50 flex items-center justify-between relative z-10">
+              <button 
+                onClick={() => setShowRegistrationOverlay(false)}
+                className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl text-slate-900 transition-all"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+              <div className="text-center">
+                <h2 className="text-lg font-black uppercase tracking-widest text-slate-950 leading-none">Registration</h2>
+                <div className="text-[10px] font-bold text-rose-500 uppercase tracking-widest mt-1">Final Step</div>
+              </div>
+              <div className="w-12"></div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8 relative z-10">
+              <div className="bg-slate-50 rounded-[2rem] p-6 mb-8 border border-slate-100 shadow-inner">
+                <div className="flex items-start gap-4">
+                  <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-xl border-4 border-white">
+                    <ImageWithFallback src={event?.imageUrls?.[0]} alt={event?.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-950 tracking-tighter leading-tight mb-1">{event?.name}</h3>
+                    <div className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                      <CalendarDaysIcon className="w-3.5 h-3.5" /> {event?.date && new Date(event.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-5 bg-slate-50 rounded-[1.5rem] border border-transparent focus-within:border-slate-200 focus-within:bg-white transition-all">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Full Name</label>
+                    <input 
+                      type="text" 
+                      name="name"
+                      value={registrationData.name}
+                      onChange={handleRegistrationChange}
+                      className="w-full bg-transparent text-sm font-bold text-slate-950 outline-none" 
+                      placeholder="Your designation"
+                    />
+                  </div>
+                  <div className="p-5 bg-slate-50 rounded-[1.5rem] border border-transparent focus-within:border-slate-200 focus-within:bg-white transition-all">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Contact Number</label>
+                    <input 
+                      type="tel" 
+                      name="phone"
+                      value={registrationData.phone}
+                      onChange={handleRegistrationChange}
+                      className="w-full bg-transparent text-sm font-bold text-slate-950 outline-none" 
+                      placeholder="012 345 6789"
+                    />
                   </div>
                 </div>
 
-                {/* Name and Type */}
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-1 truncate">
-                    {event.name}
-                  </h1>
-                  <div className="text-blue-100 text-sm font-medium">
-                    {eventTypeInfo.name}
+                <div className="p-5 bg-slate-50 rounded-[1.5rem] border border-transparent focus-within:border-slate-200 focus-within:bg-white transition-all">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Ticket Quantity</label>
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={() => setRegistrationData(d => ({...d, quantity: Math.max(1, d.quantity - 1)}))}
+                      className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-xl flex items-center justify-center text-slate-900 active:scale-90 transition-all"
+                    >
+                      <ArrowDownIcon className="w-4 h-4" />
+                    </button>
+                    <span className="text-lg font-black text-slate-950 min-w-[30px] text-center">{registrationData.quantity}</span>
+                    <button 
+                      onClick={() => setRegistrationData(d => ({...d, quantity: d.quantity + 1}))}
+                      className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-xl flex items-center justify-center text-slate-900 active:scale-90 transition-all"
+                    >
+                      <ArrowUpIcon className="w-4 h-4" />
+                    </button>
+                    <div className="ml-auto text-rose-500 font-black text-lg">
+                      R{event?.regularPrice ? event.regularPrice * registrationData.quantity : '0'}
+                    </div>
                   </div>
                 </div>
 
-                {/* Price Badge */}
-                <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl px-4 py-3 border border-white border-opacity-30">
-                  <div className="text-white text-xs font-semibold opacity-90 mb-1">STARTING FROM</div>
-                  <div className="text-white text-xl font-bold">
-                    {event.regularPrice ? `R${event.regularPrice}` : 'Free'}
-                  </div>
+                <div className="p-5 bg-slate-50 rounded-[1.5rem] border border-transparent focus-within:border-slate-200 focus-within:bg-white transition-all">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Special Requests or Personal Note</label>
+                  <textarea 
+                    name="note"
+                    value={registrationData.note}
+                    onChange={handleRegistrationChange}
+                    className="w-full bg-transparent text-sm font-bold text-slate-900 outline-none resize-none h-24" 
+                    placeholder="Tell us anything specific for this experience..."
+                  ></textarea>
                 </div>
               </div>
             </div>
 
-            {/* Main Content */}
-            <div className="p-6">
-
-              {/* Verification and Rating Badges */}
-              <div className="flex flex-wrap gap-3 mb-6">
-                {event.security && (
-                  <div className="inline-flex items-center bg-emerald-50 px-4 py-2 rounded-full border border-emerald-200">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
-                    <span className="text-emerald-700 font-semibold text-sm">
-                      ✅ Verified Event
-                    </span>
-                  </div>
-                )}
-
-                <div className="inline-flex items-center bg-blue-50 px-4 py-2 rounded-full border border-blue-200">
-                  <FaStar className="text-yellow-500 text-sm mr-2" />
-                  <span className="text-blue-700 font-semibold text-sm">
-                    {event.rating ? `${event.rating} Rating` : 'New Event'}
-                  </span>
-                </div>
-
-                {/* Event Type Badge */}
-                <div className="inline-flex items-center bg-purple-50 px-4 py-2 rounded-full border border-purple-200">
-                  {eventTypeInfo.icon}
-                  <span className="text-purple-700 font-semibold text-sm ml-2">
-                    {eventTypeInfo.name}
-                  </span>
-                </div>
-              </div>
-
-              {/* Info Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                {/* Location Card */}
-                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <FaMapMarkerAlt className="text-purple-600 text-lg" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm text-gray-600 font-medium mb-1">Location</div>
-                      <div className="text-gray-900 font-semibold text-sm truncate">{event.address}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Date & Time Card */}
-                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <FaCalendarAlt className="text-orange-600 text-lg" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-600 font-medium mb-1">Date & Time</div>
-                      <div className="text-gray-900 font-semibold text-sm">
-                        {formatDateTime(event.date, event.time)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Capacity Card */}
-                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <FaUsers className="text-cyan-600 text-lg" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-600 font-medium mb-1">Capacity</div>
-                      <div className="text-gray-900 font-semibold text-sm">{event.capacity || 'Unlimited'}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Social Media Verification */}
-              <div className="border-t border-gray-200 pt-6">
-                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                  {/* Title Section */}
-                  <div className="flex items-center gap-3 lg:w-48 lg:flex-shrink-0">
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <FaUsers className="text-gray-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 text-sm">Social Verification</h3>
-                      <p className="text-gray-500 text-xs">AI-powered validation</p>
-                    </div>
-                  </div>
-
-                  {/* Social Media Badges */}
-                  <div className="flex-1">
-                    {verifyingSocialMedia ? (
-                      <div className="flex items-center gap-3 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                        <FaSpinner className="animate-spin text-yellow-600" />
-                        <div>
-                          <div className="text-yellow-800 font-medium text-sm">Verifying profiles</div>
-                          <div className="text-yellow-600 text-xs">Scanning social networks</div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap gap-3">
-                        {socialMediaVerification.facebook.exists && socialMediaVerification.facebook.verificationStatus === 'verified' && (
-                          <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="relative">
-                              <FaFacebook className="text-blue-600 text-lg" />
-                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                            </div>
-                            <span className="text-gray-700 font-semibold text-sm">Facebook</span>
-                          </div>
-                        )}
-
-                        {socialMediaVerification.instagram.exists && socialMediaVerification.instagram.verificationStatus === 'verified' && (
-                          <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-pink-200 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="relative">
-                              <FaInstagram className="text-pink-600 text-lg" />
-                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                            </div>
-                            <span className="text-gray-700 font-semibold text-sm">Instagram</span>
-                          </div>
-                        )}
-
-                        {socialMediaVerification.linkedin.exists && socialMediaVerification.linkedin.verificationStatus === 'verified' && (
-                          <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-blue-300 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="relative">
-                              <FaLinkedin className="text-blue-700 text-lg" />
-                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                            </div>
-                            <span className="text-gray-700 font-semibold text-sm">LinkedIn</span>
-                          </div>
-                        )}
-
-                        {socialMediaVerification.twitter.exists && socialMediaVerification.twitter.verificationStatus === 'verified' && (
-                          <div className="inline-flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="relative">
-                              <FaTwitter className="text-gray-900 text-lg" />
-                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                            </div>
-                            <span className="text-gray-700 font-semibold text-sm">Twitter</span>
-                          </div>
-                        )}
-
-                        {!socialMediaVerification.facebook.exists && !socialMediaVerification.instagram.exists &&
-                          !socialMediaVerification.linkedin.exists && !socialMediaVerification.twitter.exists && (
-                            <div className="inline-flex items-center gap-2 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
-                              <FaInfoCircle className="text-gray-400" />
-                              <span className="text-gray-600 font-medium text-sm">No social profiles found</span>
-                            </div>
-                          )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* About Section - Replaced Gallery which was here */}
-
-          {/* Description Section */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                About This Event
-              </h3>
-              {description.length > 300 && (
-                <button
-                  onClick={toggleDescription}
-                  className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
-                >
-                  {showFullDescription ? (
-                    <>
-                      <FaArrowUp className="text-xs" />
-                      Show Less
-                    </>
-                  ) : (
-                    <>
-                      <FaArrowDown className="text-xs" />
-                      Read More
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-            <div className="text-gray-700 leading-relaxed">
-              {displayText.split('\n').map((paragraph, index) => (
-                <p key={index} className="mb-3">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-          </div>
-
-          {/* AI Assessment Section */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <FaRobot className="text-blue-500" />
-                AI Quality Assessment
-              </h3>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleLike}
-                  className={`p-2 rounded-lg transition-colors ${aiAssessment.userReaction === 'like'
-                      ? 'bg-green-100 text-green-600'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                >
-                  <FaArrowUp className="text-sm" />
-                </button>
-                <button
-                  onClick={handleDislike}
-                  className={`p-2 rounded-lg transition-colors ${aiAssessment.userReaction === 'dislike'
-                      ? 'bg-red-100 text-red-600'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                >
-                  <FaArrowDown className="text-sm" />
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
-                <div className="text-blue-700 text-sm font-semibold mb-2">Description Quality</div>
-                <div className="text-2xl font-bold text-blue-900">
-                  {aiAssessment.descriptionQuality !== null ? `${aiAssessment.descriptionQuality}/5` : '...'}
-                </div>
-              </div>
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
-                <div className="text-purple-700 text-sm font-semibold mb-2">Image Quality</div>
-                <div className="text-2xl font-bold text-purple-900">
-                  {aiAssessment.imageQuality !== null ? `${aiAssessment.imageQuality}/5` : '...'}
-                </div>
-              </div>
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
-                <div className="text-green-700 text-sm font-semibold mb-2">Overall Rating</div>
-                <div className="text-2xl font-bold text-green-900">
-                  {aiAssessment.overallRating !== null ? `${aiAssessment.overallRating}/5` : '...'}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1">
-                  <FaArrowUp className="text-green-500" />
-                  {aiAssessment.likes} likes
-                </span>
-                <span className="flex items-center gap-1">
-                  <FaArrowDown className="text-red-500" />
-                  {aiAssessment.dislikes} dislikes
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                <FaInfoCircle className="text-gray-400" />
-                <span>AI-powered analysis</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Comments Section */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <EventComments
-              eventId={id}
-              onCommentCountChange={setCommentCount}
-              onToggleCommentsPanel={() => setShowCommentsPanel(!showCommentsPanel)}
-            />
-          </div>
-        </div>
-
-        {/* Right Column - Sidebar */}
-        <div className="space-y-6">
-          {/* Registration Form */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 sticky top-6">
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Register for Event</h3>
-              <p className="text-gray-600 text-sm">Secure your spot for this amazing experience</p>
-            </div>
-
-            <form onSubmit={handleRegistrationSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={registrationData.name}
-                  onChange={handleRegistrationChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="Enter your full name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={registrationData.email}
-                  onChange={handleRegistrationChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="your.email@example.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number *
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={registrationData.phone}
-                  onChange={handleRegistrationChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="+27 12 345 6789"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Number of Tickets
-                </label>
-                <select
-                  name="quantity"
-                  value={registrationData.quantity}
-                  onChange={handleRegistrationChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                    <option key={num} value={num}>{num} ticket{num > 1 ? 's' : ''}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Special Requests
-                </label>
-                <textarea
-                  name="message"
-                  value={registrationData.message}
-                  onChange={handleRegistrationChange}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="Any special requirements or requests..."
-                />
-              </div>
-
-              {/* File Attachments */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Attachments (Optional)
-                </label>
-                <div className="space-y-3">
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*,.pdf"
-                    onChange={handleAttachmentChange}
-                    disabled={attachments.length >= 2}
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-
-                  {attachments.length > 0 && (
-                    <div className="space-y-2">
-                      {attachments.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            {file.type.startsWith('image/') ? (
-                              <FaFileImage className="text-blue-500" />
-                            ) : (
-                              <FaFilePdf className="text-red-500" />
-                            )}
-                            <span className="text-sm text-gray-700 truncate max-w-[200px]">
-                              {file.name}
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeAttachment(index)}
-                            className="text-gray-400 hover:text-red-500 transition-colors"
-                          >
-                            <FaTimes />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <p className="text-xs text-gray-500">
-                    Max 2 files, 5MB each. Images and PDFs only.
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="submit"
+            <div className="p-8 border-t border-slate-50 bg-slate-50/50 relative z-10">
+              <button 
+                onClick={handleRegistrationSubmit}
                 disabled={isUploading}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-3 active:scale-95"
               >
                 {isUploading ? (
-                  <>
-                    <FaSpinner className="animate-spin" />
-                    Uploading Files...
-                  </>
+                  <ArrowPathIcon className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    <FaCheckCircle />
-                    Register Now
+                    <FaWhatsapp className="text-lg" />
+                    Confirm & Send Ticket
                   </>
                 )}
               </button>
-
-              <p className="text-xs text-gray-500 text-center">
-                By registering, you agree to our terms and conditions. Your information will be sent securely via WhatsApp.
-              </p>
-            </form>
-          </div>
-
-          {/* Event Details Card */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Details</h3>
-            <div className="space-y-3">
-              {/* Event Type */}
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  {eventTypeInfo.icon}
-                </div>
-                <div>
-                  <div className="text-sm text-gray-600">Event Type</div>
-                  <div className="text-gray-900 font-medium">{eventTypeInfo.name}</div>
-                </div>
-              </div>
-
-              {/* Date & Time */}
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <FaCalendarAlt className="text-orange-600" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-600">Date & Time</div>
-                  <div className="text-gray-900 font-medium">
-                    {formatDateTime(event.date, event.time)}
-                  </div>
-                </div>
-              </div>
-
-              {/* Location */}
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <FaMapMarkerAlt className="text-purple-600" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-600">Location</div>
-                  <div className="text-gray-900 font-medium">{event.address}</div>
-                </div>
-              </div>
-
-              {/* Capacity */}
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <FaUsers className="text-cyan-600" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-600">Capacity</div>
-                  <div className="text-gray-900 font-medium">{event.capacity || 'Unlimited'}</div>
-                </div>
-              </div>
-
-              {/* Price */}
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <FaTicketAlt className="text-green-600" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-600">Price</div>
-                  <div className="text-gray-900 font-medium">
-                    {event.regularPrice ? `R${event.regularPrice}` : 'Free Entry'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Organizer Info Card */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Organizer Info</h3>
-            <div className="space-y-4">
-              <Link 
-                to={`/user-profile/${event.userRef?._id || event.userRef}`}
-                className="flex items-center gap-4 hover:opacity-80 transition-opacity w-fit"
-              >
-                <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 shadow-sm border border-gray-100 bg-gray-50 flex items-center justify-center">
-                  {event.userRef?.avatar ? (
-                    <img
-                      src={event.userRef.avatar}
-                      alt={event.userRef?.username || event.organizerName}
-                      className="w-full h-full object-cover"
-                      onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'; }}
-                    />
-                  ) : (
-                    <FaUser className="text-xl text-gray-400" />
-                  )}
-                </div>
-                <div>
-                  <div className="text-sm text-gray-600">Organizer</div>
-                  <div className="text-gray-900 font-semibold">
-                    {event.userRef?.username || event.organizerName || 'Event Organizer'}
-                    {event.userRef?.isSuperhost && (
-                      <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-rose-100 text-rose-800">
-                         Superhost
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </Link>
-
-
-              {event.organizerContact && (
-                <div className="space-y-2">
-                  <a
-                    href={`tel:${event.organizerContact}`}
-                    className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors"
-                  >
-                    <FaPhone />
-                    Call Organizer
-                  </a>
-
-                  {whatsappLink && (
-                    <a
-                      href={whatsappLink}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors"
-                    >
-                      <FaWhatsapp />
-                      WhatsApp
-                    </a>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Similar Events */}
-        {similarEvents.length > 0 && (
-          <div className="mt-12 md:mt-16 border-t border-gray-100 pt-10 md:pt-12">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8 flex items-center gap-2">
-              <FaCalendarAlt className="text-rose-500" />
-              Other events you might like
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {similarEvents.map((item) => (
-                <EventItem key={item._id} event={item} />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Comments Side Panel */}
       {showCommentsPanel && (

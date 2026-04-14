@@ -1,7 +1,20 @@
 /* eslint-disable react/prop-types */
 import { Link } from "react-router-dom";
-import { MdLocationOn } from "react-icons/md";
-import { FaHeart, FaRegHeart, FaStar, FaUser, FaChild, FaBus, FaBroom, FaWrench, FaTruck, FaLeaf, FaUtensils, FaCog } from "react-icons/fa";
+import { 
+  StarIcon as StarIconSolid, 
+  HeartIcon as HeartIconSolid,
+  CheckBadgeIcon
+} from '@heroicons/react/24/solid';
+import {
+  MapPinIcon,
+  HeartIcon as HeartIconOutline,
+  SparklesIcon,
+  WrenchScrewdriverIcon,
+  TruckIcon,
+  UserGroupIcon,
+  Squares2X2Icon,
+  UserIcon
+} from '@heroicons/react/24/outline';
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useWishlist } from "../hooks/useWishlist";
@@ -27,18 +40,18 @@ const SERVICE_TYPE_COLORS = {
 };
 
 const SERVICE_ICON_CONFIG = {
-  cleaning:        { icon: FaBroom,    bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Cleaning' },
-  maintenance:     { icon: FaWrench,   bg: 'bg-amber-100',  text: 'text-amber-700',  label: 'Maintenance' },
-  moving:          { icon: FaTruck,    bg: 'bg-purple-100', text: 'text-purple-700', label: 'Moving' },
-  landscaping:     { icon: FaLeaf,     bg: 'bg-green-100',  text: 'text-green-700',  label: 'Landscaping' },
-  catering:        { icon: FaUtensils, bg: 'bg-red-100',    text: 'text-red-700',    label: 'Catering' },
-  daycare:         { icon: FaChild,    bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Day Care' },
-  schoolTransport: { icon: FaBus,      bg: 'bg-teal-100',   text: 'text-teal-700',   label: 'School Transport' },
-  other:           { icon: FaCog,      bg: 'bg-gray-100',   text: 'text-gray-700',   label: 'Other' },
+  cleaning:        { icon: SparklesIcon,           bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Cleaning' },
+  maintenance:     { icon: WrenchScrewdriverIcon,  bg: 'bg-amber-100',  text: 'text-amber-700',  label: 'Maintenance' },
+  moving:          { icon: TruckIcon,              bg: 'bg-purple-100', text: 'text-purple-700', label: 'Moving' },
+  landscaping:     { icon: SparklesIcon,           bg: 'bg-green-100',  text: 'text-green-700',  label: 'Landscaping' },
+  catering:        { icon: SparklesIcon,           bg: 'bg-red-100',    text: 'text-red-700',    label: 'Catering' },
+  daycare:         { icon: UserGroupIcon,          bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Day Care' },
+  schoolTransport: { icon: TruckIcon,              bg: 'bg-teal-100',   text: 'text-teal-700',   label: 'School Transport' },
+  other:           { icon: Squares2X2Icon,         bg: 'bg-gray-100',   text: 'text-gray-700',   label: 'Other' },
 };
 
 function ServiceTypePill({ type }) {
-  const cfg = SERVICE_ICON_CONFIG[type] || { icon: FaCog, bg: 'bg-gray-100', text: 'text-gray-700', label: 'Service' };
+  const cfg = SERVICE_ICON_CONFIG[type] || { icon: Squares2X2Icon, bg: 'bg-gray-100', text: 'text-gray-700', label: 'Service' };
   const Icon = cfg.icon;
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${cfg.bg} ${cfg.text}`}>
@@ -167,9 +180,9 @@ function ServiceItem({ service, className = "", compactMode = false }) {
 
   const getServiceIcon = () => {
     switch (service.type) {
-      case 'daycare': return <FaChild className="mr-1 text-xs" />;
-      case 'schoolTransport': return <FaBus className="mr-1 text-xs" />;
-      default: return <MdLocationOn className="text-rose-600 mr-1 text-xs" />;
+      case 'daycare': return <UserIcon className="w-3 h-3 mr-1" />;
+      case 'schoolTransport': return <TruckIcon className="w-3 h-3 mr-1" />;
+      default: return <MapPinIcon className="text-rose-600 w-3 h-3 mr-1" />;
     }
   };
 
@@ -227,7 +240,7 @@ function ServiceItem({ service, className = "", compactMode = false }) {
 
   if (!service?._id) {
     return (
-      <div className={`${className} rounded-2xl w-full relative overflow-hidden bg-white p-4 shadow-md transition-all duration-300 hover:shadow-lg h-[420px] max-w-sm mx-auto`}>
+      <div className={`${className} rounded-2xl w-full relative overflow-hidden p-4 shadow-md transition-all duration-300 hover:shadow-lg h-[420px] max-w-sm mx-auto`}>
         <div className="animate-pulse">
           <div className="bg-gray-200 h-48 rounded-xl"></div>
           <div className="mt-4 space-y-2">
@@ -303,7 +316,7 @@ function ServiceItem({ service, className = "", compactMode = false }) {
                   className="p-1 text-gray-400 hover:text-rose-600 transition-colors ml-2"
                   aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
                 >
-                  {isFavorite ? <FaHeart className="w-3.5 h-3.5 text-rose-600" /> : <FaRegHeart className="w-3.5 h-3.5" />}
+                  {isFavorite ? <HeartIconSolid className="w-3.5 h-3.5 text-rose-600" /> : <HeartIconOutline className="w-3.5 h-3.5" />}
                 </button>
               </div>
 
@@ -327,14 +340,14 @@ function ServiceItem({ service, className = "", compactMode = false }) {
 
               {service.type === 'daycare' && service.capacity && (
                 <p className="text-gray-600 text-xs flex items-center mt-1">
-                  <FaUser className="text-gray-500 mr-1 text-xs" />
+                  <UserIcon className="text-gray-500 w-3 h-3 mr-1" />
                   <span>Capacity: {service.capacity}</span>
                 </p>
               )}
 
               {service.type === 'schoolTransport' && service.vehicleType && (
                 <p className="text-gray-600 text-xs flex items-center mt-1">
-                  <FaBus className="text-gray-500 mr-1 text-xs" />
+                  <TruckIcon className="text-gray-500 w-3 h-3 mr-1" />
                   <span>Vehicle: {service.vehicleType}</span>
                 </p>
               )}
@@ -343,11 +356,11 @@ function ServiceItem({ service, className = "", compactMode = false }) {
                 <span className="text-sm font-bold text-gray-900">
                   {formatPrice(service.regularPrice)}
                 </span>
-                <div className="flex items-center text-gray-600">
-                  <span className="font-medium text-gray-900 text-[12px] mr-0.5">
+                <div className="flex items-center text-gray-900">
+                  <span className="font-black text-gray-900 text-[11px] mr-0.5">
                     {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
                   </span>
-                  <FaStar className="text-amber-500 text-[10px]" />
+                  <StarIconSolid className="text-amber-500 w-3 h-3" />
                   {ratingData.count > 0 && <span className="text-[9px] text-gray-400 ml-1">({ratingData.count})</span>}
                 </div>
               </div>
@@ -374,13 +387,13 @@ function ServiceItem({ service, className = "", compactMode = false }) {
         <>
           <button
             onClick={toggleFavorite}
-            className="absolute top-3 right-3 z-10 p-2 bg-white/90 rounded-full shadow-md hover:bg-white transition-all duration-200 hover:scale-110 group/favorite"
+            className="absolute top-3 right-3 z-10 p-2 bg-white/20 backdrop-blur-md rounded-full shadow-md hover:bg-white/40 transition-all duration-200 hover:scale-110 group/favorite border border-white/20"
             aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
           >
             {isFavorite ? (
-              <FaHeart className="w-4 h-4 text-rose-600" />
+              <HeartIconSolid className="w-4 h-4 text-rose-500" />
             ) : (
-              <FaRegHeart className="w-4 h-4 text-gray-700 group-hover/favorite:text-rose-600" />
+              <HeartIconOutline className="w-4 h-4 text-white" />
             )}
           </button>
 
@@ -448,7 +461,7 @@ function ServiceItem({ service, className = "", compactMode = false }) {
             </div>
 
             <p className="text-gray-600 text-xs flex items-center mt-0">
-              <MdLocationOn className="text-rose-600 mr-1 text-xs" />
+              <MapPinIcon className="text-rose-600 w-3 h-3 mr-1" />
               <span className="truncate">{service.address || 'Location not available'}</span>
             </p>
             <div className="mt-1.5">
@@ -465,7 +478,7 @@ function ServiceItem({ service, className = "", compactMode = false }) {
                 </div>
 
                 <div className="flex items-center text-gray-600">
-                  <FaStar className="text-amber-500 text-[12px]" />
+                  <StarIconSolid className="text-amber-500 w-3 h-3" />
                   <span className="font-medium text-gray-900 text-[13px] ml-1">
                     {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
                   </span>

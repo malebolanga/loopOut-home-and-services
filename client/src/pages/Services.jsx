@@ -6,21 +6,60 @@ import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/
 import { app } from "../firebase";
 import { Link } from "react-router-dom";
 import {
-  FaStar, FaMapMarkerAlt, FaPhone, FaWhatsapp,
-  FaArrowLeft, FaClock, FaExclamationTriangle,
-  FaTools, FaShieldAlt, FaCheckCircle,
-  FaChevronDown, FaChevronUp, FaImages,
-  FaRegHeart, FaHeart, FaShare, FaUser,
-  FaChevronLeft, FaChevronRight, FaCheck,
-  FaTimes, FaInfoCircle, FaAward, FaGraduationCap,
-  FaBriefcase, FaUtensils, FaUsers, FaCalendarAlt,
-  FaHome, FaCar, FaSprayCan, FaBroom, FaTruck,
-  FaMotorcycle, FaCookie, FaGlassCheers, FaRing,
-  FaPalette, FaTrophy, FaCommentDots, FaArrowRight,
-  FaSpinner, FaChild, FaTree, FaWrench, FaBus,
-  FaLeaf, FaHome as FaHomeIcon, FaFileImage, FaFilePdf
+  MapPinIcon,
+  StarIcon,
+  HomeIcon,
+  UserIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  SparklesIcon,
+  BoltIcon,
+  ShieldCheckIcon,
+  FlagIcon,
+  CheckCircleIcon,
+  ArrowLeftIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronDownIcon,
+  XMarkIcon,
+  CameraIcon,
+  PhotoIcon,
+  ChevronUpIcon,
+  WifiIcon,
+  TruckIcon,
+  KeyIcon,
+  HeartIcon,
+  ShareIcon,
+  Squares2X2Icon,
+  InformationCircleIcon,
+  PaperAirplaneIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  TagIcon,
+  UsersIcon,
+  ChatBubbleLeftRightIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  AcademicCapIcon,
+  BriefcaseIcon,
+  TrophyIcon,
+  DocumentTextIcon,
+  ArrowPathIcon
+} from '@heroicons/react/24/outline';
+import { 
+  StarIcon as StarIconSolid, 
+  HeartIcon as HeartIconSolid,
+  CheckBadgeIcon
+} from '@heroicons/react/24/solid';
+
+import {
+  FaBroom, FaSprayCan, FaBriefcase, FaTools, FaShieldAlt, FaLeaf, FaUtensils,
+  FaRing, FaGlassCheers, FaTruck, FaCar, FaTree, FaPalette, FaChild, FaClock,
+  FaGraduationCap, FaBus, FaCalendarAlt, FaMapMarkerAlt, FaWrench, FaTrophy, FaUser,
+  FaMotorcycle, FaCheckCircle, FaWhatsapp, FaPhone, FaHeart, FaStar, FaCommentDots, FaAward
 } from 'react-icons/fa';
 import { FiShare2, FiMessageSquare, FiMapPin } from 'react-icons/fi';
+
 import CommentsSidePanelService from '../components/CommentsSidePanelService';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import { useWishlist } from '../hooks/useWishlist';
@@ -43,7 +82,7 @@ const SERVICE_CONFIG = {
   // Cleaning Services
   cleaning: {
     title: 'Cleaning Service',
-    icon: <FaBroom />,
+    icon: <SparklesIcon className="w-6 h-6" />,
     description: `Professional cleaning service using eco-friendly products. Background-checked staff following strict safety protocols.`,
     options: [
       { id: 'house-cleaning', name: 'Standard Cleaning', description: 'Complete cleaning of living areas', duration: '2-4 hours', price: 'R450', popular: true, icon: <FaBroom /> },
@@ -60,7 +99,7 @@ const SERVICE_CONFIG = {
   // Catering Services
   catering: {
     title: 'Chef & Catering',
-    icon: <FaUtensils />,
+    icon: <SparklesIcon className="w-6 h-6" />,
     description: `From intimate gatherings to grand celebrations, crafting memorable dining experiences with custom menus using fresh, locally sourced ingredients.`,
     options: [
       { id: 'corporate-catering', name: 'Corporate Events', description: 'Business meetings & lunches', duration: 'Custom', price: 'R150/person', popular: true, icon: <FaBriefcase /> },
@@ -77,7 +116,7 @@ const SERVICE_CONFIG = {
   // Moving Services
   moving: {
     title: 'Moving Service',
-    icon: <FaTruck />,
+    icon: <TruckIcon className="w-6 h-6" />,
     description: `Stress-free moving with professional packing, furniture handling, and transportation. Experienced team with proper equipment.`,
     options: [
       { id: 'local-moving', name: 'Local Moving', description: 'Within 50km radius', duration: '4-8 hours', price: 'R1800', popular: true, icon: <FaTruck /> },
@@ -796,7 +835,7 @@ const ServicePage = () => {
               onClick={() => navigate(-1)}
               className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
             >
-              <FaArrowLeft className="text-lg" />
+              <ArrowLeftIcon className="w-5 h-5" />
             </button>
 
             <div className="flex items-center gap-2">
@@ -811,9 +850,9 @@ const ServicePage = () => {
                 className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 backdrop-blur-sm'}`}
               >
                 {isFavorite ? (
-                  <FaHeart className="text-lg text-rose-500" />
+                  <HeartIconSolid className="w-6 h-6 text-rose-500" />
                 ) : (
-                  <FaRegHeart className={`text-lg ${isScrolled ? 'text-slate-900' : 'text-white'}`} />
+                  <HeartIcon className={`w-6 h-6 ${isScrolled ? 'text-slate-900' : 'text-white'}`} />
                 )}
               </button>
             </div>
@@ -862,13 +901,13 @@ const ServicePage = () => {
               onClick={() => openFullScreenGallery(0)}
               className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50"
             >
-              <FaImages className="text-lg" />
+              <PhotoIcon className="w-5 h-5" />
               <span>Show all {service.imageUrls.length} photos</span>
             </button>
           </div>
         ) : (
           <div className="w-full h-full bg-slate-200 flex items-center justify-center">
-            <FaImages className="text-6xl text-slate-400" />
+            <PhotoIcon className="w-16 h-16 text-slate-400" />
           </div>
         )}
       </div>
@@ -883,13 +922,13 @@ const ServicePage = () => {
               <h1 className="text-3xl font-semibold text-gray-900 mb-2">{service.name}</h1>
               <div className="flex flex-wrap items-center gap-4 text-gray-600">
                 <span className="flex items-center gap-1">
-                  <FaStar className="text-[#FFB400]" />
+                  <StarIconSolid className="w-4 h-4 text-[#FFB400]" />
                   <span className="font-semibold text-gray-900">{service.rating || '4.5'}</span>
                   <span>({service.reviewCount || '0'} reviews)</span>
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1">
-                  <FaMapMarkerAlt />
+                  <MapPinIcon className="w-4 h-4" />
                   {service.address || 'Available in your area'}
                 </span>
                 <span className="font-medium flex items-center gap-1">
@@ -936,7 +975,7 @@ const ServicePage = () => {
             <div className="py-6 border-b border-gray-200 space-y-4">
               <div className="flex items-start gap-4">
                 <div className="p-2 bg-gray-100 rounded-lg">
-                  <FaHome className="text-xl text-gray-700" />
+                  <HomeIcon className="w-5 h-5 text-gray-700" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900">Provided at your location</h3>
@@ -946,7 +985,7 @@ const ServicePage = () => {
 
               <div className="flex items-start gap-4">
                 <div className="p-2 bg-gray-100 rounded-lg">
-                  <FaClock className="text-xl text-gray-700" />
+                  <ClockIcon className="w-5 h-5 text-gray-700" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900">{enhancedServiceData.responseTime}</h3>
@@ -981,7 +1020,7 @@ const ServicePage = () => {
                   className="mt-4 font-semibold text-gray-900 underline underline-offset-4 hover:text-gray-600 flex items-center gap-2"
                 >
                   {showFullDescription ? 'Show less' : 'Show more'}
-                  {showFullDescription ? <FaChevronUp /> : <FaChevronDown />}
+                  {showFullDescription ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />}
                 </button>
               )}
             </div>
@@ -1042,7 +1081,7 @@ const ServicePage = () => {
                   className="mt-4 font-semibold text-gray-900 underline underline-offset-4 hover:text-gray-600 flex items-center gap-2"
                 >
                   {showAllServices ? 'Show less' : `Show all ${serviceOptions.length} options`}
-                  {showAllServices ? <FaChevronUp /> : <FaChevronDown />}
+                  {showAllServices ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />}
                 </button>
               )}
             </div>
@@ -1052,7 +1091,7 @@ const ServicePage = () => {
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Qualifications</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex items-start gap-3">
-                  <FaBriefcase className="text-2xl text-gray-400 mt-1" />
+                  <BriefcaseIcon className="w-6 h-6 text-gray-400 mt-1" />
                   <div>
                     <h3 className="font-semibold text-gray-900">{enhancedServiceData.yearsExperience} years of experience</h3>
                     <p className="text-gray-600 text-sm mt-1">Professional experience in {getProfessionalTitle(service.type).toLowerCase()}</p>
@@ -1060,7 +1099,7 @@ const ServicePage = () => {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <FaAward className="text-2xl text-gray-400 mt-1" />
+                  <TrophyIcon className="w-6 h-6 text-gray-400 mt-1" />
                   <div>
                     <h3 className="font-semibold text-gray-900">Certified Professional</h3>
                     <p className="text-gray-600 text-sm mt-1">Licensed and insured service provider</p>
@@ -1068,7 +1107,7 @@ const ServicePage = () => {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <FaUsers className="text-2xl text-gray-400 mt-1" />
+                  <UsersIcon className="w-6 h-6 text-gray-400 mt-1" />
                   <div>
                     <h3 className="font-semibold text-gray-900">Notable Clientele</h3>
                     <p className="text-gray-600 text-sm mt-1">Trusted by repeat customers</p>
@@ -1076,7 +1115,7 @@ const ServicePage = () => {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <FaGraduationCap className="text-2xl text-gray-400 mt-1" />
+                  <AcademicCapIcon className="w-6 h-6 text-gray-400 mt-1" />
                   <div>
                     <h3 className="font-semibold text-gray-900">Trained & Certified</h3>
                     <p className="text-gray-600 text-sm mt-1">Professional training completed</p>
@@ -1088,7 +1127,7 @@ const ServicePage = () => {
             {/* Reviews */}
             <div className="pb-6 border-b border-gray-200">
               <div className="flex items-center gap-2 mb-8">
-                <FaStar className="text-[#FFB400] text-2xl drop-shadow-sm" />
+                <StarIconSolid className="text-[#FFB400] w-7 h-7 drop-shadow-sm" />
                 <h2 className="text-2xl font-semibold text-gray-900">
                   {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (service.rating || '4.5')} · {commentCount} reviews
                 </h2>
@@ -1163,15 +1202,15 @@ const ServicePage = () => {
                                   <div className="flex items-center gap-4 mb-4">
                                     <div className="flex items-center">
                                       {[...Array(5)].map((_, i) => (
-                                        <FaStar
+                                        <StarIconSolid
                                           key={i}
-                                          className={`text-[12px] mr-1 ${i < Math.round(rating) ? 'text-[#FFB400]' : 'text-gray-200'}`}
+                                          className={`w-3.5 h-3.5 mr-1 ${i < Math.round(rating) ? 'text-[#FFB400]' : 'text-gray-200'}`}
                                         />
                                       ))}
                                     </div>
                                     {comment.likes?.length > 0 && (
                                       <div className="flex items-center gap-1 text-xs text-rose-500 font-medium">
-                                        <FaHeart />
+                                        <HeartIconSolid className="w-3 h-3" />
                                         {comment.likes.length}
                                       </div>
                                     )}
@@ -1204,7 +1243,7 @@ const ServicePage = () => {
           {/* Right Column - Booking Card */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-6">
-              <div className="border border-gray-200 rounded-xl shadow-lg p-6 bg-white">
+              <div className="border border-slate-200/50 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 lg:p-8 bg-transparent">
                 <div className="flex items-end justify-between mb-6">
                   <div>
                     <span className="text-2xl font-semibold text-gray-900">R{service.regularPrice}</span>
@@ -1287,7 +1326,7 @@ const ServicePage = () => {
                 </div>
               </div>
 
-              <div className="border border-gray-200 rounded-xl p-6 bg-white">
+              <div className="border border-slate-200/50 rounded-3xl p-6 bg-transparent">
                 <h3 className="font-semibold text-gray-900 mb-4">Contact provider</h3>
                 <div className="space-y-3">
                   {whatsappNumber && (
@@ -1359,7 +1398,7 @@ const ServicePage = () => {
         <div className="fixed inset-0 bg-black z-50 flex flex-col">
           <div className="flex items-center justify-between p-4 text-white">
             <button onClick={closeFullScreenGallery} className="p-2 hover:bg-white/10 rounded-full">
-              <FaTimes className="text-2xl" />
+              <XMarkIcon className="w-6 h-6 text-white" />
             </button>
             <span className="font-medium">{modalImageIndex + 1} / {service.imageUrls.length}</span>
             <div className="w-10" />
@@ -1370,7 +1409,7 @@ const ServicePage = () => {
               onClick={prevImage}
               className="absolute left-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white"
             >
-              <FaChevronLeft className="text-xl" />
+              <ChevronLeftIcon className="w-6 h-6" />
             </button>
 
             <img
@@ -1383,7 +1422,7 @@ const ServicePage = () => {
               onClick={nextImage}
               className="absolute right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white"
             >
-              <FaChevronRight className="text-xl" />
+              <ChevronRightIcon className="w-6 h-6" />
             </button>
           </div>
         </div>
@@ -1393,10 +1432,10 @@ const ServicePage = () => {
       {showBookingModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-slate-50 border-b border-gray-100 p-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Complete your booking</h2>
               <button onClick={closeBookingModal} className="p-2 hover:bg-gray-100 rounded-full">
-                <FaTimes />
+                <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
 
@@ -1751,9 +1790,9 @@ const ServicePage = () => {
                         <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                           <div className="flex items-center gap-2">
                             {file.type.startsWith('image/') ? (
-                              <FaFileImage className="text-blue-500" />
+                              <PhotoIcon className="w-5 h-5 text-blue-500" />
                             ) : (
-                              <FaFilePdf className="text-red-500" />
+                              <DocumentTextIcon className="w-5 h-5 text-red-500" />
                             )}
                             <span className="text-sm text-gray-700 truncate max-w-[200px]">
                               {file.name}
@@ -1764,7 +1803,7 @@ const ServicePage = () => {
                             onClick={() => removeAttachment(index)}
                             className="text-gray-400 hover:text-gray-600"
                           >
-                            <FaTimes className="text-sm" />
+                            <XMarkIcon className="w-4 h-4" />
                           </button>
                         </div>
                       ))}
@@ -1790,7 +1829,7 @@ const ServicePage = () => {
               >
                 {isUploading ? (
                   <>
-                    <FaSpinner className="animate-spin" />
+                    <ArrowPathIcon className="w-5 h-5 animate-spin" />
                     Processing...
                   </>
                 ) : (

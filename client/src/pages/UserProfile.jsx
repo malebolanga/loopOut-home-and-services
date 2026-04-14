@@ -146,7 +146,7 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-slate-50">
       {/* Cover Photo */}
       <div className="relative h-64 md:h-80 lg:h-96">
         <img
@@ -168,7 +168,7 @@ const UserProfile = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative">
         {/* Profile Header */}
-        <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-10 border border-gray-100">
+        <div className="bg-transparent rounded-[3rem] p-6 md:p-10 border border-slate-200/50 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <div className="flex flex-col lg:flex-row lg:items-center space-y-8 lg:space-y-0 lg:space-x-12">
             
             {/* Left: Avatar & Interaction */}
@@ -368,7 +368,7 @@ const UserProfile = () => {
               </div>
             </div>
           </div>          {/* Premium Tab Navigation */}
-          <div className="mt-12 bg-white rounded-2xl shadow-sm border border-gray-100 p-1 mb-8 overflow-hidden">
+          <div className="mt-12 bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-slate-200/50 p-1 mb-8 overflow-hidden">
             <nav className="flex flex-wrap md:flex-nowrap">
               {['overview', 'portfolio', 'appreciation', 'about'].map((tab) => (
                 <button
@@ -413,7 +413,7 @@ const UserProfile = () => {
                       ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((item, index) => (
                         <div
                           key={index}
-                          className=" bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-2xl transition-all duration-500 cursor-pointer"
+                          className="bg-transparent rounded-[2rem] overflow-hidden border border-slate-200/50 hover:shadow-2xl transition-all duration-500 cursor-pointer shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
                           onClick={() => {
                             if (item.category === 'service' && item.type === 'carwash') return navigate(`/carwash/${item._id}`);
                             if (item.category === 'helper' && item.type === 'photography') return navigate(`/photography/${item._id}`);
@@ -515,7 +515,7 @@ const UserProfile = () => {
                   ].filter(item => portfolioFilter === 'all' || item.category === portfolioFilter).map((item, index) => (
                     <div
                       key={index}
-                      className="bg-white rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 hover:shadow-2xl transition-all duration-500 cursor-pointer flex flex-col"
+                      className="bg-transparent rounded-[2rem] overflow-hidden border border-slate-200/50 hover:shadow-2xl transition-all duration-500 cursor-pointer shadow-[0_20px_50px_rgba(0,0,0,0.04)] flex flex-col"
                       onClick={() => {
                         if (item.category === 'service' && item.type === 'carwash') return navigate(`/carwash/${item._id}`);
                         if (item.category === 'helper' && item.type === 'photography') return navigate(`/photography/${item._id}`);

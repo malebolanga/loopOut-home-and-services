@@ -1,8 +1,21 @@
 /* eslint-disable react/prop-types */
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MdLocationOn } from "react-icons/md";
-import { FaHeart, FaRegHeart, FaStar, FaBook, FaHeart as FaHeartSolid, FaWrench, FaBroom, FaStar as FaStarSolid, FaCut, FaCamera, FaUser, FaCheck } from "react-icons/fa";
+import { 
+  StarIcon as StarIconSolid, 
+  HeartIcon as HeartIconSolid,
+  CheckBadgeIcon
+} from '@heroicons/react/24/solid';
+import {
+  MapPinIcon,
+  HeartIcon as HeartIconOutline,
+  AcademicCapIcon,
+  WrenchScrewdriverIcon,
+  SparklesIcon,
+  UserIcon,
+  CameraIcon,
+  ScissorsIcon,
+} from '@heroicons/react/24/outline';
 import { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import "../styles/ListingDetails.scss";
@@ -19,21 +32,21 @@ const POSITIVE_KEYWORDS = [
 ];
 
 const HELPER_ICON_CONFIG = {
-  tutor:        { icon: FaBook,        bg: 'bg-blue-50',   text: 'text-blue-700',   label: 'Education' },
-  caregiver:    { icon: FaHeartSolid,  bg: 'bg-rose-50',   text: 'text-rose-700',   label: 'Care' },
-  handyman:     { icon: FaWrench,      bg: 'bg-slate-50',  text: 'text-slate-700',  label: 'Technical' },
-  cleaner:      { icon: FaBroom,       bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Hygiene' },
-  domestic:     { icon: FaBroom,       bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Domestic' },
-  maid:         { icon: FaBroom,       bg: 'bg-teal-50',    text: 'text-teal-700',    label: 'Maid' },
-  beauty:       { icon: FaStarSolid,   bg: 'bg-pink-50',    text: 'text-pink-700',    label: 'Aesthetics' },
-  barber:       { icon: FaCut,         bg: 'bg-indigo-50',  text: 'text-indigo-700',  label: 'Grooming' },
-  tattoo:       { icon: FaStarSolid,   bg: 'bg-zinc-100',   text: 'text-zinc-700',   label: 'Artistry' },
-  photography:  { icon: FaCamera,      bg: 'bg-violet-50',  text: 'text-violet-700',  label: 'Media' },
-  chef:         { icon: FaUser,        bg: 'bg-orange-50',  text: 'text-orange-700',  label: 'Culinary' },
+  tutor:        { icon: AcademicCapIcon, bg: 'bg-blue-50',   text: 'text-blue-700',   label: 'Education' },
+  caregiver:    { icon: HeartIconSolid,  bg: 'bg-rose-50',   text: 'text-rose-700',   label: 'Care' },
+  handyman:     { icon: WrenchScrewdriverIcon, bg: 'bg-slate-50',  text: 'text-slate-700',  label: 'Technical' },
+  cleaner:      { icon: SparklesIcon,    bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Hygiene' },
+  domestic:     { icon: SparklesIcon,    bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Domestic' },
+  maid:         { icon: SparklesIcon,    bg: 'bg-teal-50',    text: 'text-teal-700',    label: 'Maid' },
+  beauty:       { icon: SparklesIcon,    bg: 'bg-pink-50',    text: 'text-pink-700',    label: 'Aesthetics' },
+  barber:       { icon: SparklesIcon,    bg: 'bg-indigo-50',  text: 'text-indigo-700',  label: 'Grooming' },
+  tattoo:       { icon: SparklesIcon,    bg: 'bg-zinc-100',   text: 'text-zinc-700',   label: 'Artistry' },
+  photography:  { icon: CameraIcon,      bg: 'bg-violet-50',  text: 'text-violet-700',  label: 'Media' },
+  chef:         { icon: UserIcon,        bg: 'bg-orange-50',  text: 'text-orange-700',  label: 'Culinary' },
 };
 
 function HelperTypePill({ type }) {
-  const cfg = HELPER_ICON_CONFIG[type] || { icon: FaUser, bg: 'bg-gray-50', text: 'text-gray-500', label: 'Professional' };
+  const cfg = HELPER_ICON_CONFIG[type] || { icon: UserIcon, bg: 'bg-gray-50', text: 'text-gray-500', label: 'Professional' };
   const Icon = cfg.icon;
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${cfg.bg} ${cfg.text} border border-black/5`}>
@@ -108,7 +121,7 @@ function HelperItem({ helper, className = "", compactMode = false }) {
         className={`${className} group transition-all duration-500 relative flex ${
           compactMode 
             ? 'flex-row items-center p-3 hover:bg-gray-50 rounded-2xl border-b border-gray-50 last:border-0' 
-            : 'flex-col h-full rounded-2xl bg-white border border-transparent hover:border-gray-100 hover:shadow-xl'
+            : 'flex-col h-full rounded-2xl border border-transparent hover:border-gray-100 hover:shadow-xl'
         }`}
         onClick={handleCardClick}
       >
@@ -128,7 +141,7 @@ function HelperItem({ helper, className = "", compactMode = false }) {
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             className="absolute top-3 left-3 z-10"
           >
-            <div className="bg-white px-2 py-1 rounded-md shadow-sm border border-gray-100 italic">
+            <div className="bg-slate-50/90 backdrop-blur-sm px-2 py-1 rounded-md shadow-sm border border-gray-100 italic">
                <span className="text-[10px] font-black uppercase tracking-widest text-rose-600">New Professional</span>
             </div>
           </motion.div>
@@ -138,31 +151,31 @@ function HelperItem({ helper, className = "", compactMode = false }) {
         {!compactMode && (
           <button
             onClick={(e) => { e.preventDefault(); toggleFavorite(); }}
-            className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center transition-all active:scale-90"
+            className="absolute top-3 right-3 z-10 w-9 h-9 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center transition-all active:scale-90 border border-white/20"
           >
-            {isFavorite ? <FaHeart className="w-5 h-5 text-rose-500" /> : <FaRegHeart className="w-5 h-5 text-white drop-shadow-md" />}
+            {isFavorite ? <HeartIconSolid className="w-5 h-5 text-rose-500" /> : <HeartIconOutline className="w-5 h-5 text-white" />}
           </button>
         )}
       </div>
 
       {/* Content */}
-      <div className={`${compactMode ? 'ml-4 flex-1 flex flex-row items-center justify-between gap-3 overflow-hidden' : 'pt-3 flex-1 flex flex-col'}`}>
+      <div className={`${compactMode ? 'ml-4 flex-1 flex flex-row items-center justify-between gap-3 overflow-hidden' : 'pt-3 px-1.5 flex-1 flex flex-col'}`}>
         <div className={`flex flex-col min-w-0 ${compactMode ? 'flex-1' : 'mb-1'}`}>
            <div className="flex items-center justify-between">
               <h3 className={`font-black text-gray-950 truncate leading-tight group-hover:text-rose-600 transition-colors ${compactMode ? 'text-[15px]' : 'text-[15px]'}`}>
                 {helper.name}
               </h3>
               {!compactMode && (
-                <div className="flex items-center gap-1">
-                  <FaStar className="w-3 h-3 text-gray-950" />
-                  <span className="text-[13px] font-medium text-gray-950">
+                <div className="flex items-center gap-1.5">
+                  <StarIconSolid className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="text-[14px] font-black text-gray-950 italic">
                     {ratingData.count > 0 ? ratingData.average.toFixed(1) : '4.8'}
                   </span>
                 </div>
               )}
            </div>
            
-           <div className="flex flex-col mt-0.5">
+           <div className="flex flex-col mt-1.5">
               <span className="text-[14px] text-gray-500 font-medium">
                 {helper.type || 'Professional'} Helper
               </span>
