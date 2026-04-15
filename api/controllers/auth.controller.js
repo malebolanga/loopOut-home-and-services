@@ -82,14 +82,29 @@ export const signup = async (req, res, next) => {
         ).catch((err) => console.error('OTP SMS error:', err));
       }
 
-      return res.status(200).json({
-        success: true,
-        requiresVerification: true,
-        email,
-        phone,
-        message: 'Account exists but was unverified. A fresh verification code has been sent.',
-        devHint: process.env.NODE_ENV !== 'production' ? 'Check server console for code' : null
+      // Auto-login the resumed user immediately
+      const token = jwt.sign({ id: existingEmail._id }, process.env.JWT_SECRET, {
+        expiresIn: '365d'
       });
+
+      const updatedUser = await User.findById(existingEmail._id).select('-password');
+      const { password: _p, ...rest } = updatedUser._doc;
+
+      return res
+        .cookie('access_token', token, {
+           httpOnly: true,
+           maxAge: 365 * 24 * 60 * 60 * 1000,
+           sameSite: 'lax',
+           secure: process.env.NODE_ENV === 'production',
+        })
+        .status(201).json({
+          success: true,
+          requiresVerification: false,
+          user: rest,
+          message: 'Welcome back! Your account details have been updated and you are now signed in.',
+          devHint: process.env.NODE_ENV !== 'production' ? 'Check server console for code' : null,
+          otpDebug: process.env.NODE_ENV !== 'production' ? otp : null
+        });
     }
 
     // Case 2: Brand new email, but username taken
@@ -132,15 +147,27 @@ export const signup = async (req, res, next) => {
       ).catch((err) => console.error('OTP SMS error:', err));
     }
 
-    res.status(201).json({
-      success: true,
-      requiresVerification: true,
-      email,
-      phone,
-      message: 'Account created. Please check your email and phone for the verification code.',
-      // In development, we can help by showing where the logs are
-      devHint: process.env.NODE_ENV !== 'production' ? 'Check server console for code' : null
+    // Auto-login the new user immediately
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: '365d'
     });
+
+    const { password: pass, ...rest } = newUser._doc;
+
+    res
+      .cookie('access_token', token, {
+        httpOnly: true,
+        maxAge: 365 * 24 * 60 * 60 * 1000,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production'
+      })
+      .status(201)
+      .json({
+        success: true,
+        requiresVerification: false,
+        user: rest,
+        message: 'Account created successfully! Welcome to LoopOut.',
+      });
   } catch (error) {
     next(error);
   }
@@ -154,7 +181,8 @@ export const signin = async (req, res, next) => {
     const validPassword = bcryptjs.compareSync(password, validUser.password);
     if (!validPassword) return next(errorHandler(401, 'Wrong credentials!'));
 
-    // Block sign-in for unverified email accounts
+    /* 
+    // Deferred Verification: No longer blocking sign-in
     if (!validUser.isVerified) {
       // Re-send a fresh OTP so the user can complete verification
       const otp = generateOtp();
@@ -179,9 +207,11 @@ export const signin = async (req, res, next) => {
         requiresVerification: true,
         email,
         message: 'Please verify your account. A new code has been sent to your email and phone.',
-        devHint: process.env.NODE_ENV !== 'production' ? 'Check server console for code' : null
+        devHint: process.env.NODE_ENV !== 'production' ? 'Check server console for code' : null,
+        otpDebug: process.env.NODE_ENV !== 'production' ? otp : null
       });
     }
+    */
 
     const token = jwt.sign({ id: validUser._id }, process.env.JWT_SECRET, {
       expiresIn: '365d'
@@ -389,7 +419,8 @@ export const resendOtp = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'A new verification code has been sent to your email and phone.',
-      devHint: process.env.NODE_ENV !== 'production' ? 'Check server console for code' : null
+      devHint: process.env.NODE_ENV !== 'production' ? 'Check server console for code' : null,
+      otpDebug: process.env.NODE_ENV !== 'production' ? otp : null
     });
   } catch (error) {
     next(error);

@@ -266,7 +266,18 @@ export default function Profile() {
       setWhatsappConnected(true);
       setWhatsappVerified(currentUser.whatsappVerified || false);
     }
+    if (currentUser?.accessContacts) {
+      setAccessContacts(currentUser.accessContacts);
+    }
   }, [currentUser]);
+
+  const [accessContacts, setAccessContacts] = useState(false);
+  const [isVerifyingPhone, setIsVerifyingPhone] = useState(false);
+  const [verificationOtp, setVerificationOtp] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [verificationError, setVerificationError] = useState('');
+  const [otpDebug, setOtpDebug] = useState(''); // Only for dev mode
 
   useEffect(() => {
     if (file) {
@@ -398,6 +409,67 @@ export default function Profile() {
     }
   };
 
+  const handleRequestPhoneOtp = async () => {
+    setOtpLoading(true);
+    setVerificationError('');
+    try {
+      const res = await fetch('/api/auth/resend-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: currentUser.email }),
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        setVerificationError(data.message);
+        setOtpLoading(false);
+        return;
+      }
+      setOtpSent(true);
+      if (data.otpDebug) {
+        setOtpDebug(data.otpDebug);
+        console.log('Verification Code (Dev Mode):', data.otpDebug);
+      }
+      setOtpLoading(false);
+    } catch (err) {
+      setVerificationError('Could not send verification code. Please try again.');
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyPhoneOtp = async () => {
+    setOtpLoading(true);
+    setVerificationError('');
+    try {
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: currentUser.email,
+          otp: verificationOtp,
+        }),
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        setVerificationError(data.message);
+        setOtpLoading(false);
+        return;
+      }
+      dispatch(updateUserSuccess(data.user));
+      setOtpSent(false);
+      setIsVerifyingPhone(false);
+      setOtpLoading(false);
+      setUpdateSuccess(true);
+      setTimeout(() => setUpdateSuccess(false), 3000);
+    } catch (err) {
+      setVerificationError('Verification failed. Please try again.');
+      setOtpLoading(false);
+    }
+  };
+
   // Camera Functions
   const startCamera = async () => {
     try {
@@ -487,7 +559,7 @@ export default function Profile() {
             const newFaceData = {
               imageUrl: downloadURL,
               verified: true,
-              verifiedAt: new Date().toISOString(),
+              detectedAt: new Date().toISOString(),
               method: 'camera'
             };
 
@@ -632,7 +704,7 @@ export default function Profile() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, accessContacts }),
       });
       const data = await res.json();
       if (data.success === false) {
@@ -821,11 +893,18 @@ export default function Profile() {
     <div className="min-h-screen pb-32 bg-slate-50">
       {/* Account Header - Static and Ultra-Compact */}
       <div className="max-w-6xl mx-auto px-6 pt-24 mb-6">
-        <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
-          <h1 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em]">Account Settings</h1>
-          <div className="flex-1 h-px bg-gray-100"></div>
-          <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
-             <User size={12} className="text-gray-400" />
+        <div className="flex items-center justify-between pb-4 border-b border-gray-200">
+          <div className="flex items-center gap-4">
+             <Link to="/" className="p-2 hover:bg-gray-100 rounded-full transition-colors group">
+                <Home size={18} className="text-gray-400 group-hover:text-[#FF5A5F]" />
+             </Link>
+             <h1 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em]">Account Settings</h1>
+          </div>
+          <div className="flex items-center gap-3">
+             <div className="hidden md:block w-32 h-px bg-gray-100"></div>
+             <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                <User size={14} className="text-gray-400" />
+             </div>
           </div>
         </div>
       </div>
@@ -1086,28 +1165,130 @@ export default function Profile() {
                         />
                       </div>
 
-                      {/* Identity Verification Section */}
-                      <div className="pt-6 border-t border-[#DDDDDD]">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <h4 className="font-semibold text-[#484848]">Identity verification</h4>
-                            <p className="text-sm text-[#767676] mt-1">
-                              Show others you're really you with identity verification
-                            </p>
+                      {/* Identity & Account Verification Section */}
+                      <div className="pt-6 border-t border-[#DDDDDD] space-y-6">
+                        <div>
+                          <h4 className="font-semibold text-[#484848] mb-4 flex items-center gap-2">
+                             <Shield size={20} className="text-[#FF5A5F]" />
+                             Account Verification
+                          </h4>
+                          
+                          {/* Face Verification Row */}
+                          <div className="flex items-center justify-between mb-4 p-4 bg-gray-50 rounded-xl">
+                            <div>
+                              <p className="font-medium text-[#484848]">Face Recognition</p>
+                              <p className="text-sm text-[#767676] mt-1">
+                                Verify your identity via face scan
+                              </p>
+                            </div>
+                            {!isFaceVerified ? (
+                              <button
+                                type="button"
+                                onClick={startCamera}
+                                className="px-4 py-2 border border-[#484848] rounded-lg text-[#484848] font-medium hover:bg-white transition-colors"
+                              >
+                                Scan
+                              </button>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[#00A699] font-medium bg-[#00A699]/10 px-3 py-1 rounded-full">
+                                <CheckCircle size={14} />
+                                Verified
+                              </span>
+                            )}
                           </div>
-                          {!isFaceVerified ? (
-                            <button
-                              type="button"
-                              onClick={startCamera}
-                              className="px-4 py-2 border border-[#484848] rounded-lg text-[#484848] font-medium hover:bg-[#F7F7F7] transition-colors"
-                            >
-                              Verify
-                            </button>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[#00A699] font-medium">
-                              <CheckCircle size={18} />
-                              Verified
-                            </span>
+
+                          {/* Phone Verification Row */}
+                          <div className="flex flex-col gap-4 p-4 bg-gray-50 rounded-xl">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium text-[#484848]">Phone Verification</p>
+                                <p className="text-sm text-[#767676] mt-1">
+                                  Secure your account via SMS
+                                </p>
+                              </div>
+                              {currentUser?.isVerified ? (
+                                <span className="inline-flex items-center gap-1 text-[#00A699] font-medium bg-[#00A699]/10 px-3 py-1 rounded-full">
+                                  <CheckCircle size={14} />
+                                  Verified
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setIsVerifyingPhone(true)}
+                                  className="px-4 py-2 border border-[#484848] rounded-lg text-[#484848] font-medium hover:bg-white transition-colors"
+                                >
+                                  {isVerifyingPhone ? 'Cancel' : 'Verify Now'}
+                                </button>
+                              )}
+                            </div>
+
+                            {isVerifyingPhone && !currentUser?.isVerified && (
+                              <div className="mt-2 space-y-4 animate-fadeIn border-t border-gray-100 pt-4">
+                                {!otpSent ? (
+                                  <div className="flex flex-col gap-3">
+                                    <p className="text-xs text-[#767676]">
+                                      We will send a code to <strong>{currentUser?.phone || formData.phone || 'your phone'}</strong>
+                                    </p>
+                                    <button
+                                      type="button"
+                                      disabled={otpLoading}
+                                      onClick={handleRequestPhoneOtp}
+                                      className="bg-[#484848] text-white py-2 rounded-lg font-medium hover:bg-black transition-colors disabled:opacity-50"
+                                    >
+                                      {otpLoading ? 'Sending...' : 'Send Code'}
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col gap-3">
+                                    <input
+                                      type="text"
+                                      maxLength="6"
+                                      placeholder="6-digit code"
+                                      value={verificationOtp}
+                                      onChange={(e) => setVerificationOtp(e.target.value)}
+                                      className="w-full px-4 py-2 border border-[#DDDDDD] rounded-xl text-center font-bold tracking-[0.5em] text-lg focus:ring-2 focus:ring-[#FF5A5F] outline-none"
+                                    />
+                                    {otpDebug && (
+                                       <p className="text-[10px] text-[#00A699] font-mono text-center">Development Code: {otpDebug}</p>
+                                    )}
+                                    <button
+                                      type="button"
+                                      disabled={otpLoading || verificationOtp.length < 6}
+                                      onClick={handleVerifyPhoneOtp}
+                                      className="bg-[#FF5A5F] text-white py-2 rounded-lg font-medium hover:bg-[#E00B41] transition-colors disabled:opacity-50"
+                                    >
+                                      {otpLoading ? 'Verifying...' : 'Confirm Verification'}
+                                    </button>
+                                    <button 
+                                      type="button"
+                                      onClick={() => setOtpSent(false)}
+                                      className="text-[10px] text-[#767676] hover:underline"
+                                    >
+                                      Didn't get a code? Resend
+                                    </button>
+                                  </div>
+                                )}
+                                {verificationError && (
+                                  <p className="text-xs text-red-500 font-medium">{verificationError}</p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Contacts Access Row */}
+                        <div className="p-4 bg-gray-50 rounded-xl">
+                          <div className="flex items-center justify-between mb-2">
+                             <div>
+                                <p className="font-medium text-[#484848]">LoopOut Contact Access</p>
+                                <p className="text-sm text-[#767676] mt-1">Allow LoopOut to sync your contacts for easy connections</p>
+                             </div>
+                             <ToggleSwitch enabled={accessContacts} setEnabled={setAccessContacts} />
+                          </div>
+                          {accessContacts && (
+                            <p className="text-[10px] text-[#00A699] font-medium flex items-center gap-1">
+                               <CheckCircle size={10} /> Contact syncing active
+                            </p>
                           )}
                         </div>
                       </div>

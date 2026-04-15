@@ -398,27 +398,27 @@ export default function CarWashPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Navigation Header */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-sm' : 'bg-transparent'}`}>
+      {/* Navigation Header - Transparent on top of image */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-200/50' : 'bg-transparent py-2'}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <button 
               onClick={() => navigate(-1)}
-              className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}
+              className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-gray-100 hover:bg-gray-200 text-gray-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
             >
-              <FaArrowLeft className={`text-lg ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
+              <FaArrowLeft className="text-lg" />
             </button>
             
             <div className="flex items-center gap-2">
               <button 
                 onClick={handleShare}
-                className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}
+                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-gray-100 hover:bg-gray-200 text-gray-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
               >
-                <FiShare2 className={`text-lg ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
+                <FiShare2 className="text-lg" />
               </button>
               <button 
                 onClick={() => setIsSaved(!isSaved)}
-                className={`p-2 rounded-full transition-colors ${isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'}`}
+                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-gray-100 hover:bg-gray-200 text-gray-900' : 'bg-black/20 hover:bg-black/40 backdrop-blur-sm'}`}
               >
                 {isSaved ? 
                   <FaHeart className="text-lg text-rose-500" /> : 
@@ -430,9 +430,9 @@ export default function CarWashPage() {
         </div>
       </nav>
 
-      {/* Image Gallery Section - Airbnb Style */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[300px] md:h-[400px] rounded-xl overflow-hidden">
+      {/* Image Gallery Section - Edge to Edge Style */}
+      <div className="relative w-full overflow-hidden bg-slate-900 border-b border-gray-200 shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] lg:h-[600px] w-full">
           {/* Main Large Image */}
           <div 
             className="relative h-full cursor-pointer group"
@@ -485,7 +485,7 @@ export default function CarWashPage() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
           {/* Left Column - Details */}

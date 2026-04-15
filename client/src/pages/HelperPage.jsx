@@ -2203,6 +2203,34 @@ export default function HelperPage() {
               )}
             </div>
 
+            {/* Professional Portfolio - Show All Photos */}
+            {helper.imageUrls && helper.imageUrls.length > 0 && (
+              <div className="pb-8 border-b border-gray-200">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900">Professional Portfolio</h2>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full">
+                    {helper.imageUrls.length} Photos
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {helper.imageUrls.map((url, index) => (
+                    <div 
+                      key={index} 
+                      onClick={() => openFullScreenGallery(index)}
+                      className="aspect-square rounded-2xl overflow-hidden cursor-pointer group relative shadow-sm hover:shadow-md transition-all active:scale-95"
+                    >
+                      <img 
+                        src={url} 
+                        alt={`Portfolio ${index + 1}`} 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Services Offered - FIXED SECTION */}
             {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals') && (
               <div className="pb-6 border-b border-gray-200">

@@ -2095,6 +2095,36 @@ export default function Listing() {
               )}
             </div>
 
+            {/* Property Portfolio - Show All Photos */}
+            {listing.imageUrls && listing.imageUrls.length > 0 && (
+              <div className="py-6 border-b border-gray-200">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Property Portfolio</h2>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full">
+                    {listing.imageUrls.length} Photos
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {listing.imageUrls.map((url, index) => (
+                    <div 
+                      key={index} 
+                      onClick={() => { setGalleryIndex(index); setShowFullGallery(true); }}
+                      className="aspect-square rounded-2xl overflow-hidden cursor-pointer group relative shadow-sm hover:shadow-md transition-all active:scale-95"
+                    >
+                      <ImageWithFallback 
+                        src={url} 
+                        imageUrls={listing.imageUrls}
+                        alt={`Property ${index + 1}`} 
+                        type="property"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
 
             {/* Amenities */}
             {activeAmenities.length > 0 && (

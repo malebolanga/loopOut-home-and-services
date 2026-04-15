@@ -95,6 +95,8 @@ export default function EventPage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [showBookingBelt, setShowBookingBelt] = useState(false);
+  const [showFullGallery, setShowFullGallery] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
   const [showRegistrationOverlay, setShowRegistrationOverlay] = useState(false);
   const [registrationData, setRegistrationData] = useState({
     name: currentUser?.username || '',
@@ -378,6 +380,15 @@ export default function EventPage() {
               ))}
             </div>
 
+            {/* Show All Photos Button */}
+            <button
+              onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
+              className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50 z-20"
+            >
+              <PhotoIcon className="w-5 h-5" />
+              <span>Show all {event.imageUrls.length} photos</span>
+            </button>
+
             {/* Hero Overlay Content - Relocated for maximum visibility */}
             <div className="absolute bottom-6 md:bottom-12 left-0 right-0 z-20 pointer-events-none">
               <div className="w-full px-4 md:px-12">
@@ -453,6 +464,34 @@ export default function EventPage() {
             </button>
           )}
         </section>
+
+        {/* Event Portfolio - Show All Photos */}
+        {event.imageUrls && event.imageUrls.length > 0 && (
+          <section className="relative pt-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-slate-900">Experience Portfolio</h2>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full">
+                {event.imageUrls.length} Photos
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {event.imageUrls.map((url, index) => (
+                <div 
+                  key={index} 
+                  onClick={() => { setGalleryIndex(index); setShowFullGallery(true); }}
+                  className="aspect-square rounded-2xl overflow-hidden cursor-pointer group relative shadow-sm hover:shadow-md transition-all active:scale-95"
+                >
+                  <ImageWithFallback 
+                    src={url} 
+                    alt={`Event ${index + 1}`} 
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
             {/* AI Insights - Premium Card */}
             <section className="p-8 bg-gradient-to-br from-slate-900 to-slate-800 rounded-[3rem] text-white overflow-hidden relative group">
@@ -808,6 +847,46 @@ export default function EventPage() {
           isOpen={showCommentsPanel}
           onClose={() => setShowCommentsPanel(false)}
         />
+      )}
+
+      {/* Full Screen Gallery Overlay */}
+      {showFullGallery && event.imageUrls && event.imageUrls.length > 0 && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-sm z-[300] flex flex-col">
+          <div className="flex items-center justify-between p-4 text-white">
+            <button
+              onClick={() => setShowFullGallery(false)}
+              className="p-2.5 bg-white/10 hover:bg-white/20 rounded-full transition-all text-white backdrop-blur-md"
+            >
+              <XMarkIcon className="w-6 h-6" />
+            </button>
+            <span className="font-medium text-sm tracking-widest uppercase">
+              {galleryIndex + 1} / {event.imageUrls.length}
+            </span>
+            <div className="w-10" /> {/* Spacer */}
+          </div>
+
+          <div className="flex-1 flex items-center justify-center p-4 relative h-full w-full">
+            <button
+              onClick={() => setGalleryIndex(prev => prev === 0 ? event.imageUrls.length - 1 : prev - 1)}
+              className="absolute left-4 md:left-8 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors z-10"
+            >
+              <ChevronLeftIcon className="w-6 h-6" />
+            </button>
+
+            <img
+              src={event.imageUrls[galleryIndex]}
+              alt={`Event gallery image ${galleryIndex + 1}`}
+              className="max-h-[85vh] max-w-[90vw] object-contain rounded-lg shadow-2xl select-none"
+            />
+
+            <button
+              onClick={() => setGalleryIndex(prev => prev === event.imageUrls.length - 1 ? 0 : prev + 1)}
+              className="absolute right-4 md:right-8 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors z-10"
+            >
+              <ChevronRightIcon className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

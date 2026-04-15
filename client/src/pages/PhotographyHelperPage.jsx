@@ -239,47 +239,33 @@ export default function PhotographyHelperPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white shadow-lg' : 'bg-transparent'
-      }`}>
+      {/* Navigation Header - Transparent on top of image */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-200/50' : 'bg-transparent py-2'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <button 
               onClick={() => navigate(-1)} 
-              className={`p-2 rounded-full transition-colors ${
-                isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
-              }`}
+              className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-gray-100 hover:bg-gray-200 text-gray-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
             >
-              <FaArrowLeft className={`text-xl ${
-                isScrolled ? 'text-gray-900' : 'text-white'
-              }`} />
+              <FaArrowLeft className="text-xl" />
             </button>
             
             <div className="flex items-center gap-3">
               <button 
                 onClick={handleShare}
-                className={`p-2 rounded-full transition-colors ${
-                  isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
-                }`}
+                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-gray-100 hover:bg-gray-200 text-gray-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
               >
-                <FiShare2 className={`text-xl ${
-                  isScrolled ? 'text-gray-900' : 'text-white'
-                }`} />
+                <FiShare2 className="text-xl" />
               </button>
               
               <button 
                 onClick={() => setIsLiked(!isLiked)}
-                className={`p-2 rounded-full transition-colors ${
-                  isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
-                }`}
+                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-gray-100 hover:bg-gray-200 text-gray-900' : 'bg-black/20 hover:bg-black/40 backdrop-blur-sm'}`}
               >
                 {isLiked ? (
                   <FaHeart className="text-xl text-rose-500" />
                 ) : (
-                  <FiHeart className={`text-xl ${
-                    isScrolled ? 'text-gray-900' : 'text-white'
-                  }`} />
+                  <FiHeart className={`text-xl ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
                 )}
               </button>
             </div>
@@ -287,9 +273,9 @@ export default function PhotographyHelperPage() {
         </div>
       </nav>
 
-      {/* Image Gallery Grid - Airbnb Style */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 rounded-xl overflow-hidden h-[300px] md:h-[400px] relative">
+      {/* Image Gallery Grid - Edge to Edge Style */}
+      <div className="relative w-full overflow-hidden bg-slate-900">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] lg:h-[600px] w-full">
           {/* Main Large Image */}
           <div className="relative h-full cursor-pointer group" onClick={() => openImageModal(0)}>
             <img

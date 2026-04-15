@@ -1,8 +1,10 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import OAuth from '../components/OAuth';
 import { FaSpinner, FaPhone, FaMapMarkerAlt, FaShieldAlt, FaArrowLeft, FaCheck } from 'react-icons/fa';
 import BrandLogo from '../components/BrandLogo';
+import { useDispatch } from 'react-redux';
+import { signInSuccess } from '../redux/user/userSlice';
 
 export default function SignUp() {
   const [step, setStep] = useState(1);
@@ -19,6 +21,20 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const navigate = useNavigate();
+  const locationState = useLocation();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    // Redirect logic handled in SignIn.jsx if unverified, 
+    // but here we just ensure state is captured if needed.
+    if (locationState.state?.email) {
+      setFormData(prev => ({
+        ...prev,
+        email: locationState.state.email || '',
+        phone: locationState.state.phone || '',
+      }));
+    }
+  }, [locationState.state]);
 
   const handleChange = (e) => {
     const { id, value, type, checked } = e.target;
@@ -74,14 +90,10 @@ export default function SignUp() {
         throw new Error(data.message || 'Failed to sign up. Please try again.');
       }
 
-      if (data.requiresVerification) {
-        setStep(3); // OTP Step
-        if (data.devHint) {
-            console.log('💡 DEV TIP:', data.devHint);
-            setFormData(prev => ({ ...prev, devHint: data.devHint }));
-        }
-      } else {
-        navigate('/sign-in');
+      if (res.ok) {
+        // Deferred Verification: Log in and go home
+        dispatch(signInSuccess(data.user || data));
+        navigate('/');
       }
       setLoading(false);
     } catch (error) {
@@ -90,58 +102,7 @@ export default function SignUp() {
     }
   };
 
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await fetch('/api/auth/verify-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-            email: formData.email,
-            otp: formData.otp
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || 'Verification failed.');
-      }
-
-      // Success! The verify-otp endpoint returns the user and sets the cookie
-      navigate('/');
-      setLoading(false);
-    } catch (error) {
-      setLoading(false);
-      setError(error.message);
-    }
-  };
-
-  const resendOtp = async () => {
-    try {
-        setResending(true);
-        setError(null);
-        const res = await fetch('/api/auth/resend-otp', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email: formData.email }),
-        });
-        const data = await res.json();
-        if(!res.ok) throw new Error(data.message);
-        alert('Verification code resent!');
-    } catch (err) {
-        setError(err.message);
-    } finally {
-        setResending(false);
-    }
-  };
+  // Verification logic moved to Profile
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 sm:p-8">
@@ -165,7 +126,7 @@ export default function SignUp() {
         <div className="absolute top-0 left-0 w-full h-1 bg-white/10">
             <div 
                 className="h-full bg-gradient-to-r from-[#E61E4D] to-[#D70466] transition-all duration-300"
-                style={{ width: `${(step / 3) * 100}%` }}
+                style={{ width: `${(step / 2) * 100}%` }}
             ></div>
         </div>
 
@@ -299,73 +260,6 @@ export default function SignUp() {
             </div>
         )}
 
-        {step === 3 && (
-            <div className="animate-slide-in-right py-4">
-                <div className="flex justify-center mb-6">
-                    <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center border border-white/20">
-                        <FaShieldAlt className="text-2xl text-[#E61E4D]" />
-                    </div>
-                </div>
-                <h2 className="text-[22px] font-semibold text-white mb-2 text-center drop-shadow-sm">
-                  Verify your email
-                </h2>
-                <p className="text-center text-gray-200 mb-8 text-[14px]">
-                  We've sent a 6-digit code to <br />
-                  <span className="font-semibold text-white">{formData.email}</span>
-                  {formData.phone && (
-                      <span className="block mt-1 text-gray-300">
-                          and your phone <span className="text-white font-semibold">{formData.phone}</span>
-                      </span>
-                  )}
-                </p>
-
-                {formData.devHint && (
-                    <div className="mb-6 p-4 bg-blue-500/20 border border-blue-400/50 rounded-2xl flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center shrink-0">
-                            <span className="text-xl">💡</span>
-                        </div>
-                        <p className="text-xs text-blue-100 leading-tight">
-                            <span className="font-bold block mb-1">Testing Mode:</span>
-                            {formData.devHint}
-                        </p>
-                    </div>
-                )}
-
-                <form onSubmit={handleVerifyOtp} className="flex flex-col gap-6">
-                  <input
-                    type="text"
-                    maxLength="6"
-                    placeholder="Enter code"
-                    className="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-2xl text-white text-center text-3xl font-bold tracking-[0.5em] placeholder-gray-500 focus:ring-1 focus:ring-white transition-all shadow-inner"
-                    id="otp"
-                    value={formData.otp}
-                    onChange={handleChange}
-                    required
-                  />
-                  
-                  <button 
-                    disabled={loading}
-                    className="w-full bg-white text-black py-4 rounded-xl font-bold hover:bg-gray-100 transition-all flex items-center justify-center gap-2"
-                  >
-                    {loading ? <FaSpinner className="animate-spin" /> : <><FaCheck /> Verify & Finish</>}
-                  </button>
-
-                  <div className="text-center">
-                    <p className="text-sm text-gray-400">
-                        Didn't receive the code?{' '}
-                        <button 
-                            type="button"
-                            onClick={resendOtp}
-                            disabled={resending}
-                            className="text-[#E61E4D] font-bold hover:underline disabled:opacity-30"
-                        >
-                            {resending ? 'Sending...' : 'Resend'}
-                        </button>
-                    </p>
-                  </div>
-                </form>
-            </div>
-        )}
 
         {/* Footer Link */}
         {step < 3 && (
