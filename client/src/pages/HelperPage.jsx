@@ -2521,8 +2521,18 @@ export default function HelperPage() {
             </div>
           </div>
 
+        {/* Mutual Connections Section */}
+        <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
+          <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter italic uppercase">
+            <UsersIcon className="text-rose-500 w-6 h-6" />
+            Mutual Connections
+          </h2>
+          <div className="bg-white rounded-[2rem] p-8 border border-slate-200/60 shadow-sm">
+            <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} detailed={true} />
+          </div>
+        </div>
 
-              {/* Similar Helpers */}
+        {/* Similar Helpers */}
           {similarHelpers.length > 0 && (
             <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
               <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter italic uppercase">

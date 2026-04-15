@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { MapPinIcon, ClockIcon, UserIcon, HeartIcon, ChatBubbleLeftEllipsisIcon, HandThumbUpIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon, ClockIcon, UserIcon, HeartIcon, ChatBubbleLeftEllipsisIcon, HandThumbUpIcon, PhoneIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { useState } from 'react';
 
@@ -66,13 +66,21 @@ const LookingForItem = ({ request }) => {
       </div>
 
       <div className="mt-auto pt-6 border-t border-gray-50 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-gray-400">
-            <MapPinIcon className="w-4 h-4 shrink-0" />
-            <span className="text-[11px] font-black uppercase tracking-widest truncate">{request.location}</span>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-gray-400">
+              <MapPinIcon className="w-4 h-4 shrink-0" />
+              <span className="text-[11px] font-black uppercase tracking-widest truncate">{request.location}</span>
+            </div>
+            <div className="text-[11px] font-black text-rose-600 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-100 flex flex-col items-end">
+              <span className="text-[9px] text-rose-400 font-black uppercase tracking-widest mb-0.5">Bid Price</span>
+              {request.budget ? `R${request.budget.toLocaleString()}` : "OPEN BID"}
+            </div>
           </div>
-          <div className="text-[11px] font-black text-gray-900 bg-gray-50 px-3 py-1.5 rounded-full">
-            {request.budget ? `R${request.budget.toLocaleString()}` : "OPEN BUDGET"}
+          
+          <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-2xl border border-green-100 w-fit">
+            <PhoneIcon className="w-4 h-4" />
+            <span className="text-[11px] font-black tracking-widest">{request.contact || 'No contact'}</span>
           </div>
         </div>
 

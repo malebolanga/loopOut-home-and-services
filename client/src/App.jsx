@@ -191,7 +191,7 @@ const AnimatedRoutes = () => {
         <Route path="/ai" element={<PageTransition><Ai /></PageTransition>} />
         <Route path="/content" element={<PageTransition><Content /></PageTransition>} />
         <Route path="/first-time-buyers" element={<PageTransition><ArticlePages /></PageTransition>} />
-        <Route path="/help-center" element={<PageTransition><AIHelpCenter /></PageTransition>} />
+        <Route path="/ai-help-center" element={<PageTransition><AIHelpCenter /></PageTransition>} />
 
         {/* Informational Routes */}
         <Route path="/propertysafety" element={<PageTransition><PropertySafety /></PageTransition>} />

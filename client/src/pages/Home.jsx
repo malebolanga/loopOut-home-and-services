@@ -42,7 +42,8 @@ import {
   HandThumbUpIcon,
   HandThumbDownIcon,
   ChatBubbleOvalLeftEllipsisIcon,
-  ChatBubbleLeftEllipsisIcon
+  ChatBubbleLeftEllipsisIcon,
+  PhoneIcon
 } from '@heroicons/react/24/outline';
 import {
   StarIcon as StarIconSolid,
@@ -1166,40 +1167,49 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
         {request.description}
       </p>
 
-      <div className="flex items-center justify-between pt-5 border-t border-gray-50 mt-auto">
-        <div className="flex items-center gap-4">
-          <motion.button 
-            whileTap={{ scale: 0.8 }}
-            onClick={(e) => { e.stopPropagation(); onLike(request._id); }}
-            className={`flex items-center gap-1.5 transition-all ${isLiked ? 'text-rose-500' : 'text-gray-400 hover:text-gray-900'}`}
-          >
-            {isLiked ? <HandThumbUpIconSolid className="w-5 h-5" /> : <HandThumbUpIcon className="w-5 h-5" />}
-            <span className="text-xs font-black">{request.likes?.length || 0}</span>
-          </motion.button>
-          
-          <motion.button 
-            whileTap={{ scale: 0.8 }}
-            onClick={(e) => { e.stopPropagation(); onDislike(request._id); }}
-            className={`flex items-center gap-1.5 transition-all ${isDisliked ? 'text-gray-900' : 'text-gray-400 hover:text-gray-900'}`}
-          >
-            {isDisliked ? <HandThumbDownIconSolid className="w-5 h-5" /> : <HandThumbDownIcon className="w-5 h-5" />}
-            <span className="text-xs font-black">{request.dislikes?.length || 0}</span>
-          </motion.button>
-
-          <div className="w-1 h-1 bg-gray-200 rounded-full" />
-          
-          <div className="flex items-center gap-1.5 text-gray-400">
-             <ChatBubbleLeftEllipsisIcon className="w-5 h-5" />
-             <span className="text-xs font-black">{request.comments?.length || 0} Comments</span>
+      <div className="flex flex-col gap-3 pt-4 border-t border-gray-50 mt-auto">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1.5 rounded-xl border border-green-100 shadow-sm">
+            <PhoneIcon className="w-4 h-4" />
+            <span className="text-[11px] font-black tracking-widest">{request.contact || "Not provided"}</span>
+          </div>
+          <div className="flex flex-col items-end">
+            <span className="text-[9px] text-rose-400 font-black uppercase tracking-widest mb-0.5">Bid Price</span>
+            <div className="text-[12px] font-black text-rose-600 bg-rose-50 px-3 py-1 rounded-xl border border-rose-100 shadow-sm">
+              {request.budget ? `R${request.budget.toLocaleString()}` : "OPEN BID"}
+            </div>
           </div>
         </div>
 
-        <button 
-           onClick={(e) => { e.stopPropagation(); window.open(`https://wa.me/${request.contact}`); }}
-           className="w-10 h-10 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-all flex items-center justify-center shadow-sm"
-        >
-          <ChatBubbleOvalLeftEllipsisIcon className="w-5 h-05" />
-        </button>
+        <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center gap-4">
+            <motion.button 
+              whileTap={{ scale: 0.8 }}
+              onClick={(e) => { e.stopPropagation(); onLike(request._id); }}
+              className={`flex items-center gap-1.5 transition-all ${isLiked ? 'text-rose-500' : 'text-gray-400 hover:text-gray-900'}`}
+            >
+              {isLiked ? <HandThumbUpIconSolid className="w-5 h-5" /> : <HandThumbUpIcon className="w-5 h-5" />}
+              <span className="text-xs font-black">{request.likes?.length || 0}</span>
+            </motion.button>
+            
+            <motion.button 
+              whileTap={{ scale: 0.8 }}
+              onClick={(e) => { e.stopPropagation(); onDislike(request._id); }}
+              className={`flex items-center gap-1.5 transition-all ${isDisliked ? 'text-gray-900' : 'text-gray-400 hover:text-gray-900'}`}
+            >
+              {isDisliked ? <HandThumbDownIconSolid className="w-5 h-5" /> : <HandThumbDownIcon className="w-5 h-5" />}
+              <span className="text-xs font-black">{request.dislikes?.length || 0}</span>
+            </motion.button>
+          </div>
+
+          <button 
+             onClick={(e) => { e.stopPropagation(); window.open(`https://wa.me/${request.contact}`); }}
+             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all shadow-lg active:scale-95 group"
+          >
+             <ChatBubbleOvalLeftEllipsisIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
+             <span className="text-[10px] font-black uppercase tracking-widest">Chat</span>
+          </button>
+        </div>
       </div>
     </motion.div>
   );

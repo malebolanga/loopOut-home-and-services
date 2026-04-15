@@ -248,7 +248,7 @@ const LookingForDiscovery = () => {
                          <p className="text-gray-600 leading-relaxed font-medium">{selectedRequest.description}</p>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="p-4 bg-gray-50 rounded-2xl flex items-center gap-3">
                              <MapPinIcon className="w-5 h-5 text-rose-500" />
                              <div>
@@ -256,11 +256,20 @@ const LookingForDiscovery = () => {
                                 <p className="text-sm font-bold text-gray-900 truncate">{selectedRequest.location}</p>
                              </div>
                           </div>
-                          <div className="p-4 bg-gray-50 rounded-2xl flex items-center gap-3">
+                          <div className="p-4 bg-rose-50 rounded-2xl flex items-center gap-3 border border-rose-100">
+                             <SparklesIcon className="w-5 h-5 text-rose-500" />
+                             <div>
+                                <p className="text-[10px] text-rose-400 font-black uppercase tracking-widest">Bid Price</p>
+                                <p className="text-sm font-black text-rose-600 truncate">
+                                   {selectedRequest.budget ? `R${selectedRequest.budget.toLocaleString()}` : "OPEN BID"}
+                                </p>
+                             </div>
+                          </div>
+                          <div className="p-4 bg-green-50 rounded-2xl flex items-center gap-3 border border-green-100">
                              <PhoneIcon className="w-5 h-5 text-green-500" />
                              <div>
-                                <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Contact</p>
-                                <p className="text-sm font-bold text-gray-900">WhatsApp</p>
+                                <p className="text-[10px] text-green-400 font-black uppercase tracking-widest">Contact Number</p>
+                                <p className="text-sm font-black text-green-600 truncate">{selectedRequest.contact}</p>
                              </div>
                           </div>
                       </div>
