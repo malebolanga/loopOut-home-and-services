@@ -151,6 +151,19 @@ const userSchema = new mongoose.Schema({
     listingLimit: {
         type: Number,
         default: 1
+    },
+    contacts: [{
+        type: String,
+    }],
+    accessContacts: {
+        type: Boolean,
+        default: false
+    },
+    otp: {
+        type: String,
+    },
+    otpExpiry: {
+        type: Date,
     }
 }, { timestamps: true });
 

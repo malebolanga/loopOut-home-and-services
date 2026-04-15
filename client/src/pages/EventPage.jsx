@@ -80,6 +80,7 @@ import CommentsSidePanelEvent from '../components/CommentsSidePanelEvent';
 import { useWishlist } from '../hooks/useWishlist';
 import EventItem from '../components/EventItem';
 import ImageWithFallback from '../components/ImageWithFallback';
+import MutualFriends from '../components/MutualFriends';
 
 export default function EventPage() {
   const { currentUser } = useSelector((state) => state.user);
@@ -620,6 +621,11 @@ export default function EventPage() {
                         </div>
                       </div>
                    </Link>
+                   
+                   {/* Mutual Friends Section */}
+                   <div className="bg-white/5 rounded-2xl p-4 mb-6 border border-white/5">
+                     <MutualFriends targetUserId={event.userRef?._id || event.userRef} dark={true} />
+                   </div>
 
                    <div className="space-y-3">
                       <a href={`tel:${event.organizerContact}`} className="flex items-center justify-center gap-3 w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-sm font-bold transition-all border border-white/5">

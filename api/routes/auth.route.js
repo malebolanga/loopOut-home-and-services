@@ -4,7 +4,9 @@ import {
   signOut, 
   signin, 
   signup,
-  validateToken
+  validateToken,
+  verifyOtp,
+  resendOtp
 } from '../controllers/auth.controller.js';
 
 const router = express.Router();
@@ -14,5 +16,7 @@ router.post("/signin", signin);
 router.post('/google', google);
 router.get('/signout', signOut);
 router.post('/validate-token', validateToken);
+router.post('/verify-otp', verifyOtp);
+router.post('/resend-otp', resendOtp);
 
 export default router;

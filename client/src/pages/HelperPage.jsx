@@ -81,6 +81,7 @@ import 'swiper/css/free-mode';
 // Swiper styles already imported above
 
 import ImageWithFallback from '../components/ImageWithFallback';
+import MutualFriends from '../components/MutualFriends';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
@@ -2153,6 +2154,9 @@ export default function HelperPage() {
                   )}
                 </div>
               </Link>
+              
+              {/* Mutual Friends Section */}
+              <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} />
             </div>
 
 

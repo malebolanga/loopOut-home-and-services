@@ -10,18 +10,43 @@ dotenv.config();
  * @param {string} html - HTML content (optional)
  * @returns {Promise} 
  */
+/**
+ * Send an email using SMTP (e.g. Gmail, SendGrid, etc.)
+ */
 export const sendEmail = async (to, subject, text, html) => {
+  // Cinematic Development Log Fallback
+  // This ensures that even if SMTP isn't configured, developers can see the OTP.
+  const isOtpEmail = subject.toLowerCase().includes('verification code');
+  
+  if (isOtpEmail) {
+    const otpMatch = text.match(/\d{6}/);
+    const otp = otpMatch ? otpMatch[0] : 'UNKNOWN';
+    
+    console.log('\n' + '═'.repeat(50));
+    console.log('📬  MASTERPIECE VERIFICATION SYSTEM');
+    console.log('═'.repeat(50));
+    console.log(`TO:      ${to}`);
+    console.log(`CODE:    ${otp}`);
+    console.log(`SUBJECT: ${subject}`);
+    console.log('═'.repeat(50) + '\n');
+  }
+
   try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.warn('⚠️  SMTP credentials missing in .env. Email not sent, but logged above.');
+      return { success: true, simulated: true };
+    }
+
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
       port: process.env.EMAIL_PORT || 587,
-      secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for other ports
+      secure: process.env.EMAIL_SECURE === 'true',
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
       tls: {
-        rejectUnauthorized: false // Helps in some production staging environments
+        rejectUnauthorized: false
       }
     });
 
@@ -33,10 +58,10 @@ export const sendEmail = async (to, subject, text, html) => {
       html: html || text,
     });
 
-    console.log('Message sent: %s', info.messageId);
+    console.log('✅ Email sent: %s', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('❌ Error sending email:', error.message);
     return { success: false, error };
   }
 };

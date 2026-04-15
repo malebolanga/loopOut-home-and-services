@@ -455,3 +455,41 @@ export const getFollowing = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getMutualFriends = async (req, res, next) => {
+  try {
+    if (!req.user || !req.user.id) return next(errorHandler(401, 'Unauthorized'));
+    
+    const targetUserId = req.params.id;
+    const currentUserId = req.user.id;
+
+    const currentUser = await User.findById(currentUserId).select('contacts accessContacts');
+    if (!currentUser) return next(errorHandler(404, 'Current user not found'));
+
+    if (!currentUser.accessContacts || !currentUser.contacts || currentUser.contacts.length === 0) {
+       return res.status(200).json([]);
+    }
+
+    // 1. Find users whose phone exists in current user's contacts
+    const contactsInApp = await User.find({
+      phone: { $in: currentUser.contacts },
+      _id: { $ne: currentUserId }
+    }).select('username avatar phone following followers');
+
+    // 2. Filter contacts who follow or are followed by the target user
+    const mutuals = contactsInApp.filter(contact => {
+        const isFollowingTarget = contact.following?.some(id => id.toString() === targetUserId);
+        const isFollowedByTarget = contact.followers?.some(id => id.toString() === targetUserId);
+        return isFollowingTarget || isFollowedByTarget;
+    });
+
+    res.status(200).json(mutuals.map(m => ({
+        username: m.username,
+        avatar: m.avatar,
+        _id: m._id
+    })));
+
+  } catch (error) {
+    next(error);
+  }
+};

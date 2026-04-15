@@ -12,6 +12,7 @@ import emailjs from "emailjs-com";
 import Calendar from "react-calendar";
 import CommentsSidePanel from '../components/CommentsSidePanel';
 import ImageWithFallback from '../components/ImageWithFallback';
+import MutualFriends from '../components/MutualFriends';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import { useWishlist } from '../hooks/useWishlist';
 
@@ -2076,6 +2077,9 @@ export default function Listing() {
                   </p>
                 </div>
               </Link>
+              
+              {/* Mutual Friends Section */}
+              <MutualFriends targetUserId={listing.userRef?._id || listing.userRef} />
             </div>
 
             {/* Description */}
