@@ -3,10 +3,9 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import { motion, AnimatePresence } from "framer-motion";
 
-export default function Booking(props) { // Fixed: Use `props` instead of destructuring directly
-  const listing = props.listing || {}; // Fixed: Safely handle `undefined` listing
-
+export default function Booking({ listing = {} }) {
   const [showCalendar, setShowCalendar] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -15,144 +14,222 @@ export default function Booking(props) { // Fixed: Use `props` instead of destru
 
   const sendBookingInformation = async (userId, startDate, endDate, name, contact) => {
     try {
-      const response = await fetch("/api/send-booking-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId,
-          startDate,
-          endDate,
-          name,
-          contact,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to send booking email");
+      // Format the contact number of the host for WhatsApp
+      // Uses listing contact/phone if available, otherwise falls back to a default number.
+      const hostContact = listing?.contact || listing?.userRef?.phone || listing?.userRef?.contact || "27685601550";
+      let cleanedHostContact = hostContact.toString().replace(/\D/g, "");
+      if (cleanedHostContact.startsWith("0")) {
+        cleanedHostContact = "27" + cleanedHostContact.substring(1);
       }
 
-      alert("Booking information sent to the property owner.");
+      // Format client contact for the Quick Actions reply links
+      let cleanedClientContact = contact.toString().replace(/\D/g, "");
+      if (cleanedClientContact.startsWith("0") && cleanedClientContact.length === 10) {
+        cleanedClientContact = "27" + cleanedClientContact.substring(1);
+      }
+
+      const checkInDate = new Date(startDate).toLocaleDateString("en-US", { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+      const checkOutDate = new Date(endDate).toLocaleDateString("en-US", { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+
+      // Action Messages
+      const acceptMessage = `Accept the booking for ${name}, I accept your request for ${listing?.name || "the property"} on ${checkInDate}. See you then!`;
+      const declineMessage = `Decline the booking for ${name}, I'm unable to accept the request for ${checkInDate}. Can we try another time?`;
+
+      const verificationCode = Math.floor(100000 + Math.random() * 900000);
+
+      const mapLink = listing?.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(listing.address)}` : '';
+
+      // Create a beautifully formatted WhatsApp message using standard WhatsApp markdown (*bold*, _italic_)
+      let message = `🏠 *PROPERTY INQUIRY* 📬\n\n`;
+      message += `*━━━━━━━━━━━━━━━━━━━━*\n`;
+      message += `📍 *PROPERTY OVERVIEW*\n`;
+      message += `*━━━━━━━━━━━━━━━━━━━━*\n`;
+      message += `🏠 *Property:* ${listing?.name || "LoopOut Listing"}\n`;
+      if (listing?.address) {
+        message += `📍 *Location:* ${listing.address}\n`;
+        message += `🗺️ *View Map:* ${mapLink}\n`;
+      }
+      message += `💰 *Listed Price:* R${listing?.regularPrice?.toLocaleString() || "0"}\n`;
+      message += `📋 *Offering:* ${listing?.type === 'rent' ? 'For Rent' : listing?.type === 'sale' ? 'For Sale' : 'Stay'}\n\n`;
+
+      message += `*👤 INQUIRER DETAILS*\n`;
+      message += `• *Name:* ${name}\n`;
+      message += `• *Contact:* ${contact}\n\n`;
+
+      message += `*📅 STAY DETAILS*\n`;
+      message += `• *Check-in:* ${checkInDate}\n`;
+      message += `• *Check-out:* ${checkOutDate}\n\n`;
+
+      message += `*━━━━━━━━━━━━━━━━━━━━*\n`;
+      message += `⚡ *HOST QUICK ACTIONS:*\n`;
+      message += `✅ *AVAILABLE:* https://wa.me/${cleanedClientContact}?text=${encodeURIComponent(acceptMessage)}\n`;
+      message += `❌ *UNAVAILABLE:* https://wa.me/${cleanedClientContact}?text=${encodeURIComponent(declineMessage)}\n\n`;
+
+      message += `*Verification Code:* ${verificationCode}\n`;
+      message += `_Sent via LoopOut Premium Platform_`;
+
+      const whatsappUrl = `https://wa.me/${cleanedHostContact}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+      
     } catch (error) {
-      console.error("Error sending booking information:", error);
-      alert("An error occurred while sending the booking information.");
+      console.error("Error generating WhatsApp booking request:", error);
+      alert("An error occurred while creating the booking request.");
     }
   };
 
   if (!listing.type) {
-    return <p>Listing data is not available.</p>;
+    return <p className="text-gray-500 italic text-sm mt-4">Booking is unavailable for this listing.</p>;
   }
 
+  // Only show for relevant listing types
+  const isBookable = ["book", "over", "rent", "rent-short", "rent-long"].some(t => listing.type.includes(t));
+
   return (
-    <main>
-      <div>
-        <div className="flex justify-between items-center mt-4">
-          {["book", "over"].includes(listing.type) && (
-            <button
-              onClick={() => setShowCalendar(true)}
-              className="bg-blue-500 text-white p-2 rounded"
-            >
-              Select Booking Dates
-            </button>
-          )}
-        </div>
+    <div className="w-full">
+      {isBookable && (
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setShowCalendar(true)}
+          className="w-full py-4 mt-6 bg-gradient-to-r from-rose-600 to-pink-500 text-white rounded-2xl font-black uppercase tracking-widest shadow-[0_10px_20px_rgba(225,29,72,0.3)] hover:shadow-[0_15px_30px_rgba(225,29,72,0.4)] transition-all flex items-center justify-center gap-2"
+        >
+          <span>Reserve Dates</span>
+          <span>📅</span>
+        </motion.button>
+      )}
 
+      <AnimatePresence>
         {showCalendar && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-            style={{ zIndex: 9999 }}
-          >
-            <div className="bg-white p-4 rounded shadow-lg" style={{ zIndex: 10000 }}>
-              <h2 className="text-lg font-bold mb-4">Select Dates</h2>
-
-              <div>
-                <h3>Start Date</h3>
-                <Calendar
-                  onChange={(date) => setStartDate(date)} // Fixed: Ensure correct date type is passed
-                  value={startDate}
-                  minDate={new Date()}
-                />
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCalendar(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998]"
+            />
+            
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed inset-0 m-auto w-[90%] max-w-md h-fit max-h-[90vh] bg-white rounded-[2.5rem] shadow-2xl z-[9999] overflow-y-auto scrollbar-hide flex flex-col"
+            >
+              {/* Decorative Header Background */}
+              <div className="relative h-24 bg-gradient-to-br from-rose-500 to-indigo-600 flex items-center justify-center rounded-t-[2.5rem] shrink-0">
+                <div className="absolute inset-0 bg-black/10 rounded-t-[2.5rem]" />
+                <h2 className="relative z-10 text-xl font-black text-white uppercase tracking-widest">
+                   Select Dates
+                </h2>
               </div>
 
-              {startDate && (
-                <div className="mt-4">
-                  <h3>End Date</h3>
-                  <Calendar
-                    onChange={(date) => setEndDate(date)}
-                    value={endDate}
-                    minDate={startDate}
-                  />
-                </div>
-              )}
+              <div className="p-6 md:p-8 flex flex-col gap-6">
+                
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Check-in Date</h3>
+                    <div className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                      <Calendar
+                        onChange={(date) => {
+                          setStartDate(date);
+                          if (endDate && date > endDate) setEndDate(null);
+                        }}
+                        value={startDate}
+                        minDate={new Date()}
+                        className="w-full border-none p-2 !font-sans custom-calendar"
+                      />
+                    </div>
+                  </div>
 
-              <form className="mt-4">
-                <div className="mb-4">
-                  <label htmlFor="name" className="block font-medium">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    className="w-full p-2 border border-gray-300 rounded"
-                    placeholder="Enter your name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
+                  {startDate && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="origin-top"
+                    >
+                      <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 px-1 mt-4">Check-out Date</h3>
+                      <div className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                        <Calendar
+                          onChange={(date) => setEndDate(date)}
+                          value={endDate}
+                          minDate={startDate}
+                          className="w-full border-none p-2 !font-sans custom-calendar"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
-                <div className="mb-4">
-                  <label htmlFor="contact" className="block font-medium">
-                    Contact Information
-                  </label>
-                  <input
-                    type="text"
-                    id="contact"
-                    className="w-full p-2 border border-gray-300 rounded"
-                    placeholder="Enter your contact information"
-                    value={contact}
-                    onChange={(e) => setContact(e.target.value)}
-                    required
-                  />
+
+                <div className="w-full h-px bg-gray-100 mt-2" />
+
+                <div className="space-y-4">
+                  <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">Your Details</h3>
+                  <div>
+                    <input
+                      type="text"
+                      className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium text-gray-900 placeholder-gray-400 transition-all"
+                      placeholder="Full Name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium text-gray-900 placeholder-gray-400 transition-all"
+                      placeholder="Phone or WhatsApp Number"
+                      value={contact}
+                      onChange={(e) => setContact(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
-              </form>
 
-              <div className="mt-4 flex justify-between">
-                <button
-                  onClick={() => {
-                    if (!name || !contact) {
-                      alert("Please enter your name and contact information.");
-                      return;
-                    }
-                    if (startDate && endDate) {
-                      sendBookingInformation(
-                        listing.userId,
-                        startDate.toISOString(),
-                        endDate.toISOString(),
-                        name,
-                        contact
-                      );
-                      setShowCalendar(false);
-                    } else {
-                      alert("Please select both start and end dates.");
-                    }
-                  }}
-                  className="bg-green-500 text-white p-2 rounded hover:bg-green-600"
-                >
-                  Confirm Booking
-                </button>
+                <div className="flex gap-4 mt-4 shrink-0">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowCalendar(false)}
+                    className="flex-1 py-4 bg-gray-100 text-gray-600 rounded-xl font-bold uppercase tracking-widest hover:bg-gray-200 transition-all"
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      if (!name || !contact) {
+                        alert("Please enter your name and contact information.");
+                        return;
+                      }
+                      if (startDate && endDate) {
+                        sendBookingInformation(
+                          listing.userId,
+                          startDate.toISOString(),
+                          endDate.toISOString(),
+                          name,
+                          contact
+                        );
+                        setShowCalendar(false);
+                      } else {
+                        alert("Please select both check-in and check-out dates.");
+                      }
+                    }}
+                    className="flex-1 py-4 bg-gray-950 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-black transition-all shadow-xl"
+                  >
+                    Confirm
+                  </motion.button>
+                </div>
 
-                <button
-                  onClick={() => setShowCalendar(false)}
-                  className="bg-gray-500 text-white p-2 rounded hover:bg-gray-600"
-                >
-                  Cancel
-                </button>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </>
         )}
-      </div>
-    </main>
+      </AnimatePresence>
+    </div>
   );
 }

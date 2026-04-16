@@ -110,7 +110,7 @@ const RecentlyViewedPage = () => {
     
     // Custom wrapper to add "Remove" button and "Viewed At" indicator
     const CardWrapper = ({ children }) => (
-      <div className="relative group">
+      <div className="relative ">
         <div className="absolute top-3 right-3 z-30 flex gap-2">
           <button 
             onClick={(e) => {

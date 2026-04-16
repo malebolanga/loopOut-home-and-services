@@ -5,63 +5,77 @@ export const BrandIcon = ({ className = "h-12 w-12", color = "url(#logoGradient)
     return (
         <div className={`relative flex items-center justify-center ${className}`}>
             <svg
-                viewBox="0 0 44 44"
+                viewBox="0 0 100 100"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-full w-full relative z-10 drop-shadow-sm"
+                className="h-full w-full relative z-10 drop-shadow-md"
             >
                 <defs>
-                    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#E61E4D" />
+                    <linearGradient id="logoGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#FF385C" />
+                        <stop offset="50%" stopColor="#E61E4D" />
                         <stop offset="100%" stopColor="#D70466" />
                     </linearGradient>
                 </defs>
 
-                {/* Magnifying Glass Lens (The Big O) */}
+                {/* 1. The Upside-Down Magnifying Glass Lens (The Base 'O') */}
                 <motion.circle
-                    cx="20"
-                    cy="18"
-                    r="12"
+                    cx="60"
+                    cy="60"
+                    r="26"
+                    fill="rgba(255, 255, 255, 0.12)"
                     stroke={color}
-                    strokeWidth="4.5"
+                    strokeWidth="9"
                     initial={{ pathLength: 0, opacity: 0 }}
                     animate={{ pathLength: 1, opacity: 1 }}
-                    transition={{ duration: 1.2, ease: "easeOut" }}
+                    transition={{ duration: 1.2, ease: "easeInOut" }}
+                />
+
+                {/* 2. The Internal "Loop" - Smooth glowing spirals */}
+                <motion.path
+                    d="M 60 60 C 46 40, 83 50, 60 76"
+                    stroke={color}
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    className="opacity-70"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ delay: 0.8, duration: 1 }}
+                />
+                
+                <motion.path
+                    d="M 46 60 C 46 48, 68 48, 68 60 C 68 72, 46 72, 46 60"
+                    stroke="#FF7A8F"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    className="opacity-90"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ delay: 1, duration: 1.2 }}
+                />
+
+                {/* 3. The Classic Handle (Tail on the Top-Left Side) */}
+                {/* Upside Down, pointing top left */}
+                <motion.path
+                    d="M 42 42 L 18 18"
+                    stroke={color}
+                    strokeWidth="10"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
                 />
 
                 {/* Inner Lens Shine */}
                 <motion.circle
-                    cx="16"
-                    cy="14"
-                    r="3"
+                    cx="52"
+                    cy="52"
+                    r="5"
                     fill="white"
-                    className="opacity-30"
+                    className="opacity-20"
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.3 }}
+                    animate={{ opacity: 0.2 }}
                     transition={{ delay: 1 }}
-                />
-
-                {/* Magnifying Glass Handle */}
-                <motion.path
-                    d="M29 27L38 36"
-                    stroke={color}
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ pathLength: 1, opacity: 1 }}
-                    transition={{ duration: 0.8, delay: 0.6, ease: "backOut" }}
-                />
-
-                {/* Subtle Loop Accent inside the O */}
-                <motion.path
-                    d="M16 18C16 18 18 22 24 18"
-                    stroke={color}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    className="opacity-40"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ delay: 1.5 }}
                 />
             </svg>
         </div>
@@ -74,16 +88,16 @@ const BrandLogo = ({ className = "h-8 w-auto", showText = true, textColor = "tex
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             whileHover={{ scale: 1.02 }}
-            className={`flex items-center gap-2.5 ${className} select-none cursor-pointer `}
+            className={`flex items-center gap-3 ${className} select-none cursor-pointer `}
         >
-            <BrandIcon className="h-12 w-12" />
+            <BrandIcon className="h-14 w-14" />
 
             {showText && (
                 <div className="hidden lg:flex flex-col -gap-1">
-                    <span className={`text-[28px] font-black tracking-[-0.04em] leading-none ${textColor}`}>
-                        loop<span className="text-rose-600">Out</span>
+                    <span className={`text-[28px] font-black tracking-tighter leading-none ${textColor}`}>
+                        loop<span className="text-rose-600 drop-shadow-sm">Out</span>
                     </span>
-                    <span className="text-[10px] font-black tracking-[0.3em] uppercase opacity-40 translate-x-[2px] text-gray-400">
+                    <span className="text-[10px] font-black tracking-[0.35em] uppercase opacity-40 translate-x-[2px] text-gray-500">
                         Elite Discovery
                     </span>
                 </div>

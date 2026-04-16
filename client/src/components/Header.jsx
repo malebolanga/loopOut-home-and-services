@@ -51,6 +51,7 @@ import {
   UserCircleIcon as UserCircleIconSolid,
   ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid,
   Squares2X2Icon as Squares2X2IconSolid,
+  MapPinIcon as MapPinIconSolid,
 } from '@heroicons/react/24/solid';
 
 import {
@@ -87,7 +88,7 @@ export default function Header() {
   const [currentLocation, setCurrentLocation] = useState('Polokwane');
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
-  const notificationSound = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
+  const notificationSound = useRef(new Audio('https://assets.mixkit.co/sfx/preview/mixkit-positive-notification-951.mp3'));
 
   // Currency and Language states
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
@@ -877,100 +878,49 @@ export default function Header() {
       <AnimatePresence>
         {isNavVisible && !isHeaderHidden && (
           <motion.div
-            initial={{ y: 120, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 120, opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 120 }}
-            className="md:hidden fixed bottom-6 left-6 right-6 z-[1000] rounded-[2.8rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] overflow-visible"
+            initial={{ y: 120 }}
+            animate={{ y: 0 }}
+            exit={{ y: 120 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 200 }}
+            className="md:hidden fixed bottom-0 left-0 right-0 z-[1000] bg-white border-t border-gray-200 pb-safe shadow-[0_-5px_15px_rgba(0,0,0,0.02)]"
           >
-            <div className="absolute inset-0 bg-white/80 backdrop-blur-3xl rounded-[2.8rem] border border-white/40" />
-
-            <div className="flex justify-around items-center h-17 px-6 relative z-10">
-              {/* Active Tab Indicator Pill */}
-              <div className="absolute inset-0 flex justify-around items-center px-6 pointer-events-none">
-                {[0, 1, 2, 3, 4].map((_, i) => (
-                  <div key={i} className="flex-1 flex justify-center h-full items-center">
-                    {( (i === 0 && location.pathname === '/') ||
-                      (i === 1 && location.pathname === '/trips') ||
-                      (i === 2 && location.pathname === '/trip') ||
-                      (i === 3 && location.pathname === '/messages') ||
-                      (i === 4 && (location.pathname === '/profile' || location.pathname === '/sign-in')) ) ? (
-                      <motion.div
-                        layoutId="navTab"
-                        className="w-14 h-14 bg-rose-500/10 rounded-2xl blur-sm"
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                      />
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-
-              <Link to="/" className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${location.pathname === '/' ? 'text-rose-600' : 'text-gray-400'}`}>
-                <motion.div whileTap={{ scale: 0.85 }}>
-                  <BrandIcon className={`w-7 h-7 ${location.pathname === '/' ? '' : 'grayscale opacity-50'}`} />
-                </motion.div>
-                <span className="text-[9px] font-black uppercase tracking-widest">Explore</span>
+            <div className="flex justify-between items-center h-[65px] px-6">
+              
+              <Link to="/" className={`flex flex-col items-center justify-center w-14 h-full relative transition-colors duration-200 ${location.pathname === '/' ? 'text-rose-600' : 'text-[#717171] hover:text-gray-900'}`}>
+                {location.pathname === '/' ? <BrandIcon className="w-7 h-7 mb-0.5" /> : <BrandIcon className="w-7 h-7 mb-0.5 grayscale opacity-70" />}
+                <span className="text-[10px] font-medium tracking-wide">Explore</span>
               </Link>
 
-              <Link to="/trips" className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${location.pathname === '/trips' ? 'text-rose-600' : 'text-gray-400'}`}>
-                <motion.div whileTap={{ scale: 0.85 }}>
-                  <MapPinIcon className={`w-6 h-6 ${location.pathname === '/trips' ? 'stroke-[2.5px]' : 'stroke-[2px]'}`} />
-                </motion.div>
-                <span className="text-[9px] font-black uppercase tracking-widest">Trips</span>
+              <Link to="/wishlist" className={`flex flex-col items-center justify-center w-14 h-full relative transition-colors duration-200 ${location.pathname === '/wishlist' ? 'text-rose-600' : 'text-[#717171] hover:text-gray-900'}`}>
+                {location.pathname === '/wishlist' ? <HeartIconSolid className="w-6 h-6 mb-1" /> : <HeartIcon className="w-6 h-6 mb-1 stroke-[2px]" />}
+                <span className="text-[10px] font-medium tracking-wide">Wishlists</span>
               </Link>
 
-              <Link
-                to="/trip"
-                className="relative -mt-8 flex flex-col items-center"
-              >
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="relative"
-                >
-                  <div className="absolute inset-0 bg-rose-500 blur-[25px] opacity-40 animate-pulse" />
-                  <div className="w-12 h-12 bg-gray-950 rounded-[1.8rem] flex items-center justify-center border-[4px] border-white shadow-2xl relative z-10 overflow-hidden">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                      className="absolute inset-x-0 inset-y-0 bg-gradient-to-tr from-rose-500/30 to-transparent"
-                    />
-                    <SparklesIcon className="w-8 h-8 text-white stroke-[2.5px]" />
-                  </div>
-                </motion.div>
-                <span className="text-[9px] -mt-1 font-black uppercase tracking-[0.1em] text-gray-950 italic">Masterpiece</span>
+              <Link to="/trips" className={`flex flex-col items-center justify-center w-14 h-full relative transition-colors duration-200 ${location.pathname === '/trips' ? 'text-rose-600' : 'text-[#717171] hover:text-gray-900'}`}>
+                {location.pathname === '/trips' ? <MapPinIconSolid className="w-6 h-6 mb-1" /> : <MapPinIcon className="w-6 h-6 mb-1 stroke-[2px]" />}
+                <span className="text-[10px] font-medium tracking-wide">Trips</span>
               </Link>
 
-              <Link to="/messages" className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${location.pathname === '/messages' ? 'text-rose-600' : 'text-gray-400'}`}>
-                <motion.div whileTap={{ scale: 0.85 }} className="relative">
-                  {location.pathname === '/messages' ? <ChatBubbleLeftRightIconSolid className="w-6 h-6" /> : <ChatBubbleLeftRightIcon className="w-6 h-6 stroke-[2.2px]" />}
+              <Link to="/messages" className={`flex flex-col items-center justify-center w-14 h-full relative transition-colors duration-200 ${location.pathname === '/messages' ? 'text-rose-600' : 'text-[#717171] hover:text-gray-900'}`}>
+                <div className="relative">
+                  {location.pathname === '/messages' ? <ChatBubbleLeftRightIconSolid className="w-6 h-6 mb-1" /> : <ChatBubbleLeftRightIcon className="w-6 h-6 mb-1 stroke-[2px]" />}
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white text-[8px] min-w-[15px] h-3.5 flex items-center justify-center rounded-full border border-white font-black px-0.5">
-                      {unreadCount}
+                    <span className="absolute -top-1 -right-1 bg-rose-600 text-white text-[8px] min-w-[14px] h-[14px] flex items-center justify-center rounded-full border border-white font-bold">
+                      {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
-                </motion.div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-center">Inbox</span>
+                </div>
+                <span className="text-[10px] font-medium tracking-wide">Inbox</span>
               </Link>
 
               <button
                 onClick={handleMobileProfileClick}
-                className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'text-rose-600' : 'text-gray-400'}`}
+                className={`flex flex-col items-center justify-center w-14 h-full relative transition-colors duration-200 ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'text-rose-600' : 'text-[#717171] hover:text-gray-900'}`}
               >
-                <motion.div
-                  whileTap={{ scale: 0.85 }}
-                  className={`w-10 h-10 rounded-2xl border-2 transition-all duration-300 ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'border-rose-500 ring-4 ring-rose-500/10' : 'border-gray-200'}`}
-                >
-                  <div className="w-full h-full rounded-[0.8rem] overflow-hidden">
-                    {currentUser ? (
-                      <img src={currentUser.avatar} alt="profile" className="w-full h-full object-cover" />
-                    ) : (
-                      <UserCircleIcon className="w-full h-full" />
-                    )}
-                  </div>
-                </motion.div>
-                <span className="text-[9px] font-black uppercase tracking-widest">Vault</span>
+                {location.pathname === '/profile' || location.pathname === '/sign-in' ? <UserCircleIconSolid className="w-6 h-6 mb-1" /> : <UserCircleIcon className="w-6 h-6 mb-1 stroke-[2px]" />}
+                <span className="text-[10px] font-medium tracking-wide">Profile</span>
               </button>
+
             </div>
           </motion.div>
         )}

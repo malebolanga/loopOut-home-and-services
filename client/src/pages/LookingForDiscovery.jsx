@@ -16,6 +16,7 @@ import {
   ChatBubbleBottomCenterTextIcon
 } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
+import NeuralLoader from '../components/NeuralLoader';
 
 const categories = [
   { id: 'all', label: 'All Requests', icon: SparklesIcon, color: 'bg-purple-50 text-purple-600' },
@@ -154,10 +155,8 @@ const LookingForDiscovery = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-12">
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-              <div key={i} className="aspect-[4/5] bg-gray-100 animate-pulse rounded-2xl" />
-            ))}
+          <div className="py-20 flex justify-center">
+             <NeuralLoader text="Scanning Community Requests..." />
           </div>
         ) : filteredRequests.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-center">

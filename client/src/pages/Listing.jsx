@@ -30,6 +30,7 @@ import {
   FaHeart, FaWhatsapp, FaUsers, FaClock, FaReceipt, FaSpinner
 } from "react-icons/fa";
 import { MdCleanHands, MdOutlineGppGood, MdLogin, MdChat, MdLocationOn, MdAttachMoney, MdKingBed, MdBathtub } from "react-icons/md";
+import NeuralLoader from "../components/NeuralLoader";
 
 
 // Styles
@@ -1877,14 +1878,7 @@ export default function Listing() {
 
   // Loading and error states
   if (uiState.loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return <NeuralLoader fullScreen text="Initializing Property Matrix..." />;
   }
 
   if (uiState.error || !listing) {

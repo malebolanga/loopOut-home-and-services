@@ -681,7 +681,7 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
       onClick={handleClick}
       className="cursor-pointer flex flex-col gap-2 "
     >
-      <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100 ">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-gray-100 ">
         <ImageGallery
           imageUrls={item.imageUrls || []}
           alt={item.name}
@@ -706,35 +706,55 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
         )}
       </div>
 
-      <div className="flex flex-col pt-1">
+      <div className="flex flex-col pt-2">
         <div className="flex justify-between items-start gap-2">
           <h3 className="font-bold text-[15px] text-gray-900 truncate">
             {item.address || item.name || 'South Africa'}
           </h3>
           <div className="flex items-center gap-1 shrink-0">
-            <StarIconSolid className="w-3.5 h-3.5 text-gray-950" />
-            <span className="text-[14px] font-medium text-gray-950">{item.rating?.toFixed(1) || '4.5'}</span>
+            <StarIconSolid className="w-3.5 h-3.5 text-gray-900" />
+            <span className="text-[13px] font-medium text-gray-900">{item.rating?.toFixed(1) || '4.5'}</span>
           </div>
         </div>
 
-     
+        <h4 className="text-[14px] text-gray-500 truncate mt-0.5">
+          {getPropertyTypeLabel() || item.name}
+        </h4>
 
         {item._distance && item._distance !== Infinity && !hideDistance ? (
-           <p className="text-[14px] text-gray-500">
+           <p className="text-[14px] text-gray-500 mt-0.5">
              {item._distance < 1 ? "Near you" : `${Math.round(item._distance)} km away`}
            </p>
         ) : (
-          <p className="text-[14px] text-gray-500"></p>
+           <div className="h-[21px] mt-0.5"></div>
         )}
 
-        <div className="mt-1 flex items-baseline gap-1">
-           <span className="text-[15px] font-bold text-gray-900">{formatPrice()}</span>
-           <span className="text-[14px] text-gray-900/80">{getPriceSuffix()}</span>
+        <div className="mt-2 flex items-baseline gap-1">
+           <span className="text-[16px] font-black text-gray-900 tracking-tight">{formatPrice()}</span>
+           <span className="text-[14px] text-gray-500">{getPriceSuffix()}</span>
         </div>
       </div>
     </motion.div>
   );
 };
+
+const AirbnbCardSkeleton = () => (
+  <div className="flex flex-col gap-2 animate-pulse">
+    <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-gray-200/60" />
+    <div className="flex flex-col pt-2 gap-2">
+      <div className="flex justify-between items-start gap-2">
+        <div className="h-4 bg-gray-200/60 rounded-md w-2/3" />
+        <div className="h-4 bg-gray-200/60 rounded-md w-8" />
+      </div>
+      <div className="h-3 bg-gray-200/60 rounded-md w-1/3" />
+      <div className="h-3 bg-gray-200/60 rounded-md w-1/4 mt-1" />
+      <div className="mt-2 flex items-baseline gap-2">
+        <div className="h-5 bg-gray-200/60 rounded-md w-20" />
+        <div className="h-4 bg-gray-200/60 rounded-md w-16" />
+      </div>
+    </div>
+  </div>
+);
 
 const CategoryFilter = ({ icon, label, onClick, isActive }) => (
   <motion.button
@@ -1552,11 +1572,18 @@ const MobileAppHomepage = ({
             </section>
           )}
 
+          <SmartRecommendations 
+            recommendations={aiRecommendations} 
+            insights={aiInsights} 
+            loading={loadingProperties || aiRecommendations.length === 0} 
+            onItemClick={(item, type) => navigate(`/${type || 'listing'}/${item._id}`)} 
+          />
+
           <section className="mb-16">
             <SectionTitle title="Featured properties" actionText="View all" onAction={() => navigate('/listing-home-page')} />
             {loadingProperties ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {[...Array(8)].map((_, i) => <div key={i} className="aspect-square bg-gray-200 rounded-xl animate-pulse" />)}
+                {[...Array(8)].map((_, i) => <AirbnbCardSkeleton key={i} />)}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -1571,7 +1598,7 @@ const MobileAppHomepage = ({
             <SectionTitle title="Professional services" actionText="View all" onAction={() => navigate('/service-home-page')} />
             {loadingServices ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {[...Array(4)].map((_, i) => <div key={i} className="aspect-square bg-gray-200 rounded-xl animate-pulse" />)}
+                {[...Array(4)].map((_, i) => <AirbnbCardSkeleton key={i} />)}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -2014,6 +2041,13 @@ const MobileAppHomepage = ({
           </section>
         )}
 
+        <SmartRecommendations 
+          recommendations={aiRecommendations} 
+          insights={aiInsights} 
+          loading={loadingProperties || aiRecommendations.length === 0} 
+          onItemClick={(item, type) => onItemClick(item, type)} 
+        />
+
         {recentlyViewedItems.length > 0 && (
           <section className="mb-8">
             <div className="flex justify-between items-center mb-4">
@@ -2048,7 +2082,7 @@ const MobileAppHomepage = ({
           </div>
           {loadingProperties ? (
             <div className="grid grid-cols-2 gap-4">
-              {[...Array(4)].map((_, i) => <div key={i} className="aspect-square bg-gray-200 rounded-xl animate-pulse" />)}
+              {[...Array(4)].map((_, i) => <AirbnbCardSkeleton key={i} />)}
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4">

@@ -36,6 +36,7 @@ import {
   ShieldCheckIcon as ShieldCheckIconSolid
 } from '@heroicons/react/24/solid';
 import { FaWhatsapp, FaRobot } from 'react-icons/fa';
+import { BrandIcon } from '../components/BrandLogo';
 
 export default function HostDashboard() {
   const { currentUser } = useSelector((state) => state.user);
@@ -179,7 +180,7 @@ export default function HostDashboard() {
                    {loading ? (
                      <div className="h-64 flex flex-col items-center justify-center gap-4 border border-white/5 rounded-[3rem] bg-white/2">
                         <LoaderIcon />
-                        <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em]">Establishing Neural Link...</span>
+                        <span className="text-[12px] font-black text-rose-500 uppercase tracking-[0.5em] animate-pulse">Looping Out...</span>
                      </div>
                    ) : bookings.filter(b => filter === 'all' || b.status === filter).length === 0 ? (
                      <div className="h-64 flex flex-col items-center justify-center gap-6 border-2 border-dashed border-white/5 rounded-[3rem] bg-white/2 group">
@@ -339,10 +340,13 @@ const ProtocolBadge = ({ status }) => {
 }
 
 const LoaderIcon = () => (
-  <div className="relative w-12 h-12">
-    <div className="absolute inset-0 border-4 border-rose-500/10 rounded-full" />
-    <div className="absolute inset-0 border-4 border-t-rose-500 rounded-full animate-spin" />
-  </div>
+  <motion.div 
+    animate={{ scale: [1, 1.1, 1], opacity: [0.6, 1, 0.6] }} 
+    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+    className="relative drop-shadow-[0_0_20px_rgba(255,56,92,0.4)]"
+  >
+    <BrandIcon className="w-20 h-20" />
+  </motion.div>
 );
 
 const NeuralAnalytics = ({ stats }) => (
@@ -351,12 +355,22 @@ const NeuralAnalytics = ({ stats }) => (
     animate={{ opacity: 1 }} 
     className="grid grid-cols-1 lg:grid-cols-2 gap-10"
   >
-    <div className="bg-white/5 rounded-[3rem] border border-white/5 p-12 h-[500px] flex flex-col justify-center items-center">
-       <div className="w-40 h-40 rounded-full border-8 border-rose-500/20 border-t-rose-500 animate-spin-slow mb-8 flex items-center justify-center">
-          <div className="text-4xl font-black italic">88%</div>
+    <div className="bg-white/5 rounded-[3rem] border border-white/5 p-12 h-[500px] flex flex-col justify-center items-center group">
+       <div className="relative mb-8">
+          <div className="absolute inset-0 bg-rose-500/10 blur-[60px] rounded-full group-hover:bg-rose-500/20 transition-all duration-500" />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="relative z-10 p-10 rounded-full border border-white/5 backdrop-blur-3xl"
+          >
+             <BrandIcon className="w-40 h-40" />
+          </motion.div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-20">
+             <div className="text-4xl font-black italic text-white drop-shadow-2xl">88%</div>
+          </div>
        </div>
-       <h3 className="text-xl font-black italic tracking-tighter mb-2">NETWORK PENETRATION</h3>
-       <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest text-center max-w-[200px]">Regional dominance in the high-fidelity sector</p>
+       <h3 className="text-xl font-black italic tracking-tighter mb-2">LOOPED PENETRATION</h3>
+       <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest text-center max-w-[200px]">Active dominance within the integrated matrix</p>
     </div>
     
     <div className="space-y-6">

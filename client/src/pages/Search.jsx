@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import NeuralLoader from '../components/NeuralLoader';
 import ImageWithFallback from '../components/ImageWithFallback';
 import useLocationCoords from '../hooks/useGeolocation';
 import {
@@ -1059,9 +1060,9 @@ const SearchPage = () => {
          </div>
 
          {loading ? (
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xxl:grid-cols-5 gap-8">
-             {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
-           </div>
+            <div className="py-24 flex justify-center w-full">
+               <NeuralLoader text="Scanning Loop Matrix..." />
+            </div>
          ) : listings.length > 0 ? (
            <motion.div 
              variants={containerVariants}

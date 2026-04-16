@@ -10,6 +10,7 @@ import {
   FaStar, FaMapMarkerAlt, FaHeart, FaRegHeart,
   FaUser, FaClock, FaDog, FaUsers, FaGraduationCap, FaCut, FaTools, FaCar, FaShieldAlt
 } from 'react-icons/fa';
+import NeuralLoader from '../components/NeuralLoader';
 
 export default function HelperDetails() {
   const { type } = useParams();
@@ -98,12 +99,7 @@ export default function HelperDetails() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen from-gray-50 to-white pt-16 pb-32 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-airbnb-red"></div>
-        <p className="ml-4 text-lg text-gray-700">Loading {typeLabels[type]}...</p>
-      </div>
-    );
+    return <NeuralLoader fullScreen text={`Loading ${typeLabels[type]}...`} />;
   }
 
   if (error) {

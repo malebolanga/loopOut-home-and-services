@@ -13,10 +13,10 @@ import {
   StarIcon
 } from "@heroicons/react/24/outline";
 import {
-  FaStar,
   FaHeart,
   FaFilter
 } from "react-icons/fa";
+import NeuralLoader from "../components/NeuralLoader";
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
@@ -460,17 +460,8 @@ export default function OverNight() {
           </div>
 
           {loading && page === 1 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-2">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="animate-pulse rounded-xl overflow-hidden">
-                  <div className="aspect-[4/3] bg-gray-200 rounded-xl" />
-                  <div className="p-4 space-y-3">
-                    <div className="h-4 bg-gray-200 rounded w-3/4" />
-                    <div className="h-3 bg-gray-200 rounded w-1/2" />
-                    <div className="h-3 bg-gray-200 rounded w-1/4" />
-                  </div>
-                </div>
-              ))}
+            <div className="py-24 flex justify-center w-full col-span-full">
+              <NeuralLoader text="Scanning Local Hubs..." />
             </div>
           ) : overnightListings.length > 0 ? (
             <>
@@ -498,10 +489,7 @@ export default function OverNight() {
 
               {loading && page > 1 && (
                 <div className="flex justify-center py-12">
-                  <div className="flex items-center space-x-3">
-                    <ArrowPathIcon className="w-5 h-5 animate-spin text-purple-600" />
-                    <span className="text-gray-600">Loading more stays...</span>
-                  </div>
+                   <NeuralLoader text="Deploying more results..." />
                 </div>
               )}
 
