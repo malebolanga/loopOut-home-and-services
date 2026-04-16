@@ -110,6 +110,14 @@ const Trip = () => {
     return total;
   };
 
+  const trendingTargets = [
+    { name: 'Johannesburg', icon: '🏙️' },
+    { name: 'Cape Town', icon: '🏔️' },
+    { name: 'Polokwane', icon: '🌳' },
+    { name: 'Pretoria', icon: '🏛️' },
+    { name: 'Durban', icon: '🌊' }
+  ];
+
   const startSearch = async () => {
     if (!destination) return;
     setIsSearching(true);
@@ -215,12 +223,53 @@ const Trip = () => {
 
         {/* Searching Interface */}
         {isSearching && (
-           <div className="flex flex-col items-center justify-center py-40 text-center">
-             <motion.div animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }} className="mb-10">
+           <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
+             {/* Neural Data Stream Animation */}
+             <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+                {[...Array(20)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ x: Math.random() * window.innerWidth, y: -100 }}
+                    animate={{ y: window.innerHeight + 100 }}
+                    transition={{ duration: 2 + Math.random() * 4, repeat: Infinity, ease: "linear", delay: Math.random() * 5 }}
+                    className="absolute w-[1px] h-20 bg-rose-500/50"
+                  />
+                ))}
+                <motion.div 
+                  animate={{ y: [0, window.innerHeight, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-rose-500/20 to-transparent shadow-[0_0_15px_rgba(225,29,72,0.3)]"
+                />
+             </div>
+
+             <motion.div 
+               animate={{ 
+                 scale: [1, 1.1, 1],
+                 rotate: 360 
+               }} 
+               transition={{ 
+                 scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+                 rotate: { duration: 4, repeat: Infinity, ease: "linear" }
+               }} 
+               className="mb-10 relative"
+             >
                 <CpuChipIcon className="w-16 h-16 text-gray-200" />
+                <div className="absolute inset-0 bg-rose-500/10 blur-2xl rounded-full" />
              </motion.div>
-             <h2 className="text-2xl font-black italic tracking-tighter mb-2">{searchStatus}</h2>
-             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">Neural Connection Protocol</span>
+             
+             <AnimatePresence mode="wait">
+               <motion.h2 
+                 key={searchStatus}
+                 initial={{ opacity: 0, y: 10 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: -10 }}
+                 className="text-2xl font-black italic tracking-tighter mb-2"
+               >
+                 {searchStatus}
+               </motion.h2>
+             </AnimatePresence>
+             
+             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic animate-pulse">Neural Connection Protocol</span>
            </div>
         )}
 
@@ -240,7 +289,21 @@ const Trip = () => {
                   onKeyDown={(e) => e.key === 'Enter' && destination && setStep(2)}
                   className="w-full px-10 py-8 bg-gray-50 border border-gray-100 rounded-[2rem] text-2xl font-black placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-rose-500/5 transition-all text-center"
                 />
-                <button onClick={() => setStep(2)} disabled={!destination} className="mt-12  flex items-center gap-4 bg-gray-950 text-white px-10 py-5 rounded-full mx-auto hover:bg-rose-500 transition-all active:scale-95 disabled:opacity-20">
+                
+                <div className="mt-10 flex flex-wrap justify-center gap-3">
+                  {trendingTargets.map((target) => (
+                    <button
+                      key={target.name}
+                      onClick={() => { setDestination(target.name); setStep(2); }}
+                      className="px-6 py-3 bg-white border border-gray-100 rounded-full text-[10px] font-black uppercase tracking-widest hover:border-rose-500 hover:text-rose-600 transition-all shadow-sm flex items-center gap-2 group"
+                    >
+                      <span className="group-hover:scale-125 transition-transform">{target.icon}</span>
+                      {target.name}
+                    </button>
+                  ))}
+                </div>
+
+                <button onClick={() => setStep(2)} disabled={!destination} className="mt-12  flex items-center gap-4 bg-gray-950 text-white px-10 py-5 rounded-full mx-auto hover:bg-rose-500 transition-all active:scale-95 disabled:opacity-20 shadow-[0_20px_40px_rgba(0,0,0,0.2)]">
                    <span className="text-xs font-black uppercase tracking-widest">Next Phase</span>
                    <ChevronRightIcon className="w-4 h-4" />
                 </button>
@@ -273,13 +336,23 @@ const Trip = () => {
               <h2 className="text-5xl font-black mb-16 tracking-tighter">Strategic Budget</h2>
               <div className="bg-gray-50 p-12 rounded-[4rem] border border-gray-100 shadow-sm relative overflow-hidden">
                 <div className="relative z-10">
+                   <div className="text-7xl font-black text-center mb-8 tracking-tighter text-rose-500">
+                     R {budget.toLocaleString()}
+                   </div>
                    <input
-                    type="number"
+                    type="range"
+                    min="500"
+                    max="50000"
+                    step="500"
                     value={budget}
                     onChange={(e) => setBudget(Number(e.target.value))}
-                    className="w-full bg-transparent border-none text-7xl font-black text-center focus:outline-none"
+                    className="w-full h-3 bg-gray-200 rounded-full appearance-none cursor-pointer accent-gray-950"
                   />
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-6 italic">Target Threshold (ZAR)</p>
+                  <div className="flex justify-between mt-4 px-2">
+                    <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Minimalist (R500)</span>
+                    <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Elite (R50k+)</span>
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-10 italic">Target Threshold (ZAR)</p>
                 </div>
               </div>
               <div className="mt-16 flex justify-center gap-8">
@@ -385,7 +458,7 @@ const Trip = () => {
           {step === 9 && showResults && (
             <motion.div key="results" initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} className="space-y-24 pb-40">
                {/* Result Header - cinematic & clean */}
-               <div className="bg-gray-50 rounded-[3.5rem] p-10 sm:p-20 shadow-sm relative overflow-hidden border border-gray-100/50">
+                <div className="bg-gray-50 rounded-[3.5rem] p-10 sm:p-20 shadow-sm relative overflow-hidden border border-gray-100/50">
                   <div className="relative flex flex-col lg:flex-row items-center justify-between gap-12 text-center lg:text-left">
                     <div className="flex flex-col lg:flex-row items-center gap-12">
                        <div className="w-32 h-32 bg-rose-500 rounded-[2.5rem] flex items-center justify-center shadow-xl rotate-3">
@@ -412,6 +485,22 @@ const Trip = () => {
                         </div>
                     </div>
                   </div>
+               </div>
+
+               {/* Neural Masterplan Breakdown */}
+               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  {[
+                    { label: 'Squad Size', value: `${guests} Personnel`, icon: <UserGroupIcon className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600' },
+                    { label: 'Deployment', value: `${duration} ${rentalDurationType === 'short' ? 'Days' : 'Months'}`, icon: <CalendarDaysIcon className="w-5 h-5" />, color: 'bg-emerald-50 text-emerald-600' },
+                    { label: 'Nodes Selected', value: accommodationType.join(', ') || 'General', icon: <MapPinIcon className="w-5 h-5" />, color: 'bg-rose-50 text-rose-600' },
+                    { label: 'Price Index', value: `R${(calculateEstimation() / (duration || 1)).toFixed(0)} / Unit`, icon: <CurrencyDollarIcon className="w-5 h-5" />, color: 'bg-amber-50 text-amber-600' }
+                  ].map((stat, i) => (
+                    <motion.div key={i} whileHover={{ y: -10 }} className="p-8 bg-white rounded-[2rem] border border-gray-100 shadow-sm">
+                      <div className={`w-12 h-12 ${stat.color} rounded-2xl flex items-center justify-center mb-6`}>{stat.icon}</div>
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                      <h4 className="text-lg font-black text-gray-950 tracking-tight italic truncate">{stat.value}</h4>
+                    </motion.div>
+                  ))}
                </div>
 
                {/* Video Scout */}

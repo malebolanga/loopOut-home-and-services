@@ -75,22 +75,23 @@ import {
 } from "react-icons/fa";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from 'framer-motion';
 import WishList from "./WishListProfile";
 import MyListing from "./MyListing";
 import { Camera, CheckCircle, X, MessageCircle, Mail, Phone, ChevronRight, Globe, Shield, Bell, User, Home, Heart, List, Settings, LogOut, Plus, Trash2, Edit3, MapPin, Calendar, Star, Award, HelpCircle, Download, BarChart, Gift, Wallet } from 'lucide-react';
 
-// Airbnb Color Palette
+// Masterpiece Elite Color Palette
 const colors = {
-  primary: '#FF5A5F',      // Airbnb Rausch
-  primaryDark: '#E00B41',
-  secondary: '#00A699',    // Teal
-  dark: '#484848',         // Dark gray
-  gray: '#767676',         // Medium gray
-  lightGray: '#DDDDDD',    // Light gray
-  lighterGray: '#F7F7F7',  // Background gray
+  primary: '#E11D48',      // rose-600
+  primaryDark: '#BE123C',  // rose-700
+  secondary: '#0F172A',    // slate-900
+  dark: '#020617',         // gray-950
+  gray: '#64748B',         // slate-500
+  lightGray: '#E2E8F0',    // slate-200
+  lighterGray: '#F8FAFC',  // slate-50
   white: '#FFFFFF',
-  success: '#00A699',
-  error: '#FC642D',
+  success: '#10B981',      // emerald-500
+  error: '#EF4444',        // red-500
 };
 
 // Reusable InputField Component - Airbnb Style
@@ -167,44 +168,46 @@ const SectionCard = ({ children, title, icon: Icon }) => (
 
 // Airbnb Menu Item
 const MenuItem = ({ icon: Icon, label, active, onClick, badge }) => (
-  <button
+  <motion.button
+    whileHover={{ x: 5 }}
     onClick={onClick}
-    className={`flex items-center justify-between w-full p-3 rounded-lg text-left transition-all duration-200 ${active
-      ? "bg-[#F7F7F7] text-[#FF5A5F] font-semibold"
-      : "text-[#484848] hover:bg-[#F7F7F7]"
+    className={`flex items-center justify-between w-full p-5 rounded-[1.5rem] text-left transition-all duration-300 ${active
+      ? "bg-rose-600 text-white shadow-xl shadow-rose-200"
+      : "text-gray-950 hover:bg-rose-50"
       }`}
   >
-    <div className="flex items-center gap-3">
-      <Icon size={20} />
-      <span>{label}</span>
+    <div className="flex items-center gap-4">
+      <div className={`p-2 rounded-xl ${active ? 'bg-white/20' : 'bg-rose-50'}`}>
+        <Icon size={18} className={active ? 'text-white' : 'text-rose-600'} />
+      </div>
+      <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>
     </div>
-    {badge ? (
-      <span className="bg-[#FF5A5F] text-white text-xs px-2 py-1 rounded-full">
+    {badge !== undefined && (
+      <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${active ? 'bg-white text-rose-600' : 'bg-rose-100 text-rose-600 shadow-sm'}`}>
         {badge}
       </span>
-    ) : (
-      <ChevronRight size={16} className={`${active ? 'text-[#FF5A5F]' : 'text-[#767676]'}`} />
     )}
-  </button>
+  </motion.button>
 );
 
 // Airbnb Settings Row
 const SettingsRow = ({ icon: Icon, title, description, onClick, danger }) => (
-  <button
+  <motion.button
+    whileHover={{ scale: 1.02 }}
     onClick={onClick}
-    className={`flex items-center justify-between w-full p-4 hover:bg-[#F7F7F7] transition-colors border-b border-[#DDDDDD] last:border-b-0`}
+    className={`flex items-center justify-between w-full p-4 hover:bg-gray-50 transition-all rounded-[1.5rem] group`}
   >
-    <div className="flex items-center gap-4">
-      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${danger ? 'bg-red-50' : 'bg-[#F7F7F7]'}`}>
-        <Icon size={20} className={danger ? 'text-red-500' : 'text-[#484848]'} />
+    <div className="flex items-center gap-4 text-left">
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:rotate-6 ${danger ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-900 group-hover:bg-rose-50 group-hover:text-rose-600'}`}>
+        <Icon size={20} />
       </div>
-      <div className="text-left">
-        <h4 className={`font-medium ${danger ? 'text-red-500' : 'text-[#484848]'}`}>{title}</h4>
-        <p className="text-sm text-[#767676]">{description}</p>
+      <div>
+        <h4 className="text-xs font-black uppercase tracking-widest leading-none mb-1">{title}</h4>
+        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest opacity-60 leading-none">{description}</p>
       </div>
     </div>
-    <ChevronRight size={20} className="text-[#767676]" />
-  </button>
+    <ChevronRight size={16} className="text-gray-300 group-hover:text-rose-600 transition-colors" />
+  </motion.button>
 );
 
 export default function Profile() {
@@ -891,20 +894,82 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen pb-32 bg-slate-50">
-      {/* Account Header - Static and Ultra-Compact */}
-      <div className="max-w-6xl mx-auto px-6 pt-24 mb-6">
-        <div className="flex items-center justify-between pb-4 border-b border-gray-200">
-          <div className="flex items-center gap-4">
-             <Link to="/" className="p-2 hover:bg-gray-100 rounded-full transition-colors group">
-                <Home size={18} className="text-gray-400 group-hover:text-[#FF5A5F]" />
-             </Link>
-             <h1 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em]">Account Settings</h1>
-          </div>
-          <div className="flex items-center gap-3">
-             <div className="hidden md:block w-32 h-px bg-gray-100"></div>
-             <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                <User size={14} className="text-gray-400" />
-             </div>
+      {/* Masterpiece Elite Account Header */}
+      <div className="max-w-7xl mx-auto px-6 pt-32 mb-12">
+        <div className="relative group overflow-hidden rounded-[3rem] bg-gray-950 p-12 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/5">
+          {/* Animated Background Elements */}
+          <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-rose-500/10 to-transparent blur-[80px] -z-10" />
+          <div className="absolute bottom-0 left-0 w-1/4 h-1/2 bg-blue-500/5 rounded-full blur-[100px] -z-10 animate-pulse" />
+
+          <div className="flex flex-col md:flex-row items-center gap-10 relative z-10">
+            {/* Avatar Section */}
+            <div className="relative group/avatar">
+              <div className="w-40 h-40 rounded-full border-4 border-rose-500 p-1 bg-gray-900 shadow-2xl transition-transform hover:scale-105 duration-500">
+                <img
+                  src={formData.avatar || currentUser?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
+                  alt="Profile"
+                  className="w-full h-full rounded-full object-cover"
+                />
+                <button
+                  onClick={() => fileRef.current.click()}
+                  className="absolute bottom-2 right-2 p-3 bg-white text-gray-950 rounded-full shadow-2xl hover:bg-rose-500 hover:text-white transition-all scale-0 group-hover/avatar:scale-100 duration-300"
+                >
+                  <Camera size={18} />
+                </button>
+              </div>
+              <input type="file" hidden ref={fileRef} accept="image/*" onChange={(e) => setFile(e.target.files[0])} />
+            </div>
+
+            {/* Profile Info */}
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-3">
+                <h1 className="text-4xl lg:text-5xl font-black text-white tracking-tighter italic">
+                  {currentUser?.username || 'ELITE USER'}
+                </h1>
+                {currentUser?.isVerified && (
+                  <div className="px-4 py-1.5 bg-rose-500 text-white rounded-full text-[10px] font-black tracking-[0.2em] flex items-center gap-2">
+                    <Shield size={12} />
+                    VERIFIED SYSTEM OPERATOR
+                  </div>
+                )}
+              </div>
+              <p className="text-gray-400 font-medium mb-6 flex items-center justify-center md:justify-start gap-2">
+                <Mail size={16} className="text-rose-500" />
+                {currentUser?.email}
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-6">
+                 {[
+                   { label: "Trust Score", value: "99.8%", color: "text-emerald-400" },
+                   { label: "Deployments", value: postCount || "0", color: "text-blue-400" },
+                   { label: "Active Connections", value: "124", color: "text-indigo-400" }
+                 ].map((stat, i) => (
+                   <div key={i} className="flex flex-col">
+                      <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em]">{stat.label}</span>
+                      <span className={`text-xl font-black ${stat.color} italic tracking-tight`}>{stat.value}</span>
+                   </div>
+                 ))}
+              </div>
+            </div>
+
+            {/* View Signals Button */}
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <button 
+                onClick={() => handleNavigate('/messages')}
+                className="w-full sm:w-auto px-8 py-5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-[2rem] text-xs font-black uppercase tracking-widest backdrop-blur-xl transition-all flex items-center justify-center gap-3 active:scale-95 shadow-2xl"
+              >
+                <MessageCircle size={18} />
+                Protocol Signals
+              </button>
+              
+              <button 
+                onClick={() => navigate('/')}
+                className="w-full sm:w-auto px-8 py-5 bg-white text-gray-950 hover:bg-rose-50 rounded-[2rem] text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3 active:scale-95 shadow-2xl"
+              >
+                <Home size={18} />
+                Return to Core
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -912,140 +977,82 @@ export default function Profile() {
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Sidebar - Airbnb Style */}
-          <div className="lg:col-span-3">
-            <div className="sticky top-28">
-              {/* Profile Summary Card */}
-              <div className="bg-white rounded-xl border border-[#DDDDDD] p-6 mb-6 text-center">
-                <div className="relative inline-block mb-4">
-                  <img
-                    src={formData.avatar || currentUser?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
-                    alt="Profile"
-                    className="h-24 w-24 rounded-full object-cover border-2 border-[#DDDDDD]"
-                  />
-                  {isFaceVerified && (
-                    <div className="absolute -bottom-1 -right-1 bg-[#00A699] text-white p-1.5 rounded-full border-2 border-white">
-                      <Shield size={14} />
-                    </div>
-                  )}
-                  <button
-                    onClick={() => fileRef.current.click()}
-                    className="absolute bottom-0 right-0 bg-white border border-[#DDDDDD] p-1.5 rounded-full shadow-sm hover:bg-[#F7F7F7] transition-colors"
-                  >
-                    <Camera size={14} className="text-[#484848]" />
-                  </button>
-                  <input
-                    type="file"
-                    hidden
-                    ref={fileRef}
-                    accept="image/*"
-                    onChange={(e) => setFile(e.target.files[0])}
-                  />
-                </div>
-                <h2 className="font-bold text-lg text-[#484848] flex items-center justify-center gap-2">
-                  {currentUser?.username || 'User'}
-                  {currentUser?.isVerified && (
-                    <span className="text-[#00A699]" title="Verified Account">
-                      <MdVerifiedUser size={18} />
-                    </span>
-                  )}
-                </h2>
-                <p className="text-sm text-[#767676] mt-1">{currentUser?.email || 'user@example.com'}</p>
-
-                {isFaceVerified && (
-                  <div className="mt-3 inline-flex items-center gap-1 text-sm text-[#00A699] font-medium bg-[#00A699]/10 px-3 py-1 rounded-full">
-                    <Shield size={14} />
-                    Identity verified
+          {/* Left Sidebar - Masterpiece Command Menu */}
+          <div className="lg:col-span-4">
+            <div className="sticky top-32">
+              <div className="bg-white rounded-[3rem] shadow-[0_45px_100px_-20px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden p-4">
+                <div className="p-4 mb-4">
+                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-6 pl-4">System Protocols</h3>
+                  <div className="space-y-2">
+                    <MenuItem
+                      icon={User}
+                      label="Identity Parameters"
+                      active={activeSection === "personal"}
+                      onClick={() => setActiveSection("personal")}
+                    />
+                    <MenuItem
+                      icon={Shield}
+                      label="Security Protocols"
+                      active={activeSection === "login"}
+                      onClick={() => setActiveSection("login")}
+                    />
+                    <MenuItem
+                      icon={Bell}
+                      label="Signal Alerts"
+                      active={activeSection === "notifications"}
+                      onClick={() => setActiveSection("notifications")}
+                    />
+                    <MenuItem
+                      icon={Globe}
+                      label="Privacy Firewall"
+                      active={activeSection === "privacy"}
+                      onClick={() => setActiveSection("privacy")}
+                    />
+                    <MenuItem
+                      icon={Home}
+                      label="Command Dashboard"
+                      active={activeSection === "host-account"}
+                      onClick={() => setActiveSection("host-account")}
+                    />
+                    <MenuItem
+                      icon={Heart}
+                      label="Wishlist Vault"
+                      active={activeSection === "wishlist"}
+                      onClick={() => setActiveSection("wishlist")}
+                    />
+                    <MenuItem
+                      icon={List}
+                      label="Active Deployments"
+                      active={activeSection === "my-listings"}
+                      onClick={() => setActiveSection("my-listings")}
+                      badge={userListings?.length || 0}
+                    />
                   </div>
-                )}
-              </div>
-
-              {/* Navigation Menu */}
-              <div className="bg-white rounded-xl border border-[#DDDDDD] overflow-hidden">
-                <div className="p-2">
-                  <MenuItem
-                    icon={User}
-                    label="Personal info"
-                    active={activeSection === "personal"}
-                    onClick={() => setActiveSection("personal")}
-                  />
-                  <MenuItem
-                    icon={Shield}
-                    label="Login & security"
-                    active={activeSection === "login"}
-                    onClick={() => setActiveSection("login")}
-                  />
-                  <MenuItem
-                    icon={Bell}
-                    label="Notifications"
-                    active={activeSection === "notifications"}
-                    onClick={() => setActiveSection("notifications")}
-                  />
-                  <MenuItem
-                    icon={Globe}
-                    label="Privacy & sharing"
-                    active={activeSection === "privacy"}
-                    onClick={() => setActiveSection("privacy")}
-                  />
-                  <MenuItem
-                    icon={Home}
-                    label="Host dashboard"
-                    active={activeSection === "host-account"}
-                    onClick={() => setActiveSection("host-account")}
-                  />
-                  <MenuItem
-                    icon={Heart}
-                    label="Wishlists"
-                    active={activeSection === "wishlist"}
-                    onClick={() => setActiveSection("wishlist")}
-                  />
-                  <MenuItem
-                    icon={List}
-                    label="My listings"
-                    active={activeSection === "my-listings"}
-                    onClick={() => setActiveSection("my-listings")}
-                    badge={userListings?.length || 0}
-                  />
-                  <MenuItem
-                    icon={Calendar}
-                    label="My events"
-                    active={activeSection === "events"}
-                    onClick={() => setActiveSection("events")}
-                    badge={postCount || 0}
-                  />
                 </div>
 
-                <div className="border-t border-[#DDDDDD] p-2">
-                  <button
+                <div className="h-[1px] bg-gray-50 mb-4 mx-4" />
+
+                <div className="p-4 space-y-4">
+                  <SettingsRow
+                    icon={HelpCircle}
+                    title="Intelligence Support"
+                    description="Manuals & Core Support"
+                    onClick={handleNavigateToHelp}
+                  />
+                  <SettingsRow
+                    icon={LogOut}
+                    title="Sign out"
+                    description="Securely disconnect"
                     onClick={handleSignOut}
-                    className="flex items-center gap-3 w-full p-3 rounded-lg text-left text-[#484848] hover:bg-[#F7F7F7] transition-colors"
-                  >
-                    <LogOut size={20} />
-                    <span>Log out</span>
-                  </button>
+                    danger
+                  />
                 </div>
-              </div>
-
-              {/* Help Section */}
-              <div className="mt-6 bg-white rounded-xl border border-[#DDDDDD] overflow-hidden">
-                <SettingsRow
-                  icon={HelpCircle}
-                  title="Get help"
-                  description="Contact support"
-                  onClick={handleNavigateToHelp}
-                />
-                <SettingsRow
-                  icon={Gift}
-                  title="Refer a friend"
-                  description="Earn travel credits"
-                  onClick={handleNavigateToReferrals}
-                />
               </div>
             </div>
           </div>
 
-          {/* Main Content - Airbnb Style */}
-          <div className="lg:col-span-9">
+          {/* Main Content - Masterpiece Elite Style */}
+          <div className="lg:col-span-8">
             {/* Personal Info Section */}
             {activeSection === "personal" && (
               <>

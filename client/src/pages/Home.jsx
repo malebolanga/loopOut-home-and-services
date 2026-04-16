@@ -43,7 +43,8 @@ import {
   HandThumbDownIcon,
   ChatBubbleOvalLeftEllipsisIcon,
   ChatBubbleLeftEllipsisIcon,
-  PhoneIcon
+  PhoneIcon,
+  ArrowRightIcon
 } from '@heroicons/react/24/outline';
 import {
   StarIcon as StarIconSolid,
@@ -1261,18 +1262,30 @@ const CommunityNeedsSection = ({ navigate }) => {
       whileInView="visible" 
       viewport={{ once: true }} 
       variants={containerVariants} 
-      className="mb-16 mt-4"
+      className="mb-20 mt-10 relative"
     >
-      <div className="flex justify-between items-center mb-6">
+      {/* Cinematic Orbital Backdrop */}
+      <div className="absolute -top-20 -right-20 w-96 h-96 bg-rose-500/5 rounded-full blur-[100px] -z-10 animate-pulse-slow" />
+      <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-blue-500/5 rounded-full blur-[100px] -z-10 animate-pulse-slow-reverse" />
+
+      <div className="flex justify-between items-end mb-10">
         <div>
-          <h2 className="text-2xl font-black text-gray-900 tracking-tight">Live Community Feed</h2>
-          <p className="text-[11px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-1 opacity-60">Real-time neighbor requests</p>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+            <span className="text-[10px] font-black text-rose-500 tracking-[0.3em] uppercase">Intelligence Feed</span>
+          </div>
+          <h2 className="text-4xl font-black text-gray-950 tracking-tighter leading-none">
+             COMMUNITY <br/>
+             <span className="text-gray-400">PULSE</span>
+          </h2>
         </div>
         <button 
           onClick={() => navigate('/looking-for')} 
-          className="px-5 py-2.5 bg-rose-50 text-rose-600 rounded-full text-xs font-black uppercase tracking-widest hover:bg-rose-100 transition-all"
+          className="group flex items-center gap-3 px-8 py-4 bg-gray-950 text-white rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-2xl overflow-hidden relative"
         >
-          Explore all
+          <div className="absolute inset-0 bg-gradient-to-r from-rose-600 to-rose-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <span className="relative z-10">Sync All Signals</span>
+          <ArrowRightIcon className="relative z-10 w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </button>
       </div>
 

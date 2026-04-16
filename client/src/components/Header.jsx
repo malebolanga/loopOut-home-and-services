@@ -34,7 +34,13 @@ import {
   BriefcaseIcon,
   XMarkIcon,
   BuildingOfficeIcon,
-  HomeModernIcon
+  HomeModernIcon,
+  ShieldCheckIcon,
+  CpuChipIcon,
+  InboxIcon,
+  MapIcon,
+  ArrowRightIcon,
+  ArrowLongRightIcon
 } from '@heroicons/react/24/outline';
 
 import {
@@ -313,6 +319,17 @@ export default function Header() {
     setSearchHistory([]);
   };
 
+  // Command Center Navigation
+  const MASTER_COMMANDS = [
+    { label: 'MASTER DASHBOARD', route: '/dashboard', icon: <CpuChipIcon className="w-5 h-5" />, color: 'bg-indigo-500' },
+    { label: 'WISHLIST VAULT', route: '/wishlist', icon: <HeartIcon className="w-5 h-5" />, color: 'bg-pink-500' },
+    { label: 'CREATE LISTING', route: `/${currentUser?._id}/create-listing`, icon: <PlusCircleIcon className="w-5 h-5" />, color: 'bg-emerald-500' },
+    { label: 'MY LISTINGS', route: `/${currentUser?._id}/listings`, icon: <QueueListIcon className="w-5 h-5" />, color: 'bg-blue-500' },
+    { label: 'NOTIFICATIONS', route: '/notifications', icon: <BellIcon className="w-5 h-5" />, color: 'bg-amber-500' },
+    { label: 'SIGNAL INBOX', route: '/messages', icon: <InboxIcon className="w-5 h-5" />, color: 'bg-cyan-500' },
+    { label: 'SECURITY LAB', route: '/trust', icon: <ShieldCheckIcon className="w-5 h-5" />, color: 'bg-gray-800' },
+  ];
+
   // Handle search submission
   const handleSearch = (e) => {
     if (e) e.preventDefault();
@@ -429,28 +446,40 @@ export default function Header() {
           ref={headerRef}
           className="fixed top-8 left-0 right-0 z-[100] overflow-visible bg-transparent"
         >
-        <div className="max-w-[2520px] mx-auto xl:px-20 md:px-10 px-8">
+        <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-[34px]">
           <div className="flex flex-row items-center justify-between h-12">
             
             {/* Left: Icon-Triggered Search */}
             <div className={`transition-all duration-300 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
-              <button
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setShowSearch(true)}
-                className="search-trigger group relative flex items-center justify-center lg:justify-start lg:pl-3 lg:pr-6 lg:w-auto w-14 h-14 rounded-full bg-white shadow-[0_15px_35px_-10px_rgba(225,29,72,0.15)] hover:shadow-2xl hover:scale-110 transition-all duration-500 active:scale-95 border border-rose-100"
+                className="search-trigger flex items-center gap-2 cursor-point"
               >
-                <div className="absolute inset-0 bg-rose-500 opacity-0 group-hover:opacity-10 rounded-full blur-md transition-opacity" />
-                <BrandIcon className="w-8 h-8 lg:w-9 lg:h-9" />
-                <span className="hidden lg:block ml-1 text-xl font-black tracking-[-0.04em] text-gray-900">
-                  loop<span className="text-rose-600">Out</span>
-                </span>
-              </button>
+                <div className="relative">
+                  <BrandIcon className="w-10 h-10 transition-transform group-hover:rotate-12 duration-500" />
+                  <motion.div 
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                    className="absolute inset-0 bg-rose-500 blur-xl rounded-full -z-10"
+                  />
+                </div>
+                <div className="hidden lg:block">
+                  <h1 className="text-xl font-black tracking-tighter text-gray-900 italic">LOOP OUT</h1>
+                  <div className="flex items-center gap-1.5 overflow-hidden">
+                    <span className="text-[8px] font-black text-rose-600 uppercase tracking-widest leading-none">Neural Hub</span>
+                    <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
+                  </div>
+                </div>
+              </motion.div>
             </div>
 
             {/* Center: Spacer */}
             <div className="flex-1"></div>
 
             {/* Right: User Menu */}
-            <div className="relative" ref={profileDropdownRef}>
+            <div className="relative translate-x-[20px]" ref={profileDropdownRef}>
               <div className="flex flex-row items-center gap-3">
 
                 <div className="relative" ref={createDropdownRef}>
@@ -566,128 +595,69 @@ export default function Header() {
                 </button>
               </div>
 
-              {/* User Profile Dropdown - Refined App Style */}
+              {/* User Profile Dropdown - Refined Masterpiece Command Center */}
               <AnimatePresence>
                 {showProfileDropdown && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    initial={{ opacity: 0, scale: 0.95, y: 15 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                    className="absolute rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] w-[320px] bg-slate-50 overflow-hidden right-0 top-14 border border-gray-100 p-3 z-[60]"
+                    exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                    className="absolute rounded-[3rem] shadow-[0_45px_100px_-20px_rgba(0,0,0,0.4)] w-[360px] bg-white overflow-hidden right-0 top-16 border border-gray-100 p-4 z-[60]"
                   >
                     <div className="flex flex-col">
                       {currentUser ? (
                         <>
+                          {/* User Header */}
                           <div
-                            className="p-6 bg-gradient-to-br from-gray-50 to-white rounded-[1.5rem] mb-2 flex items-center gap-4 border border-gray-100 group cursor-pointer hover:border-rose-200 transition-all"
+                            className="p-6 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 rounded-[2.2rem] mb-4 flex items-centerg cursor-pointer shadow-xl"
                             onClick={() => handleNavigate('/profile')}
                           >
-                            <img
-                              src={currentUser.avatar}
-                              className="w-12 h-12 rounded-full object-cover ring-2 ring-rose-500 ring-offset-2"
-                              alt="Profile"
-                            />
+                            <div className="relative flex-shrink-0">
+                               <img
+                                 src={currentUser.avatar}
+                                 className="w-14 h-14 rounded-full object-cover border-2 border-rose-500 p-0.5"
+                                 alt="Profile"
+                               />
+                               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-black rounded-full" />
+                            </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-black text-[#222222] truncate">{currentUser.username}</p>
-                              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">View Account</p>
+                              <p className="text-lg font-black text-white truncate">{currentUser.username}</p>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] text-rose-500 font-bold uppercase tracking-[0.2em]">ELITE USER</span>
+                              </div>
                             </div>
+                            <ChevronRightIcon className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
                           </div>
 
-                          <div className="p-2 space-y-1">
-                            <button
-                              onClick={() => handleNavigate('/dashboard')}
-                              className="w-full px-5 py-3.5 bg-gray-950 hover:bg-black rounded-[1.2rem] transition-all flex items-center justify-between group shadow-lg mb-2"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-                                  <Squares2X2Icon className="w-4 h-4 text-white" />
+                          <div className="grid grid-cols-2 gap-3 mb-4">
+                            {MASTER_COMMANDS.map((cmd) => (
+                              <button
+                                key={cmd.label}
+                                onClick={() => handleNavigate(cmd.route)}
+                                className="flex flex-col items-start gap-2 p-4 bg-gray-50 hover:bg-rose-50/50 rounded-[2rem] transition-a border border-transparent hover:border-rose-100/50"
+                              >
+                                <div className={`p-2.5 ${cmd.color} text-white rounded-2xl shadow-lg transition-transform group-hover:rotate-12`}>
+                                  {cmd.icon}
                                 </div>
-                                <span className="text-xs font-black uppercase tracking-widest text-white">Master Dashboard</span>
-                              </div>
-                              <ChevronRightIcon className="w-4 h-4 text-white/40 group-hover:translate-x-1 transition-transform" />
-                            </button>
-
-                            <div className="grid grid-cols-3 gap-1 px-1">
-                              <button onClick={() => handleNavigate('/wishlist')} className="p-4 rounded-xl hover:bg-gray-50 flex flex-col items-center gap-2 border border-transparent hover:border-gray-100 transition-all group">
-                                <HeartIcon className="w-5 h-5 text-gray-400 group-hover:text-[#FF385C]" />
-                                <span className="text-[8px] font-black uppercase tracking-tighter">Wishlist</span>
+                                <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest truncate w-full text-left">{cmd.label.split(' ')[0]} {cmd.label.split(' ')[1] || ''}</span>
                               </button>
-                              <button onClick={() => handleNavigate(`/${currentUser._id}/listings`)} className="p-4 rounded-xl hover:bg-gray-50 flex flex-col items-center gap-2 border border-transparent hover:border-gray-100 transition-all group">
-                                <QueueListIcon className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
-                                <span className="text-[8px] font-black uppercase tracking-tighter">My Listings</span>
-                              </button>
-                              <button onClick={() => handleNavigate('/messages')} className="p-4 rounded-xl hover:bg-gray-50 flex flex-col items-center gap-2 border border-transparent hover:border-gray-100 transition-all group">
-                                <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-400 group-hover:text-green-500" />
-                                <span className="text-[8px] font-black uppercase tracking-tighter">Messages</span>
-                              </button>
-                            </div>
-
-                            <div className="h-px bg-gray-50 my-2 mx-4" />
-
-                            <button onClick={() => handleNavigate(`/${currentUser._id}/create-listing`)} className="w-full px-4 py-3 hover:bg-rose-50 rounded-xl transition-all flex items-center justify-between group">
-                              <div className="flex items-center gap-3">
-                                <PlusCircleIcon className="w-5 h-5 text-[#FF385C] group-hover:scale-110 transition-transform" />
-                                <span className="text-xs font-black uppercase tracking-widest text-gray-700">Create Listing</span>
-                              </div>
-                              <ChevronRightIcon className="w-3 h-3 text-gray-300 group-hover:translate-x-1 transition-transform" />
-                            </button>
-
-                            <button onClick={() => handleNavigate('/notifications')} className="w-full px-4 py-3 hover:bg-gray-50 rounded-xl transition-all flex items-center justify-between group">
-                              <div className="flex items-center gap-3">
-                                <div className="relative">
-                                  <BellIcon className="w-5 h-5 text-gray-400" />
-                                  {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#FF385C] rounded-full border border-white" />}
-                                </div>
-                                <span className="text-xs font-bold text-gray-700">Notifications</span>
-                              </div>
-                              <span className="text-[10px] font-black bg-gray-100 px-2 py-1 rounded-md text-gray-500">{unreadCount}</span>
-                            </button>
-
-                          
+                            ))}
                           </div>
 
-                          <div className="mt-2 pt-2 border-t border-gray-50">
-                            <button
-                              onClick={handleSignOut}
-                              className="w-full px-5 py-4 hover:bg-gray-100 rounded-xl transition-all flex items-center gap-3 text-gray-500 italic"
-                            >
-                              <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                              <span className="text-xs font-black uppercase tracking-widest">Sign Out</span>
-                            </button>
-                          </div>
+                          <div className="h-[1px] bg-gray-50 mb-4" />
+
+                          <button 
+                            onClick={handleSignOut}
+                            className="w-full py-4 text-center text-xs font-black uppercase text-gray-500 hover:text-rose-600 transition-colors tracking-[0.25em]"
+                          >
+                            Sign out
+                          </button>
                         </>
                       ) : (
-                        <>
-                          <button
-                            onClick={() => handleNavigate('/sign-up')}
-                            className="px-4 py-3 hover:bg-gray-100 transition font-semibold text-left text-[#222222] flex items-center gap-2"
-                          >
-                            <PlusCircleIcon className="w-4 h-4" />
-                            Sign up
-                          </button>
-                          <button
-                            onClick={() => handleNavigate('/sign-in')}
-                            className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
-                          >
-                            <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                            Log in
-                          </button>
-                          <div className="border-t border-[#DDDDDD] my-1"></div>
-                          <button
-                            onClick={() => handleNavigate('/host')}
-                            className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
-                          >
-                            <HomeIcon className="w-4 h-4" />
-                            loopOut your home
-                          </button>
-                          <button
-                            onClick={() => handleNavigate('/help')}
-                            className="px-4 py-3 hover:bg-gray-100 transition text-left text-[#222222] flex items-center gap-2"
-                          >
-                            <QuestionMarkCircleIcon className="w-4 h-4" />
-                            Help Center
-                          </button>
-                        </>
+                        <div className="p-4 space-y-3">
+                           <button onClick={() => handleNavigate('/sign-in')} className="w-full py-5 bg-gray-950 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-2xl hover:bg-black transition-all">Sign In</button>
+                           <button onClick={() => handleNavigate('/sign-up')} className="w-full py-5 border-2 border-gray-100 text-gray-900 rounded-[2rem] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">Create Account</button>
+                        </div>
                       )}
                     </div>
                   </motion.div>
