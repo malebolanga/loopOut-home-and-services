@@ -397,13 +397,16 @@ function ServiceItem({ service, className = "", compactMode = false }) {
             )}
           </button>
 
-          {/* ADDED: User avatar and first name in left corner */}
+          {/* ADDED: User avatar and first name with verified badge */}
           {service?.userRef?._id && (
-            <div className="absolute top-2 left-3 z-[15] flex items-center gap-1.5 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-full shadow-md transition-transform hover:scale-105">
+            <div className="absolute top-2 left-3 z-[15] flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full shadow-md transition-transform hover:scale-105">
               <div className="w-5 h-5 rounded-full overflow-hidden border border-white/50">
                 {getUserAvatar()}
               </div>
-              <span className="text-[10px] font-semibold text-gray-700 leading-none">{getUserFirstName()}</span>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-semibold text-gray-700 leading-none">{getUserFirstName()}</span>
+                <CheckBadgeIcon className="w-3 h-3 text-blue-500" />
+              </div>
             </div>
           )}
 

@@ -378,11 +378,14 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
             </button>
 
             {listing?.userRef?._id && (
-              <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded-full shadow-sm">
-                <div className="w-4 h-4 rounded-full overflow-hidden">
+              <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-full shadow-sm">
+                <div className="w-4 h-4 rounded-full overflow-hidden relative">
                   {getUserAvatar()}
                 </div>
-                <span className="text-[9px] font-bold text-gray-900 uppercase tracking-tight">{getUserFirstName()}</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[9px] font-bold text-gray-900 uppercase tracking-tight">{getUserFirstName()}</span>
+                  <CheckBadgeIcon className="w-3 h-3 text-blue-500" />
+                </div>
               </div>
             )}
 

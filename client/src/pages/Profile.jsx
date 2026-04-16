@@ -79,6 +79,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import WishList from "./WishListProfile";
 import MyListing from "./MyListing";
 import { Camera, CheckCircle, X, MessageCircle, Mail, Phone, ChevronRight, Globe, Shield, Bell, User, Home, Heart, List, Settings, LogOut, Plus, Trash2, Edit3, MapPin, Calendar, Star, Award, HelpCircle, Download, BarChart, Gift, Wallet } from 'lucide-react';
+import { CheckBadgeIcon } from '@heroicons/react/24/outline';
 
 // Masterpiece Elite Color Palette
 const colors = {
@@ -926,12 +927,10 @@ export default function Profile() {
                 <h1 className="text-4xl lg:text-5xl font-black text-white tracking-tighter italic">
                   {currentUser?.username || 'ELITE USER'}
                 </h1>
-                {currentUser?.isVerified && (
-                  <div className="px-4 py-1.5 bg-rose-500 text-white rounded-full text-[10px] font-black tracking-[0.2em] flex items-center gap-2">
-                    <Shield size={12} />
-                    VERIFIED SYSTEM OPERATOR
-                  </div>
-                )}
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.1)]">
+                  <CheckBadgeIcon className="w-5 h-5 text-blue-500" />
+                  <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Verified</span>
+                </div>
               </div>
               <p className="text-gray-400 font-medium mb-6 flex items-center justify-center md:justify-start gap-2">
                 <Mail size={16} className="text-rose-500" />

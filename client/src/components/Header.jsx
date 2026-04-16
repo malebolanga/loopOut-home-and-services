@@ -21,6 +21,7 @@ import {
   ChevronRightIcon,
   ChevronDownIcon,
   CheckIcon,
+  CheckBadgeIcon,
   QueueListIcon,
   UserIcon,
   HomeIcon,
@@ -321,12 +322,13 @@ export default function Header() {
 
   // Command Center Navigation
   const MASTER_COMMANDS = [
-    { label: 'MASTER DASHBOARD', route: '/dashboard', icon: <CpuChipIcon className="w-5 h-5" />, color: 'bg-indigo-500' },
+    { label: 'MASTER DASHBOARD', route: '/host-dashboard', icon: <CpuChipIcon className="w-5 h-5" />, color: 'bg-indigo-500' },
     { label: 'WISHLIST VAULT', route: '/wishlist', icon: <HeartIcon className="w-5 h-5" />, color: 'bg-pink-500' },
     { label: 'CREATE LISTING', route: `/${currentUser?._id}/create-listing`, icon: <PlusCircleIcon className="w-5 h-5" />, color: 'bg-emerald-500' },
     { label: 'MY LISTINGS', route: `/${currentUser?._id}/listings`, icon: <QueueListIcon className="w-5 h-5" />, color: 'bg-blue-500' },
-    { label: 'NOTIFICATIONS', route: '/notifications', icon: <BellIcon className="w-5 h-5" />, color: 'bg-amber-500' },
+    { label: 'HELP CENTER', route: '/help-center', icon: <QuestionMarkCircleIcon className="w-5 h-5" />, color: 'bg-indigo-600' },
     { label: 'SIGNAL INBOX', route: '/messages', icon: <InboxIcon className="w-5 h-5" />, color: 'bg-cyan-500' },
+    { label: 'VERIFY IDENTITY', route: '/verification', icon: <CheckBadgeIcon className="w-5 h-5" />, color: 'bg-rose-600' },
     { label: 'SECURITY LAB', route: '/trust', icon: <ShieldCheckIcon className="w-5 h-5" />, color: 'bg-gray-800' },
   ];
 
@@ -425,7 +427,7 @@ export default function Header() {
     }
   };
 
-  const hiddenRoutes = ['/profile', '/wishlist', '/search'];
+  const hiddenRoutes = ['/profile', '/wishlist', '/search', '/host-dashboard'];
   const hiddenPrefixes = ['/user/', '/user-profile/', '/listing/', '/helper/', '/service/', '/event/'];
   
   const isHeaderHidden = 
@@ -609,7 +611,7 @@ export default function Header() {
                         <>
                           {/* User Header */}
                           <div
-                            className="p-6 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 rounded-[2.2rem] mb-4 flex items-centerg cursor-pointer shadow-xl"
+                            className="p-6 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 rounded-[2.2rem] mb-4 flex items-center cursor-pointer shadow-xl group"
                             onClick={() => handleNavigate('/profile')}
                           >
                             <div className="relative flex-shrink-0">
@@ -621,10 +623,13 @@ export default function Header() {
                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-black rounded-full" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-lg font-black text-white truncate">{currentUser.username}</p>
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] text-rose-500 font-bold uppercase tracking-[0.2em]">ELITE USER</span>
-                              </div>
+                               <div className="flex items-center gap-2">
+                                  <p className="text-lg font-black text-white truncate">{currentUser.username}</p>
+                                  <CheckBadgeIcon className="w-5 h-5 text-blue-500" />
+                               </div>
+                               <div className="flex items-center gap-1.5">
+                                 <span className="text-[10px] text-rose-500 font-bold uppercase tracking-[0.2em]">ELITE USER</span>
+                               </div>
                             </div>
                             <ChevronRightIcon className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
                           </div>

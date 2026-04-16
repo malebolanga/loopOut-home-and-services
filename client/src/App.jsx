@@ -21,6 +21,7 @@ import Message from "./pages/Message";
 
 // Dashboard Page
 import DashBoard from "./pages/DashBoard";
+import HostDashboard from "./pages/HostDashboard";
 
 // Listing Related Pages
 import CreateListing from "./pages/CreateListing";
@@ -55,6 +56,7 @@ import Ai from "./pages/Ai";
 import Content from "./pages/Content";
 import ArticlePages from './pages/ArticlePages';
 import AIHelpCenter from './pages/AIHelpCenter';
+import HelpCenter from './pages/HelpCenter';
 
 // Informational Pages
 import About from "./pages/About";
@@ -65,6 +67,7 @@ import LifestyleDecor from "./pages/LifestyleDecor";
 import Users from './pages/Users';
 import UserListings from './pages/UserListings';
 import Pricing from './pages/Pricing';
+import Verification from './pages/Verification';
 
 // Payment & Promotion
 import PromotionSelection from './pages/PromotionSelection';
@@ -136,6 +139,7 @@ const AnimatedRoutes = () => {
         <Route path="/smart-search" element={<PageTransition><SmartSearchPage /></PageTransition>} />
 
         <Route path="/dashboard" element={<PageTransition><DashBoard /></PageTransition>} />
+        <Route path="/host-dashboard" element={<PageTransition><HostDashboard /></PageTransition>} />
         <Route path="/explore" element={<PageTransition><ExplorePage /></PageTransition>} />
         <Route path="/categories" element={<PageTransition><Categories /></PageTransition>} />
 
@@ -192,6 +196,7 @@ const AnimatedRoutes = () => {
         <Route path="/content" element={<PageTransition><Content /></PageTransition>} />
         <Route path="/first-time-buyers" element={<PageTransition><ArticlePages /></PageTransition>} />
         <Route path="/ai-help-center" element={<PageTransition><AIHelpCenter /></PageTransition>} />
+        <Route path="/help-center" element={<PageTransition><HelpCenter /></PageTransition>} />
 
         {/* Informational Routes */}
         <Route path="/propertysafety" element={<PageTransition><PropertySafety /></PageTransition>} />
@@ -231,6 +236,7 @@ const AnimatedRoutes = () => {
         <Route element={<PrivateRoute />}>
           <Route path="/sale" element={<PageTransition><Sale /></PageTransition>} />
           <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
+          <Route path="/verification" element={<PageTransition><Verification /></PageTransition>} />
           <Route path="/:userId/create-listing" element={<PageTransition><CreateListing /></PageTransition>} />
           <Route path="/update-listing/:listingId" element={<PageTransition><UpdateListing /></PageTransition>} />
         </Route>
@@ -240,6 +246,21 @@ const AnimatedRoutes = () => {
     </AnimatePresence>
   );
 };
+
+function AppContent() {
+  const location = useLocation();
+  const hideFooter = location.pathname === '/host-dashboard';
+  
+  return (
+    <>
+      <ScrollToTop />
+      <AuthSessionManager />
+      <Header />
+      <AnimatedRoutes />
+      {!hideFooter && <Footer />}
+    </>
+  );
+}
 
 export default function App() {
   const { currentUser } = useSelector((state) => state.user);
@@ -269,11 +290,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <ScrollToTop />
-      <AuthSessionManager />
-      <Header />
-      <AnimatedRoutes />
-      <Footer />
+      <AppContent />
     </BrowserRouter>
   );
 }
