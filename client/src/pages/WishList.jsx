@@ -13,7 +13,7 @@ import {
   ThumbsDown,
   LayoutGrid,
   Search,
-  Users,
+  User,
   Calendar,
   Layers,
   ShoppingBag,
@@ -25,6 +25,152 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import ImageWithFallback from '../components/ImageWithFallback';
+
+const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onNavigate }, ref) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const getTitle = () => item.name || item.title || 'Untitled Masterpiece';
+  const getPrice = () => item.regularPrice ? `R${item.regularPrice.toLocaleString()}` : item.price ? `R${item.price.toLocaleString()}` : 'Contact';
+  const getLocation = () => item.address || item.location || 'Private Location';
+  const getRating = () => (item.rating || 4.8).toFixed(1);
+  const getImage = () => (item.imageUrls && item.imageUrls[0]) || (item.images && item.images[0]) || "https://placehold.co/600x400/E0E0E0/333333?text=No+Image";
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, scale: 0.9, transition: { duration: 0.4 } }
+  };
+
+  if (viewMode === 'list') {
+    return (
+      <motion.div
+         ref={ref}
+         variants={cardVariants}
+         exit="exit"
+         layout
+         className=" relative bg-white rounded-3xl border border-gray-100 overflow-hidden flex items-center p-4 gap-6 hover:shadow-xl transition-all duration-500"
+      >
+        <div className="w-40 h-40 rounded-2xl overflow-hidden flex-shrink-0">
+           <ImageWithFallback src={getImage()} alt={getTitle()} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+        </div>
+        <div className="flex-1 min-w-0">
+           <div className="flex items-center gap-2 mb-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full">{item.type}</span>
+              <div className="flex items-center gap-1">
+                 <Star className="w-3 h-3 text-rose-500 fill-rose-500" />
+                 <span className="text-xs font-black">{getRating()}</span>
+              </div>
+           </div>
+           <h3 className="text-lg font-black text-gray-900 truncate mb-1 group-hover:text-rose-500 transition-colors">{getTitle()}</h3>
+           <p className="text-gray-400 text-xs flex items-center gap-1.5 mb-4">
+              <MapPin className="w-3.5 h-3.5 text-rose-400" />
+              {getLocation()}
+           </p>
+           <div className="flex items-center justify-between">
+              <span className="text-xl font-black text-gray-900">{getPrice()}</span>
+              <div className="flex items-center gap-3">
+                 <button 
+                   onClick={() => onNavigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`)}
+                   className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 transition-all active:scale-95 shadow-lg shadow-gray-100"
+                 >
+                   Inspect
+                 </button>
+                 <button 
+                   onClick={() => onRemove(item._id, item.type)}
+                   className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 transition-all border border-gray-100"
+                 >
+                   <Trash2 className="w-4 h-4" />
+                 </button>
+              </div>
+           </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      ref={ref}
+      variants={cardVariants}
+      exit="exit"
+      layout
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      className="relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
+      onClick={() => onNavigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`)}
+    >
+      <div className="absolute inset-0 z-0">
+        <ImageWithFallback
+          src={getImage()}
+          alt={getTitle()}
+          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+        />
+      </div>
+
+      {/* Top Overlays */}
+      <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
+        <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
+          <Sparkles className="w-3 h-3 text-rose-500" />
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{item.type}</span>
+        </div>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(item._id, item.type);
+          }}
+          disabled={isRemoving}
+          className="w-10 h-10 bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg flex items-center justify-center text-gray-900 hover:bg-rose-500 hover:text-white transition-all active:scale-90 pointer-events-auto group/trash"
+        >
+          {isRemoving ? <Sparkles className="w-3.5 h-3.5 text-gray-900 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+        </button>
+      </div>
+
+      {/* Permanent Information Overlay (On Image) */}
+      <div className="absolute inset-x-0 bottom-0 z-10 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none">
+        <div className="flex justify-between items-end gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 mb-1 text-white">
+              <Star className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
+              <span className="text-xs font-black">{getRating()}</span>
+            </div>
+            <h3 className="text-base font-black text-white leading-tight truncate mb-0.5">
+              {getTitle()}
+            </h3>
+            <p className="text-xs text-white/70 font-medium truncate">
+              {getLocation()}
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-xl font-black text-white tracking-tighter leading-none mb-1">
+              {getPrice()}
+            </div>
+            <div className="text-[8px] font-black text-white/50 uppercase tracking-[0.2em] leading-none text-nowrap">Perspective</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Hover Action Overlay */}
+      <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-8 bg-gray-900/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none group-hover:pointer-events-auto">
+        <div className="w-full space-y-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+          <div className="flex gap-2">
+            <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-green-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm">
+              <ThumbsUp className="w-4 h-4" />
+              {item.votes?.up || 0}
+            </div>
+            <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-rose-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm">
+              <ThumbsDown className="w-4 h-4" />
+              {item.votes?.down || 0}
+            </div>
+          </div>
+          <div className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl">
+            Inspect Original Masterpiece
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+});
 
 const WishList = () => {
   const navigate = useNavigate();
@@ -39,7 +185,7 @@ const WishList = () => {
     { id: 'all', label: 'All Saved', icon: <Layers className="w-5 h-5" /> },
     { id: 'listing', label: 'Properties', icon: <HomeIcon className="w-5 h-5" /> },
     { id: 'service', label: 'Services', icon: <Sparkles className="w-5 h-5" /> },
-    { id: 'helper', label: 'Helpers', icon: <Users className="w-5 h-5" /> },
+    { id: 'helper', label: 'Helpers', icon: <User className="w-5 h-5" /> },
     { id: 'event', label: 'Events', icon: <Calendar className="w-5 h-5" /> },
   ];
 
@@ -97,151 +243,6 @@ const WishList = () => {
     }
   };
 
-  const AirbnbCard = ({ item }) => {
-    const [isHovered, setIsHovered] = useState(false);
-    const isRemoving = removingId === item._id;
-
-    const getTitle = () => item.name || item.title || 'Untitled Masterpiece';
-    const getPrice = () => item.regularPrice ? `R${item.regularPrice.toLocaleString()}` : item.price ? `R${item.price.toLocaleString()}` : 'Contact';
-    const getLocation = () => item.address || item.location || 'Private Location';
-    const getRating = () => (item.rating || 4.8).toFixed(1);
-    const getImage = () => (item.imageUrls && item.imageUrls[0]) || (item.images && item.images[0]) || "https://placehold.co/600x400/E0E0E0/333333?text=No+Image";
-
-    const cardVariants = {
-      hidden: { opacity: 0, y: 20 },
-      visible: { opacity: 1, y: 0 },
-      exit: { opacity: 0, scale: 0.9, transition: { duration: 0.4 } }
-    };
-
-    if (viewMode === 'list') {
-      return (
-        <motion.div
-           variants={cardVariants}
-           exit="exit"
-           layout
-           className="group relative bg-white rounded-3xl border border-gray-100 overflow-hidden flex items-center p-4 gap-6 hover:shadow-xl transition-all duration-500"
-        >
-          <div className="w-40 h-40 rounded-2xl overflow-hidden flex-shrink-0">
-             <ImageWithFallback src={getImage()} alt={getTitle()} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-          </div>
-          <div className="flex-1 min-w-0">
-             <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full">{item.type}</span>
-                <div className="flex items-center gap-1">
-                   <Star className="w-3 h-3 text-rose-500 fill-rose-500" />
-                   <span className="text-xs font-black">{getRating()}</span>
-                </div>
-             </div>
-             <h3 className="text-lg font-black text-gray-900 truncate mb-1 group-hover:text-rose-500 transition-colors">{getTitle()}</h3>
-             <p className="text-gray-400 text-xs flex items-center gap-1.5 mb-4">
-                <MapPin className="w-3.5 h-3.5 text-rose-400" />
-                {getLocation()}
-             </p>
-             <div className="flex items-center justify-between">
-                <span className="text-xl font-black text-gray-900">{getPrice()}</span>
-                <div className="flex items-center gap-3">
-                   <button 
-                     onClick={() => navigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`)}
-                     className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 transition-all active:scale-95 shadow-lg shadow-gray-100"
-                   >
-                     Inspect
-                   </button>
-                   <button 
-                     onClick={() => removeFromWishlist(item._id, item.type)}
-                     className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 transition-all border border-gray-100"
-                   >
-                     <Trash2 className="w-4 h-4" />
-                   </button>
-                </div>
-             </div>
-          </div>
-        </motion.div>
-      );
-    }
-
-    return (
-      <motion.div
-        variants={cardVariants}
-        exit="exit"
-        layout
-        onHoverStart={() => setIsHovered(true)}
-        onHoverEnd={() => setIsHovered(false)}
-        className="group relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
-        onClick={() => navigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`)}
-      >
-        <div className="absolute inset-0 z-0">
-          <ImageWithFallback
-            src={getImage()}
-            alt={getTitle()}
-            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-          />
-        </div>
-
-        {/* Top Overlays */}
-        <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
-          <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
-            <Sparkles className="w-3 h-3 text-rose-500" />
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{item.type}</span>
-          </div>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              removeFromWishlist(item._id, item.type);
-            }}
-            disabled={isRemoving}
-            className="w-10 h-10 bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg flex items-center justify-center text-gray-900 hover:bg-rose-500 hover:text-white transition-all active:scale-90 pointer-events-auto group/trash"
-          >
-            {isRemoving ? <Sparkles className="w-3.5 h-3.5 text-gray-900 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-          </button>
-        </div>
-
-        {/* Permanent Information Overlay (On Image) */}
-        <div className="absolute inset-x-0 bottom-0 z-10 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none">
-          <div className="flex justify-between items-end gap-2">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 mb-1 text-white">
-                <Star className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
-                <span className="text-xs font-black">{getRating()}</span>
-              </div>
-              <h3 className="text-base font-black text-white leading-tight truncate mb-0.5">
-                {getTitle()}
-              </h3>
-              <p className="text-xs text-white/70 font-medium truncate">
-                {getLocation()}
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-xl font-black text-white tracking-tighter leading-none mb-1">
-                {getPrice()}
-              </div>
-              <div className="text-[8px] font-black text-white/50 uppercase tracking-[0.2em] leading-none text-nowrap">Perspective</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Hover Action Overlay */}
-        <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-8 bg-gray-900/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none group-hover:pointer-events-auto">
-          <div className="w-full space-y-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
-            <div className="flex gap-2">
-              <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-green-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm">
-                <ThumbsUp className="w-4 h-4" />
-                {item.votes?.up || 0}
-              </div>
-              <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-rose-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm">
-                <ThumbsDown className="w-4 h-4" />
-                {item.votes?.down || 0}
-              </div>
-            </div>
-            <div className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl">
-              Inspect Original Masterpiece
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-white pb-32">
        <style>{`
@@ -256,7 +257,7 @@ const WishList = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col md:flex-row md:items-end justify-between gap-8"
+            className="flex flex-col md:items-start justify-between gap-8"
           >
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -273,45 +274,52 @@ const WishList = () => {
                 A curated selection of properties, personnel, and experiences you've marked as extraordinary.
               </p>
             </div>
-            
-            <div className="flex items-center gap-4 bg-white p-2 rounded-2xl shadow-xl shadow-gray-100 border border-gray-50">
-               <button 
-                 onClick={() => setViewMode('grid')}
-                 className={`p-3 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-gray-900 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-50'}`}
-               >
-                 <Layers className="w-5 h-5" />
-               </button>
-               <button 
-                 onClick={() => setViewMode('list')}
-                 className={`p-3 rounded-xl transition-all ${viewMode === 'list' ? 'bg-gray-900 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-50'}`}
-               >
-                 <Search className="w-5 h-5" />
-               </button>
-            </div>
           </motion.div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 mt-12">
-        {/* Categories Bar */}
-        <div className="flex items-center gap-8 overflow-x-auto pb-8 border-b border-gray-100 scrollbar-hide">
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`flex flex-col items-center gap-3 min-w-[80px] group transition-all ${activeCategory === cat.id ? 'text-gray-900' : 'text-gray-400'}`}
+      {/* Categories & View Toggle Bar */}
+      <div className="pt-6 pb-6 px-6 mb-8 max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          {/* Categories Bar */}
+          <div className="flex items-center gap-8 overflow-x-auto scrollbar-hide pr-4">
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`flex flex-col items-center gap-3 min-w-[80px]  transition-all ${activeCategory === cat.id ? 'text-gray-900' : 'text-gray-400'}`}
+              >
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${activeCategory === cat.id ? 'bg-gray-900 text-white shadow-2xl scale-110' : 'bg-gray-50 group-hover:bg-gray-100'}`}>
+                  {cat.icon}
+                </div>
+                <span className={`text-[11px] font-black uppercase tracking-widest transition-colors ${activeCategory === cat.id ? 'text-gray-900' : 'group-hover:text-gray-600'}`}>
+                  {cat.label}
+                </span>
+                <div className={`h-1 bg-gray-900 rounded-full transition-all duration-500 ${activeCategory === cat.id ? 'w-full opacity-100' : 'w-0 opacity-0'}`} />
+              </button>
+            ))}
+          </div>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center shrink-0 gap-4 bg-white p-2 rounded-2xl shadow-xl shadow-gray-100 border border-gray-50 max-w-fit">
+            <button 
+              onClick={() => setViewMode('grid')}
+              className={`p-3 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-gray-900 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-50'}`}
             >
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${activeCategory === cat.id ? 'bg-gray-900 text-white shadow-2xl scale-110' : 'bg-gray-50 group-hover:bg-gray-100'}`}>
-                {cat.icon}
-              </div>
-              <span className={`text-[11px] font-black uppercase tracking-widest transition-colors ${activeCategory === cat.id ? 'text-gray-900' : 'group-hover:text-gray-600'}`}>
-                {cat.label}
-              </span>
-              <div className={`h-1 bg-gray-900 rounded-full transition-all duration-500 ${activeCategory === cat.id ? 'w-full opacity-100' : 'w-0 opacity-0'}`} />
+              <Layers className="w-5 h-5" />
             </button>
-          ))}
+            <button 
+              onClick={() => setViewMode('list')}
+              className={`p-3 rounded-xl transition-all ${viewMode === 'list' ? 'bg-gray-900 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-50'}`}
+            >
+              <Search className="w-5 h-5" />
+            </button>
+          </div>
         </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6">
 
         {/* Results Grid */}
         <div className="py-16">
@@ -349,7 +357,14 @@ const WishList = () => {
             >
               <AnimatePresence mode="popLayout">
                 {filteredWishlist.map((item) => (
-                  <AirbnbCard key={item._id} item={item} />
+                  <AirbnbCard 
+                    key={item._id} 
+                    item={item} 
+                    viewMode={viewMode}
+                    isRemoving={removingId === item._id}
+                    onRemove={removeFromWishlist}
+                    onNavigate={navigate}
+                  />
                 ))}
               </AnimatePresence>
             </motion.div>

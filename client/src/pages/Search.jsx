@@ -458,98 +458,126 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
   if (viewMode === 'list') {
     return (
       <motion.div
-        variants={cardVariants}
-        className="flex flex-col sm:flex-row gap-4 py-4 border-b border-gray-100 cursor-pointer"
-        onClick={onClick}
+         variants={cardVariants}
+         className="relative bg-white rounded-3xl border border-gray-100 overflow-hidden flex items-center p-4 gap-6 hover:shadow-xl transition-all duration-500 cursor-pointer"
+         onClick={() => navigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`)}
       >
-        <div className="relative w-full sm:w-[240px] aspect-[4/3] sm:aspect-auto sm:h-32 shrink-0 overflow-hidden rounded-2xl bg-gray-100">
-          <ImageWithFallback
-            src={getImage()}
-            alt={getTitle()}
-            className="w-full h-full object-cover"
-          />
-          {/* Badge */}
-          <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-white/90 backdrop-blur-md rounded shadow-sm border border-black/5 flex items-center gap-1">
-             <span className="text-[10px] font-bold text-gray-900 uppercase tracking-wider">{type === 'properties' && item.type === 'over' ? 'Vacation' : type === 'properties' ? item.type : type}</span>
-          </div>
-          {/* Price on Image */}
-          <div className="absolute bottom-2 left-2 px-2 py-1 bg-white/95 backdrop-blur-md rounded flex items-center justify-center shadow-sm">
-             <span className="text-[13px] font-bold text-gray-900 leading-none">{getPrice()}</span>
-          </div>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsLiked(!isLiked);
-            }}
-            className="absolute top-2 right-2 p-1 hover:scale-110 active:scale-90 transition-transform drop-shadow-md"
-          >
-            <Heart className={`w-[20px] h-[20px] ${isLiked ? 'fill-rose-500 text-rose-500' : 'fill-black/40 text-white'}`} strokeWidth={isLiked ? 0 : 1.5} />
-          </button>
+        <div className="w-40 h-40 rounded-2xl overflow-hidden flex-shrink-0">
+           <ImageWithFallback src={getImage()} alt={getTitle()} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
         </div>
-
-        <div className="flex-1 flex flex-col py-0.5 pr-2">
-          <div className="flex justify-between items-start mb-0.5">
-            <p className="text-[13px] text-gray-500 font-light leading-tight">{getLocation()}</p>
-            <div className="flex items-center gap-1 shrink-0 text-gray-900">
-              <Star className="w-3.5 h-3.5 fill-current" />
-              <span className="text-[13px] font-light leading-none">{getRating()}</span>
-            </div>
-          </div>
-          
-          <h3 className="text-[16px] text-gray-900 font-medium truncate max-w-xl leading-tight mb-0.5">{getTitle()}</h3>
-          
-          <p className="text-[13px] text-gray-500 font-light line-clamp-1 leading-snug">
-             {item.description || (item.bedrooms ? `${item.bedrooms} beds` : type === 'services' ? 'Professional Service' : type === 'helpers' ? 'Local Helper' : 'Event')}
-          </p>
+        <div className="flex-1 min-w-0">
+           <div className="flex items-center gap-2 mb-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full">{type}</span>
+              <div className="flex items-center gap-1">
+                 <Star className="w-3 h-3 text-rose-500 fill-rose-500" />
+                 <span className="text-xs font-black">{getRating()}</span>
+              </div>
+           </div>
+           <h3 className="text-lg font-black text-gray-900 truncate mb-1 group-hover:text-rose-500 transition-colors">{getTitle()}</h3>
+           <p className="text-gray-400 text-xs flex items-center gap-1.5 mb-4">
+              <MapPin className="w-3.5 h-3.5 text-rose-400" />
+              {getLocation()}
+           </p>
+           <div className="flex items-center justify-between">
+              <span className="text-xl font-black text-gray-900">{getPrice()}</span>
+              <div className="flex items-center gap-3">
+                 <button 
+                   onClick={(e) => { e.stopPropagation(); navigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`); }}
+                   className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 transition-all active:scale-95 shadow-lg shadow-gray-100"
+                 >
+                   Inspect
+                 </button>
+                 <button 
+                   onClick={(e) => {
+                     e.stopPropagation();
+                     setIsLiked(!isLiked);
+                   }}
+                   className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 transition-all border border-gray-100"
+                 >
+                   <Heart className={`w-4 h-4 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}`} strokeWidth={isLiked ? 0 : 2} />
+                 </button>
+              </div>
+           </div>
         </div>
       </motion.div>
     );
   }
 
-  // Grid Mode (Simple Small Card)
   return (
     <motion.div
       variants={cardVariants}
-      className="flex flex-col gap-3 cursor-pointer"
-      onClick={onClick}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      className="relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
+      onClick={() => navigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`)}
     >
-      <div className="relative w-full aspect-[20/19] overflow-hidden rounded-2xl bg-gray-100">
+      <div className="absolute inset-0 z-0">
         <ImageWithFallback
           src={getImage()}
           alt={getTitle()}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
         />
-        {/* Badge */}
-        <div className="absolute top-3 left-3 px-2 py-1 bg-white/90 backdrop-blur-md rounded-md shadow-sm border border-black/5 flex items-center gap-1">
-           <span className="text-[11px] font-semibold text-gray-900 uppercase tracking-wider">{type === 'properties' && item.type === 'over' ? 'Vacation' : type === 'properties' ? item.type : type}</span>
+      </div>
+
+      {/* Top Overlays */}
+      <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
+        <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
+          <Sparkles className="w-3 h-3 text-rose-500" />
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{type}</span>
         </div>
-        {/* Heart button */}
+
         <button
           onClick={(e) => {
             e.stopPropagation();
             setIsLiked(!isLiked);
           }}
-          className="absolute top-3 right-3 p-1.5 hover:scale-110 active:scale-90 transition-transform drop-shadow-md"
+          className="w-10 h-10 bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg flex items-center justify-center text-gray-900 hover:bg-rose-500 hover:text-white transition-all active:scale-90 pointer-events-auto"
         >
-          <Heart className={`w-[24px] h-[24px] ${isLiked ? 'fill-rose-500 text-rose-500' : 'fill-black/40 text-white'}`} strokeWidth={isLiked ? 0 : 1.5} />
+          <Heart className={`w-4 h-4 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}`} strokeWidth={isLiked ? 0 : 2} />
         </button>
       </div>
-      
-      <div className="flex flex-col px-0.5">
-         <div className="flex justify-between items-start">
-            <h3 className="font-semibold text-gray-900 truncate pr-4 text-[15px]">{getLocation()}</h3>
-            <div className="flex items-center gap-1 shrink-0 text-gray-900 mt-0.5">
-               <Star className="w-3 h-3 fill-current" />
-               <span className="text-[14px] font-light">{getRating()}</span>
+
+      {/* Permanent Information Overlay (On Image) */}
+      <div className="absolute inset-x-0 bottom-0 z-10 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none">
+        <div className="flex justify-between items-end gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 mb-1 text-white">
+              <Star className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
+              <span className="text-xs font-black">{getRating()}</span>
             </div>
-         </div>
-         <p className="text-[14px] text-gray-500 font-light truncate leading-snug">{getTitle()}</p>
-         <p className="text-[14px] text-gray-500 font-light truncate leading-snug">
-          {item.bedrooms ? `${item.bedrooms} beds` : type === 'services' ? 'Professional Service' : type === 'helpers' ? 'Local Helper' : 'Event'}
-         </p>
-         <div className="mt-1 flex items-baseline gap-1">
-            <span className="text-[15px] font-semibold text-gray-900">{getPrice()}</span>
-         </div>
+            <h3 className="text-base font-black text-white leading-tight truncate mb-0.5">
+              {getTitle()}
+            </h3>
+            <p className="text-xs text-white/70 font-medium truncate">
+              {getLocation()}
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-xl font-black text-white tracking-tighter leading-none mb-1">
+              {getPrice()}
+            </div>
+            <div className="text-[8px] font-black text-white/50 uppercase tracking-[0.2em] leading-none text-nowrap">Perspective</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Hover Action Overlay */}
+      <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-8 bg-gray-900/50 backdrop-blur-md opacity-0 hover:opacity-100 transition-all duration-500 pointer-events-none hover:pointer-events-auto">
+        <div className="w-full space-y-4 transform translate-y-4 hover:translate-y-0 transition-all duration-500">
+          <div className="flex gap-2">
+            <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-green-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm">
+              <ThumbsUp className="w-4 h-4" />
+              {item.votes?.up || 0}
+            </div>
+            <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-rose-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm">
+              <ThumbsDown className="w-4 h-4" />
+              {item.votes?.down || 0}
+            </div>
+          </div>
+          <div className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl" onClick={(e) => { e.stopPropagation(); navigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`); }}>
+            Inspect Original Masterpiece
+          </div>
+        </div>
       </div>
     </motion.div>
   );
@@ -683,7 +711,7 @@ const SearchPage = () => {
   const [searchSubType, setSearchSubType] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState('map');
   const [loading, setLoading] = useState(false);
   const [listings, setListings] = useState([]);
   const { city: detectedCity, loading: geoLoading } = useLocationCoords();
@@ -1000,6 +1028,12 @@ const SearchPage = () => {
 
           <div className="flex items-center gap-2 bg-white/50 border border-slate-200/50 p-1 rounded-full shadow-sm">
             <button
+              onClick={() => setViewMode('map')}
+              className={`p-2 rounded-full transition-all ${viewMode === 'map' ? 'bg-gray-950 text-white' : 'text-gray-400'}`}
+            >
+              <MapIcon className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-full transition-all ${viewMode === 'grid' ? 'bg-gray-950 text-white' : 'text-gray-400'}`}
             >
@@ -1010,12 +1044,6 @@ const SearchPage = () => {
               className={`p-2 rounded-full transition-all ${viewMode === 'list' ? 'bg-gray-950 text-white' : 'text-gray-400'}`}
             >
               <Bars3Icon className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('map')}
-              className={`p-2 rounded-full transition-all ${viewMode === 'map' ? 'bg-gray-950 text-white' : 'text-gray-400'}`}
-            >
-              <MapIcon className="w-4 h-4" />
             </button>
           </div>
         </div>

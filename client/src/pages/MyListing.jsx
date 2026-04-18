@@ -1,7 +1,8 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Star, Sparkles, MapPin, Edit2, Trash2, Home as HomeIcon } from 'lucide-react';
 
 const ListingTypeConfig = {
   rent: {
@@ -37,6 +38,7 @@ const ListingTypeConfig = {
 };
 
 export default function PropertyListings() {
+  const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user);
   const [deletingId, setDeletingId] = useState(null);
   const [userListings, setUserListings] = useState([]);
@@ -252,118 +254,80 @@ export default function PropertyListings() {
       </div>
 
       {/* Listings Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6 p-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6 p-2">
         {filteredListings.map((listing) => (
           <div
             key={listing._id}
-            className="group relative rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl border border-gray-200 hover:border-gray-300 bg-white flex flex-col h-full"
+            onClick={() => navigate(`/listing/${listing._id}`)}
+            className="group relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
           >
-            {/* Favorite Button */}
-            <button 
-              onClick={() => toggleFavorite(listing._id)}
-              className={`absolute top-3 right-3 z-10 p-2 rounded-full backdrop-blur-sm transition-all ${
-                favorites.includes(listing._id)
-                  ? 'bg-rose-100/90 text-rose-600 shadow-sm'
-                  : 'bg-white/90 hover:bg-white text-gray-500 hover:text-rose-500'
-              }`}
-              aria-label={favorites.includes(listing._id) ? "Remove from favorites" : "Add to favorites"}
-            >
-              {favorites.includes(listing._id) ? (
-                <span className="text-base">❤️</span>
-              ) : (
-                <span className="text-base">🤍</span>
-              )}
-            </button>
-
-            {/* Status Badge */}
-            <div className="absolute top-3 left-3 z-10">
-              <span className={`px-2 py-1 text-xs font-medium rounded-full ${ListingTypeConfig[listing.type]?.style}`}>
-                {ListingTypeConfig[listing.type]?.icon} {ListingTypeConfig[listing.type]?.label}
-              </span>
-            </div>
-
-            {/* Image */}
-            <Link
-              to={`/listing/${listing._id}`}
-              className="block aspect-[4/3] overflow-hidden relative"
-            >
+            <div className="absolute inset-0 z-0">
               <img
                 src={listing.imageUrls[0] || '/placeholder-property.jpg'}
                 alt={listing.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
-              
-              {/* Image Overlay Info */}
-              <div className="absolute bottom-3 left-3 text-white">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  {listing.bedrooms && (
-                    <span className="flex items-center gap-1 backdrop-blur-sm bg-black/30 px-2 py-1 rounded-md">
-                      🛏️ {listing.bedrooms}
-                    </span>
-                  )}
-                  {listing.bathrooms && (
-                    <span className="flex items-center gap-1 backdrop-blur-sm bg-black/30 px-2 py-1 rounded-md">
-                      🚿 {listing.bathrooms}
-                    </span>
-                  )}
+            </div>
+
+            {/* Top Overlays */}
+            <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
+              <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-rose-500" />
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{listing.type}</span>
+              </div>
+            </div>
+
+            {/* Permanent Information Overlay (On Image) */}
+            <div className="absolute inset-x-0 bottom-0 z-10 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none">
+              <div className="flex justify-between items-end gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1 text-white">
+                    <Star className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
+                    <span className="text-xs font-black">4.8</span>
+                  </div>
+                  <h3 className="text-base font-black text-white leading-tight truncate mb-0.5">
+                    {listing.name}
+                  </h3>
+                  <p className="text-xs text-white/70 font-medium truncate flex items-center gap-1">
+                    {listing.address}
+                  </p>
                 </div>
-              </div>
-            </Link>
-
-            {/* Listing Details */}
-            <div className="p-1 flex flex-col flex-grow">
-              <div className="flex justify-between items-start mb-0">
-                <h3 className="text-sm font-semibold text-gray-900 line-clamp-1">
-                  {listing.name}
-                </h3>
-                <div className="flex items-center gap-1">
-                  <span className="text-yellow-400">⭐</span>
-                  <span className="text-sm font-medium">4.8</span>
-                </div>
-              </div>
-
-              <div className="mt-1 flex items-center gap-1 text-sm text-gray-500 mb-0">
-                <span className="text-rose-500 flex-shrink-0">📍</span>
-                <span className="truncate">{listing.address}</span>
-              </div>
-
-
-              {/* Price */}
-              <div className="mt-auto flex justify-between items-center pt-0">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-sm font-bold text-gray-900">
+                <div className="text-right">
+                  <div className="text-xl font-black text-white tracking-tighter leading-none mb-1">
                     R{listing.regularPrice?.toLocaleString()}
-                  </span>
-                 
+                  </div>
+                  <div className="text-[8px] font-black text-white/50 uppercase tracking-[0.2em] leading-none text-nowrap">Perspective</div>
                 </div>
-                <span className="text-xs text-gray-400">
-                   {new Date(listing.createdAt).toLocaleDateString()}
-                </span>
               </div>
+            </div>
 
-              {/* Action Buttons */}
-              <div className="mt-1 flex gap-2">
-                <Link
-                  to={`/update-listing/${listing._id}`}
-                  className="flex-1 py-1 px-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+            {/* Hover Action Overlay */}
+            <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-8 bg-gray-900/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none group-hover:pointer-events-auto">
+              <div className="w-full space-y-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                <div className="flex gap-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); navigate(`/update-listing/${listing._id}`); }}
+                    className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-green-400 hover:bg-green-500 hover:text-white transition-all rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(listing._id); }}
+                    disabled={deletingId === listing._id}
+                    className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-rose-400 hover:bg-rose-500 hover:text-white transition-all rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm"
+                  >
+                    {deletingId === listing._id ? <Sparkles className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    Delete
+                  </button>
+                </div>
+                <div 
+                  className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl"
+                  onClick={(e) => { e.stopPropagation(); navigate(`/listing/${listing._id}`); }}
                 >
-                  <span>✏️</span>
-                 
-                </Link>
-                <button
-                  onClick={() => handleDelete(listing._id)}
-                  disabled={deletingId === listing._id}
-                  className="flex-1 py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-                >
-                  {deletingId === listing._id ? (
-                    <span className="animate-spin">⏳</span>
-                  ) : (
-                    <span>🗑️</span>
-                  )}
-               
-                </button>
+                  Inspect Original Masterpiece
+                </div>
               </div>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { MdLocationOn, MdStar, MdFilterList, MdRefresh, MdMoreVert, MdEdit, MdDelete } from 'react-icons/md';
 import { FaSpinner, FaPlus, FaHome, FaBuilding, FaTree, FaKey, FaMoneyBillWave, FaBed, FaBath } from 'react-icons/fa';
+import { Star, Sparkles, Edit2, Trash2, Home as HomeIcon } from 'lucide-react';
 
 const ListingTypeConfig = {
   rent: {
@@ -242,192 +243,79 @@ export default function List() {
 
       {/* Main Content */}
       <main className="max-w-[1280px] mx-auto px-6 lg:px-10 py-8">
-        {/* Table Header - Airbnb Style */}
-        {filteredListings.length > 0 && (
-          <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 text-xs font-semibold text-[#717171] uppercase tracking-wide border-b border-[#DDDDDD]">
-            <div className="col-span-5">Listing</div>
-            <div className="col-span-2">Status</div>
-            <div className="col-span-2">Type</div>
-            <div className="col-span-2">Price</div>
-            <div className="col-span-1"></div>
-          </div>
-        )}
-
-        {/* Listings List */}
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6 p-2">
           {filteredListings.map((listing) => (
             <div
               key={listing._id}
-              className="group bg-white rounded-xl border border-[#DDDDDD] hover:border-[#222222] transition-all duration-200 overflow-hidden"
+              className="group relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
             >
-              {/* Desktop Layout */}
-              <div className="hidden md:grid grid-cols-12 gap-4 p-4 items-center">
-                {/* Listing Info */}
-                <div className="col-span-5 flex items-center gap-4">
-                  <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-[#F7F7F7]">
-                    <img
-                      src={listing.imageUrls[0] || '/placeholder-property.jpg'}
-                      alt={listing.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <Link 
-                      to={`/listing/${listing._id}`}
-                      className="block font-semibold text-[#222222] hover:underline truncate"
-                    >
-                      {listing.name}
-                    </Link>
-                    <div className="flex items-center gap-1 text-sm text-[#717171] mt-1">
-                      <MdLocationOn className="w-3.5 h-3.5 flex-shrink-0" />
-                      <span className="truncate">{listing.address}</span>
-                    </div>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-[#717171]">
-                      {listing.bedrooms && (
-                        <span className="flex items-center gap-1">
-                          <FaBed className="w-3 h-3" />
-                          {listing.bedrooms}
-                        </span>
-                      )}
-                      {listing.bathrooms && (
-                        <span className="flex items-center gap-1">
-                          <FaBath className="w-3 h-3" />
-                          {listing.bathrooms}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
+              <div className="absolute inset-0 z-0">
+                <img
+                  src={listing.imageUrls[0] || '/placeholder-property.jpg'}
+                  alt={listing.name}
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                  loading="lazy"
+                />
+              </div>
 
-                {/* Status */}
-                <div className="col-span-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[#E8F5E9] text-[#2E7D32]">
-                    Active
-                  </span>
-                </div>
-
-                {/* Type */}
-                <div className="col-span-2">
-                  <span className="inline-flex items-center gap-1.5 text-sm text-[#222222]">
-                    {ListingTypeConfig[listing.type]?.icon}
-                    {ListingTypeConfig[listing.type]?.label}
-                  </span>
-                </div>
-
-                {/* Price */}
-                <div className="col-span-2">
-                  <div className="text-sm font-semibold text-[#222222]">
-                    R{listing.regularPrice?.toLocaleString()}
-                  </div>
-                  {listing.type === 'rent' && (
-                    <div className="text-xs text-[#717171]">/ month</div>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="col-span-1 relative dropdown-container">
-                  <button
-                    onClick={() => toggleDropdown(listing._id)}
-                    className="p-2 rounded-full hover:bg-[#F7F7F7] transition-colors"
-                  >
-                    <MdMoreVert className="w-5 h-5 text-[#717171]" />
-                  </button>
-                  
-                  {dropdownOpen === listing._id && (
-                    <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-[#DDDDDD] py-1 z-10">
-                      <Link
-                        to={`/update-listing/${listing._id}`}
-                        className="flex items-center gap-3 px-4 py-3 text-sm text-[#222222] hover:bg-[#F7F7F7] transition-colors"
-                      >
-                        <MdEdit className="w-4 h-4" />
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => {
-                          handleDelete(listing._id);
-                          setDropdownOpen(null);
-                        }}
-                        disabled={deletingId === listing._id}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[#C13515] hover:bg-[#FFF8F6] transition-colors"
-                      >
-                        {deletingId === listing._id ? (
-                          <FaSpinner className="animate-spin w-4 h-4" />
-                        ) : (
-                          <MdDelete className="w-4 h-4" />
-                        )}
-                        Delete
-                      </button>
-                    </div>
-                  )}
+              {/* Top Overlays */}
+              <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
+                <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3 text-rose-500" />
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{listing.type}</span>
                 </div>
               </div>
 
-              {/* Mobile Layout */}
-              <div className="md:hidden p-4">
-                <div className="flex gap-4">
-                  <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-[#F7F7F7]">
-                    <img
-                      src={listing.imageUrls[0] || '/placeholder-property.jpg'}
-                      alt={listing.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                    <div className="absolute top-2 left-2">
-                      <span className="px-2 py-0.5 text-[10px] font-medium rounded bg-[#222222] text-white">
-                        {ListingTypeConfig[listing.type]?.label}
-                      </span>
-                    </div>
-                  </div>
+              {/* Permanent Information Overlay (On Image) */}
+              <div className="absolute inset-x-0 bottom-0 z-10 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none">
+                <div className="flex justify-between items-end gap-2">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between">
-                      <Link 
-                        to={`/listing/${listing._id}`}
-                        className="font-semibold text-[#222222] text-sm hover:underline line-clamp-2"
-                      >
-                        {listing.name}
-                      </Link>
+                    <div className="flex items-center gap-1.5 mb-1 text-white">
+                      <Star className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
+                      <span className="text-xs font-black">4.8</span>
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-[#717171] mt-1">
-                      <MdLocationOn className="w-3 h-3" />
-                      <span className="truncate">{listing.address}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-2 text-xs text-[#717171]">
-                      {listing.bedrooms && (
-                        <span>{listing.bedrooms} beds</span>
-                      )}
-                      {listing.bathrooms && (
-                        <span>· {listing.bathrooms} baths</span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between mt-3">
-                      <div className="font-semibold text-[#222222]">
-                        R{listing.regularPrice?.toLocaleString()}
-                        {listing.type === 'rent' && (
-                          <span className="text-xs font-normal text-[#717171]">/mo</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Link
-                          to={`/update-listing/${listing._id}`}
-                          className="p-2 text-[#222222] hover:bg-[#F7F7F7] rounded-full transition-colors"
-                        >
-                          <MdEdit className="w-4 h-4" />
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(listing._id)}
-                          disabled={deletingId === listing._id}
-                          className="p-2 text-[#C13515] hover:bg-[#FFF8F6] rounded-full transition-colors"
-                        >
-                          {deletingId === listing._id ? (
-                            <FaSpinner className="animate-spin w-4 h-4" />
-                          ) : (
-                            <MdDelete className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
+                    <h3 className="text-base font-black text-white leading-tight truncate mb-0.5">
+                      {listing.name}
+                    </h3>
+                    <p className="text-xs text-white/70 font-medium truncate flex items-center gap-1">
+                      {listing.address}
+                    </p>
                   </div>
+                  <div className="text-right">
+                    <div className="text-xl font-black text-white tracking-tighter leading-none mb-1">
+                      R{listing.regularPrice?.toLocaleString()}
+                    </div>
+                    <div className="text-[8px] font-black text-white/50 uppercase tracking-[0.2em] leading-none text-nowrap">Perspective</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Hover Action Overlay */}
+              <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-8 bg-gray-900/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none group-hover:pointer-events-auto">
+                <div className="w-full space-y-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                  <div className="flex gap-2">
+                    <Link
+                      to={`/update-listing/${listing._id}`}
+                      className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-green-400 hover:bg-green-500 hover:text-white transition-all rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      Edit
+                    </Link>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDelete(listing._id); }}
+                      disabled={deletingId === listing._id}
+                      className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-rose-400 hover:bg-rose-500 hover:text-white transition-all rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      {deletingId === listing._id ? <Sparkles className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                      Delete
+                    </button>
+                  </div>
+                  <Link
+                    to={`/listing/${listing._id}`} 
+                    className="block w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl"
+                  >
+                    Inspect Original Masterpiece
+                  </Link>
                 </div>
               </div>
             </div>

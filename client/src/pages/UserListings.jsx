@@ -1,8 +1,9 @@
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Star, Sparkles, Edit2, Trash2 } from 'lucide-react';
 import { MdLocationOn, MdMoreVert, MdEdit, MdDelete } from 'react-icons/md';
-import { FaEdit, FaTrash, FaBuilding, FaTree, FaMoneyBillWave, FaKey, FaFilter, FaPlus, FaCheckCircle } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaBuilding, FaTree, FaMoneyBillWave, FaKey, FaFilter, FaPlus, FaCheckCircle, FaSpinner } from 'react-icons/fa';
 
 const ListingTypeConfig = {
   rent: {
@@ -48,6 +49,7 @@ const ListingTypeConfig = {
 };
 
 export default function UserListings() {
+  const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user);
   const [deletingId, setDeletingId] = useState(null);
   const [userListings, setUserListings] = useState([]);
@@ -203,90 +205,99 @@ export default function UserListings() {
         </div>
 
         {/* Listings Grid - Higher Density */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6 p-2">
           {filteredListings.map((listing) => (
             <div
               key={listing._id}
-              className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col h-full"
+              onClick={() => {
+                const path = listing.category === 'stays' ? `/listing/${listing._id}` : 
+                            listing.category === 'experiences' ? `/service/${listing._id}` :
+                            `/helper/${listing._id}`;
+                navigate(path);
+              }}
+              className="group relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
             >
-              {/* Image Section */}
-              <div className="relative aspect-square overflow-hidden">
-                <Link
-                  to={listing.category === 'stays' ? `/listing/${listing._id}` : 
-                      listing.category === 'experiences' ? `/service/${listing._id}` :
-                      `/helper/${listing._id}`}
-                  className="block w-full h-full"
-                >
-                  <img
-                    src={listing.imageUrls[0] || '/placeholder-property.jpg'}
-                    alt={listing.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                </Link>
+              <div className="absolute inset-0 z-0">
+                <img
+                  src={listing.imageUrls[0] || '/placeholder-property.jpg'}
+                  alt={listing.name}
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                  loading="lazy"
+                />
+              </div>
 
-                {/* Status Badges */}
-                <div className="absolute top-3 left-3">
-                  <span className={`px-3 py-1 text-[10px] font-bold rounded-full border shadow-sm backdrop-blur-md ${ListingTypeConfig[listing.type]?.style || ListingTypeConfig[listing.category]?.style}`}>
+              {/* Top Overlays */}
+              <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
+                <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3 text-rose-500" />
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">
                     {ListingTypeConfig[listing.type]?.label || ListingTypeConfig[listing.category]?.label}
                   </span>
                 </div>
+              </div>
 
-                {/* More Dropdown */}
-                <div className="absolute top-3 right-3 dropdown-container">
-                  <button
-                    onClick={() => setDropdownOpen(dropdownOpen === listing._id ? null : listing._id)}
-                    className="p-1.5 bg-white/90 backdrop-blur-md rounded-full shadow-lg hover:bg-white transition-colors border border-gray-100"
-                  >
-                    <MdMoreVert className="w-4 h-4 text-gray-700" />
-                  </button>
-                  
-                  {dropdownOpen === listing._id && (
-                    <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
-                      <Link
-                        to={listing.category === 'stays' ? `/update-listing/${listing._id}` : 
-                            listing.category === 'experiences' ? `/update-service/${listing._id}` :
-                            `/update-helper/${listing._id}`}
-                        className="flex items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 font-semibold"
-                      >
-                        <MdEdit className="w-3.5 h-3.5 text-rose-500" />
-                        Edit post
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(listing._id, listing.category)}
-                        disabled={deletingId === listing._id}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 font-semibold border-t border-gray-50"
-                      >
-                        <MdDelete className="w-3.5 h-3.5" />
-                        {deletingId === listing._id ? '...' : 'Remove'}
-                      </button>
+              {/* Permanent Information Overlay (On Image) */}
+              <div className="absolute inset-x-0 bottom-0 z-10 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none">
+                <div className="flex justify-between items-end gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1 text-white">
+                      <Star className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
+                      <span className="text-xs font-black">4.8</span>
                     </div>
-                  )}
+                    <h3 className="text-base font-black text-white leading-tight truncate mb-0.5">
+                      {listing.name}
+                    </h3>
+                    <p className="text-xs text-white/70 font-medium truncate flex items-center gap-1">
+                      <MdLocationOn className="w-3 h-3" />
+                      {listing.address}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xl font-black text-white tracking-tighter leading-none mb-1">
+                      R{listing.regularPrice?.toLocaleString()}
+                    </div>
+                    <div className="text-[8px] font-black text-white/50 uppercase tracking-[0.2em] leading-none text-nowrap">Perspective</div>
+                  </div>
                 </div>
               </div>
 
-              {/* Content Section */}
-              <div className="p-4 flex flex-col flex-1">
-                <h3 className="text-sm font-bold text-gray-900 line-clamp-1 group-hover:text-rose-600 transition-colors mb-1.5">
-                  {listing.name}
-                </h3>
-
-                <div className="flex items-center gap-1.5 text-[11px] text-gray-500 mb-3">
-                  <MdLocationOn className="text-rose-500 flex-shrink-0 w-3 h-3" />
-                  <span className="truncate">{listing.address}</span>
-                </div>
-
-                <div className="mt-auto pt-3 border-t border-gray-50">
-                  <div className="flex flex-col">
-                    <span className="text-[9px] uppercase tracking-wider text-gray-400 font-bold">Base Price</span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-lg font-black text-gray-900 leading-none">
-                        R{listing.regularPrice?.toLocaleString()}
-                      </span>
-                      {listing.type === 'rent' && (
-                        <span className="text-[10px] text-gray-500 font-bold">/mo</span>
-                      )}
-                    </div>
+              {/* Hover Action Overlay */}
+              <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-8 bg-gray-900/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none group-hover:pointer-events-auto">
+                <div className="w-full space-y-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        const editPath = listing.category === 'stays' ? `/update-listing/${listing._id}` : 
+                                       listing.category === 'experiences' ? `/update-service/${listing._id}` :
+                                       `/update-helper/${listing._id}`;
+                        navigate(editPath); 
+                      }}
+                      className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-green-400 hover:bg-green-500 hover:text-white transition-all rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDelete(listing._id, listing.category); }}
+                      disabled={deletingId === listing._id}
+                      className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-rose-400 hover:bg-rose-500 hover:text-white transition-all rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      {deletingId === listing._id ? <FaSpinner className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                      Delete
+                    </button>
+                  </div>
+                  <div 
+                    className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl"
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      const viewPath = listing.category === 'stays' ? `/listing/${listing._id}` : 
+                                      listing.category === 'experiences' ? `/service/${listing._id}` :
+                                      `/helper/${listing._id}`;
+                      navigate(viewPath); 
+                    }}
+                  >
+                    Inspect Original Masterpiece
                   </div>
                 </div>
               </div>

@@ -1,18 +1,20 @@
-// eslint-disable-next-line no-unused-vars
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination } from 'swiper/modules';
+import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+import { Star, Sparkles, Heart, MapPin, ThumbsUp, ThumbsDown } from 'lucide-react';
 import {
   FaStar, FaMapMarkerAlt, FaHeart, FaRegHeart,
   FaUser, FaClock, FaDog, FaUsers, FaGraduationCap, FaCut, FaTools, FaCar, FaShieldAlt
 } from 'react-icons/fa';
 import NeuralLoader from '../components/NeuralLoader';
+import ImageWithFallback from '../components/ImageWithFallback';
+import { useWishlist } from "../hooks/useWishlist";
 
 export default function HelperDetails() {
+  const navigate = useNavigate();
   const { type } = useParams();
   const [helpers, setHelpers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -136,99 +138,90 @@ export default function HelperDetails() {
         {helpers.map((helper) => (
           <div
             key={helper._id}
-            className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-100"
+            onClick={() => navigate(`/helper/${helper._id}`)}
+            className="group relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
           >
-            {/* Image Gallery with Navigation */}
-            <div className="relative h-64">
-              <Swiper
-                modules={[Navigation, Pagination]}
-                navigation
-                pagination={{ clickable: true }}
-                onSlideChange={(swiper) => setActiveSlideIndex(swiper.activeIndex)}
-                className="h-full w-full"
+            <div className="absolute inset-0 z-0">
+               <Swiper
+                modules={[Pagination, Autoplay]}
+                pagination={{ clickable: true, dynamicBullets: true }}
+                autoplay={{ delay: 5000, disableOnInteraction: false }}
+                className="w-full h-full"
               >
                 {helper.imageUrls.map((img, index) => (
                   <SwiperSlide key={index}>
-                    <img
+                    <ImageWithFallback
                       src={img}
                       alt={`${helper.name} - ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                      loading="lazy"
                     />
                   </SwiperSlide>
                 ))}
               </Swiper>
+            </div>
 
-              {/* Favorite Button */}
-              <button
-                onClick={() => toggleFavorite(helper._id)}
-                className="absolute top-3 right-3 z-10 p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
-                aria-label="Save to favorites"
+            {/* Top Overlays */}
+            <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
+              <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-rose-500" />
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{typeLabels[type]}</span>
+              </div>
+
+               <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFavorite(helper._id);
+                }}
+                className="w-10 h-10 bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg flex items-center justify-center text-gray-900 hover:bg-rose-500 hover:text-white transition-all active:scale-90 pointer-events-auto"
               >
-                {favorites[helper._id] ? (
-                  <FaHeart className="text-red-500 text-xl" />
-                ) : (
-                  <FaRegHeart className="text-gray-600 text-xl" />
-                )}
+                <Heart className={`w-4 h-4 ${favorites[helper._id] ? 'text-rose-500 fill-rose-500' : 'text-gray-400'}`} />
               </button>
+            </div>
 
-              {/* Image Counter */}
-              <div className="absolute bottom-3 right-3 z-10 bg-black bg-opacity-60 text-white px-2 py-1 rounded-full text-xs">
-                {activeSlideIndex + 1}/{helper.imageUrls.length}
+            {/* Permanent Information Overlay (On Image) */}
+            <div className="absolute inset-x-0 bottom-0 z-10 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none">
+              <div className="flex justify-between items-end gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1 text-white">
+                    <Star className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
+                    <span className="text-xs font-black">{helper.rating}</span>
+                  </div>
+                  <h3 className="text-base font-black text-white leading-tight truncate mb-0.5">
+                    {helper.name}
+                  </h3>
+                  <p className="text-xs text-white/70 font-medium truncate flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {helper.address}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-xl font-black text-white tracking-tighter leading-none mb-1">
+                    R{helper.regularPrice}
+                  </div>
+                  <div className="text-[8px] font-black text-white/50 uppercase tracking-[0.2em] leading-none text-nowrap">Perspective</div>
+                </div>
               </div>
             </div>
 
-            {/* Card Content */}
-            <div className="p-5">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 line-clamp-1">{helper.name}</h2>
-                  <p className="text-gray-600 text-sm mt-1 line-clamp-2">{helper.description}</p>
+            {/* Hover Action Overlay */}
+            <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-8 bg-gray-900/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none group-hover:pointer-events-auto">
+              <div className="w-full space-y-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                <div className="flex gap-2">
+                  <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-green-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm">
+                    <ThumbsUp className="w-4 h-4" />
+                    {Math.floor(Math.random() * 50)}
+                  </div>
+                  <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-rose-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm">
+                    <ThumbsDown className="w-4 h-4" />
+                    {Math.floor(Math.random() * 5)}
+                  </div>
                 </div>
-
-                <div className="flex items-center">
-                  <FaStar className="text-yellow-400 mr-1" />
-                  <span className="font-medium">{helper.rating}</span>
-                  <span className="text-gray-400 mx-1">•</span>
-                  <span className="text-gray-500 text-sm">{helper.reviews} reviews</span>
-                </div>
-              </div>
-
-              <div className="flex items-center mt-3 text-gray-600">
-                <FaMapMarkerAlt className="mr-2" />
-                <span className="text-sm truncate">{helper.address}</span>
-              </div>
-
-              <div className="mt-4 flex justify-between items-center">
-                <div>
-                  <span className="text-lg font-bold text-airbnb-red">R{helper.regularPrice}</span>
-                  <span className="text-gray-600"> / service</span>
-                </div>
-
-                <Link
-                  to={`/helper/${helper._id}`}
-                  className="px-4 py-2 bg-airbnb-red hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+                <div 
+                  className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl"
                 >
-                  View Details
-                </Link>
-              </div>
-
-              {/* Helper-specific badges */}
-              <div className="mt-4 flex flex-wrap gap-2">
-                {helper.security && (
-                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full flex items-center">
-                    <FaShieldAlt className="mr-1" /> Verified
-                  </span>
-                )}
-
-                {helper.pets && (
-                  <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full flex items-center">
-                    <FaDog className="mr-1" /> Pets OK
-                  </span>
-                )}
-
-                <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full flex items-center">
-                  <FaClock className="mr-1" /> {helper.period}
-                </span>
+                  Inspect Original Masterpiece
+                </div>
               </div>
             </div>
           </div>

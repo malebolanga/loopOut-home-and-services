@@ -86,14 +86,14 @@ const LookingForDiscovery = () => {
   }, [requests, activeTab, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-32">
+    <div className="min-h-screen bg-[#FDFDFD] pt-0 pb-32">
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
       {/* Hero Section */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-40 backdrop-blur-md bg-white/80">
+      <div className="bg-white/90 border-b border-gray-100 top-0 z-10 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
