@@ -18,7 +18,6 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   UserGroupIcon,
-  SparklesIcon,
   TicketIcon,
   CheckBadgeIcon,
   ShieldCheckIcon,

@@ -238,7 +238,7 @@ export const extractFiltersFromQuery = (query) => {
   });
   
   // Extract location
-  const locations = ['cape town', 'johannesburg', 'pretoria', 'durban', 'south africa', 'sandton', 'cbd'];
+  const locations = ['cape town', 'johannesburg', 'pretoria', 'durban', 'south africa', 'sandton', 'cbd', 'polokwane', 'tembisa', 'midrand', 'soweto'];
   locations.forEach(location => {
     if (lowerQuery.includes(location)) {
       filters.location = location;

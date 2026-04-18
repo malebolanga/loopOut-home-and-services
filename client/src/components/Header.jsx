@@ -30,7 +30,6 @@ import {
   QuestionMarkCircleIcon,
   ChartPieIcon,
   MapPinIcon,
-  SparklesIcon,
   UserGroupIcon,
   BriefcaseIcon,
   XMarkIcon,
@@ -67,7 +66,7 @@ import {
   signOutUserFailure,
 } from "../redux/user/userSlice";
 
-
+import { Sparkles } from 'lucide-react';
 
 export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
@@ -215,6 +214,18 @@ export default function Header() {
     };
   }, [fetchNotifications]);
 
+  // Sync search state with URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const term = urlParams.get('searchTerm');
+    const type = urlParams.get('type');
+    const address = urlParams.get('address') || urlParams.get('location');
+
+    if (term) setSearchTerm(term);
+    if (type) setSearchType(type);
+    if (address) setCurrentLocation(address);
+  }, [location.search]);
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -348,9 +359,13 @@ export default function Header() {
 
     // Build search parameters
     const urlParams = new URLSearchParams();
-    urlParams.set('searchTerm', searchTerm);
+    
+    // If searchTerm is exactly the same as the extracted location, don't set it as a keyword
+    const isLocationOnly = extractedFilters.location && searchTerm.toLowerCase().trim() === extractedFilters.location.toLowerCase().trim();
+    if (searchTerm && !isLocationOnly) urlParams.set('searchTerm', searchTerm);
+    
     urlParams.set('type', extractedFilters.type || searchType || 'properties');
-    urlParams.set('address', extractedFilters.location || currentLocation);
+    urlParams.set('location', extractedFilters.location || currentLocation);
 
     // Join other extracted filters
     Object.entries(extractedFilters).forEach(([key, value]) => {
@@ -435,8 +450,12 @@ export default function Header() {
     hiddenRoutes.includes(location.pathname) || 
     hiddenPrefixes.some(prefix => location.pathname.startsWith(prefix));
 
-  // Completely hide on some specific pages if needed, 
-  // but for now let's just use the flag for the elements.
+  const hiddenBottomNavRoutes = ['/host-dashboard'];
+  const hiddenBottomNavPrefixes = ['/user/', '/user-profile/', '/listing/', '/helper/', '/service/', '/event/'];
+  
+  const isBottomNavHidden = 
+    hiddenBottomNavRoutes.includes(location.pathname) || 
+    hiddenBottomNavPrefixes.some(prefix => location.pathname.startsWith(prefix));
 
   return (
     <>
@@ -453,26 +472,23 @@ export default function Header() {
           <div className="flex flex-row items-center justify-between h-12">
             
             {/* Left: Icon-Triggered Search */}
-            <div className={`transition-all duration-300 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
+            <div className={`transition-all duration-500 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
               <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setShowSearch(true)}
-                className="search-trigger flex items-center gap-2 cursor-point"
+                className="search-trigger flex items-center gap-3 cursor-pointer "
               >
                 <div className="relative">
-                  <BrandIcon className="w-10 h-10 transition-transform group-hover:rotate-12 duration-500" />
-                  <motion.div 
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                    className="absolute inset-0 bg-rose-500 blur-xl rounded-full -z-10"
-                  />
+                  <div className="absolute inset-0 bg-gradient-to-tr from-rose-500 to-orange-400 blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 rounded-full" />
+                  <BrandIcon className="w-12 h-12 relative z-10 transition-transform group-hover:rotate-[15deg] duration-700 ease-out" />
                 </div>
                 <div className="hidden lg:block">
-                  <h1 className="text-xl font-black tracking-tighter text-gray-900 italic">LOOP OUT</h1>
-                  <div className="flex items-center gap-1.5 overflow-hidden">
-                    <span className="text-[8px] font-black text-rose-600 uppercase tracking-widest leading-none">Neural Hub</span>
-                    <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
+                  <h1 className="text-2xl font-black tracking-tighter text-gray-900 leading-none">lOOPOUT</h1>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="h-[1px] w-4 bg-rose-500/50" />
+                    <span className="text-[9px] font-black text-rose-600 uppercase tracking-[0.3em] leading-none">Neural Hub</span>
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
                   </div>
                 </div>
               </motion.div>
@@ -488,9 +504,10 @@ export default function Header() {
                 <div className="relative" ref={createDropdownRef}>
                   <button
                     onClick={() => setShowCreateDropdown(!showCreateDropdown)}
-                    className="hidden xl:flex items-center gap-2 text-xs font-black uppercase tracking-widest py-3 px-6 rounded-full bg-gray-950 text-white hover:bg-black transition-all duration-300 cursor-pointer shadow-lg active:scale-95"
+                    className="hidden xl:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] py-3.5 px-8 rounded-full bg-gray-950 text-white hover:bg-black transition-all duration-500 cursor-pointer shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] active:scale-95 group relative overflow-hidden"
                   >
-                    <PlusIcon className="w-4 h-4 stroke-[3px]" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
+                    <PlusIcon className="w-4 h-4 stroke-[3px] text-rose-500 group-hover:rotate-90 transition-transform duration-500" />
                     <span>Create</span>
                   </button>
 
@@ -575,9 +592,9 @@ export default function Header() {
                     setShowProfileDropdown(!showProfileDropdown);
                     setShowLanguageDropdown(false);
                   }}
-                  className="flex flex-row items-center justify-center w-14 h-14 bg-white rounded-full cursor-pointer shadow-[0_15px_35px_-10px_rgba(225,29,72,0.15)] hover:shadow-2xl hover:scale-110 transition-all duration-500 animate-in fade-in zoom-in border border-rose-100 text-rose-600"
+                  className="flex flex-row items-center justify-center w-14 h-14 bg-white rounded-full cursor-pointer shadow-[0_20px_40px_-15px_rgba(225,29,72,0.2)] hover:shadow-[0_30px_60px_-12px_rgba(225,29,72,0.3)] hover:scale-105 transition-all duration-500 border border-rose-100 text-rose-600 hover:bg-rose-50 group"
                 >
-                  <Bars3Icon className="w-7 h-7 stroke-[2.5px]" />
+                  <Bars3Icon className="w-7 h-7 stroke-[2.5px] group-hover:scale-110 transition-transform" />
                   <div className="hidden">
                     {currentUser ? (
                       <img
@@ -727,7 +744,7 @@ export default function Header() {
                   { id: 'events', label: 'Experiences', icon: MagnifyingGlassIcon, color: 'rose' },
                   { id: 'services', label: 'Services', icon: UserGroupIcon, color: 'rose' },
                   { id: 'helpers', label: 'Helpers', icon: BriefcaseIcon, color: 'rose' },
-                  { id: 'looking-for', label: 'Needs', icon: SparklesIcon, color: 'rose', path: '/looking-for' }
+                  { id: 'looking-for', label: 'Needs', icon: Sparkles, color: 'rose', path: '/looking-for' }
                 ].map((item) => {
                   const Icon = item.icon;
                   const isActive = searchType === item.id;
@@ -876,7 +893,7 @@ export default function Header() {
     </AnimatePresence>
 
       <AnimatePresence>
-        {isNavVisible && !isHeaderHidden && (
+        {isNavVisible && !isBottomNavHidden && (
           <motion.div
             initial={{ y: 120 }}
             animate={{ y: 0 }}

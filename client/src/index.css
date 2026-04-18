@@ -52,6 +52,15 @@ body {
     animation: blob 7s infinite;
 }
 
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+    animation: shimmer 2s infinite;
+}
+
 .animation-delay-2000 {
     animation-delay: 2s;
 }

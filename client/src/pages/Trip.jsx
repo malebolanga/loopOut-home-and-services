@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { 
   MapPinIcon, 
-  SparklesIcon, 
   UserGroupIcon,
   CalendarDaysIcon,
   TruckIcon,
@@ -32,6 +31,7 @@ import {
   MagnifyingGlassIcon,
   CheckBadgeIcon
 } from '@heroicons/react/24/outline';
+import { Sparkles } from 'lucide-react';
 import ListingItem from '../components/ListingItem';
 import HelperItem from '../components/HelperItem';
 import ServiceItem from '../components/ServiceItem';
@@ -68,7 +68,7 @@ const Trip = () => {
     { id: 'guesthouse', label: 'Guest House', icon: <HomeIcon className="w-6 h-6" /> },
     { id: 'motel', label: 'Motel', icon: <BuildingLibraryIcon className="w-6 h-6" /> },
     { id: 'hotel', label: 'Hotel', icon: <BuildingOfficeIcon className="w-6 h-6" /> },
-    { id: 'resort', label: 'Resort', icon: <SparklesIcon className="w-6 h-6" /> },
+    { id: 'resort', label: 'Resort', icon: <Sparkles className="w-6 h-6" /> },
     { id: 'apartment', label: 'Self-Catering Apt', icon: <HomeModernIcon className="w-6 h-6" /> }
   ];
 

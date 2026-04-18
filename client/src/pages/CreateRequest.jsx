@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { 
-  SparklesIcon, 
   MapPinIcon, 
   PhoneIcon, 
   TagIcon, 

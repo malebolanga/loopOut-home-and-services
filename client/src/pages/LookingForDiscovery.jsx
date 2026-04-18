@@ -6,7 +6,6 @@ import {
   MagnifyingGlassIcon, 
   AdjustmentsHorizontalIcon, 
   PlusIcon,
-  SparklesIcon,
   HomeIcon,
   UserGroupIcon,
   BriefcaseIcon,
@@ -15,15 +14,16 @@ import {
   PhoneIcon,
   ChatBubbleBottomCenterTextIcon
 } from '@heroicons/react/24/outline';
+import { Sparkles as LucideSparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NeuralLoader from '../components/NeuralLoader';
 
 const categories = [
-  { id: 'all', label: 'All Requests', icon: SparklesIcon, color: 'bg-purple-50 text-purple-600' },
+  { id: 'all', label: 'All Requests', icon: LucideSparkles, color: 'bg-purple-50 text-purple-600' },
   { id: 'room', label: 'Rooms', icon: HomeIcon, color: 'bg-blue-50 text-blue-600' },
   { id: 'roommate', label: 'Roommates', icon: UserGroupIcon, color: 'bg-emerald-50 text-emerald-600' },
   { id: 'nanny', label: 'Helpers/Nannies', icon: BriefcaseIcon, color: 'bg-amber-50 text-amber-600' },
-  { id: 'dog', label: 'Pets', icon: SparklesIcon, color: 'bg-rose-50 text-rose-600' },
+  { id: 'dog', label: 'Pets', icon: LucideSparkles, color: 'bg-rose-50 text-rose-600' },
   { id: 'sharing', label: 'Sharing', icon: UserGroupIcon, color: 'bg-indigo-50 text-indigo-600' },
 ];
 
@@ -256,7 +256,7 @@ const LookingForDiscovery = () => {
                              </div>
                           </div>
                           <div className="p-4 bg-rose-50 rounded-2xl flex items-center gap-3 border border-rose-100">
-                             <SparklesIcon className="w-5 h-5 text-rose-500" />
+                             <LucideSparkles className="w-5 h-5 text-rose-500" />
                              <div>
                                 <p className="text-[10px] text-rose-400 font-black uppercase tracking-widest">Bid Price</p>
                                 <p className="text-sm font-black text-rose-600 truncate">

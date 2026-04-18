@@ -18,7 +18,6 @@ import {
   StarIcon,
   MapPinIcon,
   HomeIcon,
-  SparklesIcon,
   ArrowPathIcon,
   TicketIcon,
   WrenchScrewdriverIcon,
@@ -45,10 +44,26 @@ import {
   CloudIcon,
   ChatBubbleBottomCenterTextIcon
 } from '@heroicons/react/24/outline';
-import { 
+import {
   StarIcon as StarIconSolid,
-  HeartIcon as HeartIconSolid 
+  HeartIcon as HeartIconSolid
 } from '@heroicons/react/24/solid';
+import {
+  MapPin,
+  Home,
+  Tag,
+  Heart,
+  User,
+  Sparkles,
+  Key,
+  Building,
+  Moon,
+  LayoutGrid,
+  Star,
+  ThumbsUp,
+  ThumbsDown,
+  Share2
+} from 'lucide-react';
 
 const RECENT_SEARCHES_KEY = 'recentPropertySearches';
 const MAX_RECENT_SEARCHES = 5;
@@ -60,7 +75,7 @@ const ALL_CATEGORIES = [
   { id: 'guest_house', label: 'Guest House', type: 'properties', icon: HomeIcon, color: 'bg-purple-100 text-purple-800', description: 'Guest houses & B&Bs' },
   { id: 'for_rent', label: 'For Rent', type: 'properties', icon: HomeIcon, color: 'bg-blue-100 text-blue-800', description: 'Rental properties' },
   { id: 'for_sale', label: 'For Sale', type: 'properties', icon: TagIcon, color: 'bg-emerald-100 text-emerald-800', description: 'Properties for sale' },
-  { id: 'vacation', label: 'Vacation Rental', type: 'properties', icon: SparklesIcon, color: 'bg-pink-100 text-pink-800', description: 'Short-term stays' },
+  { id: 'vacation', label: 'Vacation Rental', type: 'properties', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Short-term stays' },
 
   // Services
   { id: 'photography', label: 'Photography', type: 'services', icon: CameraIcon, color: 'bg-indigo-100 text-indigo-800', description: 'Photo & video services' },
@@ -76,7 +91,7 @@ const ALL_CATEGORIES = [
   { id: 'tattoo', label: 'Tattoo Artist', type: 'helpers', icon: PuzzlePieceIcon, color: 'bg-red-100 text-red-800', description: 'Tattoo & piercing' },
   { id: 'tutor', label: 'Private Tutor', type: 'helpers', icon: AcademicCapIcon, color: 'bg-blue-100 text-blue-800', description: 'Personal teaching' },
   { id: 'hair', label: 'Hair & Beauty', type: 'helpers', icon: ScissorsIcon, color: 'bg-rose-100 text-rose-800', description: 'Salon services' },
-  { id: 'nail', label: 'Nail Services', type: 'helpers', icon: SparklesIcon, color: 'bg-pink-100 text-pink-800', description: 'Manicure & pedicure' },
+  { id: 'nail', label: 'Nail Services', type: 'helpers', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Manicure & pedicure' },
   { id: 'chef', label: 'Private Chef', type: 'helpers', icon: BriefcaseIcon, color: 'bg-amber-100 text-amber-800', description: 'Personal cooking' },
   { id: 'barber', label: 'Barber', type: 'helpers', icon: ScissorsIcon, color: 'bg-sky-100 text-sky-800', description: 'Men\'s grooming' },
 
@@ -84,7 +99,7 @@ const ALL_CATEGORIES = [
   { id: 'transport', label: 'Transport', type: 'services', icon: TruckIcon, color: 'bg-blue-100 text-blue-800', description: 'Transportation services' },
 
   // Daily Essentials (for Homepage consistency)
-  { id: 'daily', label: 'Daily Loop', type: 'services', icon: SparklesIcon, color: 'bg-green-100 text-green-800', description: 'Essentials & daily needs' },
+  { id: 'daily', label: 'Daily Loop', type: 'services', icon: Sparkles, color: 'bg-green-100 text-green-800', description: 'Essentials & daily needs' },
 ];
 
 // Property Types Configuration
@@ -137,7 +152,7 @@ const EVENTS_CATEGORY_CONFIG = {
 const SEARCH_TYPE_CONFIG = {
   all: {
     label: 'Everything',
-    icon: SparklesIcon,
+    icon: Sparkles,
     color: 'from-gray-900 to-gray-800',
     bgColor: 'bg-gray-900',
     textColor: 'text-gray-900',
@@ -345,7 +360,6 @@ const CategoryDropdown = ({
       {/* Quick select footer - Fixed */}
       <div className="flex-shrink-0 bg-gray-50 border-t border-gray-200 p-3">
         <div className="flex items-center justify-between text-xs text-gray-500">
-          <span>Press ESC to close</span>
           <span>{filteredCategories.length} categories</span>
         </div>
       </div>
@@ -355,260 +369,196 @@ const CategoryDropdown = ({
 
 const ResultCard = ({ item, index, viewMode, onClick }) => {
   const [isLiked, setIsLiked] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const navigate = useNavigate();
 
   const getItemType = () => {
     const type = item.itemType || item.type || 'properties';
-    if (type === 'listing') return 'properties';
-    if (type === 'property') return 'properties';
+    if (type === 'listing' || type === 'property') return 'properties';
     if (type === 'service') return 'services';
     if (type === 'helper') return 'helpers';
     if (type === 'event') return 'events';
-    if (type === 'looking-for') return 'looking-for';
     return type;
   };
 
-  const getItemSubType = () => {
-    return item.subType || item.type || item.category || item.serviceType || '';
-  };
-
-  const itemType = getItemType();
-  const itemSubType = getItemSubType();
-
-  const mainConfig = SEARCH_TYPE_CONFIG[itemType] || {
-    label: itemType.charAt(0).toUpperCase() + itemType.slice(1),
-    bgColor: 'bg-gray-100',
-    textColor: 'text-gray-600',
-    endpoint: itemType
-  };
-
-  let subConfig = null;
-  if (mainConfig?.subTypes && itemSubType) {
-    subConfig = mainConfig.subTypes[itemSubType];
-  }
-  if (!subConfig && itemType === 'helpers' && itemSubType) {
-    subConfig = HELPER_CATEGORY_CONFIG[itemSubType];
-  }
-  if (!subConfig && itemType === 'properties' && itemSubType) {
-    subConfig = PROPERTY_TYPE_CONFIG[itemSubType];
-  }
-  if (!subConfig && itemType === 'services' && itemSubType) {
-    subConfig = SERVICES_CATEGORY_CONFIG[itemSubType];
-  }
-  if (!subConfig && itemType === 'events' && itemSubType) {
-    subConfig = EVENTS_CATEGORY_CONFIG[itemSubType];
-  }
-
-  const getImageUrl = () => {
-    if (item.imageUrls && item.imageUrls.length > 0) return item.imageUrls[0];
-    if (item.images && item.images.length > 0) return item.images[0];
-    if (item.imageUrl) return item.imageUrl;
-    return null;
-  };
-
-  const getAllImages = () => {
-    if (item.imageUrls && item.imageUrls.length > 0) return item.imageUrls;
-    if (item.images && item.images.length > 0) return item.images;
-    if (item.imageUrl) return [item.imageUrl];
-    return [];
-  };
+  const type = getItemType();
 
   const getPrice = () => {
-    let p = item.price || item.regularPrice || item.hourlyRate || item.dailyRate;
-    if (!p) return 'Contact for price';
-    
-    const formattedPrice = `R${p.toLocaleString()}`;
-
-    if (itemType === 'properties') {
-      if (itemSubType === 'rent') return `${formattedPrice} /month`;
-      if (itemSubType === 'over' || itemSubType === 'guest_house') return `${formattedPrice}  /night`;
-      if (itemSubType === 'office') return `${formattedPrice} /hour`;
-      if (itemSubType === 'sale' || itemSubType === 'land') return `${formattedPrice} /Sale`;
-    }
-    
-    if (itemType === 'services' || itemType === 'helpers') {
-      if (item.dailyRate) return `${formattedPrice} /day`;
-      if (item.hourlyRate) return `${formattedPrice} /hour`;
-    }
-
-    if (itemType === 'events') return `${formattedPrice} per guest`;
-
-    return formattedPrice;
+    const val = item.regularPrice || item.price || item.cost || item.pricePerHour || item.ticketPrice;
+    if (!val) return 'Contact';
+    const formatted = typeof val === 'number' ? `R${val.toLocaleString()}` : val;
+    if (type === 'properties' && item.type === 'rent') return `${formatted} / mo`;
+    if (type === 'properties' && item.type === 'over') return `${formatted} / night`;
+    return formatted;
   };
 
-  const getRating = () => item.rating || item.averageRating || 4.5;
-  const getLocation = () => item.address || item.location || item.city || 'Location not specified';
+  const getRating = () => item.rating || 4.9;
 
-  if (itemType === 'looking-for') {
-     return (
-       <motion.div
-         variants={itemVariants}
-         whileHover={{ y: -4 }}
-         onClick={onClick}
-         className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm hover:shadow-xl transition-all h-full flex flex-col gap-4"
-       >
-          <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-2xl bg-gray-50 overflow-hidden border border-gray-100 p-0.5">
-                <img src={item.userRef?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"} className="w-full h-full object-cover rounded-[0.9rem]" />
-             </div>
-             <div>
-                <h4 className="text-[13px] font-black text-gray-900 leading-tight truncate w-32">{item.userRef?.username || "Neighbor"}</h4>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{item.category}</p>
-             </div>
-          </div>
-          <h3 className="font-black text-gray-900 text-base leading-tight truncate">{item.title}</h3>
-          <p className="text-xs text-gray-500 line-clamp-2 font-medium leading-relaxed">{item.description}</p>
-          <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50">
-             <div className="flex items-center gap-1.5 text-gray-400">
-                <MapPinIcon className="w-3.5 h-3.5" />
-                <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[80px]">{getLocation()}</span>
-             </div>
-             <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Active Need</span>
-          </div>
-       </motion.div>
-     );
-  }
+  const getImage = () => {
+    if (item.imageUrls && item.imageUrls.length > 0) return item.imageUrls[0];
+    if (item.images && item.images.length > 0) return item.images[0];
+    return 'https://images.unsplash.com/photo-1615529182904-14819c35db37?w=800&q=80';
+  };
 
-  if (viewMode === 'list') {
+  const getTitle = () => item.name || item.title || item.eventName || 'Untitled Masterpiece';
+  const getLocation = () => item.address || item.location || item.city || 'Private Location';
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 30, scale: 0.95 },
+    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, ease: "easeOut" } }
+  };
+
+  if (type === 'looking-for') {
     return (
       <motion.div
-        variants={itemVariants}
-        whileHover={{ x: 4, y: -2, backgroundColor: '#f9fafb' }}
+        variants={cardVariants}
+        whileHover={{ y: -5, scale: 1.02 }}
         onClick={onClick}
-        className=" rounded-2xl p-3 hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-100 flex gap-4  overflow-hidden"
+        className="group relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-[2.5rem] p-8 shadow-2xl hover:shadow-[0_30px_60px_-15px_rgba(225,29,72,0.3)] transition-all duration-500 h-full flex flex-col gap-6 cursor-pointer overflow-hidden border border-gray-700"
       >
-        <div className="w-32 h-32 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 bg-neutral-100">
-          <ImageWithFallback
-            src={getImageUrl()}
-            imageUrls={getAllImages()}
-            type={itemType === 'listing' ? 'property' : (itemType === 'helper' ? 'helper' : (itemType === 'event' ? 'event' : 'service'))}
-            alt={item.name || item.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-125 transition-transform duration-1000">
+           <LayoutGrid className="w-32 h-32 text-white" />
+        </div>
+        
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md overflow-hidden border border-white/20 p-1">
+              <img src={item.userRef?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"} className="w-full h-full object-cover rounded-[0.9rem]" alt="user" />
+            </div>
+            <div>
+              <h4 className="text-[15px] font-black text-white leading-tight truncate max-w-[150px] drop-shadow-sm">{item.userRef?.username || "Neighbor"}</h4>
+              <p className="text-[10px] text-rose-300 font-bold uppercase tracking-widest mt-1">{item.category}</p>
+            </div>
+          </div>
+          <div className="px-3 py-1.5 bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(225,29,72,0.5)]">
+             Active Pulse
+          </div>
         </div>
 
-        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-          <div className="flex justify-between items-start gap-2">
-            <div className="min-w-0">
-              <h3 className="text-base font-bold text-gray-900 truncate tracking-tight group-hover:text-rose-600 transition-colors">
-                {item.name || item.title}
-              </h3>
-              <div className="flex items-center gap-1 text-gray-400 mt-0.5">
-                <MapPinIcon className="w-3 h-3" />
-                <p className="text-[11px] font-medium truncate">{getLocation()}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1 shrink-0 bg-gray-50 px-2 py-1 rounded-lg">
-              <StarIcon className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-              <span className="text-xs font-bold text-gray-900">{getRating().toFixed(1)}</span>
-            </div>
-          </div>
+        <div className="relative z-10 my-4 flex-1">
+           <h3 className="font-black text-white text-2xl leading-tight mb-3 drop-shadow-md">{item.title}</h3>
+           <p className="text-[13px] text-gray-300 line-clamp-3 font-medium leading-relaxed">{item.description}</p>
+        </div>
 
-          <div className="flex items-center gap-2 mt-1 text-[11px] text-gray-500 flex-wrap">
-            {item.bedrooms !== undefined && (
-              <span className="bg-gray-50 px-2 py-0.5 rounded-md">{item.bedrooms} bed</span>
-            )}
-            {item.bathrooms !== undefined && (
-              <span className="bg-gray-50 px-2 py-0.5 rounded-md">{item.bathrooms} bath</span>
-            )}
-            {itemType !== 'properties' && subConfig && (
-              <span className="bg-gray-50 px-2 py-0.5 rounded-md">{subConfig.label}</span>
-            )}
+        <div className="relative z-10 mt-auto flex items-center justify-between pt-6 border-t border-white/10">
+          <div className="flex items-center gap-2 text-rose-300">
+            <MapPin className="w-4 h-4" />
+            <span className="text-xs font-black uppercase tracking-widest truncate max-w-[120px] drop-shadow-sm">{getLocation()}</span>
           </div>
-
-          <div className="mt-auto flex justify-between items-end">
-             <div className="flex flex-col">
-                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Starting from</span>
-                <span className="text-base font-black text-gray-900">{getPrice()}</span>
-             </div>
-             <button
-               onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }}
-               className={`p-2 rounded-full transition-all ${isLiked ? 'bg-rose-50 text-rose-500' : 'bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500'}`}
-             >
-               <HeartIcon className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-             </button>
+          <div className="flex items-baseline gap-1 bg-white/10 px-4 py-2 rounded-2xl border border-white/10 backdrop-blur-md">
+             <span className="text-xl font-black text-white tracking-tighter drop-shadow-md">
+               {getPrice()}
+             </span>
           </div>
         </div>
       </motion.div>
     );
   }
 
-  return (
-    <motion.div
-      variants={itemVariants}
-      whileHover={{ y: -4 }}
-      onClick={onClick}
-      className="
-      cursor-pointer flex flex-col h-full"
-    >
-      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100 rounded-2xl mb-3 shadow-sm group-hover:shadow-md transition-shadow">
-        <ImageWithFallback
-          src={getImageUrl()}
-          imageUrls={getAllImages()}
-          type={itemType === 'listing' ? 'property' : (itemType === 'helper' ? 'helper' : (itemType === 'event' ? 'event' : 'service'))}
-          alt={item.name || item.title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-        />
-        
-        {/* Type Badge */}
-        {mainConfig && (
-          <div className="absolute top-2.5 left-2.5 z-10">
-            <div className="bg-white/90 backdrop-blur-md px-2 py-1 rounded-lg border border-white/20 shadow-sm">
-              <span className="text-[9px] font-black text-gray-900 uppercase tracking-widest">
-                 {mainConfig.label}
-              </span>
+  if (viewMode === 'list') {
+    return (
+      <motion.div
+        variants={cardVariants}
+        className="flex flex-col sm:flex-row gap-4 py-4 border-b border-gray-100 cursor-pointer"
+        onClick={onClick}
+      >
+        <div className="relative w-full sm:w-[240px] aspect-[4/3] sm:aspect-auto sm:h-32 shrink-0 overflow-hidden rounded-2xl bg-gray-100">
+          <ImageWithFallback
+            src={getImage()}
+            alt={getTitle()}
+            className="w-full h-full object-cover"
+          />
+          {/* Badge */}
+          <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-white/90 backdrop-blur-md rounded shadow-sm border border-black/5 flex items-center gap-1">
+             <span className="text-[10px] font-bold text-gray-900 uppercase tracking-wider">{type === 'properties' && item.type === 'over' ? 'Vacation' : type === 'properties' ? item.type : type}</span>
+          </div>
+          {/* Price on Image */}
+          <div className="absolute bottom-2 left-2 px-2 py-1 bg-white/95 backdrop-blur-md rounded flex items-center justify-center shadow-sm">
+             <span className="text-[13px] font-bold text-gray-900 leading-none">{getPrice()}</span>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsLiked(!isLiked);
+            }}
+            className="absolute top-2 right-2 p-1 hover:scale-110 active:scale-90 transition-transform drop-shadow-md"
+          >
+            <Heart className={`w-[20px] h-[20px] ${isLiked ? 'fill-rose-500 text-rose-500' : 'fill-black/40 text-white'}`} strokeWidth={isLiked ? 0 : 1.5} />
+          </button>
+        </div>
+
+        <div className="flex-1 flex flex-col py-0.5 pr-2">
+          <div className="flex justify-between items-start mb-0.5">
+            <p className="text-[13px] text-gray-500 font-light leading-tight">{getLocation()}</p>
+            <div className="flex items-center gap-1 shrink-0 text-gray-900">
+              <Star className="w-3.5 h-3.5 fill-current" />
+              <span className="text-[13px] font-light leading-none">{getRating()}</span>
             </div>
           </div>
-        )}
+          
+          <h3 className="text-[16px] text-gray-900 font-medium truncate max-w-xl leading-tight mb-0.5">{getTitle()}</h3>
+          
+          <p className="text-[13px] text-gray-500 font-light line-clamp-1 leading-snug">
+             {item.description || (item.bedrooms ? `${item.bedrooms} beds` : type === 'services' ? 'Professional Service' : type === 'helpers' ? 'Local Helper' : 'Event')}
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
 
-        {/* Favorite Button */}
+  // Grid Mode (Simple Small Card)
+  return (
+    <motion.div
+      variants={cardVariants}
+      className="flex flex-col gap-3 cursor-pointer"
+      onClick={onClick}
+    >
+      <div className="relative w-full aspect-[20/19] overflow-hidden rounded-2xl bg-gray-100">
+        <ImageWithFallback
+          src={getImage()}
+          alt={getTitle()}
+          className="w-full h-full object-cover"
+        />
+        {/* Badge */}
+        <div className="absolute top-3 left-3 px-2 py-1 bg-white/90 backdrop-blur-md rounded-md shadow-sm border border-black/5 flex items-center gap-1">
+           <span className="text-[11px] font-semibold text-gray-900 uppercase tracking-wider">{type === 'properties' && item.type === 'over' ? 'Vacation' : type === 'properties' ? item.type : type}</span>
+        </div>
+        {/* Heart button */}
         <button
-          onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }}
-          className="absolute top-2.5 right-2.5 z-10 p-2 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 transition-all active:scale-90"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsLiked(!isLiked);
+          }}
+          className="absolute top-3 right-3 p-1.5 hover:scale-110 active:scale-90 transition-transform drop-shadow-md"
         >
-          <HeartIcon className={`w-4 h-4 stroke-[2.5px] ${isLiked ? 'text-rose-500 fill-rose-500 stroke-rose-500' : 'text-white'}`} />
+          <Heart className={`w-[24px] h-[24px] ${isLiked ? 'fill-rose-500 text-rose-500' : 'fill-black/40 text-white'}`} strokeWidth={isLiked ? 0 : 1.5} />
         </button>
       </div>
-
-      <div className="flex-1 flex flex-col">
-        <div className="flex justify-between items-start gap-2">
-          <h3 className="font-bold text-sm text-gray-900 truncate group-hover:text-rose-600 transition-colors">
-            {item.name || item.title}
-          </h3>
-          <div className="flex items-center gap-1 shrink-0">
-            <StarIcon className="w-3 h-3 text-gray-900 fill-gray-900" />
-            <span className="text-xs font-bold text-gray-900">{getRating().toFixed(1)}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1 text-gray-500 mt-0.5">
-          <MapPinIcon className="w-3 h-3 flex-shrink-0" />
-          <p className="text-xs font-medium truncate">{getLocation()}</p>
-        </div>
-        
-        <div className="text-[11px] text-gray-400 mt-1 flex gap-1 items-center flex-wrap uppercase font-bold tracking-tight">
-           {itemType === 'properties' ? (
-             <>
-               <span>{item.bedrooms || 0} Beds</span>
-               <span className="text-gray-300">•</span>
-               <span>{item.bathrooms || 0} Baths</span>
-             </>
-           ) : (
-             subConfig && <span>{subConfig.label}</span>
-           )}
-        </div>
-
-        <div className="mt-2 text-sm font-black text-gray-900 uppercase">
-           {getPrice()}
-        </div>
+      
+      <div className="flex flex-col px-0.5">
+         <div className="flex justify-between items-start">
+            <h3 className="font-semibold text-gray-900 truncate pr-4 text-[15px]">{getLocation()}</h3>
+            <div className="flex items-center gap-1 shrink-0 text-gray-900 mt-0.5">
+               <Star className="w-3 h-3 fill-current" />
+               <span className="text-[14px] font-light">{getRating()}</span>
+            </div>
+         </div>
+         <p className="text-[14px] text-gray-500 font-light truncate leading-snug">{getTitle()}</p>
+         <p className="text-[14px] text-gray-500 font-light truncate leading-snug">
+          {item.bedrooms ? `${item.bedrooms} beds` : type === 'services' ? 'Professional Service' : type === 'helpers' ? 'Local Helper' : 'Event'}
+         </p>
+         <div className="mt-1 flex items-baseline gap-1">
+            <span className="text-[15px] font-semibold text-gray-900">{getPrice()}</span>
+         </div>
       </div>
     </motion.div>
   );
 };
 
 const EmptyState = ({ onClear }) => (
-  <motion.div 
-    initial={{ opacity: 0, scale: 0.9 }} 
-    animate={{ opacity: 1, scale: 1 }} 
+  <motion.div
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
     className=" rounded-[3rem] p-16 text-center border border-gray-50 shadow-2xl shadow-rose-100 max-w-2xl mx-auto"
   >
     <div className="w-24 h-24 bg-rose-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
@@ -619,8 +569,8 @@ const EmptyState = ({ onClear }) => (
       We couldn't find exactly what you're looking for. <br />
       Try broadening your search or resetting your filters.
     </p>
-    <button 
-      onClick={onClear} 
+    <button
+      onClick={onClear}
       className="px-10 py-5 bg-gray-900 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-rose-600 transition-all shadow-xl shadow-gray-200 active:scale-95"
     >
       Reset all filters
@@ -811,7 +761,7 @@ const SearchPage = () => {
       const searchTerm = urlParams.get('searchTerm') || '';
       const minPrice = urlParams.get('minPrice');
       const maxPrice = urlParams.get('maxPrice');
-      const location = urlParams.get('location') || '';
+      const location = urlParams.get('location') || urlParams.get('address') || '';
       const minRating = urlParams.get('minRating');
 
       let endpoints = [];
@@ -963,133 +913,143 @@ const SearchPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Airbnb Style Persistent Header */}
-      <div className="fixed top-0 left-0 right-0 z-[60] bg-white/80 backdrop-blur-md border-b border-slate-200/50 shadow-sm px-4 py-3 md:py-4">
-        <div className="max-w-7xl mx-auto flex items-center gap-3">
-           
-           {/* Search Pill Trigger */}
-           <button 
-             onClick={() => setShowFilters(true)}
-             className="flex-1 flex items-center gap-4 bg-white border border-slate-200/50 rounded-full px-5 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.05)] hover:shadow-lg transition-all active:scale-98 group"
-           >
-              <MagnifyingGlassIcon className="w-5 h-5 text-rose-500" />
-              <div className="flex flex-col items-start overflow-hidden">
-                 <span className="text-sm font-black text-gray-900 truncate leading-none mb-1">
-                    {searchTerm || 'Where to?'}
-                 </span>
-                 <div className="flex items-center gap-2 text-[10px] text-gray-400 font-black uppercase tracking-widest whitespace-nowrap">
-                    <span>{filters.location || 'Anywhere'}</span>
-                    <span className="w-1 h-1 rounded-full bg-gray-300" />
-                    <span>Any week</span>
-                    <span className="w-1 h-1 rounded-full bg-gray-300" />
-                    <span>Add guests</span>
-                 </div>
+      {/* Elite Persistent Header */}
+      <div className="fixed top-0 left-0 right-0 z-[60] bg-white/60 backdrop-blur-2xl border-b border-white/40 px-3 py-3 md:px-10 md:py-6 shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
+        <div className="max-w-[2520px] mx-auto xl:px-20 flex items-center gap-3 md:gap-6">
+          
+          {/* Futuristic Search Pill */}
+          <button
+            onClick={() => setShowFilters(true)}
+            className="flex-1 flex items-center gap-3 md:gap-6 bg-white border border-gray-100 rounded-full pl-4 md:pl-6 pr-2 py-1.5 md:py-2 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] transition-all duration-500 active:scale-[0.99] overflow-hidden relative"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-rose-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-rose-500 flex items-center justify-center shadow-lg shadow-rose-200 group-hover:rotate-12 transition-transform duration-500 flex-shrink-0">
+              <MagnifyingGlassIcon className="w-4 h-4 md:w-5 md:h-5 text-white" />
+            </div>
+            <div className="flex flex-col items-start overflow-hidden relative z-10">
+              <span className="text-xs md:text-sm font-black text-gray-900 truncate leading-tight tracking-tight max-w-[120px] md:max-w-none">
+                {searchTerm || 'Initiate Scan...'}
+              </span>
+              <div className="flex items-center gap-1.5 md:gap-2 text-[9px] md:text-[10px] text-gray-400 font-bold uppercase tracking-[0.15em] md:tracking-[0.2em] whitespace-nowrap opacity-70">
+                <span className="group-hover:text-rose-500 transition-colors truncate max-w-[60px] md:max-w-none">{filters.location || 'Anywhere'}</span>
+                <div className="w-1 h-1 rounded-full bg-gray-300 flex-shrink-0" />
+                <span className="hidden xs:inline">Any timeframe</span>
+                <div className="w-1 h-1 rounded-full bg-gray-300 flex-shrink-0 hidden xs:block" />
+                <span className="hidden xs:inline">Add Entity</span>
               </div>
-           </button>
+            </div>
+          </button>
 
-           {/* Filter Button */}
-           <button 
-             onClick={() => setShowFilters(true)}
-             className="w-12 h-12 flex items-center justify-center rounded-full border border-slate-200/50 bg-white shadow-sm hover:shadow-md transition-all active:scale-90"
-           >
-              <AdjustmentsHorizontalIcon className="w-5 h-5 text-gray-600" />
-           </button>
+          {/* Luxury Filter Button */}
+          <button
+            onClick={() => setShowFilters(true)}
+            className="w-11 h-11 md:w-14 md:h-14 flex items-center justify-center rounded-full border border-gray-100 bg-white shadow-sm hover:shadow-xl hover:scale-110 transition-all duration-500 active:scale-90  flex-shrink-0"
+          >
+            <AdjustmentsHorizontalIcon className="w-5 h-5 md:w-6 md:h-6 text-gray-600 group-hover:text-rose-500 transition-colors" />
+          </button>
         </div>
       </div>
 
       <main className="pt-24 pb-32 px-4 md:px-10 lg:px-20 max-w-[2520px] mx-auto">
-         {/* Categories Bar */}
-         <div className="mb-12 overflow-x-auto no-scrollbar py-2">
-            <div className="flex gap-8 items-center">
-               <button 
-                 onClick={() => { setSelectedCategory('all'); fetchData(); }}
-                 className={`flex flex-col items-center gap-3 min-w-fit transition-all ${!selectedCategory || selectedCategory === 'all' ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}
-               >
-                  <SparklesIcon className="w-6 h-6" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">All Vibes</span>
-                  {(!selectedCategory || selectedCategory === 'all') && <div className="w-6 h-0.5 bg-gray-950 rounded-full" />}
-               </button>
-               
-               {ALL_CATEGORIES.map(cat => (
-                 <button 
-                   key={cat.id}
-                   onClick={() => handleCategorySelect(cat)}
-                   className={`flex flex-col items-center gap-3 min-w-fit transition-all ${selectedCategory === cat.id ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}
-                 >
-                    <cat.icon className="w-6 h-6" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">{cat.label}</span>
-                    {selectedCategory === cat.id && <div className="w-6 h-0.5 bg-gray-950 rounded-full" />}
-                 </button>
-               ))}
-            </div>
-         </div>
+        {/* Cinematic Categories Bar */}
+        <div className="mb-16 overflow-x-auto no-scrollbar py-6 border-b border-gray-100/50">
+          <div className="flex gap-12 items-center">
+            <button
+              onClick={() => { setSelectedCategory('all'); fetchData(); }}
+              className={` flex flex-col items-center gap-4 min-w-fit transition-all relative ${!selectedCategory || selectedCategory === 'all' ? 'text-gray-950 opacity-100' : 'text-gray-400 opacity-60 hover:opacity-100 hover:text-gray-600'}`}
+            >
+              <div className={`p-4 rounded-2xl transition-all duration-500 ${!selectedCategory || selectedCategory === 'all' ? 'bg-gray-950 text-white shadow-2xl scale-110 shadow-gray-200' : 'bg-transparent group-hover:bg-gray-100'}`}>
+                <Sparkles className="w-7 h-7" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-[0.25em]">Universe</span>
+              {(!selectedCategory || selectedCategory === 'all') && (
+                <motion.div layoutId="activeCategory" className="absolute -bottom-6 w-8 h-1 bg-gray-950 rounded-full" />
+              )}
+            </button>
 
-         {/* Results Area */}
-         <div className="mb-8 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-               <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight italic">
-                  {listings.length} Results Found
-               </h2>
-               {searchType !== 'all' && (
-                 <span className="px-3 py-1 bg-rose-100 text-rose-600 text-[9px] font-black uppercase tracking-widest rounded-full">
-                    {searchType}
-                 </span>
-               )}
-            </div>
-            
-            <div className="flex items-center gap-2 bg-white/50 border border-slate-200/50 p-1 rounded-full shadow-sm">
-               <button 
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-full transition-all ${viewMode === 'grid' ? 'bg-gray-950 text-white' : 'text-gray-400'}`}
-               >
-                  <Squares2X2Icon className="w-4 h-4" />
-               </button>
-               <button 
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-full transition-all ${viewMode === 'list' ? 'bg-gray-950 text-white' : 'text-gray-400'}`}
-               >
-                  <Bars3Icon className="w-4 h-4" />
-               </button>
-               <button 
-                onClick={() => setViewMode('map')}
-                className={`p-2 rounded-full transition-all ${viewMode === 'map' ? 'bg-gray-950 text-white' : 'text-gray-400'}`}
-               >
-                  <MapIcon className="w-4 h-4" />
-               </button>
-            </div>
-         </div>
+            {ALL_CATEGORIES.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => handleCategorySelect(cat)}
+                className={` flex flex-col items-center gap-4 min-w-fit transition-all relative ${selectedCategory === cat.id ? 'text-gray-950 opacity-100' : 'text-gray-400 opacity-60 hover:opacity-80'}`}
+              >
+                <div className={`p-4 rounded-2xl transition-all duration-500 ${selectedCategory === cat.id ? 'bg-rose-500 text-white shadow-2xl scale-110 shadow-rose-200' : 'bg-transparent group-hover:bg-gray-100'}`}>
+                  <cat.icon className="w-7 h-7" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-[0.25em]">{cat.label}</span>
+                {selectedCategory === cat.id && (
+                  <motion.div layoutId="activeCategory" className="absolute -bottom-6 w-8 h-1 bg-rose-500 rounded-full" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
 
-         {loading ? (
-            <div className="py-24 flex justify-center w-full">
-               <NeuralLoader text="Scanning Loop Matrix..." />
-            </div>
-         ) : listings.length > 0 ? (
-           <motion.div 
-             variants={containerVariants}
-             initial="hidden"
-             animate="visible"
-             className={`grid gap-x-8 gap-y-12 ${
-               viewMode === 'grid' 
-                 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xxl:grid-cols-5' 
-                 : 'grid-cols-1'
-             }`}
-           >
-             {listings.map((item, idx) => (
-               <ResultCard 
-                 key={item._id || item.id || idx} 
-                 item={item} 
-                 viewMode={viewMode}
-                 onClick={() => addToRecentlyViewed(item, item.itemType)}
-               />
-             ))}
-           </motion.div>
-         ) : (
-           <EmptyState onClear={clearFilters} />
-         )}
+        {/* Results Area */}
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight italic">
+              {listings.length} Results Found
+            </h2>
+            {searchType !== 'all' && (
+              <span className="px-3 py-1 bg-rose-100 text-rose-600 text-[9px] font-black uppercase tracking-widest rounded-full">
+                {searchType}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 bg-white/50 border border-slate-200/50 p-1 rounded-full shadow-sm">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-full transition-all ${viewMode === 'grid' ? 'bg-gray-950 text-white' : 'text-gray-400'}`}
+            >
+              <Squares2X2Icon className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-full transition-all ${viewMode === 'list' ? 'bg-gray-950 text-white' : 'text-gray-400'}`}
+            >
+              <Bars3Icon className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`p-2 rounded-full transition-all ${viewMode === 'map' ? 'bg-gray-950 text-white' : 'text-gray-400'}`}
+            >
+              <MapIcon className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="py-24 flex justify-center w-full">
+            <NeuralLoader text="Scanning Loop Matrix..." />
+          </div>
+        ) : listings.length > 0 ? (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className={`grid gap-x-6 gap-y-10 ${viewMode === 'grid'
+              ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5'
+              : 'grid-cols-1'
+              }`}
+          >
+            {listings.map((item, idx) => (
+              <ResultCard
+                key={item._id || item.id || idx}
+                item={item}
+                viewMode={viewMode}
+                onClick={() => addToRecentlyViewed(item, item.itemType)}
+              />
+            ))}
+          </motion.div>
+        ) : (
+          <EmptyState onClear={clearFilters} />
+        )}
       </main>
 
       {/* Map Toggle Floating Button (Mobile) */}
-      <button 
+      <button
         onClick={() => setViewMode(viewMode === 'map' ? 'grid' : 'map')}
         className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[50] flex items-center gap-2 bg-gray-950 text-white px-6 py-4 rounded-full text-[11px] font-black uppercase tracking-widest shadow-2xl transition-all hover:scale-110 active:scale-95 border border-white/20"
       >
@@ -1104,12 +1064,12 @@ const SearchPage = () => {
       <AnimatePresence>
         {showFilters && (
           <>
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
-              onClick={() => setShowFilters(false)} 
-              className="fixed inset-0 bg-gray-950/40 backdrop-blur-sm z-[100]" 
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowFilters(false)}
+              className="fixed inset-0 bg-gray-950/40 backdrop-blur-sm z-[100]"
             />
             <motion.div
               initial={{ y: '100%' }}
@@ -1128,33 +1088,33 @@ const SearchPage = () => {
                   ].map((item) => {
                     const Icon = item.icon;
                     const isActive = searchType === item.id;
-                    
+
                     return (
-                      <button 
+                      <button
                         key={item.id}
                         onClick={() => setSearchType(item.id)}
                         className="flex flex-col items-center gap-2 relative outline-none"
                       >
-                         <motion.div 
-                           animate={isActive ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : { scale: 1, rotate: 0 }}
-                           transition={{ duration: 0.4, ease: "backOut" }}
-                           className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'bg-white text-gray-400 border border-slate-100'}`}
-                         >
-                            <Icon className="w-6 h-6" />
-                         </motion.div>
-                         
-                         <motion.span 
-                           animate={{ opacity: isActive ? 1 : 0.4, scale: isActive ? 1.05 : 1 }}
-                           className={`text-[9px] font-black uppercase tracking-widest transition-colors ${isActive ? 'text-gray-900' : 'text-gray-400'}`}
-                         >
-                           {item.label}
-                         </motion.span>
+                        <motion.div
+                          animate={isActive ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : { scale: 1, rotate: 0 }}
+                          transition={{ duration: 0.4, ease: "backOut" }}
+                          className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'bg-white text-gray-400 border border-slate-100'}`}
+                        >
+                          <Icon className="w-6 h-6" />
+                        </motion.div>
+
+                        <motion.span
+                          animate={{ opacity: isActive ? 1 : 0.4, scale: isActive ? 1.05 : 1 }}
+                          className={`text-[9px] font-black uppercase tracking-widest transition-colors ${isActive ? 'text-gray-900' : 'text-gray-400'}`}
+                        >
+                          {item.label}
+                        </motion.span>
                       </button>
                     );
                   })}
                 </div>
-                
-                <button 
+
+                <button
                   onClick={() => setShowFilters(false)}
                   className="w-10 h-10 rounded-full bg-white border border-slate-200/50 flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors"
                 >
@@ -1164,93 +1124,105 @@ const SearchPage = () => {
 
               {/* Scrollable Content Area */}
               <div className="flex-1 overflow-y-auto px-4 py-8 space-y-6">
-                 {/* Section: WHERE? */}
-                 <div className="bg-transparent rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 border border-slate-200/50">
-                    <h2 className="text-3xl font-black text-gray-900 mb-8 tracking-tighter italic uppercase">Where to?</h2>
-                    
-                    <div className="relative mb-8">
-                       <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-rose-500" />
-                       <input 
-                         type="text"
-                         placeholder="Neural destination..."
-                         value={filters.location}
-                         onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
-                         className="w-full bg-slate-50/50 border border-slate-200/50 rounded-2xl py-5 pl-12 pr-4 focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all outline-none font-black text-sm uppercase tracking-widest placeholder:text-slate-300"
-                       />
-                    </div>
+                {/* Section: WHERE? */}
+                <div className="bg-transparent rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 border border-slate-200/50">
+                  <h2 className="text-3xl font-black text-gray-900 mb-8 tracking-tighter italic uppercase">Where to?</h2>
 
-                    <div className="space-y-4">
-                       <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] mb-6">Suggested Hubs</p>
-                       
-                       <button 
-                         onClick={() => setFilters(prev => ({ ...prev, location: 'Nearby' }))}
-                         className="w-full flex items-center gap-5 p-4 rounded-3xl hover:bg-white/50 transition-all border border-transparent hover:border-slate-100 shadow-sm"
-                       >
-                          <div className="w-12 h-12 bg-blue-50/50 rounded-2xl flex items-center justify-center text-blue-500 shadow-inner">
-                             <MapPinIcon className="w-6 h-6" />
-                          </div>
-                          <div className="text-left">
-                             <p className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none mb-1">Nearby</p>
-                             <p className="text-[10px] font-bold text-gray-400">SYNC WITH LOCAL COORDINATES</p>
-                          </div>
-                       </button>
+                  <div className="relative mb-8">
+                    <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-rose-500" />
+                    <input
+                      type="text"
+                      placeholder="Neural destination..."
+                      value={filters.location}
+                      onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
+                      className="w-full bg-slate-50/50 border border-slate-200/50 rounded-2xl py-5 pl-12 pr-4 focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all outline-none font-black text-sm uppercase tracking-widest placeholder:text-slate-300"
+                    />
+                  </div>
 
-                       <button 
-                         onClick={() => setFilters(prev => ({ ...prev, location: 'Cape Town, Western Cape' }))}
-                         className="w-full flex items-center gap-5 p-4 rounded-3xl hover:bg-white/50 transition-all border border-transparent hover:border-slate-100 shadow-sm"
-                       >
-                          <div className="w-12 h-12 bg-teal-50/50 rounded-2xl flex items-center justify-center text-teal-500 shadow-inner">
-                             <BuildingOfficeIcon className="w-6 h-6" />
-                          </div>
-                          <div className="text-left">
-                             <p className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none mb-1">Cape Town</p>
-                             <p className="text-[10px] font-bold text-gray-400">COASTAL EXPEDITION HUB</p>
-                          </div>
-                       </button>
+                  <h2 className="text-3xl font-black text-gray-900 mb-8 tracking-tighter italic uppercase">What?</h2>
+                  <div className="relative mb-8">
+                    <Sparkles className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-rose-500" />
+                    <input
+                      type="text"
+                      placeholder="What in the matrix? (e.g. Pizza, Pool)"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full bg-slate-50/50 border border-slate-200/50 rounded-2xl py-5 pl-12 pr-4 focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all outline-none font-black text-sm uppercase tracking-widest placeholder:text-slate-300"
+                    />
+                  </div>
 
-                       <button 
-                         onClick={() => setFilters(prev => ({ ...prev, location: 'Durban, KwaZulu-Natal' }))}
-                         className="w-full flex items-center gap-5 p-4 rounded-3xl hover:bg-white/50 transition-all border border-transparent hover:border-slate-100 shadow-sm"
-                       >
-                          <div className="w-12 h-12 bg-orange-50/50 rounded-2xl flex items-center justify-center text-orange-500 shadow-inner">
-                             <HomeIcon className="w-6 h-6" />
-                          </div>
-                          <div className="text-left">
-                             <p className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none mb-1">Durban</p>
-                             <p className="text-[10px] font-bold text-gray-400">SUBTROPICAL ADVENTURE MATRIX</p>
-                          </div>
-                       </button>
-                    </div>
-                 </div>
+                  <div className="space-y-4">
+                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] mb-6">Suggested Hubs</p>
 
-                 {/* Collapsed Sections: WHEN and WHO */}
-                 <div className="bg-white/50 rounded-[2rem] p-6 flex items-center justify-between border border-slate-100 opacity-60">
-                    <span className="text-xs font-black uppercase tracking-widest text-gray-900">Neural Timeframe</span>
-                    <span className="text-[10px] font-black uppercase text-rose-500 tracking-widest underline underline-offset-4">Configure</span>
-                 </div>
+                    <button
+                      onClick={() => setFilters(prev => ({ ...prev, location: 'Nearby' }))}
+                      className="w-full flex items-center gap-5 p-4 rounded-3xl hover:bg-white/50 transition-all border border-transparent hover:border-slate-100 shadow-sm"
+                    >
+                      <div className="w-12 h-12 bg-blue-50/50 rounded-2xl flex items-center justify-center text-blue-500 shadow-inner">
+                        <MapPinIcon className="w-6 h-6" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none mb-1">Nearby</p>
+                        <p className="text-[10px] font-bold text-gray-400">SYNC WITH LOCAL COORDINATES</p>
+                      </div>
+                    </button>
 
-                 <div className="bg-white/50 rounded-[2rem] p-6 flex items-center justify-between border border-slate-100 opacity-60">
-                    <span className="text-xs font-black uppercase tracking-widest text-gray-900">Entity Count</span>
-                    <span className="text-[10px] font-black uppercase text-rose-500 tracking-widest underline underline-offset-4">Assign</span>
-                 </div>
+                    <button
+                      onClick={() => setFilters(prev => ({ ...prev, location: 'Cape Town, Western Cape' }))}
+                      className="w-full flex items-center gap-5 p-4 rounded-3xl hover:bg-white/50 transition-all border border-transparent hover:border-slate-100 shadow-sm"
+                    >
+                      <div className="w-12 h-12 bg-teal-50/50 rounded-2xl flex items-center justify-center text-teal-500 shadow-inner">
+                        <BuildingOfficeIcon className="w-6 h-6" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none mb-1">Cape Town</p>
+                        <p className="text-[10px] font-bold text-gray-400">COASTAL EXPEDITION HUB</p>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => setFilters(prev => ({ ...prev, location: 'Durban, KwaZulu-Natal' }))}
+                      className="w-full flex items-center gap-5 p-4 rounded-3xl hover:bg-white/50 transition-all border border-transparent hover:border-slate-100 shadow-sm"
+                    >
+                      <div className="w-12 h-12 bg-orange-50/50 rounded-2xl flex items-center justify-center text-orange-500 shadow-inner">
+                        <HomeIcon className="w-6 h-6" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none mb-1">Durban</p>
+                        <p className="text-[10px] font-bold text-gray-400">SUBTROPICAL ADVENTURE MATRIX</p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Collapsed Sections: WHEN and WHO */}
+                <div className="bg-white/50 rounded-[2rem] p-6 flex items-center justify-between border border-slate-100 opacity-60">
+                  <span className="text-xs font-black uppercase tracking-widest text-gray-900">Neural Timeframe</span>
+                  <span className="text-[10px] font-black uppercase text-rose-500 tracking-widest underline underline-offset-4">Configure</span>
+                </div>
+
+                <div className="bg-white/50 rounded-[2rem] p-6 flex items-center justify-between border border-slate-100 opacity-60">
+                  <span className="text-xs font-black uppercase tracking-widest text-gray-900">Entity Count</span>
+                  <span className="text-[10px] font-black uppercase text-rose-500 tracking-widest underline underline-offset-4">Assign</span>
+                </div>
               </div>
 
               {/* Footer - Search Button */}
               <div className="flex-shrink-0 bg-white/80 backdrop-blur-md border-t border-slate-200/50 p-8 flex items-center justify-between">
-                 <button 
-                   onClick={() => setFilters({ minPrice: '', maxPrice: '', minRating: '', location: '' })}
-                   className="text-[10px] font-black text-gray-400 underline underline-offset-8 hover:text-rose-600 transition-colors uppercase tracking-[0.2em]"
-                 >
-                   Clear Loop
-                 </button>
-                 
-                 <button 
-                   onClick={() => { handleSearch(); setShowFilters(false); }}
-                   className="bg-gray-950 text-white px-10 py-5 rounded-[1.5rem] flex items-center gap-4 shadow-[0_20px_50px_rgba(0,0,0,0.2)] hover:bg-rose-500 transition-all active:scale-95 group"
-                 >
-                   <MagnifyingGlassIcon className="w-5 h-5 text-rose-500 group-hover:text-white transition-colors" />
-                   <span className="text-xs font-black uppercase tracking-widest">Execute Scan</span>
-                 </button>
+                <button
+                  onClick={() => setFilters({ minPrice: '', maxPrice: '', minRating: '', location: '' })}
+                  className="text-[10px] font-black text-gray-400 underline underline-offset-8 hover:text-rose-600 transition-colors uppercase tracking-[0.2em]"
+                >
+                  Clear Loop
+                </button>
+
+                <button
+                  onClick={() => { handleSearch(); setShowFilters(false); }}
+                  className="bg-gray-950 text-white px-10 py-5 rounded-[1.5rem] flex items-center gap-4 shadow-[0_20px_50px_rgba(0,0,0,0.2)] hover:bg-rose-500 transition-all active:scale-95 group"
+                >
+                  <MagnifyingGlassIcon className="w-5 h-5 text-rose-500 group-hover:text-white transition-colors" />
+                  <span className="text-xs font-black uppercase tracking-widest">Execute Scan</span>
+                </button>
               </div>
             </motion.div>
           </>

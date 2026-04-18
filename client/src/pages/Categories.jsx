@@ -20,7 +20,6 @@ import {
   ComputerDesktopIcon,
   BookOpenIcon,
   FireIcon,
-  SparklesIcon,
   ChevronRightIcon,
   ArrowLeftIcon,
   MagnifyingGlassIcon,
@@ -33,6 +32,7 @@ import {
   StarIcon as StarIconSolid,
   HeartIcon as HeartIconSolid,
 } from '@heroicons/react/24/solid';
+import { Sparkles } from 'lucide-react';
 
 const Categories = () => {
   const navigate = useNavigate();
@@ -113,7 +113,7 @@ const Categories = () => {
       color: 'bg-emerald-500',
       gradient: 'from-emerald-500 to-emerald-600',
       subcategories: [
-        { id: 'cleaning', name: 'Cleaning Services', count: 345, icon: SparklesIcon },
+        { id: 'cleaning', name: 'Cleaning Services', count: 345, icon: Sparkles },
         { id: 'repair', name: 'Repair & Maintenance', count: 289, icon: WrenchScrewdriverIcon },
         { id: 'moving', name: 'Moving & Relocation', count: 167, icon: TruckIcon },
         { id: 'landscaping', name: 'Landscaping', count: 123, icon: SunIcon },
@@ -134,7 +134,7 @@ const Categories = () => {
         { id: 'caregivers', name: 'Caregivers', count: 267, icon: HeartIcon },
         { id: 'tutors', name: 'Tutors', count: 189, icon: AcademicCapIcon },
         { id: 'handyman', name: 'Handyman', count: 324, icon: WrenchScrewdriverIcon },
-        { id: 'cleaning-help', name: 'Cleaning Help', count: 456, icon: SparklesIcon },
+        { id: 'cleaning-help', name: 'Cleaning Help', count: 456, icon: Sparkles },
         { id: 'drivers', name: 'Drivers', count: 178, icon: TruckIcon },
         { id: 'babysitters', name: 'Babysitters', count: 234, icon: UserGroupIcon },
         { id: 'pet-care', name: 'Pet Care', count: 145, icon: HeartIcon },
@@ -171,7 +171,7 @@ const Categories = () => {
         { id: 'electronics', name: 'Electronics', count: 234, icon: ComputerDesktopIcon },
         { id: 'home-decor', name: 'Home & Decor', count: 189, icon: HomeIcon },
         { id: 'groceries', name: 'Groceries', count: 567, icon: ShoppingBagIcon },
-        { id: 'beauty', name: 'Beauty & Cosmetics', count: 198, icon: SparklesIcon },
+        { id: 'beauty', name: 'Beauty & Cosmetics', count: 198, icon: Sparkles },
         { id: 'sports-equipment', name: 'Sports Equipment', count: 123, icon: FireIcon },
         { id: 'books', name: 'Books & Stationery', count: 145, icon: BookOpenIcon },
         { id: 'specialty', name: 'Specialty Stores', count: 89, icon: BuildingStorefrontIcon },
@@ -191,7 +191,7 @@ const Categories = () => {
         { id: 'art-classes', name: 'Art Classes', count: 145, icon: CameraIcon },
         { id: 'professional', name: 'Professional Training', count: 234, icon: AcademicCapIcon },
         { id: 'test-prep', name: 'Test Preparation', count: 178, icon: BookOpenIcon },
-        { id: 'hobbies', name: 'Hobby Classes', count: 156, icon: SparklesIcon },
+        { id: 'hobbies', name: 'Hobby Classes', count: 156, icon: Sparkles },
         { id: 'kids-activities', name: 'Kids Activities', count: 267, icon: UserGroupIcon },
       ]
     },

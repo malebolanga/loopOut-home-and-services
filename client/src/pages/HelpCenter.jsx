@@ -10,9 +10,9 @@ import {
   ChatBubbleLeftEllipsisIcon,
   EnvelopeIcon,
   PhoneIcon,
-  SparklesIcon,
   ArrowLeftIcon
 } from '@heroicons/react/24/outline';
+import { Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function HelpCenter() {
@@ -149,7 +149,7 @@ export default function HelpCenter() {
                
                <div className="relative z-10 space-y-8">
                   <div className="w-12 h-12 bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-center text-rose-500">
-                    <SparklesIcon className="w-6 h-6 animate-pulse" />
+                    <Sparkles className="w-6 h-6 animate-pulse" />
                   </div>
                   <div>
                     <h3 className="text-2xl font-black italic tracking-tighter mb-4">NEURAL <br/>ASSISTANT</h3>

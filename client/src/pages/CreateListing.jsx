@@ -1,9 +1,4 @@
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
-import { app } from "../firebase";
-import { useSelector } from "react-redux";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
 import {
   HomeIcon,
   BriefcaseIcon,
@@ -22,7 +17,6 @@ import {
   CakeIcon,
   PhotoIcon,
   AcademicCapIcon,
-  SparklesIcon,
   MapPinIcon,
   PhoneIcon,
   UserIcon,
@@ -48,15 +42,17 @@ import {
   MinusIcon,
   QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
+import { Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from "framer-motion";
+import { useSelector } from "react-redux";
 
-// Custom paw icon
-const PawIcon = ({ className = "w-4 h-4" }) => (
+const CustomHeartIcon = () => (
   <svg 
-    className={className} 
+    xmlns="http://www.w3.org/2000/svg" 
     fill="none" 
-    stroke="currentColor" 
     viewBox="0 0 24 24" 
-    xmlns="http://www.w3.org/2000/svg"
+    stroke="currentColor" 
+    className="w-full h-full"
   >
     <path 
       strokeLinecap="round" 
@@ -165,7 +161,7 @@ const CategoryCard = ({ id, icon: Icon, label, description, selected, onSelect }
 
     {selected && (
       <div className="absolute top-0 right-0 p-6">
-        <SparklesIcon className="w-8 h-8 text-rose-500 opacity-20" />
+        <Sparkles className="w-8 h-8 text-rose-500 opacity-20" />
       </div>
     )}
   </div>
@@ -291,7 +287,7 @@ const StepProgress = ({ currentStep }) => {
     { label: "Category", icon: MapIcon },
     { label: "Type", icon: TagIcon },
     { label: "Details", icon: InformationCircleIcon },
-    { label: "Features", icon: SparklesIcon },
+    { label: "Features", icon: Sparkles },
     { label: "Media", icon: CameraIcon },
     { label: "Review", icon: CheckCircleIcon }
   ];
@@ -1974,7 +1970,7 @@ export default function CreateListing() {
 
                         {listingForm.serviceList.length === 0 && (
                           <div className="text-center py-10 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                            <SparklesIcon className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                            <Sparkles className="w-10 h-10 text-gray-300 mx-auto mb-3" />
                             <p className="text-gray-500 font-medium">No individual services added yet.</p>
                             <button
                               type="button"
@@ -2376,7 +2372,7 @@ export default function CreateListing() {
                     </>
                   ) : (
                     <>
-                      <SparklesIcon className="w-5 h-5 transition-transform group-hover:rotate-12" />
+                      <Sparkles className="w-5 h-5 transition-transform group-hover:rotate-12" />
                       <span className="text-[10px]">Finalize Listing</span>
                     </>
                   )}
@@ -2423,7 +2419,7 @@ export default function CreateListing() {
                   }}
                   className="text-rose-500"
                 >
-                  <SparklesIcon className="w-10 h-10" />
+                  <Sparkles className="w-10 h-10" />
                 </motion.div>
               </div>
               <h3 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">Deploying...</h3>
@@ -2455,7 +2451,7 @@ export default function CreateListing() {
             {promotionSteps === 0 && (
               <div className="p-12 md:p-16 text-center bg-gradient-to-b from-rose-50/50 to-white">
                 <div className="w-24 h-24 bg-rose-500 text-white rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-2xl shadow-rose-200 rotate-12 transition-transform hover:rotate-0">
-                  <SparklesIcon className="w-12 h-12" />
+                  <Sparkles className="w-12 h-12" />
                 </div>
                 <h3 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight leading-tight">
                    Your listing is <br /> <span className="text-rose-500">Live & Legends</span>! 🎉
@@ -2520,7 +2516,7 @@ export default function CreateListing() {
 
                       {promotionPackage === pkg.id && (
                          <div className="absolute top-0 right-0 p-3">
-                            <SparklesIcon className="w-8 h-8 text-rose-500 opacity-20 rotate-12" />
+                            <Sparkles className="w-8 h-8 text-rose-500 opacity-20 rotate-12" />
                          </div>
                       )}
                     </div>

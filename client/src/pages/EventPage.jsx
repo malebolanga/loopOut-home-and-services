@@ -10,7 +10,6 @@ import {
   UserIcon,
   PhoneIcon,
   EnvelopeIcon,
-  SparklesIcon,
   BoltIcon,
   ShieldCheckIcon,
   FlagIcon,
@@ -48,6 +47,7 @@ import {
   ArrowPathIcon,
   CpuChipIcon
 } from '@heroicons/react/24/outline';
+import { Sparkles } from 'lucide-react';
 import { 
   StarIcon as StarIconSolid, 
   HeartIcon as HeartIconSolid,
@@ -436,7 +436,7 @@ export default function EventPage() {
           </div>
         ) : (
           <div className="h-[50vh] bg-slate-100 flex items-center justify-center">
-             <SparklesIcon className="w-20 h-20 text-slate-200 animate-pulse" />
+             <Sparkles className="w-20 h-20 text-slate-200 animate-pulse" />
           </div>
         )}
       </div>
@@ -532,7 +532,7 @@ export default function EventPage() {
                     </button>
                   </div>
                   <div className="text-slate-500 text-xs font-medium flex items-center gap-2">
-                    <SparklesIcon className="w-4 h-4" /> Verified by Experience AI 
+                    <Sparkles className="w-4 h-4" /> Verified by Experience AI 
                   </div>
                 </div>
               </div>
@@ -649,7 +649,7 @@ export default function EventPage() {
                         </div>
                         {event.userRef?.isSuperhost && (
                           <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-rose-500 rounded-xl flex items-center justify-center shadow-lg border-2 border-slate-900">
-                            <SparklesIcon className="w-4 h-4 text-white" />
+                            <Sparkles className="w-4 h-4 text-white" />
                           </div>
                         )}
                       </div>

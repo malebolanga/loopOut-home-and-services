@@ -10,7 +10,6 @@ import {
   HeartIcon,
   StarIcon,
   FunnelIcon,
-  SparklesIcon,
   CalendarDaysIcon,
   UserGroupIcon,
   ChevronLeftIcon,
@@ -52,6 +51,7 @@ import {
   HandThumbUpIcon as HandThumbUpIconSolid,
   HandThumbDownIcon as HandThumbDownIconSolid
 } from '@heroicons/react/24/solid';
+import { Sparkles } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode } from 'swiper/modules';
 import 'swiper/css';
@@ -1089,7 +1089,7 @@ const LoopOutHomeHero = ({ navigate }) => {
            {[
              { label: "VERIFIED HOMES", value: "1.2k+", icon: <HomeIcon className="w-5 h-5 text-rose-400" /> },
              { label: "EXPERT HELPERS", value: "850+", icon: <UserGroupIcon className="w-5 h-5 text-blue-400" /> },
-             { label: "DAILY SERVICES", value: "24/7", icon: <SparklesIcon className="w-5 h-5 text-amber-400" /> },
+             { label: "DAILY SERVICES", value: "24/7", icon: <Sparkles className="w-5 h-5 text-amber-400" /> },
              { label: "LOCAL EVENTS", value: "100+", icon: <FireIcon className="w-5 h-5 text-orange-400" /> }
            ].map((stat, i) => (
              <div key={i} className="flex items-center gap-4 group">
@@ -1366,7 +1366,7 @@ const SmartRecommendations = ({ recommendations, insights, loading, onItemClick 
   return (
     <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mb-10">
       <div className="flex items-center gap-2 mb-4">
-        <SparklesIcon className="w-5 h-5 text-rose-500" />
+        <Sparkles className="w-5 h-5 text-rose-500" />
         <h3 className="font-semibold text-gray-900">AI Picks for you</h3>
       </div>
 
@@ -1498,7 +1498,7 @@ const MobileAppHomepage = ({
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {[
                 { id: 'grocery', name: 'Groceries', desc: 'Fresh items in 60m', icon: <ShoppingBagIcon className="w-5 h-5" />, color: 'bg-green-500', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80' },
-                { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <SparklesIcon className="w-5 h-5" />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1635274605638-d44babc08a4f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+                { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <Sparkles className="w-5 h-5" />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1635274605638-d44babc08a4f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
                 { id: 'pharmacy', name: 'Pharmacy', desc: 'Medication drop-off', icon: <BoltIcon className="w-5 h-5" />, color: 'bg-rose-500', img: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=400&q=80' },
                 { id: 'usedbooks', name: 'Used Books', desc: 'Sell Uni textbooks', icon: <AcademicCapIcon className="w-5 h-5" />, color: 'bg-orange-600', img: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80' },
                 { id: 'water', name: 'Water & Gas', desc: 'Refills delivered', icon: <GlobeAltIcon className="w-5 h-5" />, color: 'bg-cyan-500', img: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?auto=format&fit=crop&w=400&q=80' }
@@ -1714,7 +1714,7 @@ const MobileAppHomepage = ({
                   desc: "Use our AI-powered search to find the perfect stay, helper, or service near you." 
                 },
                 { 
-                  icon: <SparklesIcon className="w-10 h-10 text-amber-500" />, 
+                  icon: <Sparkles className="w-10 h-10 text-amber-500" />, 
                   title: "2. Personalize", 
                   desc: "Select options that fit your schedule and budget. See verified reviews and ratings." 
                 },
@@ -1811,7 +1811,7 @@ const MobileAppHomepage = ({
         >
           <div className="absolute -inset-2 bg-gradient-to-r from-rose-600 to-pink-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 animate-pulse" />
           <div className="relative bg-rose-600 text-white p-4 rounded-full shadow-2xl flex items-center justify-center border-2 border-white/20">
-            <SparklesIcon className="w-8 h-8" />
+            <Sparkles className="w-8 h-8" />
             <div className="absolute right-full mr-4 bg-white px-4 py-2 rounded-2xl shadow-xl text-gray-900 font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 pointer-events-none">
                Need help finding something? <span>✨</span>
             </div>
@@ -1923,7 +1923,7 @@ const MobileAppHomepage = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
           <div className="absolute inset-0 p-8 flex flex-col justify-end">
              <div className="flex items-center gap-2 mb-3">
-                <SparklesIcon className="w-5 h-5 text-rose-400" />
+                <Sparkles className="w-5 h-5 text-rose-400" />
                 <span className="text-white/60 text-[11px] font-black tracking-[0.2em] uppercase">EXPERIENCE THE LOOP</span>
              </div>
              <h2 className="text-3xl font-black text-white leading-[0.9] mb-3 tracking-tighter">
@@ -1999,7 +1999,7 @@ const MobileAppHomepage = ({
             {[
               { id: 'grocery', name: 'Groceries', desc: 'Fresh items in 60m', icon: <ShoppingBagIcon className="w-4 h-4" />, color: 'bg-green-500', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80' },
               { id: 'usedbooks', name: 'Used Books', desc: 'Sell Uni textbooks', icon: <AcademicCapIcon className="w-4 h-4" />, color: 'bg-orange-600', img: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80' },
-              { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <SparklesIcon className="w-4 h-4" />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1635274605638-d44babc08a4f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+              { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <Sparkles className="w-4 h-4" />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1635274605638-d44babc08a4f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
               { id: 'pharmacy', name: 'Pharmacy', desc: 'Medication drop-off', icon: <BoltIcon className="w-4 h-4" />, color: 'bg-rose-500', img: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=400&q=80' },
             ].map((item) => (
               <motion.div

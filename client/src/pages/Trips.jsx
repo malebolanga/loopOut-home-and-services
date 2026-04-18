@@ -5,9 +5,9 @@ import {
   CalendarIcon, 
   MapPinIcon, 
   BriefcaseIcon, 
-  ChevronRightIcon,
-  SparklesIcon
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
+import { Sparkles } from 'lucide-react';
 
 export default function Trips() {
   const { currentUser } = useSelector((state) => state.user);
@@ -146,7 +146,7 @@ export default function Trips() {
               to="/trip" 
               className="inline-flex items-center px-10 py-5 bg-gray-950 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-rose-500 transition-all active:scale-95 shadow-2xl"
             >
-              <SparklesIcon className="w-4 h-4 mr-2" />
+              <Sparkles className="w-4 h-4 mr-2" />
               Initialize Architect
             </Link>
           </div>

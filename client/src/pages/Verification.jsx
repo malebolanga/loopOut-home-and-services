@@ -14,7 +14,6 @@ import {
   FingerPrintIcon,
   LockClosedIcon,
   ArrowRightIcon,
-  SparklesIcon,
   CpuChipIcon,
   ShieldExclamationIcon,
   PhotoIcon,

@@ -1,22 +1,22 @@
 /* eslint-disable react/prop-types */
 import { Link } from "react-router-dom";
-import { 
-  StarIcon as StarIconSolid, 
-  HeartIcon as HeartIconSolid,
-  CheckBadgeIcon
-} from '@heroicons/react/24/solid';
+import { motion } from "framer-motion";
 import {
-  MapPinIcon,
-  HomeIcon,
-  TagIcon,
-  HeartIcon as HeartIconOutline,
-  UserIcon,
-  SparklesIcon,
-  KeyIcon,
-  BuildingOfficeIcon,
-  MoonIcon,
-  Squares2X2Icon
-} from '@heroicons/react/24/outline';
+  MapPin,
+  Home,
+  Tag,
+  Heart,
+  User,
+  Sparkles,
+  Key,
+  Building,
+  Moon,
+  LayoutGrid,
+  Star,
+  ThumbsUp,
+  ThumbsDown,
+  Share2
+} from 'lucide-react';
 import { useState, useMemo, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
@@ -64,17 +64,17 @@ const getPropertyTypeName = (type) => {
 };
 
 const LISTING_TYPE_CONFIG = {
-  sale:       { icon: HomeIcon,     bg: 'bg-green-100',  text: 'text-green-700',  label: 'For Sale' },
-  rent:       { icon: KeyIcon,      bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'For Rent' },
-  'rent-long':{ icon: KeyIcon,      bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Long Term' },
-  'rent-short':{ icon: MoonIcon,    bg: 'bg-rose-100',   text: 'text-rose-700',   label: 'Short Term' },
-  over:       { icon: MoonIcon,     bg: 'bg-rose-100',   text: 'text-rose-700',   label: 'Overnight' },
-  land:       { icon: SparklesIcon, bg: 'bg-amber-100',  text: 'text-amber-700',  label: 'Land Plot' },
-  office:     { icon: BuildingOfficeIcon, bg: 'bg-purple-100', text: 'text-purple-700', label: 'Office' },
+  sale:       { icon: Home,         bg: 'bg-green-100',  text: 'text-green-700',  label: 'For Sale' },
+  rent:       { icon: Key,          bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'For Rent' },
+  'rent-long':{ icon: Key,          bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Long Term' },
+  'rent-short':{ icon: Moon,         bg: 'bg-rose-100',   text: 'text-rose-700',   label: 'Short Term' },
+  over:       { icon: Moon,         bg: 'bg-rose-100',   text: 'text-rose-700',   label: 'Overnight' },
+  land:       { icon: Sparkles,     bg: 'bg-amber-100',  text: 'text-amber-700',  label: 'Land Plot' },
+  office:     { icon: Building,     bg: 'bg-purple-100', text: 'text-purple-700', label: 'Office' },
 };
 
 function ListingTypePill({ type }) {
-  const cfg = LISTING_TYPE_CONFIG[type] || { icon: Squares2X2Icon, bg: 'bg-gray-100', text: 'text-gray-700', label: 'Property' };
+  const cfg = LISTING_TYPE_CONFIG[type] || { icon: LayoutGrid, bg: 'bg-gray-100', text: 'text-gray-700', label: 'Property' };
   const Icon = cfg.icon;
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${cfg.bg} ${cfg.text}`}>
@@ -276,204 +276,99 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
   }
 
   return (
-    <div
-      onClick={onClick}
-      className={`${className} ${compactMode
-        ? 'flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg  w-full'
-        : ' cursor-pointer flex flex-col h-full'
-        }`}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ y: -5 }}
+      className={`${className} group relative aspect-square bg-white rounded-[2rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_15px_45px_rgba(0,0,0,0.04)] transition-all duration-700 h-full cursor-pointer`}
+      onClick={handleCardClick}
     >
-      {compactMode ? (
-        <>
-          <Link
-            to={`/listing/${listing._id}`}
-            className="block relative flex-grow-0"
-            onClick={handleCardClick}
-          >
-            <div className="relative w-24 h-28 flex-shrink-0 rounded-lg overflow-hidden">
+      <div className="absolute inset-0 z-0">
+        <Swiper
+          modules={[Pagination, Autoplay]}
+          pagination={{ clickable: true, dynamicBullets: true }}
+          autoplay={{ delay: 5000, disableOnInteraction: false }}
+          className="w-full h-full"
+        >
+          {enhancedImages.map((img, index) => (
+            <SwiperSlide key={index}>
               <ImageWithFallback
-                src={enhancedImages[0]?.url}
-                imageUrls={listing.imageUrls}
-                type="property"
-                alt={`${listing.name || 'Property'} image`}
-                className={`w-full h-full rounded-2xl object-cover transition-transform duration-500 ${imageLoaded ? 'scale-100' : 'scale-110'} group-hover:scale-105`}
+                src={img.url}
+                alt={`${listing.name || 'Property'} image ${index + 1}`}
+                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                 loading="lazy"
               />
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
 
-              {/* User avatar link - Compact Mode */}
-              {listing?.userRef?._id && (
-                <div className="absolute top-1 left-1 z-10 flex items-center gap-1 bg-white/80 backdrop-blur-sm px-1.5 py-0.5 rounded-full">
-                  <div className="w-4 h-4 rounded-full overflow-hidden">
-                    {getUserAvatar()}
-                  </div>
-                  <span className="text-[9px] font-medium text-gray-700">{getUserFirstName()}</span>
-                </div>
-              )}
+      {/* Top Overlays */}
+      <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10 pointer-events-none">
+        <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
+          <Sparkles className="w-3 h-3 text-rose-500" />
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{getPropertyTypeName(listing.type)}</span>
+        </div>
 
-              {isNewListing && (
-                <span className="absolute top-1 right-1 bg-green-500 text-white px-1.5 py-0.5 text-[10px] font-semibold rounded-full shadow-xs">
-                  NEW
-                </span>
-              )}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFavorite(e);
+          }}
+          className="w-9 h-9 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center justify-center text-gray-900 hover:bg-rose-500 hover:text-white transition-all active:scale-90 pointer-events-auto"
+        >
+          <Heart className={`w-4 h-4 ${isFavorite ? 'text-rose-500 fill-rose-500' : 'text-gray-400'}`} />
+        </button>
+      </div>
+
+      {/* Permanent Information Overlay (On Image) */}
+      <div className="absolute inset-x-0 bottom-0 z-10 p-5 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none">
+        <div className="flex justify-between items-end gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 mb-1 text-white">
+              <Star className="w-3 h-3 text-rose-400 fill-rose-400" />
+              <span className="text-[10px] font-black">{ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}</span>
             </div>
-          </Link>
-
-          <div className="flex-grow flex flex-col justify-between h-full min-w-0">
-            <div>
-              <div className="flex justify-between items-start">
-                <h3 className="text-sm font-semibold text-gray-900 truncate">
-                  {listing.name || 'Property Name'}
-                </h3>
-                <button
-                  onClick={toggleFavorite}
-                  className="p-1 text-gray-400 hover:text-rose-600 transition-colors ml-2"
-                  aria-label={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
-                >
-                  {isFavorite ? <HeartIconSolid className="w-3.5 h-3.5 text-rose-600" /> : <HeartIconOutline className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-
-              <p className="text-gray-600 text-[10px] font-black uppercase tracking-widest flex items-center mt-2.5">
-                <MapPinIcon className="text-rose-600 w-3 h-3 mr-1.5" />
-                <span className="truncate">{listing.address || 'Address not available'}</span>
-              </p>
-              <div className="mt-1.5">
-                <ListingTypePill type={listing.type} />
-              </div>
-
-            </div>
-
-            <div className="mt-1.5 flex justify-between items-center">
-              <div className="text-sm font-bold text-gray-900">
-                {formatPrice(
-                  listing.offer ? listing.discountPrice : listing.regularPrice,
-                  { type: listing.type }
-                )}
-              </div>
-              <div className="flex flex-col items-end">
-                <div className="flex items-center text-gray-900">
-                  <span className="font-black text-gray-900 text-[11px] mr-1.5">
-                    {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
-                  </span>
-                  <StarIconSolid className="text-amber-500 w-3 h-3" />
-                </div>
-                {ratingData.count > 0 && <span className="text-[9px] text-gray-400 mt-0.5">({ratingData.count} rev)</span>}
-              </div>
-            </div>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl mb-2.5 shadow-sm group-hover:shadow-md transition-shadow">
-            <button
-              onClick={toggleFavorite}
-              className="absolute top-2 right-2 z-20 p-2 bg-white/10 backdrop-blur-md rounded-full shadow-sm hover:bg-white/30 transition-all hover:scale-110 border border-white/20"
-              aria-label={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
-            >
-              {isFavorite ? (
-                <HeartIconSolid className="w-4 h-4 text-rose-500" />
-              ) : (
-                <HeartIconOutline className="w-4 h-4 text-white" />
-              )}
-            </button>
-
-            {listing?.userRef?._id && (
-              <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-full shadow-sm">
-                <div className="w-4 h-4 rounded-full overflow-hidden relative">
-                  {getUserAvatar()}
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-[9px] font-bold text-gray-900 uppercase tracking-tight">{getUserFirstName()}</span>
-                  <CheckBadgeIcon className="w-3 h-3 text-blue-500" />
-                </div>
-              </div>
-            )}
-
-            <Link
-              to={`/listing/${listing._id}`}
-              className="block w-full h-full"
-              onClick={handleCardClick}
-            >
-              <Swiper
-                modules={[Pagination, Autoplay]}
-                pagination={{ clickable: true, dynamicBullets: true }}
-                autoplay={{ delay: 5000, disableOnInteraction: false }}
-                className="w-full h-full"
-              >
-                {enhancedImages.map((img, index) => (
-                  <SwiperSlide key={index}>
-                    <ImageWithFallback
-                      src={img.url}
-                      imageUrls={index === 0 ? listing.imageUrls : undefined}
-                      type="property"
-                      alt={`${listing.name || 'Property'} image ${index + 1}`}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      loading="lazy"
-                    />
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </Link>
-            
-            <div className="absolute bottom-2 left-2 z-10 flex gap-1">
-              <span className="bg-gray-900/80 backdrop-blur-md text-white px-2 py-0.5 text-[9px] font-black uppercase tracking-widest rounded-md">
-                {getPropertyTypeName(listing.type)}
-              </span>
-              {isNewListing && (
-                <span className="bg-rose-500 text-white px-2 py-0.5 text-[9px] font-black uppercase tracking-widest rounded-md">
-                  NEW
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex-1 flex flex-col px-1.5">
-            <div className="flex justify-between items-start gap-2">
-              <h3 className="text-sm font-bold text-gray-900 truncate group-hover:text-rose-600 transition-colors">
-                {listing.name || 'Property Name'}
-              </h3>
-              <div className="flex items-center text-gray-900 shrink-0">
-                <StarIconSolid className="text-amber-500 w-3 h-3" />
-                <span className="font-bold text-xs ml-1">
-                  {ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}
-                </span>
-              </div>
-            </div>
-
-            <p className="text-gray-500 text-xs flex items-center mt-0.5">
-              <MapPinIcon className="text-rose-500 mr-1 w-3 h-3 min-w-fit" />
-              <span className="truncate">{listing.address || 'Address not available'}</span>
+            <h3 className="text-sm font-black text-white leading-tight truncate mb-0.5">
+              {listing.name}
+            </h3>
+            <p className="text-[10px] text-white/70 font-medium truncate">
+              {listing.address || 'Private Location'}
             </p>
-
-            <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-tight">
-              {listing.type !== 'land' && listing.type !== 'office' && (
-                <>
-                  <div className="flex items-center gap-1">
-                    <HomeIcon className="w-3 h-3" />
-                    <span>{listing.bedrooms || 0} Beds</span>
-                  </div>
-                  <span className="text-gray-200">•</span>
-                  <div className="flex items-center gap-1">
-                    <SparklesIcon className="w-3 h-3" />
-                    <span>{listing.bathrooms || 0} Baths</span>
-                  </div>
-                </>
-              )}
-              {listing.type === 'office' && <span>{listing.squareMeters || listing.bedrooms || 0} SQM</span>}
-              {listing.type === 'land' && <span>{listing.landArea || listing.bathrooms || 0} SQM</span>}
+          </div>
+          <div className="text-right">
+            <div className="text-lg font-black text-white tracking-tighter leading-none mb-1">
+              R{listing.regularPrice?.toLocaleString()}
             </div>
+            <div className="text-[7px] font-black text-white/50 uppercase tracking-[0.2em] leading-none">Perspective</div>
+          </div>
+        </div>
+      </div>
 
-            <div className="mt-2 text-sm font-black text-gray-900">
-               {formatPrice(
-                 listing.offer ? listing.discountPrice : listing.regularPrice,
-                 { type: listing.type }
-               )}
+      {/* Hover Action Overlay */}
+      <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-6 bg-gray-900/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500">
+        <div className="w-full space-y-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+          <div className="flex gap-2">
+            <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-green-400 rounded-xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5">
+              <ThumbsUp className="w-3.5 h-3.5" />
+              {listing.votes?.up || 0}
+            </div>
+            <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-rose-400 rounded-xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5">
+              <ThumbsDown className="w-3.5 h-3.5" />
+              {listing.votes?.down || 0}
             </div>
           </div>
-        </>
-      )}
-    </div>
+          <Link
+            to={`/listing/${listing._id}`}
+            onClick={handleCardClick}
+            className="block w-full py-3.5 bg-white text-gray-900 rounded-xl font-black uppercase tracking-[0.2em] text-center text-[9px] hover:bg-rose-500 hover:text-white transition-all shadow-2xl"
+          >
+            Inspect Original
+          </Link>
+        </div>
+      </div>
+    </motion.div>
   );
-}
+};
 
 export default ListingItem;

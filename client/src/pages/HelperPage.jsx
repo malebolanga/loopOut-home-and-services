@@ -15,7 +15,6 @@ import {
   UserIcon,
   PhoneIcon,
   EnvelopeIcon,
-  SparklesIcon,
   BoltIcon,
   ShieldCheckIcon,
   FlagIcon,
@@ -49,8 +48,8 @@ import {
   HeartIcon as HeartIconSolid,
   CheckBadgeIcon
 } from '@heroicons/react/24/solid';
-
-import {
+import { Sparkles } from 'lucide-react';
+import { 
   FaTshirt, FaBroom, FaFire, FaBaby, FaGlassCheers, FaEllipsisH, FaPalette,
   FaSpa, FaStar, FaCut, FaGraduationCap, FaChalkboardTeacher, FaBook, FaLanguage,
   FaPencilAlt, FaHandsWash, FaToolbox, FaWrench, FaTools, FaScrewdriver,
@@ -2162,7 +2161,7 @@ export default function HelperPage() {
 
             <div className="space-y-6 pb-8 border-b border-slate-100">
               <div className="flex items-start gap-4">
-                <SparklesIcon className="w-6 h-6 text-rose-500 mt-1" />
+                <Sparkles className="w-6 h-6 text-rose-500 mt-1" />
                 <div>
                   <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Top rated professional</h3>
                   <p className="text-gray-500 text-xs font-medium mt-1">Highly rated for quality, reliability, and customer satisfaction</p>

@@ -21,10 +21,10 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   UserGroupIcon,
-  SparklesIcon,
   TicketIcon,
   CheckBadgeIcon
 } from '@heroicons/react/24/outline';
+import { Sparkles } from 'lucide-react';
 import { 
   StarIcon as StarIconSolid,
   CheckCircleIcon as CheckCircleIconSolid,

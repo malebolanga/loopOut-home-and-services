@@ -12,7 +12,6 @@ import {
   UserIcon,
   PhoneIcon,
   EnvelopeIcon,
-  SparklesIcon,
   BoltIcon,
   ShieldCheckIcon,
   FlagIcon,
@@ -35,9 +34,6 @@ import {
   PaperAirplaneIcon,
   ClockIcon,
   CurrencyDollarIcon,
-  TagIcon,
-  UsersIcon,
-  ChatBubbleLeftRightIcon,
   ArrowUpIcon,
   ArrowDownIcon,
   AcademicCapIcon,
@@ -46,6 +42,7 @@ import {
   DocumentTextIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
+import { Sparkles } from 'lucide-react';
 import { 
   StarIcon as StarIconSolid, 
   HeartIcon as HeartIconSolid,
@@ -82,7 +79,7 @@ const SERVICE_CONFIG = {
   // Cleaning Services
   cleaning: {
     title: 'Cleaning Service',
-    icon: <SparklesIcon className="w-6 h-6" />,
+    icon: <Sparkles className="w-6 h-6" />,
     description: `Professional cleaning service using eco-friendly products. Background-checked staff following strict safety protocols.`,
     options: [
       { id: 'house-cleaning', name: 'Standard Cleaning', description: 'Complete cleaning of living areas', duration: '2-4 hours', price: 'R450', popular: true, icon: <FaBroom /> },
@@ -99,7 +96,7 @@ const SERVICE_CONFIG = {
   // Catering Services
   catering: {
     title: 'Chef & Catering',
-    icon: <SparklesIcon className="w-6 h-6" />,
+    icon: <Sparkles className="w-6 h-6" />,
     description: `From intimate gatherings to grand celebrations, crafting memorable dining experiences with custom menus using fresh, locally sourced ingredients.`,
     options: [
       { id: 'corporate-catering', name: 'Corporate Events', description: 'Business meetings & lunches', duration: 'Custom', price: 'R150/person', popular: true, icon: <FaBriefcase /> },
