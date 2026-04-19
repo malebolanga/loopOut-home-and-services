@@ -27,6 +27,7 @@ import HostDashboard from "./pages/HostDashboard";
 import CreateListing from "./pages/CreateListing";
 import UpdateListing from "./pages/UpdateListing";
 import Listing from "./pages/Listing";
+import RentPage from "./pages/RentPage";
 import List from "./pages/List";
 import MyListing from "./pages/MyListing";
 import ListingsPage from "./pages/ListingsPage";
@@ -57,6 +58,8 @@ import Content from "./pages/Content";
 import ArticlePages from './pages/ArticlePages';
 import AIHelpCenter from './pages/AIHelpCenter';
 import HelpCenter from './pages/HelpCenter';
+import Planner from './pages/Planner';
+import ForBusiness from './pages/ForBusiness';
 
 // Informational Pages
 import About from "./pages/About";
@@ -142,6 +145,7 @@ const AnimatedRoutes = () => {
         <Route path="/host-dashboard" element={<PageTransition><HostDashboard /></PageTransition>} />
         <Route path="/explore" element={<PageTransition><ExplorePage /></PageTransition>} />
         <Route path="/categories" element={<PageTransition><Categories /></PageTransition>} />
+        <Route path="/for-business" element={<PageTransition><ForBusiness /></PageTransition>} />
 
         {/* User Profile - Specific before dynamic */}
         <Route path="/user/:id" element={<PageTransition><UserProfile /></PageTransition>} />
@@ -156,6 +160,7 @@ const AnimatedRoutes = () => {
         <Route path="/commercial" element={<PageTransition><Commercial /></PageTransition>} />
         <Route path="/overnight" element={<PageTransition><OverNight /></PageTransition>} />
         <Route path="/listing/:listingId" element={<PageTransition><Listing /></PageTransition>} />
+        <Route path="/rent/:listingId" element={<PageTransition><Listing /></PageTransition>} />
         <Route path="/helper-home-page" element={<PageTransition><HelpersHomePage /></PageTransition>} />
         <Route path="/event-home-page" element={<PageTransition><EventsHomePage /></PageTransition>} />
         <Route path="/listing-home-page" element={<PageTransition><ListingsHomePage /></PageTransition>} />
@@ -197,6 +202,7 @@ const AnimatedRoutes = () => {
         <Route path="/first-time-buyers" element={<PageTransition><ArticlePages /></PageTransition>} />
         <Route path="/ai-help-center" element={<PageTransition><AIHelpCenter /></PageTransition>} />
         <Route path="/help-center" element={<PageTransition><HelpCenter /></PageTransition>} />
+        <Route path="/planner" element={<PageTransition><Planner /></PageTransition>} />
 
         {/* Informational Routes */}
         <Route path="/propertysafety" element={<PageTransition><PropertySafety /></PageTransition>} />

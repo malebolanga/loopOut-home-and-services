@@ -1,143 +1,256 @@
-// eslint-disable-next-line no-unused-vars
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { 
+  UserPlusIcon, 
+  PencilSquareIcon, 
+  CloudArrowUpIcon,
+  CheckBadgeIcon,
+  ShieldCheckIcon,
+  BanknotesIcon,
+  ChevronRightIcon,
+  HomeIcon,
+  UserGroupIcon,
+  BriefcaseIcon,
+  CalendarDaysIcon
+} from '@heroicons/react/24/outline';
+import { Sparkles, Rocket, Zap, Heart } from 'lucide-react';
 
-export default function Become() {
+const Become = () => {
+  const navigate = useNavigate();
+
+  const { currentUser } = useSelector((state) => state.user);
+
+  const steps = [
+    {
+      id: '01',
+      title: 'Initialize Protocol',
+      desc: 'Create your elite account in seconds. We verify every identity to maintain our high-fidelity community standards.',
+      icon: <UserPlusIcon className="w-8 h-8 text-rose-500" />,
+      color: 'bg-rose-50'
+    },
+    {
+      id: '02',
+      title: 'Craft Your Presence',
+      desc: 'Upload stunning visuals and define your offering. Use our AI tools to optimize your listing for maximum performance.',
+      icon: <PencilSquareIcon className="w-8 h-8 text-blue-500" />,
+      color: 'bg-blue-50'
+    },
+    {
+      id: '03',
+      title: 'Go Live & Dominate',
+      desc: 'Publish your listing to the global marketplace. Start receiving verified bookings and tracking yield in real-time.',
+      icon: <CloudArrowUpIcon className="w-8 h-8 text-emerald-500" />,
+      color: 'bg-emerald-50'
+    }
+  ];
+
+  const categories = [
+    { name: 'Stays', icon: <HomeIcon className="w-6 h-6" />, path: currentUser ? `/${currentUser._id}/create-listing?tab=stays` : '/sign-in' },
+    { name: 'Helpers', icon: <UserGroupIcon className="w-6 h-6" />, path: currentUser ? `/${currentUser._id}/create-listing?tab=online` : '/sign-in' },
+    { name: 'Services', icon: <BriefcaseIcon className="w-6 h-6" />, path: currentUser ? `/${currentUser._id}/create-listing?tab=experiences` : '/sign-in' },
+    { name: 'Events', icon: <CalendarDaysIcon className="w-6 h-6" />, path: currentUser ? `/${currentUser._id}/create-listing?tab=events` : '/sign-in' }
+  ];
+
   return (
-    <div className="py-20 px-4 max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold mb-4 text-center text-slate-800">
-        Get Started on LoupeOut Home
-      </h2>
-      <h1 className="text-xl font-bold text-center mb-4 text-slate-700">
-        Learn how to start hosting, from creating your listing to prepping your space.
-      </h1>
+    <div className="min-h-screen bg-gray-50/50">
+      {/* Cinematic Hero */}
+      <section className="relative h-[60vh] flex items-center justify-center overflow-hidden bg-gray-950">
+         <div className="absolute inset-0">
+            <motion.img 
+              initial={{ scale: 1.2 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 2 }}
+              src="https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&q=80&w=1470" 
+              className="w-full h-full object-cover opacity-30"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-950/80 to-gray-950" />
+         </div>
 
-      <div className="h-200 w-90 flex-col gap-4 mx-auto p-10 px-3 max-w-6xl">
-        <img
-          className="bg-white shadow-md hover:shadow-lg transition-shadow overflow-hidden rounded-lg w-full sm:w-[330px]"
-          src="https://images.unsplash.com/photo-1460317442991-0ec209397118?w=700&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8YXBhcnRtZW50fGVufDB8fDB8fHww"
-          alt="example"
-        />
-      </div>
+         <div className="relative z-10 text-center px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center gap-6"
+            >
+               <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-6 h-6 text-rose-500 fill-rose-500" />
+                  <span className="text-rose-500 text-xs font-black tracking-[0.4em] uppercase">The Onboarding Protocol</span>
+               </div>
+               <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-none mb-6">
+                  YOUR JOURNEY TO <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-white to-blue-400 italic">ELITE STATUS.</span>
+               </h1>
+               <p className="text-gray-400 max-w-xl mx-auto text-lg font-medium leading-relaxed">
+                  Join the world's most sophisticated network. Transform your potential into performance with loopOut Business solutions.
+               </p>
+            </motion.div>
+         </div>
+      </section>
 
-      <h1 className="uppercase text-xl font-bold mb-4 text-slate-700">
-        Create Your Listing
-      </h1>
+      {/* Stepper Grid */}
+      <section className="max-w-7xl mx-auto px-6 -mt-32 relative z-20 mb-24">
+         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {steps.map((step, idx) => (
+              <motion.div
+                key={step.id}
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + (idx * 0.1) }}
+                className="bg-white p-10 rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 flex flex-col gap-8 group hover:border-gray-950 transition-all duration-500"
+              >
+                 <div className="flex justify-between items-start">
+                    <div className={`${step.color} w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                       {step.icon}
+                    </div>
+                    <span className="text-4xl font-black text-gray-100 group-hover:text-gray-950 transition-colors">{step.id}</span>
+                 </div>
+                 <div>
+                    <h3 className="text-2xl font-black text-gray-950 tracking-tighter mb-4">{step.title}</h3>
+                    <p className="text-gray-500 font-medium leading-relaxed">{step.desc}</p>
+                 </div>
+              </motion.div>
+            ))}
+         </div>
+      </section>
 
-      <p className="text-xs sm:text-sm text-gray-400">
-        Think of your listing as an advertisement for your space. Make it compelling and honest about any quirks.
-      </p>
+      {/* Action Hub */}
+      <section className="max-w-7xl mx-auto px-6 mb-24">
+         <div className="bg-gray-950 rounded-[3.5rem] p-12 lg:p-20 overflow-hidden relative shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-500/10 blur-[150px] rounded-full" />
+            
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+               <div>
+                  <h2 className="text-4xl lg:text-5xl font-black text-white tracking-tighter mb-8 leading-tight">
+                     WHAT ARE YOU <br />
+                     <span className="text-gray-500 italic">DOMINATING TODAY?</span>
+                  </h2>
+                  <p className="text-gray-400 mb-12 text-lg font-medium">Choose your sector and begin your listing journey. Our AI will guide you through every optimization.</p>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                     {categories.map((cat, i) => (
+                       <button
+                         key={i}
+                         onClick={() => navigate(cat.path)}
+                         className="flex items-center gap-4 p-6 bg-white/5 border border-white/10 rounded-2xl text-white hover:bg-white/10 hover:border-white/20 transition-all group"
+                       >
+                          <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:text-rose-400 transition-colors">
+                            {cat.icon}
+                          </div>
+                          <span className="text-sm font-black uppercase tracking-widest">{cat.name}</span>
+                       </button>
+                     ))}
+                  </div>
+               </div>
 
-      <p className="text-xs sm:text-sm text-gray-400">
-        Start by entering basic details such as the location, property type, and number of bedrooms and bathrooms your guests will have access to.
-      </p>
+               <div className="relative">
+                  <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-10 rounded-[3rem] animate-pulse-slow">
+                     <div className="flex items-center gap-4 mb-8">
+                        <CheckBadgeIcon className="w-8 h-8 text-rose-500" />
+                        <div>
+                           <div className="text-white font-black uppercase tracking-widest text-xs">Verification Suite</div>
+                           <div className="text-emerald-400 text-[10px] font-bold">IDENTITY PROTOCOL ACTIVE</div>
+                        </div>
+                     </div>
+                     <div className="space-y-6">
+                        {[
+                          { label: 'Biometric Check', status: 'Passed' },
+                          { label: 'Security Deposit', status: 'Secured' },
+                          { label: 'Community Trust', status: 'Elite Tier' }
+                        ].map((item, i) => (
+                          <div key={i} className="flex justify-between items-center py-4 border-b border-white/5 text-sm">
+                             <span className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">{item.label}</span>
+                             <span className="text-white font-black">{item.status}</span>
+                          </div>
+                        ))}
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </section>
 
-      <p className="text-xs sm:text-sm text-gray-400">
-        Take high-quality photos of the space. Guests love browsing images when making a decision on where to stay. Clean and tidy up your space beforehand, and capture each area using natural light and landscape orientation when possible.
-      </p>
+      {/* Value Prepositions */}
+      <section className="max-w-7xl mx-auto px-6 mb-24 grid grid-cols-1 md:grid-cols-3 gap-12">
+         {[
+           {
+             title: 'Neural Payouts',
+             desc: 'Automated, instant payouts with full transparency on every transaction fee.',
+             icon: <BanknotesIcon className="w-10 h-10 text-rose-600" />
+           },
+           {
+             title: 'Guardian Shield',
+             desc: 'R1M in property and liability coverage for all elite hosts and providers.',
+             icon: <ShieldCheckIcon className="w-10 h-10 text-blue-600" />
+           },
+           {
+             title: 'Pulse Community',
+             desc: 'Join a network of top-tier professionals sharing insights and growing together.',
+             icon: <Heart className="w-10 h-10 text-pink-600 shadow-xl" />
+           }
+         ].map((item, i) => (
+           <div key={i} className="flex flex-col gap-6 p-8 bg-white rounded-3xl border border-gray-100 hover:shadow-xl transition-shadow">
+              <div className="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center shadow-inner">
+                 {item.icon}
+              </div>
+              <h4 className="text-xl font-black text-gray-950 tracking-tighter">{item.title}</h4>
+              <p className="text-gray-500 font-medium leading-relaxed">{item.desc}</p>
+           </div>
+         ))}
+      </section>
 
-      <p className="text-xs sm:text-sm text-gray-400">
-        Highlight unique features. When writing your listings title and description, emphasize what makes your place stand out, like a view or a pool. Be transparent about any important details such as stairs or parking.
-      </p>
-
-      <div className="h-100 w-90 flex-col gap-4 p-10 px-3 mx-auto max-w-6xl">
-        <img
-          className="bg-white shadow-md hover:shadow-lg transition-shadow overflow-hidden rounded-lg w-full sm:w-[330px]"
-          src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fGhvdXNlfGVufDB8fDB8fHww"
-          alt="example"
-        />
-      </div>
-
-      <div className="flex-col gap-4 p-10 px-3 max-w-6xl">
-        <Link
-          className="bg-red-400 text-white p-3 rounded-lg uppercase text-center hover:opacity-95"
-          to={'/create-listing'}
-        >
-          Create Listing
-        </Link>
-      </div>
-
-      <h1 className="uppercase text-xl font-bold mb-4 text-slate-700">
-        To Become a Host in Just 30 Seconds, Follow These Simple Steps:
-      </h1>
-      <p className="text-xs sm:text-sm text-gray-400">
-        <ol>
-          <li>1. Create a sign-up account.</li>
-          <li>2. Go to your profile and click on  Create a Listing.</li>
-          <li>3. Fill out the required information to create your hosting listing.</li>
-        </ol>
-      </p>
-
-      <p className="text-xs sm:text-sm text-gray-400">
-        Thats it! Youll be on your way to becoming a host in no time.
-      </p>
-      <br />
-
-      <h1 className="uppercase text-xl font-bold mb-4 text-slate-700">
-        Prepare Your Space
-      </h1>
-
-      <p className="text-xs sm:text-sm text-gray-400">
-        Whether youre expecting your first guest or your 100th, follow these steps to ensure your space is ready to welcome guests.
-      </p>
-      <br />
-
-      <div className="flex gap-6 mx-auto">
-        <img
-          className="bg-white shadow-md hover:shadow-lg transition-shadow overflow-hidden rounded-lg w-full sm:w-[400px]"
-          src="https://images.unsplash.com/photo-1554995207-c18c203602cb?&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxleHBsb3JlLWZlZWR8NHx8fGVufDB8fHx8fA%3D%3D"
-          alt="example"
-        />
-
-        <img
-          className="bg-white shadow-md hover:shadow-lg transition-shadow overflow-hidden rounded-lg w-full sm:w-[400px]"
-          src="https://images.unsplash.com/photo-1564540574859-0dfb63985953?&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mjd8fG9mZmljZXxlbnwwfHwwfHx8MA%3D%3D"
-          alt="example"
-        />
-      </div>
-
-      <div className="flex-col gap-4 p-10 px-3 max-w-6xl">
-        <h1 className="uppercase text-xl font-bold mb-4 text-slate-700">
-          Its Easy to Get Started on LoupeOut Home
-        </h1>
-      </div>
-
-      <h3 className="text-lg font-semibold text-slate-600">1. First, Create a Sign-Up Account</h3>
-      <p className="text-xs sm:text-sm text-gray-400">
-        Share some basic info, like your location and the number of guests your space can accommodate.
-      </p>
-
-      <h3 className="text-lg font-semibold text-slate-600">2. Make It Stand Out</h3>
-      <p className="text-xs sm:text-sm text-gray-400">
-        Add three or more photos, plus a title and description—well assist you with the process.
-      </p>
-
-      <h3 className="text-lg font-semibold text-slate-600">3. Finish Up and Publish</h3>
-      <p className="text-xs sm:text-sm text-gray-400">
-        Choose whether to start with an experienced guest, set your starting price, and publish your listing.
-      </p>
-      <br />
-
-      <h3 className="uppercase text-xl font-bold mb-4 text-slate-700">
-        Try Your First Listing Here
-      </h3>
-      <br />
-      <Link
-        className="bg-red-400 text-white p-3 px-6 rounded-lg uppercase text-center hover:opacity-95"
-        to={'/create-listing'}
-      >
-        Create Listing
-      </Link>
-      <br />
-      <br />
-      <br />
-      <div className="p-0 mx-auto">
-        <img
-          className="bg-white shadow-md hover:shadow-lg transition-shadow overflow-hidden rounded-lg w-full sm:w-[400px]"
-          src="https://images.unsplash.com/photo-1590986201364-ce95ab280ca2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8Zm9yJTIwcmVudHxlbnwwfHwwfHx8MA%3D%3D"
-          alt="example"
-        />
-      </div>
+      {/* Global CTA */}
+      <section className="py-24 px-6 bg-white text-center border-t border-gray-100">
+         <div className="max-w-3xl mx-auto">
+            <Zap className="w-12 h-12 text-rose-500 mx-auto mb-8 animate-bounce" />
+            <h2 className="text-4xl md:text-6xl font-black text-gray-950 tracking-tighter mb-8 leading-none">
+               ENOUGH READING. <br />
+               <span className="text-gray-400">LET'S BUILD WEALTH.</span>
+            </h2>
+            <div className="flex flex-col md:flex-row items-center justify-center gap-6 mt-12">
+               <button 
+                 onClick={() => navigate('/sign-up')}
+                 className="w-full md:w-auto px-12 py-6 bg-gray-950 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-black active:scale-95 transition-all shadow-2xl flex items-center justify-center gap-3"
+               >
+                 Create Your Account
+                 <Rocket className="w-5 h-5" />
+               </button>
+               <button 
+                 onClick={() => navigate('/contact')}
+                 className="w-full md:w-auto px-12 py-6 border-2 border-gray-200 text-gray-950 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-50 transition-all"
+               >
+                 Talk to a Growth Expert
+               </button>
+            </div>
+            
+            <p className="mt-12 text-[10px] text-gray-400 font-bold uppercase tracking-[0.3em]">No subscription fees. No hidden costs. Pay as you earn.</p>
+         </div>
+      </section>
+      
+      {/* Mini Footer Area */}
+      <footer className="py-12 bg-white border-t border-gray-100 px-6">
+         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="flex items-center gap-3">
+               <div className="w-8 h-8 bg-gray-950 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-black text-sm">L</span>
+               </div>
+               <span className="text-gray-950 font-black tracking-tighter text-lg uppercase">loopOut <span className="text-rose-600">Protocol</span></span>
+            </div>
+            <div className="flex gap-8 text-[10px] font-black text-gray-500 uppercase tracking-widest">
+               <button onClick={() => navigate('/privacy')} className="hover:text-rose-600 transition-colors">Privacy</button>
+               <button onClick={() => navigate('/terms')} className="hover:text-rose-600 transition-colors">Terms</button>
+               <button onClick={() => navigate('/help-center')} className="hover:text-rose-600 transition-colors">Help Center</button>
+               <button onClick={() => navigate('/trust')} className="hover:text-rose-600 transition-colors">Safety</button>
+            </div>
+            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">© 2026 LoopOut Onboarding Hub.</p>
+         </div>
+      </footer>
+      
+      {/* Visual Progress Footer */}
+      <div className="h-2 bg-gradient-to-r from-rose-500 via-blue-500 to-emerald-500" />
     </div>
   );
-}
+};
+
+export default Become;

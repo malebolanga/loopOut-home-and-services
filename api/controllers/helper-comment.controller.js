@@ -57,9 +57,17 @@ export const getHelperComments = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 5;
     const skip = (page - 1) * limit;
 
+    // Gracefully return empty if the ID doesn't belong to a Helper
+    // (e.g. when CarWashPage or other pages reuse this component)
     const helperExists = await Helper.exists({ _id: helperId });
     if (!helperExists) {
-      return next(errorHandler(404, 'Helper not found'));
+      return res.status(200).json({
+        comments: [],
+        totalComments: 0,
+        totalPages: 0,
+        currentPage: page,
+        ratings: { cleanliness: 0, staff: 0, overall: 0 }
+      });
     }
 
     const comments = await HelperComment.find({ helperId })
@@ -90,7 +98,7 @@ export const getHelperComments = async (req, res, next) => {
       currentPage: page,
       ratings: {
         cleanliness,
-        staff: communication, // Map communication to staff for backward compatibility in UI
+        staff: communication,
         overall
       }
     });
@@ -98,6 +106,7 @@ export const getHelperComments = async (req, res, next) => {
     next(errorHandler(500, error.message || 'Failed to fetch helper comments'));
   }
 };
+
 
 export const likeHelperComment = async (req, res, next) => {
   try {

@@ -64,11 +64,14 @@ export default function HostDashboard() {
     fetchHostData();
   }, [currentUser]);
 
+  const totalRevenue = bookings.reduce((sum, b) => sum + Number(b.totalPrice || 0), 0);
+  const totalHelperBookings = bookings.filter(b => b.helper).length;
+
   const stats = [
-    { label: 'Active Revenue', value: 'R42,850', sub: '+12.5%', icon: BanknotesIcon, color: 'text-emerald-400' },
-    { label: 'Neural Trust', value: '99.8%', sub: 'Elite Status', icon: ShieldCheckIcon, color: 'text-blue-400' },
-    { label: 'Deployments', value: bookings.length, sub: 'Active Signals', icon: CpuChipIcon, color: 'text-rose-400' },
-    { label: 'Operator Rank', value: '#12', sub: 'Regional Hub', icon: ArrowTrendingUpIcon, color: 'text-amber-400' },
+    { label: 'Active Revenue', value: `R${totalRevenue.toLocaleString()}`, sub: 'Total Earned', icon: BanknotesIcon, color: 'text-emerald-400' },
+    { label: 'Service Ops', value: totalHelperBookings, sub: 'Helper Bookings', icon: ShieldCheckIcon, color: 'text-blue-400' },
+    { label: 'Deployments', value: bookings.length, sub: 'All Signals', icon: CpuChipIcon, color: 'text-rose-400' },
+    { label: 'Operator Rank', value: '#1', sub: 'Regional Hub', icon: ArrowTrendingUpIcon, color: 'text-amber-400' },
   ];
 
   return (
@@ -202,7 +205,11 @@ export default function HostDashboard() {
 
            {activeTab === 'analytics' && <NeuralAnalytics stats={stats} />}
            {activeTab === 'trust' && <TrustProtocols />}
-           {activeTab === 'wallet' && <FinancialGrid />}
+           {activeTab === 'wallet' && <FinancialGrid 
+               total={bookings.reduce((sum, b) => sum + Number(b.totalPrice || 0), 0)}
+               properties={bookings.filter(b => b.listing).reduce((sum, b) => sum + Number(b.totalPrice || 0), 0)}
+               helpers={bookings.filter(b => b.helper).reduce((sum, b) => sum + Number(b.totalPrice || 0), 0)}
+           />}
         </div>
       </div>
 
@@ -419,24 +426,24 @@ const TrustProtocols = () => (
   </div>
 );
 
-const FinancialGrid = () => (
+const FinancialGrid = ({ total = 0, properties = 0, helpers = 0 }) => (
    <div className="bg-white/5 rounded-[2.5rem] sm:rounded-[3rem] border border-white/5 p-8 md:p-12 overflow-hidden relative">
       <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px]" />
       <div className="flex flex-col md:flex-row justify-between gap-12 relative z-10">
          <div className="space-y-8">
             <div>
                <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-3">Total Operational Yield</p>
-               <h3 className="text-4xl sm:text-6xl md:text-7xl font-black italic tracking-tighter text-emerald-400">R124,500.00</h3>
+               <h3 className="text-4xl sm:text-6xl md:text-7xl font-black italic tracking-tighter text-emerald-400">R{total.toLocaleString()}</h3>
             </div>
             
             <div className="flex gap-12">
                <div>
-                  <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Processing Hub</p>
-                  <p className="text-xl font-bold text-white">R12,800</p>
+                  <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Property Revenue</p>
+                  <p className="text-xl font-bold text-white">R{properties.toLocaleString()}</p>
                </div>
                <div>
-                  <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Cleared Sig</p>
-                  <p className="text-xl font-bold text-white">R111,700</p>
+                  <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Helper/Service Yield</p>
+                  <p className="text-xl font-bold text-white">R{helpers.toLocaleString()}</p>
                </div>
             </div>
             

@@ -17,7 +17,7 @@ import GoogleMapComponent from '../components/GoogleMapComponent';
 import { useWishlist } from '../hooks/useWishlist';
 
 
-import { HeartIcon, ShareIcon, StarIcon, MapPinIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon, PhoneIcon, EnvelopeIcon, ChatBubbleLeftRightIcon, FlagIcon, UserIcon, CameraIcon, Squares2X2Icon, ArrowLeftIcon, PhotoIcon, UsersIcon, CalendarIcon, ClockIcon, HomeModernIcon, TagIcon, ArrowPathIcon, TicketIcon, BanknotesIcon } from '@heroicons/react/24/outline';
+import { HeartIcon, ShareIcon, StarIcon, MapPinIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon, PhoneIcon, EnvelopeIcon, ChatBubbleLeftRightIcon, FlagIcon, UserIcon, CameraIcon, Squares2X2Icon, ArrowLeftIcon, PhotoIcon, UsersIcon, CalendarIcon, CalendarDaysIcon, ClockIcon, HomeModernIcon, TagIcon, ArrowPathIcon, TicketIcon, BanknotesIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid, HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { FiShare2, FiHeart, FiMessageSquare } from "react-icons/fi";
 
@@ -27,9 +27,9 @@ import {
   FaShieldAlt, FaHotTub, FaDog, FaBolt, FaSnowflake, FaUserFriends, FaCoffee,
   FaCouch, FaShower, FaWind, FaDesktop, FaTree, FaUmbrellaBeach, FaDumbbell,
   FaSmokingBan, FaHome, FaFacebook, FaInstagram, FaTwitter, FaLinkedin, FaTiktok, FaGlobe,
-  FaHeart, FaWhatsapp, FaUsers, FaClock, FaReceipt, FaSpinner
+  FaHeart, FaWhatsapp, FaUsers, FaClock, FaReceipt, FaSpinner, FaBed, FaBath, FaChevronLeft, FaChevronRight
 } from "react-icons/fa";
-import { MdCleanHands, MdOutlineGppGood, MdLogin, MdChat, MdLocationOn, MdAttachMoney, MdKingBed, MdBathtub } from "react-icons/md";
+import { MdCleanHands, MdOutlineGppGood, MdLogin, MdChat, MdLocationOn, MdAttachMoney, MdKingBed, MdBathtub, MdClose } from "react-icons/md";
 import NeuralLoader from "../components/NeuralLoader";
 
 
@@ -2027,24 +2027,28 @@ export default function Listing() {
 
             {/* Property Highlights */}
             <div className="border-y border-gray-200 py-6">
-              <div className="flex items-center gap-8 lg:gap-12">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                    <MdKingBed className="text-lg lg:text-xl text-gray-700" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm lg:text-base">{listing.bedrooms} bedrooms</p>
-                  </div>
+               <div className="flex flex-wrap gap-3 mt-6">
+              {listing.bedrooms && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-2xl text-sm font-bold text-gray-700">
+                  <FaBed className="text-rose-400" /> {listing.bedrooms} bed{listing.bedrooms > 1 ? "s" : ""}
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                    <MdBathtub className="text-lg lg:text-xl text-gray-700" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm lg:text-base">{listing.bathrooms} bathrooms</p>
-                  </div>
+              )}
+              {listing.bathrooms && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-2xl text-sm font-bold text-gray-700">
+                  <FaBath className="text-rose-400" /> {listing.bathrooms} bath{listing.bathrooms > 1 ? "s" : ""}
                 </div>
-              </div>
+              )}
+              {listing.kind && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-2xl text-sm font-bold text-gray-700 capitalize">
+                  <HomeModernIcon className="w-4 h-4 text-rose-400" /> {listing.kind.replace(/_/g, " ")}
+                </div>
+              )}
+              {listing.period && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-2xl text-sm font-bold text-green-700">
+                  <CalendarDaysIcon className="w-4 h-4" /> Available {listing.period}
+                </div>
+              )}
+            </div>
             </div>
 
             {/* Host Info */}

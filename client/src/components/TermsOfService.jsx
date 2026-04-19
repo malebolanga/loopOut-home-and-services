@@ -1,322 +1,205 @@
-// eslint-disable-next-line no-unused-vars
 import React from 'react';
-import {
-  FaBalanceScale,
-  FaFileContract,
-  FaUserShield,
-  FaExclamationTriangle,
-  FaGavel,
-  FaGlobe,
-  FaInfoCircle,
-  FaShieldAlt,
-  FaLock,
-  FaLink,
-  FaCookieBite,
-  FaEye,
-  FaCopy,
-  FaBan,
-  FaUserCheck,
-  FaHandshake
-} from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import { 
+  ScaleIcon, 
+  ShieldCheckIcon, 
+  LockClosedIcon, 
+  DocumentTextIcon,
+  GlobeAltIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  ArrowRightIcon
+} from '@heroicons/react/24/outline';
+import { Sparkles, Gavel, ShieldAlert } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-export default function Terms() {
+const TermsOfService = () => {
+  const navigate = useNavigate();
+
+  const sections = [
+    {
+      id: 'introduction',
+      title: 'Foundation & Scope',
+      icon: <DocumentTextIcon className="w-6 h-6" />,
+      content: 'LoopOut Home (Pty) Ltd operates the definitive marketplace for extraordinary stays and elite services. By accessing our neural network, you agree to comply with our high-fidelity community standards and operational protocols.'
+    },
+    {
+      id: 'clients',
+      title: 'Partner Obligations',
+      icon: <ShieldCheckIcon className="w-6 h-6" />,
+      content: 'Our business partners are bound by specialized contracts designed to ensure elite service delivery and maintained property excellence. Discrepancies between these terms and individual contracts favor the latter.'
+    },
+    {
+      id: 'privacy',
+      title: 'Neural Privacy',
+      icon: <LockClosedIcon className="w-6 h-6" />,
+      content: 'We process biometric and usage data with absolute precision. Your data is your property, utilized only to enhance your experience and secure your interactions within the loop ecosystem.'
+    }
+  ];
+
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <div className="bg-airbnb-red text-white py-20 px-6">
-        <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 flex items-center justify-center">
-            <FaBalanceScale className="mr-4" />
-            LoopOut Terms and Conditions
-          </h1>
-          <p className="text-xl mb-8 max-w-3xl mx-auto">
-            Effective Date: September 1, 2024 | Last Updated: September 1, 2024
-          </p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-white font-inter">
+      {/* Cinematic Header */}
+      <section className="relative h-[50vh] flex items-center justify-center overflow-hidden bg-gray-950">
+         <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=1470')] bg-cover bg-center opacity-20" />
+            <div className="absolute inset-0 bg-gradient-to-b from-gray-950/50 via-gray-950 to-white" />
+         </div>
 
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-6 py-16">
-        {/* Quick Navigation */}
-        <div className="bg-white p-8 rounded-xl shadow-lg mb-12">
-          <h2 className="text-2xl font-bold mb-6">Key Sections</h2>
-          <ul className="list-disc pl-5 space-y-3 columns-1 md:columns-2">
-            <li><a href="#introduction" className="text-airbnb-red hover:underline">Introduction</a></li>
-            <li><a href="#clients" className="text-airbnb-red hover:underline">Application to Clients</a></li>
-            <li><a href="#users" className="text-airbnb-red hover:underline">Application to Users</a></li>
-            <li><a href="#obligations" className="text-airbnb-red hover:underline">LOH Obligations</a></li>
-            <li><a href="#website-use" className="text-airbnb-red hover:underline">Website Use</a></li>
-            <li><a href="#restrictions" className="text-airbnb-red hover:underline">Restrictions</a></li>
-            <li><a href="#privacy" className="text-airbnb-red hover:underline">Privacy Policy</a></li>
-            <li><a href="#intellectual" className="text-airbnb-red hover:underline">Intellectual Property</a></li>
-            <li><a href="#governing" className="text-airbnb-red hover:underline">Governing Law</a></li>
-          </ul>
-        </div>
+         <div className="relative z-10 text-center px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center gap-6"
+            >
+               <div className="flex items-center gap-2 mb-2">
+                  <Gavel className="w-5 h-5 text-rose-500" />
+                  <span className="text-rose-500 text-[10px] font-black tracking-[0.4em] uppercase underline underline-offset-8">Legal Framework v2.0</span>
+               </div>
+               <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-none">
+                  TERMS OF <br />
+                  <span className="text-gray-500 italic">ENGAGEMENT.</span>
+               </h1>
+               <div className="flex items-center gap-4 text-gray-500 text-xs font-bold uppercase tracking-widest mt-4">
+                  <span>Last Updated: April 2026</span>
+                  <div className="w-1 h-1 bg-rose-500 rounded-full" />
+                  <span>Effective Immediately</span>
+               </div>
+            </motion.div>
+         </div>
+      </section>
 
-        {/* Introduction Section */}
-        <section id="introduction" className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 flex items-center">
-            <FaFileContract className="mr-3 text-airbnb-red" />
-            Introduction
-          </h2>
-          <div className="bg-white p-8 rounded-xl shadow-lg">
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <FaInfoCircle className="text-airbnb-red mt-1 mr-4" />
-                <p className="flex-1 text-gray-600">
-                  LoopOut Home (Pty) Ltd hosts a website under domain name www.privateproperty.co.za (the Website) for the online marketing of property listings for sale or for rent and the advertising of service providers in the real estate, legal and related industries (collectively Advertisements).
-                </p>
-              </div>
-              <div className="flex items-start">
-                <FaExclamationTriangle className="text-airbnb-red mt-1 mr-4" />
-                <p className="flex-1 text-gray-600">
-                  These Website Standard Terms and Conditions written on this webpage shall manage your use of the website. By using this Website, you agree to accept all terms and conditions.
-                </p>
-              </div>
+      {/* Main Content Grid */}
+      <main className="max-w-7xl mx-auto px-6 -mt-20 relative z-20 pb-24">
+         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            
+            {/* Sidebar Navigation */}
+            <aside className="lg:col-span-4 space-y-4">
+               <div className="sticky top-24 bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-200/50">
+                  <h3 className="text-sm font-black text-gray-950 uppercase tracking-widest mb-8 flex items-center gap-3">
+                     <InformationCircleIcon className="w-5 h-5 text-rose-500" />
+                     Quick Access
+                  </h3>
+                  <nav className="flex flex-col gap-2">
+                     {['Foundation', 'Partner Obligations', 'User Conduct', 'Data Encryption', 'Liability Shield', 'Governing Law'].map((item, i) => (
+                       <button 
+                         key={i} 
+                         className="flex items-center justify-between p-4 rounded-2xl hover:bg-white hover:shadow-md transition-all text-sm font-bold text-gray-400 hover:text-gray-950 group"
+                       >
+                          {item}
+                          <ArrowRightIcon className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                       </button>
+                     ))}
+                  </nav>
+               </div>
+            </aside>
+
+            {/* Document Content */}
+            <div className="lg:col-span-8 space-y-16">
+               
+               {/* Highlighted Sections */}
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {sections.map((section, idx) => (
+                    <motion.div 
+                      key={idx}
+                      whileHover={{ y: -5 }}
+                      className="p-10 bg-white rounded-[2.5rem] border border-gray-100 shadow-lg shadow-gray-100/50 flex flex-col gap-6"
+                    >
+                       <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500">
+                          {section.icon}
+                       </div>
+                       <h3 className="text-xl font-black text-gray-950 tracking-tighter">{section.title}</h3>
+                       <p className="text-sm text-gray-500 leading-relaxed font-medium">{section.content}</p>
+                    </motion.div>
+                  ))}
+               </div>
+
+               {/* Detailed Articles */}
+               <div className="space-y-12">
+                  <section className="prose prose-rose max-w-none">
+                     <div className="flex items-center gap-4 mb-8">
+                        <div className="px-4 py-1.5 bg-gray-950 text-white rounded-full text-[10px] font-black uppercase tracking-widest">Article 01</div>
+                        <h2 className="text-3xl font-black text-gray-950 tracking-tighter m-0">Website Use & Restrictions</h2>
+                     </div>
+                     <p className="text-gray-600 text-lg leading-relaxed mb-8">
+                        The LoopOut ecosystem is a high-fidelity environment. Users are prohibited from using automated scrapers, data harvesting robots, or any neural interference tools that may compromise the integrity of our marketplace. 
+                     </p>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 not-prose">
+                        {[
+                          'No decentralized data mining.',
+                          'No unauthorized commercialization.',
+                          'No identity masking protocols.',
+                          'No direct content injection.'
+                        ].map((rule, i) => (
+                          <div key={i} className="flex items-center gap-3 p-5 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-gray-500 text-xs">
+                             <ShieldAlert className="w-4 h-4 text-rose-400" />
+                             {rule}
+                          </div>
+                        ))}
+                     </div>
+                  </section>
+
+                  <section className="bg-gray-950 rounded-[3rem] p-12 lg:p-20 relative overflow-hidden">
+                     <div className="absolute bottom-0 right-0 w-64 h-64 bg-rose-500/20 blur-[80px] rounded-full" />
+                     <h3 className="text-white text-3xl font-black tracking-tighter mb-8 italic">Intellectual Integrity.</h3>
+                     <p className="text-gray-400 text-base leading-relaxed mb-12">
+                        Every pixel, line of code, and trademark within the loopOut network is protected by international intellectual property laws. Unauthorized reproduction of our neural algorithms or brand identity will result in immediate protocol termination and legal escalation.
+                     </p>
+                     <div className="flex items-center gap-8 text-white/40 text-[10px] font-black uppercase tracking-[0.3em]">
+                        <span>© 2026 LoopOut Global</span>
+                        <span>IPR-V3-SECURE</span>
+                     </div>
+                  </section>
+
+                  <section>
+                     <div className="flex items-center gap-4 mb-8">
+                        <div className="px-4 py-1.5 bg-gray-950 text-white rounded-full text-[10px] font-black uppercase tracking-widest">Article 02</div>
+                        <h2 className="text-3xl font-black text-gray-950 tracking-tighter m-0">Liability Shield</h2>
+                     </div>
+                     <p className="text-gray-500 font-medium leading-relaxed">
+                        To the maximum extent permitted by the laws of the Republic of South Africa, LoopOut Home and its directors shall not be held liable for indirect, consequential, or special damages arising out of your engagement with the ecosystem. Our liability is shielded to maintain the equilibrium of the marketplace.
+                     </p>
+                  </section>
+               </div>
             </div>
-          </div>
-        </section>
+         </div>
+      </main>
 
-        {/* Application to Clients */}
-        <section id="clients" className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 flex items-center">
-            <FaUserCheck className="mr-3 text-airbnb-red" />
-            Application to Clients
-          </h2>
-          <div className="bg-white p-8 rounded-xl shadow-lg">
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <FaHandshake className="text-airbnb-red mt-1 mr-4" />
-                <p className="flex-1 text-gray-600">
-                  These STCs are applicable together with the signed agreement (the Contract) concluded between LOH and each client who advertises on the Website (Client).
-                </p>
-              </div>
-              <div className="flex items-start">
-                <FaExclamationTriangle className="text-airbnb-red mt-1 mr-4" />
-                <p className="flex-1 text-gray-600">
-                  If there is any discrepancy or conflict between these STCs and the Contract, the provisions of the Contract will apply.
-                </p>
-              </div>
+      {/* Interactive Footer CTA */}
+      <section className="py-24 px-6 bg-gray-50 text-center">
+         <div className="max-w-3xl mx-auto">
+            <h2 className="text-4xl md:text-5xl font-black text-gray-950 tracking-tighter mb-8 leading-tight">
+               CLEAR ON THE RULES? <br />
+               <span className="text-gray-400">LET'S START THE SYNC.</span>
+            </h2>
+            <div className="flex flex-col md:flex-row items-center justify-center gap-6 mt-12">
+               <button 
+                 onClick={() => navigate('/sign-up')}
+                 className="w-full md:w-auto px-12 py-6 bg-rose-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-rose-500 active:scale-95 transition-all shadow-2xl flex items-center justify-center gap-3"
+               >
+                 Accept & Continue
+                 <Sparkles className="w-5 h-5 fill-white" />
+               </button>
+               <button 
+                 onClick={() => navigate('/contact')}
+                 className="w-full md:w-auto px-12 py-6 border-2 border-gray-200 text-gray-950 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-50 transition-all font-inter"
+               >
+                 Inquire with Legal
+               </button>
             </div>
-          </div>
-        </section>
+         </div>
+      </section>
 
-        {/* Application to Users */}
-        <section id="users" className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 flex items-center">
-            <FaUserShield className="mr-3 text-airbnb-red" />
-            Application to Users
-          </h2>
-          <div className="bg-white p-8 rounded-xl shadow-lg">
-            <div className="flex items-start">
-              <FaInfoCircle className="text-airbnb-red mt-1 mr-4" />
-              <p className="flex-1 text-gray-600">
-                By logging in, registering on, accessing or using the Website, all persons making use of the Website (Users) agree to be bound by these STCs, except those provisions which, explicitly or implicitly, only apply to Clients.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* LOH General Obligations */}
-        <section id="obligations" className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 flex items-center">
-            <FaShieldAlt className="mr-3 text-airbnb-red" />
-            LOH General Obligations and Warranties
-          </h2>
-          <div className="bg-white p-8 rounded-xl shadow-lg">
-            <div className="space-y-6">
-              <div className="flex items-start">
-                <FaHandshake className="text-airbnb-red mt-1 mr-4" />
-                <p className="flex-1 text-gray-600">
-                  LOH must provide the following services to the Clients and Users:
-                </p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="border p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2">Advertisement Display</h4>
-                  <p className="text-gray-600">Display and market Advertisements on the Website</p>
-                </div>
-                <div className="border p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2">Support Service</h4>
-                  <p className="text-gray-600">Telephonic support Monday-Friday, 08:00-17:00</p>
-                </div>
-                <div className="border p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2">Website Availability</h4>
-                  <p className="text-gray-600">24/7 accessibility and operation</p>
-                </div>
-                <div className="border p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2">Security</h4>
-                  <p className="text-gray-600">Virus-free downloads and applications</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Use of the Website */}
-        <section id="website-use" className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 flex items-center">
-            <FaGlobe className="mr-3 text-airbnb-red" />
-            Use of the Website
-          </h2>
-          <div className="bg-white p-8 rounded-xl shadow-lg">
-            <div className="space-y-6">
-              <div className="flex items-start">
-                <FaEye className="text-airbnb-red mt-1 mr-4" />
-                <div>
-                  <h4 className="font-semibold mb-2">Accuracy Disclaimer</h4>
-                  <p className="text-gray-600">LOH does not verify or warrant the accuracy or completeness of Advertisements</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <FaCookieBite className="text-airbnb-red mt-1 mr-4" />
-                <div>
-                  <h4 className="font-semibold mb-2">Cookies</h4>
-                  <p className="text-gray-600">We use cookies to personalize visits and track preferences</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <FaLink className="text-airbnb-red mt-1 mr-4" />
-                <div>
-                  <h4 className="font-semibold mb-2">Linking Policy</h4>
-                  <p className="text-gray-600">No linking without prior written consent; third-party links used at your own risk</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Restrictions */}
-        <section id="restrictions" className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 flex items-center">
-            <FaBan className="mr-3 text-airbnb-red" />
-            Restrictions
-          </h2>
-          <div className="bg-white p-8 rounded-xl shadow-lg">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="border p-4 rounded-lg">
-                <h4 className="font-semibold mb-2">Content Publishing</h4>
-                <p className="text-gray-600">No publishing Website material in other media</p>
-              </div>
-              <div className="border p-4 rounded-lg">
-                <h4 className="font-semibold mb-2">Commercial Use</h4>
-                <p className="text-gray-600">No selling or commercializing Website material</p>
-              </div>
-              <div className="border p-4 rounded-lg">
-                <h4 className="font-semibold mb-2">Damaging Use</h4>
-                <p className="text-gray-600">No use that damages the Website or impacts access</p>
-              </div>
-              <div className="border p-4 rounded-lg">
-                <h4 className="font-semibold mb-2">Data Mining</h4>
-                <p className="text-gray-600">No data mining, harvesting, or extracting</p>
-              </div>
-              <div className="border p-4 rounded-lg">
-                <h4 className="font-semibold mb-2">Unauthorized Marketing</h4>
-                <p className="text-gray-600">No unauthorized advertising or marketing</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Privacy Policy */}
-        <section id="privacy" className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 flex items-center">
-            <FaLock className="mr-3 text-airbnb-red" />
-            Privacy Policy and Personal Information
-          </h2>
-          <div className="bg-white p-8 rounded-xl shadow-lg">
-            <div className="space-y-6">
-              <div className="flex items-start">
-                <FaUserShield className="text-airbnb-red mt-1 mr-4" />
-                <div>
-                  <h4 className="font-semibold mb-2">Personal Information</h4>
-                  <p className="text-gray-600">We collect name, contact details, property searches, and usage data</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <FaInfoCircle className="text-airbnb-red mt-1 mr-4" />
-                <div>
-                  <h4 className="font-semibold mb-2">Usage Purpose</h4>
-                  <p className="text-gray-600">Personal Info is used to compile the Website and provide services</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <FaHandshake className="text-airbnb-red mt-1 mr-4" />
-                <div>
-                  <h4 className="font-semibold mb-2">Consent</h4>
-                  <p className="text-gray-600">By using the Website, you consent to our use of Personal Info for communication, improvement, and business purposes</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Intellectual Property */}
-        <section id="intellectual" className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 flex items-center">
-            <FaCopy className="mr-3 text-airbnb-red" />
-            Intellectual Property and Indemnities
-          </h2>
-          <div className="bg-white p-8 rounded-xl shadow-lg">
-            <div className="space-y-6">
-              <div className="flex items-start">
-                <FaShieldAlt className="text-airbnb-red mt-1 mr-4" />
-                <div>
-                  <h4 className="font-semibold mb-2">Ownership</h4>
-                  <p className="text-gray-600">All Website content, trademarks, and source code are LOH intellectual property</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <FaBan className="text-airbnb-red mt-1 mr-4" />
-                <div>
-                  <h4 className="font-semibold mb-2">Prohibited Actions</h4>
-                  <p className="text-gray-600">No reverse-engineering, copying, or unauthorized monitoring</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <FaHandshake className="text-airbnb-red mt-1 mr-4" />
-                <div>
-                  <h4 className="font-semibold mb-2">Limited License</h4>
-                  <p className="text-gray-600">Users granted limited license only for viewing Website material</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Governing Law */}
-        <section id="governing" className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 flex items-center">
-            <FaGavel className="mr-3 text-airbnb-red" />
-            Governing Law
-          </h2>
-          <div className="bg-white p-8 rounded-xl shadow-lg">
-            <div className="flex items-start">
-              <FaBalanceScale className="text-airbnb-red mt-1 mr-4" />
-              <div>
-                <p className="text-gray-600">
-                  This Agreement shall be governed by and construed in accordance with the internal laws of the Republic of South Africa without giving effect to any choice or conflict of law provision or rule.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      {/* Footer CTA */}
-      <div className="bg-gray-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold mb-6">Questions About Our Terms?</h2>
-          <div className="flex justify-center gap-4">
-            <button className="bg-airbnb-red text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-700">
-              Contact Legal Team
-            </button>
-            <button className="border-2 border-white px-8 py-3 rounded-lg font-semibold hover:bg-white/10">
-              View Privacy Policy
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Sub-Footer Mini */}
+      <footer className="py-12 border-t border-gray-100 flex flex-col md:flex-row justify-center items-center gap-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+         <button onClick={() => navigate('/privacy')} className="hover:text-rose-500 transition-colors">Privacy Policy</button>
+         <div className="w-1 h-1 bg-gray-200 rounded-full" />
+         <button onClick={() => navigate('/trust')} className="hover:text-rose-500 transition-colors">Safety Hub</button>
+         <div className="w-1 h-1 bg-gray-200 rounded-full" />
+         <button onClick={() => navigate('/')} className="hover:text-rose-500 transition-colors">Back to Home</button>
+      </footer>
     </div>
   );
-}
+};
+
+export default TermsOfService;

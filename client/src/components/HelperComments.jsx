@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { FaSpinner, FaEllipsisH, FaHeart, FaRegHeart, FaChevronDown, FaChevronUp, FaStar, FaBroom, FaUserFriends } from 'react-icons/fa';
 import { FiSend } from 'react-icons/fi';
@@ -21,6 +21,7 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
   const [focusedInput, setFocusedInput] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [totalComments, setTotalComments] = useState(0);
+  const hasFailed = useRef(false); // prevent infinite retry loop on 404/error
   const [ratings, setRatings] = useState({
     cleanliness: 0,
     staff: 0,
@@ -36,6 +37,7 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
 
   const fetchComments = useCallback(async () => {
     if (!helperId) return;
+    if (hasFailed.current) return; // stop retrying after a permanent failure
     setLoading(prev => ({ ...prev, comments: true }));
     setError(null);
     try {
@@ -81,6 +83,7 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
       }
 
     } catch (err) {
+      hasFailed.current = true; // lock out further retries
       setError(err.message);
       console.error('Fetch comments error:', err);
     } finally {

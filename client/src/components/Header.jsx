@@ -335,13 +335,14 @@ export default function Header() {
   // Command Center Navigation
   const MASTER_COMMANDS = [
     { label: 'MASTER DASHBOARD', route: '/host-dashboard', icon: <CpuChipIcon className="w-5 h-5" />, color: 'bg-indigo-500' },
-    { label: 'WISHLIST VAULT', route: '/wishlist', icon: <HeartIcon className="w-5 h-5" />, color: 'bg-pink-500' },
+    { label: 'AI PLANNER', route: '/planner', icon: <MapIcon className="w-5 h-5" />, color: 'bg-pink-500' },
     { label: 'CREATE LISTING', route: `/${currentUser?._id}/create-listing`, icon: <PlusCircleIcon className="w-5 h-5" />, color: 'bg-emerald-500' },
     { label: 'MY LISTINGS', route: `/${currentUser?._id}/listings`, icon: <QueueListIcon className="w-5 h-5" />, color: 'bg-blue-500' },
     { label: 'HELP CENTER', route: '/help-center', icon: <QuestionMarkCircleIcon className="w-5 h-5" />, color: 'bg-indigo-600' },
     { label: 'SIGNAL INBOX', route: '/messages', icon: <InboxIcon className="w-5 h-5" />, color: 'bg-cyan-500' },
     { label: 'VERIFY IDENTITY', route: '/verification', icon: <CheckBadgeIcon className="w-5 h-5" />, color: 'bg-rose-600' },
     { label: 'SECURITY LAB', route: '/trust', icon: <ShieldCheckIcon className="w-5 h-5" />, color: 'bg-gray-800' },
+    { label: 'FOR BUSINESS', route: '/for-business', icon: <BriefcaseIcon className="w-5 h-5" />, color: 'bg-rose-500' },
   ];
 
   // Handle search submission
@@ -444,14 +445,14 @@ export default function Header() {
   };
 
   const hiddenRoutes = ['/profile', '/wishlist', '/search', '/host-dashboard'];
-  const hiddenPrefixes = ['/user/', '/user-profile/', '/listing/', '/helper/', '/service/', '/event/'];
+  const hiddenPrefixes = ['/user/', '/user-profile/', '/listing/', '/rent/', '/helper/', '/service/', '/event/', '/carwash/'];
   
   const isHeaderHidden = 
     hiddenRoutes.includes(location.pathname) || 
     hiddenPrefixes.some(prefix => location.pathname.startsWith(prefix));
 
   const hiddenBottomNavRoutes = ['/host-dashboard'];
-  const hiddenBottomNavPrefixes = ['/user/', '/user-profile/', '/listing/', '/helper/', '/service/', '/event/'];
+  const hiddenBottomNavPrefixes = ['/user/', '/user-profile/', '/listing/', '/rent/', '/helper/', '/service/', '/event/', '/carwash/'];
   
   const isBottomNavHidden = 
     hiddenBottomNavRoutes.includes(location.pathname) || 
@@ -908,9 +909,9 @@ export default function Header() {
                 <span className="text-[10px] font-medium tracking-wide">Explore</span>
               </Link>
 
-              <Link to="/wishlist" className={`flex flex-col items-center justify-center w-14 h-full relative transition-colors duration-200 ${location.pathname === '/wishlist' ? 'text-rose-600' : 'text-[#717171] hover:text-gray-900'}`}>
-                {location.pathname === '/wishlist' ? <HeartIconSolid className="w-6 h-6 mb-1" /> : <HeartIcon className="w-6 h-6 mb-1 stroke-[2px]" />}
-                <span className="text-[10px] font-medium tracking-wide">Wishlists</span>
+              <Link to="/planner" className={`flex flex-col items-center justify-center w-14 h-full relative transition-colors duration-200 ${location.pathname === '/planner' ? 'text-rose-600' : 'text-[#717171] hover:text-gray-900'}`}>
+                {location.pathname === '/planner' ? <MapIcon className="w-6 h-6 mb-1 stroke-[2.5px] text-rose-600" /> : <MapIcon className="w-6 h-6 mb-1 stroke-[2px]" />}
+                <span className="text-[10px] font-medium tracking-wide">Planner</span>
               </Link>
 
               <Link to="/trips" className={`flex flex-col items-center justify-center w-14 h-full relative transition-colors duration-200 ${location.pathname === '/trips' ? 'text-rose-600' : 'text-[#717171] hover:text-gray-900'}`}>

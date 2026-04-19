@@ -996,7 +996,7 @@ const LoopOutHomeHero = ({ navigate }) => {
         className="absolute inset-0"
       >
         <img 
-          src="/loopout_hero_bg.png" 
+          src="/soweto_bg.png" 
           alt="loopOut Elite Experience" 
           className="w-full h-full object-cover"
         />
@@ -1020,18 +1020,18 @@ const LoopOutHomeHero = ({ navigate }) => {
             transition={{ delay: 0.8, duration: 1 }}
             className="inline-block px-5 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white text-[10px] font-black tracking-[0.25em] uppercase mb-8 shadow-2xl"
           >
-            Everything is in the Loop
+            VIBE OF THE NATION
           </motion.div>
 
           <h1 className="text-6xl lg:text-8xl font-black text-white mb-8 tracking-tighter leading-[0.9] drop-shadow-2xl">
-            EXPERIENCE <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-pink-400 to-rose-400 animate-gradient-x">
-               INFINITE FLOW
+            HEARTBEAT OF <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-rose-400 to-amber-400 animate-gradient-x">
+               THE STREETS
             </span>
           </h1>
 
-          <p className="text-xl lg:text-2xl text-white/80 max-w-2xl mx-auto mb-12 font-medium leading-relaxed drop-shadow-lg">
-            The elite portal connecting you to premium homes, professional helpers, and world-class daily services.
+          <p className="text-xl lg:text-2xl text-white/90 max-w-2xl mx-auto mb-12 font-medium leading-relaxed drop-shadow-lg">
+            Immerse in the culture. Discover authentic homes, verified local helpers, and premium community services securely.
           </p>
           
 
@@ -1092,7 +1092,7 @@ const LoopOutHomeHero = ({ navigate }) => {
              { label: "DAILY SERVICES", value: "24/7", icon: <Sparkles className="w-5 h-5 text-amber-400" /> },
              { label: "LOCAL EVENTS", value: "100+", icon: <FireIcon className="w-5 h-5 text-orange-400" /> }
            ].map((stat, i) => (
-             <div key={i} className="flex items-center gap-4 group">
+             <div key={i} className="flex items-center gap-4">
                 <div className="p-3 bg-white/10 rounded-2xl group-hover:bg-white/20 transition-colors">{stat.icon}</div>
                 <div>
                    <div className="text-white text-xl font-black leading-tight tracking-tight">{stat.value}</div>
@@ -1301,7 +1301,7 @@ const CommunityNeedsSection = ({ navigate }) => {
         </div>
         <button 
           onClick={() => navigate('/looking-for')} 
-          className="group flex items-center gap-3 px-8 py-4 bg-gray-950 text-white rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-2xl overflow-hidden relative"
+          className="flex items-center gap-3 px-8 py-4 bg-gray-950 text-white rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-2xl overflow-hidden relative"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-rose-600 to-rose-500 opacity-0 group-hover:opacity-100 transition-opacity" />
           <span className="relative z-10">Sync All Signals</span>
@@ -1675,7 +1675,7 @@ const MobileAppHomepage = ({
           <motion.section initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="bg-gray-50 rounded-3xl p-8">
             <div className="flex justify-between items-center mb-8">
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900">LoopOut by the numbers</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">loopOut by the numbers</h2>
                 <p className="text-gray-500 mt-1">Connecting people with spaces, services, and experiences</p>
               </div>
               <div className="flex items-center text-sm text-gray-600">
@@ -1702,7 +1702,7 @@ const MobileAppHomepage = ({
           {/* HOW IT WORKS SECTION */}
           <section className="mt-20 mb-20 px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">How LoopOut works</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">How loopOut works</h2>
               <p className="text-gray-500">The easiest way to find and book services in Polokwane</p>
             </div>
             
@@ -1744,7 +1744,7 @@ const MobileAppHomepage = ({
               <div className="inline-block bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4">
                 Available Now
               </div>
-              <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6 tracking-tight leading-tight">LoopOut is better on the app</h2>
+              <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6 tracking-tight leading-tight">loopOut is better on the app</h2>
               <p className="text-gray-300 mb-8 max-w-md text-base lg:text-lg leading-relaxed">Get real-time notifications, exclusive app-only deals, and discover exactly what you need with our AI-powered search. Download now for iOS and Android.</p>
               <div className="flex flex-wrap gap-4">
                 <a href="#" className="flex items-center gap-3 bg-white text-black px-6 py-3 rounded-xl hover:bg-gray-100 transition-colors shadow-lg hover:-translate-y-1 transform duration-200">
@@ -1775,7 +1775,7 @@ const MobileAppHomepage = ({
                    <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-xl mb-6 relative z-10">
                     <span className="text-4xl font-black text-rose-500">L</span>
                   </div>
-                  <h3 className="text-white font-bold text-2xl mb-2 relative z-10">LoopOut</h3>
+                  <h3 className="text-white font-bold text-2xl mb-2 relative z-10">loopOut</h3>
                   <p className="text-white/90 text-sm text-center px-4 relative z-10">Discover homes, services, and experiences instantly.</p>
                   
                   <div className="mt-8 w-full space-y-3 relative z-10">
@@ -1797,6 +1797,49 @@ const MobileAppHomepage = ({
                 </div>
               </div>
             </div>
+          </section>
+          
+          {/* Desktop Promo Banner: Become a Provider */}
+          <section className="mb-20 mt-16 group">
+             <div className="relative h-[480px] rounded-[3rem] overflow-hidden shadow-2xl">
+                <img 
+                  src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1469" 
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[10s]"
+                  alt="Business Growth"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/60 to-transparent" />
+                
+                <div className="absolute inset-0 p-16 flex flex-col justify-center max-w-2xl">
+                   <div className="flex items-center gap-2 mb-6">
+                      <div className="w-10 h-[1px] bg-rose-500" />
+                      <span className="text-rose-500 text-xs font-black tracking-[0.3em] uppercase">Enterprise Protocol</span>
+                   </div>
+                   
+                   <h2 className="text-5xl font-black text-white leading-tight tracking-tighter mb-8">
+                      TURN YOUR ASSETS <br />
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-amber-400 italic">
+                        INTO A POWERHOUSE.
+                      </span>
+                   </h2>
+                   
+                   <p className="text-xl text-gray-300 font-medium mb-12 leading-relaxed">
+                      Scale your property, service, or expertise with the world's most sophisticated AI-driven business ecosystem.
+                   </p>
+                   
+                   <div className="flex items-center gap-6">
+                      <button 
+                        onClick={() => navigate('/for-business')}
+                        className="px-10 py-5 bg-white text-gray-950 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all shadow-2xl flex items-center gap-3 group/btn"
+                      >
+                        Join loopOut Business
+                        <ArrowRightIcon className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                      </button>
+                      <button className="px-10 py-5 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-white/20 transition-all">
+                        Learn More
+                      </button>
+                   </div>
+                </div>
+             </div>
           </section>
         </main>
 
@@ -1916,26 +1959,26 @@ const MobileAppHomepage = ({
           onClick={() => navigate('/ai-help-center')}
         >
           <img 
-            src="/loopout_hero_bg.png" 
+            src="/soweto_bg.png" 
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
             alt="LoopOut Experience" 
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
           <div className="absolute inset-0 p-8 flex flex-col justify-end">
              <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="w-5 h-5 text-rose-400" />
-                <span className="text-white/60 text-[11px] font-black tracking-[0.2em] uppercase">EXPERIENCE THE LOOP</span>
+                <span className="text-white/80 text-[11px] font-black tracking-[0.2em] uppercase drop-shadow-md">VIBE OF THE NATION</span>
              </div>
              <h2 className="text-3xl font-black text-white leading-[0.9] mb-3 tracking-tighter">
-               YOUR CITY. <br />
-               <span className="text-rose-400">YOUR CHOICE.</span>
+               HEARTBEAT OF <br />
+               <span className="text-rose-400">THE STREETS.</span>
              </h2>
-             <p className="text-white/70 text-sm font-medium mb-6 leading-relaxed max-w-[240px]">
-               The elite portal for premium homes and verified professional support.
+             <p className="text-white/90 text-sm font-medium mb-6 leading-relaxed max-w-[240px] drop-shadow-md">
+               Immerse in the culture. Discover authentic homes, verified local helpers, and premium community services securely.
              </p>
              <div className="flex items-center gap-3">
-                <div className="px-6 py-3 bg-white text-gray-900 rounded-2xl text-xs font-black shadow-xl">
-                  AI EXPLORE
+                <div className="px-6 py-3 bg-white text-gray-900 rounded-2xl text-xs font-black shadow-xl whitespace-nowrap">
+                  START EXPLORING
                 </div>
                 <div className="w-10 h-10 rounded-2xl bg-rose-500/20 backdrop-blur-md border border-rose-500/30 flex items-center justify-center">
                    <ChevronRightIcon className="w-5 h-5 text-white" />
@@ -2187,7 +2230,7 @@ const MobileAppHomepage = ({
               <h2 className="text-2xl font-bold mb-2 tracking-tight">Earn with LoopOut</h2>
               <p className="text-white/90 mb-6 text-sm px-2 leading-relaxed">Turn your space, skills, or services into extra income. Join thousands of providers today.</p>
               
-              <button onClick={() => navigate('/become')} className="w-full bg-white text-rose-600 font-bold py-3.5 px-6 rounded-xl shadow-lg active:scale-95 transition-all duration-150">
+              <button onClick={() => navigate('/for-business')} className="w-full bg-white text-rose-600 font-bold py-3.5 px-6 rounded-xl shadow-lg active:scale-95 transition-all duration-150">
                 Get Started
               </button>
             </div>
