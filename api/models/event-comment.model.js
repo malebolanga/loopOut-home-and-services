@@ -45,6 +45,12 @@ const eventCommentSchema = new mongoose.Schema({
     type: String,
     default: '/default-avatar.jpg'
   },
+  rating: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 5
+  },
   likes: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

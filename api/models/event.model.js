@@ -74,6 +74,12 @@ const eventSchema = new mongoose.Schema(
       default: false,
     },
 
+    rating: { 
+      type: Number, 
+      default: 0, 
+      min: 0, 
+      max: 5 
+    },
     comments: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'EventComment'

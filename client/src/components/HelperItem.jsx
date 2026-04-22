@@ -69,35 +69,17 @@ function HelperItem({ helper, className = "" }) {
   const [isNewHelper, setIsNewHelper] = useState(false);
   const [clickCount, setClickCount] = useState(0);
   const [hasPositivePromo, setHasPositivePromo] = useState(false);
-  const [ratingData, setRatingData] = useState({ average: 4.8, count: 0 });
-
-  const calculatePositivePromo = useMemo(() => {
-    if (!helper?.reviews || helper.reviews.length < MIN_POSITIVE_REVIEWS) return false;
-    return helper.reviews.filter(r => r.comment && POSITIVE_KEYWORDS.some(k => r.comment.toLowerCase().includes(k))).length >= MIN_POSITIVE_REVIEWS;
-  }, [helper]);
+  const [ratingData, setRatingData] = useState({ 
+    average: helper.rating || 4.8, 
+    count: helper.comments?.length || 0 
+  });
 
   useEffect(() => {
     if (helper?.createdAt) {
       const diffDays = Math.ceil(Math.abs(new Date() - new Date(helper.createdAt)) / (1000 * 60 * 60 * 24));
       setIsNewHelper(diffDays <= NEW_HELPER_THRESHOLD_DAYS);
     }
-    if (helper?._id) {
-      const storedClicks = JSON.parse(localStorage.getItem('helperClicks')) || {};
-      setClickCount(storedClicks[helper._id] || 0);
-      
-      const fetchRating = async () => {
-        try {
-          const res = await fetch(`/api/helper-comments/${helper._id}?limit=1`);
-          if (res.ok) {
-            const data = await res.json();
-            setRatingData({ average: data.ratings?.overall || 4.8, count: data.totalComments || 0 });
-          }
-        } catch (e) { /* ignore */ }
-      };
-      fetchRating();
-    }
-    setHasPositivePromo(calculatePositivePromo);
-  }, [helper, calculatePositivePromo]);
+  }, [helper]);
 
   const handleCardClick = () => {
     if (!helper?._id) return;

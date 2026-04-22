@@ -62,17 +62,11 @@ function EventItem({ event, className = "" }) {
     if (event?._id) {
       const storedClicks = JSON.parse(localStorage.getItem('eventClicks')) || {};
       setClickCount(storedClicks[event._id] || 0);
-      const fetchRating = async () => {
-        try {
-          const res = await fetch(`/api/event-comments/${event._id}?limit=1`);
-          if (res.ok) {
-            const data = await res.json();
-            setRatingData({ average: data.ratings?.overall || 0, count: data.totalComments || 0 });
-          }
-        } catch (error) {}
-      };
-      fetchRating();
     }
+    setRatingData({ 
+      average: event.rating || 0, 
+      count: event.comments?.length || 0 
+    });
   }, [event]);
 
   const handleCardClick = () => {

@@ -110,25 +110,12 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
       } catch (error) {
         console.error('Error reading listingClicks from localStorage:', error);
       }
-
-      // Fetch accurate rating data
-      const fetchRating = async () => {
-        try {
-          const res = await fetch(`/api/comment/${listing._id}?limit=1`);
-          if (res.ok) {
-            const data = await res.json();
-            setRatingData({
-              average: data.ratings?.overall || 0,
-              count: data.totalComments || 0
-            });
-          }
-        } catch (error) {
-          // silently fail
-        }
-      };
-      fetchRating();
     }
-  }, [listing?._id]);
+    setRatingData({
+      average: listing.rating || 0,
+      count: listing.comments?.length || 0
+    });
+  }, [listing]);
 
   const handleCardClick = () => {
     if (!listing?._id) return;

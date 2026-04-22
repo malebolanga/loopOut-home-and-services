@@ -29,8 +29,23 @@ export const createHelperComment = async (req, res, next) => {
 
     await comment.save();
     
+    // Update Helper Average Rating
+    const allComments = await HelperComment.find({ helperId });
+    let totalCleanliness = 0;
+    let totalCommunication = 0;
+    
+    allComments.forEach(c => {
+      totalCleanliness += c.cleanlinessRating || 5;
+      totalCommunication += c.communicationRating || 5;
+    });
+
+    const cleanliness = allComments.length > 0 ? (totalCleanliness / allComments.length) : 0;
+    const communication = allComments.length > 0 ? (totalCommunication / allComments.length) : 0;
+    const overall = allComments.length > 0 ? ((cleanliness + communication) / 2) : 0;
+
     if (!helper.comments) helper.comments = [];
     helper.comments.push(comment._id);
+    helper.rating = Number(overall.toFixed(1));
     await helper.save();
 
     // Notify helper owner (userRef is the owner)

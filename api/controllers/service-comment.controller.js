@@ -5,7 +5,7 @@ import { createUserNotification } from '../utils/notificationUtils.js';
 
 export const createServiceComment = async (req, res, next) => {
   try {
-    const { content, serviceId, userName, userAvatar } = req.body;
+    const { content, serviceId, userName, userAvatar, rating } = req.body;
     const userId = req.user.id;
 
     if (!content || !serviceId) {
@@ -22,15 +22,17 @@ export const createServiceComment = async (req, res, next) => {
       serviceId,
       userId,
       userName: userName || req.user.username,
-      userAvatar: userAvatar || req.user.avatar || '/default-avatar.jpg'
+      userAvatar: userAvatar || req.user.avatar || '/default-avatar.jpg',
+      rating: rating ? Number(rating) : 5
     });
 
     await comment.save();
     
-    // Initialize comments array if it doesn't exist
-    if (!service.comments) {
-      service.comments = [];
-    }
+    // Update Service Average Rating
+    const comments = await ServiceComment.find({ serviceId, rating: { $exists: true } });
+    const avgRating = comments.reduce((acc, curr) => acc + curr.rating, 0) / comments.length;
+
+    service.rating = Number(avgRating.toFixed(1));
     service.comments.push(comment._id);
     await service.save();
 

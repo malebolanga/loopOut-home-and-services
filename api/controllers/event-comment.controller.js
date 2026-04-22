@@ -5,7 +5,7 @@ import { createUserNotification } from '../utils/notificationUtils.js';
 
 export const createEventComment = async (req, res, next) => {
   try {
-    const { content, eventId, userName, userAvatar } = req.body;
+    const { content, eventId, userName, userAvatar, rating } = req.body;
     const userId = req.user.id;
 
     if (!content || !eventId) {
@@ -22,13 +22,19 @@ export const createEventComment = async (req, res, next) => {
       eventId,
       userId,
       userName: userName || req.user.username,
-      userAvatar: userAvatar || req.user.avatar || '/default-avatar.jpg'
+      userAvatar: userAvatar || req.user.avatar || '/default-avatar.jpg',
+      rating: rating ? Number(rating) : 5
     });
 
     await comment.save();
     
+    // Update Event Average Rating
+    const allComments = await EventComment.find({ eventId, rating: { $exists: true } });
+    const avgRating = allComments.reduce((acc, curr) => acc + curr.rating, 0) / allComments.length;
+
     if (!event.comments) event.comments = [];
     event.comments.push(comment._id);
+    event.rating = Number(avgRating.toFixed(1));
     await event.save();
 
     // Notify event owner

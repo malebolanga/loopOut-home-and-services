@@ -87,18 +87,11 @@ function ServiceItem({ service, className = "" }) {
         const storedClicks = JSON.parse(localStorage.getItem('serviceClicks')) || {};
         setClickCount(storedClicks[service._id] || 0);
       } catch (error) { console.error('Error reading serviceClicks:', error); }
-
-      const fetchRating = async () => {
-        try {
-          const res = await fetch(`/api/service-comments/${service._id}?limit=1`);
-          if (res.ok) {
-            const data = await res.json();
-            setRatingData({ average: data.ratings?.overall || 0, count: data.totalComments || 0 });
-          }
-        } catch (error) { /* ignore */ }
-      };
-      fetchRating();
     }
+    setRatingData({ 
+      average: service.rating || 0, 
+      count: service.comments?.length || 0 
+    });
   }, [service]);
 
   const handleCardClick = () => {

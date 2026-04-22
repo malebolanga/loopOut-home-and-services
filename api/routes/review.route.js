@@ -9,8 +9,8 @@ import { verifyUser } from '../utils/verifyUser.js';
 
 const router = express.Router();
 
-router.post('/:listingId', verifyUser, createReview);
-router.get('/listing/:listingId', getListingReviews);
+router.post('/:entityId', verifyUser, createReview);
+router.get('/:type/:entityId', getListingReviews); // type can be listing, service, etc.
 router.delete('/:reviewId', verifyUser, deleteReview);
 router.patch('/helpful/:reviewId', verifyUser, markHelpful);
 

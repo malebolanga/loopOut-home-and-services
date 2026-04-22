@@ -141,6 +141,12 @@ const helperSchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
+    rating: { 
+        type: Number, 
+        default: 0, 
+        min: 0, 
+        max: 5 
+    },
     comments: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'HelperComment'

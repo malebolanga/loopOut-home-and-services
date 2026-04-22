@@ -10,9 +10,30 @@ const reviewSchema = new mongoose.Schema(
     },
     listing: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Listing',
-      required: true
+      ref: 'Listing'
     },
+    service: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Service'
+    },
+    helper: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Helper'
+    },
+    event: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Event'
+    },
+    rating: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 5
+    },
+    likes: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
     author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
