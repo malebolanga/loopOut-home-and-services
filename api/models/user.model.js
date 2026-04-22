@@ -164,7 +164,12 @@ const userSchema = new mongoose.Schema({
     },
     otpExpiry: {
         type: Date,
-    }
+    },
+    plannerTasks: [{
+        task: { type: String, required: true },
+        completed: { type: Boolean, default: false },
+        createdAt: { type: Date, default: Date.now }
+    }],
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);

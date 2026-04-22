@@ -2,5 +2,9 @@
   "appId": "com.loupeout.app",
   "appName": "LoupeOut",
   "webDir": "dist",
-  "backgroundColor": "#f0f2f5"
+  "backgroundColor": "#f0f2f5",
+  "server": {
+    "url": "http://10.0.0.133:5173",
+    "cleartext": true
+  }
 }

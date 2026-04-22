@@ -329,7 +329,7 @@ const CategoryDropdown = ({
                       : 'hover:bg-gray-50 border border-transparent'
                       }`}
                   >
-                    <div className={`p-2 rounded-lg ${category.color} group-hover:scale-110 transition-transform flex-shrink-0`}>
+                    <div className={`p-2 rounded-lg ${category.color} hover:scale-110 transition-transform flex-shrink-0`}>
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -414,9 +414,9 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
         variants={cardVariants}
         whileHover={{ y: -5, scale: 1.02 }}
         onClick={onClick}
-        className="group relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-[2.5rem] p-8 shadow-2xl hover:shadow-[0_30px_60px_-15px_rgba(225,29,72,0.3)] transition-all duration-500 h-full flex flex-col gap-6 cursor-pointer overflow-hidden border border-gray-700"
+        className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-[2.5rem] p-8 shadow-2xl hover:shadow-[0_30px_60px_-15px_rgba(225,29,72,0.3)] transition-all duration-500 h-full flex flex-col gap-6 cursor-pointer overflow-hidden border border-gray-700"
       >
-        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-125 transition-transform duration-1000">
+        <div className="absolute top-0 right-0 p-8 opacity-10 hover:scale-125 transition-transform duration-1000">
            <LayoutGrid className="w-32 h-32 text-white" />
         </div>
         
@@ -463,7 +463,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
          onClick={() => navigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`)}
       >
         <div className="w-40 h-40 rounded-2xl overflow-hidden flex-shrink-0">
-           <ImageWithFallback src={getImage()} alt={getTitle()} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+           <ImageWithFallback src={getImage()} alt={getTitle()} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" />
         </div>
         <div className="flex-1 min-w-0">
            <div className="flex items-center gap-2 mb-2">
@@ -473,7 +473,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
                  <span className="text-xs font-black">{getRating()}</span>
               </div>
            </div>
-           <h3 className="text-lg font-black text-gray-900 truncate mb-1 group-hover:text-rose-500 transition-colors">{getTitle()}</h3>
+           <h3 className="text-lg font-black text-gray-900 truncate mb-1 hover:text-rose-500 transition-colors">{getTitle()}</h3>
            <p className="text-gray-400 text-xs flex items-center gap-1.5 mb-4">
               <MapPin className="w-3.5 h-3.5 text-rose-400" />
               {getLocation()}
@@ -515,7 +515,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
         <ImageWithFallback
           src={getImage()}
           alt={getTitle()}
-          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-1000 hover:scale-105"
         />
       </div>
 

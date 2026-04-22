@@ -51,7 +51,7 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
          className=" relative bg-white rounded-3xl border border-gray-100 overflow-hidden flex items-center p-4 gap-6 hover:shadow-xl transition-all duration-500"
       >
         <div className="w-40 h-40 rounded-2xl overflow-hidden flex-shrink-0">
-           <ImageWithFallback src={getImage()} alt={getTitle()} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+           <ImageWithFallback src={getImage()} alt={getTitle()} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" />
         </div>
         <div className="flex-1 min-w-0">
            <div className="flex items-center gap-2 mb-2">
@@ -61,7 +61,7 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
                  <span className="text-xs font-black">{getRating()}</span>
               </div>
            </div>
-           <h3 className="text-lg font-black text-gray-900 truncate mb-1 group-hover:text-rose-500 transition-colors">{getTitle()}</h3>
+           <h3 className="text-lg font-black text-gray-900 truncate mb-1 hover:text-rose-500 transition-colors uppercase tracking-tight">{getTitle()}</h3>
            <p className="text-gray-400 text-xs flex items-center gap-1.5 mb-4">
               <MapPin className="w-3.5 h-3.5 text-rose-400" />
               {getLocation()}
@@ -103,7 +103,7 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
         <ImageWithFallback
           src={getImage()}
           alt={getTitle()}
-          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-1000 hover:scale-105"
         />
       </div>
 
@@ -120,7 +120,7 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
             onRemove(item._id, item.type);
           }}
           disabled={isRemoving}
-          className="w-10 h-10 bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg flex items-center justify-center text-gray-900 hover:bg-rose-500 hover:text-white transition-all active:scale-90 pointer-events-auto group/trash"
+          className="w-10 h-10 bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg flex items-center justify-center text-gray-900 hover:bg-rose-500 hover:text-white transition-all active:scale-90 pointer-events-auto"
         >
           {isRemoving ? <Sparkles className="w-3.5 h-3.5 text-gray-900 animate-spin" /> : <Trash2 className="w-4 h-4" />}
         </button>
@@ -151,8 +151,8 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
       </div>
 
       {/* Hover Action Overlay */}
-      <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-8 bg-gray-900/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none group-hover:pointer-events-auto">
-        <div className="w-full space-y-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+      <div className={`absolute inset-0 z-20 flex flex-col justify-center items-center p-8 bg-gray-900/50 backdrop-blur-md transition-all duration-500 ${isHovered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`w-full space-y-4 transform transition-all duration-500 ${isHovered ? 'translate-y-0' : 'translate-y-4'}`}>
           <div className="flex gap-2">
             <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-green-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm">
               <ThumbsUp className="w-4 h-4" />
@@ -289,10 +289,10 @@ const WishList = () => {
                 onClick={() => setActiveCategory(cat.id)}
                 className={`flex flex-col items-center gap-3 min-w-[80px]  transition-all ${activeCategory === cat.id ? 'text-gray-900' : 'text-gray-400'}`}
               >
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${activeCategory === cat.id ? 'bg-gray-900 text-white shadow-2xl scale-110' : 'bg-gray-50 group-hover:bg-gray-100'}`}>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${activeCategory === cat.id ? 'bg-gray-900 text-white shadow-2xl scale-110' : 'bg-gray-50 hover:bg-gray-100'}`}>
                   {cat.icon}
                 </div>
-                <span className={`text-[11px] font-black uppercase tracking-widest transition-colors ${activeCategory === cat.id ? 'text-gray-900' : 'group-hover:text-gray-600'}`}>
+                <span className={`text-[11px] font-black uppercase tracking-widest transition-colors ${activeCategory === cat.id ? 'text-gray-900' : 'hover:text-gray-600'}`}>
                   {cat.label}
                 </span>
                 <div className={`h-1 bg-gray-900 rounded-full transition-all duration-500 ${activeCategory === cat.id ? 'w-full opacity-100' : 'w-0 opacity-0'}`} />

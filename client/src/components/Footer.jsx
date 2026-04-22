@@ -6,7 +6,8 @@ import {
   HomeIcon, 
   MapIcon, 
   HeartIcon, 
-  UserIcon 
+  UserIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline';
 
 const Footer = () => {
@@ -51,13 +52,13 @@ const Footer = () => {
       
       const isScrollingUp = currentScrollY < lastScroll.current;
       
-      // Show nav when at top, hide when scrolling up, show when scrolling down
-      if (currentScrollY < 100) {
-        setIsNavVisible(true); // Always show at top
+      // Elite Behavior: Hide when scrolling down, show when scrolling up
+      if (currentScrollY < 50) {
+        setIsNavVisible(true); 
       } else if (isScrollingUp) {
-        setIsNavVisible(false); // Hide when scrolling up
+        setIsNavVisible(true); // Show when user wants to navigate
       } else {
-        setIsNavVisible(true); // Show when scrolling down
+        setIsNavVisible(false); // Hide when user is consuming content (scrolling down)
       }
       
       lastScroll.current = currentScrollY;
@@ -88,87 +89,102 @@ const Footer = () => {
     <>
   
 
-      {/* Main Footer - Hidden on small screens, visible on medium and above */}
-      <footer className="hidden md:block bg-[#F0F2F5] text-gray-600 pt-16 pb-8 mt-12 border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-12">
+      {/* Main Footer - Hidden on mobile, visible on desktop */}
+      <footer className="hidden md:block bg-gray-50 text-gray-600 pt-20 pb-12 mt-20 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 md:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-12 gap-10 md:gap-12 mb-16">
             
             {/* Brand Column */}
-            <div className="md:col-span-5 space-y-6 pr-8">
-              <h3 className="text-2xl font-black tracking-tight"><span className="text-rose-500">loop</span><span className="text-gray-900">Out</span></h3>
-              <p className="text-sm text-gray-500 leading-relaxed font-medium">
-                Your ultimate platform for extraordinary stays, vetted professionals, and premium services. We bring the best right to your doorstep.
-              </p>
-              <div className="flex space-x-4 pt-4">
-                <a href="#" className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-400 hover:text-[#1877F2] hover:shadow-md transition-all">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z" />
-                  </svg>
-                </a>
-                <a href="#" className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-400 hover:text-black hover:shadow-md transition-all">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                  </svg>
-                </a>
-                <a href="#" className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-400 hover:text-[#E1306C] hover:shadow-md transition-all">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-                  </svg>
-                </a>
+            <div className="col-span-2 md:col-span-5 space-y-6 md:space-y-8">
+              <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 bg-gray-950 rounded-xl flex items-center justify-center shadow-2xl">
+                    <span className="text-white font-black text-xs">LO</span>
+                 </div>
+                 <h3 className="text-2xl font-black tracking-tighter text-gray-900 uppercase">LoopOut</h3>
               </div>
+              <p className="text-sm text-gray-500 leading-relaxed font-medium max-w-sm">
+                The ultimate neural ecosystem for high-fidelity stays, vetted local professionals, and premium lifestyle services.
+              </p>
             </div>
 
             {/* Links Columns */}
-            <div className="md:col-span-2 space-y-4 md:ml-auto">
-              <h5 className="text-gray-900 font-bold text-[11px] uppercase tracking-widest">Company</h5>
-              <ul className="space-y-3">
-                <li><Link to="/about" className="text-sm font-medium text-gray-500 hover:text-rose-500 transition-colors">About loopOut</Link></li>
-                <li><Link to="/pricing" className="text-sm font-medium text-gray-500 hover:text-rose-500 transition-colors">Pricing Options</Link></li>
-                <li><Link to="/careers" className="text-sm font-medium text-gray-500 hover:text-rose-500 transition-colors">Careers</Link></li>
-                <li><Link to="/press" className="text-sm font-medium text-gray-500 hover:text-rose-500 transition-colors">Press</Link></li>
+            <div className="md:col-span-2 space-y-6">
+              <h5 className="text-gray-950 font-black text-[10px] uppercase tracking-[0.2em]">Company</h5>
+              <ul className="space-y-4">
+                <li><Link to="/about" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">About</Link></li>
+                <li><Link to="/pricing" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Pricing</Link></li>
+                <li><Link to="/careers" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Careers</Link></li>
               </ul>
             </div>
 
-            <div className="md:col-span-2 space-y-4 md:ml-auto">
-              <h5 className="text-gray-900 font-bold text-[11px] uppercase tracking-widest">Support</h5>
-              <ul className="space-y-3">
-                <li><Link to="/help-center" className="text-sm font-medium text-gray-500 hover:text-rose-500 transition-colors">Help Center</Link></li>
-                <li><Link to="/message" className="text-sm font-medium text-gray-500 hover:text-rose-500 transition-colors">Message Us</Link></li>
-                <li><Link to="/trust" className="text-sm font-medium text-gray-500 hover:text-rose-500 transition-colors">Trust & Safety</Link></li>
-                <li><Link to="/cancellations" className="text-sm font-medium text-gray-500 hover:text-rose-500 transition-colors">Cancellations</Link></li>
+            <div className="md:col-span-2 space-y-6">
+              <h5 className="text-gray-950 font-black text-[10px] uppercase tracking-[0.2em]">Support</h5>
+              <ul className="space-y-4">
+                <li><Link to="/help-center" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Help Center</Link></li>
+                <li><Link to="/trust" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Trust & Safety</Link></li>
+                <li><Link to="/message" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Message Us</Link></li>
               </ul>
             </div>
 
-            <div className="md:col-span-2 space-y-4 md:ml-auto">
-              <h5 className="text-gray-900 font-bold text-[11px] uppercase tracking-widest">Legal</h5>
-              <ul className="space-y-3">
-                <li><Link to="/terms" className="text-sm font-medium text-gray-500 hover:text-rose-500 transition-colors">Terms of Service</Link></li>
-                <li><Link to="/privacy" className="text-sm font-medium text-gray-500 hover:text-rose-500 transition-colors">Privacy Policy</Link></li>
-                <li><Link to="/cookies" className="text-sm font-medium text-gray-500 hover:text-rose-500 transition-colors">Cookie Policy</Link></li>
-                <li><Link to="/sitemap" className="text-sm font-medium text-gray-500 hover:text-rose-500 transition-colors">Sitemap</Link></li>
+            <div className="col-span-2 md:col-span-3 space-y-6">
+              <h5 className="text-gray-950 font-black text-[10px] uppercase tracking-[0.2em]">Protocols</h5>
+              <ul className="space-y-4">
+                <li><Link to="/terms" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Terms of Service</Link></li>
+                <li><Link to="/privacy" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Privacy Policy</Link></li>
               </ul>
             </div>
 
           </div>
 
-          <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-gray-500">© {new Date().getFullYear()} loopOut, Inc. All rights reserved.</span>
-            </div>
-            <div className="flex space-x-6 text-sm font-bold text-gray-600">
-              <span className="flex items-center gap-1 cursor-pointer hover:text-rose-500 transition-colors">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                </svg>
-                English (SA)
-              </span>
-              <span className="flex items-center gap-1 cursor-pointer hover:text-rose-500 transition-colors">
-                R ZAR
-              </span>
+          <div className="border-t border-gray-100 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
+            <span className="text-xs font-bold text-gray-400">© {new Date().getFullYear()} loopOut Neural Hub. All rights reserved.</span>
+            <div className="flex items-center gap-10">
+               <span className="text-xs font-black text-gray-900 border-b border-rose-500/30">ENGLISH (SA)</span>
+               <span className="text-xs font-black text-gray-900 border-b border-rose-500/30">ZAR (R)</span>
             </div>
           </div>
         </div>
       </footer>
+
+      {/* MOBILE BOTTOM DOCK: GLASSMORPHIC ELITE NAV */}
+      <nav 
+        className={`md:hidden fixed bottom-6 left-6 right-6 z-[100] transition-all duration-500 transform ${
+          isNavVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+        }`}
+      >
+        <div className="bg-white/80 backdrop-blur-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2.5rem] p-3 flex items-center justify-between">
+          {[
+            { id: '/', label: 'Explore', icon: HomeIcon },
+            { id: '/wishlist', label: 'Saved', icon: HeartIcon },
+            { id: '/planner', label: 'Planner', icon: MapIcon },
+            { id: '/messages', label: 'Inbox', icon: ChatBubbleLeftRightIcon },
+            { id: '/profile', label: 'Profile', icon: UserIcon }
+          ].map((item) => {
+            const isActive = location.pathname === item.id;
+            const Icon = item.icon;
+            
+            return (
+              <Link
+                key={item.id}
+                to={item.id}
+                onClick={item.id === '/profile' ? handleProfileClick : undefined}
+                className="flex flex-col items-center justify-center flex-1 py-1 relative"
+              >
+                <div className={`p-3 rounded-2xl transition-all duration-300 ${
+                  isActive ? 'bg-gray-950 text-white shadow-lg shadow-gray-200 -translate-y-1' : 'text-gray-400 hover:text-gray-600'
+                }`}>
+                  <Icon className={`w-6 h-6 stroke-[2px] ${isActive ? 'text-rose-500' : ''}`} />
+                </div>
+                {isActive && (
+                  <span className="text-[8px] font-black uppercase tracking-widest text-gray-900 mt-1 animate-in fade-in slide-in-from-bottom-1 duration-500">
+                    {item.label}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
 
 
     </>

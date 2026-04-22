@@ -34,7 +34,7 @@ export const updateUser = async (req, res, next) => {
       'occupation', 'interests', 'website', 'socialMedia',
       'faceData', 'whatsappNumber', 'whatsappVerified',
       'twoFactorEnabled', 'profileVisibility', 'contactVisibility',
-      'sharedInfo', 'dataSharing', 'securitySettings'
+      'sharedInfo', 'dataSharing', 'securitySettings', 'plannerTasks'
     ];
 
     const updateData = {};

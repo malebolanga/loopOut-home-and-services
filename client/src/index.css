@@ -106,6 +106,30 @@ body {
     @apply translate-x-full;
 }
 
+/* Elite 3D Image Protocol */
+.elite-image-container {
+    @apply relative overflow-hidden rounded-[2.5rem] transition-all duration-700 ease-out;
+}
+
+.elite-image-container:hover {
+    @apply shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] -translate-y-2;
+}
+
+.elite-image {
+    @apply w-full h-full object-cover transition-all duration-[800ms] ease-out;
+    filter: brightness(1) contrast(1) saturate(1);
+}
+
+.elite-image:hover {
+    @apply scale-110 shadow-2xl;
+    filter: brightness(1.05) contrast(1.1) saturate(1.1);
+}
+
+.elite-image-container:hover .elite-image {
+    @apply scale-110;
+    filter: brightness(1.05) contrast(1.1) saturate(1.1);
+}
+
 /* Gradient Text */
 .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-orange-500;

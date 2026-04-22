@@ -862,35 +862,35 @@ const ServicePage = () => {
         {service.imageUrls?.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-full w-full">
             <div
-              className="md:col-span-2 md:row-span-2 relative cursor-pointer group overflow-hidden"
+              className="md:col-span-2 md:row-span-2 relative cursor-pointer overflow-hidden"
               onClick={() => openFullScreenGallery(0)}
             >
               <img
                 src={service.imageUrls[0]}
                 alt={service.name}
-                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
                 onError={(e) => {
                   e.target.src = 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=80';
                 }}
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
+              <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors duration-500" />
             </div>
 
             {service.imageUrls.slice(1, 5).map((url, index) => (
               <div
                 key={index}
-                className="relative cursor-pointer hidden md:block group overflow-hidden"
+                className="relative cursor-pointer hidden md:block overflow-hidden"
                 onClick={() => openFullScreenGallery(index + 1)}
               >
                 <img
                   src={url}
                   alt={`${service.name} ${index + 2}`}
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-110"
                   onError={(e) => {
                     e.target.src = 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=600&q=80';
                   }}
                 />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
+                <div className="absolute inset-0 bg-black/0 hover:bg-black/15 transition-colors duration-500" />
               </div>
             ))}
 
@@ -1179,8 +1179,8 @@ const ServicePage = () => {
                           const rating = comment.rating || 5;
                           return (
                             <SwiperSlide key={comment._id} className="h-auto">
-                              <div className="h-full bg-gradient-to-br from-[#F8F9FA] to-white border border-[#EBEBEB] rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#FFB400]/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                              <div className="h-full bg-gradient-to-br from-[#F8F9FA] to-white border border-[#EBEBEB] rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#FFB400]/10 to-transparent rounded-bl-full opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                                 <div className="relative z-10">
                                   <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-3">

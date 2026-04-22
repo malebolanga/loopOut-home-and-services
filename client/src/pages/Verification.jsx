@@ -189,9 +189,9 @@ export default function Verification() {
         {/* Header Breadcrumb */}
         <button 
           onClick={handleBack}
-          className="group flex items-center gap-3 text-gray-400 hover:text-rose-600 transition-colors mb-12"
+          className="flex items-center gap-3 text-gray-400 hover:text-rose-600 transition-colors mb-12"
         >
-          <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-rose-50 transition-all">
+          <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center hover:bg-rose-50 transition-all">
             <ArrowLeft size={18} />
           </div>
           <span className="text-[10px] font-black uppercase tracking-[0.3em]">Protocol Abort / Return</span>
@@ -227,16 +227,16 @@ export default function Verification() {
                   <button
                     key={protocol.id}
                     onClick={() => startVerification(protocol.id)}
-                    className="flex flex-col items-start gap-8 p-8 bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200 hover:shadow-2xl rounded-[2.5rem] transition-all group"
+                    className="flex flex-col items-start gap-8 p-8 bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200 hover:shadow-2xl rounded-[2.5rem] transition-all"
                   >
-                    <div className={`p-4 ${protocol.color} text-white rounded-2xl shadow-xl transition-transform group-hover:rotate-12`}>
+                    <div className={`p-4 ${protocol.color} text-white rounded-2xl shadow-xl transition-transform hover:rotate-12`}>
                       {protocol.icon}
                     </div>
                     <div className="space-y-2">
                        <h3 className="text-xs font-black text-gray-950 uppercase tracking-widest">{protocol.label}</h3>
                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-tight">{protocol.description}</p>
                     </div>
-                    <ChevronRightIcon className="w-5 h-5 text-gray-300 group-hover:text-rose-600 transition-colors" />
+                    <ChevronRightIcon className="w-5 h-5 text-gray-300 hover:text-rose-600 transition-colors" />
                   </button>
                 ))}
               </div>
@@ -280,7 +280,7 @@ export default function Verification() {
                       <h2 className="text-4xl font-black text-gray-950 tracking-tighter">FACE ALIGNMENT</h2>
                    </div>
 
-                   <div className="relative group overflow-hidden rounded-[3rem] bg-gray-950 shadow-[0_50px_100px_-20px_rgba(225,29,72,0.3)] aspect-[4/3] flex items-center justify-center">
+                   <div className="relative overflow-hidden rounded-[3rem] bg-gray-950 shadow-[0_50px_100px_-20px_rgba(225,29,72,0.3)] aspect-[4/3] flex items-center justify-center">
                      {cameraActive ? (
                        <>
                          <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover grayscale opacity-60" />
@@ -294,9 +294,9 @@ export default function Verification() {
                      ) : (
                        <button 
                          onClick={toggleCamera}
-                         className="flex flex-col items-center gap-4 text-white/40 hover:text-white transition-all group"
+                         className="flex flex-col items-center gap-4 text-white/40 hover:text-white transition-all"
                        >
-                         <div className="w-24 h-24 rounded-full border border-white/20 flex items-center justify-center group-hover:border-rose-500 group-hover:bg-rose-500/10 active:scale-90 duration-500">
+                         <div className="w-24 h-24 rounded-full border border-white/20 flex items-center justify-center hover:border-rose-500 hover:bg-rose-500/10 active:scale-90 duration-500">
                            <Camera size={32} />
                          </div>
                          <span className="text-[10px] font-black uppercase tracking-[0.4em]">INITIATE CAMERA BYPASS</span>
@@ -351,13 +351,13 @@ export default function Verification() {
                       <p className="text-gray-500 font-medium">Position your government-issued document within the neural scanner field.</p>
                    </div>
                    
-                   <div className="aspect-[1.6/1] bg-gray-50 border-4 border-dashed border-gray-200 rounded-[3rem] flex flex-col items-center justify-center p-12 hover:border-rose-500 hover:bg-rose-50/30 transition-all cursor-pointer group"
+                   <div className="aspect-[1.6/1] bg-gray-50 border-4 border-dashed border-gray-200 rounded-[3rem] flex flex-col items-center justify-center p-12 hover:border-rose-500 hover:bg-rose-50/30 transition-all cursor-pointer"
                     onClick={runSimulation}
                    >
-                       <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+                       <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-xl hover:scale-110 transition-transform">
                           <PhotoIcon className="w-10 h-10 text-rose-500" />
                        </div>
-                       <p className="mt-8 text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 group-hover:text-rose-600">Primary Document Upload</p>
+                       <p className="mt-8 text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 hover:text-rose-600">Primary Document Upload</p>
                    </div>
                 </div>
               )}
@@ -523,10 +523,10 @@ export default function Verification() {
 
               <button 
                 onClick={() => navigate('/profile')}
-                className="group flex items-center gap-4 px-12 py-6 bg-gray-950 text-white hover:bg-black rounded-[2.5rem] text-xs font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95"
+                className="flex items-center gap-4 px-12 py-6 bg-gray-950 text-white hover:bg-black rounded-[2.5rem] text-xs font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95"
               >
                 Sync Final Core
-                <ChevronRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ChevronRightIcon className="w-5 h-5 hover:translate-x-1 transition-transform" />
               </button>
             </motion.div>
           )}

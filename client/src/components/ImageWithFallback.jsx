@@ -45,7 +45,7 @@ const ImageWithFallback = ({ src, alt, className, type = 'default', imageUrls, o
             <img
                 src={imgSrc || FALLBACK_IMAGES[type]}
                 alt={alt}
-                className={`${className} ${isLoading && !hasError ? 'hidden' : 'block'}`}
+                className={`${className} elite-image ${isLoading && !hasError ? 'hidden' : 'block'}`}
                 onError={handleError}
                 onLoad={handleLoad}
                 {...props}

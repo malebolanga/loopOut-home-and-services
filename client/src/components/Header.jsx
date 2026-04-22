@@ -481,8 +481,8 @@ export default function Header() {
                 className="search-trigger flex items-center gap-3 cursor-pointer "
               >
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-rose-500 to-orange-400 blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 rounded-full" />
-                  <BrandIcon className="w-12 h-12 relative z-10 transition-transform group-hover:rotate-[15deg] duration-700 ease-out" />
+                  <div className="absolute inset-0 bg-gradient-to-tr from-rose-500 to-orange-400 blur-xl opacity-20 hover:opacity-40 transition-opacity duration-500 rounded-full" />
+                  <BrandIcon className="w-12 h-12 relative z-10 transition-transform hover:rotate-[15deg] duration-700 ease-out" />
                 </div>
                 <div className="hidden lg:block">
                   <h1 className="text-2xl font-black tracking-tighter text-gray-900 leading-none">lOOPOUT</h1>
@@ -505,10 +505,10 @@ export default function Header() {
                 <div className="relative" ref={createDropdownRef}>
                   <button
                     onClick={() => setShowCreateDropdown(!showCreateDropdown)}
-                    className="hidden xl:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] py-3.5 px-8 rounded-full bg-gray-950 text-white hover:bg-black transition-all duration-500 cursor-pointer shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] active:scale-95 group relative overflow-hidden"
+                    className="hidden xl:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] py-3.5 px-8 rounded-full bg-gray-950 text-white hover:bg-black transition-all duration-500 cursor-pointer shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] active:scale-95 relative overflow-hidden"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
-                    <PlusIcon className="w-4 h-4 stroke-[3px] text-rose-500 group-hover:rotate-90 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full hover:animate-shimmer" />
+                    <PlusIcon className="w-4 h-4 stroke-[3px] text-rose-500 hover:rotate-90 transition-transform duration-500" />
                     <span>Create</span>
                   </button>
 
@@ -537,9 +537,9 @@ export default function Header() {
                               }
                               setShowCreateDropdown(false);
                             }}
-                            className="w-full px-6 py-4 hover:bg-rose-50 transition-colors flex items-center gap-4 text-left "
+                            className="w-full px-6 py-4 hover:bg-rose-50 transition-colors flex items-center gap-4 text-left"
                           >
-                            <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-all">
+                            <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all">
                               <item.icon className="w-5 h-5" />
                             </div>
                             <div>
@@ -593,9 +593,9 @@ export default function Header() {
                     setShowProfileDropdown(!showProfileDropdown);
                     setShowLanguageDropdown(false);
                   }}
-                  className="flex flex-row items-center justify-center w-14 h-14 bg-white rounded-full cursor-pointer shadow-[0_20px_40px_-15px_rgba(225,29,72,0.2)] hover:shadow-[0_30px_60px_-12px_rgba(225,29,72,0.3)] hover:scale-105 transition-all duration-500 border border-rose-100 text-rose-600 hover:bg-rose-50 group"
+                  className="flex flex-row items-center justify-center w-14 h-14 bg-white rounded-full cursor-pointer shadow-[0_20px_40px_-15px_rgba(225,29,72,0.2)] hover:shadow-[0_30px_60px_-12px_rgba(225,29,72,0.3)] hover:scale-105 transition-all duration-500 border border-rose-100 text-rose-600 hover:bg-rose-50"
                 >
-                  <Bars3Icon className="w-7 h-7 stroke-[2.5px] group-hover:scale-110 transition-transform" />
+                  <Bars3Icon className="w-7 h-7 stroke-[2.5px] hover:scale-110 transition-transform" />
                   <div className="hidden">
                     {currentUser ? (
                       <img
@@ -630,7 +630,7 @@ export default function Header() {
                         <>
                           {/* User Header */}
                           <div
-                            className="p-6 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 rounded-[2.2rem] mb-4 flex items-center cursor-pointer shadow-xl group"
+                            className="p-6 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 rounded-[2.2rem] mb-4 flex items-center cursor-pointer shadow-xl"
                             onClick={() => handleNavigate('/profile')}
                           >
                             <div className="relative flex-shrink-0">
@@ -650,7 +650,7 @@ export default function Header() {
                                  <span className="text-[10px] text-rose-500 font-bold uppercase tracking-[0.2em]">ELITE USER</span>
                                </div>
                             </div>
-                            <ChevronRightIcon className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
+                            <ChevronRightIcon className="w-5 h-5 text-gray-500 hover:text-white transition-colors" />
                           </div>
 
                           <div className="grid grid-cols-2 gap-3 mb-4">
@@ -660,7 +660,7 @@ export default function Header() {
                                 onClick={() => handleNavigate(cmd.route)}
                                 className="flex flex-col items-start gap-2 p-4 bg-gray-50 hover:bg-rose-50/50 rounded-[2rem] transition-a border border-transparent hover:border-rose-100/50"
                               >
-                                <div className={`p-2.5 ${cmd.color} text-white rounded-2xl shadow-lg transition-transform group-hover:rotate-12`}>
+                                <div className={`p-2.5 ${cmd.color} text-white rounded-2xl shadow-lg transition-transform hover:rotate-12`}>
                                   {cmd.icon}
                                 </div>
                                 <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest truncate w-full text-left">{cmd.label.split(' ')[0]} {cmd.label.split(' ')[1] || ''}</span>
@@ -766,7 +766,7 @@ export default function Header() {
                        <motion.div 
                          animate={isActive ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : { scale: 1, rotate: 0 }}
                          transition={{ duration: 0.4, ease: "backOut" }}
-                         className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-900 group-hover:-translate-y-1'}`}
+                         className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-900 hover:-translate-y-1'}`}
                        >
                           <Icon className="w-6 h-6" />
                        </motion.div>
@@ -892,57 +892,6 @@ export default function Header() {
         </>
       )}
     </AnimatePresence>
-
-      <AnimatePresence>
-        {isNavVisible && !isBottomNavHidden && (
-          <motion.div
-            initial={{ y: 120 }}
-            animate={{ y: 0 }}
-            exit={{ y: 120 }}
-            transition={{ type: 'spring', damping: 30, stiffness: 200 }}
-            className="md:hidden fixed bottom-0 left-0 right-0 z-[1000] bg-white border-t border-gray-200 pb-safe shadow-[0_-5px_15px_rgba(0,0,0,0.02)]"
-          >
-            <div className="flex justify-between items-center h-[65px] px-6">
-              
-              <Link to="/" className={`flex flex-col items-center justify-center w-14 h-full relative transition-colors duration-200 ${location.pathname === '/' ? 'text-rose-600' : 'text-[#717171] hover:text-gray-900'}`}>
-                {location.pathname === '/' ? <BrandIcon className="w-7 h-7 mb-0.5" /> : <BrandIcon className="w-7 h-7 mb-0.5 grayscale opacity-70" />}
-                <span className="text-[10px] font-medium tracking-wide">Explore</span>
-              </Link>
-
-              <Link to="/planner" className={`flex flex-col items-center justify-center w-14 h-full relative transition-colors duration-200 ${location.pathname === '/planner' ? 'text-rose-600' : 'text-[#717171] hover:text-gray-900'}`}>
-                {location.pathname === '/planner' ? <MapIcon className="w-6 h-6 mb-1 stroke-[2.5px] text-rose-600" /> : <MapIcon className="w-6 h-6 mb-1 stroke-[2px]" />}
-                <span className="text-[10px] font-medium tracking-wide">Planner</span>
-              </Link>
-
-              <Link to="/trips" className={`flex flex-col items-center justify-center w-14 h-full relative transition-colors duration-200 ${location.pathname === '/trips' ? 'text-rose-600' : 'text-[#717171] hover:text-gray-900'}`}>
-                {location.pathname === '/trips' ? <MapPinIconSolid className="w-6 h-6 mb-1" /> : <MapPinIcon className="w-6 h-6 mb-1 stroke-[2px]" />}
-                <span className="text-[10px] font-medium tracking-wide">Trips</span>
-              </Link>
-
-              <Link to="/messages" className={`flex flex-col items-center justify-center w-14 h-full relative transition-colors duration-200 ${location.pathname === '/messages' ? 'text-rose-600' : 'text-[#717171] hover:text-gray-900'}`}>
-                <div className="relative">
-                  {location.pathname === '/messages' ? <ChatBubbleLeftRightIconSolid className="w-6 h-6 mb-1" /> : <ChatBubbleLeftRightIcon className="w-6 h-6 mb-1 stroke-[2px]" />}
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-rose-600 text-white text-[8px] min-w-[14px] h-[14px] flex items-center justify-center rounded-full border border-white font-bold">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
-                </div>
-                <span className="text-[10px] font-medium tracking-wide">Inbox</span>
-              </Link>
-
-              <button
-                onClick={handleMobileProfileClick}
-                className={`flex flex-col items-center justify-center w-14 h-full relative transition-colors duration-200 ${location.pathname === '/profile' || location.pathname === '/sign-in' ? 'text-rose-600' : 'text-[#717171] hover:text-gray-900'}`}
-              >
-                {location.pathname === '/profile' || location.pathname === '/sign-in' ? <UserCircleIconSolid className="w-6 h-6 mb-1" /> : <UserCircleIcon className="w-6 h-6 mb-1 stroke-[2px]" />}
-                <span className="text-[10px] font-medium tracking-wide">Profile</span>
-              </button>
-
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {!isHeaderHidden && (
         <>

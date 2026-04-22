@@ -626,7 +626,7 @@ const FreshaCategoryCard = ({ category, onClick, index }) => {
 
 // --- Airbnb-Style Components (Preserved) ---
 
-const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDistance = false }) => {
+const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDistance = false, reducedSize = false }) => {
   const isGuestFavorite = item.rating >= 4.8;
 
   const getPriceSuffix = () => {
@@ -660,7 +660,6 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
     return `R${price}`;
   };
 
-  // Handle click with proper navigation based on type
   const handleClick = () => {
     if (type === 'property') {
       onClick(`/listing/${item._id}`);
@@ -677,13 +676,14 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
 
   return (
     <motion.div
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -6, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       onClick={handleClick}
-      className="cursor-pointer flex flex-col gap-2 "
+      className={`cursor-pointer flex flex-col ${reducedSize ? 'gap-1.5' : 'gap-2'}`}
     >
-      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-gray-100 ">
+      <div className={`relative aspect-[4/5] overflow-hidden rounded-[2rem] bg-gray-100 shadow-md ${reducedSize ? 'mb-1' : 'mb-0'}`}>
         <ImageGallery
-          imageUrls={item.imageUrls || []}
+          imageUrls={item.imageUrls || [item.image] || []}
           alt={item.name}
           type={type === 'property' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property') : type}
         />
@@ -693,9 +693,9 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
           className="absolute top-3 right-3 p-2 text-white hover:scale-110 transition-transform z-20 drop-shadow-md"
         >
           {isLiked ? (
-            <HeartIconSolid className="w-6 h-6 text-rose-500 fill-rose-500" />
+            <HeartIconSolid className={`text-rose-500 fill-rose-500 ${reducedSize ? 'w-5 h-5' : 'w-6 h-6'}`} />
           ) : (
-            <HeartIcon className="w-6 h-6 stroke-[2px]" />
+            <HeartIcon className={`stroke-[2px] ${reducedSize ? 'w-5 h-5' : 'w-6 h-6'}`} />
           )}
         </button>
 
@@ -706,18 +706,18 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
         )}
       </div>
 
-      <div className="flex flex-col pt-2">
+      <div className="flex flex-col pt-1">
         <div className="flex justify-between items-start gap-2">
-          <h3 className="font-bold text-[15px] text-gray-900 truncate">
-            {item.address || item.name || 'South Africa'}
+          <h3 className={`font-black text-gray-900 truncate tracking-tight ${reducedSize ? 'text-[13px]' : 'text-[15px]'}`}>
+            {item.address?.split(',')[0] || item.name || 'South Africa'}
           </h3>
           <div className="flex items-center gap-1 shrink-0">
-            <StarIconSolid className="w-3.5 h-3.5 text-gray-900" />
-            <span className="text-[13px] font-medium text-gray-900">{item.rating?.toFixed(1) || '4.5'}</span>
+            <StarIconSolid className="w-3 h-3 text-gray-950" />
+            <span className={`font-black text-gray-950 ${reducedSize ? 'text-[11px]' : 'text-[13px]'}`}>{item.rating?.toFixed(1) || '4.5'}</span>
           </div>
         </div>
 
-        <h4 className="text-[14px] text-gray-500 truncate mt-0.5">
+        <h4 className={`text-gray-500 truncate font-semibold ${reducedSize ? 'text-[11px] mt-0' : 'text-[14px] mt-0.5'}`}>
           {getPropertyTypeLabel() || item.name}
         </h4>
 
@@ -726,12 +726,12 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
              {item._distance < 1 ? "Near you" : `${Math.round(item._distance)} km away`}
            </p>
         ) : (
-           <div className="h-[21px] mt-0.5"></div>
+           <div className={reducedSize ? "h-0" : "h-[21px] mt-0.5"}></div>
         )}
 
-        <div className="mt-2 flex items-baseline gap-1">
-           <span className="text-[16px] font-black text-gray-900 tracking-tight">{formatPrice()}</span>
-           <span className="text-[14px] text-gray-500">{getPriceSuffix()}</span>
+        <div className={`${reducedSize ? 'mt-1' : 'mt-2'} flex items-baseline gap-1`}>
+           <span className={`font-black text-gray-900 tracking-tight ${reducedSize ? 'text-[14px]' : 'text-[16px]'}`}>{formatPrice()}</span>
+           <span className={`text-gray-500 font-bold ${reducedSize ? 'text-[11px]' : 'text-[14px]'}`}>{getPriceSuffix()}</span>
         </div>
       </div>
     </motion.div>
@@ -1023,10 +1023,10 @@ const LoopOutHomeHero = ({ navigate }) => {
             VIBE OF THE NATION
           </motion.div>
 
-          <h1 className="text-6xl lg:text-8xl font-black text-white mb-8 tracking-tighter leading-[0.9] drop-shadow-2xl">
-            HEARTBEAT OF <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-rose-400 to-amber-400 animate-gradient-x">
-               THE STREETS
+          <h1 className="text-6xl lg:text-8xl font-black text-white mb-8 tracking-tighter leading-[0.85] drop-shadow-2xl">
+            EXPERIENCE <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-amber-400 to-rose-500 animate-gradient-x">
+               YOUR CITY.
             </span>
           </h1>
 
@@ -1108,36 +1108,49 @@ const LoopOutHomeHero = ({ navigate }) => {
 
 
 
-const DesktopPopularDestinations = ({ navigate }) => {
-  const popularDestinations = [
-    { name: 'Johannesburg', image: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
-    { name: 'Cape Town', image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
-    { name: 'Durban', image: 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
-    { name: 'Pretoria', image: 'https://images.unsplash.com/photo-1592210454359-9043f067919b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
-    { name: 'Port Elizabeth', image: 'https://images.unsplash.com/photo-1590841609987-4ac211afdde1?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' }
-  ];
 
+// --- AIRBNB-STYLE DISCOVER SECTION (SIDE-SLIDING & REDUCED SIZE) ---
+const AirbnbDiscoverSection = ({ title, items, type, navigate, actionText, onAction }) => {
   return (
-    <motion.section key="popular-destinations" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={containerVariants} className="mb-16">
-      <SectionTitle title="Popular destinations" actionText="View all" onAction={() => navigate('/explore')} />
-      <div className="grid grid-cols-5 gap-6">
-        {popularDestinations.map((destination) => (
-          <motion.div key={`dest-${destination.name}`} variants={itemVariants} onClick={() => navigate(`/search?address=${encodeURIComponent(destination.name)}`)} className="cursor-pointer group">
-            <div className="relative overflow-hidden rounded-xl mb-3 aspect-[3/4]">
-              <ImageGallery
-                imageUrls={[destination.image]}
-                alt={destination.name}
-                type="category"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-              <div className="absolute bottom-0 left-0 right-0 p-4">
-                <h3 className="text-white font-semibold text-lg">{destination.name}</h3>
-              </div>
-            </div>
+    <section className="mb-20">
+      <div className="flex justify-between items-end mb-8">
+        <div>
+           <div className="flex items-center gap-2 mb-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+              <span className="text-gray-400 text-[10px] font-black tracking-[0.3em] uppercase">Discovery Engine</span>
+           </div>
+           <h2 className="text-3xl font-black text-gray-950 tracking-tighter leading-none">{title}</h2>
+        </div>
+        {actionText && (
+          <button 
+            onClick={onAction} 
+            className="text-xs font-black text-rose-500 uppercase tracking-widest border-b border-rose-500/20 hover:border-rose-500 transition-all text-[11px]"
+          >
+            {actionText}
+          </button>
+        )}
+      </div>
+
+      <div className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide snap-x -mx-4 px-4 md:mx-0 md:px-0">
+        {items.map((item, idx) => (
+          <motion.div
+            key={item._id || idx}
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ delay: idx * 0.1, duration: 0.8, ease: "easeOut" }}
+            className="snap-start shrink-0 w-[200px] md:w-[240px]"
+          >
+            <AirbnbCard
+              item={item}
+              type={type}
+              onClick={(id) => navigate(id)}
+              hideDistance={true}
+              reducedSize={true}
+            />
           </motion.div>
         ))}
       </div>
-    </motion.section>
+    </section>
   );
 };
 
@@ -1441,6 +1454,116 @@ const MobileAppHomepage = ({
     { icon: '🏰', label: 'Trending', type: 'all' },
   ];
 
+// --- NEW COMPONENT: SERVICES TO YOUR DOOR (SIDE SLIDING) ---
+const ServicesToYourDoor = ({ navigate }) => {
+  const atHomeServices = [
+    { id: 'barber', name: 'Mobile Barber', desc: 'Fresh cuts at your home', emoji: '💈', color: 'from-gray-950 to-gray-800' },
+    { id: 'hair', name: 'Home Hair & Style', desc: 'Salon experience at home', emoji: '💇', color: 'from-rose-500 to-pink-500' },
+    { id: 'massage', name: 'Home Massage', desc: 'Relaxation brought to you', emoji: '💆', color: 'from-emerald-500 to-teal-500' },
+    { id: 'domestic', name: 'House Cleaning', desc: 'Professional cleaning', emoji: '🧹', color: 'from-blue-600 to-indigo-600' },
+  ];
+
+  return (
+    <section className="mb-16">
+      <div className="flex justify-between items-end mb-8">
+        <div>
+           <h2 className="text-3xl font-black text-gray-900 tracking-tighter">THE HOME EXPERIENCE</h2>
+           <p className="text-gray-500 mt-1 uppercase text-[10px] font-black tracking-[0.2em]">Services that travel directly to you</p>
+        </div>
+        <button 
+          onClick={() => navigate('/helper-home-page')} 
+          className="text-xs font-black text-rose-500 uppercase tracking-widest border-b-2 border-rose-500/20 hover:border-rose-500 transition-all"
+        >
+          View All Home Experts
+        </button>
+      </div>
+
+      <div className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide snap-x -mx-4 px-4 md:mx-0 md:px-0">
+        {atHomeServices.map((service, idx) => (
+          <motion.div
+            key={service.id}
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ delay: idx * 0.1 }}
+            whileHover={{ y: -10 }}
+            onClick={() => navigate(`/search?category=${service.id}&type=helpers`)}
+            className="snap-start shrink-0 w-[300px] md:w-[320px] cursor-pointer bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-xl shadow-gray-100/30 hover:shadow-2xl hover:shadow-rose-500/10 transition-all duration-500 relative overflow-hidden"
+          >
+             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-rose-500/5 to-transparent rounded-bl-[4rem]" />
+             <div className={`w-16 h-16 rounded-[1.5rem] bg-gradient-to-br ${service.color} flex items-center justify-center text-3xl mb-8 shadow-lg hover:rotate-12 transition-transform duration-500`}>
+              {service.emoji}
+            </div>
+            <h3 className="text-xl font-black text-gray-900 mb-2 leading-tight">{service.name}</h3>
+            <p className="text-gray-500 text-sm mb-10 font-medium leading-relaxed h-10">{service.desc}</p>
+            <div className="flex items-center text-rose-500 font-black text-[10px] uppercase tracking-[0.2em] gap-3">
+              BOOK EXPERT <ArrowRightIcon className="w-4 h-4 hover:translate-x-1 transition-transform" />
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+// --- NEW COMPONENT: WEEKLY SPECIALS (DEFINE YOUR DAY) ---
+const WeeklySpecialsSection = ({ navigate }) => {
+  const specials = [
+    { 
+      id: 'promo-verified', 
+      title: 'Verified Excellence', 
+      discount: 'PREMIUM', 
+      desc: 'Trust only the best local experts in your area', 
+      color: 'bg-indigo-600',
+      image: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=80&w=1470'
+    },
+    { 
+      id: 'promo-favor', 
+      title: 'Community Favor', 
+      discount: 'R50 + R50', 
+      desc: 'Refer a neighbor and both get credits', 
+      color: 'bg-emerald-600',
+      image: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&q=80&w=1470'
+    },
+    { 
+      id: 'promo-1', 
+      title: 'First-Time User Special', 
+      discount: 'R20 OFF', 
+      desc: 'On your first home experience booking', 
+      color: 'bg-rose-600',
+      image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=1470'
+    },
+  ];
+
+  return (
+    <section className="mb-16">
+       <div className="flex items-center gap-3 mb-8">
+          <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+          <h2 className="text-xl font-black text-gray-950 tracking-widest uppercase">DEFINE YOUR DAY</h2>
+       </div>
+       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {specials.map((promo, idx) => (
+            <motion.div 
+               key={promo.id}
+               whileHover={{ scale: 1.02 }}
+               className="relative h-64 rounded-[2.5rem] overflow-hidden  cursor-pointer shadow-xl"
+               onClick={() => navigate('/search?filter=special')}
+            >
+               <img src={promo.image} className="absolute inset-0 w-full h-full object-cover hover:scale-110 transition-transform duration-[5s]" alt={promo.title} />
+               <div className="absolute inset-0 bg-black/40 hover:bg-black/20 transition-colors" />
+               <div className="absolute inset-x-0 bottom-0 p-8">
+                  <div className={`${promo.color} text-white text-[10px] font-black px-3 py-1 rounded-full w-fit mb-3 tracking-widest`}>
+                    {promo.discount}
+                  </div>
+                  <h3 className="text-white font-bold text-xl leading-tight mb-1">{promo.title}</h3>
+                  <p className="text-white/80 text-sm font-medium">{promo.desc}</p>
+               </div>
+            </motion.div>
+          ))}
+       </div>
+    </section>
+  );
+};
+
   if (isDesktop) {
     return (
       <div className="min-h-screen">
@@ -1478,65 +1601,31 @@ const MobileAppHomepage = ({
             </div>
           )}
 
-          <DesktopPopularDestinations navigate={navigate} />
+          {/* NEW: WEEKLY SPECIALS SECTION */}
+          <WeeklySpecialsSection navigate={navigate} />
 
-          {/* THE DAILY LOOP - NEW FEATURE */}
-          <section className="mb-16">
-            <div className="flex justify-between items-end mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">The Daily Loop</h2>
-                <p className="text-gray-500 mt-1">Daily essentials brought to your door</p>
-              </div>
-              <button 
-                onClick={() => navigate('/search?category=daily&type=services')}
-                className="text-sm font-semibold underline hover:text-rose-500 transition-colors"
-              >
-                View all daily
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {[
-                { id: 'grocery', name: 'Groceries', desc: 'Fresh items in 60m', icon: <ShoppingBagIcon className="w-5 h-5" />, color: 'bg-green-500', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80' },
-                { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <Sparkles className="w-5 h-5" />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1635274605638-d44babc08a4f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-                { id: 'pharmacy', name: 'Pharmacy', desc: 'Medication drop-off', icon: <BoltIcon className="w-5 h-5" />, color: 'bg-rose-500', img: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=400&q=80' },
-                { id: 'usedbooks', name: 'Used Books', desc: 'Sell Uni textbooks', icon: <AcademicCapIcon className="w-5 h-5" />, color: 'bg-orange-600', img: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80' },
-                { id: 'water', name: 'Water & Gas', desc: 'Refills delivered', icon: <GlobeAltIcon className="w-5 h-5" />, color: 'bg-cyan-500', img: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?auto=format&fit=crop&w=400&q=80' }
-              ].map((item) => (
-                <motion.div
-                  key={item.id}
-                  whileHover={{ y: -8 }}
-                  onClick={() => navigate(`/search?category=${item.id}&type=services`)}
-                  className=" cursor-pointer relative h-48 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
-                >
-                  <img src={item.img} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={item.name} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                    <div className={`${item.color} w-10 h-10 rounded-xl flex items-center justify-center text-white mb-3 shadow-lg`}>
-                       {item.icon}
-                    </div>
-                    <h3 className="text-white font-bold text-xl">{item.name}</h3>
-                    <p className="text-white/70 text-xs">{item.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </section>
-
-          <div className="flex items-center gap-8 overflow-x-auto pb-4 mb-8 border-b border-gray-200 scrollbar-hide">
-            {categories.map((cat) => (
-              <CategoryFilter key={cat.label} {...cat} isActive={activeCategory === cat.label} onClick={() => {
-                if (cat.path) {
-                   navigate(cat.path);
-                   return;
-                }
-                setActiveCategory(cat.label);
-                navigate(cat.category ? `/search?type=${cat.type}&category=${cat.category}` : `/search?type=${cat.type}`);
-              }} />
-            ))}
-          </div>
+          {/* AIRBNB CATEGORY DISCOVERY - EVENTS, SERVICES, HELPERS */}
+          <AirbnbDiscoverSection 
+            title="Popular Events" 
+            items={featuredEvents} 
+            type="event" 
+            navigate={navigate} 
+            actionText="Show all" 
+            onAction={() => navigate('/search?type=events')}
+          />
 
 
+          <AirbnbDiscoverSection 
+            title="Verified Helpers" 
+            items={featuredHelpers} 
+            type="helper" 
+            navigate={navigate} 
+            actionText="Show all" 
+            onAction={() => navigate('/helper-home-page')}
+          />
+
+          {/* SERVICES TO YOUR DOOR SECTION */}
+          <ServicesToYourDoor navigate={navigate} />
 
           {recentlyViewedItems.length > 0 && (
             <section className="mb-16">
@@ -1615,6 +1704,9 @@ const MobileAppHomepage = ({
           </div>
 
           <CommunityNeedsSection navigate={navigate} />
+
+          {/* NEW: SERVICES TO YOUR DOOR SECTION */}
+          <ServicesToYourDoor navigate={navigate} />
 
           <section className="mb-16">
             <SectionTitle title="Verified helpers" actionText="View all" onAction={() => navigate('/helper-home-page')} />
@@ -1951,41 +2043,43 @@ const MobileAppHomepage = ({
             ))}
           </div>
         </section>
-        {/* Mobile Elite Banner */}
+        {/* Mobile Elite Banner - Refined Identity */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }} 
           animate={{ opacity: 1, y: 0 }} 
-          className="relative h-72 rounded-[2.5rem] overflow-hidden mb-8  shadow-2xl"
+          className="relative h-80 rounded-[2.5rem] overflow-hidden mb-8 shadow-2xl"
           onClick={() => navigate('/ai-help-center')}
         >
           <img 
             src="/soweto_bg.png" 
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+            className="absolute inset-0 w-full h-full object-cover" 
             alt="LoopOut Experience" 
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
           <div className="absolute inset-0 p-8 flex flex-col justify-end">
              <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="w-5 h-5 text-rose-400" />
-                <span className="text-white/80 text-[11px] font-black tracking-[0.2em] uppercase drop-shadow-md">VIBE OF THE NATION</span>
+                <span className="text-white/80 text-[10px] font-black tracking-[0.25em] uppercase">VIBE OF THE NATION</span>
              </div>
-             <h2 className="text-3xl font-black text-white leading-[0.9] mb-3 tracking-tighter">
-               HEARTBEAT OF <br />
-               <span className="text-rose-400">THE STREETS.</span>
+             <h2 className="text-3xl font-black text-white leading-[0.85] mb-3 tracking-tighter">
+               EXPERIENCE <br />
+               <span className="text-rose-500">YOUR CITY.</span>
              </h2>
-             <p className="text-white/90 text-sm font-medium mb-6 leading-relaxed max-w-[240px] drop-shadow-md">
-               Immerse in the culture. Discover authentic homes, verified local helpers, and premium community services securely.
+             <p className="text-white/90 text-[13px] font-medium mb-6 leading-relaxed max-w-[260px]">
+               Book authentic homes and on-demand services that come directly to your door.
              </p>
              <div className="flex items-center gap-3">
-                <div className="px-6 py-3 bg-white text-gray-900 rounded-2xl text-xs font-black shadow-xl whitespace-nowrap">
-                  START EXPLORING
-                </div>
-                <div className="w-10 h-10 rounded-2xl bg-rose-500/20 backdrop-blur-md border border-rose-500/30 flex items-center justify-center">
-                   <ChevronRightIcon className="w-5 h-5 text-white" />
+                <div className="px-6 py-3 bg-white text-gray-900 rounded-2xl text-[11px] font-black shadow-xl uppercase tracking-widest">
+                  EXPLORE NOW
                 </div>
              </div>
           </div>
         </motion.div>
+
+        {/* NEW: MOBILE WEEKLY SPECIALS */}
+        <div className="mb-10">
+           <WeeklySpecialsSection navigate={navigate} />
+        </div>
 
 
         {/* Mobile Location Status Indicator */}
@@ -2002,68 +2096,6 @@ const MobileAppHomepage = ({
         )}
 
 
-        <div className="flex overflow-x-auto gap-4 pb-4 mb-6 -mx-4 px-4 scrollbar-hide">
-          {categories.slice(0, 10).map((cat) => (
-            <button 
-              key={cat.label} 
-              onClick={() => {
-                if (cat.path) {
-                    navigate(cat.path);
-                    return;
-                }
-                navigate(cat.category ? `/search?type=${cat.type}&category=${cat.category}` : `/search?type=${cat.type}`);
-              }} 
-              className="flex flex-col items-center gap-2 min-w-[64px]"
-            >
-              <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center text-2xl hover:bg-gray-200 transition-colors">
-                {cat.icon}
-              </div>
-              <span className="text-xs font-medium text-gray-700">{cat.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* THE DAILY LOOP - NEW FEATURE (Mobile) */}
-        <section className="mb-10">
-          <div className="flex justify-between items-end mb-5">
-            <div>
-              <h2 className="font-black text-gray-900 text-xl tracking-tight">The Daily Loop</h2>
-              <p className="text-xs text-gray-500 mt-1 uppercase font-bold tracking-widest opacity-60">Essentials brought to your door</p>
-            </div>
-            <button 
-              onClick={() => navigate('/search?category=daily&type=services')}
-              className="text-xs font-semibold text-rose-500 underline"
-            >
-              View all
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { id: 'grocery', name: 'Groceries', desc: 'Fresh items in 60m', icon: <ShoppingBagIcon className="w-4 h-4" />, color: 'bg-green-500', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80' },
-              { id: 'usedbooks', name: 'Used Books', desc: 'Sell Uni textbooks', icon: <AcademicCapIcon className="w-4 h-4" />, color: 'bg-orange-600', img: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80' },
-              { id: 'laundry', name: 'Laundry', desc: 'Wash & Fold service', icon: <Sparkles className="w-4 h-4" />, color: 'bg-blue-500', img: 'https://images.unsplash.com/photo-1635274605638-d44babc08a4f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-              { id: 'pharmacy', name: 'Pharmacy', desc: 'Medication drop-off', icon: <BoltIcon className="w-4 h-4" />, color: 'bg-rose-500', img: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=400&q=80' },
-            ].map((item) => (
-              <motion.div
-                key={item.id}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => navigate(`/search?category=${item.id}&type=services`)}
-                className="cursor-pointer relative h-32 rounded-2xl overflow-hidden shadow-sm border border-gray-100"
-              >
-                <img src={item.img} className="absolute inset-0 w-full h-full object-cover" alt={item.name} />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute inset-0 p-3 flex flex-col justify-end">
-                  <div className={`${item.color} w-8 h-8 rounded-lg flex items-center justify-center text-white mb-2 shadow-lg`}>
-                     {item.icon}
-                  </div>
-                  <h3 className="text-white font-bold text-sm">{item.name}</h3>
-                  <p className="text-white/70 text-[10px] leading-tight truncate">{item.desc}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
 
 
 
@@ -2165,76 +2197,26 @@ const MobileAppHomepage = ({
 
         <CommunityNeedsSection navigate={navigate} />
 
-        <section className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-semibold text-gray-900">Upcoming events</h2>
-            <Link to="/search?type=events" className="text-sm text-gray-500 underline">See all</Link>
-          </div>
-          {featuredEvents.length > 0 ? (
-            <div className="flex overflow-x-auto gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
-              {featuredEvents.slice(0, 3).map((event) => (
-                <div key={event._id} onClick={() => navigate(`/event/${event._id}`)} className="flex-shrink-0 w-72 cursor-pointer">
-                  <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-2 bg-gray-200">
-                    <ImageGallery
-                      imageUrls={event.imageUrls || []}
-                      alt={event.name}
-                      type="event"
-                    />
-                    <div className="absolute top-2 left-2 bg-white/90 px-2 py-1 rounded text-xs font-bold">
-                      {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </div>
-                  </div>
-                  <p className="font-medium text-sm truncate">{event.name}</p>
-                  <p className="text-sm text-gray-500 truncate">{event.address}</p>
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="font-semibold text-sm">R{event.regularPrice}</span>
-                    <span className="text-xs text-gray-500">{event.attendingCount}+ going</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 bg-gray-50 rounded-xl">
-              <CalendarDaysIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 text-sm">No upcoming events</p>
-            </div>
-          )}
-        </section>
+        <AirbnbDiscoverSection 
+          title="Premium Events" 
+          items={featuredEvents} 
+          type="event" 
+          navigate={navigate} 
+        />
 
-        <section className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-semibold text-gray-900">Helpers</h2>
-            <Link to="/helper-home-page" className="text-sm text-gray-500 underline">See all</Link>
-          </div>
-          <div className="flex overflow-x-auto gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
-            {featuredHelpers.slice(0, 8).map((helper) => (
-              <div key={helper._id} className="flex-shrink-0 w-56 snap-start">
-                <EliteHelperCard 
-                  helper={helper} 
-                  onClick={() => navigate(`/helper/${helper._id}`)} 
-                />
-              </div>
-            ))}
-          </div>
-        </section>
 
-        {/* Mobile Promo Banner: Become a Provider */}
-        <section className="mb-4 mt-8 bg-gradient-to-br from-rose-500 to-rose-700 rounded-3xl p-6 overflow-hidden relative shadow-lg text-white">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full blur-3xl opacity-20 -mr-10 -mt-10 pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-yellow-300 rounded-full blur-3xl opacity-20 -ml-10 -mb-10 pointer-events-none"></div>
-            
-            <div className="relative z-10 flex flex-col items-center text-center">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 border border-white/30 shadow-inner">
-                 <HomeModernIcon className="w-8 h-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold mb-2 tracking-tight">Earn with LoopOut</h2>
-              <p className="text-white/90 mb-6 text-sm px-2 leading-relaxed">Turn your space, skills, or services into extra income. Join thousands of providers today.</p>
-              
-              <button onClick={() => navigate('/for-business')} className="w-full bg-white text-rose-600 font-bold py-3.5 px-6 rounded-xl shadow-lg active:scale-95 transition-all duration-150">
-                Get Started
-              </button>
-            </div>
-        </section>
+        <AirbnbDiscoverSection 
+          title="Verified Helpers" 
+          items={featuredHelpers} 
+          type="helper" 
+          navigate={navigate} 
+        />
+
+        {/* NEW: MOBILE SERVICES TO YOUR DOOR */}
+        <div className="mb-10">
+           <ServicesToYourDoor navigate={navigate} />
+        </div>
+
       </main>
 
       {/* Floating Track Requests Button - Mobile */}

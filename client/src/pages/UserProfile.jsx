@@ -174,7 +174,7 @@ const UserProfile = () => {
             {/* Left: Avatar & Interaction */}
             <div className="flex flex-col items-center flex-shrink-0">
               <div className="relative -mt-24 md:-mt-36 mb-6">
-                <div className="relative p-1.5 bg-white rounded-[2.5rem] shadow-2xl transform transition-transform group-hover:scale-105 duration-500">
+                <div className="relative p-1.5 bg-white rounded-[2.5rem] shadow-2xl transform transition-transform hover:scale-105 duration-500">
                   <img
                     src={userData.avatar}
                     alt={userData.username}
@@ -245,7 +245,7 @@ const UserProfile = () => {
                   
                   <div className="flex flex-wrap items-center gap-4 md:gap-8 text-gray-600 font-medium">
                     <div className="flex items-center cursor-default">
-                      <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center mr-3 group-hover:bg-rose-100 transition-colors">
+                      <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center mr-3 hover:bg-rose-100 transition-colors">
                         <StarIconSolid className="w-5 h-5 text-rose-500" />
                       </div>
                       <div className="flex flex-col">
@@ -258,7 +258,7 @@ const UserProfile = () => {
                       </div>
                     </div>
                     <div className="flex items-center cursor-default">
-                      <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mr-3 group-hover:bg-blue-100 transition-colors">
+                      <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mr-3 hover:bg-blue-100 transition-colors">
                         <MapPinIcon className="w-5 h-5 text-blue-500" />
                       </div>
                       <div className="flex flex-col">
@@ -269,7 +269,7 @@ const UserProfile = () => {
                       </div>
                     </div>
                     <div className="flex items-center cursor-default">
-                      <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center mr-3 group-hover:bg-purple-100 transition-colors">
+                      <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center mr-3 hover:bg-purple-100 transition-colors">
                         <CalendarIcon className="w-5 h-5 text-purple-500" />
                       </div>
                       <div className="flex flex-col">
@@ -289,13 +289,13 @@ const UserProfile = () => {
                       navigator.clipboard.writeText(window.location.href);
                       alert('Profile URL copied to clipboard!');
                     }}
-                    className="group w-12 h-12 flex items-center justify-center bg-gray-50 hover:bg-white border border-gray-100 rounded-2xl hover:shadow-xl hover:shadow-gray-100 transition-all duration-300"
+                    className="w-12 h-12 flex items-center justify-center bg-gray-50 hover:bg-white border border-gray-100 rounded-2xl hover:shadow-xl hover:shadow-gray-100 transition-all duration-300"
                     title="Copy Profile URL"
                   >
-                    <GlobeAltIcon className="w-5 h-5 text-gray-400 group-hover:text-rose-500" />
+                    <GlobeAltIcon className="w-5 h-5 text-gray-400 hover:text-rose-500" />
                   </button>
-                  <button className="group w-12 h-12 flex items-center justify-center bg-gray-50 hover:bg-white border border-gray-100 rounded-2xl hover:shadow-xl hover:shadow-gray-100 transition-all duration-300">
-                    <HeartIcon className="w-5 h-5 text-gray-400 group-hover:text-rose-500" />
+                  <button className="w-12 h-12 flex items-center justify-center bg-gray-50 hover:bg-white border border-gray-100 rounded-2xl hover:shadow-xl hover:shadow-gray-100 transition-all duration-300">
+                    <HeartIcon className="w-5 h-5 text-gray-400 hover:text-rose-500" />
                   </button>
                 </div>
               </div>
@@ -356,9 +356,9 @@ const UserProfile = () => {
                   <div 
                     key={idx} 
                     onClick={stat.onClick}
-                    className={`group relative bg-gray-50 hover:bg-white p-4 rounded-2xl border border-gray-100 flex flex-col items-center justify-center transition-all duration-500 hover:shadow-2xl hover:shadow-gray-100 overflow-hidden ${stat.onClick ? 'cursor-pointer' : 'cursor-default'}`}
+                    className={`relative bg-gray-50 hover:bg-white p-4 rounded-2xl border border-gray-100 flex flex-col items-center justify-center transition-all duration-500 hover:shadow-2xl hover:shadow-gray-100 overflow-hidden ${stat.onClick ? 'cursor-pointer' : 'cursor-default'}`}
                   >
-                    <div className="absolute -right-2 -bottom-2 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-500 scale-[3]">
+                    <div className="absolute -right-2 -bottom-2 opacity-[0.03] hover:opacity-[0.07] transition-opacity duration-500 scale-[3]">
                       {stat.icon}
                     </div>
                     <div className="text-2xl font-black text-gray-900 mb-0.5">{stat.value}</div>
@@ -424,7 +424,7 @@ const UserProfile = () => {
                             <img
                               src={item.imageUrls?.[0] || item.images?.[0] || '/placeholder.jpg'}
                               alt={item.name}
-                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                              className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
                             />
                             <div className="absolute top-4 left-4">
                               <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white shadow-xl ${
@@ -526,7 +526,7 @@ const UserProfile = () => {
                         <img
                           src={item.imageUrls?.[0] || item.images?.[0] || '/placeholder.jpg'}
                           alt={item.name}
-                          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                          className="w-full h-full object-cover transition-transform duration-1000 hover:scale-110"
                         />
                         <div className="absolute top-4 left-4 flex gap-2">
                            <span className={`px-4 py-2 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] text-white shadow-2xl backdrop-blur-md ${
@@ -554,8 +554,8 @@ const UserProfile = () => {
                              {item.regularPrice ? `R${item.regularPrice}` : item.price || 'Free'}
                             </span>
                           </div>
-                          <div className="w-10 h-10 bg-gray-50 rounded-2xl flex items-center justify-center group-hover:bg-rose-500 transition-colors">
-                             <ChevronRightIcon className="w-5 h-5 text-gray-400 group-hover:text-white" />
+                          <div className="w-10 h-10 bg-gray-50 rounded-2xl flex items-center justify-center hover:bg-rose-500 transition-colors">
+                             <ChevronRightIcon className="w-5 h-5 text-gray-400 hover:text-white" />
                           </div>
                         </div>
                       </div>
@@ -700,18 +700,18 @@ const UserProfile = () => {
                     key={user._id}
                     to={`/user-profile/${user._id}`}
                     onClick={() => setShowFollowList(null)}
-                    className="flex items-center gap-4 p-4 hover:bg-rose-50 rounded-[1.5rem] transition-all group border border-transparent hover:border-rose-100"
+                    className="flex items-center gap-4 p-4 hover:bg-rose-50 rounded-[1.5rem] transition-all border border-transparent hover:border-rose-100"
                   >
                     <img 
                       src={user.avatar} 
                       alt={user.username} 
-                      className="w-12 h-12 rounded-2xl object-cover shadow-md group-hover:scale-110 transition-transform duration-500" 
+                      className="w-12 h-12 rounded-2xl object-cover shadow-md hover:scale-110 transition-transform duration-500" 
                     />
                     <div className="flex-1">
-                      <p className="font-bold text-gray-900 group-hover:text-rose-600 transition-colors">{user.username}</p>
+                      <p className="font-bold text-gray-900 hover:text-rose-600 transition-colors">{user.username}</p>
                       <p className="text-xs text-gray-400 line-clamp-1 font-medium">{user.bio || 'LoopOut Member'}</p>
                     </div>
-                    <ChevronRightIcon className="w-5 h-5 text-gray-300 group-hover:text-rose-400 transition-colors" />
+                    <ChevronRightIcon className="w-5 h-5 text-gray-300 hover:text-rose-400 transition-colors" />
                   </Link>
                 ))
               ) : (
