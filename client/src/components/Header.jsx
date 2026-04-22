@@ -40,7 +40,8 @@ import {
   InboxIcon,
   MapIcon,
   ArrowRightIcon,
-  ArrowLongRightIcon
+  ArrowLongRightIcon,
+  MicrophoneIcon
 } from '@heroicons/react/24/outline';
 
 import {
@@ -76,6 +77,7 @@ export default function Header() {
   const [searchHistory, setSearchHistory] = useState(() => getSearchHistory());
   const [suggestions, setSuggestions] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -276,6 +278,7 @@ export default function Header() {
         setIsNavVisible(false);
       }
 
+      setScrolled(currentScrollY > 20);
       lastScrollY.current = currentScrollY;
     };
 
@@ -465,10 +468,14 @@ export default function Header() {
       {!isHeaderHidden && (
         <motion.header
           initial={{ y: 0 }}
-          animate={{ y: isNavVisible ? 0 : -120 }}
+          animate={{ 
+            y: isNavVisible ? 0 : -120,
+            paddingTop: scrolled ? '0.5rem' : '1.5rem',
+            paddingBottom: scrolled ? '0.5rem' : '1.5rem',
+          }}
           transition={{ type: 'spring', damping: 25, stiffness: 120 }}
           ref={headerRef}
-          className="fixed top-8 left-0 right-0 z-[100] overflow-visible bg-transparent"
+          className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-2xl shadow-lg border-b border-gray-100' : 'bg-transparent'}`}
         >
         <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-[34px]">
           <div className="flex flex-row items-center justify-between h-12">
@@ -838,8 +845,11 @@ export default function Header() {
                        value={searchTerm}
                        onChange={(e) => setSearchTerm(e.target.value)}
                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                       className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all outline-none font-medium placeholder-gray-400"
+                       className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-12 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all outline-none font-medium placeholder-gray-400"
                      />
+                     <button className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all">
+                        <MicrophoneIcon className="w-5 h-5" />
+                     </button>
                   </div>
 
                   <div className="space-y-4">

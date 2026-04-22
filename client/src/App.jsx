@@ -4,6 +4,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import PrivateRoute from "./components/PrivateRoute";
 import AuthSessionManager from "./components/AuthSessionManager";
+import NeuralSplash from "./components/NeuralSplash";
 import { useEffect } from "react";
 import ScrollToTop from "./components/ScrollToTop";
 import { useSelector, useDispatch } from "react-redux";
@@ -271,6 +272,7 @@ function AppContent() {
   
   return (
     <>
+      <NeuralSplash />
       <ScrollToTop />
       <AuthSessionManager />
       <Header />

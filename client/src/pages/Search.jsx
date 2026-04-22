@@ -607,15 +607,17 @@ const EmptyState = ({ onClear }) => (
 );
 
 const SkeletonCard = () => (
-  <div className="space-y-3">
-    <div className="aspect-[4/3] bg-gray-200 animate-pulse rounded-2xl" />
-    <div className="space-y-2">
-      <div className="flex justify-between">
-        <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
-        <div className="h-4 bg-gray-200 rounded w-8 animate-pulse" />
+  <div className="relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-sm animate-pulse">
+    <div className="absolute inset-0 bg-gray-100" />
+    <div className="absolute inset-x-0 bottom-0 p-6 space-y-3">
+      <div className="flex justify-between items-end">
+        <div className="space-y-2 flex-1">
+          <div className="h-2 bg-gray-200 rounded w-1/4" />
+          <div className="h-4 bg-gray-200 rounded w-3/4" />
+          <div className="h-2 bg-gray-200 rounded w-1/2" />
+        </div>
+        <div className="h-8 bg-gray-200 rounded-xl w-16" />
       </div>
-      <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse" />
-      <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
     </div>
   </div>
 );
@@ -1049,8 +1051,34 @@ const SearchPage = () => {
         </div>
 
         {loading ? (
-          <div className="py-24 flex justify-center w-full">
-            <NeuralLoader text="Scanning Loop Matrix..." />
+          <div className="py-24 space-y-12 w-full">
+            <div className="flex flex-col items-center justify-center">
+               <NeuralLoader text="Scanning Loop Matrix..." />
+            </div>
+            
+            {/* AI Insights Animation during loading */}
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="max-w-xl mx-auto p-8 rounded-[2rem] bg-rose-50/30 border border-rose-100/50 backdrop-blur-sm"
+            >
+               <div className="flex items-center gap-4 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-rose-500 flex items-center justify-center text-white shadow-lg">
+                     <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                     <h4 className="text-xs font-black uppercase tracking-widest text-gray-900">Neural Insight</h4>
+                     <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest">Optimizing Discovery Path...</p>
+                  </div>
+               </div>
+               <p className="text-sm text-gray-500 font-medium leading-relaxed italic">
+                 "Our AI is currently cross-referencing your search with live availability and local frequency patterns to ensure the highest fidelity matches."
+               </p>
+            </motion.div>
+
+            <div className={`grid gap-x-6 gap-y-10 ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5' : 'grid-cols-1'}`}>
+               {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <SkeletonCard key={i} />)}
+            </div>
           </div>
         ) : listings.length > 0 ? (
           <motion.div
