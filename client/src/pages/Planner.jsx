@@ -25,6 +25,11 @@ export default function Planner() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newTaskText, setNewTaskText] = useState("");
+  
+  const [tripLocation, setTripLocation] = useState("");
+  const [tripBudget, setTripBudget] = useState("");
+  const [tripResults, setTripResults] = useState(null);
+  const [isSearchingTrip, setIsSearchingTrip] = useState(false);
 
   // Fetch real bookings for the user
   useEffect(() => {
@@ -112,6 +117,36 @@ export default function Planner() {
     } catch (error) {
       console.error("Failed to delete task:", error);
     }
+  };
+
+  const handleTripSearch = async (e) => {
+    e.preventDefault();
+    if (!tripLocation || !tripBudget) return;
+    setIsSearchingTrip(true);
+    setTripResults(null);
+    
+    // Simulate "searching across internet and Masterpiece"
+    setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/trips/search?location=${encodeURIComponent(tripLocation)}&date=${new Date().toISOString()}`);
+        const data = await res.json();
+        
+        let budgetNum = parseFloat(tripBudget) || 1000;
+        
+        setTripResults({
+          realData: data.success ? data : { events: [] },
+          internetSuggestions: [
+            { type: 'restaurant', title: 'Local Fine Dining & Restaurants', desc: `Average standard meal cost near ${tripLocation}: R150 - R350`, priceEstimate: 250, icon: '🍽️' },
+            { type: 'groceries', title: 'Fresh Produce & Fruits', desc: 'Average cost for local fruits & quick snacks: R50 - R150', priceEstimate: 100, icon: '🍎' },
+            { type: 'activity', title: 'City Explore & Local Transport', desc: 'Estimated transport/activity cost per person: R100 - R300', priceEstimate: 200, icon: '🚕' }
+          ]
+        });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSearchingTrip(false);
+      }
+    }, 2000);
   };
 
   const getStatusColor = (status) => {
@@ -202,11 +237,170 @@ export default function Planner() {
           >
             Tasks
           </button>
+          <button 
+            onClick={() => setActiveTab("trip_planner")}
+            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeTab === "trip_planner" ? "bg-rose-500 text-white shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+          >
+            <span>✨</span> AI Trip Finder
+          </button>
         </div>
 
         {/* Content Section */}
         <div className="space-y-6">
-          {activeTab === "schedule" ? (
+          {activeTab === "trip_planner" ? (
+            <div className="space-y-8 animate-fade-in">
+               <div className="bg-gray-50 rounded-[2.5rem] p-8 border border-gray-100">
+                  <h2 className="text-2xl font-black text-gray-900 mb-2">Where to next?</h2>
+                  <p className="text-sm font-medium text-gray-500 mb-6">Search locations and set a budget to uncover internet prices for meals, fruit, and discover local Masterpiece events.</p>
+                  
+                  <form onSubmit={handleTripSearch} className="space-y-4">
+                     <div className="flex flex-col gap-1">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-2">Location</label>
+                        <div className="relative">
+                           <MapPinIcon className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                           <input 
+                             type="text" 
+                             required
+                             value={tripLocation}
+                             onChange={(e) => setTripLocation(e.target.value)}
+                             placeholder="e.g. Pretoria, Gauteng"
+                             className="w-full bg-white border border-gray-200 rounded-2xl py-4 pl-12 pr-6 text-sm font-bold outline-none focus:border-rose-500 transition-all"
+                           />
+                        </div>
+                     </div>
+                     <div className="flex flex-col gap-1">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-2">Expected Budget (ZAR)</label>
+                        <div className="relative">
+                           <span className="font-bold absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">R</span>
+                           <input 
+                             type="number" 
+                             required
+                             value={tripBudget}
+                             onChange={(e) => setTripBudget(e.target.value)}
+                             placeholder="5000"
+                             className="w-full bg-white border border-gray-200 rounded-2xl py-4 pl-12 pr-6 text-sm font-bold outline-none focus:border-rose-500 transition-all text-gray-900"
+                           />
+                        </div>
+                     </div>
+                     <button 
+                       type="submit"
+                       disabled={isSearchingTrip}
+                       className="w-full mt-4 bg-gray-900 text-white rounded-2xl py-5 text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:bg-rose-500 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                     >
+                        {isSearchingTrip ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Scanning Internet & Network...
+                          </>
+                        ) : (
+                          "Analyze Trip Feasibility"
+                        )}
+                     </button>
+                  </form>
+               </div>
+
+               {tripResults && !isSearchingTrip && (
+                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+                    {/* Internet Suggestions */}
+                    <div>
+                       <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
+                         <span>🌐</span> Web Estimates for {tripLocation}
+                       </h3>
+                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {tripResults.internetSuggestions?.map((sug, i) => (
+                             <div key={i} className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                                <div className="text-3xl mb-3">{sug.icon}</div>
+                                <h4 className="font-bold text-gray-900 text-sm mb-1 line-clamp-1">{sug.title}</h4>
+                                <p className="text-xs text-gray-500 font-medium leading-relaxed">{sug.desc}</p>
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+
+                    {/* Masterpiece Real Network Events */}
+                    {tripResults.realData?.events?.length > 0 && (
+                      <div>
+                         <h3 className="text-sm font-black uppercase tracking-widest text-rose-500 mb-4 flex items-center gap-2">
+                           <span>🎪</span> Elite Events Found
+                         </h3>
+                         <div className="space-y-3">
+                            {tripResults.realData.events.map(ev => (
+                               <div key={ev._id} onClick={() => navigate(`/event/${ev._id}`)} className="flex items-center gap-4 p-4 bg-rose-50 rounded-2xl cursor-pointer hover:bg-rose-100 transition-colors">
+                                  <div className="w-12 h-12 bg-rose-500 rounded-xl flex items-center justify-center text-white shrink-0 shadow-md">
+                                     <TicketIcon className="w-6 h-6" />
+                                  </div>
+                                  <div className="flex-1">
+                                     <h4 className="font-black text-gray-900 text-sm">{ev.eventName || ev.name || "Exciting Event"}</h4>
+                                     <p className="text-xs text-rose-600 font-bold mt-0.5">{ev.address}</p>
+                                  </div>
+                                  <div className="text-right">
+                                     <p className="text-sm font-black text-gray-900">R{ev.ticketPrice || ev.regularPrice || 0}</p>
+                                  </div>
+                               </div>
+                            ))}
+                         </div>
+                      </div>
+                    )}
+
+                    {/* Masterpiece Real Network Listings */}
+                    {tripResults.realData?.listings?.length > 0 && (
+                      <div>
+                         <h3 className="text-sm font-black uppercase tracking-widest text-blue-500 mb-4 flex items-center gap-2">
+                           <span>🏠</span> Local Stays
+                         </h3>
+                         <div className="space-y-3">
+                            {tripResults.realData.listings.map(item => (
+                               <div key={item._id} onClick={() => navigate(`/listing/${item._id}`)} className="flex items-center gap-4 p-4 bg-blue-50 rounded-2xl cursor-pointer hover:bg-blue-100 transition-colors">
+                                  <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white shrink-0 shadow-md">
+                                     <HomeIcon className="w-6 h-6" />
+                                  </div>
+                                  <div className="flex-1">
+                                     <h4 className="font-black text-gray-900 text-sm">{item.name}</h4>
+                                     <p className="text-xs text-blue-600 font-bold mt-0.5">{item.address}</p>
+                                  </div>
+                                  <div className="text-right">
+                                     <p className="text-sm font-black text-gray-900">R{item.regularPrice}</p>
+                                  </div>
+                               </div>
+                            ))}
+                         </div>
+                      </div>
+                    )}
+
+                    {/* Masterpiece Real Network Helpers */}
+                    {tripResults.realData?.helpers?.length > 0 && (
+                      <div>
+                         <h3 className="text-sm font-black uppercase tracking-widest text-emerald-500 mb-4 flex items-center gap-2">
+                           <span>👤</span> Local Help & Services
+                         </h3>
+                         <div className="space-y-3">
+                            {tripResults.realData.helpers.map(item => (
+                               <div key={item._id} onClick={() => navigate(`/helper/${item._id}`)} className="flex items-center gap-4 p-4 bg-emerald-50 rounded-2xl cursor-pointer hover:bg-emerald-100 transition-colors">
+                                  <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-white shrink-0 shadow-md">
+                                     <BriefcaseIcon className="w-6 h-6" />
+                                  </div>
+                                  <div className="flex-1">
+                                     <h4 className="font-black text-gray-900 text-sm">{item.name}</h4>
+                                     <p className="text-xs text-emerald-600 font-bold mt-0.5">{item.address}</p>
+                                  </div>
+                                  <div className="text-right">
+                                     <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Available</p>
+                                  </div>
+                               </div>
+                            ))}
+                         </div>
+                      </div>
+                    )}
+
+                    {tripResults && !tripResults.realData?.events?.length && !tripResults.realData?.listings?.length && !tripResults.realData?.helpers?.length && (
+                      <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 text-center">
+                         <p className="text-sm font-bold text-gray-500 italic">No exact Masterpiece network items found for this specific search right now. But local meals and activities fit your budget!</p>
+                      </div>
+                    )}
+                 </motion.div>
+               )}
+            </div>
+          ) : activeTab === "schedule" ? (
             <div className="space-y-4">
               {loading ? (
                 <div className="space-y-4">

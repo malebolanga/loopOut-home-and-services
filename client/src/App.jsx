@@ -255,7 +255,19 @@ const AnimatedRoutes = () => {
 
 function AppContent() {
   const location = useLocation();
-  const hideFooter = location.pathname === '/host-dashboard';
+  const hideFooterPaths = [
+    '/host-dashboard',
+    '/for-business',
+    '/become',
+    '/help-center',
+    '/ai-help-center',
+    '/cookies',
+    '/privacy',
+    '/trust',
+    '/terms',
+    '/host'
+  ];
+  const hideFooter = hideFooterPaths.includes(location.pathname);
   
   return (
     <>

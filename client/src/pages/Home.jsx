@@ -2376,8 +2376,27 @@ const Home = () => {
         Object.values(controllers).forEach(controller => controller.abort());
       }, API_TIMEOUT);
 
-      const searchCoords = coords || POLOKWANE_COORDS;
-      const detectedCity = city || (coords ? null : "Polokwane");
+      let searchCoords = coords || null;
+      let detectedCity = city || null;
+
+      if (!coords && !city) {
+        try {
+          const storedSearches = localStorage.getItem('recentPropertySearches');
+          if (storedSearches) {
+            const searches = JSON.parse(storedSearches);
+            if (searches && searches.length > 0) {
+              detectedCity = searches[0];
+            }
+          }
+        } catch (e) {
+          console.error("Failed to parse recent searches", e);
+        }
+      }
+
+      if (!detectedCity) {
+        detectedCity = "Polokwane";
+        if (!searchCoords) searchCoords = { latitude: -23.8962, longitude: 29.4486 }; // POLOKWANE_COORDS
+      }
 
       const fetchPromises = [
         fetch(`/api/listing/get?limit=50&sort=createdAt&order=desc`, {

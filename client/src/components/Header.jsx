@@ -334,6 +334,7 @@ export default function Header() {
 
   // Command Center Navigation
   const MASTER_COMMANDS = [
+    { label: 'HOME HUB', route: '/', icon: <HomeIcon className="w-5 h-5" />, color: 'bg-rose-500' },
     { label: 'MASTER DASHBOARD', route: '/host-dashboard', icon: <CpuChipIcon className="w-5 h-5" />, color: 'bg-indigo-500' },
     { label: 'AI PLANNER', route: '/planner', icon: <MapIcon className="w-5 h-5" />, color: 'bg-pink-500' },
     { label: 'CREATE LISTING', route: `/${currentUser?._id}/create-listing`, icon: <PlusCircleIcon className="w-5 h-5" />, color: 'bg-emerald-500' },
@@ -472,17 +473,21 @@ export default function Header() {
         <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-[34px]">
           <div className="flex flex-row items-center justify-between h-12">
             
-            {/* Left: Icon-Triggered Search */}
+            {/* Left: Branding & Home Link */}
             <div className={`transition-all duration-500 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setShowSearch(true)}
-                className="search-trigger flex items-center gap-3 cursor-pointer "
+              <Link
+                to="/"
+                onClick={(e) => {
+                  if (window.innerWidth < 768) {
+                    e.preventDefault();
+                    setShowSearch(true);
+                  }
+                }}
+                className="flex items-center gap-3 cursor-pointer "
               >
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-tr from-rose-500 to-orange-400 blur-xl opacity-20 hover:opacity-40 transition-opacity duration-500 rounded-full" />
-                  <BrandIcon className="w-12 h-12 relative z-10 transition-transform hover:rotate-[15deg] duration-700 ease-out" />
+                  <BrandIcon className="w-12 h-12 relative z-10 transition-transform group-hover:rotate-[15deg] duration-700 ease-out" />
                 </div>
                 <div className="hidden lg:block">
                   <h1 className="text-2xl font-black tracking-tighter text-gray-900 leading-none">lOOPOUT</h1>
@@ -492,11 +497,25 @@ export default function Header() {
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
                   </div>
                 </div>
-              </motion.div>
+              </Link>
             </div>
 
-            {/* Center: Spacer */}
-            <div className="flex-1"></div>
+            {/* Center: Search Pill (Airbnb Style) */}
+            <div className={`flex-1 hidden md:flex justify-center transition-all duration-500 ${showSearch ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+              <button
+                onClick={() => setShowSearch(true)}
+                className="flex items-center gap-4 px-6 py-2 border border-gray-200 rounded-full shadow-sm hover:shadow-md transition-all cursor-pointer bg-white group"
+              >
+                <span className="text-xs font-bold text-gray-900">Anywhere</span>
+                <div className="w-[1px] h-4 bg-gray-200" />
+                <span className="text-xs font-bold text-gray-900">Any week</span>
+                <div className="w-[1px] h-4 bg-gray-200" />
+                <span className="text-xs font-medium text-gray-400">Add guests</span>
+                <div className="w-8 h-8 bg-rose-500 rounded-full flex items-center justify-center text-white ml-2 group-hover:bg-rose-600 transition-colors">
+                  <MagnifyingGlassIcon className="w-4 h-4 stroke-[3px]" />
+                </div>
+              </button>
+            </div>
 
             {/* Right: User Menu */}
             <div className="relative translate-x-[20px]" ref={profileDropdownRef}>
@@ -564,6 +583,14 @@ export default function Header() {
                 >
                   <GlobeAltIcon className="w-5 h-5" />
                 </button>
+
+                {/* Home Icon - Desktop */}
+                <Link
+                  to="/"
+                  className="relative p-3 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
+                >
+                  <HomeIcon className="w-5 h-5 stroke-[2px]" />
+                </Link>
 
                 {/* Wishlist Icon - Desktop */}
                 <button

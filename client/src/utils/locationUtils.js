@@ -36,42 +36,37 @@ export const calculateDistance = (lat1, lon1, lat2, lon2) => {
  * @returns {Array} - Filtered and sorted items
  */
 export const filterByDistanceTier = (items, userCoords, radius = Infinity, detectedCity = null) => {
-  if (!userCoords || !userCoords.latitude || !userCoords.longitude) return items;
-
   return items
     .map(item => {
-      // Prioritize items with exact coordinates
-      if (item.latitude && item.longitude) {
-        const dist = calculateDistance(
+      let isLocal = false;
+      const lowerAddr = (item.address || item.location || "").toLowerCase();
+      const lowerDesc = (item.description || "").toLowerCase();
+      const lowerNear = (item.near || "").toLowerCase();
+      
+      if (detectedCity) {
+        const city = detectedCity.toLowerCase();
+        isLocal = lowerAddr.includes(city) || lowerDesc.includes(city) || lowerNear.includes(city);
+      } else {
+        isLocal = lowerAddr.includes("polokwane") || lowerDesc.includes("polokwane") || lowerNear.includes("polokwane");
+      }
+
+      let dist = Infinity;
+      if (userCoords && userCoords.latitude && userCoords.longitude && item.latitude && item.longitude) {
+        dist = calculateDistance(
           userCoords.latitude,
           userCoords.longitude,
           item.latitude,
           item.longitude
         );
-        return { ...item, _distance: dist };
       }
 
-      // Fallback for items without coordinates: 
-      // check if address/description contains the detected city
-      const lowerAddr = (item.address || item.location || "").toLowerCase();
-      const lowerDesc = (item.description || "").toLowerCase();
-      const lowerNear = (item.near || "").toLowerCase();
-      
-      let isLocal = false;
-      if (detectedCity) {
-        const city = detectedCity.toLowerCase();
-        isLocal = lowerAddr.includes(city) || lowerDesc.includes(city) || lowerNear.includes(city);
-      } else {
-        // Default fallback if no city detected (e.g. Polokwane as base)
-        isLocal = lowerAddr.includes("polokwane") || lowerDesc.includes("polokwane") || lowerNear.includes("polokwane");
+      // If we don't have userCoords (GPS is off), or the item has no coords, we rely on the text match
+      // If there's a strong city string match, we guarantee it passes by giving it a virtual distance
+      if (isLocal && dist > 5) {
+        dist = 5.1; // Virtual distance within immediate local tier
       }
 
-      // Give string matches a "virtual distance" to rank them near the top but after coordinate matches
-      if (isLocal) {
-        return { ...item, _distance: 5.1 }; // Just outside a typical 5km center radius
-      }
-
-      return { ...item, _distance: Infinity };
+      return { ...item, _distance: dist };
     })
     .filter(item => item._distance <= radius)
     .sort((a, b) => a._distance - b._distance);
