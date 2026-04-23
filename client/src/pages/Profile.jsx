@@ -887,6 +887,10 @@ export default function Profile() {
     navigate('/verification');
   };
 
+  const handleNavigate = (path) => {
+    navigate(path);
+  };
+
   // View Profile Modal
   const [showViewProfile, setShowViewProfile] = useState(false);
 

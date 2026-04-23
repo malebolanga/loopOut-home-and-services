@@ -497,7 +497,7 @@ export default function Header() {
                   <BrandIcon className="w-12 h-12 relative z-10 transition-transform group-hover:rotate-[15deg] duration-700 ease-out" />
                 </div>
                 <div className="hidden lg:block">
-                  <h1 className="text-2xl font-black tracking-tighter text-gray-900 leading-none">lOOPOUT</h1>
+                  <h1 className="text-2xl font-black tracking-tighter text-gray-900 leading-none">ONMANCHA</h1>
                   <div className="flex items-center gap-2 mt-1">
                     <div className="h-[1px] w-4 bg-rose-500/50" />
                     <span className="text-[9px] font-black text-rose-600 uppercase tracking-[0.3em] leading-none">Neural Hub</span>
@@ -657,7 +657,7 @@ export default function Header() {
                     initial={{ opacity: 0, scale: 0.95, y: 15 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                    className="absolute rounded-[3rem] shadow-[0_45px_100px_-20px_rgba(0,0,0,0.4)] w-[360px] bg-white overflow-hidden right-0 top-16 border border-gray-100 p-4 z-[60]"
+                    className="absolute rounded-[2.5rem] shadow-[0_45px_100px_-20px_rgba(0,0,0,0.4)] w-[360px] bg-white right-0 top-16 border border-gray-100 p-4 z-[60] max-h-[85vh] overflow-y-auto scrollbar-hide"
                   >
                     <div className="flex flex-col">
                       {currentUser ? (
@@ -704,12 +704,14 @@ export default function Header() {
 
                           <div className="h-[1px] bg-gray-50 mb-4" />
 
-                          <button 
-                            onClick={handleSignOut}
-                            className="w-full py-4 text-center text-xs font-black uppercase text-gray-500 hover:text-rose-600 transition-colors tracking-[0.25em]"
-                          >
-                            Sign out
-                          </button>
+                          <div className="sticky bottom-0 bg-white pt-2 pb-4 mt-2 border-t border-gray-50 -mx-4 px-4">
+                            <button 
+                              onClick={handleSignOut}
+                              className="w-full py-4 text-center text-xs font-black uppercase text-gray-500 hover:text-rose-600 transition-colors tracking-[0.25em] bg-gray-50 rounded-2xl hover:bg-rose-50"
+                            >
+                              Sign out
+                            </button>
+                          </div>
                         </>
                       ) : (
                         <div className="p-4 space-y-3">
