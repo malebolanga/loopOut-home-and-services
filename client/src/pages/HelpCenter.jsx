@@ -23,7 +23,7 @@ export default function HelpCenter() {
 
   const categories = [
     { title: 'Booking & Stays', icon: HandThumbUpIcon, count: 42, color: 'bg-blue-500' },
-    { title: 'Hosting on LoopOut', icon: QuestionMarkCircleIcon, count: 28, color: 'bg-rose-500' },
+    { title: 'Hosting on loopOut', icon: QuestionMarkCircleIcon, count: 28, color: 'bg-rose-500' },
     { title: 'Payments & Refunds', icon: CreditCardIcon, count: 19, color: 'bg-emerald-500' },
     { title: 'Trust & Safety', icon: ShieldCheckIcon, count: 35, color: 'bg-amber-500' },
   ];
@@ -31,10 +31,10 @@ export default function HelpCenter() {
   const faqs = [
     { 
       q: "How do I verify my identity established signal?", 
-      a: "Go to your profile settings and select 'Identity Verification'. Follow the neural scanning protocol to link your physical ID with your LoopOut account." 
+      a: "Go to your profile settings and select 'Identity Verification'. Follow the neural scanning protocol to link your physical ID with your loopOut account." 
     },
     { 
-      q: "What is the LoopOut cancellation protocol?", 
+      q: "What is the loopOut cancellation protocol?", 
       a: "Cancellation policies vary by host. You can find the specific protocol for your booking under the 'Trips' tab in your dashboard." 
     },
     { 
@@ -221,7 +221,7 @@ export default function HelpCenter() {
             <div className="w-10 h-10 bg-gray-950 rounded-xl flex items-center justify-center">
                <span className="text-white font-black">L</span>
             </div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.5em]">LoopOut Neural Network © 2026</p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.5em]">loopOut Neural Network © 2026</p>
          </div>
       </footer>
     </div>

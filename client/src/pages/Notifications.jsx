@@ -211,7 +211,7 @@ export default function Notifications() {
                         onClick={() => navigate('/explore')}
                         className="mt-6 px-6 py-2.5 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors"
                     >
-                        Explore LoopOut
+                        Explore loopOut
                     </button>
                 </div>
             ) : (

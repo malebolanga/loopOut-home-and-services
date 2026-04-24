@@ -66,7 +66,7 @@ const PrivacyPolicy = () => {
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-rose-200 to-white italic">PRIVACY.</span>
                </h1>
                <p className="max-w-xl text-gray-500 text-lg font-medium leading-relaxed">
-                  Protecting your digital sovereignty within the LoopOut ecosystem through advanced encryption and ethical data governance.
+                  Protecting your digital sovereignty within the loopOut ecosystem through advanced encryption and ethical data governance.
                </p>
             </motion.div>
          </div>

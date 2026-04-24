@@ -12,7 +12,7 @@ import {
 const categories = [
   { id: 'all', label: 'All', icon: '🌟' },
   { id: 'cleaning', label: 'Cleaning', icon: '🧹' },
-  { id: 'maintenance', label: 'Repairs', icon: '🔧' },
+  { id: 'maintenance', label: 'Handyman', icon: '🔧' },
   { id: 'moving', label: 'Moving', icon: '🚚' },
   { id: 'landscaping', label: 'Garden', icon: '🌿' },
   { id: 'catering', label: 'Catering', icon: '🍽️' },

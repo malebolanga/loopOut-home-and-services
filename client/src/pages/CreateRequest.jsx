@@ -80,7 +80,7 @@ export default function CreateRequest() {
         <div className="bg-white rounded-[3rem] border border-gray-100 p-8 md:p-16 shadow-2xl shadow-rose-100/20">
           <div className="mb-12">
             <h1 className="text-4xl font-black text-gray-900 tracking-tight">Post your Need</h1>
-            <p className="text-gray-500 font-medium mt-2">Tell the LoopOut community exactly what you're looking for.</p>
+            <p className="text-gray-500 font-medium mt-2">Tell the loopOut community exactly what you're looking for.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-10">

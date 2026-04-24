@@ -115,7 +115,7 @@ export default function HostYourHome() {
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-600">The Ultimate Hosting Portal</span>
             </div>
             <h1 className="text-6xl md:text-8xl font-black text-gray-900 mb-8 tracking-tighter leading-[0.9]">
-              LoopOut Your <br />
+              loopOut Your <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-600 to-orange-500">World</span>
             </h1>
             <p className="text-lg text-gray-400 max-w-2xl mx-auto font-medium leading-relaxed">
@@ -301,7 +301,7 @@ export default function HostYourHome() {
         <div className="max-w-4xl mx-auto relative z-10">
            <h2 className="text-6xl md:text-8xl font-black text-white mb-10 tracking-tighter leading-none">
              Ready to <br />
-             LoopOut?
+             loopOut?
            </h2>
            <p className="text-xl text-white/40 mb-14 font-medium max-w-2xl mx-auto">
              Join the definitive community of professionals and visionaries shaping the future of global hosting.
@@ -319,7 +319,7 @@ export default function HostYourHome() {
       <footer className="py-12 px-6 sm:px-12 border-t border-gray-100">
         <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
            <div className="flex items-center gap-6">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">© 2026 LoopOut Global</span>
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">© 2026 loopOut Global</span>
               <div className="w-[1px] h-4 bg-gray-100" />
               <button className="text-[10px] font-black text-gray-900 uppercase tracking-widest hover:text-rose-500 transition-colors">Privacy Ethics</button>
               <button className="text-[10px] font-black text-gray-900 uppercase tracking-widest hover:text-rose-500 transition-colors">Safety Protocols</button>

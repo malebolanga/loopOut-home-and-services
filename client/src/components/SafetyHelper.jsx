@@ -28,7 +28,7 @@ export default function ComprehensiveSafetyPolicy() {
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6 flex items-center justify-center">
             <FaShieldAlt className="mr-4" />
-            LoopOut Comprehensive Safety Policy
+            loopOut Comprehensive Safety Policy
           </h1>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
             Ensuring Safe Experiences for All Service Categories
@@ -99,7 +99,7 @@ export default function ComprehensiveSafetyPolicy() {
           <section id="platform-role">
             <h2 className="text-3xl font-bold mb-6 flex items-center">
               <FaBalanceScale className="mr-3 text-blue-600" />
-              LoopOut s Role as a Platform
+              loopOut s Role as a Platform
             </h2>
             <div className="bg-white p-8 rounded-xl shadow-lg">
               <div className="flex items-start mb-6">
@@ -107,7 +107,7 @@ export default function ComprehensiveSafetyPolicy() {
                 <div>
                   <h3 className="text-xl font-semibold mb-3">Advertising Service Only</h3>
                   <p className="text-gray-600 mb-4">
-                    LoopOut operates solely as an advertising platform connecting service providers 
+                    loopOut operates solely as an advertising platform connecting service providers 
                     with customers. We are NOT a service provider and do not employ the individuals 
                     offering services through our platform.
                   </p>
@@ -417,7 +417,7 @@ export default function ComprehensiveSafetyPolicy() {
                     <li>Administer basic first aid if trained</li>
                     <li>Do not move injured persons unnecessarily</li>
                     <li>Keep emergency contact information accessible</li>
-                    <li>Report incident to LoopOut within 24 hours</li>
+                    <li>Report incident to loopOut within 24 hours</li>
                   </ul>
                 </div>
                 <div>
@@ -425,10 +425,10 @@ export default function ComprehensiveSafetyPolicy() {
                   <ul className="list-disc pl-5 space-y-3">
                     <li className="font-semibold">Remove yourself from dangerous situations</li>
                     <li>Contact authorities if threatened</li>
-                    <li>Use safety features in the LoopOut app</li>
+                    <li>Use safety features in the loopOut app</li>
                     <li>Notify trusted contacts immediately</li>
                     <li>Document incidents with photos if safe</li>
-                    <li>Report safety concerns to LoopOut promptly</li>
+                    <li>Report safety concerns to loopOut promptly</li>
                   </ul>
                 </div>
               </div>
@@ -437,7 +437,7 @@ export default function ComprehensiveSafetyPolicy() {
                 <h4 className="font-semibold mb-2 text-yellow-800">Emergency Contact Information</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div>
-                    <p className="font-semibold">LoopOut Safety Team</p>
+                    <p className="font-semibold">loopOut Safety Team</p>
                     <p>safety@loopout.com</p>
                     <p>1-800-LOOPOUT</p>
                   </div>
@@ -506,7 +506,7 @@ export default function ComprehensiveSafetyPolicy() {
               <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
                 <h4 className="font-semibold mb-2 text-yellow-800">Important Notice</h4>
                 <p className="text-yellow-700">
-                  LoopOut does not process payments for services. All financial transactions 
+                  loopOut does not process payments for services. All financial transactions 
                   occur directly between customers and service providers. We recommend using traceable payment 
                   methods and obtaining receipts for all transactions.
                 </p>
@@ -526,7 +526,7 @@ export default function ComprehensiveSafetyPolicy() {
                 <div>
                   <h3 className="text-xl font-semibold mb-3">No Platform Liability</h3>
                   <p className="text-gray-600 mb-4">
-                    LoopOut explicitly disclaims any liability for damages, injuries, or disputes that may 
+                    loopOut explicitly disclaims any liability for damages, injuries, or disputes that may 
                     arise between customers and service providers. As an advertising platform only, we are 
                     not responsible for:
                   </p>
@@ -610,7 +610,7 @@ export default function ComprehensiveSafetyPolicy() {
                   <h4 className="font-semibold mb-2 text-blue-800">Legal Recourse</h4>
                   <p className="text-blue-700">
                     For unresolved disputes involving significant damages or legal matters, parties should 
-                    seek resolution through appropriate legal channels. LoopOut s role is limited to providing 
+                    seek resolution through appropriate legal channels. loopOut s role is limited to providing 
                     platform access information to authorized legal authorities when legally required.
                   </p>
                 </div>
@@ -626,9 +626,9 @@ export default function ComprehensiveSafetyPolicy() {
                 Important Disclaimer
               </h3>
               <p className="text-red-700 mb-4">
-                By using LoopOut to book or provide services, you acknowledge and agree that LoopOut acts 
+                By using loopOut to book or provide services, you acknowledge and agree that loopOut acts 
                 solely as an advertising platform. You assume all risks associated with arranging and 
-                receiving services, and release LoopOut from any liability for damages, injuries, or 
+                receiving services, and release loopOut from any liability for damages, injuries, or 
                 disputes that may occur between users.
               </p>
               <p className="text-red-700">

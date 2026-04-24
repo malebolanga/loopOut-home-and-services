@@ -122,7 +122,7 @@ export default function Trips() {
         <div className="mb-16">
           <span className="text-[10px] font-black uppercase tracking-[0.4em] text-rose-500 mb-4 block italic">Deployment Vault</span>
           <h1 className="text-6xl font-black text-gray-900 tracking-tighter italic">Personal Expeditions</h1>
-          <p className="text-gray-500 mt-4 text-lg font-medium max-w-2xl">Manage all your upcoming and past itineraries in the LoopOut Masterpiece ecosystem.</p>
+          <p className="text-gray-500 mt-4 text-lg font-medium max-w-2xl">Manage all your upcoming and past itineraries in the loopOut Masterpiece ecosystem.</p>
         </div>
 
         {loading ? (

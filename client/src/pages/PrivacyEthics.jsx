@@ -12,7 +12,7 @@ export default function PrivacyEthics() {
     {
       icon: <EyeOff className="w-6 h-6" />,
       title: "Transparent Usage",
-      description: "We only collect what is strictly necessary to power your LoopOut experience. You govern your footprint."
+      description: "We only collect what is strictly necessary to power your loopOut experience. You govern your footprint."
     },
     {
       icon: <Scale className="w-6 h-6" />,
@@ -44,7 +44,7 @@ export default function PrivacyEthics() {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">Ethics.</span>
           </h1>
           <p className="text-xl text-gray-400 font-medium leading-relaxed mb-12">
-            At LoopOut, we don't just protect your data—we uphold a rigorous moral framework. 
+            At loopOut, we don't just protect your data—we uphold a rigorous moral framework. 
             Our platform is built on the unwavering foundation of digital dignity and equal opportunity.
           </p>
         </motion.div>
@@ -77,12 +77,12 @@ export default function PrivacyEthics() {
         <div className="prose prose-lg prose-gray">
           <h2 className="text-3xl font-black text-gray-900 mb-6 tracking-tight">Our Core Commitment</h2>
           <p className="text-gray-500 font-medium leading-relaxed mb-8">
-            LoopOut operates on a simple principle: your information belongs to you. We employ state-of-the-art encryption protocols across all our services, whether you are booking a home, hiring a professional, or curating an event.
+            loopOut operates on a simple principle: your information belongs to you. We employ state-of-the-art encryption protocols across all our services, whether you are booking a home, hiring a professional, or curating an event.
           </p>
           <div className="bg-gray-900 text-white p-8 rounded-[2rem] mb-12">
             <h4 className="text-xl font-black mb-4 flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-blue-400" />
-              The LoopOut Promise
+              The loopOut Promise
             </h4>
             <p className="text-gray-400 text-sm leading-relaxed">
               We pledge to never monetize your behavioral data, to aggressively combat bias in our algorithms, and to maintain a marketplace where respect and equity are the absolute baseline for participation.

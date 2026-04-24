@@ -1306,7 +1306,7 @@ export default function CreateListing() {
         ];
       case 'experiences':
         return [
-          { id: "cleaning", label: "Cleaning", emoji: "🧹", description: "Home & office cleaning" },
+          { id: "handyman", label: "Handyman", emoji: "🛠️", description: "General home repairs" },
           { id: "maintenance", label: "Maintenance", emoji: "🔧", description: "Repairs & fixes" },
           { id: "moving", label: "Moving", emoji: "🚚", description: "Relocation services" },
           { id: "landscaping", label: "Landscaping", emoji: "🌿", description: "Garden & yard work" },
@@ -1589,7 +1589,7 @@ export default function CreateListing() {
                       placeholder={
                         selectedCategory === 'stays' ? "Cozy mountain cabin with amazing views" :
                         selectedCategory === 'experiences' && selectedType === 'carwash' ? "Premium Car Wash & Detailing Service" :
-                        selectedCategory === 'experiences' ? "Professional Cleaning Service" :
+                        selectedCategory === 'experiences' ? "Professional Handyman Service" :
                         selectedCategory === 'online' && selectedType === 'sneaker' ? "Expert Sneaker Cleaning & Restoration" :
                         selectedCategory === 'online' && selectedType === 'washingmat' ? "Professional Mat Washing Service" :
                         selectedCategory === 'online' && selectedType === 'animals' ? "Loving Pet Care & Walking Services" :

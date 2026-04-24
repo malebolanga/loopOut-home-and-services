@@ -21,7 +21,7 @@ const TermsOfService = () => {
       id: 'introduction',
       title: 'Foundation & Scope',
       icon: <DocumentTextIcon className="w-6 h-6" />,
-      content: 'LoopOut Home (Pty) Ltd operates the definitive marketplace for extraordinary stays and elite services. By accessing our neural network, you agree to comply with our high-fidelity community standards and operational protocols.'
+      content: 'loopOut Home (Pty) Ltd operates the definitive marketplace for extraordinary stays and elite services. By accessing our neural network, you agree to comply with our high-fidelity community standards and operational protocols.'
     },
     {
       id: 'clients',
@@ -122,7 +122,7 @@ const TermsOfService = () => {
                         <h2 className="text-3xl font-black text-gray-950 tracking-tighter m-0">Website Use & Restrictions</h2>
                      </div>
                      <p className="text-gray-600 text-lg leading-relaxed mb-8">
-                        The LoopOut ecosystem is a high-fidelity environment. Users are prohibited from using automated scrapers, data harvesting robots, or any neural interference tools that may compromise the integrity of our marketplace. 
+                        The loopOut ecosystem is a high-fidelity environment. Users are prohibited from using automated scrapers, data harvesting robots, or any neural interference tools that may compromise the integrity of our marketplace. 
                      </p>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 not-prose">
                         {[
@@ -146,7 +146,7 @@ const TermsOfService = () => {
                         Every pixel, line of code, and trademark within the loopOut network is protected by international intellectual property laws. Unauthorized reproduction of our neural algorithms or brand identity will result in immediate protocol termination and legal escalation.
                      </p>
                      <div className="flex items-center gap-8 text-white/40 text-[10px] font-black uppercase tracking-[0.3em]">
-                        <span>© 2026 LoopOut Global</span>
+                        <span>© 2026 loopOut Global</span>
                         <span>IPR-V3-SECURE</span>
                      </div>
                   </section>
@@ -157,7 +157,7 @@ const TermsOfService = () => {
                         <h2 className="text-3xl font-black text-gray-950 tracking-tighter m-0">Liability Shield</h2>
                      </div>
                      <p className="text-gray-500 font-medium leading-relaxed">
-                        To the maximum extent permitted by the laws of the Republic of South Africa, LoopOut Home and its directors shall not be held liable for indirect, consequential, or special damages arising out of your engagement with the ecosystem. Our liability is shielded to maintain the equilibrium of the marketplace.
+                        To the maximum extent permitted by the laws of the Republic of South Africa, loopOut Home and its directors shall not be held liable for indirect, consequential, or special damages arising out of your engagement with the ecosystem. Our liability is shielded to maintain the equilibrium of the marketplace.
                      </p>
                   </section>
                </div>

@@ -173,7 +173,7 @@ const PrivateTutorDetailsPage = () => {
     if (bookingData.message) {
       message += `*📝 Goals/Message:* ${bookingData.message}\n`;
     }
-    message += `\n_This request was sent via LoopOut Tutor Booking_`;
+    message += `\n_This request was sent via loopOut Tutor Booking_`;
 
     const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');

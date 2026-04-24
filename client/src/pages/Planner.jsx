@@ -11,9 +11,11 @@ import {
   CalendarIcon,
   ChevronRightIcon,
   XMarkIcon,
-  MapPinIcon
+  MapPinIcon,
+  SparklesIcon
 } from "@heroicons/react/24/outline";
 import { updateUserSuccess } from "../redux/user/userSlice";
+import NeighborhoodInsights from "../components/NeighborhoodInsights";
 
 export default function Planner() {
   const { currentUser } = useSelector((state) => state.user);
@@ -300,7 +302,10 @@ export default function Planner() {
                </div>
 
                {tripResults && !isSearchingTrip && (
-                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
+                    {/* Neighborhood Intelligence HUD Integrated Here */}
+                    <NeighborhoodInsights location={tripLocation} />
+
                     {/* Internet Suggestions */}
                     <div>
                        <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">

@@ -28,7 +28,7 @@ const helperSchema = new mongoose.Schema({
     type: {
         type: String,
         required: true,
-        enum: ['domestic', 'errand', 'tutor', 'chef', 'beauty', 'tattoo', 'barber', 'photography', 'baker', 'sneaker', 'washingmat', 'animals'],
+        enum: ['domestic', 'handyman', 'errand', 'tutor', 'chef', 'beauty', 'tattoo', 'barber', 'photography', 'baker', 'sneaker', 'washingmat', 'animals'],
     },
     regularPrice: {
         type: Number,

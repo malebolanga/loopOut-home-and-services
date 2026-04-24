@@ -7,7 +7,7 @@ import { BrandIcon } from './BrandLogo';
  * Uses the brand emblem with a glass effect and tactical "Neural" aesthetics.
  */
 const NeuralLoader = ({ 
-  text = "Looping Out...", 
+  text = "looping Out...", 
   fullScreen = false,
   className = "" 
 }) => {

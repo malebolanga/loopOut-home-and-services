@@ -191,14 +191,6 @@ const TOP_CATEGORIES = [
     emoji: '🚕'
   },
   {
-    id: 'tattor Artise',
-    name: 'Tattoo artist',
-    image: 'https://images.pexels.com/photos/1304469/pexels-photo-1304469.jpeg',
-    count: '2,109',
-    color: 'from-teal-600 to-cyan-500',
-    emoji: '🎨'
-  },
-  {
     id: 'domestic',
     name: 'Domestic Work',
     image: '/3d_maid_icon_1775252783278.png',
@@ -285,6 +277,14 @@ const TOP_CATEGORIES = [
     count: '1,123',
     color: 'from-yellow-500 to-amber-500',
     emoji: '⚡'
+  },
+  {
+    id: 'handyman',
+    name: 'Handyman',
+    image: '/3d_services_icon_1775252517283.png',
+    count: '956',
+    color: 'from-blue-700 to-indigo-600',
+    emoji: '🛠️'
   },
   {
     id: 'nanny',
@@ -412,8 +412,9 @@ const MOCK_SERVICES = [
   { _id: 'serv-4', name: 'Home Repair & Maintenance', price: 300, regularPrice: 300, description: 'Professional home repair and maintenance services', imageUrls: ['https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9 },
   { _id: 'serv-5', name: 'Car Wash & Detailing', price: 150, regularPrice: 150, description: 'Professional car washing and detailing services', imageUrls: ['https://images.unsplash.com/photo-1565689221354-d87f85d4aee2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.5 },
   { _id: 'serv-6', name: 'Sneaker Cleaning & Restoration', price: 250, regularPrice: 250, description: 'Professional sneaker cleaning and restoration services', imageUrls: ['https://images.unsplash.com/photo-1463100099107-aa0980c362e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8 },
-  { _id: 'serv-7', name: 'Professional Mat Washing', price: 180, regularPrice: 180, description: 'Deep cleaning and sanitizing of all types of mats', imageUrls: ['https://images.unsplash.com/photo-1582735689369-4fe89db7114c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.7 },
-  { _id: 'serv-8', name: 'Pet Grooming & Care', price: 220, regularPrice: 220, description: 'Professional grooming, bathing, and care for your pets', imageUrls: ['https://images.unsplash.com/photo-1450778869180-41d0601e046e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9 }
+  { _id: 'serv-7', name: 'Professional Mat Washing', price: 180, regularPrice: 180, description: 'Deep cleaning and sanitization of all types of mats', imageUrls: ['https://images.unsplash.com/photo-1582735689369-4fe89db7114c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.7, createdAt: '2024-03-01T10:00:00Z' },
+  { _id: 'serv-8', name: 'Pet Grooming & Care', price: 220, regularPrice: 220, description: 'Professional grooming, bathing, and care for your pets', imageUrls: ['https://images.unsplash.com/photo-1450778869180-41d0601e046e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9, createdAt: '2024-03-02T10:00:00Z' },
+  { _id: 'serv-handyman-1', name: 'Expert Handyman Services', price: 350, regularPrice: 350, description: 'All-in-one home repair, plumbing, and electrical fixes by certified professionals.', imageUrls: ['https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9, createdAt: new Date().toISOString() }
 ];
 
 // Updated MOCK_HELPERS with specific IDs that match your database
@@ -426,7 +427,8 @@ const MOCK_HELPERS = [
   { _id: 'help-6', name: 'Emily Davis', type: 'photography', rating: 4.9, regularPrice: 300, imageUrls: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Cape Town', host: 'Emily Davis', description: 'Professional photographer specializing in portraits, events, and commercial work.', travelFee: 60 },
   { _id: 'help-7', name: 'Mike\'s Sneaker Care', type: 'sneaker', rating: 4.8, regularPrice: 250, imageUrls: ['https://images.unsplash.com/photo-1491553895911-0055eca6402d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Johannesburg', host: 'Mike Johnson', description: 'Expert sneaker cleaning and restoration services. I use premium products to restore your sneakers to like-new condition.', travelFee: 45 },
   { _id: 'help-8', name: 'Clean Mats SA', type: 'washingmat', rating: 4.7, regularPrice: 180, imageUrls: ['https://images.unsplash.com/photo-1582735689369-4fe89db7114c?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Durban', host: 'Sarah Williams', description: 'Professional mat washing service using industrial machines. I clean all types of mats including doormats, bath mats, and gym mats.', travelFee: 40 },
-  { _id: 'help-9', name: 'Paws & Claws Care', type: 'animals', rating: 4.9, regularPrice: 220, imageUrls: ['https://images.unsplash.com/photo-1450778869180-41d0601e046e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Cape Town', host: 'Dr. James Wilson', description: 'Loving and experienced animal care provider. I offer pet sitting, dog walking, grooming, and medication administration for all types of pets.', travelFee: 35 }
+  { _id: 'help-9', name: 'Paws & Claws Care', type: 'animals', rating: 4.9, regularPrice: 220, imageUrls: ['https://images.unsplash.com/photo-1450778869180-41d0601e046e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Cape Town', host: 'Dr. James Wilson', description: 'Loving and experienced animal care provider. I offer pet sitting, dog walking, grooming, and medication administration for all types of pets.', travelFee: 35, createdAt: '2024-03-02T12:00:00Z' },
+  { _id: 'help-handyman-1', name: 'Handy Andy', type: 'handyman', rating: 4.9, regularPrice: 350, imageUrls: ['https://images.unsplash.com/photo-1621905251189-08b45d6a269e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], address: 'Polokwane', host: 'Andrew M.', description: 'Your reliable local handyman for all home maintenance and repair needs.', travelFee: 50, createdAt: new Date().toISOString() }
 ];
 
 const MOCK_EVENTS = [
@@ -812,7 +814,7 @@ const TopCategoriesSection = ({ navigate }) => {
 
   const handleCategoryClick = (category) => {
     const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner', 'nanny'];
-    const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattor Artise', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician'];
+    const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician','handyman'];
     const properties = ['rental', 'guesthouse'];
     const needs = ['roommate', 'nanny-need'];
 
@@ -1407,53 +1409,6 @@ const SmartRecommendations = ({ recommendations, insights, loading, onItemClick 
   );
 };
 
-const MobileAppHomepage = ({
-  featuredProperties, featuredServices, featuredHelpers, featuredEvents,
-  loadingProperties, loadingServices, loadingHelpers, loadingEvents,
-  stats, onItemClick, recentlyViewedItems, onRecentlyViewedLike,
-  currentLocation = 'South Africa', navigate, aiRecommendations, aiInsights, aiTrendData, onAISuggestionClick,
-  recentlyAddedItems, locationStatus, requestCount = 0
-}) => {
-  const [isDesktop, setIsDesktop] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeCategory, setActiveCategory] = useState('Homes');
-  const [showAIInsights, setShowAIInsights] = useState(true);
-  const [isBookingsOpen, setIsBookingsOpen] = useState(false);
-
-  useEffect(() => {
-    const checkScreenSize = () => { setIsDesktop(window.innerWidth >= 1024); };
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
-
-  const handleSearchSubmit = (e) => {
-    if (e) e.preventDefault();
-    if (searchTerm.trim()) {
-      navigate(`/search?searchTerm=${encodeURIComponent(searchTerm)}&type=all&address=${encodeURIComponent(currentLocation)}`);
-      setSearchTerm('');
-    }
-  };
-
-  const categories = [
-    { icon: '🏠', label: 'Homes', type: 'properties' },
-    { icon: '✨', label: 'Services', type: 'services' },
-    { icon: '👷', label: 'Helpers', type: 'helpers' },
-    { icon: '🧹', label: 'Maid', type: 'helpers', category: 'domestic' },
-    { icon: '🧽', label: 'Cleaner', type: 'helpers', category: 'cleaner' },
-    { icon: '📚', label: 'Tutor', type: 'helpers', category: 'tutor' },
-    { icon: '👨‍🍳', label: 'Chef', type: 'helpers', category: 'chef' },
-    { icon: '💄', label: 'Beauty', type: 'helpers', category: 'beauty' },
-    { icon: '🖋️', label: 'Tattoos', type: 'helpers', category: 'tattoo' },
-    { icon: '✂️', label: 'Barber', type: 'helpers', category: 'barber' },
-    { icon: '👶', label: 'Nanny', type: 'helpers', category: 'nanny' },
-    { icon: '🎪', label: 'Events', type: 'events' },
-    { icon: '🤝', label: 'Needs', type: 'looking-for', path: '/looking-for' },
-    { icon: '🏖️', label: 'Beachfront', type: 'properties' },
-    { icon: '🏕️', label: 'Cabins', type: 'properties' },
-    { icon: '🏰', label: 'Trending', type: 'all' },
-  ];
-
 // --- NEW COMPONENT: SERVICES TO YOUR DOOR (SIDE SLIDING) ---
 const ServicesToYourDoor = ({ navigate }) => {
   const atHomeServices = [
@@ -1461,6 +1416,7 @@ const ServicesToYourDoor = ({ navigate }) => {
     { id: 'hair', name: 'Home Hair & Style', desc: 'Salon experience at home', emoji: '💇', color: 'from-rose-500 to-pink-500' },
     { id: 'massage', name: 'Home Massage', desc: 'Relaxation brought to you', emoji: '💆', color: 'from-emerald-500 to-teal-500' },
     { id: 'domestic', name: 'House Cleaning', desc: 'Professional cleaning', emoji: '🧹', color: 'from-blue-600 to-indigo-600' },
+    { id: 'handyman', name: 'Mobile Handyman', desc: 'Home repairs & maintenance', emoji: '🛠️', color: 'from-orange-600 to-amber-500' },
   ];
 
   return (
@@ -1563,6 +1519,55 @@ const WeeklySpecialsSection = ({ navigate }) => {
     </section>
   );
 };
+
+const MobileAppHomepage = ({
+  featuredProperties, featuredServices, featuredHelpers, featuredEvents,
+  loadingProperties, loadingServices, loadingHelpers, loadingEvents,
+  stats, onItemClick, recentlyViewedItems, onRecentlyViewedLike,
+  currentLocation = 'South Africa', navigate, aiRecommendations, aiInsights, aiTrendData, onAISuggestionClick,
+  recentlyAddedItems, locationStatus, requestCount = 0
+}) => {
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeCategory, setActiveCategory] = useState('Homes');
+  const [showAIInsights, setShowAIInsights] = useState(true);
+  const [isBookingsOpen, setIsBookingsOpen] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => { setIsDesktop(window.innerWidth >= 1024); };
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (searchTerm.trim()) {
+      navigate(`/search?searchTerm=${encodeURIComponent(searchTerm)}&type=all&address=${encodeURIComponent(currentLocation)}`);
+      setSearchTerm('');
+    }
+  };
+
+  const categories = [
+    { icon: '🏠', label: 'Homes', type: 'properties' },
+    { icon: '✨', label: 'Services', type: 'services' },
+    { icon: '👷', label: 'Helpers', type: 'helpers' },
+    { icon: '🧹', label: 'Maid', type: 'helpers', category: 'domestic' },
+    { icon: '🧽', label: 'Cleaner', type: 'helpers', category: 'cleaner' },
+    { icon: '📚', label: 'Tutor', type: 'helpers', category: 'tutor' },
+    { icon: '👨‍🍳', label: 'Chef', type: 'helpers', category: 'chef' },
+    { icon: '💄', label: 'Beauty', type: 'helpers', category: 'beauty' },
+    { icon: '🖋️', label: 'Tattoos', type: 'helpers', category: 'tattoo' },
+    { icon: '✂️', label: 'Barber', type: 'helpers', category: 'barber' },
+    { icon: '👶', label: 'Nanny', type: 'helpers', category: 'nanny' },
+    { icon: '🎪', label: 'Events', type: 'events' },
+    { icon: '🤝', label: 'Needs', type: 'looking-for', path: '/looking-for' },
+    { icon: '🏖️', label: 'Beachfront', type: 'properties' },
+    { icon: '🏕️', label: 'Cabins', type: 'properties' },
+    { icon: '🏰', label: 'Trending', type: 'all' },
+  ];
+
+
 
   if (isDesktop) {
     return (
@@ -1705,8 +1710,6 @@ const WeeklySpecialsSection = ({ navigate }) => {
 
           <CommunityNeedsSection navigate={navigate} />
 
-          {/* NEW: SERVICES TO YOUR DOOR SECTION */}
-          <ServicesToYourDoor navigate={navigate} />
 
           <section className="mb-16">
             <SectionTitle title="Verified helpers" actionText="View all" onAction={() => navigate('/helper-home-page')} />
@@ -2011,7 +2014,7 @@ const WeeklySpecialsSection = ({ navigate }) => {
                 transition={{ delay: index * 0.05 }}
                 onClick={() => {
                   const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner'];
-                  const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattor Artise', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician'];
+                  const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician','handyman'];
                   const properties = ['rental', 'guesthouse', 'sale', 'overnight'];
 
                   if (helpers.includes(category.id)) {
@@ -2053,7 +2056,7 @@ const WeeklySpecialsSection = ({ navigate }) => {
           <img 
             src="/soweto_bg.png" 
             className="absolute inset-0 w-full h-full object-cover" 
-            alt="LoopOut Experience" 
+            alt="loopOut Experience" 
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
           <div className="absolute inset-0 p-8 flex flex-col justify-end">

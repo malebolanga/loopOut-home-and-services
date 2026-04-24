@@ -99,7 +99,7 @@ const Footer = () => {
             <div className="col-span-2 md:col-span-5 space-y-6 md:space-y-8">
               <div className="flex items-center gap-3">
                      <BrandIcon className="w-8 h-8" />
-                 <h3 className="text-2xl font-black tracking-tighter text-gray-900 uppercase">Onmancha</h3>
+                 <h3 className="text-2xl font-black tracking-tighter text-gray-900">loopOut</h3>
               </div>
               <p className="text-sm text-gray-500 leading-relaxed font-medium max-w-sm">
                 The ultimate neural ecosystem for high-fidelity stays, vetted local professionals, and premium lifestyle services.
@@ -136,7 +136,7 @@ const Footer = () => {
           </div>
 
           <div className="border-t border-gray-100 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
-            <span className="text-xs font-bold text-gray-400">© {new Date().getFullYear()} Onmancha Neural Hub. All rights reserved.</span>
+            <span className="text-xs font-bold text-gray-400">© {new Date().getFullYear()} loopOut Neural Hub. All rights reserved.</span>
             <div className="flex items-center gap-10">
                <span className="text-xs font-black text-gray-900 border-b border-rose-500/30">ENGLISH (SA)</span>
                <span className="text-xs font-black text-gray-900 border-b border-rose-500/30">ZAR (R)</span>

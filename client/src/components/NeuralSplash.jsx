@@ -70,7 +70,7 @@ export default function NeuralSplash() {
               transition={{ delay: 0.4, duration: 0.6 }}
               className="text-4xl font-black tracking-tighter text-gray-900 mb-2"
             >
-              ONMANCHA
+              loopOut
             </motion.h1>
             
             <motion.div 

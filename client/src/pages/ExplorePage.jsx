@@ -151,6 +151,7 @@ const ExplorePage = () => {
     { id: 'properties', label: 'Properties', icon: <TbBuilding className="w-5 h-5" />, color: 'bg-gradient-to-r from-blue-500 to-cyan-500' },
     { id: 'services', label: 'Services', icon: <TbTools className="w-5 h-5" />, color: 'bg-gradient-to-r from-emerald-500 to-green-500' },
     { id: 'helpers', label: 'Helpers', icon: <TbUsers className="w-5 h-5" />, color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
+    { id: 'handyman', label: 'Handyman', icon: <FiTool className="w-5 h-5" />, color: 'bg-gradient-to-r from-slate-600 to-gray-800' },
     { id: 'events', label: 'Events', icon: <TbCalendarEvent className="w-5 h-5" />, color: 'bg-gradient-to-r from-amber-500 to-orange-500' }
   ];
 

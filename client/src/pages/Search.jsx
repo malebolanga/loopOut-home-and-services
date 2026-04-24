@@ -62,8 +62,11 @@ import {
   Star,
   ThumbsUp,
   ThumbsDown,
-  Share2
+  Share2,
+  BookOpen
 } from 'lucide-react';
+import NeighborhoodInsights from '../components/NeighborhoodInsights';
+
 
 const RECENT_SEARCHES_KEY = 'recentPropertySearches';
 const MAX_RECENT_SEARCHES = 5;
@@ -82,7 +85,7 @@ const ALL_CATEGORIES = [
   { id: 'car_wash', label: 'Car Wash', type: 'services', icon: BoltIcon, color: 'bg-cyan-100 text-cyan-800', description: 'Vehicle cleaning' },
   { id: 'landscaping', label: 'Landscaping', type: 'services', icon: SunIcon, color: 'bg-green-100 text-green-800', description: 'Garden & lawn care' },
   { id: 'electrician', label: 'Electrician', type: 'services', icon: BoltIcon, color: 'bg-yellow-100 text-yellow-800', description: 'Electrical services' },
-  { id: 'maintenance', label: 'Maintenance', type: 'services', icon: WrenchIcon, color: 'bg-gray-100 text-gray-800', description: 'Repair & maintenance' },
+  { id: 'handyman', label: 'Handyman', type: 'services', icon: WrenchIcon, color: 'bg-gray-100 text-gray-800', description: 'Repair & maintenance' },
   { id: 'catering', label: 'Catering', type: 'services', icon: BriefcaseIcon, color: 'bg-orange-100 text-orange-800', description: 'Event catering' },
   { id: 'moving', label: 'Moving & Transport', type: 'services', icon: TruckIcon, color: 'bg-amber-100 text-amber-800', description: 'Relocation services' },
 
@@ -133,7 +136,7 @@ const SERVICES_CATEGORY_CONFIG = {
   car_wash: { label: 'Car Wash', color: 'bg-cyan-100 text-cyan-800', icon: '🚗', endpoint: 'service' },
   landscaping: { label: 'Landscaping', color: 'bg-green-100 text-green-800', icon: '🌿', endpoint: 'service' },
   electrician: { label: 'Electrician', color: 'bg-yellow-100 text-yellow-800', icon: '⚡', endpoint: 'service' },
-  maintenance: { label: 'Maintenance', color: 'bg-gray-100 text-gray-800', icon: '🔧', endpoint: 'service' },
+  handyman: { label: 'Handyman', color: 'bg-gray-100 text-gray-800', icon: '🔧', endpoint: 'service' },
   catering: { label: 'Catering', color: 'bg-orange-100 text-orange-800', icon: '🍽️', endpoint: 'service' },
   moving: { label: 'Moving & Transport', color: 'bg-amber-100 text-amber-800', icon: '🚚', endpoint: 'service' },
   transport: { label: 'Transport', color: 'bg-blue-100 text-blue-800', icon: '🚕', endpoint: 'service' },
@@ -478,7 +481,21 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
               <MapPin className="w-3.5 h-3.5 text-rose-400" />
               {getLocation()}
            </p>
-           <div className="flex items-center justify-between">
+           {/* Neighborhood Intelligence HUD - User requested area context */}
+          <AnimatePresence>
+            {detectedLocation && !loading && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="mb-12"
+              >
+                <NeighborhoodInsights location={detectedLocation} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="flex items-center justify-between mb-8">
               <span className="text-xl font-black text-gray-900">{getPrice()}</span>
               <div className="flex items-center gap-3">
                  <button 
@@ -736,6 +753,27 @@ const SearchPage = () => {
 
   // Recent searches
   const [recentSearches, setRecentSearches] = useState([]);
+  const [detectedLocation, setDetectedLocation] = useState(null);
+
+  // Location intelligence detection
+  useEffect(() => {
+    const queryLocation = filters.location || searchTerm;
+    if (queryLocation && queryLocation.length > 3) {
+      const cities = ["Tembisa", "Soweto", "Sandton", "Midrand", "Pretoria", "Johannesburg", "Durban", "Cape Town", "Kempton Park", "Polokwane", "Bloemfontein"];
+      const found = cities.find(c => queryLocation.toLowerCase().includes(c.toLowerCase()));
+      if (found) {
+        setDetectedLocation(found);
+      } else {
+        // Heuristic for other potential locations
+        const words = queryLocation.split(' ');
+        const caps = words.find(w => w.length > 3 && w[0] === w[0].toUpperCase());
+        if (caps) setDetectedLocation(caps);
+        else setDetectedLocation(null);
+      }
+    } else {
+      setDetectedLocation(null);
+    }
+  }, [filters.location, searchTerm]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -795,9 +833,8 @@ const SearchPage = () => {
       const minRating = urlParams.get('minRating');
 
       let endpoints = [];
-
       if (type === 'all') {
-        endpoints = ['listing', 'service', 'helper', 'event', 'looking-for'];
+        endpoints = ['listing', 'service', 'helper', 'event'];
       } else {
         const config = SEARCH_TYPE_CONFIG[type];
         if (config) endpoints = [config.endpoint];
@@ -863,9 +900,8 @@ const SearchPage = () => {
 
       setListings(combinedResults);
     } catch (error) {
-      console.error('Search error:', error);
-      const mockData = generateMockData(urlParams);
-      setListings(mockData);
+      console.error('Search Database error:', error);
+      setListings([]);
     } finally {
       setLoading(false);
     }
@@ -878,7 +914,7 @@ const SearchPage = () => {
   const handleSearch = useCallback(() => {
     const urlParams = new URLSearchParams();
     if (searchTerm) urlParams.set('searchTerm', searchTerm);
-    if (searchType !== 'all') urlParams.set('type', searchType);
+    urlParams.set('type', searchType || 'all');
     if (searchSubType) urlParams.set('subType', searchSubType);
     if (filters.minPrice) urlParams.set('minPrice', filters.minPrice);
     if (filters.maxPrice) urlParams.set('maxPrice', filters.maxPrice);
@@ -1081,7 +1117,9 @@ const SearchPage = () => {
             </div>
           </div>
         ) : listings.length > 0 ? (
-          <motion.div
+          <div>
+
+            <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -1099,6 +1137,7 @@ const SearchPage = () => {
               />
             ))}
           </motion.div>
+          </div>
         ) : (
           <EmptyState onClear={clearFilters} />
         )}

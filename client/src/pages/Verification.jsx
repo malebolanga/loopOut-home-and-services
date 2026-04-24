@@ -217,7 +217,7 @@ export default function Verification() {
                   <span className="text-gray-300">IDENTITY</span>
                 </h1>
                 <p className="max-w-xl text-gray-500 font-medium leading-relaxed">
-                  Establish an immutable connection between your physical presence and the LoopOut network. 
+                  Establish an immutable connection between your physical presence and the loopOut network. 
                   Choose a deployment protocol to securely verify your identity.
                 </p>
               </div>
@@ -369,7 +369,7 @@ export default function Verification() {
                          <Zap size={14} /> SECURITY SIGNAL ACTIVE
                       </div>
                       <h2 className="text-4xl font-black text-gray-950 tracking-tighter">SIGNAL VERIFY</h2>
-                      <p className="text-gray-500 font-medium">Link your secure communication channel to the LoopOut neural network.</p>
+                      <p className="text-gray-500 font-medium">Link your secure communication channel to the loopOut neural network.</p>
                    </div>
 
                    <AnimatePresence mode="wait">
@@ -500,7 +500,7 @@ export default function Verification() {
               <div className="space-y-6 mb-12">
                  <h2 className="text-6xl font-black text-gray-950 tracking-tighter italic">IDENTITY <br/> ESTABLISHED</h2>
                  <p className="text-gray-500 max-w-md mx-auto font-medium">
-                   Your neural signal has been successfully hard-coded into the LoopOut verification chain. You now hold ELITE level status.
+                   Your neural signal has been successfully hard-coded into the loopOut verification chain. You now hold ELITE level status.
                  </p>
               </div>
 

@@ -114,7 +114,7 @@ const Categories = () => {
       gradient: 'from-emerald-500 to-emerald-600',
       subcategories: [
         { id: 'cleaning', name: 'Cleaning Services', count: 345, icon: Sparkles },
-        { id: 'repair', name: 'Repair & Maintenance', count: 289, icon: WrenchScrewdriverIcon },
+        { id: 'handyman service', name: 'Handyman', count: 289, icon: WrenchScrewdriverIcon },
         { id: 'moving', name: 'Moving & Relocation', count: 167, icon: TruckIcon },
         { id: 'landscaping', name: 'Landscaping', count: 123, icon: SunIcon },
         { id: 'catering', name: 'Catering & Food', count: 189, icon: CakeIcon },

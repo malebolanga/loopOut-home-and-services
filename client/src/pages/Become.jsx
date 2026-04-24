@@ -243,7 +243,7 @@ const Become = () => {
                <button onClick={() => navigate('/help-center')} className="hover:text-rose-600 transition-colors">Help Center</button>
                <button onClick={() => navigate('/trust')} className="hover:text-rose-600 transition-colors">Safety</button>
             </div>
-            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">© 2026 LoopOut Onboarding Hub.</p>
+            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">© 2026 loopOut Onboarding Hub.</p>
          </div>
       </footer>
       

@@ -14,7 +14,7 @@ const categories = [
   { id: 'domestic', label: 'Maid', icon: '🧹' },
   { id: 'tutor', label: 'Tutor', icon: '📚' },
   { id: 'chef', label: 'Chef', icon: '👨‍🍳' },
-  { id: 'handyman', label: 'Repairs', icon: '🔧' },
+  { id: 'handyman', label: 'Handyman', icon: '🔧' },
   { id: 'beauty', label: 'Beauty', icon: '💄' },
   { id: 'tattoo', label: 'Tattoo', icon: '🖋️' },
   { id: 'barber', label: 'Barber', icon: '✂️' },

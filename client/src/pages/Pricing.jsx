@@ -27,7 +27,7 @@ const Pricing = () => {
     },
     {
       id: "pro",
-      name: "LoopOut PRO",
+      name: "loopOut PRO",
       description: "Ideal for active service providers and real estate agents.",
       monthlyPrice: "$15",
       annualPrice: "$12",

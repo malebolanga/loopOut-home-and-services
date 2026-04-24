@@ -159,7 +159,7 @@ const CookiePolicy = () => {
       {/* Mini Footer */}
       <footer className="py-12 border-t border-gray-100 flex flex-col md:flex-row justify-center items-center gap-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">
          <div className="flex items-center gap-6">
-            <span className="text-gray-300">© 2026 LoopOut Global</span>
+            <span className="text-gray-300">© 2026 loopOut Global</span>
             <div className="w-[1px] h-4 bg-gray-200" />
             <button onClick={() => navigate('/contact')} className="hover:text-rose-500 transition-colors">Safety Officer</button>
             <button onClick={() => navigate('/')} className="hover:text-rose-500 transition-colors">Back to Home</button>

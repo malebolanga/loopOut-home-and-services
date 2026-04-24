@@ -7,7 +7,7 @@ export default function SafetyProtocols() {
     {
       icon: <UserCheck className="w-6 h-6" />,
       title: "Identity Verification",
-      description: "Every user on LoopOut undergoes a multi-layer identity check to foster a trusted environment."
+      description: "Every user on loopOut undergoes a multi-layer identity check to foster a trusted environment."
     },
     {
       icon: <Bell className="w-6 h-6" />,
@@ -37,7 +37,7 @@ export default function SafetyProtocols() {
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-full mb-8">
             <ShieldAlert className="w-4 h-4 text-emerald-500" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">LoopOut Security</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">loopOut Security</span>
           </div>
           <h1 className="text-6xl md:text-8xl font-black text-gray-900 mb-8 tracking-tighter leading-[0.9]">
             Safety <br />
@@ -45,7 +45,7 @@ export default function SafetyProtocols() {
           </h1>
           <p className="text-xl text-gray-400 font-medium leading-relaxed mb-12">
             The physical and digital safety of our community is non-negotiable. 
-            We deploy military-grade protocols to ensure every interaction on LoopOut is secure, respectful, and verified.
+            We deploy military-grade protocols to ensure every interaction on loopOut is secure, respectful, and verified.
           </p>
         </motion.div>
       </section>
@@ -80,7 +80,7 @@ export default function SafetyProtocols() {
           <ShieldAlert className="w-16 h-16 text-rose-500 mx-auto mb-6" />
           <h2 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">Need Immediate Assistance?</h2>
           <p className="text-gray-500 font-medium leading-relaxed mb-8 max-w-lg mx-auto">
-            If you are in an emergency situation, please contact your local emergency services immediately. For urgent LoopOut matters, our critical response team is standing by.
+            If you are in an emergency situation, please contact your local emergency services immediately. For urgent loopOut matters, our critical response team is standing by.
           </p>
           <button className="px-10 py-5 bg-gray-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-rose-500 transition-all shadow-xl">
              Contact Critical Response

@@ -237,8 +237,47 @@ export const extractFiltersFromQuery = (query) => {
     }
   });
   
+  // Extract type/intent
+  const typeKeywords = [
+    { patterns: ['apartment', 'house', 'villa', 'property', 'rent', 'sale', 'listing', 'stay', 'accommodation', 'room', 'flat'], type: 'properties' },
+    { patterns: ['service', 'repair', 'maintain', 'moving', 'transport', 'car wash', 'catering', 'delivery', 'clean', 'plumb', 'electrician'], type: 'services' },
+    { patterns: ['helper', 'chef', 'tutor', 'assistant', 'maid', 'barber', 'stylist', 'tattoo', 'domestic'], type: 'helpers' },
+    { patterns: ['event', 'festival', 'concert', 'party', 'show', 'exhibition', 'jazz', 'tickets'], type: 'events' },
+    { patterns: ['need', 'looking for', 'request', 'help with'], type: 'looking-for' }
+  ];
+
+  typeKeywords.forEach(({ patterns, type }) => {
+    if (patterns.some(pattern => lowerQuery.includes(pattern))) {
+      filters.type = type;
+    }
+  });
+
+  // Extract sub-type (sub-category)
+  const subTypeKeywords = [
+    { patterns: ['rent', 'rental', 'lease', 'tenant'], subType: 'rent', type: 'properties' },
+    { patterns: ['sale', 'buy', 'purchase', 'owner'], subType: 'sale', type: 'properties' },
+    { patterns: ['guest house', 'guesthouse', 'b&b', 'bed and breakfast'], subType: 'guest_house', type: 'properties' },
+    { patterns: ['car wash', 'carwash', 'valet'], subType: 'car_wash', type: 'services' },
+    { patterns: ['maid', 'domestic', 'cleaner'], subType: 'domestic', type: 'helpers' }
+  ];
+
+  subTypeKeywords.forEach(({ patterns, subType, type }) => {
+    if (patterns.some(pattern => lowerQuery.includes(pattern))) {
+      filters.subType = subType;
+      if (!filters.type) filters.type = type;
+    }
+  });
+
   // Extract location
-  const locations = ['cape town', 'johannesburg', 'pretoria', 'durban', 'south africa', 'sandton', 'cbd', 'polokwane', 'tembisa', 'midrand', 'soweto'];
+  const locations = [
+    'cape town', 'johannesburg', 'pretoria', 'durban', 'south africa', 
+    'sandton', 'cbd', 'polokwane', 'tembisa', 'midrand', 'soweto',
+    'kempton park', 'bloemfontein', 'port elizabeth', 'east london',
+    'nelspruit', 'rustenburg', 'kimberley', 'pietermaritzburg', 'stellenbosch',
+    'bellville', 'randburg', 'roodepoort', 'centurion', 'mamelodi', 'alexandra',
+    'daveyton', 'benoni', 'springs', 'vosloorus', 'edenvale', 'boksburg',
+    'thembisa', 'tshwane', 'gauteng', 'ekurhuleni', 'braamfontein'
+  ];
   locations.forEach(location => {
     if (lowerQuery.includes(location)) {
       filters.location = location;

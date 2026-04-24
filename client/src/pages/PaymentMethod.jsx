@@ -139,7 +139,7 @@ const PaymentMethod = () => {
 
       <p className="mt-8 text-[10px] text-gray-400 text-center px-6">
         Payments are processed securely via PayFast. We do not store your credit card information. 
-        By clicking pay, you agree to LoopOut's Terms of Service.
+        By clicking pay, you agree to loopOut's Terms of Service.
       </p>
     </div>
   );

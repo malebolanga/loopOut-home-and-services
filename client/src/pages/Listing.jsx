@@ -396,7 +396,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       if (declineLink) message += `❌ *DECLINE REQUEST:* ${declineLink}%0A%0A`;
 
       message += `*Verification Code:* \`${verificationCode}\`%0A`;
-      message += `_Sent via LoopOut Premium Platform_`;
+      message += `_Sent via loopOut Premium Platform_`;
     } else if (isOffice) {
       // Office space message - Professional Formatting
       message = `*🏢 OFFICE SPACE BOOKING 📑*%0A%0A`;
@@ -419,7 +419,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       if (declineLink) message += `❌ *DECLINE:* ${declineLink}%0A%0A`;
 
       message += `*Verification Code:* \`${verificationCode}\`%0A`;
-      message += `_Powered by LoopOut Platform_`;
+      message += `_Powered by loopOut Platform_`;
     } else if (isSale || isRent) {
       // Sale or Rent inquiry message - Professional Formatting
       message = `*🏠 PROPERTY INQUIRY 📬*%0A%0A`;
@@ -446,7 +446,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       if (declineLink) message += `❌ *UNAVAILABLE:* ${declineLink}%0A%0A`;
 
       message += `*Verification Code:* \`${verificationCode}\`%0A`;
-      message += `_Sent via LoopOut Premium Platform_`;
+      message += `_Sent via loopOut Premium Platform_`;
     }
 
     // Save booking to Database

@@ -63,6 +63,7 @@ const serviceSchema = new mongoose.Schema(
       required: true,
       enum: [
         'cleaning', 
+        'handyman',
         'maintenance', 
         'moving', 
         'landscaping', 

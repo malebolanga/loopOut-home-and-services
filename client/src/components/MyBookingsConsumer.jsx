@@ -291,7 +291,7 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
           >
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-2xl font-black text-gray-900 tracking-tight">LoopOut Schedule</h2>
+                <h2 className="text-2xl font-black text-gray-900 tracking-tight">loopOut Schedule</h2>
                 <div className="flex items-center gap-4 mt-2">
                    <button 
                      onClick={() => setViewMode('list')}
@@ -368,7 +368,7 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
                 <div className="mt-12 p-6 bg-gradient-to-br from-gray-900 to-gray-800 rounded-[2.5rem] text-white overflow-hidden relative shadow-2xl">
                   <FaStar className="absolute top-4 right-4 text-rose-500 text-4xl opacity-20 rotate-12" />
                   <h3 className="text-lg font-bold mb-2 relative z-10">Rate your last service</h3>
-                  <p className="text-gray-400 text-sm mb-4 relative z-10">Help the LoopOut community find the best professionals.</p>
+                  <p className="text-gray-400 text-sm mb-4 relative z-10">Help the loopOut community find the best professionals.</p>
                   <button className="w-full py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl font-bold hover:bg-white/20 transition-colors relative z-10">
                     Give Feedback
                   </button>

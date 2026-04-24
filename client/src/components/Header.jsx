@@ -72,7 +72,7 @@ import { Sparkles } from 'lucide-react';
 export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchType, setSearchType] = useState('properties');
+  const [searchType, setSearchType] = useState('all');
   const [showSearch, setShowSearch] = useState(false);
   const [searchHistory, setSearchHistory] = useState(() => getSearchHistory());
   const [suggestions, setSuggestions] = useState([]);
@@ -169,7 +169,7 @@ export default function Header() {
 
           if (Notification.permission === 'granted' && document.hidden) {
             const latest = data.notifications?.[0];
-            new Notification(latest?.title || 'LoopOut Alert', {
+            new Notification(latest?.title || 'loopOut Alert', {
               body: latest?.message || 'You have a new notification',
               icon: '/favicon.ico'
             });
@@ -462,6 +462,70 @@ export default function Header() {
     hiddenBottomNavRoutes.includes(location.pathname) || 
     hiddenBottomNavPrefixes.some(prefix => location.pathname.startsWith(prefix));
 
+  const profileMenuContent = (
+    <div className="flex flex-col">
+      {currentUser ? (
+        <>
+          {/* User Header */}
+          <div
+            className="p-6 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 rounded-[2.2rem] mb-4 flex items-center cursor-pointer shadow-xl"
+            onClick={() => handleNavigate('/profile')}
+          >
+            <div className="relative flex-shrink-0">
+               <img
+                 src={currentUser.avatar}
+                 className="w-14 h-14 rounded-full object-cover border-2 border-rose-500 p-0.5"
+                 alt="Profile"
+               />
+               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-black rounded-full" />
+            </div>
+            <div className="flex-1 min-w-0">
+               <div className="flex items-center gap-2">
+                  <p className="text-lg font-black text-white truncate">{currentUser.username}</p>
+                  <CheckBadgeIcon className="w-5 h-5 text-blue-500" />
+               </div>
+               <div className="flex items-center gap-1.5">
+                 <span className="text-[10px] text-rose-500 font-bold uppercase tracking-[0.2em]">ELITE USER</span>
+               </div>
+            </div>
+            <ChevronRightIcon className="w-5 h-5 text-gray-500 hover:text-white transition-colors" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {MASTER_COMMANDS.map((cmd) => (
+              <button
+                key={cmd.label}
+                onClick={() => handleNavigate(cmd.route)}
+                className="flex flex-col items-start gap-2 p-4 bg-gray-50 hover:bg-rose-50/50 rounded-[2rem] transition-a border border-transparent hover:border-rose-100/50"
+              >
+                <div className={`p-2.5 ${cmd.color} text-white rounded-2xl shadow-lg transition-transform hover:rotate-12`}>
+                  {cmd.icon}
+                </div>
+                <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest truncate w-full text-left">{cmd.label.split(' ')[0]} {cmd.label.split(' ')[1] || ''}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="h-[1px] bg-gray-50 mb-4" />
+
+          <div className="sticky bottom-0 bg-white pt-2 pb-4 mt-2 border-t border-gray-50 -mx-4 px-4">
+            <button 
+              onClick={handleSignOut}
+              className="w-full py-4 text-center text-xs font-black uppercase text-gray-500 hover:text-rose-600 transition-colors tracking-[0.25em] bg-gray-50 rounded-2xl hover:bg-rose-50"
+            >
+              Sign out
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="p-4 space-y-3">
+           <button onClick={() => handleNavigate('/sign-in')} className="w-full py-5 bg-gray-950 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-2xl hover:bg-black transition-all">Sign In</button>
+           <button onClick={() => handleNavigate('/sign-up')} className="w-full py-5 border-2 border-gray-100 text-gray-900 rounded-[2rem] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">Create Account</button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <>
       {/* Floating Glass Header - Matches Bottom Dock Aesthetic */}
@@ -497,7 +561,7 @@ export default function Header() {
                   <BrandIcon className="w-12 h-12 relative z-10 transition-transform group-hover:rotate-[15deg] duration-700 ease-out" />
                 </div>
                 <div className="hidden lg:block">
-                  <h1 className="text-2xl font-black tracking-tighter text-gray-900 leading-none">ONMANCHA</h1>
+                  <h1 className="text-2xl font-black tracking-tighter text-gray-900 leading-none">loopOut</h1>
                   <div className="flex items-center gap-2 mt-1">
                     <div className="h-[1px] w-4 bg-rose-500/50" />
                     <span className="text-[9px] font-black text-rose-600 uppercase tracking-[0.3em] leading-none">Neural Hub</span>
@@ -657,69 +721,9 @@ export default function Header() {
                     initial={{ opacity: 0, scale: 0.95, y: 15 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                    className="absolute rounded-[2.5rem] shadow-[0_45px_100px_-20px_rgba(0,0,0,0.4)] w-[360px] bg-white right-0 top-16 border border-gray-100 p-4 z-[60] max-h-[85vh] overflow-y-auto scrollbar-hide"
+                    className="hidden md:block absolute rounded-[2.5rem] shadow-[0_45px_100px_-20px_rgba(0,0,0,0.4)] w-[360px] bg-white right-0 top-16 border border-gray-100 p-4 z-[60] max-h-[85vh] overflow-y-auto scrollbar-hide pb-4"
                   >
-                    <div className="flex flex-col">
-                      {currentUser ? (
-                        <>
-                          {/* User Header */}
-                          <div
-                            className="p-6 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 rounded-[2.2rem] mb-4 flex items-center cursor-pointer shadow-xl"
-                            onClick={() => handleNavigate('/profile')}
-                          >
-                            <div className="relative flex-shrink-0">
-                               <img
-                                 src={currentUser.avatar}
-                                 className="w-14 h-14 rounded-full object-cover border-2 border-rose-500 p-0.5"
-                                 alt="Profile"
-                               />
-                               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-black rounded-full" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                               <div className="flex items-center gap-2">
-                                  <p className="text-lg font-black text-white truncate">{currentUser.username}</p>
-                                  <CheckBadgeIcon className="w-5 h-5 text-blue-500" />
-                               </div>
-                               <div className="flex items-center gap-1.5">
-                                 <span className="text-[10px] text-rose-500 font-bold uppercase tracking-[0.2em]">ELITE USER</span>
-                               </div>
-                            </div>
-                            <ChevronRightIcon className="w-5 h-5 text-gray-500 hover:text-white transition-colors" />
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-3 mb-4">
-                            {MASTER_COMMANDS.map((cmd) => (
-                              <button
-                                key={cmd.label}
-                                onClick={() => handleNavigate(cmd.route)}
-                                className="flex flex-col items-start gap-2 p-4 bg-gray-50 hover:bg-rose-50/50 rounded-[2rem] transition-a border border-transparent hover:border-rose-100/50"
-                              >
-                                <div className={`p-2.5 ${cmd.color} text-white rounded-2xl shadow-lg transition-transform hover:rotate-12`}>
-                                  {cmd.icon}
-                                </div>
-                                <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest truncate w-full text-left">{cmd.label.split(' ')[0]} {cmd.label.split(' ')[1] || ''}</span>
-                              </button>
-                            ))}
-                          </div>
-
-                          <div className="h-[1px] bg-gray-50 mb-4" />
-
-                          <div className="sticky bottom-0 bg-white pt-2 pb-4 mt-2 border-t border-gray-50 -mx-4 px-4">
-                            <button 
-                              onClick={handleSignOut}
-                              className="w-full py-4 text-center text-xs font-black uppercase text-gray-500 hover:text-rose-600 transition-colors tracking-[0.25em] bg-gray-50 rounded-2xl hover:bg-rose-50"
-                            >
-                              Sign out
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="p-4 space-y-3">
-                           <button onClick={() => handleNavigate('/sign-in')} className="w-full py-5 bg-gray-950 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-2xl hover:bg-black transition-all">Sign In</button>
-                           <button onClick={() => handleNavigate('/sign-up')} className="w-full py-5 border-2 border-gray-100 text-gray-900 rounded-[2rem] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">Create Account</button>
-                        </div>
-                      )}
-                    </div>
+                    {profileMenuContent}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -756,6 +760,30 @@ export default function Header() {
       </motion.header>
     )}
 
+    {/* User Profile Dropdown - Mobile Bottom Sheet */}
+    <AnimatePresence>
+      {showProfileDropdown && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowProfileDropdown(false)}
+            className="md:hidden fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[1000] top-0 left-0"
+          />
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'tween', duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="md:hidden fixed bottom-0 left-0 right-0 w-full bg-white rounded-t-[2.5rem] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.3)] border-t border-gray-100 p-6 z-[1001] max-h-[85vh] overflow-y-auto scrollbar-hide pb-24"
+          >
+            {profileMenuContent}
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+
     {/* Full Screen Elite Search Modal - Airbnb Style */}
     <AnimatePresence>
       {showSearch && (
@@ -771,17 +799,17 @@ export default function Header() {
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            transition={{ type: 'tween', duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             className="search-container fixed inset-0 bg-gray-50 z-[1001] flex flex-col md:max-w-md md:left-auto md:right-0 md:shadow-2xl overflow-hidden"
           >
             <div className="flex-shrink-0 bg-white px-6 pt-12 pb-4 flex items-center justify-between">
               <div className="flex gap-8 overflow-x-auto scrollbar-hide py-2">
                 {[
+                  { id: 'all', label: 'Universe', icon: Sparkles, color: 'rose' },
                   { id: 'properties', label: 'Homes', icon: HomeIcon, color: 'rose' },
                   { id: 'events', label: 'Experiences', icon: MagnifyingGlassIcon, color: 'rose' },
                   { id: 'services', label: 'Services', icon: UserGroupIcon, color: 'rose' },
-                  { id: 'helpers', label: 'Helpers', icon: BriefcaseIcon, color: 'rose' },
-                  { id: 'looking-for', label: 'Needs', icon: Sparkles, color: 'rose', path: '/looking-for' }
+                  { id: 'helpers', label: 'Helpers', icon: BriefcaseIcon, color: 'rose' }
                 ].map((item) => {
                   const Icon = item.icon;
                   const isActive = searchType === item.id;

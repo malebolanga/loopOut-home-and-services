@@ -1290,8 +1290,8 @@ export default function Profile() {
                         <div className="p-4 bg-gray-50 rounded-xl">
                           <div className="flex items-center justify-between mb-2">
                              <div>
-                                <p className="font-medium text-[#484848]">LoopOut Contact Access</p>
-                                <p className="text-sm text-[#767676] mt-1">Allow LoopOut to sync your contacts for easy connections</p>
+                                <p className="font-medium text-[#484848]">loopOut Contact Access</p>
+                                <p className="text-sm text-[#767676] mt-1">Allow loopOut to sync your contacts for easy connections</p>
                              </div>
                              <ToggleSwitch enabled={accessContacts} setEnabled={setAccessContacts} />
                           </div>

@@ -263,7 +263,7 @@ const UserProfile = () => {
                       </div>
                       <div className="flex flex-col">
                         <span className="text-gray-900 font-bold leading-tight truncate max-w-[150px]">
-                          {userData.location || 'LoopOut Member'}
+                          {userData.location || 'loopOut Member'}
                         </span>
                         <span className="text-[10px] opacity-60 uppercase">Primary Base</span>
                       </div>
@@ -305,7 +305,7 @@ const UserProfile = () => {
                 <div className="md:col-span-2">
                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Host Story</h3>
                    <p className="text-gray-600 leading-relaxed font-medium">
-                    {userData.bio || 'This LoopOut partner prefers to let their creations speak for themselves. Reach out to learn more about their journey.'}
+                    {userData.bio || 'This loopOut partner prefers to let their creations speak for themselves. Reach out to learn more about their journey.'}
                   </p>
                 </div>
                 
@@ -543,7 +543,7 @@ const UserProfile = () => {
                            <h3 className="font-extrabold text-gray-900 text-lg mb-1 leading-tight line-clamp-2">{item.name || item.title}</h3>
                            <p className="text-gray-400 text-xs font-semibold flex items-center gap-1">
                             <MapPinIcon className="w-3.5 h-3.5 text-rose-500" />
-                            {item.address || item.location || 'LoopOut Community'}
+                            {item.address || item.location || 'loopOut Community'}
                           </p>
                         </div>
                         
@@ -662,7 +662,7 @@ const UserProfile = () => {
                        <h3 className="text-xl font-black tracking-tight text-gray-900">Partner Bio</h3>
                        <div className="prose prose-rose">
                           <p className="text-gray-600 leading-relaxed font-medium">
-                            {userData.bio || "No detailed autobiographical data available for this LoopOut partner. We recommend messaging the host directly for more specific inquiries about their experience or vision."}
+                            {userData.bio || "No detailed autobiographical data available for this loopOut partner. We recommend messaging the host directly for more specific inquiries about their experience or vision."}
                           </p>
                        </div>
                     </section>
@@ -709,7 +709,7 @@ const UserProfile = () => {
                     />
                     <div className="flex-1">
                       <p className="font-bold text-gray-900 hover:text-rose-600 transition-colors">{user.username}</p>
-                      <p className="text-xs text-gray-400 line-clamp-1 font-medium">{user.bio || 'LoopOut Member'}</p>
+                      <p className="text-xs text-gray-400 line-clamp-1 font-medium">{user.bio || 'loopOut Member'}</p>
                     </div>
                     <ChevronRightIcon className="w-5 h-5 text-gray-300 hover:text-rose-400 transition-colors" />
                   </Link>

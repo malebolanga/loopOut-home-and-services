@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import { verifyToken } from '../utils/verifyUser.js';
 import Notification from '../models/notification.model.js';
 
@@ -7,25 +8,40 @@ const router = express.Router();
 // Get all notifications for current user
 router.get('/', verifyToken, async(req, res) => {
     try {
-        const notifications = await Notification.find({ userId: req.user.id })
-            .sort({ createdAt: -1 })
-            .limit(20);
+        console.log('[NOTIF] Fetching for user:', req.user?.id);
+        
+        if (!req.user || !req.user.id) {
+            console.error('[NOTIF] Error: req.user.id is missing');
+            return res.status(401).json({ success: false, message: 'Unauthorized: No user ID in token' });
+        }
 
-        const unreadCount = await Notification.countDocuments({
-            userId: req.user.id,
-            read: false
-        });
+        // Check if database is connected
+        if (mongoose.connection.readyState !== 1) {
+            console.error('[NOTIF] Error: Database not connected. State:', mongoose.connection.readyState);
+            return res.status(503).json({ success: false, message: 'Database connecting, please retry' });
+        }
+
+        const userId = req.user.id;
+
+        // Use Promise.all to fetch both in parallel
+        const [notifications, unreadCount] = await Promise.all([
+            Notification.find({ userId }).sort({ createdAt: -1 }).limit(20).lean(),
+            Notification.countDocuments({ userId, read: false })
+        ]);
+
+        console.log(`[NOTIF] Found ${notifications.length} notifications (${unreadCount} unread)`);
 
         res.json({
             notifications,
             unreadCount
         });
     } catch (error) {
-        console.error('SERVER ERROR STACK (Notifications):', error.stack || error);
+        console.error('[NOTIF] CRITICAL SERVER ERROR:', error);
         res.status(500).json({ 
             success: false,
-            message: 'Internal server error',
-            error: error.message 
+            message: 'Notification service error',
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });
@@ -33,22 +49,25 @@ router.get('/', verifyToken, async(req, res) => {
 // Mark notifications as read
 router.post('/read', verifyToken, async(req, res) => {
     try {
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
         const { notificationId } = req.body;
+        const userId = req.user.id;
 
         if (notificationId) {
-            // Mark single notification as read
-            await Notification.findOneAndUpdate({ _id: notificationId, userId: req.user.id }, { read: true });
+            await Notification.findOneAndUpdate({ _id: notificationId, userId }, { read: true });
         } else {
-            // Mark all notifications as read
-            await Notification.updateMany({ userId: req.user.id, read: false }, { read: true });
+            await Notification.updateMany({ userId, read: false }, { read: true });
         }
 
         res.json({ success: true });
     } catch (error) {
-        console.error('SERVER ERROR STACK (MarkRead):', error.stack || error);
+        console.error('[NOTIF] Mark Read Error:', error);
         res.status(500).json({ 
             success: false,
-            message: 'Internal server error',
+            message: 'Failed to update notifications',
             error: error.message 
         });
     }

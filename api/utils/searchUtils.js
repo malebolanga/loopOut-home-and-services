@@ -73,7 +73,7 @@ export const generateSuggestions = (query, type = 'properties', history = []) =>
     if (type && typeof type === 'string' && type !== 'all') {
       const typeLabels = {
         properties: ['apartment', 'house', 'rent', 'sale', 'property', 'home', 'flat', 'villa'],
-        services: ['cleaning', 'repair', 'maintenance', 'service', 'plumbing', 'electrician', 'gardening'],
+        services: ['cleaning', 'handyman', 'repair', 'maintenance', 'service', 'plumbing', 'electrician', 'gardening'],
         helpers: ['helper', 'assistant', 'cleaner', 'driver', 'chef', 'tutor', 'babysitter'],
         events: ['event', 'concert', 'festival', 'party', 'meeting', 'show', 'exhibition']
       };

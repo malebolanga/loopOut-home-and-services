@@ -174,6 +174,11 @@ export const getHostBookings = async (req, res) => {
 export const getUserBookings = async (req, res) => {
   try {
     const { userId } = req.params;
+    
+    if (!userId || userId === 'undefined' || userId === 'null') {
+      return res.status(400).json({ error: 'Valid User ID is required' });
+    }
+
     const bookings = await Booking.find({ user: userId })
       .populate('listing')
       .populate('helper')

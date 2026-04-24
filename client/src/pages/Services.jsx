@@ -40,7 +40,8 @@ import {
   BriefcaseIcon,
   TrophyIcon,
   DocumentTextIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  UsersIcon
 } from '@heroicons/react/24/outline';
 import { Sparkles } from 'lucide-react';
 import { 
@@ -673,7 +674,7 @@ const ServicePage = () => {
     if (declineLink) message += `❌ *DECLINE BOOKING:*\n${declineLink}\n\n`;
 
     message += `🔐 *Verification Code:* ${verificationCode}\n`;
-    message += `_Powered by LoopOut Platform_`;
+    message += `_Powered by loopOut Platform_`;
 
     return { 
       url: `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`,

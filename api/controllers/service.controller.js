@@ -161,7 +161,7 @@ export const getServices = async (req, res, next) => {
       // ✅ UPDATED: Include carwash in default filter
       type = {
         $in: [
-          'cleaning', 'maintenance', 'moving', 'landscaping',
+          'cleaning', 'handyman', 'maintenance', 'moving', 'landscaping',
           'catering', 'other', 'daycare', 'schoolTransport', 'carwash'
         ]
       };

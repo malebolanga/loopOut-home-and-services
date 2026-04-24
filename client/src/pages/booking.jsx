@@ -44,7 +44,7 @@ export default function Booking({ listing = {} }) {
       message += `*━━━━━━━━━━━━━━━━━━━━*\n`;
       message += `📍 *PROPERTY OVERVIEW*\n`;
       message += `*━━━━━━━━━━━━━━━━━━━━*\n`;
-      message += `🏠 *Property:* ${listing?.name || "LoopOut Listing"}\n`;
+      message += `🏠 *Property:* ${listing?.name || "loopOut Listing"}\n`;
       if (listing?.address) {
         message += `📍 *Location:* ${listing.address}\n`;
         message += `🗺️ *View Map:* ${mapLink}\n`;
@@ -66,7 +66,7 @@ export default function Booking({ listing = {} }) {
       message += `❌ *UNAVAILABLE:* https://wa.me/${cleanedClientContact}?text=${encodeURIComponent(declineMessage)}\n\n`;
 
       message += `*Verification Code:* ${verificationCode}\n`;
-      message += `_Sent via LoopOut Premium Platform_`;
+      message += `_Sent via loopOut Premium Platform_`;
 
       const whatsappUrl = `https://wa.me/${cleanedHostContact}?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, '_blank');

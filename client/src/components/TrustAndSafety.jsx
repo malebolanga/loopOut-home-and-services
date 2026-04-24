@@ -170,7 +170,7 @@ const TrustAndSafety = () => {
                   <div className="p-8 bg-gray-950 rounded-[2.5rem] text-white">
                      <DocumentCheckIcon className="w-10 h-10 text-rose-500 mb-6" />
                      <h4 className="text-xl font-black mb-3 italic tracking-tighter text-white">The Guarantee.</h4>
-                     <p className="text-gray-400 text-sm leading-relaxed">LoopOut ensures that every stay and service meets our high-fidelity quality protocols or your financial commitment is protected.</p>
+                     <p className="text-gray-400 text-sm leading-relaxed">loopOut ensures that every stay and service meets our high-fidelity quality protocols or your financial commitment is protected.</p>
                   </div>
                   <div className="p-8 bg-white border border-gray-100 rounded-[2.5rem] shadow-xl">
                      <ExclamationCircleIcon className="w-10 h-10 text-rose-500 mb-6" />

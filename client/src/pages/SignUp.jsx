@@ -243,7 +243,7 @@ export default function SignUp() {
                                 Mutual Friends Access
                             </span>
                             <p className="text-xs text-gray-400 mt-1 leading-relaxed">
-                                Allow LoopOut to access your contacts to find mutual friends. 
+                                Allow loopOut to access your contacts to find mutual friends. 
                                 This helps verify helpers and increases trust in bookings.
                             </p>
                         </div>
