@@ -179,16 +179,16 @@ const SERVICE_CONFIG = {
     ]
   },
 
-  // Maintenance Services
-  maintenance: {
-    title: 'Home Repair',
+  // Handyman Services
+  handyman: {
+    title: 'Handyman Service',
     icon: <FaWrench />,
     description: `Expert home maintenance and repair services including plumbing, electrical, painting, and general handyman work.`,
     options: [
       { id: 'plumbing', name: 'Plumbing Services', description: 'Repairs and installations', duration: '1-3 hours', price: 'R450', popular: true, icon: <FaTools /> },
       { id: 'electrical', name: 'Electrical Work', description: 'Certified electrician services', duration: '1-4 hours', price: 'R550', popular: true, icon: <FaTools /> },
       { id: 'painting', name: 'Painting', description: 'Interior and exterior', duration: 'Custom', price: 'R35/sqm', popular: false, icon: <FaPalette /> },
-      { id: 'handyman', name: 'General Handyman', description: 'Odd jobs and repairs', duration: 'Hourly', price: 'R300/hour', popular: true, icon: <FaWrench /> }
+      { id: 'handyman-jobs', name: 'General Handyman', description: 'Odd jobs and repairs', duration: 'Hourly', price: 'R300/hour', popular: true, icon: <FaWrench /> }
     ],
     highlights: [
       { icon: <FaShieldAlt />, title: 'Licensed', desc: 'Certified professionals' },
@@ -197,7 +197,7 @@ const SERVICE_CONFIG = {
   },
 
   // Car Wash Services
-  carWash: {
+  carwash: {
     title: 'Car Detailing',
     icon: <FaCar />,
     description: `Premium car wash and detailing using high-quality, eco-friendly products. From sedans to trucks - exterior wash, interior detailing, waxing, and paint protection.`,
@@ -213,6 +213,23 @@ const SERVICE_CONFIG = {
       { icon: <FaLeaf />, title: 'Eco-Friendly', desc: 'Water-wise washing' }
     ],
     requiresVehicleType: true
+  },
+
+  // Daily Loop Services
+  daily: {
+    title: 'Daily Loop',
+    icon: <Sparkles className="w-6 h-6" />,
+    description: `Daily essential chores and tasks made easy. From grocery shopping to pharmacy runs, we take care of your daily routine.`,
+    options: [
+      { id: 'grocery-run', name: 'Grocery Run', description: 'Shopping and delivery', duration: '1-2 hours', price: 'R150', popular: true, icon: <FaUtensils /> },
+      { id: 'pharmacy-drop', name: 'Pharmacy Drop', description: 'Medicine collection', duration: '1 hour', price: 'R100', popular: true, icon: <FaShieldAlt /> },
+      { id: 'laundry-service', name: 'Laundry', description: 'Wash, dry, and fold', duration: '24 hours', price: 'R250', popular: false, icon: <FaBus /> },
+      { id: 'other-chores', name: 'General Chores', description: 'Custom daily tasks', duration: 'Flexible', price: 'R200/hour', popular: false, icon: <FaClock /> }
+    ],
+    highlights: [
+      { icon: <FaClock />, title: 'Same Day', desc: 'Fast turnaround' },
+      { icon: <FaShieldAlt />, title: 'Trusted', desc: 'Verified handlers' }
+    ]
   }
 };
 

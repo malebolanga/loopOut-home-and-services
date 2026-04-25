@@ -384,6 +384,38 @@ const TOP_CATEGORIES = [
     emoji: '🍼'
   },
   {
+    id: 'catering',
+    name: 'Catering',
+    image: 'https://images.unsplash.com/photo-1555244162-803834f70033?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '345',
+    color: 'from-orange-500 to-amber-500',
+    emoji: '🍱'
+  },
+  {
+    id: 'schoolTransport',
+    name: 'School Transport',
+    image: 'https://images.unsplash.com/photo-1556316301-38e938166c30?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '234',
+    color: 'from-yellow-500 to-orange-400',
+    emoji: '🚌'
+  },
+  {
+    id: 'daycare',
+    name: 'Daycare Centers',
+    image: 'https://images.unsplash.com/photo-1543333995-a78aea2353cf?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '156',
+    color: 'from-pink-500 to-rose-400',
+    emoji: '🧸'
+  },
+  {
+    id: 'daily',
+    name: 'Daily Loop',
+    image: 'https://plus.unsplash.com/premium_photo-1664371457497-28005391697a?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    count: '890',
+    color: 'from-emerald-500 to-green-400',
+    emoji: '🔄'
+  },
+  {
     id: 'trending',
     name: 'Trending',
     image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?fm=jpg&q=60&w=800&auto=format&fit=crop',
@@ -814,7 +846,7 @@ const TopCategoriesSection = ({ navigate }) => {
 
   const handleCategoryClick = (category) => {
     const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner', 'nanny'];
-    const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician','handyman'];
+    const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician','handyman', 'catering', 'schoolTransport', 'daily', 'daycare'];
     const properties = ['rental', 'guesthouse'];
     const needs = ['roommate', 'nanny-need'];
 
