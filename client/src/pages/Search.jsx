@@ -97,6 +97,7 @@ const ALL_CATEGORIES = [
   { id: 'nail', label: 'Nail Services', type: 'helpers', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Manicure & pedicure' },
   { id: 'chef', label: 'Private Chef', type: 'helpers', icon: BriefcaseIcon, color: 'bg-amber-100 text-amber-800', description: 'Personal cooking' },
   { id: 'barber', label: 'Barber', type: 'helpers', icon: ScissorsIcon, color: 'bg-sky-100 text-sky-800', description: 'Men\'s grooming' },
+  { id: 'nanny', label: 'Nanny', type: 'helpers', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Childcare assistance' },
 
   // Transport
   { id: 'transport', label: 'Transport', type: 'services', icon: TruckIcon, color: 'bg-blue-100 text-blue-800', description: 'Transportation services' },

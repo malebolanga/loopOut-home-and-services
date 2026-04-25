@@ -2045,9 +2045,9 @@ const MobileAppHomepage = ({
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.05 }}
                 onClick={() => {
-                  const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner'];
-                  const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician','handyman'];
-                  const properties = ['rental', 'guesthouse', 'sale', 'overnight'];
+                  const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner', 'barber', 'hair', 'nails', 'massage', 'chef', 'tattoo', 'nanny'];
+                  const services = ['baker', 'carwash', 'photograph', 'transport', 'landscaping', 'electrician','handyman', 'catering', 'schoolTransport', 'daycare', 'daily', 'delivery', 'usedbooks'];
+                  const properties = ['rental', 'guesthouse', 'sale', 'overnight', 'vacation', 'office', 'land'];
 
                   if (helpers.includes(category.id)) {
                     navigate(`/search?category=${category.id}&type=helpers`);

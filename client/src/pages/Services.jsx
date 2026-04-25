@@ -41,7 +41,7 @@ import {
   TrophyIcon,
   DocumentTextIcon,
   ArrowPathIcon,
-  UsersIcon
+  UserGroupIcon
 } from '@heroicons/react/24/outline';
 import { Sparkles } from 'lucide-react';
 import { 
@@ -1122,7 +1122,7 @@ const ServicePage = () => {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <UsersIcon className="w-6 h-6 text-gray-400 mt-1" />
+                  <UserGroupIcon className="w-6 h-6 text-gray-400 mt-1" />
                   <div>
                     <h3 className="font-semibold text-gray-900">Notable Clientele</h3>
                     <p className="text-gray-600 text-sm mt-1">Trusted by repeat customers</p>

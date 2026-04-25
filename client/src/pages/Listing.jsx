@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 /* eslint-disable react/prop-types */
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Zoom, Thumbs, Pagination, FreeMode } from "swiper/modules";
@@ -127,7 +127,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
     breakfast: false,
     specialRequests: '',
     pets: false,
-    children: 0,
+    childGuests: 0,
     selectedDate: '',
     startTime: '09:00',
     endTime: '17:00'
@@ -492,7 +492,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
         breakfast: false,
         specialRequests: '',
         pets: false,
-        children: 0,
+        childGuests: 0,
         selectedDate: '',
         startTime: '09:00',
         endTime: '17:00'
@@ -722,8 +722,8 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                       Children
                     </label>
                     <select
-                      name="children"
-                      value={bookingDetails.children}
+                      name="childGuests"
+                      value={bookingDetails.childGuests}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                     >
