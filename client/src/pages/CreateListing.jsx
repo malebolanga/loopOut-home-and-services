@@ -28,7 +28,6 @@ import {
   ShieldCheckIcon,
   ExclamationTriangleIcon,
   KeyIcon,
-  UsersIcon,
   HeartIcon,
   BeakerIcon,
   BookOpenIcon,
