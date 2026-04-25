@@ -9,7 +9,6 @@ import { app } from "../firebase";
 import { useWishlist } from '../hooks/useWishlist';
 import { Link } from "react-router-dom";
 import {
-  MapPinIcon,
   StarIcon,
   HomeIcon,
   UserIcon,
@@ -41,6 +40,8 @@ import {
   ChatBubbleLeftRightIcon,
   ArrowUpIcon,
   ArrowDownIcon,
+  PlusCircleIcon,
+  MapPinIcon,
   CheckIcon
 } from '@heroicons/react/24/outline';
 import { 
@@ -109,15 +110,29 @@ export default function HelperPage() {
   const [ratings, setRatings] = useState({ cleanliness: 0, communication: 0, overall: 0 });
   const [topComments, setTopComments] = useState([]);
   const [similarHelpers, setSimilarHelpers] = useState([]);
+  const [bookingSummary, setBookingSummary] = useState({ count: 0, recentBookers: [] });
 
   const RECENTLY_VIEWED_KEY = 'recentlyViewed';
 
   useEffect(() => {
     if (helper) {
       fetchSimilarHelpers();
+      fetchBookingSummary();
       saveToHistory(helper);
     }
   }, [helper]);
+
+  const fetchBookingSummary = async () => {
+    try {
+      const res = await fetch(`/api/bookings/helper-summary/${helper._id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBookingSummary(data);
+      }
+    } catch (error) {
+      console.error('Error fetching booking summary:', error);
+    }
+  };
 
   const fetchSimilarHelpers = async () => {
     try {
@@ -1569,46 +1584,46 @@ export default function HelperPage() {
     const locationInfo = handleLocationInfo(bookingData, helper);
 
     let message = `*📅 QUICK BOOKING REQUEST*%0A`;
-    message += `*For:* ${helper.name} (${getProfessionalTitle(helper.type)})%0A%0A`;
-
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
     message += `*👤 CLIENT DETAILS*%0A`;
-    message += `• Name: ${bookingData.name}%0A`;
-    message += `• Phone: ${bookingData.phone || 'Not provided'}%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `👤 *Name:* ${bookingData.name}%0A`;
+    message += `📞 *Phone:* ${bookingData.phone || 'Not provided'}%0A`;
+    if (bookingData.date) message += `📅 *Date:* ${bookingData.date}%0A`;
+    if (bookingData.time) message += `⏰ *Time:* ${bookingData.time}%0A%0A`;
 
-    if (bookingData.date) message += `• Date: ${bookingData.date}%0A`;
-    if (bookingData.time) message += `• Time: ${bookingData.time}%0A`;
-
-    message += `%0A*📍 LOCATION DETAILS*%0A`;
-    message += `• Type: ${locationInfo.displayName}%0A`;
-    if (locationInfo.address) {
-      message += `• Address: ${locationInfo.address}%0A`;
-      const mapLink = generateMapLink(locationInfo.address);
-      if (mapLink) {
-        message += `• Open in Maps: ${mapLink}%0A`;
-      }
-    }
-
-    message += `%0A*💼 SERVICE SUMMARY*%0A`;
-    
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `*💼 SERVICE SUMMARY*%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `⚒️ *Provider:* ${helper.name}%0A`;
     if (bookingData.selectedServices.length > 0) {
       bookingData.selectedServices.forEach(id => {
         const s = serviceOptions.find(opt => opt.id === id);
         if (s) {
-          message += `• ${s.name}: R${s.price}%0A`;
+          message += `📜 *${s.name}:* R${s.price}%0A`;
         } else {
-          message += `• ${id}%0A`;
+          message += `📜 *${id}*%0A`;
         }
       });
-      message += `• *TOTAL PRICE: R${totalPrice}*%0A`;
-    } else {
-      message += `• Base Price: R${helper.regularPrice}%0A`;
-      message += `• *TOTAL PRICE: R${totalPrice}*%0A`;
     }
+    message += `💵 *TOTAL: R${totalPrice}*%0A%0A`;
 
-    message += `%0A*⚡ QUICK ACTIONS*%0A`;
-    message += `Please tap a link below to respond to ${bookingData.name}:%0A%0A`;
-    if (acceptLink) message += `✅ *ACCEPT BOOKING:*%0A${acceptLink}%0A%0A`;
-    if (declineLink) message += `❌ *DECLINE BOOKING:*%0A${declineLink}%0A%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `*📍 LOCATION*%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `📌 *Type:* ${locationInfo.displayName}%0A`;
+    if (locationInfo.address) {
+      message += `🏠 *Address:* ${locationInfo.address}%0A`;
+      const mapLink = generateMapLink(locationInfo.address);
+      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
+    }
+    message += `%0A`;
+
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `*⚡ QUICK ACTIONS*%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    if (acceptLink) message += `✅ *ACCEPT:*%0A${acceptLink}%0A%0A`;
+    if (declineLink) message += `❌ *REJECT:*%0A${declineLink}%0A%0A`;
 
     message += `_Sent via loopOut_`;
 
@@ -1783,8 +1798,8 @@ export default function HelperPage() {
     message += `━━━━━━━━━━━━━━━━━━━━\n`;
     message += `*⚡ QUICK ACTIONS*\n`;
     message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    if (acceptLink) message += `✅ *ACCEPT BOOKING:*\n${acceptLink}\n\n`;
-    if (declineLink) message += `❌ *DECLINE BOOKING:*\n${declineLink}\n\n`;
+    if (acceptLink) message += `✅ *ACCEPT:*\n${acceptLink}\n\n`;
+    if (declineLink) message += `❌ *REJECT:*\n${declineLink}\n\n`;
 
     message += `🔐 *Verification Code:* ${verificationCode}\n`;
     message += `_Sent via loopOut_`;
@@ -2087,7 +2102,7 @@ export default function HelperPage() {
                 <div key={`empty-${i}`} className="bg-slate-800 h-full" />
               ))}
             </div>
-            <button onClick={() => openFullScreenGallery(0)} className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50 z-10">
+            <button onClick={() => openFullScreenGallery(0)} className="absolute top-28 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50 z-20">
               <Squares2X2Icon className="w-4 h-4" /> Show all {helper.imageUrls.length} photos
             </button>
           </div>
@@ -2115,10 +2130,17 @@ export default function HelperPage() {
               <span className="font-black uppercase tracking-widest text-[10px]">Superhelper</span>
             </div>
             <span className="text-slate-300">·</span>
+            <div className="flex items-center gap-2 text-slate-700">
+              <PlusCircleIcon className="text-indigo-500 w-4 h-4" />
+              <span className="font-black uppercase tracking-widest text-[10px]">Booked {bookingSummary.count || 0} times</span>
+            </div>
+            <span className="text-slate-300">·</span>
             <div className="flex items-center gap-2 text-slate-700 underline font-black uppercase tracking-widest text-[10px] cursor-pointer hover:text-slate-900 transition-colors">
               <MapPinIcon className="text-slate-400 w-4 h-4" />
               <span>{helper.address || 'Johannesburg, South Africa'}</span>
             </div>
+            <span className="text-slate-300">·</span>
+            <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} />
           </div>
         </div>
 
@@ -2519,6 +2541,7 @@ export default function HelperPage() {
               </div>
             </div>
           </div>
+        </div>
 
         {/* Mutual Connections Section */}
         <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
@@ -2529,7 +2552,47 @@ export default function HelperPage() {
           <div className="bg-white rounded-[2rem] p-8 border border-slate-200/60 shadow-sm">
             <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} detailed={true} />
           </div>
+
+        {/* Recent Bookers Section */}
+        {bookingSummary.recentBookers && bookingSummary.recentBookers.length > 0 && (
+          <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
+            <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter italic uppercase">
+              <CheckCircleIcon className="text-emerald-500 w-6 h-6" />
+              Intelligence Report: Recent Transmissions
+            </h2>
+            <div className="py-4 px-[2px] overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8 rounded-none">
+              <Swiper
+                spaceBetween={16}
+                slidesPerView="auto"
+                className="recent-bookers-swiper flex"
+                breakpoints={{
+                  320: { slidesPerView: 2.5, spaceBetween: 12 },
+                  640: { slidesPerView: 3.5, spaceBetween: 16 },
+                  768: { slidesPerView: 4.5, spaceBetween: 20 },
+                  1024: { slidesPerView: 5.5, spaceBetween: 24 }
+                }}
+              >
+                {bookingSummary.recentBookers.map((booker) => (
+                  <SwiperSlide key={booker._id} className="!w-auto px-[2px]">
+                    <Link to={`/user-profile/${booker._id}`} className="flex flex-col items-center gap-3">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-rose-500 rounded-full blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
+                        <img
+                          src={booker.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
+                          alt={booker.username}
+                          className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-0 border-white shadow-lg relative z-10 transition-transform duration-500 group-hover:scale-105"
+                        />
+                      </div>
+                    </Link>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
+          </div>
+        )}
         </div>
+
+
 
         {/* Similar Helpers */}
           {similarHelpers.length > 0 && (
@@ -2545,7 +2608,6 @@ export default function HelperPage() {
               </div>
             </div>
           )}
-        </div>
       </main>
 
       {/* Full Screen Gallery Overlay */}
@@ -2590,7 +2652,7 @@ export default function HelperPage() {
 
       {/* Full Page Booking Form Overlay */}
       {showBookingFormOverlay && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 z-[1200] flex items-center justify-center p-4 overflow-y-auto pb-24">
           <div className="bg-slate-50 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-slate-50 border-b border-gray-200 p-4 flex items-center justify-between">
               <button
@@ -3144,7 +3206,7 @@ export default function HelperPage() {
             </div>
           </div>
           <button
-            onClick={openBookingFormOverlay}
+            onClick={() => setShowBookingFormOverlay(true)}
             className="px-8 py-4 bg-slate-950 hover:bg-black text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
           >
             Review & Reserve

@@ -461,12 +461,33 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
     );
   }
 
+  const getItemPath = (item) => {
+    if (item.itemType === 'listing' || item.type === 'listing') return `/listing/${item._id}`;
+    if (item.itemType === 'event' || item.type === 'event') return `/event/${item._id}`;
+    
+    // Helper specific routes
+    if (item.itemType === 'helper') {
+      const specializedTypes = ['beauty', 'photography', 'carwash', 'barber', 'tattoo', 'chef'];
+      if (specializedTypes.includes(item.type)) return `/${item.type}/${item._id}`;
+      if (item.type === 'tutor') return `/privatetutor/${item._id}`;
+      return `/helper/${item._id}`;
+    }
+    
+    // Service specific routes
+    if (item.itemType === 'service') {
+      if (item.type === 'carwash') return `/carwash/${item._id}`;
+      return `/service/${item._id}`;
+    }
+    
+    return `/${item.type || 'helper'}/${item._id}`;
+  };
+
   if (viewMode === 'list') {
     return (
       <motion.div
          variants={cardVariants}
          className="relative bg-white rounded-3xl border border-gray-100 overflow-hidden flex items-center p-4 gap-6 hover:shadow-xl transition-all duration-500 cursor-pointer"
-         onClick={() => navigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`)}
+         onClick={() => navigate(getItemPath(item))}
       >
         <div className="w-40 h-40 rounded-2xl overflow-hidden flex-shrink-0">
            <ImageWithFallback src={getImage()} alt={getTitle()} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" />
@@ -502,7 +523,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
               <span className="text-xl font-black text-gray-900">{getPrice()}</span>
               <div className="flex items-center gap-3">
                  <button 
-                   onClick={(e) => { e.stopPropagation(); navigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`); }}
+                   onClick={(e) => { e.stopPropagation(); navigate(getItemPath(item)); }}
                    className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 transition-all active:scale-95 shadow-lg shadow-gray-100"
                  >
                    Inspect
@@ -529,7 +550,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       className="relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
-      onClick={() => navigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`)}
+      onClick={() => navigate(getItemPath(item))}
     >
       <div className="absolute inset-0 z-0">
         <ImageWithFallback
@@ -594,7 +615,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
               {item.votes?.down || 0}
             </div>
           </div>
-          <div className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl" onClick={(e) => { e.stopPropagation(); navigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`); }}>
+          <div className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl" onClick={(e) => { e.stopPropagation(); navigate(getItemPath(item)); }}>
             Inspect Original Masterpiece
           </div>
         </div>
@@ -832,28 +853,40 @@ const SearchPage = () => {
       const searchTerm = urlParams.get('searchTerm') || '';
       const minPrice = urlParams.get('minPrice');
       const maxPrice = urlParams.get('maxPrice');
-      const location = urlParams.get('location') || urlParams.get('address') || '';
+      const locationQ = urlParams.get('location') || urlParams.get('address') || '';
       const minRating = urlParams.get('minRating');
 
-      let endpoints = [];
-      if (type === 'all') {
-        endpoints = ['listing', 'service', 'helper', 'event'];
-      } else {
-        const config = SEARCH_TYPE_CONFIG[type];
-        if (config) endpoints = [config.endpoint];
-      }
+      const nearbyLocationsMap = {
+        'polokwane': 'seshego|mankweng|lebowakgomo|mokopane|tzaneen|turfloop|turf',
+        'turf': 'polokwane|seshego|mankweng|lebowakgomo|mokopane|tzaneen',
+        'turfloop': 'polokwane|seshego|mankweng|lebowakgomo|mokopane|tzaneen',
+        'soshanguve': 'pretoria|mabopane|garankuwa|hammanskraal|centurion|midrand|rosslyn',
+        'tembisa': 'kempton park|boksburg|midrand|edenvale|benoni|germiston|johannesburg|ivory park',
+        'pretoria': 'centurion|soshanguve|midrand|mamelodi|johannesburg|atteridgeville',
+        'johannesburg': 'sandton|randburg|midrand|soweto|roodepoort|kempton park|boksburg|alberton',
+        'cape town': 'bellville|stellenbosch|somerset west|durbanville|milnerton|guguletu|khayelitsha',
+        'durban': 'umhlanga|pinetown|westville|chatsworth|amanzimtoti|kwamashu|umlazi',
+        'mamelodi': 'pretoria|centurion|silverton|cullinan',
+        'soweto': 'johannesburg|langlaagte|roodepoort|krugersdorp'
+      };
 
-      const fetchPromises = endpoints.map(async (endpoint) => {
-        let url = `/api/${endpoint}/get?limit=${DEFAULT_LISTING_LIMIT}`;
-
-        if (searchTerm) url += `&searchTerm=${encodeURIComponent(searchTerm)}`;
-        if (location) {
-          if (endpoint === 'listing' || endpoint === 'helper') {
-            url += `&address=${encodeURIComponent(location)}`;
-          } else {
-            url += `&location=${encodeURIComponent(location)}`;
-          }
+      const fetchWithParams = async (currentLocation, currentSearchTerm) => {
+        let endpoints = [];
+        if (type === 'all') {
+          endpoints = ['listing', 'service', 'helper', 'event'];
+        } else {
+          const config = SEARCH_TYPE_CONFIG[type];
+          if (config) endpoints = [config.endpoint];
         }
+
+        const fetchPromises = endpoints.map(async (endpoint) => {
+          let url = `/api/${endpoint}/get?limit=${DEFAULT_LISTING_LIMIT}`;
+
+          if (currentSearchTerm) url += `&searchTerm=${encodeURIComponent(currentSearchTerm)}`;
+          if (currentLocation) {
+            // Send both address and location to ensure endpoints pick up the right one
+            url += `&address=${encodeURIComponent(currentLocation)}&location=${encodeURIComponent(currentLocation)}`;
+          }
 
         if (endpoint === 'listing') {
           if (minPrice) url += `&minPrice=${minPrice}`;
@@ -877,31 +910,53 @@ const SearchPage = () => {
           url += `&category=${subType}`;
         }
 
-        try {
-          const res = await fetch(url);
-          if (res.ok) {
-            const data = await res.json();
-            return data.map(item => ({
-              ...item,
-              itemType: endpoint,
-              subType: item.type || item.category || subType
-            }));
+          try {
+            const res = await fetch(url);
+            if (res.ok) {
+              const data = await res.json();
+              return data.map(item => ({
+                ...item,
+                itemType: endpoint,
+                subType: item.type || item.category || subType
+              }));
+            }
+          } catch (err) {
+            console.error(`Error fetching from ${endpoint}:`, err);
           }
-        } catch (err) {
-          console.error(`Error fetching from ${endpoint}:`, err);
+          return [];
+        });
+
+        const results = await Promise.all(fetchPromises);
+        let combinedResults = results.flat();
+
+        if (minRating) {
+          const ratingThreshold = parseFloat(minRating);
+          combinedResults = combinedResults.filter(item => (item.rating || 4.5) >= ratingThreshold);
         }
-        return [];
-      });
+        return combinedResults;
+      };
 
-      const results = await Promise.all(fetchPromises);
-      let combinedResults = results.flat();
-
-      if (minRating) {
-        const ratingThreshold = parseFloat(minRating);
-        combinedResults = combinedResults.filter(item => (item.rating || 4.5) >= ratingThreshold);
+      let finalResults = await fetchWithParams(locationQ, searchTerm);
+      
+      // If no results, check for fallback locations
+      if (finalResults.length === 0 && (locationQ || searchTerm)) {
+        const fullQuery = ((locationQ || '') + ' ' + (searchTerm || '')).toLowerCase();
+        let matchedFallback = '';
+        
+        for (const [key, fallbackStr] of Object.entries(nearbyLocationsMap)) {
+          if (fullQuery.includes(key)) {
+            matchedFallback = fallbackStr;
+            break;
+          }
+        }
+        
+        if (matchedFallback) {
+          // Re-fetch using the fallback string as the location
+          finalResults = await fetchWithParams(matchedFallback, searchTerm);
+        }
       }
 
-      setListings(combinedResults);
+      setListings(finalResults);
     } catch (error) {
       console.error('Search Database error:', error);
       setListings([]);

@@ -1,6 +1,11 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import mongoSanitize from 'express-mongo-sanitize';
+import compression from 'compression';
+import cors from 'cors';
 import userRouter from './routes/user.route.js';
 import authRouter from './routes/auth.route.js';
 import listingRouter from './routes/listing.route.js';
@@ -11,7 +16,6 @@ import carwashRoutes from './routes/carwash.route.js'; // Add this import
 import serviceCommentRouter from './routes/service-comment.route.js';
 import eventRouter from './routes/event.route.js';
 import cookieParser from 'cookie-parser';
-// Add to your imports:
 
 import helperCommentRouter from './routes/helper-comment.route.js';
 import eventCommentRouter from './routes/event-comment.route.js';
@@ -43,6 +47,42 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+
+// --- Security & Performance Middleware ---
+
+app.use(cors({
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true,
+}));
+
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+app.use(mongoSanitize());
+app.use(compression());
+
+const apiLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    limit: 200, 
+    message: { success: false, message: 'Too many requests from this IP, please try again after 5 minutes.' },
+    standardHeaders: true, 
+    legacyHeaders: false, 
+});
+
+const authLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    limit: 30, 
+    message: { success: false, message: 'Too many auth attempts from this IP, please try again after an hour.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+app.use('/api/', apiLimiter);
+app.use('/api/auth/', authLimiter);
+
+// --- End Security & Performance Middleware ---
 
 // General API Request Logger
 app.use((req, res, next) => {
@@ -106,6 +146,10 @@ app.use((err, req, res, next) => {
 });
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}!`);
-});
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(port, () => {
+        console.log(`Server is running on port ${port}!`);
+    });
+}
+
+export default app;

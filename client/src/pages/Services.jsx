@@ -687,11 +687,11 @@ const ServicePage = () => {
     message += `━━━━━━━━━━━━━━━━━━━━\n`;
     message += `*⚡ QUICK ACTIONS*\n`;
     message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    if (acceptLink) message += `✅ *ACCEPT BOOKING:*\n${acceptLink}\n\n`;
-    if (declineLink) message += `❌ *DECLINE BOOKING:*\n${declineLink}\n\n`;
+    if (acceptLink) message += `✅ *ACCEPT:*\n${acceptLink}\n\n`;
+    if (declineLink) message += `❌ *REJECT:*\n${declineLink}\n\n`;
 
     message += `🔐 *Verification Code:* ${verificationCode}\n`;
-    message += `_Powered by loopOut Platform_`;
+    message += `_Sent via loopOut_`;
 
     return { 
       url: `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`,

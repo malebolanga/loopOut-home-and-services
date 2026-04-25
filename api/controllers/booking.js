@@ -267,3 +267,35 @@ export const updateBookingStatus = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+// Get booking summary for a specific helper
+export const getHelperBookingSummary = async (req, res) => {
+  try {
+    const { helperId } = req.params;
+    
+    const bookings = await Booking.find({ helper: helperId })
+      .populate('user', 'username avatar')
+      .sort({ createdAt: -1 });
+      
+    const count = bookings.length;
+    
+    // Get unique users who booked
+    const recentBookers = [];
+    const seenUsers = new Set();
+    
+    for (const booking of bookings) {
+      if (booking.user && !seenUsers.has(booking.user._id.toString())) {
+        recentBookers.push(booking.user);
+        seenUsers.add(booking.user._id.toString());
+      }
+      if (recentBookers.length >= 5) break;
+    }
+
+    res.json({
+      count,
+      recentBookers
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};

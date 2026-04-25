@@ -87,7 +87,7 @@ import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperItem from '../components/HelperItem';
 
-export default function PhotographyHelperPage() {
+export default function BeautyPage() {
   const { currentUser } = useSelector((state) => state.user);
   const [helper, setHelper] = useState(null);
   const [loading, setLoading] = useState(true);

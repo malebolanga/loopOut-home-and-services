@@ -473,9 +473,17 @@ export const getMutualFriends = async (req, res, next) => {
        return res.status(200).json([]);
     }
 
-    const currentContacts = currentUser.contacts;
-    const targetContacts = targetUser.contacts;
-    const mutualPhones = currentContacts.filter(phone => targetContacts.includes(phone));
+    const currentContacts = currentUser.contacts || [];
+    const targetContacts = targetUser.contacts || [];
+
+    // Helper to extract last 9 digits for robust matching across different formats
+    const normalize = (p) => p.replace(/\D/g, '').slice(-9);
+    const targetNormalized = new Set(targetContacts.map(normalize));
+    
+    const mutualPhones = currentContacts.filter(phone => {
+        const norm = normalize(phone);
+        return norm.length >= 9 && targetNormalized.has(norm);
+    });
 
     if (mutualPhones.length === 0) {
         return res.status(200).json([]);

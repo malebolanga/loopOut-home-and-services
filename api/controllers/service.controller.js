@@ -176,9 +176,9 @@ export const getServices = async (req, res, next) => {
       ...(req.query.kind && { kind: req.query.kind }),
       ...(req.query.cancel && { cancel: req.query.cancel }),
       ...(req.query.host && { host: req.query.host }),
-      ...(req.query.address && { address: req.query.address }),
+      ...(req.query.address && { address: { $regex: req.query.address, $options: 'i' } }),
       ...(req.query.period && { period: req.query.period }),
-      ...(req.query.near && { near: req.query.near }),
+      ...(req.query.near && { near: { $regex: req.query.near, $options: 'i' } }),
       ...(req.query.userRef && { userRef: req.query.userRef }),
 
       // Daycare filters

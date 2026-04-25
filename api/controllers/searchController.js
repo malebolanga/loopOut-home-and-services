@@ -1,8 +1,19 @@
-// backend/controllers/searchController.js
 const Listing = require('../models/Listing');
 const Service = require('../models/Service');
 const Helper = require('../models/Helper');
 const Event = require('../models/Event');
+
+const nearbyLocationsMap = {
+  'polokwane': ['seshego', 'mankweng', 'lebowakgomo', 'mokopane', 'tzaneen', 'turfloop'],
+  'soshanguve': ['pretoria', 'mabopane', 'garankuwa', 'hammanskraal', 'centurion', 'midrand', 'rosslyn'],
+  'tembisa': ['kempton park', 'boksburg', 'midrand', 'edenvale', 'benoni', 'germiston', 'johannesburg', 'ivory park'],
+  'pretoria': ['centurion', 'soshanguve', 'midrand', 'mamelodi', 'johannesburg', 'atteridgeville'],
+  'johannesburg': ['sandton', 'randburg', 'midrand', 'soweto', 'roodepoort', 'kempton park', 'boksburg', 'alberton'],
+  'cape town': ['bellville', 'stellenbosch', 'somerset west', 'durbanville', 'milnerton', 'guguletu', 'khayelitsha'],
+  'durban': ['umhlanga', 'pinetown', 'westville', 'chatsworth', 'amanzimtoti', 'kwamashu', 'umlazi'],
+  'mamelodi': ['pretoria', 'centurion', 'silverton', 'cullinan'],
+  'soweto': ['johannesburg', 'langlaagte', 'roodepoort', 'krugersdorp']
+};
 
 // Smart search across all types
 exports.smartSearch = async (req, res) => {
@@ -29,19 +40,56 @@ exports.smartSearch = async (req, res) => {
       searchPromises.push(searchEvents(searchTerm, filters));
     }
     
-    const [properties, services, helpers, events] = await Promise.all(searchPromises);
+    let [properties, services, helpers, events] = await Promise.all(searchPromises);
     
-    if (type === 'all') {
-      results.properties = properties;
-      results.services = services;
-      results.helpers = helpers;
-      results.events = events;
-    } else {
-      results[type] = type === 'properties' ? properties :
-                     type === 'services' ? services :
-                     type === 'helpers' ? helpers : events;
+    const totalResults = (properties?.length || 0) + (services?.length || 0) + (helpers?.length || 0) + (events?.length || 0);
+    let usedFallback = false;
+
+    if (totalResults === 0 && searchTerm) {
+      const lowerTerm = searchTerm.toLowerCase();
+      let fallbackLocations = [];
+      for (const [key, locations] of Object.entries(nearbyLocationsMap)) {
+        if (lowerTerm.includes(key)) {
+          fallbackLocations = [...new Set([...fallbackLocations, ...locations])];
+        }
+      }
+      
+      if (fallbackLocations.length > 0) {
+        const fallbackRegex = fallbackLocations.join('|');
+        usedFallback = true;
+        
+        const fallbackPromises = [];
+        
+        if (type === 'all' || type === 'properties') {
+          fallbackPromises.push(searchProperties(fallbackRegex, filters));
+        }
+        if (type === 'all' || type === 'services') {
+          fallbackPromises.push(searchServices(fallbackRegex, filters));
+        }
+        if (type === 'all' || type === 'helpers') {
+          fallbackPromises.push(searchHelpers(fallbackRegex, filters));
+        }
+        if (type === 'all' || type === 'events') {
+          fallbackPromises.push(searchEvents(fallbackRegex, filters));
+        }
+        
+        [properties, services, helpers, events] = await Promise.all(fallbackPromises);
+      }
     }
     
+    if (type === 'all') {
+      results.properties = properties || [];
+      results.services = services || [];
+      results.helpers = helpers || [];
+      results.events = events || [];
+    } else {
+      results[type] = type === 'properties' ? (properties || []) :
+                     type === 'services' ? (services || []) :
+                     type === 'helpers' ? (helpers || []) : (events || []);
+    }
+    
+    results.fallbackActive = usedFallback; // Indicate to frontend that we used nearby locations
+
     res.status(200).json(results);
   } catch (error) {
     console.error('Smart search error:', error);

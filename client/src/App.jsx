@@ -111,6 +111,10 @@ import UserProfile from './pages/UserProfile';
 
 // Photography Helper Page
 import PhotographyHelperPage from './pages/PhotographyHelperPage';
+import BeautyPage from './pages/BeautyPage';
+import BarberPage from './pages/BarberPage';
+import TattooPage from './pages/TattooPage';
+import ChefPage from './pages/ChefPage';
 
 // Trip Components
 import TripSearch from './pages/TripSearch';
@@ -178,9 +182,13 @@ const AnimatedRoutes = () => {
         {/* Service Routes */}
         <Route path="/carwash/:id" element={<PageTransition><CarWashPage /></PageTransition>} />
         <Route path="/photography/:id" element={<PageTransition><PhotographyHelperPage /></PageTransition>} />
+        <Route path="/beauty/:id" element={<PageTransition><BeautyPage /></PageTransition>} />
+        <Route path="/barber/:id" element={<PageTransition><BarberPage /></PageTransition>} />
+        <Route path="/tattoo/:id" element={<PageTransition><TattooPage /></PageTransition>} />
+        <Route path="/chef/:id" element={<PageTransition><ChefPage /></PageTransition>} />
         <Route path="/helper/:id" element={<PageTransition><HelperPage /></PageTransition>} />
         <Route path="/event/:id" element={<PageTransition><EventPage /></PageTransition>} />
-        <Route path="/privatetutor/:privatetutorId" element={<PageTransition><PrivateTutor /></PageTransition>} />
+        <Route path="/privatetutor/:id" element={<PageTransition><PrivateTutor /></PageTransition>} />
         <Route path="/service/:serviceId" element={<PageTransition><Services /></PageTransition>} />
         <Route path="/update-helper/:helperId" element={<PageTransition><UpdateHelper /></PageTransition>} />
         <Route path="/update-service/:serviceId" element={<PageTransition><UpdateService /></PageTransition>} />
@@ -268,14 +276,32 @@ function AppContent() {
     '/terms',
     '/host'
   ];
-  const hideFooter = hideFooterPaths.includes(location.pathname);
+    const hideHeaderPaths = [
+    '/host-dashboard',
+    '/for-business',
+    '/become',
+    '/cookies',
+    '/privacy',
+    '/trust',
+    '/terms',
+    '/host'
+  ];
+
+  // Helper types that should have zero headers/footers for immersive layout
+  const specializedHelperPaths = [
+    '/helper', '/photography', '/beauty', '/barber', '/tattoo', '/chef', '/carwash', '/privatetutor', '/listing'
+  ];
+
+  const isSpecializedPage = specializedHelperPaths.some(path => location.pathname.startsWith(path));
+  const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage;
+  const hideFooter = hideFooterPaths.includes(location.pathname) || isSpecializedPage;
   
   return (
     <>
       <NeuralSplash />
       <ScrollToTop />
       <AuthSessionManager />
-      <Header />
+      {!hideHeader && <Header />}
       <AnimatedRoutes />
       {!hideFooter && <Footer />}
     </>

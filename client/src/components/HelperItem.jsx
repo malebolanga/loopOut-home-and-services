@@ -86,8 +86,17 @@ function HelperItem({ helper, className = "" }) {
     const storedClicks = JSON.parse(localStorage.getItem('helperClicks')) || {};
     storedClicks[helper._id] = (storedClicks[helper._id] || 0) + 1;
     localStorage.setItem('helperClicks', JSON.stringify(storedClicks));
-    setClickCount(storedClicks[helper._id]);
-    navigate(`/helper/${helper._id}`);
+    // Use specific route based on helper type if it exists in App.jsx
+    const typeRoutes = ['beauty', 'photography', 'carwash', 'barber', 'tattoo', 'chef'];
+    let path = `/helper/${helper._id}`;
+    
+    if (typeRoutes.includes(helper.type)) {
+      path = `/${helper.type}/${helper._id}`;
+    } else if (helper.type === 'tutor') {
+      path = `/privatetutor/${helper._id}`;
+    }
+    
+    navigate(path);
   };
 
   if (!helper?._id) return <div className="animate-pulse bg-gray-50 rounded-[2.5rem] h-[400px] w-full" />;

@@ -87,7 +87,7 @@ import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperItem from '../components/HelperItem';
 
-export default function PhotographyHelperPage() {
+export default function TattooPage() {
   const { currentUser } = useSelector((state) => state.user);
   const [helper, setHelper] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -2574,7 +2574,7 @@ export default function PhotographyHelperPage() {
               >
                 {bookingSummary.recentBookers.map((booker) => (
                   <SwiperSlide key={booker._id} className="!w-auto px-[2px]">
-                    <Link to={`/user-profile/${booker._id}`} className="flex flex-col items-center gap-3 ">
+                    <Link to={`/user-profile/${booker._id}`} className="flex flex-col items-center gap-3 group">
                       <div className="relative">
                         <div className="absolute inset-0 bg-rose-500 rounded-full blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
                         <img
