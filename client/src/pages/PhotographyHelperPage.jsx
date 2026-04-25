@@ -2580,7 +2580,7 @@ export default function PhotographyHelperPage() {
                         <img
                           src={booker.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
                           alt={booker.username}
-                          className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-2 border-white shadow-lg relative z-10 transition-transform duration-500 group-hover:scale-105"
+                          className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-2 border-white  relative z-10 transition-transform duration-500 group-hover:scale-105"
                         />
                       </div>
                     </Link>
@@ -2589,7 +2589,7 @@ export default function PhotographyHelperPage() {
               </Swiper>
             </div>
           </div>
-        )}
+        )}z
         </div>
 
 

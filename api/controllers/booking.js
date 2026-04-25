@@ -299,3 +299,65 @@ export const getHelperBookingSummary = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+// Get booking summary for a specific service
+export const getServiceBookingSummary = async (req, res) => {
+  try {
+    const { serviceId } = req.params;
+    
+    const bookings = await Booking.find({ service: serviceId })
+      .populate('user', 'username avatar')
+      .sort({ createdAt: -1 });
+      
+    const count = bookings.length;
+    
+    const recentBookers = [];
+    const seenUsers = new Set();
+    
+    for (const booking of bookings) {
+      if (booking.user && !seenUsers.has(booking.user._id.toString())) {
+        recentBookers.push(booking.user);
+        seenUsers.add(booking.user._id.toString());
+      }
+      if (recentBookers.length >= 5) break;
+    }
+
+    res.json({
+      count,
+      recentBookers
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Get booking summary for a specific listing
+export const getListingBookingSummary = async (req, res) => {
+  try {
+    const { listingId } = req.params;
+    
+    const bookings = await Booking.find({ listing: listingId })
+      .populate('user', 'username avatar')
+      .sort({ createdAt: -1 });
+      
+    const count = bookings.length;
+    
+    const recentBookers = [];
+    const seenUsers = new Set();
+    
+    for (const booking of bookings) {
+      if (booking.user && !seenUsers.has(booking.user._id.toString())) {
+        recentBookers.push(booking.user);
+        seenUsers.add(booking.user._id.toString());
+      }
+      if (recentBookers.length >= 5) break;
+    }
+
+    res.json({
+      count,
+      recentBookers
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
