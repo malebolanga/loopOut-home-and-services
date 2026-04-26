@@ -731,7 +731,51 @@ const ServicePage = () => {
     if (url) window.open(url, '_blank');
   };
 
-  const handleBookingSubmit = async (e) => {
+  
+  const handleEscrowCheckout = async () => {
+    if (!currentUser) {
+      window.location.href = '/sign-in';
+      return;
+    }
+    try {
+      setIsUploading(true);
+      const res = await fetch('/api/payment/escrow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+           userId: currentUser._id,
+           amount: totalPrice,
+           name: currentUser.username,
+           email: currentUser.email,
+           serviceId: helper ? helper._id : (service ? service._id : ''),
+           providerName: helper ? helper.name : (service ? service.name : '')
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.payfast) {
+         const form = document.createElement('form');
+         form.method = 'POST';
+         form.action = data.payfast.url;
+         Object.keys(data.payfast.fields).forEach(key => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = data.payfast.fields[key];
+            form.appendChild(input);
+         });
+         document.body.appendChild(form);
+         form.submit();
+      } else {
+         console.error(data.message);
+         setIsUploading(false);
+      }
+    } catch(err) {
+      console.error(err);
+      setIsUploading(false);
+    }
+  };
+
+  const handleBookingSubmit =async (e) => {
     e.preventDefault();
 
     if (!service?.contact) {
@@ -1317,11 +1361,19 @@ const ServicePage = () => {
                   </div>
                 </div>
 
-                <button
+                                <button
                   onClick={() => openBookingModal()}
-                  className="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-lg transition-colors mb-4"
+                  className="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-lg transition-colors mb-2"
                 >
-                  Check availability
+                  Book via WhatsApp
+                </button>
+
+                <button
+                  onClick={handleEscrowCheckout}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors mb-4 flex items-center justify-center gap-2"
+                >
+                  <FaShieldAlt className="w-4 h-4" />
+                  Pay with Secure Escrow
                 </button>
 
                 <div className="text-center text-gray-500 text-sm mb-4">You won't be charged yet</div>

@@ -1653,7 +1653,51 @@ export default function PhotographyHelperPage() {
   };
 
   // ==================== ENHANCED BOOKING SUBMIT FUNCTION ====================
-  const handleBookingSubmit = async (e) => {
+  
+  const handleEscrowCheckout = async () => {
+    if (!currentUser) {
+      window.location.href = '/sign-in';
+      return;
+    }
+    try {
+      setIsUploading(true);
+      const res = await fetch('/api/payment/escrow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+           userId: currentUser._id,
+           amount: totalPrice,
+           name: currentUser.username,
+           email: currentUser.email,
+           serviceId: helper ? helper._id : (service ? service._id : ''),
+           providerName: helper ? helper.name : (service ? service.name : '')
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.payfast) {
+         const form = document.createElement('form');
+         form.method = 'POST';
+         form.action = data.payfast.url;
+         Object.keys(data.payfast.fields).forEach(key => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = data.payfast.fields[key];
+            form.appendChild(input);
+         });
+         document.body.appendChild(form);
+         form.submit();
+      } else {
+         console.error(data.message);
+         setIsUploading(false);
+      }
+    } catch(err) {
+      console.error(err);
+      setIsUploading(false);
+    }
+  };
+
+  const handleBookingSubmit =async (e) => {
     e.preventDefault();
 
     if (!helper?.contact) {
@@ -2496,7 +2540,7 @@ export default function PhotographyHelperPage() {
                 </div>
 
                 <div className="text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-8 italic">
-                   Professional Protocol: Zero Upfront Charge
+                   loopOut Promise: Zero Upfront Charge
                 </div>
 
                 <div className="space-y-4 pt-6 border-t border-gray-50">
@@ -3157,6 +3201,8 @@ export default function PhotographyHelperPage() {
                  </div>
               </div>
 
+              
+             <div className="flex flex-col gap-4">
               <button
                 onClick={handleBookingSubmit}
                 disabled={isUploading}
@@ -3174,6 +3220,19 @@ export default function PhotographyHelperPage() {
                   </>
                 )}
               </button>
+              
+              <button
+                onClick={handleEscrowCheckout}
+                disabled={isUploading}
+                className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-3 active:scale-95 mt-2"
+              >
+                <FaShieldAlt className="text-lg" /> Secure Escrow Checkout
+              </button>
+              
+              <p className="text-[10px] text-gray-500 font-bold text-center italic px-4 shadow-sm border border-rose-100 bg-rose-50 rounded-xl py-3 mt-2">
+                 ⚠️ Never send money over WhatsApp before the job is completed. Avoid scams by using loopOut Secure Escrow!
+              </p>
+             </div>
 
               {/* Quick Accept Info */}
               {bookingData.name && bookingData.phone && (

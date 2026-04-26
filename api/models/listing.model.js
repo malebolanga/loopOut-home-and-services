@@ -183,8 +183,8 @@ const listingSchema = new mongoose.Schema(
     },
     promotionExpiry: {
       type: Date
-    }
-
+    },
+    bookingsCount: { type: Number, default: 0 }
   },
   { timestamps: true }
 );

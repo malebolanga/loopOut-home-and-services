@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { BookOpen } from "lucide-react";
 import {
   MapPin,
   Home,
@@ -290,6 +291,16 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
         </Swiper>
       </div>
 
+      
+      {/* Bookings Counter Overlay */}
+      <div className="absolute top-5 left-1/2 -translate-x-1/2 flex items-center justify-center z-20 pointer-events-auto group/booking hover:-translate-y-1 transition-transform cursor-pointer">
+        <div className="px-3 py-1.5 bg-black/60 backdrop-blur-md border border-white/20 rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.2)] flex items-center justify-center text-white transition-all overflow-hidden flex-nowrap whitespace-nowrap">
+          <BookOpen className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+          <span className="text-[10px] font-black ml-1.5 shrink-0">{listing.bookingsCount || 0}</span>
+          <span className="text-[8px] font-bold uppercase tracking-[0.2em] hidden group-hover/booking:inline-block transition-all ml-1.5 text-slate-200">Bookings</span>
+        </div>
+      </div>
+      
       {/* Top Overlays */}
       <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
         <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">

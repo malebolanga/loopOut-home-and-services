@@ -30,6 +30,7 @@ import bookingRouter from './routes/bookingRoutes.js';
 import lookingForRouter from './routes/lookingFor.route.js';
 import aiHelpRouter from './routes/ai-help.route.js';
 import verificationRouter from './routes/verification.route.js';
+import sosRouter from './routes/sos.route.js';
 
 import path from 'path';
 dotenv.config();
@@ -119,6 +120,7 @@ app.use('/api/bookings', bookingRouter);
 app.use('/api/looking-for', lookingForRouter);
 app.use('/api/ai-help', aiHelpRouter);
 app.use('/api/verification', verificationRouter);
+app.use('/api/sos', sosRouter);
 
 app.use(express.static(path.join(__dirname, '/client/dist')));
 

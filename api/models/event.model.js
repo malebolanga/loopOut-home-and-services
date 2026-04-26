@@ -84,6 +84,10 @@ const eventSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'EventComment'
     }],
+    bookingsCount: {
+      type: Number,
+      default: 0
+    },
   },
   { timestamps: true }
 );

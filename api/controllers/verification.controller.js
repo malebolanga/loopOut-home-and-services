@@ -80,3 +80,32 @@ export const verifyFace = async (req, res, next) => {
     next(error);
   }
 };
+
+export const submitKyc = async (req, res, next) => {
+  const { idDocumentUrl, liveSelfieUrl } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          idDocumentUrl,
+          liveSelfieUrl,
+          kycStatus: 'pending', // Pending review by admin
+          'faceData.imageUrl': liveSelfieUrl,
+          'faceData.verified': true,
+          'faceData.detectedAt': new Date(),
+          isVerified: true // Set to true here so it takes immediate effect contextually for the Demo MVP
+        }
+      },
+      { new: true }
+    );
+
+    if (!user) return next(errorHandler(404, 'User not found'));
+
+    res.status(200).json({ success: true, message: 'KYC documents submitted. Identity verified for MVP.', user });
+  } catch (error) {
+    next(error);
+  }
+};

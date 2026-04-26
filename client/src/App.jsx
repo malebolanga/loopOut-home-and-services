@@ -262,6 +262,8 @@ const AnimatedRoutes = () => {
   );
 };
 
+import EmergencySOS from './components/EmergencySOS';
+
 function AppContent() {
   const location = useLocation();
   const hideFooterPaths = [
@@ -298,6 +300,7 @@ function AppContent() {
   
   return (
     <>
+      <EmergencySOS />
       <NeuralSplash />
       <ScrollToTop />
       <AuthSessionManager />

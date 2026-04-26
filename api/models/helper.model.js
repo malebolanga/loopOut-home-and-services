@@ -156,8 +156,10 @@ const helperSchema = new mongoose.Schema({
             name: { type: String, required: true },
             price: { type: Number, required: true }
         }
-    ]
-}, { timestamps: true });
+    ],
+    bookingsCount: { type: Number, default: 0 }
+  },
+  { timestamps: true });
 
 const Helper = mongoose.model('Helper', helperSchema);
 

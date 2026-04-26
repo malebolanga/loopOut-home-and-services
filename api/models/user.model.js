@@ -136,6 +136,19 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    kycStatus: {
+        type: String,
+        enum: ['unverified', 'pending', 'verified', 'rejected'],
+        default: 'unverified'
+    },
+    idDocumentUrl: {
+        type: String,
+        default: ""
+    },
+    liveSelfieUrl: {
+        type: String,
+        default: ""
+    },
     coverPhoto: {
         type: String,
         default: ""

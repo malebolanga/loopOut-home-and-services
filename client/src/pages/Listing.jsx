@@ -1540,6 +1540,50 @@ export default function Listing() {
     return formatted;
   };
 
+  
+  const handleEscrowCheckout = async () => {
+    if (!currentUser) {
+      window.location.href = '/sign-in';
+      return;
+    }
+    try {
+      setIsContacting(true);
+      const res = await fetch('/api/payment/escrow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+           userId: currentUser._id,
+           amount: listing.regularPrice, // Simple price for now
+           name: currentUser.username,
+           email: currentUser.email,
+           serviceId: listing._id,
+           providerName: listing.name
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.payfast) {
+         const form = document.createElement('form');
+         form.method = 'POST';
+         form.action = data.payfast.url;
+         Object.keys(data.payfast.fields).forEach(key => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = data.payfast.fields[key];
+            form.appendChild(input);
+         });
+         document.body.appendChild(form);
+         form.submit();
+      } else {
+         console.error(data.message);
+         setIsContacting(false);
+      }
+    } catch(err) {
+      console.error(err);
+      setIsContacting(false);
+    }
+  };
+
   const handleContactHost = () => {
     const contactNumber = listing?.contact || listing?.phone || listing?.userRef?.contact || listing?.userRef?.phone || '';
     const emailAddress = listing?.email || listing?.userRef?.email;
@@ -2480,6 +2524,15 @@ export default function Listing() {
                   <FaWhatsapp className="text-base lg:text-xl" />
                   {isSaleOrRent ? 'Inquire via WhatsApp' : 'Book via WhatsApp'}
                 </button>
+
+                <button
+                  onClick={handleEscrowCheckout}
+                  className="w-full mt-2 py-2 lg:py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 text-sm lg:text-base shadow-sm"
+                >
+                  <FaShieldAlt className="text-base lg:text-xl" />
+                  Pay Securely via Escrow
+                </button>
+
 
                 <p className="text-center text-gray-500 text-xs lg:text-sm mt-2">
                   {isSaleOrRent ? 'Ask questions about this listing' : 'You\'ll receive a confirmation via WhatsApp'}

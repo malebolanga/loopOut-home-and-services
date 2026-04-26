@@ -1,13 +1,17 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import { verifyToken } from '../utils/verifyUser.js';
 import Listing from '../models/listing.model.js';
 import Service from '../models/service.model.js';
 import Helper from '../models/helper.model.js';
 import Event from '../models/event.model.js';
+import Escrow from '../models/escrow.model.js';
+import Booking from '../models/Booking.js';
+import User from '../models/user.model.js';
+import Notification from '../models/notification.model.js';
+import { generatePayfastData } from '../utils/payfast.js';
 
 const router = express.Router();
-
-import { generatePayfastData } from '../utils/payfast.js';
 
 /**
  * POST /api/payment
@@ -46,6 +50,38 @@ router.post('/', verifyToken, async (req, res) => {
 });
 
 /**
+ * POST /api/payment/escrow
+ * Handles Escrow Secure Checkout.
+ */
+router.post('/escrow', verifyToken, async (req, res) => {
+  try {
+    const { userId, amount, name, email, serviceId, providerName } = req.body;
+
+    const safeAmount = amount ? Number(amount).toFixed(2) : '35.00';
+    const safeItemName = `Secure Escrow: ${providerName}`.substring(0, 99);
+    
+    const payfast = generatePayfastData({
+      merchant_id: process.env.PAYFAST_MERCHANT_ID,
+      merchant_key: process.env.PAYFAST_MERCHANT_KEY,
+      amount: safeAmount,
+      item_name: safeItemName,
+      name_first: name || 'LoopOut',
+      name_last: 'Client',
+      email_address: email || 'user@example.com',
+      m_payment_id: `escrow-${serviceId}-${userId}-${Date.now()}`.substring(0, 99),
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Escrow Secure Checkout initialized',
+      payfast
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Could not initialize escrow payment' });
+  }
+});
+
+/**
  * POST /api/payment/itn
  * PayFast Instant Transaction Notification (Webhook).
  * PayFast calls this to confirm a payment was actually completed.
@@ -55,13 +91,51 @@ router.post('/itn', async (req, res) => {
     const itnData = req.body;
     console.log('[PAYMENT ITN] Data received from PayFast:', itnData);
     
-    // 1. Verify the signature (Production Requirement)
+    // 1. Verify the signature (Production Requirement - Should be implemented for launch)
     // 2. Check payment status
     if (itnData.payment_status === 'COMPLETE') {
-      // 3. Update listing limits in Database
-      // Find the user by its userId embedded in m_payment_id (or as custom field)
-      // For now we just log it as success.
-      console.log(`[PAYMENT SUCCESS] Listing upgrade confirmed for payment ID: ${itnData.m_payment_id}`);
+      const paymentId = itnData.m_payment_id;
+      
+      if (paymentId.startsWith('escrow-')) {
+        const parts = paymentId.split('-');
+        // escrow-{serviceId}-{userId}-{timestamp}
+        const serviceId = parts[1];
+        const clientId = parts[2];
+        const amount = itnData.amount_gross;
+
+        console.log(`[ESCROW SUCCESS] Funds received for Service: ${serviceId}, Client: ${clientId}, Amount: ${amount}`);
+
+        // Find existing booking or create one
+        let booking = await Booking.findOne({ 
+          $or: [{ listing: serviceId }, { helper: serviceId }, { service: serviceId }],
+          user: clientId,
+          status: 'pending'
+        }).sort({ createdAt: -1 });
+
+        if (booking) {
+          booking.status = 'confirmed';
+          await booking.save();
+        }
+
+        // Record in Escrow model
+        const newEscrow = new Escrow({
+          bookingId: booking ? booking._id : new mongoose.Types.ObjectId(),
+          clientId,
+          providerId: itnData.custom_str1 || (booking ? (booking.listing?.userRef || booking.helper?.userRef || booking.service?.userRef) : undefined),
+          amount: Number(amount),
+          status: 'held',
+          paymentId: itnData.pf_payment_id,
+          mPaymentId: paymentId
+        });
+
+        await newEscrow.save();
+        
+        // Notify both parties
+        // (Implementation for professional notification could go here)
+      } else if (paymentId.startsWith('listing-up-')) {
+        console.log(`[PAYMENT SUCCESS] Listing upgrade confirmed for payment ID: ${paymentId}`);
+        // Handle listing upgrade logic
+      }
     }
 
     // PayFast expects a 200 OK after receiving ITN

@@ -2,6 +2,7 @@ import Booking from '../models/Booking.js';
 import Listing from '../models/listing.model.js';
 import Helper from '../models/helper.model.js';
 import Service from '../models/service.model.js';
+import Event from '../models/event.model.js';
 import Notification from '../models/notification.model.js';
 
 // Calculate price and validate dates
@@ -23,6 +24,10 @@ export const calculateBookingDetails = async (req, res) => {
     if (!item) {
       // Check Service
       item = await Service.findById(listingId);
+    }
+    if (!item) {
+      // Check Event
+      item = await Event.findById(listingId);
     }
 
     if (!item) {
@@ -56,10 +61,10 @@ export const calculateBookingDetails = async (req, res) => {
 // Create booking
 export const createBooking = async (req, res) => {
   try {
-    const { userId, listingId, helperId, serviceId, startDate, endDate, totalPrice, phone, message, subtype } = req.body;
+    const { userId, listingId, helperId, serviceId, eventId, startDate, endDate, totalPrice, phone, message, subtype } = req.body;
 
     // Validate input
-    const mainId = listingId || helperId || serviceId;
+    const mainId = listingId || helperId || serviceId || eventId;
     if (!userId || !mainId || !startDate || !endDate || !totalPrice) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -70,6 +75,7 @@ export const createBooking = async (req, res) => {
       listing: listingId || undefined,
       helper: helperId || undefined,
       service: serviceId || undefined,
+      event: eventId || undefined,
       startDate,
       endDate,
       totalPrice,
@@ -81,12 +87,19 @@ export const createBooking = async (req, res) => {
 
     await newBooking.save();
 
+    // Increment bookingsCount for real data tracking
+    if (listingId) await Listing.findByIdAndUpdate(listingId, { $inc: { bookingsCount: 1 } });
+    if (helperId) await Helper.findByIdAndUpdate(helperId, { $inc: { bookingsCount: 1 } });
+    if (serviceId) await Service.findByIdAndUpdate(serviceId, { $inc: { bookingsCount: 1 } });
+    if (eventId) await Event.findByIdAndUpdate(eventId, { $inc: { bookingsCount: 1 } });
+
     // Create notification for the host
     try {
       let item;
       if (listingId) item = await Listing.findById(listingId);
       else if (helperId) item = await Helper.findById(helperId);
       else if (serviceId) item = await Service.findById(serviceId);
+      else if (eventId) item = await Event.findById(eventId);
 
       if (item && item.userRef) {
         const hostNotification = new Notification({
@@ -120,7 +133,8 @@ export const getBookedDates = async (req, res) => {
       $or: [
         { listing: listingId },
         { helper: listingId },
-        { service: listingId }
+        { service: listingId },
+        { event: listingId }
       ],
       status: { $in: ['pending', 'confirmed', 'approved'] }
     });
@@ -337,6 +351,36 @@ export const getListingBookingSummary = async (req, res) => {
     const { listingId } = req.params;
     
     const bookings = await Booking.find({ listing: listingId })
+      .populate('user', 'username avatar')
+      .sort({ createdAt: -1 });
+      
+    const count = bookings.length;
+    
+    const recentBookers = [];
+    const seenUsers = new Set();
+    
+    for (const booking of bookings) {
+      if (booking.user && !seenUsers.has(booking.user._id.toString())) {
+        recentBookers.push(booking.user);
+        seenUsers.add(booking.user._id.toString());
+      }
+      if (recentBookers.length >= 5) break;
+    }
+
+    res.json({
+      count,
+      recentBookers
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+// Get booking summary for a specific event
+export const getEventBookingSummary = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    
+    const bookings = await Booking.find({ event: eventId })
       .populate('user', 'username avatar')
       .sort({ createdAt: -1 });
       

@@ -5,6 +5,7 @@ const bookingSchema = new mongoose.Schema({
   listing: { type: mongoose.Schema.Types.ObjectId, ref: 'Listing' },
   helper: { type: mongoose.Schema.Types.ObjectId, ref: 'Helper' },
   service: { type: mongoose.Schema.Types.ObjectId, ref: 'Service' },
+  event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   totalPrice: { type: Number, required: true },
