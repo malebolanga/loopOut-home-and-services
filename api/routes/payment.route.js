@@ -9,6 +9,7 @@ import Escrow from '../models/escrow.model.js';
 import Booking from '../models/Booking.js';
 import User from '../models/user.model.js';
 import Notification from '../models/notification.model.js';
+import Withdrawal from '../models/withdrawal.model.js';
 import { generatePayfastData } from '../utils/payfast.js';
 
 const router = express.Router();
@@ -143,6 +144,38 @@ router.post('/itn', async (req, res) => {
   } catch (error) {
     console.error('ITN Error:', error);
     res.status(500).send('Error');
+  }
+});
+
+/**
+ * POST /api/payment/withdrawal
+ * Initiates a host fund extraction request.
+ */
+router.post('/withdrawal', verifyToken, async (req, res) => {
+  try {
+    const { userId, amount, accountDetails } = req.body;
+
+    if (!userId || !amount || !accountDetails) {
+      return res.status(400).json({ success: false, message: 'All biological and financial parameters are required.' });
+    }
+
+    const newWithdrawal = new Withdrawal({
+      userId,
+      amount,
+      accountDetails,
+      status: 'pending'
+    });
+
+    await newWithdrawal.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Neural Extraction Sequence Initiated. Verification in progress.',
+      withdrawal: newWithdrawal
+    });
+  } catch (error) {
+    console.error('Withdrawal error:', error);
+    res.status(500).json({ success: false, message: 'Neural extraction engine failed.' });
   }
 });
 

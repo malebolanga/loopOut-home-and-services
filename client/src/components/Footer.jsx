@@ -7,7 +7,8 @@ import {
   MapIcon, 
   HeartIcon, 
   UserIcon,
-  ChatBubbleLeftRightIcon
+  ChatBubbleLeftRightIcon,
+  CpuChipIcon
 } from '@heroicons/react/24/outline';
 import { BrandIcon } from './BrandLogo';
 
@@ -155,7 +156,7 @@ const Footer = () => {
           {[
             { id: '/', label: 'Explore', icon: HomeIcon },
             { id: '/wishlist', label: 'Saved', icon: HeartIcon },
-            { id: '/planner', label: 'Planner', icon: MapIcon },
+            { id: '/host-dashboard', label: 'Dashboard', icon: CpuChipIcon },
             { id: '/messages', label: 'Inbox', icon: ChatBubbleLeftRightIcon },
             { id: '/profile', label: 'Profile', icon: UserIcon }
           ].map((item) => {

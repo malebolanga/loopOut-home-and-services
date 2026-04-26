@@ -62,43 +62,48 @@ export default function Verification() {
     { id: 'phone', label: 'SIGNAL VERIFY', icon: <PhoneIcon className="w-6 h-6" />, color: 'bg-emerald-500', description: 'End-to-end encrypted signal verification' },
   ];
 
-  const uploadKycFile = (fileOrBase64, folder, setUrlState) => {
+  const uploadKycFile = async (fileOrBase64, folder, setUrlState) => {
     const storage = getStorage(app);
     const fileName = new Date().getTime() + "_upload";
     const storageRef = ref(storage, `kyc/${folder}/${fileName}`);
     setIsProcessing(true);
     setError(null);
     
+    let uploadTask;
+
     if (typeof fileOrBase64 === 'string') {
-        const uploadTask = uploadString(storageRef, fileOrBase64, 'data_url');
-        uploadTask.on('state_changed', 
-           (snapshot) => { setProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100); },
-           (err) => { setError('Upload failed'); setIsProcessing(false); },
-           () => {
-             getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-               setUrlState(downloadURL);
-               setIsProcessing(false);
-               setProgress(0);
-               submitKycFinal(idUrl, downloadURL);
-             });
-           }
-        );
+        // Convert dataUrl to Blob for resumable upload
+        const fetchResponse = await fetch(fileOrBase64);
+        const blob = await fetchResponse.blob();
+        uploadTask = uploadBytesResumable(storageRef, blob);
     } else {
-        const uploadTask = uploadBytesResumable(storageRef, fileOrBase64);
-        uploadTask.on('state_changed',
-          (snapshot) => { setProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100); },
-          (err) => { setError('Upload failed'); setIsProcessing(false); },
-          () => {
-             getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                setUrlState(downloadURL);
-                setIdUrl(downloadURL); // explicit sync just in case
-                setIsProcessing(false);
-                setProgress(0);
-                setKycStep(2); // move to selfie
-             });
-          }
-        );
+        uploadTask = uploadBytesResumable(storageRef, fileOrBase64);
     }
+
+    uploadTask.on('state_changed', 
+        (snapshot) => { setProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100); },
+        (err) => { 
+            console.error("Upload error:", err);
+            setError(err.code === 'storage/unauthorized' ? 'Neural security denied access. Contact core support.' : 'Upload failed'); 
+            setIsProcessing(false); 
+        },
+        () => {
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                setUrlState(downloadURL);
+                if (folder === 'idDocuments') {
+                   setIdUrl(downloadURL);
+                   setIsProcessing(false);
+                   setProgress(0);
+                   setKycStep(2);
+                } else {
+                   setSelfieUrl(downloadURL);
+                   setIsProcessing(false);
+                   setProgress(0);
+                   submitKycFinal(idUrl, downloadURL);
+                }
+            });
+        }
+    );
   };
 
   const handleIdChange = (e) => {

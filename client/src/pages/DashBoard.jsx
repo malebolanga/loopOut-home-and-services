@@ -22,7 +22,9 @@ import {
   ChevronRightIcon,
   UserGroupIcon,
   TicketIcon,
-  CheckBadgeIcon
+  CheckBadgeIcon,
+  CpuChipIcon,
+  BanknotesIcon
 } from '@heroicons/react/24/outline';
 import { Sparkles } from 'lucide-react';
 import { 
@@ -217,7 +219,41 @@ const ClientRequestNote = ({ message }) => {
        </div>
     </div>
   );
-};
+}
+
+const FooterDock = ({ unreadCount = 0 }) => {
+  const navigate = useNavigate();
+  const location = window.location.pathname;
+  
+  return (
+    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-2 bg-white/5 backdrop-blur-3xl px-4 sm:px-6 py-3 sm:py-4 rounded-full border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] z-[200] max-w-[95vw] sm:max-w-none">
+       {[
+         { icon: HomeIcon, route: '/', label: 'Home' },
+         { icon: MagnifyingGlassIcon, route: '/search', label: 'Explore' },
+         { icon: CpuChipIcon, route: '/host-dashboard', label: 'Dashboard' },
+         { icon: BellIcon, route: '/dashboard', label: 'Alerts', active: location === '/dashboard', badge: unreadCount },
+         { icon: UserIcon, route: '/profile', label: 'Profile' }
+       ].map((item, i) => (
+         <button 
+           key={i} 
+           onClick={() => navigate(item.route)}
+           title={item.label}
+           className={`p-3 sm:p-4 rounded-full transition-all flex flex-col items-center gap-1 group relative ${item.active ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20 scale-110 sm:scale-125 mx-1 sm:mx-2' : 'text-gray-400 hover:text-white hover:bg-white/5 whitespace-nowrap'}`}
+         >
+            <item.icon className={`w-5 h-5 sm:w-6 h-6 ${item.badge > 0 ? 'animate-bounce text-rose-500' : ''}`} />
+            {item.badge > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-rose-500 text-white rounded-full flex items-center justify-center text-[8px] font-black border-2 border-white shadow-lg">
+                {item.badge}
+              </span>
+            )}
+            <span className="text-[6px] sm:text-[8px] font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">
+              {item.label}
+            </span>
+         </button>
+       ))}
+    </div>
+  );
+};;
 
 export default function DashBoard() {
   const { currentUser } = useSelector((state) => state.user);
@@ -231,6 +267,37 @@ export default function DashBoard() {
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [hostStats, setHostStats] = useState({ listings: 0, rating: 5.0, earnings: 0 });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [postRes, userRes] = await Promise.all([
+          fetch(`/api/user/post-count/${currentUser._id}`),
+          fetch(`/api/user/${currentUser._id}`)
+        ]);
+        
+        if (postRes.ok && userRes.ok) {
+          const postData = await postRes.json();
+          const userData = await userRes.json();
+          
+          const likes = userData.likeCount || 0;
+          const dislikes = userData.dislikeCount || 0;
+          const totalRating = (likes + dislikes) > 0 ? (likes / (likes + dislikes) * 5).toFixed(1) : '5.0';
+          
+          setHostStats(prev => ({
+            ...prev,
+            listings: postData.count || 0,
+            rating: totalRating
+          }));
+        }
+      } catch (err) {
+        console.error('Stats fetch failed', err);
+      }
+    };
+
+    if (currentUser?._id) fetchStats();
+  }, [currentUser]);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -412,12 +479,13 @@ export default function DashBoard() {
     return `${Math.floor(diffInHours / 168)}w ago`;
   };
 
-  const stats = {
+   const stats = {
     total: bookings.length,
     pending: bookings.filter(b => b.status === 'pending').length,
     confirmed: bookings.filter(b => b.status === 'confirmed').length,
-    stays: bookings.filter(b => b.type === 'listing').length,
-    services: bookings.filter(b => b.type !== 'listing').length
+    earnings: bookings.reduce((sum, b) => (b.status === 'completed' || b.status === 'confirmed') ? sum + (Number(b.totalAmount) || Number(b.totalPrice) || 0) : sum, 0),
+    listings: hostStats.listings,
+    rating: hostStats.rating
   };
 
   const filteredBookings = bookings.filter(booking => {
@@ -537,10 +605,10 @@ export default function DashBoard() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {[
-            { label: 'Total Requests', value: stats.total, icon: CalendarIcon, color: 'text-blue-600', bg: 'bg-blue-50' },
-            { label: 'Pending Approval', value: stats.pending, icon: ClockIcon, color: 'text-amber-600', bg: 'bg-amber-50' },
-            { label: 'Overnight Stays', value: stats.stays, icon: HomeIcon, color: 'text-rose-600', bg: 'bg-rose-50' },
-            { label: 'Active Services', value: stats.services, icon: UserIcon, color: 'text-emerald-600', bg: 'bg-emerald-50' }
+            { label: 'Total Listings', value: stats.listings, icon: HomeIcon, color: 'text-blue-600', bg: 'bg-blue-50' },
+            { label: 'Total Earnings', value: `R${stats.earnings.toLocaleString()}`, icon: BanknotesIcon, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+            { label: 'Host Rating', value: `${stats.rating}★`, icon: StarIcon, color: 'text-amber-600', bg: 'bg-amber-50' },
+            { label: 'Pending Approval', value: stats.pending, icon: ClockIcon, color: 'text-rose-600', bg: 'bg-rose-50' }
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -882,9 +950,9 @@ export default function DashBoard() {
                             {(booking.status === 'confirmed' || booking.status === 'approved' || booking.status === 'ongoing') && (
                               <button 
                                 onClick={() => handleStatusUpdate(booking._id, 'completed')}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-lg"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-lg min-w-[120px]"
                               >
-                                {booking.type === 'listing' ? 'Check Out' : 'Done'}
+                                {booking.type === 'listing' ? 'Check Out' : 'Mark Completed'}
                               </button>
                             )}
                           </>
@@ -970,6 +1038,7 @@ export default function DashBoard() {
           </div>
         </div>
       </div>
+      <FooterDock unreadCount={unreadCount} />
     </div>
   );
 }

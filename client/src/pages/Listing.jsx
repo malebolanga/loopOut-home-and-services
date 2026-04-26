@@ -2083,7 +2083,7 @@ export default function Listing() {
               <div className="flex flex-wrap items-center gap-2 text-gray-600 text-sm lg:text-base">
                 <span className="flex items-center gap-1">
                   <StarIconSolid className="text-[#FFB400] w-4 h-4" />
-                  <span className="font-semibold text-gray-900">{Number(aiRating.average).toFixed(1)}</span>
+                  <span className="font-semibold text-gray-900">{(ratings?.overall || listing?.rating || 0).toFixed(1)}</span>
                   <span className="underline">{commentCount} reviews</span>
                 </span>
                 <span>·</span>

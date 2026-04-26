@@ -756,7 +756,10 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
           </h3>
           <div className="flex items-center gap-1 shrink-0">
             <StarIconSolid className="w-3 h-3 text-gray-950" />
-            <span className={`font-black text-gray-950 ${reducedSize ? 'text-[11px]' : 'text-[13px]'}`}>{item.rating?.toFixed(1) || '4.5'}</span>
+            <span className={`font-black text-gray-950 flex flex-nowrap items-center gap-1 ${reducedSize ? 'text-[11px]' : 'text-[13px]'}`}>
+              <span>{(item.rating || 0).toFixed(1)}</span>
+              <span className="text-gray-500 font-normal">({item.comments?.length || 0})</span>
+            </span>
           </div>
         </div>
 
@@ -951,7 +954,10 @@ const EliteHelperCard = ({ helper, onClick }) => {
           </h3>
           <div className="flex items-center gap-1 shrink-0">
             <StarIconSolid className="w-3.5 h-3.5 text-gray-950" />
-            <span className="text-[14px] font-medium text-gray-950">{helper.rating?.toFixed(1) || '4.5'}</span>
+            <span className="text-[14px] font-medium text-gray-950 flex items-center gap-1">
+              <span>{(helper.rating || 0).toFixed(1)}</span>
+              <span className="text-gray-500 font-normal text-[12px]">({helper.comments?.length || 0})</span>
+            </span>
           </div>
         </div>
 
@@ -1010,12 +1016,13 @@ const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
           <h3 className="font-bold text-[15px] text-gray-900 truncate">
             {item.address || "South Africa"}
           </h3>
-          {item.rating && (
-            <div className="flex items-center gap-1 shrink-0">
-              <StarIconSolid className="w-3.5 h-3.5 text-gray-950" />
-              <span className="text-[14px] font-medium text-gray-950">{item.rating?.toFixed(1)}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-1 shrink-0">
+            <StarIconSolid className="w-3.5 h-3.5 text-gray-950" />
+            <span className="text-[14px] font-medium text-gray-950 flex items-center gap-1">
+              <span>{(item.rating || 0).toFixed(1)}</span>
+              <span className="text-gray-500 font-normal text-[12px]">({item.comments?.length || 0})</span>
+            </span>
+          </div>
         </div>
         <p className="text-[14px] text-gray-500 truncate">{item.name}</p>
         <div className="mt-1 flex items-baseline gap-1">

@@ -23,6 +23,8 @@ import Message from "./pages/Message";
 // Dashboard Page
 import DashBoard from "./pages/DashBoard";
 import HostDashboard from "./pages/HostDashboard";
+import HostEarnings from "./pages/HostEarnings";
+import HostTools from "./pages/HostTools";
 
 // Listing Related Pages
 import CreateListing from "./pages/CreateListing";
@@ -148,6 +150,8 @@ const AnimatedRoutes = () => {
 
         <Route path="/dashboard" element={<PageTransition><DashBoard /></PageTransition>} />
         <Route path="/host-dashboard" element={<PageTransition><HostDashboard /></PageTransition>} />
+        <Route path="/host-earnings" element={<PageTransition><HostEarnings /></PageTransition>} />
+        <Route path="/host-tools" element={<PageTransition><HostTools /></PageTransition>} />
         <Route path="/explore" element={<PageTransition><ExplorePage /></PageTransition>} />
         <Route path="/categories" element={<PageTransition><Categories /></PageTransition>} />
         <Route path="/for-business" element={<PageTransition><ForBusiness /></PageTransition>} />
@@ -268,6 +272,8 @@ function AppContent() {
   const location = useLocation();
   const hideFooterPaths = [
     '/host-dashboard',
+    '/host-earnings',
+    '/host-tools',
     '/for-business',
     '/become',
     '/help-center',
@@ -280,6 +286,8 @@ function AppContent() {
   ];
     const hideHeaderPaths = [
     '/host-dashboard',
+    '/host-earnings',
+    '/host-tools',
     '/for-business',
     '/become',
     '/cookies',

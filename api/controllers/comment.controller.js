@@ -42,6 +42,18 @@ export const createComment = async (req, res, next) => {
       target.comments = [];
     }
     target.comments.push(comment._id);
+
+    // Update the average rating on the target entity
+    if (rating) {
+      const allComments = await Comment.find({ listingId, rating: { $exists: true, $ne: null } });
+      if (allComments.length > 0) {
+        const sum = allComments.reduce((acc, curr) => acc + curr.rating, 0);
+        target.rating = sum / allComments.length;
+      } else {
+        target.rating = Number(rating);
+      }
+    }
+
     await target.save();
 
     // Notify owner

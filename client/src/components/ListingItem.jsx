@@ -325,7 +325,10 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 mb-1 text-white">
               <Star className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
-              <span className="text-xs font-black">{ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}</span>
+              <span className="text-xs font-black flex items-center gap-1">
+                <span>{(ratingData.average || 0).toFixed(1)}</span>
+                <span className="font-normal opacity-80 pointer-events-auto hover:text-rose-300">({ratingData.count})</span>
+              </span>
             </div>
             <h3 className="text-base font-black text-white leading-tight truncate mb-0.5">
               {listing.name}

@@ -1,228 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
+  CpuChipIcon,
+  BanknotesIcon,
+  ArrowTrendingUpIcon,
+  ShieldCheckIcon,
   CalendarIcon,
-  UserIcon,
-  PhoneIcon,
-  ClockIcon,
-  CheckIcon,
-  XMarkIcon,
-  HomeIcon,
-  BriefcaseIcon,
-  MagnifyingGlassIcon,
-  BellIcon,
-  MapPinIcon,
-  StarIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  UserGroupIcon,
+  Squares2X2Icon,
   TicketIcon,
   CheckBadgeIcon,
-  ShieldCheckIcon,
-  ArrowTrendingUpIcon,
-  BanknotesIcon,
-  Squares2X2Icon,
-  CameraIcon,
-  CpuChipIcon,
-  FingerPrintIcon
+  UserIcon,
+  ClockIcon,
+  MapPinIcon,
+  BellIcon,
+  CheckIcon,
+  XMarkIcon,
+  CurrencyDollarIcon,
+  SignalIcon,
+  HomeIcon,
+  WrenchScrewdriverIcon
 } from '@heroicons/react/24/outline';
-import { 
-  StarIcon as StarIconSolid,
-  CheckCircleIcon as CheckCircleIconSolid,
-  XCircleIcon as XCircleIconSolid,
-  ShieldCheckIcon as ShieldCheckIconSolid
-} from '@heroicons/react/24/solid';
-import { FaWhatsapp, FaRobot } from 'react-icons/fa';
-import { BrandIcon } from '../components/BrandLogo';
+import { FaRobot, FaWhatsapp } from 'react-icons/fa';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
+import FooterDock from '../components/FooterDock';
+import BrandLogo from '../components/BrandLogo';
 
-export default function HostDashboard() {
-  const { currentUser } = useSelector((state) => state.user);
+// Sub-components moved to top level for stability
+const BookingProtocolCard = ({ booking, idx, handleUpdateStatusGlobal }) => {
   const navigate = useNavigate();
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('operations'); // 'operations', 'analytics', 'trust', 'wallet'
-  const [filter, setFilter] = useState('all');
-
-  useEffect(() => {
-    const fetchHostData = async () => {
-      if (!currentUser?._id) return;
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/bookings/host/${currentUser._id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setBookings(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
-        }
-      } catch (error) {
-        console.error('Neural connection error:', error);
-      } finally {
-        setLoading(false);
+  
+  const handleStatusUpdate = async (newStatus) => {
+    try {
+      const res = await fetch(`/api/bookings/status/${booking._id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        handleUpdateStatusGlobal();
       }
-    };
-    fetchHostData();
-  }, [currentUser]);
+    } catch (error) {
+      console.error('Status update failed:', error);
+    }
+  };
 
-  const totalRevenue = bookings.reduce((sum, b) => sum + Number(b.totalPrice || 0), 0);
-  const totalHelperBookings = bookings.filter(b => b.helper).length;
-
-  const stats = [
-    { label: 'Active Revenue', value: `R${totalRevenue.toLocaleString()}`, sub: 'Total Earned', icon: BanknotesIcon, color: 'text-emerald-400' },
-    { label: 'Service Ops', value: totalHelperBookings, sub: 'Helper Bookings', icon: ShieldCheckIcon, color: 'text-blue-400' },
-    { label: 'Deployments', value: bookings.length, sub: 'All Signals', icon: CpuChipIcon, color: 'text-rose-400' },
-    { label: 'Operator Rank', value: '#1', sub: 'Regional Hub', icon: ArrowTrendingUpIcon, color: 'text-amber-400' },
-  ];
-
-  return (
-    <div className="min-h-screen bg-[#020617] text-white selection:bg-rose-500/30 overflow-x-hidden relative">
-      {/* Cinematic Background */}
-      <div className=" inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-rose-500/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-blue-500/10 rounded-full blur-[100px]" />
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
-      </div>
-
-      <div className="relative z-10 max-w-7xl mx-auto px-6 pt-12 pb-32">
-        {/* Sleek Professional Sticky Header */}
-        <header className="sticky top-0 z-[100] -mx-6 px-6 py-5 bg-[#020617]/80 backdrop-blur-3xl border-b border-white/5 mb-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
-                <CpuChipIcon className="w-6 h-6 text-white" />
-             </div>
-             <div>
-                <h1 className="text-lg md:text-xl font-black tracking-widest italic text-white uppercase translate-y-0.5">
-                   HOST <span className="text-white/30">DASHBOARD</span>
-                </h1>
-                <div className="flex items-center gap-1.5 overflow-hidden">
-                   <div className="w-1 h-1 rounded-full bg-rose-500 animate-pulse" />
-                   <span className="text-[7px] font-black text-rose-500/60 uppercase tracking-[0.3em] whitespace-nowrap">Neural Command Active</span>
-                </div>
-             </div>
-          </div>
-
-          <div className="flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-2xl transition-all cursor-pointer group">
-             <div className="text-right hidden sm:block">
-                <p className="text-[10px] font-black text-white group-hover:text-rose-500 transition-colors uppercase tracking-widest">{currentUser?.username}</p>
-                <p className="text-[7px] font-bold text-white/30 uppercase tracking-widest">Elite Operator</p>
-             </div>
-             <div className="relative">
-                <img src={currentUser?.avatar} alt="Operator" className="w-9 h-9 rounded-xl object-cover border border-white/10 group-hover:border-rose-500 transition-colors" />
-                <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-lg flex items-center justify-center border-2 border-[#020617]">
-                   <CheckIcon className="w-2 h-2 text-white stroke-[4px]" />
-                </div>
-             </div>
-          </div>
-        </header>
-
-        {/* Tactical Stats Grid */}
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          {stats.map((stat, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="group relative h-40"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-[2.5rem] border border-white/10 transition-all group-hover:border-white/20 group-hover:scale-[1.02] duration-500" />
-              <div className="relative h-full p-8 flex flex-col justify-between">
-                <div className="flex items-center justify-between">
-                   <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">{stat.label}</p>
-                   <stat.icon className={`w-6 h-6 ${stat.color} opacity-50 group-hover:opacity-100 transition-opacity`} />
-                </div>
-                <div>
-                   <h3 className="text-3xl font-black italic tracking-tighter">{stat.value}</h3>
-                   <span className={`text-[10px] font-black ${stat.color} uppercase tracking-widest`}>{stat.sub}</span>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </section>
-
-        {/* Command Tabs */}
-        <div className="flex items-center gap-4 mb-12 overflow-x-auto scrollbar-hide pb-4">
-          {[
-            { id: 'operations', label: 'Tactical Operations', icon: Squares2X2Icon },
-            { id: 'analytics', label: 'Neural Analytics', icon: ArrowTrendingUpIcon },
-            { id: 'trust', label: 'Trust Protocols', icon: ShieldCheckIcon },
-            { id: 'wallet', label: 'Financial Grid', icon: BanknotesIcon },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-3 px-8 py-5 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap border ${activeTab === tab.id ? 'bg-white text-gray-950 border-white shadow-[0_20px_40px_rgba(255,255,255,0.1)]' : 'bg-white/5 text-white/50 border-white/10 hover:bg-white/10 hover:text-white'}`}
-            >
-              <tab.icon className="w-5 h-5" />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Content Area */}
-        <div className="space-y-12">
-           {activeTab === 'operations' && (
-             <div className="space-y-8">
-                <div className="flex flex-wrap items-center justify-between gap-6">
-                   <h2 className="text-3xl font-black italic tracking-tighter">ACTIVE <span className="text-rose-500">DEPLOYS</span></h2>
-                   <div className="flex bg-white/5 p-1.5 rounded-2xl border border-white/5">
-                      {['all', 'pending', 'confirmed', 'completed'].map(f => (
-                        <button 
-                          key={f}
-                          onClick={() => setFilter(f)}
-                          className={`px-6 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'text-white/40 hover:text-white'}`}
-                        >
-                          {f}
-                        </button>
-                      ))}
-                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6">
-                   {loading ? (
-                     <div className="h-64 flex flex-col items-center justify-center gap-4 border border-white/5 rounded-[3rem] bg-white/2">
-                        <LoaderIcon />
-                        <span className="text-[12px] font-black text-rose-500 uppercase tracking-[0.5em] animate-pulse">Looping Out...</span>
-                     </div>
-                   ) : bookings.filter(b => filter === 'all' || b.status === filter).length === 0 ? (
-                     <div className="h-64 flex flex-col items-center justify-center gap-6 border-2 border-dashed border-white/5 rounded-[3rem] bg-white/2 group">
-                        <div className="p-6 bg-white/5 rounded-full border border-white/10 group-hover:scale-110 transition-transform duration-500">
-                           <TicketIcon className="w-12 h-12 text-white/10 group-hover:text-rose-500 transition-colors" />
-                        </div>
-                        <div className="text-center italic">
-                           <p className="text-xl font-black text-white/60">No active signals detected</p>
-                           <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest mt-2">Adjust neural filter parameters</p>
-                        </div>
-                     </div>
-                   ) : (
-                     bookings.filter(b => filter === 'all' || b.status === filter).map((booking, idx) => (
-                       <BookingProtocolCard key={booking._id} booking={booking} idx={idx} />
-                     ))
-                   )}
-                </div>
-             </div>
-           )}
-
-           {activeTab === 'analytics' && <NeuralAnalytics stats={stats} />}
-           {activeTab === 'trust' && <TrustProtocols />}
-           {activeTab === 'wallet' && <FinancialGrid 
-               total={bookings.reduce((sum, b) => sum + Number(b.totalPrice || 0), 0)}
-               properties={bookings.filter(b => b.listing).reduce((sum, b) => sum + Number(b.totalPrice || 0), 0)}
-               helpers={bookings.filter(b => b.helper).reduce((sum, b) => sum + Number(b.totalPrice || 0), 0)}
-           />}
-        </div>
-      </div>
-
-      <FooterDock />
-    </div>
-  );
-}
-
-const BookingProtocolCard = ({ booking, idx }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, x: -50 }}
-      animate={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ delay: idx * 0.1 }}
       className="group relative overflow-hidden rounded-[3rem] bg-white/5 border border-white/5 hover:border-white/10 transition-all duration-500 hover:shadow-2xl hover:shadow-rose-500/5"
     >
@@ -254,243 +82,518 @@ const BookingProtocolCard = ({ booking, idx }) => {
            </div>
         </div>
 
-        {/* Operation Details */}
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-10">
-           <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center">
-                    <CalendarIcon className="w-6 h-6 text-white/50" />
-                 </div>
-                 <div>
-                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-0.5 whitespace-nowrap">Extraction Date</p>
-                    <p className="text-sm font-bold text-white/90">{new Date(booking.startDate).toLocaleDateString('en-ZA', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                 </div>
-              </div>
-              <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center">
-                    <MapPinIcon className="w-6 h-6 text-white/50" />
-                 </div>
-                 <div>
-                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-0.5 whitespace-nowrap">Operation Zone</p>
-                    <p className="text-sm font-bold text-white/90 truncate max-w-[200px]">{booking.listing?.name || booking.helper?.name || 'Secure Facility'}</p>
-                 </div>
-              </div>
+        {/* Operational Context */}
+        <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-8 p-8 bg-white/[0.02] border border-white/5 rounded-[2.5rem]">
+           <div>
+              <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-2">Subject Node</p>
+              <h5 className="text-xs font-black text-white uppercase tracking-tight truncate">{booking.listing?.name || booking.helper?.name || 'Manual Deploy'}</h5>
+              <p className="text-[8px] font-bold text-rose-500/60 uppercase mt-1">Sector: {booking.type?.toUpperCase() || 'GENERAL'}</p>
            </div>
-
-           <div className="bg-white/2 rounded-3xl p-6 border border-white/5 relative group/msg">
-              <div className="flex items-center justify-between mb-3">
-                 <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">Protocol Intel</p>
-                 <FaRobot className="w-3 h-3 text-rose-500 opacity-30 group-hover/msg:opacity-100 transition-opacity" />
+           <div>
+              <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-2">Schedule Window</p>
+              <div className="flex items-center gap-2">
+                 <ClockIcon className="w-3.5 h-3.5 text-rose-500" />
+                 <span className="text-xs font-black text-white">{new Date(booking.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               </div>
-              <p className="text-[11px] font-bold text-white/60 leading-relaxed italic line-clamp-2">
-                 "{booking.message || 'Standard deployment requested. No special intel provided.'}"
-              </p>
-              <div className="absolute -bottom-2 -left-2 px-3 py-1 bg-gray-950 border border-white/5 rounded-full text-[8px] font-black text-white/30 uppercase tracking-[0.2em] opacity-0 group-hover/msg:opacity-100 transition-all translate-y-2 group-hover/msg:translate-y-0">
-                 Read Full Log
-              </div>
+              <p className="text-[8px] text-white/40 font-bold uppercase mt-1">{new Date(booking.createdAt).toLocaleDateString()}</p>
+           </div>
+           <div>
+              <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-2">Neural Value</p>
+              <div className="text-xl font-black italic tracking-tighter text-white">R{(Number(booking.totalAmount) || Number(booking.totalPrice) || 0).toLocaleString()}</div>
            </div>
         </div>
 
-        {/* Protocol Control */}
-        <div className="lg:w-1/5 flex flex-col gap-4">
-           <div className="text-center mb-4">
-              <p className="text-2xl font-black italic tracking-tighter text-white">R{Number(booking.totalPrice).toLocaleString()}</p>
-              <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest opacity-50">Operational Value</span>
-           </div>
-           
-           <div className="grid grid-cols-2 gap-3">
-              <button className="py-4 bg-emerald-500 text-gray-950 text-[9px] font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-400 transition-all shadow-lg active:scale-95">
-                 Authorize
+        {/* Action Protocol */}
+        <div className="lg:w-1/4 flex flex-col gap-3">
+           {booking.status === 'pending' ? (
+              <div className="grid grid-cols-2 gap-3">
+                 <button onClick={() => handleStatusUpdate('confirmed')} className="py-4 bg-emerald-500 hover:bg-emerald-400 text-gray-950 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20">Authorize</button>
+                 <button onClick={() => handleStatusUpdate('declined')} className="py-4 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all">Deny</button>
+              </div>
+           ) : booking.status === 'confirmed' || booking.status === 'approved' ? (
+              <button 
+                onClick={() => handleStatusUpdate('completed')}
+                className="w-full py-5 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl transition-all shadow-[0_15px_30px_rgba(225,29,72,0.2)] flex items-center justify-center gap-2 group-hover:animate-pulse"
+              >
+                 <SignalIcon className="w-4 h-4" />
+                 Signal Completed
               </button>
-              <button className="py-4 bg-white/5 border border-white/10 text-white/50 text-[9px] font-black uppercase tracking-widest rounded-2xl hover:bg-white/10 hover:text-white transition-all active:scale-95">
-                 Deny
-              </button>
-           </div>
-           
-           <button className="w-full py-4 bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest rounded-2xl hover:bg-blue-500 transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-500/10">
-              <FaWhatsapp size={14} />
-              Open Signal
-           </button>
+           ) : (
+              <div className="w-full py-4 bg-white/5 border border-white/5 rounded-2xl text-center">
+                 <span className="text-[10px] font-black text-white/20 uppercase tracking-widest italic">{booking.status.toUpperCase()}</span>
+              </div>
+           )}
         </div>
-      </div>
-      
-      {/* Bottom Interface Bar */}
-      <div className="px-10 py-3 bg-white/2 border-t border-white/5 flex items-center justify-between">
-         <div className="flex items-center gap-6">
-            <ProtocolBadge status={booking.status} />
-            <span className="text-[9px] font-bold text-white/20 uppercase tracking-tighter">SIG: #{booking._id}</span>
-         </div>
-         <div className="flex -space-x-3">
-            {[1,2,3].map(i => (
-              <div key={i} className="w-6 h-6 rounded-full border-2 border-[#020617] bg-gray-800" />
-            ))}
-         </div>
       </div>
     </motion.div>
   );
-}
+};
 
-const ProtocolBadge = ({ status }) => {
-  const cfg = {
-    pending: { label: 'PENDING HUB SYNC', color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
-    confirmed: { label: 'SIGNAL ESTABLISHED', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-400/20' },
-    completed: { label: 'PROTOCOL ARCHIVED', color: 'bg-blue-500/10 text-blue-400 border-blue-400/20' },
-    cancelled: { label: 'SIGNAL TERMINATED', color: 'bg-rose-500/10 text-rose-500 border-rose-500/20' },
-  }[status] || { label: status.toUpperCase(), color: 'bg-white/5 text-white/30 border-white/10' };
-
+const NeuralAnalytics = ({ bookings }) => {
+  const totalRev = bookings.reduce((sum, b) => (b.status === 'completed' || b.status === 'confirmed') ? sum + (Number(b.totalAmount) || Number(b.totalPrice) || 0) : sum, 0);
+  const pendingRev = bookings.filter(b => b.status === 'pending').reduce((sum, b) => sum + (Number(b.totalAmount) || Number(b.totalPrice) || 0), 0);
+  
   return (
-    <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border ${cfg.color}`}>
-      {cfg.label}
-    </span>
-  );
-}
-
-const LoaderIcon = () => (
-  <motion.div 
-    animate={{ scale: [1, 1.1, 1], opacity: [0.6, 1, 0.6] }} 
-    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-    className="relative drop-shadow-[0_0_20px_rgba(255,56,92,0.4)]"
-  >
-    <BrandIcon className="w-20 h-20" />
-  </motion.div>
-);
-
-const NeuralAnalytics = ({ stats }) => (
-  <motion.div 
-    initial={{ opacity: 0 }} 
-    animate={{ opacity: 1 }} 
-    className="grid grid-cols-1 lg:grid-cols-2 gap-10"
-  >
-    <div className="bg-white/5 rounded-[3rem] border border-white/5 p-12 h-[500px] flex flex-col justify-center items-center group">
-       <div className="relative mb-8">
-          <div className="absolute inset-0 bg-rose-500/10 blur-[60px] rounded-full group-hover:bg-rose-500/20 transition-all duration-500" />
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="relative z-10 p-10 rounded-full border border-white/5 backdrop-blur-3xl"
-          >
-             <BrandIcon className="w-40 h-40" />
-          </motion.div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-20">
-             <div className="text-4xl font-black italic text-white drop-shadow-2xl">88%</div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+       <div className="bg-white/5 border border-white/5 p-12 rounded-[3.5rem] relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] pointer-events-none" />
+          <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] mb-8">Yield Intensity</h4>
+          <div className="text-7xl font-black italic tracking-tighter mb-4">R{totalRev.toLocaleString()}</div>
+          <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Aggregate platform-wide inflow</p>
+          
+          <div className="mt-12 flex items-center gap-4">
+             <div className="px-4 py-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400 text-[10px] font-black italic">+24.5%</div>
+             <p className="text-[8px] font-bold text-white/30 uppercase tracking-tighter">Neural growth compared to previous quadrant</p>
           </div>
        </div>
-       <h3 className="text-xl font-black italic tracking-tighter mb-2">LOOPED PENETRATION</h3>
-       <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest text-center max-w-[200px]">Active dominance within the integrated matrix</p>
-    </div>
-    
-    <div className="space-y-6">
-       {[1,2,3,4].map(i => (
-         <div key={i} className="bg-white/5 rounded-[2rem] border border-white/5 p-8 flex items-center justify-between group hover:bg-white/10 transition-all cursor-pointer">
-            <div className="flex items-center gap-6">
-               <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center">
-                  <ArrowTrendingUpIcon className="w-6 h-6 text-white/50 group-hover:text-emerald-400 transition-colors" />
-               </div>
-               <div>
-                  <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">Growth Index</p>
-                  <p className="font-bold text-white">Hub Sector {i}</p>
-               </div>
-            </div>
-            <div className="text-right">
-               <p className="font-black text-emerald-400">+{(Math.random() * 20).toFixed(1)}%</p>
-            </div>
-         </div>
-       ))}
-    </div>
-  </motion.div>
-);
 
-const TrustProtocols = () => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div className="bg-gradient-to-br from-blue-500/10 to-transparent rounded-[3rem] border border-white/5 p-12 flex flex-col justify-between h-[400px]">
-       <ShieldCheckIconSolid className="w-16 h-16 text-blue-400" />
-       <div>
-          <h3 className="text-3xl font-black italic tracking-tighter mb-4 uppercase">Neural Trust <br/>Verification</h3>
-          <p className="text-white/40 text-sm font-medium leading-relaxed max-w-xs">All guests must undergo cinematic face scanning and identity deployment before signal establishment.</p>
+       <div className="grid grid-cols-2 gap-6">
+          <div className="bg-white/5 border border-white/5 p-10 rounded-[3rem] group hover:bg-white/10 transition-colors">
+             <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-6">Neural Holding</p>
+             <h5 className="text-3xl font-black italic text-amber-500">R{pendingRev.toLocaleString()}</h5>
+             <p className="text-[7px] font-bold text-white/40 uppercase mt-4">Pending signals awaiting logic verification</p>
+          </div>
+          <div className="bg-white/5 border border-white/5 p-10 rounded-[3rem] group hover:bg-white/10 transition-colors">
+             <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-6">Network Health</p>
+             <h5 className="text-3xl font-black italic text-blue-400">99.8%</h5>
+             <p className="text-[7px] font-bold text-white/40 uppercase mt-4">System integrity and signal response rate</p>
+          </div>
        </div>
-       <button className="w-fit px-8 py-4 bg-blue-500 text-gray-950 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-blue-400 transition-all">
-          Configure Protocol
-       </button>
     </div>
-    
-    <div className="bg-gradient-to-br from-rose-500/10 to-transparent rounded-[3rem] border border-white/5 p-12 flex flex-col justify-between h-[400px]">
-       <FingerPrintIcon className="w-16 h-16 text-rose-500" />
-       <div>
-          <h3 className="text-3xl font-black italic tracking-tighter mb-4 uppercase">Identity <br/>Matching</h3>
-          <p className="text-white/40 text-sm font-medium leading-relaxed max-w-xs">Syncing backend facial descriptors with frontend live sensor feeds for 100% confirmation.</p>
-       </div>
-       <button className="w-fit px-8 py-4 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-rose-400 transition-all">
-          View Active Scans
-       </button>
-    </div>
-  </div>
-);
+  )
+};
 
-const FinancialGrid = ({ total = 0, properties = 0, helpers = 0 }) => (
-   <div className="bg-white/5 rounded-[2.5rem] sm:rounded-[3rem] border border-white/5 p-8 md:p-12 overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px]" />
-      <div className="flex flex-col md:flex-row justify-between gap-12 relative z-10">
-         <div className="space-y-8">
-            <div>
-               <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-3">Total Operational Yield</p>
-               <h3 className="text-4xl sm:text-6xl md:text-7xl font-black italic tracking-tighter text-emerald-400">R{total.toLocaleString()}</h3>
-            </div>
-            
-            <div className="flex gap-12">
-               <div>
-                  <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Property Revenue</p>
-                  <p className="text-xl font-bold text-white">R{properties.toLocaleString()}</p>
-               </div>
-               <div>
-                  <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Helper/Service Yield</p>
-                  <p className="text-xl font-bold text-white">R{helpers.toLocaleString()}</p>
-               </div>
-            </div>
-            
-            <button className="w-full py-6 bg-emerald-500 text-gray-950 text-xs font-black uppercase tracking-[0.3em] rounded-[2rem] hover:bg-emerald-400 transition-all shadow-2xl shadow-emerald-500/20 active:scale-95">
-               INITIATE REVENUE WITHDRAWAL
-            </button>
-         </div>
-         
-         <div className="flex-1 space-y-4">
-            <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-6">Recent Ledger Transfers</p>
-            {[1,2,3,4,5].map(i => (
-              <div key={i} className="flex items-center justify-between p-4 bg-white/2 border-b border-white/5">
-                 <div className="flex items-center gap-4">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 text-[10px] font-black">+</div>
-                    <span className="text-[11px] font-bold text-white/80">OP-REF-{Math.floor(Math.random() * 90000)}</span>
-                 </div>
-                 <span className="text-[11px] font-black text-emerald-400">R{Math.floor(Math.random() * 5000)}</span>
-              </div>
-            ))}
-         </div>
-      </div>
-   </div>
-);
+const TacticalCalendar = ({ bookings }) => {
+  const [value, onChange] = useState(new Date());
+  
+  const tileClassName = ({ date, view }) => {
+    if (view === 'month') {
+      const dateStr = date.toISOString().split('T')[0];
+      const hasBooking = bookings.some(b => b.createdAt.startsWith(dateStr));
+      if (hasBooking) return 'bg-rose-500 rounded-full text-white font-black';
+    }
+    return '';
+  };
 
-const FooterDock = () => {
-  const navigate = useNavigate();
   return (
-    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-2 bg-white/5 backdrop-blur-3xl px-4 sm:px-6 py-3 sm:py-4 rounded-full border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] z-50 max-w-[95vw] sm:max-w-none">
-       {[
-         { icon: HomeIcon, route: '/', label: 'Home' },
-         { icon: MagnifyingGlassIcon, route: '/search', label: 'Explore' },
-         { icon: CpuChipIcon, route: '/host-dashboard', label: 'Dashboard', active: true },
-         { icon: BellIcon, route: '/dashboard', label: 'Alerts' },
-         { icon: UserIcon, route: '/profile', label: 'Profile' }
-       ].map((item, i) => (
-         <button 
-           key={i} 
-           onClick={() => navigate(item.route)}
-           title={item.label}
-           className={`p-3 sm:p-4 rounded-full transition-all flex flex-col items-center gap-1 group ${item.active ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20 scale-110 sm:scale-125 mx-1 sm:mx-2' : 'text-white/50 hover:text-white hover:bg-white/5'}`}
-         >
-            <item.icon className="w-5 h-5 sm:w-6 h-6" />
-            <span className="text-[6px] sm:text-[8px] font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">
-              {item.label}
-            </span>
-         </button>
-       ))}
+    <div className="bg-white/5 border border-white/5 p-12 rounded-[3.5rem] relative overflow-hidden">
+        <style>{`
+          .react-calendar {
+            background: transparent !important;
+            border: none !important;
+            font-family: inherit !important;
+            width: 100% !important;
+          }
+          .react-calendar__navigation button {
+            color: white !important;
+            font-weight: 900 !important;
+            text-transform: uppercase !important;
+            font-size: 14px !important;
+          }
+          .react-calendar__month-view__weekdays__weekday {
+            color: rgba(255,255,255,0.3) !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            text-transform: uppercase !important;
+          }
+          .react-calendar__tile {
+            color: white !important;
+            padding: 1.5em 0.5em !important;
+            font-weight: 700 !important;
+          }
+          .react-calendar__tile:enabled:hover, .react-calendar__tile:enabled:focus {
+            background-color: rgba(255,255,255,0.05) !important;
+            border-radius: 1rem !important;
+          }
+          .react-calendar__tile--now {
+            background: rgba(255,255,255,0.1) !important;
+            border-radius: 1rem !important;
+          }
+          .react-calendar__tile--active {
+            background: #e11d48 !important;
+            border-radius: 1rem !important;
+            color: white !important;
+          }
+        `}</style>
+        <h3 className="text-2xl font-black italic tracking-tighter mb-8 uppercase">Neural Deployment <span className="text-rose-500">Timeline</span></h3>
+        <Calendar 
+          onChange={onChange} 
+          value={value} 
+          tileClassName={tileClassName}
+          className="mx-auto"
+        />
+        <div className="mt-12 w-full grid grid-cols-1 gap-4">
+           <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-4">Selected Date Operations</p>
+           {/* Placeholder for daily logs */}
+           <div className="p-8 border border-white/5 rounded-3xl bg-white/2 text-center">
+              <p className="text-[10px] font-black text-white/20 uppercase tracking-widest italic">No deployments found for this neural window</p>
+           </div>
+        </div>
     </div>
   );
 };
+
+const LoaderIcon = () => (
+  <motion.div
+    animate={{ rotate: 360 }}
+    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+    className="w-12 h-12 border-4 border-rose-500/20 border-t-rose-500 rounded-full"
+  />
+);
+
+// Removed local FooterDock definition
+
+export default function HostDashboard() {
+  const { currentUser } = useSelector((state) => state.user);
+  const navigate = useNavigate();
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('operations');
+  const [filter, setFilter] = useState('all');
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const fetchHostData = async () => {
+    if (!currentUser?._id) return;
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/bookings/host/${currentUser._id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBookings(data);
+      }
+    } catch (error) {
+      console.error('Error fetching host data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch('/api/notifications');
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data.notifications || []);
+        setUnreadCount(data.unreadCount || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      const res = await fetch('/api/notifications/read', { method: 'POST' });
+      if (res.ok) {
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        setUnreadCount(0);
+      }
+    } catch (error) {
+      console.error('Error marking as read:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchHostData();
+    fetchNotifications();
+    const interval = setInterval(() => {
+      fetchNotifications();
+      fetchHostData();
+    }, 60000); 
+    return () => clearInterval(interval);
+  }, [currentUser]);
+
+  const totalRevenue = bookings.reduce((sum, b) => (b.status === 'completed' || b.status === 'confirmed') ? sum + (Number(b.totalAmount) || Number(b.totalPrice) || 0) : sum, 0);
+  const totalHelperBookings = bookings.filter(b => b.helper).length;
+
+  const stats = [
+    { label: 'Active Revenue', value: `R${totalRevenue.toLocaleString()}`, sub: 'Total Earned', icon: BanknotesIcon, color: 'text-emerald-400', route: '/host-earnings' },
+    { label: 'Service Ops', value: totalHelperBookings, sub: 'Helper Bookings', icon: ShieldCheckIcon, color: 'text-blue-400' },
+    { label: 'Deployments', value: bookings.length, sub: 'All Signals', icon: CpuChipIcon, color: 'text-rose-400' },
+    { label: 'Operator Rank', value: '#1', sub: 'Regional Hub', icon: ArrowTrendingUpIcon, color: 'text-amber-400' },
+  ];
+
+  const [showSettings, setShowSettings] = useState(false);
+  const [protocolState, setProtocolState] = useState({
+     audio: true,
+     thermal: true,
+     frequency: 85
+  });
+
+  return (
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-rose-500/30 overflow-x-hidden relative">
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[1000] flex items-center justify-center p-6"
+          >
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-3xl" onClick={() => setShowSettings(false)} />
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="relative w-full max-w-xl bg-white/5 border border-white/10 rounded-[3.5rem] p-12 overflow-hidden shadow-2xl"
+            >
+               <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/10 blur-[100px] pointer-events-none" />
+               <div className="relative z-10 space-y-12">
+                  <div className="flex items-center justify-between">
+                     <div className="space-y-1">
+                        <h2 className="text-3xl font-black italic tracking-tighter uppercase">Protocol <span className="text-rose-500">Settings</span></h2>
+                        <p className="text-[10px] font-bold text-white/20 tracking-[0.4em] uppercase">Operational Adjustments</p>
+                     </div>
+                     <button onClick={() => setShowSettings(false)} className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
+                        <XMarkIcon className="w-5 h-5 text-white/40" />
+                     </button>
+                  </div>
+
+                  <div className="space-y-8">
+                     <div className="flex items-center justify-between p-6 bg-white/2 rounded-[2rem] border border-white/5">
+                        <div className="flex items-center gap-4">
+                           <div className="p-3 bg-rose-500/10 rounded-xl">
+                              <SignalIcon className="w-6 h-6 text-rose-500" />
+                           </div>
+                           <div>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-white/80">Neural Audio Signals</p>
+                              <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Acoustic Status Feedback</p>
+                           </div>
+                        </div>
+                        <button 
+                           onClick={() => setProtocolState(p => ({...p, audio: !p.audio}))}
+                           className={`w-14 h-8 rounded-full p-1 transition-all ${protocolState.audio ? 'bg-rose-500' : 'bg-white/10'}`}
+                        >
+                           <div className={`w-6 h-6 bg-white rounded-full transition-transform ${protocolState.audio ? 'translate-x-6' : 'translate-x-0'}`} />
+                        </button>
+                     </div>
+
+                     <div className="flex items-center justify-between p-6 bg-white/2 rounded-[2rem] border border-white/5">
+                        <div className="flex items-center gap-4">
+                           <div className="p-3 bg-blue-500/10 rounded-xl">
+                              <Squares2X2Icon className="w-6 h-6 text-blue-500" />
+                           </div>
+                           <div>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-white/80">Thermal Atmospheric Depth</p>
+                              <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Dynamically Animated Brushes</p>
+                           </div>
+                        </div>
+                        <button 
+                           onClick={() => setProtocolState(p => ({...p, thermal: !p.thermal}))}
+                           className={`w-14 h-8 rounded-full p-1 transition-all ${protocolState.thermal ? 'bg-blue-500' : 'bg-white/10'}`}
+                        >
+                           <div className={`w-6 h-6 bg-white rounded-full transition-transform ${protocolState.thermal ? 'translate-x-6' : 'translate-x-0'}`} />
+                        </button>
+                     </div>
+
+                     <div className="p-6 bg-white/2 rounded-[2rem] border border-white/5 space-y-6">
+                        <div className="flex items-center justify-between">
+                           <div>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-white/80">Signal Frequency Level</p>
+                              <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Core Neural Response Sensitivity</p>
+                           </div>
+                           <span className="text-xl font-black italic text-rose-500">{protocolState.frequency}%</span>
+                        </div>
+                        <input 
+                           type="range" min="0" max="100" 
+                           value={protocolState.frequency}
+                           onChange={(e) => setProtocolState(p => ({...p, frequency: e.target.value}))}
+                           className="w-full accent-rose-500 bg-white/10 h-1.5 rounded-full appearance-none cursor-pointer" 
+                        />
+                     </div>
+                  </div>
+
+                  <button 
+                     onClick={() => setShowSettings(false)}
+                     className="w-full py-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all active:scale-95"
+                  >
+                     Commit Parameters
+                  </button>
+               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {protocolState.thermal && (
+          <>
+            <motion.div 
+               animate={{ x: [0, 50, 0], y: [0, 30, 0] }}
+               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+               className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-rose-500/10 rounded-full blur-[120px]" 
+            />
+            <motion.div 
+               animate={{ x: [0, -40, 0], y: [0, -60, 0] }}
+               transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+               className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-blue-500/10 rounded-full blur-[100px]" 
+            />
+          </>
+        )}
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
+        <div className="absolute inset-0 opacity-[0.1]" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-6 pt-12 pb-32">
+        <header className="sticky top-0 z-[100] -mx-6 px-6 py-5 bg-[#020617]/80 backdrop-blur-3xl border-b border-white/5 mb-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+             <BrandLogo showText={true} textColor="text-white" className="h-10 w-auto" />
+             <div className="h-8 w-[1px] bg-white/10 hidden sm:block" />
+             <div className="hidden sm:block">
+                <h1 className="text-[10px] font-black tracking-[0.4em] text-rose-500 uppercase italic">
+                   Command <span className="text-white/30">Hub</span>
+                </h1>
+             </div>
+          </div>
+          
+          <div className="flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-2xl transition-all cursor-pointer group">
+                <div className="text-right hidden sm:block">
+                   <p className="text-[10px] font-black text-white group-hover:text-rose-500 transition-colors uppercase tracking-widest">{currentUser?.username}</p>
+                   <p className="text-[7px] font-bold text-white/30 uppercase tracking-widest">Elite Operator</p>
+                </div>
+                <div className="relative">
+                   <img src={currentUser?.avatar} alt="Operator" className="w-9 h-9 rounded-xl object-cover border border-white/10 group-hover:border-rose-500 transition-colors" />
+                   <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-lg flex items-center justify-center border-2 border-[#020617]">
+                      <CheckIcon className="w-2 h-2 text-white stroke-[4px]" />
+                   </div>
+                </div>
+             </div>
+        </header>
+
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          {stats.map((stat, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              onClick={() => stat.route && navigate(stat.route)}
+              className={`group relative h-40 ${stat.route ? 'cursor-pointer' : ''}`}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-[2.5rem] border border-white/10 transition-all group-hover:border-white/20 group-hover:bg-white/10 group-hover:scale-[1.02] duration-500" />
+              <div className="relative h-full p-8 flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                   <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">{stat.label}</p>
+                   <stat.icon className={`w-6 h-6 ${stat.color} opacity-50 group-hover:opacity-100 transition-opacity`} />
+                </div>
+                <div>
+                   <h3 className="text-3xl font-black italic tracking-tighter">{stat.value}</h3>
+                   <span className={`text-[10px] font-black ${stat.color} uppercase tracking-widest`}>{stat.sub}</span>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </section>
+
+        <div className="flex items-center gap-4 mb-12 overflow-x-auto scrollbar-hide pb-4">
+          {[
+            { id: 'operations', label: 'Tactical Operations', icon: Squares2X2Icon },
+            { id: 'calendar', label: 'Tactical Calendar', icon: CalendarIcon },
+            { id: 'analytics', label: 'Neural Analytics', icon: ArrowTrendingUpIcon },
+            { id: 'trust', label: 'Trust Protocols', icon: ShieldCheckIcon },
+            { id: 'wallet', label: 'Financial Grid', icon: BanknotesIcon },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-3 px-8 py-5 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap border ${activeTab === tab.id ? 'bg-white text-gray-950 border-white shadow-[0_20px_40px_rgba(255,255,255,0.1)]' : 'bg-white/5 text-white/50 border-white/10 hover:bg-white/10 hover:text-white'}`}
+            >
+              <tab.icon className="w-5 h-5" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative min-h-[400px]">
+          <AnimatePresence mode="wait">
+             {activeTab === 'operations' && (
+               <motion.div
+                 key="ops"
+                 initial={{ opacity: 0, x: -20 }}
+                 animate={{ opacity: 1, x: 0 }}
+                 exit={{ opacity: 0, x: 20 }}
+                 className="space-y-8"
+               >
+                  <div className="flex flex-wrap items-center justify-between gap-6">
+                     <h2 className="text-3xl font-black italic tracking-tighter">ACTIVE <span className="text-rose-500">DEPLOYS</span></h2>
+                     <div className="flex bg-white/5 p-1.5 rounded-2xl border border-white/5">
+                        {['all', 'pending', 'confirmed', 'completed'].map(f => (
+                          <button 
+                            key={f}
+                            onClick={() => setFilter(f)}
+                            className={`px-6 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'text-white/40 hover:text-white'}`}
+                          >
+                            {f}
+                          </button>
+                        ))}
+                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6">
+                     {loading ? (
+                       <div className="h-64 flex flex-col items-center justify-center gap-4 border border-white/5 rounded-[3rem] bg-white/2">
+                          <LoaderIcon />
+                          <span className="text-[12px] font-black text-rose-500 uppercase tracking-[0.5em] animate-pulse">Looping Out...</span>
+                       </div>
+                     ) : bookings.filter(b => filter === 'all' || b.status === filter).length === 0 ? (
+                       <div className="h-64 flex flex-col items-center justify-center gap-6 border-2 border-dashed border-white/5 rounded-[3rem] bg-white/2 group">
+                          <div className="p-6 bg-white/5 rounded-full border border-white/10 group-hover:scale-110 transition-transform duration-500">
+                             <TicketIcon className="w-12 h-12 text-white/10 group-hover:text-rose-500 transition-colors" />
+                          </div>
+                          <div className="text-center italic">
+                             <p className="text-xl font-black text-white/60">No active signals detected</p>
+                             <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest mt-2">Adjust neural filter parameters</p>
+                          </div>
+                       </div>
+                     ) : (
+                       bookings.filter(b => filter === 'all' || b.status === filter).map((booking, idx) => (
+                         <BookingProtocolCard key={booking._id} booking={booking} idx={idx} handleUpdateStatusGlobal={fetchHostData} />
+                       ))
+                     )}
+                  </div>
+               </motion.div>
+             )}
+
+             {activeTab === 'calendar' && (
+               <motion.div
+                 key="cal"
+                 initial={{ opacity: 0, x: -20 }}
+                 animate={{ opacity: 1, x: 0 }}
+                 exit={{ opacity: 0, x: 20 }}
+               >
+                 <TacticalCalendar bookings={bookings} />
+               </motion.div>
+             )}
+
+             {activeTab === 'analytics' && (
+               <motion.div
+                 key="ana"
+                 initial={{ opacity: 0, x: -20 }}
+                 animate={{ opacity: 1, x: 0 }}
+                 exit={{ opacity: 0, x: 20 }}
+               >
+                 <NeuralAnalytics bookings={bookings} />
+               </motion.div>
+             )}
+             
+             {(activeTab === 'trust' || activeTab === 'wallet') && (
+                <motion.div
+                  key="locked"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.05 }}
+                  className="h-64 flex flex-col items-center justify-center border border-white/5 rounded-[3.5rem] bg-white/2"
+                >
+                   <ShieldCheckIcon className="w-12 h-12 text-white/10 mb-4" />
+                   <p className="text-sm font-bold text-white/20 italic">Protocol sequence initiated. Financial grid access encrypted.</p>
+                </motion.div>
+             )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      <FooterDock unreadCount={unreadCount} />
+    </div>
+  );
+}

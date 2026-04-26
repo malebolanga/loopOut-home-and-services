@@ -69,6 +69,25 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    // Check for overlaps to prevent dual booking
+    const overlapQuery = {
+      status: { $in: ['pending', 'confirmed', 'approved', 'ongoing', 'assigned'] },
+      $or: [
+        { startDate: { $lt: new Date(endDate) }, endDate: { $gt: new Date(startDate) } }
+      ]
+    };
+
+    if (listingId) overlapQuery.listing = listingId;
+    else if (helperId) overlapQuery.helper = helperId;
+    else if (serviceId) overlapQuery.service = serviceId;
+    else if (eventId) overlapQuery.event = eventId;
+
+    const existingBooking = await Booking.findOne(overlapQuery);
+
+    if (existingBooking) {
+      return res.status(400).json({ error: 'This time slot is already reserved (Pending or Confirmed). Please select another time.' });
+    }
+
     // Create new booking
     const newBooking = new Booking({
       user: userId,

@@ -338,7 +338,6 @@ export default function Header() {
   // Command Center Navigation
   const MASTER_COMMANDS = [
     { label: 'HOME HUB', route: '/', icon: <HomeIcon className="w-5 h-5" />, color: 'bg-rose-500' },
-    { label: 'MASTER DASHBOARD', route: '/host-dashboard', icon: <CpuChipIcon className="w-5 h-5" />, color: 'bg-indigo-500' },
     { label: 'AI PLANNER', route: '/planner', icon: <MapIcon className="w-5 h-5" />, color: 'bg-pink-500' },
     { label: 'CREATE LISTING', route: `/${currentUser?._id}/create-listing`, icon: <PlusCircleIcon className="w-5 h-5" />, color: 'bg-emerald-500' },
     { label: 'MY LISTINGS', route: `/${currentUser?._id}/listings`, icon: <QueueListIcon className="w-5 h-5" />, color: 'bg-blue-500' },
