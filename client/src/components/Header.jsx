@@ -490,28 +490,29 @@ export default function Header() {
             <ChevronRightIcon className="w-5 h-5 text-gray-500 hover:text-white transition-colors" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="grid grid-cols-3 gap-2 mb-4">
             {MASTER_COMMANDS.map((cmd) => (
               <button
                 key={cmd.label}
                 onClick={() => handleNavigate(cmd.route)}
-                className="flex flex-col items-start gap-2 p-4 bg-gray-50 hover:bg-rose-50/50 rounded-[2rem] transition-a border border-transparent hover:border-rose-100/50"
+                className="flex flex-col items-center justify-center gap-2 p-3 bg-gray-50 hover:bg-rose-50/50 rounded-2xl transition-all border border-transparent hover:border-rose-100/50"
               >
-                <div className={`p-2.5 ${cmd.color} text-white rounded-2xl shadow-lg transition-transform hover:rotate-12`}>
+                <div className={`p-2 ${cmd.color} text-white rounded-xl shadow-md transition-transform hover:scale-110`}>
                   {cmd.icon}
                 </div>
-                <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest truncate w-full text-left">{cmd.label.split(' ')[0]} {cmd.label.split(' ')[1] || ''}</span>
+                <span className="text-[8px] font-black text-gray-900 uppercase tracking-widest text-center leading-tight">
+                  {cmd.label}
+                </span>
               </button>
             ))}
           </div>
 
-          <div className="h-[1px] bg-gray-50 mb-4" />
-
-          <div className="sticky bottom-0 bg-white pt-2 pb-4 mt-2 border-t border-gray-50 -mx-4 px-4">
+          <div className="sticky bottom-0 bg-white pt-2 border-t border-gray-100 mt-2 -mx-4 px-4 pb-2">
             <button 
               onClick={handleSignOut}
-              className="w-full py-4 text-center text-xs font-black uppercase text-gray-500 hover:text-rose-600 transition-colors tracking-[0.25em] bg-gray-50 rounded-2xl hover:bg-rose-50"
+              className="flex items-center justify-center gap-2 w-full py-3.5 text-xs font-black uppercase text-gray-500 hover:text-rose-600 transition-colors tracking-[0.2em] bg-gray-50 rounded-2xl hover:bg-rose-50 border border-transparent hover:border-rose-100/50"
             >
+              <ArrowRightOnRectangleIcon className="w-4 h-4" />
               Sign out
             </button>
           </div>
@@ -533,15 +534,15 @@ export default function Header() {
           initial={{ y: 0 }}
           animate={{ 
             y: isNavVisible ? 0 : -120,
-            paddingTop: scrolled ? '0.5rem' : '1.5rem',
-            paddingBottom: scrolled ? '0.5rem' : '1.5rem',
+            paddingTop: scrolled ? '0.25rem' : '0.5rem',
+            paddingBottom: scrolled ? '0.25rem' : '0.5rem',
           }}
           transition={{ type: 'spring', damping: 25, stiffness: 120 }}
           ref={headerRef}
           className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-2xl shadow-lg border-b border-gray-100' : 'bg-transparent'}`}
         >
         <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-[34px]">
-          <div className="flex flex-row items-center justify-between h-12">
+          <div className="flex flex-row items-center justify-between h-10">
             
             {/* Left: Branding & Home Link */}
             <div className={`transition-all duration-500 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
@@ -553,18 +554,18 @@ export default function Header() {
                     setShowSearch(true);
                   }
                 }}
-                className="flex items-center gap-3 cursor-pointer "
+                className="flex items-center gap-2 cursor-pointer "
               >
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-tr from-rose-500 to-orange-400 blur-xl opacity-20 hover:opacity-40 transition-opacity duration-500 rounded-full" />
-                  <BrandIcon className="w-12 h-12 relative z-10 transition-transform group-hover:rotate-[15deg] duration-700 ease-out" />
+                  <BrandIcon className="w-12 h-12 md:w-8 md:h-8 relative z-10 transition-transform group-hover:rotate-[15deg] duration-700 ease-out" />
                 </div>
                 <div className="hidden lg:block">
-                  <h1 className="text-2xl font-black tracking-tighter text-gray-900 leading-none">loopOut</h1>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="h-[1px] w-4 bg-rose-500/50" />
-                    <span className="text-[9px] font-black text-rose-600 uppercase tracking-[0.3em] leading-none">Neural Hub</span>
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                  <h1 className="text-xl font-black tracking-tighter text-gray-900 leading-none">loopOut</h1>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="h-[1px] w-3 bg-rose-500/50" />
+                    <span className="text-[8px] font-black text-rose-600 uppercase tracking-[0.2em] leading-none">Neural Hub</span>
+                    <div className="w-1 h-1 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
                   </div>
                 </div>
               </Link>
@@ -574,15 +575,15 @@ export default function Header() {
             <div className={`flex-1 hidden md:flex justify-center transition-all duration-500 ${showSearch ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
               <button
                 onClick={() => setShowSearch(true)}
-                className="flex items-center gap-4 px-6 py-2 border border-gray-200 rounded-full shadow-sm hover:shadow-md transition-all cursor-pointer bg-white group"
+                className="flex items-center gap-3 px-4 py-1.5 border border-gray-200 rounded-full shadow-sm hover:shadow-md transition-all cursor-pointer bg-white group"
               >
-                <span className="text-xs font-bold text-gray-900">Anywhere</span>
-                <div className="w-[1px] h-4 bg-gray-200" />
-                <span className="text-xs font-bold text-gray-900">Any week</span>
-                <div className="w-[1px] h-4 bg-gray-200" />
-                <span className="text-xs font-medium text-gray-400">Add guests</span>
-                <div className="w-8 h-8 bg-rose-500 rounded-full flex items-center justify-center text-white ml-2 group-hover:bg-rose-600 transition-colors">
-                  <MagnifyingGlassIcon className="w-4 h-4 stroke-[3px]" />
+                <span className="text-[11px] font-bold text-gray-900">Anywhere</span>
+                <div className="w-[1px] h-3 bg-gray-200" />
+                <span className="text-[11px] font-bold text-gray-900">Any week</span>
+                <div className="w-[1px] h-3 bg-gray-200" />
+                <span className="text-[11px] font-medium text-gray-400">Add guests</span>
+                <div className="w-6 h-6 bg-rose-500 rounded-full flex items-center justify-center text-white ml-2 group-hover:bg-rose-600 transition-colors">
+                  <MagnifyingGlassIcon className="w-3 h-3 stroke-[3px]" />
                 </div>
               </button>
             </div>
@@ -649,35 +650,35 @@ export default function Header() {
                     setShowLanguageDropdown(!showLanguageDropdown);
                     setShowProfileDropdown(false);
                   }}
-                  className="language-button p-4 md:py-1 md:px-2 border-[1px] border-[#DDDDDD] flex flex-row items-center gap-3 rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
+                  className="language-button p-2 md:py-1 md:px-2 border-[1px] border-[#DDDDDD] flex flex-row items-center gap-3 rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
                 >
-                  <GlobeAltIcon className="w-5 h-5" />
+                  <GlobeAltIcon className="w-4 h-4" />
                 </button>
 
                 {/* Home Icon - Desktop */}
                 <Link
                   to="/"
-                  className="relative p-3 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
+                  className="relative p-2 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
                 >
-                  <HomeIcon className="w-5 h-5 stroke-[2px]" />
+                  <HomeIcon className="w-4 h-4 stroke-[2px]" />
                 </Link>
 
                 {/* Wishlist Icon - Desktop */}
                 <button
                   onClick={() => handleNavigate('/wishlist')}
-                  className="relative p-3 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
+                  className="relative p-2 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
                 >
-                  <HeartIcon className="w-5 h-5 stroke-[2px]" />
+                  <HeartIcon className="w-4 h-4 stroke-[2px]" />
                 </button>
 
                 {/* Notification Bell Icon - Desktop */}
                 <button
                   onClick={() => handleNavigate('/notifications')}
-                  className="relative p-3 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
+                  className="relative p-2 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
                 >
-                  <BellIcon className="w-5 h-5 stroke-[2px]" />
+                  <BellIcon className="w-4 h-4 stroke-[2px]" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-[#FF385C] text-white text-[10px] min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full border-2 border-white shadow-sm z-10 font-bold">
+                    <span className="absolute -top-1 -right-1 bg-[#FF385C] text-white text-[8px] min-w-[14px] h-[14px] px-1 flex items-center justify-center rounded-full border-[1.5px] border-white shadow-sm z-10 font-bold">
                       {unreadCount}
                     </span>
                   )}

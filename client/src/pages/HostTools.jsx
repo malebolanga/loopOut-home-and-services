@@ -13,6 +13,7 @@ import {
   MegaphoneIcon,
   UserGroupIcon,
   ArrowLeftIcon,
+  ArrowRightIcon,
   BoltIcon,
   SignalIcon,
   SparklesIcon
@@ -84,29 +85,21 @@ export default function HostTools() {
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 pt-12 pb-32">
-        <header className="flex items-center justify-between mb-20">
-          <div className="flex items-center gap-6">
-            <button 
-              onClick={() => navigate('/host-dashboard')}
-              className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all group"
-            >
-              <ArrowLeftIcon className="w-5 h-5 text-white/50 group-hover:text-white group-hover:-translate-x-1 transition-all" />
-            </button>
+      <div className="relative z-10 max-w-7xl mx-auto px-6 pt-6 pb-20">
+        <header className="flex items-center justify-between mb-10">
+          <div className="flex items-center gap-4">
             <div className="flex items-center gap-4">
-              <BrandLogo showText={true} textColor="text-white" className="h-12 w-auto" />
-              <div className="h-8 w-[1px] bg-white/10 hidden lg:block" />
+              <BrandLogo showText={true} textColor="text-white" className="h-8 w-auto" />
+              <div className="h-6 w-[1px] bg-white/10 hidden lg:block" />
               <div className="hidden lg:block">
-                <h2 className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em] italic">Operational <span className="text-white/20">Protocols</span></h2>
+                <h2 className="text-[9px] font-black text-rose-500 uppercase tracking-[0.3em] italic">Operational <span className="text-white/20">Protocols</span></h2>
               </div>
             </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-4 bg-white/5 border border-white/10 p-2 pl-6 rounded-2xl">
-             <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.3em]">Neural Status: Optimized</span>
-             <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center">
-                <CpuChipIcon className="w-6 h-6 text-rose-500" />
-             </div>
+          <div className="flex items-center gap-3">
+            <div className="h-6 w-[1px] bg-white/10 mx-2" />
+            <img src={currentUser?.avatar} alt="Profile" className="w-8 h-8 rounded-xl border border-white/10" />
           </div>
         </header>
 

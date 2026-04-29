@@ -1657,25 +1657,7 @@ const MobileAppHomepage = ({
           {/* NEW: WEEKLY SPECIALS SECTION */}
           <WeeklySpecialsSection navigate={navigate} />
 
-          {/* AIRBNB CATEGORY DISCOVERY - EVENTS, SERVICES, HELPERS */}
-          <AirbnbDiscoverSection 
-            title="Popular Events" 
-            items={featuredEvents} 
-            type="event" 
-            navigate={navigate} 
-            actionText="Show all" 
-            onAction={() => navigate('/search?type=events')}
-          />
 
-
-          <AirbnbDiscoverSection 
-            title="Verified Helpers" 
-            items={featuredHelpers} 
-            type="helper" 
-            navigate={navigate} 
-            actionText="Show all" 
-            onAction={() => navigate('/helper-home-page')}
-          />
 
           {/* SERVICES TO YOUR DOOR SECTION */}
           <ServicesToYourDoor navigate={navigate} />
