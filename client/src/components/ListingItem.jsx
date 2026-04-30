@@ -302,7 +302,7 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
       </div>
       
       {/* Top Overlays */}
-      <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
+      <div className="absolute top-5 left-5 z-10 pointer-events-none flex flex-col gap-4">
         <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
           <Sparkles className="w-3 h-3 text-rose-500" />
           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{getPropertyTypeName(listing.type)}</span>
