@@ -1,5 +1,5 @@
 // src/App.jsx
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, useParams } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import PrivateRoute from "./components/PrivateRoute";
@@ -261,9 +261,31 @@ const AnimatedRoutes = () => {
         </Route>
 
         <Route path="/private" element={<PageTransition><Private /></PageTransition>} />
+
+        {/* Short-form Listing Redirect (domain/ID) */}
+        <Route path="/:id" element={<ListingRedirect />} />
       </Routes>
     </AnimatePresence>
   );
+};
+
+// Helper component to handle direct ID redirects
+const ListingRedirect = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    // If it's a 24-character hex string (standard MongoDB ID format)
+    if (/^[0-9a-fA-F]{24}$/.test(id)) {
+      navigate(`/listing/${id}`, { replace: true });
+    } else {
+      // If not an ID, redirect to home or 404
+      navigate('/', { replace: true });
+    }
+  }, [id, navigate]);
+
+  return null;
 };
 
 import EmergencySOS from './components/EmergencySOS';

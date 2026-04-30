@@ -996,18 +996,18 @@ const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
 
   return (
     <motion.div
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -8 }}
       onClick={onClick}
-      className="cursor-pointer flex flex-col gap-2 "
+      className="cursor-pointer flex flex-col gap-3"
     >
-      <div className="relative aspect-square overflow-hidden md:rounded-2xl rounded-none -mx-4 md:mx-0 bg-gray-100 ">
+      <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-gray-100 shadow-sm">
         <ImageGallery
           imageUrls={item.imageUrls || []}
           alt={item.name}
           type={type}
         />
-        <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-sm border border-black/5 z-20">
-          <span className="text-[10px] font-bold text-gray-900 uppercase tracking-wider">New Listing</span>
+        <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/30 z-20">
+          <span className="text-[10px] font-bold text-white uppercase tracking-wider">New Listing</span>
         </div>
       </div>
 
@@ -2191,7 +2191,7 @@ const MobileAppHomepage = ({
         {recentlyAddedItems.length > 0 && (
           <section className="mb-8">
             <h2 className="font-semibold text-gray-900 mb-4">Recently added</h2>
-            <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 scrollbar-hide snap-x">
+            <div className="flex overflow-x-auto gap-10 pb-4 -mx-4 px-6 scrollbar-hide snap-x">
               {recentlyAddedItems.slice(0, 5).map((item) => (
                 <div key={item._id} className="flex-shrink-0 w-56 snap-start">
                   <RecentlyAddedCard
@@ -2208,7 +2208,7 @@ const MobileAppHomepage = ({
 
         {/* MOBILE CONSOLIDATED FEED */}
         <section className="mt-10 mb-8">
-          <div className="flex overflow-x-auto gap-8 pb-6 border-b border-gray-100 mb-8 no-scrollbar">
+          <div className="flex overflow-x-auto gap-10 pb-6 border-b border-gray-100 mb-8 no-scrollbar -mx-4 px-6">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -2218,7 +2218,7 @@ const MobileAppHomepage = ({
                   className={`flex flex-col items-center gap-3 transition-all duration-300 shrink-0 ${isActive ? 'opacity-100' : 'opacity-40'}`}
                 >
                   <motion.div 
-                    className={`w-14 h-14 flex items-center justify-center rounded-xl transition-all ${isActive ? `${getTabColor(tab.id)} shadow-lg` : 'bg-transparent'}`}
+                    className={`w-14 h-14 flex items-center justify-center rounded-xl transition-all bg-transparent`}
                     whileTap={{ scale: 0.8 }}
                     animate={isActive ? {
                       y: [0, -5, 0],
