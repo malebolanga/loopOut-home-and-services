@@ -56,8 +56,8 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/free-mode';
-import { 
-  FaApple, 
+import {
+  FaApple,
   FaGooglePlay
 } from 'react-icons/fa';
 import ImageGallery from '../components/ImageGallery';
@@ -66,11 +66,11 @@ import LoopOutPulse from '../components/LoopOutPulse';
 import MyBookingsConsumer from '../components/MyBookingsConsumer';
 import LookingForItem from '../components/LookingForItem';
 
-import { 
-  calculateDistance, 
-  POLOKWANE_COORDS, 
+import {
+  calculateDistance,
+  POLOKWANE_COORDS,
   DISTANCE_TIERS,
-  filterByDistanceTier 
+  filterByDistanceTier
 } from '../utils/locationUtils';
 
 // --- Constants ---
@@ -585,8 +585,8 @@ const FreshaCategoryCard = ({ category, onClick, index }) => {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.5 }}
-      whileHover={{ 
-        y: -20, 
+      whileHover={{
+        y: -20,
         scale: 1.08,
         rotate: [0, -1, 1, 0],
         transition: { duration: 0.3 }
@@ -606,35 +606,35 @@ const FreshaCategoryCard = ({ category, onClick, index }) => {
       <div className="relative aspect-[4/5] overflow-hidden p-6 bg-gradient-to-br from-white via-gray-50 to-gray-100 flex flex-col items-center justify-center">
         {/* Elite 3D Background Shadow - Emotional Pulse */}
         <div className={`absolute -inset-10 bg-gradient-to-r ${category.color} opacity-0 group-hover:opacity-30 blur-[4rem] transition-opacity duration-700 -z-10 animate-pulse-slow`} />
-        
+
         {/* Floating 3D Icon Section */}
-        <motion.div 
-          animate={{ 
+        <motion.div
+          animate={{
             y: [0, -15, 0],
             rotate: [0, 5, -5, 0]
           }}
-          transition={{ 
-            repeat: Infinity, 
-            duration: 5, 
-            ease: "easeInOut" 
+          transition={{
+            repeat: Infinity,
+            duration: 5,
+            ease: "easeInOut"
           }}
           className="relative z-10 w-40 h-40 flex items-center justify-center"
           style={{ transform: "translateZ(100px)" }}
         >
           {/* 3D Glass Sphere Backing with Emotional Glow */}
           <div className="absolute inset-0 bg-white/50 backdrop-blur-xl rounded-full border border-white/80 shadow-[inset_0_0_20px_white] group-hover:scale-110 group-hover:bg-white/70 transition-all duration-700" />
-          
+
           <div className="relative z-20 text-7xl drop-shadow-[0_15px_15px_rgba(0,0,0,0.25)] group-hover:scale-125 group-hover:rotate-6 transition-transform duration-700">
             {category.emoji || '✨'}
           </div>
 
           {/* Isometric Overlay Image IF EXISTS */}
           {category.image.startsWith('/') && (
-             <img
-               src={category.image}
-               alt={category.name}
-               className="absolute inset-0 w-full h-full object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30"
-             />
+            <img
+              src={category.image}
+              alt={category.name}
+              className="absolute inset-0 w-full h-full object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30"
+            />
           )}
         </motion.div>
 
@@ -768,16 +768,16 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
         </h4>
 
         {item._distance && item._distance !== Infinity && !hideDistance ? (
-           <p className="text-[14px] text-gray-500 mt-0.5">
-             {item._distance < 1 ? "Near you" : `${Math.round(item._distance)} km away`}
-           </p>
+          <p className="text-[14px] text-gray-500 mt-0.5">
+            {item._distance < 1 ? "Near you" : `${Math.round(item._distance)} km away`}
+          </p>
         ) : (
-           <div className={reducedSize ? "h-0" : "h-[21px] mt-0.5"}></div>
+          <div className={reducedSize ? "h-0" : "h-[21px] mt-0.5"}></div>
         )}
 
         <div className={`${reducedSize ? 'mt-1' : 'mt-2'} flex items-baseline gap-1`}>
-           <span className={`font-black text-gray-900 tracking-tight ${reducedSize ? 'text-[14px]' : 'text-[16px]'}`}>{formatPrice()}</span>
-           <span className={`text-gray-500 font-bold ${reducedSize ? 'text-[11px]' : 'text-[14px]'}`}>{getPriceSuffix()}</span>
+          <span className={`font-black text-gray-900 tracking-tight ${reducedSize ? 'text-[14px]' : 'text-[16px]'}`}>{formatPrice()}</span>
+          <span className={`text-gray-500 font-bold ${reducedSize ? 'text-[11px]' : 'text-[14px]'}`}>{getPriceSuffix()}</span>
         </div>
       </div>
     </motion.div>
@@ -858,7 +858,7 @@ const TopCategoriesSection = ({ navigate }) => {
 
   const handleCategoryClick = (category) => {
     const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner', 'nanny'];
-    const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician','handyman', 'catering', 'schoolTransport', 'daily', 'daycare'];
+    const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician', 'handyman', 'catering', 'schoolTransport', 'daily', 'daycare'];
     const properties = ['rental', 'guesthouse'];
     const needs = ['roommate', 'nanny-need'];
 
@@ -939,7 +939,7 @@ const EliteHelperCard = ({ helper, onClick }) => {
           alt={helper.name}
           type="avatar"
         />
-        
+
         {/* Verified Badge */}
         <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-sm border border-black/5 z-20 flex items-center gap-1.5">
           <CheckCircleIcon className="w-3.5 h-3.5 text-rose-500" />
@@ -950,7 +950,7 @@ const EliteHelperCard = ({ helper, onClick }) => {
       <div className="flex flex-col pt-1">
         <div className="flex justify-between items-start gap-2">
           <h3 className="font-bold text-[15px] text-gray-900 truncate">
-             {helper.address || "South Africa"}
+            {helper.address || "South Africa"}
           </h3>
           <div className="flex items-center gap-1 shrink-0">
             <StarIconSolid className="w-3.5 h-3.5 text-gray-950" />
@@ -962,11 +962,11 @@ const EliteHelperCard = ({ helper, onClick }) => {
         </div>
 
         <p className="text-[14px] text-gray-500 truncate">{helper.name}</p>
-      
+
 
         <div className="mt-1 flex items-baseline gap-1">
-           <span className="text-[15px] font-bold text-gray-900">{formatPrice()}</span>
-           <span className="text-[14px] text-gray-900/80">/ session</span>
+          <span className="text-[15px] font-bold text-gray-900">{formatPrice()}</span>
+          <span className="text-[14px] text-gray-900/80">/ session</span>
         </div>
       </div>
     </motion.div>
@@ -1026,8 +1026,8 @@ const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
         </div>
         <p className="text-[14px] text-gray-500 truncate">{item.name}</p>
         <div className="mt-1 flex items-baseline gap-1">
-           <span className="text-[15px] font-bold text-gray-900">{formatPrice()}</span>
-           <span className="text-[14px] text-gray-900/80">{getPriceSuffix()}</span>
+          <span className="text-[15px] font-bold text-gray-900">{formatPrice()}</span>
+          <span className="text-[14px] text-gray-900/80">{getPriceSuffix()}</span>
         </div>
       </div>
     </motion.div>
@@ -1037,17 +1037,17 @@ const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
 // --- PREMIUM LOOP OUT HERO ---
 const LoopOutHomeHero = ({ navigate }) => {
   return (
-    <div className="relative h-[650px] w-full overflow-hidden bg-gray-900">
+    <div className="relative h-[750px] w-full overflow-hidden bg-gray-900">
       {/* Background with Ambient Motion */}
-      <motion.div 
+      <motion.div
         initial={{ scale: 1.1, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.8, ease: "easeOut" }}
         className="absolute inset-0"
       >
-        <img 
-          src="/soweto_bg.png" 
-          alt="loopOut Elite Experience" 
+        <img
+          src="/soweto_bg.png"
+          alt="loopOut Elite Experience"
           className="w-full h-full object-cover"
         />
         {/* Elite Overlay Gradients */}
@@ -1058,10 +1058,10 @@ const LoopOutHomeHero = ({ navigate }) => {
       {/* Hero Content */}
       <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
         <motion.div
-           initial={{ y: 40, opacity: 0 }}
-           animate={{ y: 0, opacity: 1 }}
-           transition={{ delay: 0.6, duration: 0.8 }}
-           className="max-w-4xl"
+          initial={{ y: 40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.8 }}
+          className="max-w-4xl"
         >
           {/* Tagline */}
           <motion.div
@@ -1076,56 +1076,56 @@ const LoopOutHomeHero = ({ navigate }) => {
           <h1 className="text-6xl lg:text-8xl font-black text-white mb-8 tracking-tighter leading-[0.85] drop-shadow-2xl">
             EXPERIENCE <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-amber-400 to-rose-500 animate-gradient-x">
-               YOUR CITY.
+              YOUR CITY.
             </span>
           </h1>
 
           <p className="text-xl lg:text-2xl text-white/90 max-w-2xl mx-auto mb-12 font-medium leading-relaxed drop-shadow-lg">
             Immerse in the culture. Discover authentic homes, verified local helpers, and premium community services securely.
           </p>
-          
+
 
           <div className="flex flex-wrap items-center justify-center gap-6">
-             <motion.button 
-               whileHover={{ scale: 1.05, y: -5 }}
-               whileTap={{ scale: 0.95 }}
-               onClick={() => navigate('/listing-home-page')}
-               className="relative px-10 py-5 bg-white text-gray-900 rounded-[2rem] font-black shadow-[0_20px_40px_rgba(0,0,0,0.3)] transition-all overflow-hidden"
-             >
-                <div className="relative z-10 flex items-center gap-3">
-                  <HomeIcon className="w-6 h-6" />
-                  EXPLORE HOMES
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity" />
-             </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05, y: -5 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/listing-home-page')}
+              className="relative px-10 py-5 bg-white text-gray-900 rounded-[2rem] font-black shadow-[0_20px_40px_rgba(0,0,0,0.3)] transition-all overflow-hidden"
+            >
+              <div className="relative z-10 flex items-center gap-3">
+                <HomeIcon className="w-6 h-6" />
+                EXPLORE HOMES
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            </motion.button>
 
-             <motion.button 
-               whileHover={{ scale: 1.05, y: -5 }}
-               whileTap={{ scale: 0.95 }}
-               onClick={() => navigate('/helper-home-page')}
-               className=" relative px-10 py-5 bg-rose-600 text-white rounded-[2rem] font-black shadow-[0_20px_40px_rgba(225,29,72,0.3)] transition-all overflow-hidden border border-rose-500/50"
-             >
-                <div className="relative z-10 flex items-center gap-3">
-                  <UserGroupIcon className="w-6 h-6" />
-                  FIND HELPERS
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-rose-700 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-             </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05, y: -5 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/helper-home-page')}
+              className=" relative px-10 py-5 bg-rose-600 text-white rounded-[2rem] font-black shadow-[0_20px_40px_rgba(225,29,72,0.3)] transition-all overflow-hidden border border-rose-500/50"
+            >
+              <div className="relative z-10 flex items-center gap-3">
+                <UserGroupIcon className="w-6 h-6" />
+                FIND HELPERS
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-rose-700 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </motion.button>
           </div>
         </motion.div>
       </div>
 
       {/* Floating 3D Elements Placeholder (Abstract UI) */}
-      <motion.div 
-        animate={{ 
+      <motion.div
+        animate={{
           y: [0, -20, 0],
           rotate: [0, 5, 0]
         }}
         transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
         className="absolute top-1/4 left-10 w-20 h-20 rounded-3xl bg-white/5 backdrop-blur-3xl border border-white/10 hidden lg:block"
       />
-      <motion.div 
-        animate={{ 
+      <motion.div
+        animate={{
           y: [0, 20, 0],
           rotate: [0, -10, 0]
         }}
@@ -1136,20 +1136,20 @@ const LoopOutHomeHero = ({ navigate }) => {
       {/* Hero Stats/Features Bar */}
       <div className="absolute bottom-0 inset-x-0 bg-black/20 backdrop-blur-2xl border-t border-white/10 py-8 z-20 hidden md:block">
         <div className="max-w-7xl mx-auto px-12 flex justify-between items-center">
-           {[
-             { label: "VERIFIED HOMES", value: "1.2k+", icon: <HomeIcon className="w-5 h-5 text-rose-400" /> },
-             { label: "EXPERT HELPERS", value: "850+", icon: <UserGroupIcon className="w-5 h-5 text-blue-400" /> },
-             { label: "DAILY SERVICES", value: "24/7", icon: <Sparkles className="w-5 h-5 text-amber-400" /> },
-             { label: "LOCAL EVENTS", value: "100+", icon: <FireIcon className="w-5 h-5 text-orange-400" /> }
-           ].map((stat, i) => (
-             <div key={i} className="flex items-center gap-4">
-                <div className="p-3 bg-white/10 rounded-2xl group-hover:bg-white/20 transition-colors">{stat.icon}</div>
-                <div>
-                   <div className="text-white text-xl font-black leading-tight tracking-tight">{stat.value}</div>
-                   <div className="text-white/40 text-[9px] font-black tracking-[0.2em]">{stat.label}</div>
-                </div>
-             </div>
-           ))}
+          {[
+            { label: "VERIFIED HOMES", value: "1.2k+", icon: <HomeIcon className="w-5 h-5 text-rose-400" /> },
+            { label: "EXPERT HELPERS", value: "850+", icon: <UserGroupIcon className="w-5 h-5 text-blue-400" /> },
+            { label: "DAILY SERVICES", value: "24/7", icon: <Sparkles className="w-5 h-5 text-amber-400" /> },
+            { label: "LOCAL EVENTS", value: "100+", icon: <FireIcon className="w-5 h-5 text-orange-400" /> }
+          ].map((stat, i) => (
+            <div key={i} className="flex items-center gap-4">
+              <div className="p-3 bg-white/10 rounded-2xl group-hover:bg-white/20 transition-colors">{stat.icon}</div>
+              <div>
+                <div className="text-white text-xl font-black leading-tight tracking-tight">{stat.value}</div>
+                <div className="text-white/40 text-[9px] font-black tracking-[0.2em]">{stat.label}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -1165,15 +1165,15 @@ const AirbnbDiscoverSection = ({ title, items, type, navigate, actionText, onAct
     <section className="mb-20">
       <div className="flex justify-between items-end mb-8">
         <div>
-           <div className="flex items-center gap-2 mb-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-              <span className="text-gray-400 text-[10px] font-black tracking-[0.3em] uppercase">Discovery Engine</span>
-           </div>
-           <h2 className="text-3xl font-black text-gray-950 tracking-tighter leading-none">{title}</h2>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+            <span className="text-gray-400 text-[10px] font-black tracking-[0.3em] uppercase">Discovery Engine</span>
+          </div>
+          <h2 className="text-3xl font-black text-gray-950 tracking-tighter leading-none">{title}</h2>
         </div>
         {actionText && (
-          <button 
-            onClick={onAction} 
+          <button
+            onClick={onAction}
             className="text-xs font-black text-rose-500 uppercase tracking-widest border-b border-rose-500/20 hover:border-rose-500 transition-all text-[11px]"
           >
             {actionText}
@@ -1209,7 +1209,7 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
   const isDisliked = currentUser && request.dislikes?.includes(currentUser._id);
 
   return (
-    <motion.div 
+    <motion.div
       whileHover={{ y: -5 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => navigate(`/looking-for?id=${request._id}`)}
@@ -1218,10 +1218,10 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gray-50 overflow-hidden border border-gray-100 p-0.5 shadow-sm">
-            <img 
-              src={request.userRef?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"} 
-              alt="user" 
-              className="w-full h-full object-cover rounded-lg" 
+            <img
+              src={request.userRef?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
+              alt="user"
+              className="w-full h-full object-cover rounded-lg"
             />
           </div>
           <div>
@@ -1229,21 +1229,21 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
               {request.userRef?.username || "Neighbor"}
             </h4>
             <div className="flex items-center gap-1.5 mt-0.5">
-               <span className="text-[9px] text-gray-400 font-black uppercase tracking-widest">{request.category}</span>
+              <span className="text-[9px] text-gray-400 font-black uppercase tracking-widest">{request.category}</span>
             </div>
           </div>
         </div>
         <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-lg border border-gray-100">
-           {request.category === 'roommate' ? '👤' : 
-            request.category === 'nanny' ? '🍼' : 
-            request.category === 'pampering' ? '💄' : '✨'}
+          {request.category === 'roommate' ? '👤' :
+            request.category === 'nanny' ? '🍼' :
+              request.category === 'pampering' ? '💄' : '✨'}
         </div>
       </div>
 
       <div className="space-y-1">
         <h4 className="font-black text-gray-900 text-sm leading-tight">{request.title}</h4>
         <div className="flex items-center gap-1.5 opacity-60">
-           <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{request.location}</span>
+          <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{request.location}</span>
         </div>
       </div>
 
@@ -1267,7 +1267,7 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
 
         <div className="flex items-center justify-between pt-2">
           <div className="flex items-center gap-4">
-            <motion.button 
+            <motion.button
               whileTap={{ scale: 0.8 }}
               onClick={(e) => { e.stopPropagation(); onLike(request._id); }}
               className={`flex items-center gap-1.5 transition-all ${isLiked ? 'text-rose-500' : 'text-gray-400 hover:text-gray-900'}`}
@@ -1275,8 +1275,8 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
               {isLiked ? <HandThumbUpIconSolid className="w-5 h-5" /> : <HandThumbUpIcon className="w-5 h-5" />}
               <span className="text-xs font-black">{request.likes?.length || 0}</span>
             </motion.button>
-            
-            <motion.button 
+
+            <motion.button
               whileTap={{ scale: 0.8 }}
               onClick={(e) => { e.stopPropagation(); onDislike(request._id); }}
               className={`flex items-center gap-1.5 transition-all ${isDisliked ? 'text-gray-900' : 'text-gray-400 hover:text-gray-900'}`}
@@ -1286,12 +1286,12 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
             </motion.button>
           </div>
 
-          <button 
-             onClick={(e) => { e.stopPropagation(); window.open(`https://wa.me/${request.contact}`); }}
-             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all shadow-lg active:scale-95 group"
+          <button
+            onClick={(e) => { e.stopPropagation(); window.open(`https://wa.me/${request.contact}`); }}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all shadow-lg active:scale-95 "
           >
-             <ChatBubbleOvalLeftEllipsisIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
-             <span className="text-[10px] font-black uppercase tracking-widest">Chat</span>
+            <ChatBubbleOvalLeftEllipsisIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-black uppercase tracking-widest">Chat</span>
           </button>
         </div>
       </div>
@@ -1340,11 +1340,11 @@ const CommunityNeedsSection = ({ navigate }) => {
   if (loading || needs.length === 0) return null;
 
   return (
-    <motion.section 
-      initial="hidden" 
-      whileInView="visible" 
-      viewport={{ once: true }} 
-      variants={containerVariants} 
+    <motion.section
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={containerVariants}
       className="mb-20 mt-10 relative"
     >
       {/* Cinematic Orbital Backdrop */}
@@ -1358,12 +1358,12 @@ const CommunityNeedsSection = ({ navigate }) => {
             <span className="text-[10px] font-black text-rose-500 tracking-[0.3em] uppercase">Intelligence Feed</span>
           </div>
           <h2 className="text-4xl font-black text-gray-950 tracking-tighter leading-none">
-             COMMUNITY <br/>
-             <span className="text-gray-400">PULSE</span>
+            COMMUNITY <br />
+            <span className="text-gray-400">PULSE</span>
           </h2>
         </div>
-        <button 
-          onClick={() => navigate('/looking-for')} 
+        <button
+          onClick={() => navigate('/looking-for')}
           className="flex items-center gap-3 px-8 py-4 bg-gray-950 text-white rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-2xl overflow-hidden relative"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-rose-600 to-rose-500 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -1393,8 +1393,8 @@ const CommunityNeedsSection = ({ navigate }) => {
                 custom={idx}
                 className="h-full"
               >
-                <StatusCard 
-                  request={need} 
+                <StatusCard
+                  request={need}
                   currentUser={currentUser}
                   onLike={(id) => handleInteraction(id, 'like')}
                   onDislike={(id) => handleInteraction(id, 'dislike')}
@@ -1471,11 +1471,11 @@ const ServicesToYourDoor = ({ navigate }) => {
     <section className="mb-16">
       <div className="flex justify-between items-end mb-8">
         <div>
-           <h2 className="text-3xl font-black text-gray-900 tracking-tighter">THE HOME EXPERIENCE</h2>
-           <p className="text-gray-500 mt-1 uppercase text-[10px] font-black tracking-[0.2em]">Services that travel directly to you</p>
+          <h2 className="text-3xl font-black text-gray-900 tracking-tighter">THE HOME EXPERIENCE</h2>
+          <p className="text-gray-500 mt-1 uppercase text-[10px] font-black tracking-[0.2em]">Services that travel directly to you</p>
         </div>
-        <button 
-          onClick={() => navigate('/helper-home-page')} 
+        <button
+          onClick={() => navigate('/helper-home-page')}
           className="text-xs font-black text-rose-500 uppercase tracking-widest border-b-2 border-rose-500/20 hover:border-rose-500 transition-all"
         >
           View All Home Experts
@@ -1493,8 +1493,8 @@ const ServicesToYourDoor = ({ navigate }) => {
             onClick={() => navigate(`/search?category=${service.id}&type=helpers`)}
             className="snap-start shrink-0 w-[300px] md:w-[320px] cursor-pointer bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-xl shadow-gray-100/30 hover:shadow-2xl hover:shadow-rose-500/10 transition-all duration-500 relative overflow-hidden"
           >
-             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-rose-500/5 to-transparent rounded-bl-[4rem]" />
-             <div className={`w-16 h-16 rounded-[1.5rem] bg-gradient-to-br ${service.color} flex items-center justify-center text-3xl mb-8 shadow-lg hover:rotate-12 transition-transform duration-500`}>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-rose-500/5 to-transparent rounded-bl-[4rem]" />
+            <div className={`w-16 h-16 rounded-[1.5rem] bg-gradient-to-br ${service.color} flex items-center justify-center text-3xl mb-8 shadow-lg hover:rotate-12 transition-transform duration-500`}>
               {service.emoji}
             </div>
             <h3 className="text-xl font-black text-gray-900 mb-2 leading-tight">{service.name}</h3>
@@ -1512,27 +1512,27 @@ const ServicesToYourDoor = ({ navigate }) => {
 // --- NEW COMPONENT: WEEKLY SPECIALS (DEFINE YOUR DAY) ---
 const WeeklySpecialsSection = ({ navigate }) => {
   const specials = [
-    { 
-      id: 'promo-verified', 
-      title: 'Verified Excellence', 
-      discount: 'PREMIUM', 
-      desc: 'Trust only the best local experts in your area', 
+    {
+      id: 'promo-verified',
+      title: 'Verified Excellence',
+      discount: 'PREMIUM',
+      desc: 'Trust only the best local experts in your area',
       color: 'bg-indigo-600',
       image: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=80&w=1470'
     },
-    { 
-      id: 'promo-favor', 
-      title: 'Community Favor', 
-      discount: 'R50 + R50', 
-      desc: 'Refer a neighbor and both get credits', 
+    {
+      id: 'promo-favor',
+      title: 'Community Favor',
+      discount: 'R50 + R50',
+      desc: 'Refer a neighbor and both get credits',
       color: 'bg-emerald-600',
       image: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&q=80&w=1470'
     },
-    { 
-      id: 'promo-1', 
-      title: 'First-Time User Special', 
-      discount: 'R20 OFF', 
-      desc: 'On your first home experience booking', 
+    {
+      id: 'promo-1',
+      title: 'First-Time User Special',
+      discount: 'R20 OFF',
+      desc: 'On your first home experience booking',
       color: 'bg-rose-600',
       image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=1470'
     },
@@ -1540,34 +1540,33 @@ const WeeklySpecialsSection = ({ navigate }) => {
 
   return (
     <section className="mb-16">
-       <div className="flex items-center gap-3 mb-8">
-          <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-          <h2 className="text-xl font-black text-gray-950 tracking-widest uppercase">DEFINE YOUR DAY</h2>
-       </div>
-       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {specials.map((promo, idx) => (
-            <motion.div 
-               key={promo.id}
-               whileHover={{ scale: 1.02 }}
-               className="relative h-64 rounded-[2.5rem] overflow-hidden  cursor-pointer shadow-xl"
-               onClick={() => navigate('/search?filter=special')}
-            >
-               <img src={promo.image} className="absolute inset-0 w-full h-full object-cover hover:scale-110 transition-transform duration-[5s]" alt={promo.title} />
-               <div className="absolute inset-0 bg-black/40 hover:bg-black/20 transition-colors" />
-               <div className="absolute inset-x-0 bottom-0 p-8">
-                  <div className={`${promo.color} text-white text-[10px] font-black px-3 py-1 rounded-full w-fit mb-3 tracking-widest`}>
-                    {promo.discount}
-                  </div>
-                  <h3 className="text-white font-bold text-xl leading-tight mb-1">{promo.title}</h3>
-                  <p className="text-white/80 text-sm font-medium">{promo.desc}</p>
-               </div>
-            </motion.div>
-          ))}
-       </div>
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+        <h2 className="text-xl font-black text-gray-950 tracking-widest uppercase">DEFINE YOUR DAY</h2>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {specials.map((promo, idx) => (
+          <motion.div
+            key={promo.id}
+            whileHover={{ scale: 1.02 }}
+            className="relative h-64 rounded-[2.5rem] overflow-hidden  cursor-pointer shadow-xl"
+            onClick={() => navigate('/search?filter=special')}
+          >
+            <img src={promo.image} className="absolute inset-0 w-full h-full object-cover hover:scale-110 transition-transform duration-[5s]" alt={promo.title} />
+            <div className="absolute inset-0 bg-black/40 hover:bg-black/20 transition-colors" />
+            <div className="absolute inset-x-0 bottom-0 p-8">
+              <div className={`${promo.color} text-white text-[10px] font-black px-3 py-1 rounded-full w-fit mb-3 tracking-widest`}>
+                {promo.discount}
+              </div>
+              <h3 className="text-white font-bold text-xl leading-tight mb-1">{promo.title}</h3>
+              <p className="text-white/80 text-sm font-medium">{promo.desc}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
     </section>
   );
 };
-
 const MobileAppHomepage = ({
   featuredProperties, featuredServices, featuredHelpers, featuredEvents,
   loadingProperties, loadingServices, loadingHelpers, loadingEvents,
@@ -1580,6 +1579,30 @@ const MobileAppHomepage = ({
   const [activeCategory, setActiveCategory] = useState('Homes');
   const [showAIInsights, setShowAIInsights] = useState(true);
   const [isBookingsOpen, setIsBookingsOpen] = useState(false);
+  const [bannerLocationIndex, setBannerLocationIndex] = useState(0);
+
+  const bannerLocations = [
+    "SOWETO", "ALEXANDRA", "GAUTENG", "CAPE TOWN", "PRETORIA", "DURBAN", "KZN", "LIMPOPO", "POLOKWANE"
+  ];
+
+  const bannerImages = [
+    "/soweto_bg.png",
+    "https://images.unsplash.com/photo-1549488344-1f9b8d2bd1f3?auto=format&fit=crop&q=80&w=1470",
+    "https://plus.unsplash.com/premium_photo-1742493691326-1237999b6827?q=80&w=1151&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1576485290814-1c72aa4bbb8e?auto=format&fit=crop&q=80&w=1470",
+    "https://images.unsplash.com/photo-1603553224936-a0466e549586?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1656776832776-cc37b01dd59f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1520116468816-95b69f847357?auto=format&fit=crop&q=80&w=1470",
+    "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&q=80&w=1470",
+    "https://images.unsplash.com/photo-1523800503107-5bc3ba2a6f81?auto=format&fit=crop&q=80&w=1470"
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBannerLocationIndex((prev) => (prev + 1) % bannerLocations.length);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const checkScreenSize = () => { setIsDesktop(window.innerWidth >= 1024); };
@@ -1596,24 +1619,35 @@ const MobileAppHomepage = ({
     }
   };
 
-  const categories = [
-    { icon: '🏠', label: 'Homes', type: 'properties' },
-    { icon: '✨', label: 'Services', type: 'services' },
-    { icon: '👷', label: 'Helpers', type: 'helpers' },
-    { icon: '🧹', label: 'Maid', type: 'helpers', category: 'domestic' },
-    { icon: '🧽', label: 'Cleaner', type: 'helpers', category: 'cleaner' },
-    { icon: '📚', label: 'Tutor', type: 'helpers', category: 'tutor' },
-    { icon: '👨‍🍳', label: 'Chef', type: 'helpers', category: 'chef' },
-    { icon: '💄', label: 'Beauty', type: 'helpers', category: 'beauty' },
-    { icon: '🖋️', label: 'Tattoos', type: 'helpers', category: 'tattoo' },
-    { icon: '✂️', label: 'Barber', type: 'helpers', category: 'barber' },
-    { icon: '👶', label: 'Nanny', type: 'helpers', category: 'nanny' },
-    { icon: '🎪', label: 'Events', type: 'events' },
-    { icon: '🤝', label: 'Needs', type: 'looking-for', path: '/looking-for' },
-    { icon: '🏖️', label: 'Beachfront', type: 'properties' },
-    { icon: '🏕️', label: 'Cabins', type: 'properties' },
-    { icon: '🏰', label: 'Trending', type: 'all' },
+  const [activeTab, setActiveTab] = useState('Universe');
+
+  const tabs = [
+    { id: 'Universe', emoji: '✨' },
+    { id: 'Homes', image: '/3d_home_icon_1775252451792.png' },
+    { id: 'Services', image: '/3d_services_icon_1775252517283.png' },
+    { id: 'Helpers', image: '/3d_helper_icon_1775252697443.png' },
+    { id: 'Events', emoji: '🎪' }
   ];
+
+  const getFilteredItems = () => {
+    switch (activeTab) {
+      case 'Homes': return featuredProperties;
+      case 'Services': return featuredServices;
+      case 'Helpers': return featuredHelpers;
+      case 'Events': return featuredEvents;
+      default: return [...featuredProperties.slice(0, 4), ...featuredServices.slice(0, 4)];
+    }
+  };
+
+  const getTabColor = (id) => {
+    switch (id) {
+      case 'Homes': return 'bg-rose-500';
+      case 'Services': return 'bg-amber-500';
+      case 'Helpers': return 'bg-blue-500';
+      case 'Events': return 'bg-purple-500';
+      default: return 'bg-gray-950';
+    }
+  };
 
 
 
@@ -1654,6 +1688,35 @@ const MobileAppHomepage = ({
             </div>
           )}
 
+          {/* PROMOTED LISTINGS SECTION (SAMPLE) */}
+          <section className="mb-16 bg-gradient-to-r from-amber-500/10 to-rose-500/10 p-6 rounded-[2.5rem] border border-amber-500/20 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/20 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-rose-500/20 rounded-full blur-3xl" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-[2px] bg-amber-500" />
+                <span className="text-amber-600 text-sm font-black tracking-[0.2em] uppercase flex items-center gap-2">
+                  <FireIcon className="w-5 h-5" /> Promoted by Hosts
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {[
+                  { item: MOCK_PROPERTIES[0], type: 'property', path: `/listing/${MOCK_PROPERTIES[0]._id}` },
+                  { item: MOCK_SERVICES[0], type: 'service', path: `/service/${MOCK_SERVICES[0]._id}` },
+                  { item: MOCK_HELPERS[0], type: 'helper', path: `/helper/${MOCK_HELPERS[0]._id}` },
+                  { item: MOCK_EVENTS[0], type: 'event', path: `/event/${MOCK_EVENTS[0]._id}` }
+                ].filter(promo => promo.item).map((promo, idx) => (
+                  <div key={`promoted-${promo.type}-${idx}`} className="relative">
+                    <AirbnbCard item={promo.item} type={promo.type} onClick={() => navigate(promo.path)} hideDistance={true} />
+                    <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg z-30 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> Ad
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
           {/* NEW: WEEKLY SPECIALS SECTION */}
           <WeeklySpecialsSection navigate={navigate} />
 
@@ -1662,23 +1725,7 @@ const MobileAppHomepage = ({
           {/* SERVICES TO YOUR DOOR SECTION */}
           <ServicesToYourDoor navigate={navigate} />
 
-          {recentlyViewedItems.length > 0 && (
-            <section className="mb-16">
-              <SectionTitle title="Recently viewed" actionText="See all" onAction={() => navigate('/recently-viewed')} />
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {recentlyViewedItems.slice(0, 4).map((item) => (
-                  <AirbnbCard
-                    key={item._id}
-                    item={item}
-                    type={item.itemType === 'listing' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property') : item.itemType}
-                    onClick={() => onItemClick(item, item.itemType)}
-                    isLiked={item.isLiked}
-                    onLike={onRecentlyViewedLike}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
+
 
           {recentlyAddedItems.length > 0 && (
             <section className="mb-16">
@@ -1696,106 +1743,100 @@ const MobileAppHomepage = ({
             </section>
           )}
 
-          <SmartRecommendations 
-            recommendations={aiRecommendations} 
-            insights={aiInsights} 
-            loading={loadingProperties || aiRecommendations.length === 0} 
-            onItemClick={(item, type) => navigate(`/${type || 'listing'}/${item._id}`)} 
-          />
 
-          <section className="mb-16">
-            <SectionTitle title="Featured properties" actionText="View all" onAction={() => navigate('/listing-home-page')} />
-            {loadingProperties ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {[...Array(8)].map((_, i) => <AirbnbCardSkeleton key={i} />)}
+          {/* CONSOLIDATED DISCOVER FEED */}
+          <section className="mb-20">
+            <div className="flex items-center justify-between mb-12">
+              <div className="flex items-center gap-10">
+                {tabs.map((tab) => {
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <motion.button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex flex-col items-center gap-4 relative transition-all duration-300 ${isActive ? 'opacity-100 scale-110' : 'opacity-40 hover:opacity-100'}`}
+                    >
+                      <motion.div 
+                        className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500 ${isActive ? `${getTabColor(tab.id)} shadow-[0_20px_40px_rgba(0,0,0,0.15)]` : 'bg-transparent'}`}
+                        whileHover={{ 
+                          scale: 1.3,
+                          rotateY: [0, 15, -15, 0],
+                          rotateX: [0, -10, 10, 0],
+                          y: [0, -20, 0],
+                          transition: {
+                            duration: 0.8,
+                            ease: "easeInOut",
+                            repeat: Infinity,
+                            repeatType: "mirror"
+                          }
+                        }}
+                        style={{ transformStyle: 'preserve-3d', perspective: '1000px' }}
+                      >
+                        <motion.div
+                          animate={isActive ? {
+                            scale: [1, 1.2, 1],
+                            rotate: [0, 5, -5, 0],
+                            transition: { repeat: Infinity, duration: 4 }
+                          } : {}}
+                        >
+                          {tab.image ? (
+                            <img src={tab.image} className="w-12 h-12 object-contain drop-shadow-2xl" alt={tab.id} />
+                          ) : (
+                            <span className="text-3xl drop-shadow-2xl">{tab.emoji}</span>
+                          )}
+                        </motion.div>
+                      </motion.div>
+                      <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors ${isActive ? 'text-gray-950' : 'text-gray-400'}`}>
+                        {tab.id}
+                      </span>
+                      {isActive && (
+                        <motion.div layoutId="activeTabUnderline" className={`absolute -bottom-6 w-10 h-1 ${getTabColor(tab.id)} rounded-full`} />
+                      )}
+                    </motion.button>
+                  );
+                })}
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {featuredProperties.slice(0, 8).map((property) => (
-                  <AirbnbCard key={property._id} item={property} type="property" onClick={() => navigate(`/listing/${property._id}`)} />
-                ))}
-              </div>
-            )}
-          </section>
 
-          <section className="mb-16">
-            <SectionTitle title="Professional services" actionText="View all" onAction={() => navigate('/service-home-page')} />
-            {loadingServices ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {[...Array(4)].map((_, i) => <AirbnbCardSkeleton key={i} />)}
+              <div className="flex items-center gap-3 bg-gray-100 p-1.5 rounded-2xl border border-gray-200/50">
+                <div className="px-4 py-2 bg-white rounded-xl shadow-sm text-[10px] font-black uppercase tracking-widest text-gray-900">Elite Filter</div>
+                <FunnelIcon className="w-5 h-5 text-gray-400 mr-2" />
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {featuredServices.slice(0, 4).map((service) => (
-                  <AirbnbCard key={service._id} item={service} type="service" onClick={() => navigate(`/service/${service._id}`)} />
-                ))}
-              </div>
-            )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+              {getFilteredItems().map((item, idx) => (
+                <motion.div
+                  key={item._id || idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                >
+                  <AirbnbCard
+                    item={item}
+                    type={activeTab === 'Universe' ? (item.itemType || 'property') : activeTab.slice(0, -1).toLowerCase()}
+                    onClick={(path) => navigate(path)}
+                  />
+                </motion.div>
+              ))}
+            </div>
+            
+            <div className="mt-16 flex justify-center">
+              <button 
+                onClick={() => navigate('/search')}
+                className="px-12 py-5 bg-gray-950 text-white rounded-[2rem] text-xs font-black uppercase tracking-[0.3em] hover:bg-rose-500 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.2)] active:scale-95"
+              >
+                Expand the Matrix
+              </button>
+            </div>
           </section>
 
           {/* LoopOut Pulse (Live Community Feed) */}
-          <div className="mb-10 mt-8">
+          <div className="mb-20">
             <LoopOutPulse />
           </div>
 
           <CommunityNeedsSection navigate={navigate} />
 
-
-          <section className="mb-16">
-            <SectionTitle title="Verified helpers" actionText="View all" onAction={() => navigate('/helper-home-page')} />
-            {loadingHelpers ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-6">
-                {[...Array(8)].map((_, i) => <div key={i} className="aspect-square bg-gray-200 rounded-3xl animate-pulse" />)}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-12 px-4">
-                {featuredHelpers.slice(0, 8).map((helper) => (
-                  <EliteHelperCard 
-                    key={helper._id} 
-                    helper={helper} 
-                    onClick={() => navigate(`/helper/${helper._id}`)} 
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section className="mb-16">
-            <SectionTitle title="Upcoming events" actionText="View all" onAction={() => navigate('/search?type=events')} />
-            {loadingEvents ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {[...Array(4)].map((_, i) => <div key={i} className="aspect-[4/3] bg-gray-200 rounded-xl animate-pulse" />)}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {featuredEvents.slice(0, 4).map((event) => (
-                  <motion.div key={event._id} whileHover={{ y: -4 }} onClick={() => navigate(`/event/${event._id}`)} className="cursor-pointer flex flex-col gap-3">
-                    <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-gray-200">
-                      <ImageGallery
-                        imageUrls={event.imageUrls || []}
-                        alt={event.name}
-                        type="event"
-                      />
-                      <div className="absolute top-3 left-3 bg-white/95 backdrop-blur px-2 py-1 rounded-md">
-                        <span className="text-xs font-bold text-gray-900">{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                      </div>
-                      {event.attendingCount > 100 && (
-                        <div className="absolute top-3 right-3 bg-rose-500 text-white px-2 py-1 rounded-md text-xs font-bold">Trending</div>
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 truncate">{event.name}</h3>
-                      <p className="text-gray-500 text-sm truncate">{event.address}</p>
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="font-semibold text-gray-900">R{event.regularPrice}</span>
-                        <span className="text-sm text-gray-500">{event.attendingCount}+ going</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </section>
 
           <motion.section initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="bg-gray-50 rounded-3xl p-8">
             <div className="flex justify-between items-center mb-8">
@@ -1830,23 +1871,23 @@ const MobileAppHomepage = ({
               <h2 className="text-3xl font-bold text-gray-900 mb-2">How loopOut works</h2>
               <p className="text-gray-500">The easiest way to find and book services in Polokwane</p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mx-auto">
               {[
-                { 
-                  icon: <MagnifyingGlassIcon className="w-10 h-10 text-rose-500" />, 
-                  title: "1. Discover", 
-                  desc: "Use our AI-powered search to find the perfect stay, helper, or service near you." 
+                {
+                  icon: <MagnifyingGlassIcon className="w-10 h-10 text-rose-500" />,
+                  title: "1. Discover",
+                  desc: "Use our AI-powered search to find the perfect stay, helper, or service near you."
                 },
-                { 
-                  icon: <Sparkles className="w-10 h-10 text-amber-500" />, 
-                  title: "2. Personalize", 
-                  desc: "Select options that fit your schedule and budget. See verified reviews and ratings." 
+                {
+                  icon: <Sparkles className="w-10 h-10 text-amber-500" />,
+                  title: "2. Personalize",
+                  desc: "Select options that fit your schedule and budget. See verified reviews and ratings."
                 },
-                { 
-                  icon: <CheckCircleIcon className="w-10 h-10 text-green-500" />, 
-                  title: "3. Book & Enjoy", 
-                  desc: "Book instantly via WhatsApp and enjoy professional services from the best in the city." 
+                {
+                  icon: <CheckCircleIcon className="w-10 h-10 text-green-500" />,
+                  title: "3. Book & Enjoy",
+                  desc: "Book instantly via WhatsApp and enjoy professional services from the best in the city."
                 }
               ].map((step, i) => (
                 <div key={i} className="flex flex-col items-center text-center ">
@@ -1864,7 +1905,7 @@ const MobileAppHomepage = ({
           <section className="mt-16 mb-8 bg-gray-900 rounded-3xl p-10 lg:p-14 overflow-hidden relative flex flex-col md:flex-row items-center justify-between">
             <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500 rounded-full blur-3xl opacity-20 -mr-20 -mt-20 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500 rounded-full blur-3xl opacity-20 -ml-20 -mb-20 pointer-events-none"></div>
-            
+
             <div className="relative z-10 md:w-1/2 text-left mb-10 md:mb-0">
               <div className="inline-block bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4">
                 Available Now
@@ -1895,93 +1936,93 @@ const MobileAppHomepage = ({
                   <div className="w-1.5 h-1.5 bg-gray-800 rounded-full"></div>
                 </div>
                 <div className="w-full h-full bg-gradient-to-br from-rose-500 to-indigo-600 p-6 flex flex-col items-center justify-center text-center relative z-10">
-                   <div className="absolute inset-0 bg-black/10"></div>
-                   
-                   <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-xl mb-6 relative z-10">
+                  <div className="absolute inset-0 bg-black/10"></div>
+
+                  <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-xl mb-6 relative z-10">
                     <span className="text-4xl font-black text-rose-500">L</span>
                   </div>
                   <h3 className="text-white font-bold text-2xl mb-2 relative z-10">loopOut</h3>
                   <p className="text-white/90 text-sm text-center px-4 relative z-10">Discover homes, services, and experiences instantly.</p>
-                  
+
                   <div className="mt-8 w-full space-y-3 relative z-10">
                     <div className="w-full h-24 bg-white/20 backdrop-blur-md rounded-2xl p-3 flex gap-3">
-                       <div className="w-12 h-12 bg-white/30 rounded-xl"></div>
-                       <div className="flex-1 space-y-2">
-                         <div className="w-full h-3 bg-white/30 rounded-full"></div>
-                         <div className="w-2/3 h-3 bg-white/30 rounded-full"></div>
-                       </div>
+                      <div className="w-12 h-12 bg-white/30 rounded-xl"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="w-full h-3 bg-white/30 rounded-full"></div>
+                        <div className="w-2/3 h-3 bg-white/30 rounded-full"></div>
+                      </div>
                     </div>
                     <div className="w-full h-24 bg-white/20 backdrop-blur-md rounded-2xl p-3 flex gap-3">
-                       <div className="w-12 h-12 bg-white/30 rounded-xl"></div>
-                       <div className="flex-1 space-y-2">
-                         <div className="w-full h-3 bg-white/30 rounded-full"></div>
-                         <div className="w-2/3 h-3 bg-white/30 rounded-full"></div>
-                       </div>
+                      <div className="w-12 h-12 bg-white/30 rounded-xl"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="w-full h-3 bg-white/30 rounded-full"></div>
+                        <div className="w-2/3 h-3 bg-white/30 rounded-full"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </section>
-          
+
           {/* Desktop Promo Banner: Become a Provider */}
-          <section className="mb-20 mt-16 group">
-             <div className="relative h-[480px] rounded-[3rem] overflow-hidden shadow-2xl">
-                <img 
-                  src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1469" 
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[10s]"
-                  alt="Business Growth"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/60 to-transparent" />
-                
-                <div className="absolute inset-0 p-16 flex flex-col justify-center max-w-2xl">
-                   <div className="flex items-center gap-2 mb-6">
-                      <div className="w-10 h-[1px] bg-rose-500" />
-                      <span className="text-rose-500 text-xs font-black tracking-[0.3em] uppercase">Enterprise Protocol</span>
-                   </div>
-                   
-                   <h2 className="text-5xl font-black text-white leading-tight tracking-tighter mb-8">
-                      TURN YOUR ASSETS <br />
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-amber-400 italic">
-                        INTO A POWERHOUSE.
-                      </span>
-                   </h2>
-                   
-                   <p className="text-xl text-gray-300 font-medium mb-12 leading-relaxed">
-                      Scale your property, service, or expertise with the world's most sophisticated AI-driven business ecosystem.
-                   </p>
-                   
-                   <div className="flex items-center gap-6">
-                      <button 
-                        onClick={() => navigate('/for-business')}
-                        className="px-10 py-5 bg-white text-gray-950 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all shadow-2xl flex items-center gap-3 group/btn"
-                      >
-                        Join loopOut Business
-                        <ArrowRightIcon className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
-                      </button>
-                      <button className="px-10 py-5 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-white/20 transition-all">
-                        Learn More
-                      </button>
-                   </div>
+          <section className="mb-20 mt-16 ">
+            <div className="relative h-[480px] rounded-[3rem] overflow-hidden shadow-2xl">
+              <img
+                src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1469"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[10s]"
+                alt="Business Growth"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/60 to-transparent" />
+
+              <div className="absolute inset-0 p-16 flex flex-col justify-center max-w-2xl">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-10 h-[1px] bg-rose-500" />
+                  <span className="text-rose-500 text-xs font-black tracking-[0.3em] uppercase">Enterprise Protocol</span>
                 </div>
-             </div>
+
+                <h2 className="text-5xl font-black text-white leading-tight tracking-tighter mb-8">
+                  TURN YOUR ASSETS <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-amber-400 italic">
+                    INTO A POWERHOUSE.
+                  </span>
+                </h2>
+
+                <p className="text-xl text-gray-300 font-medium mb-12 leading-relaxed">
+                  Scale your property, service, or expertise with the world's most sophisticated AI-driven business ecosystem.
+                </p>
+
+                <div className="flex items-center gap-6">
+                  <button
+                    onClick={() => navigate('/for-business')}
+                    className="px-10 py-5 bg-white text-gray-950 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all shadow-2xl flex items-center gap-3 group/btn"
+                  >
+                    Join loopOut Business
+                    <ArrowRightIcon className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                  </button>
+                  <button className="px-10 py-5 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-white/20 transition-all">
+                    Learn More
+                  </button>
+                </div>
+              </div>
+            </div>
           </section>
         </main>
 
         {/* Floating Smart Concierge */}
         <motion.div
-           initial={{ scale: 0, opacity: 0 }}
-           animate={{ scale: 1, opacity: 1 }}
-           whileHover={{ scale: 1.1, rotate: 10 }}
-           whileTap={{ scale: 0.9 }}
-           onClick={() => navigate('/ai-help-center')}
-           className=" fixed bottom-8 right-8 z-[100] cursor-pointer "
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={{ scale: 1.1, rotate: 10 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => navigate('/ai-help-center')}
+          className=" fixed bottom-8 right-8 z-[100] cursor-pointer "
         >
           <div className="absolute -inset-2 bg-gradient-to-r from-rose-600 to-pink-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 animate-pulse" />
           <div className="relative bg-rose-600 text-white p-4 rounded-full shadow-2xl flex items-center justify-center border-2 border-white/20">
             <Sparkles className="w-8 h-8" />
             <div className="absolute right-full mr-4 bg-white px-4 py-2 rounded-2xl shadow-xl text-gray-900 font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 pointer-events-none">
-               Need help finding something? <span>✨</span>
+              Need help finding something? <span>✨</span>
             </div>
           </div>
           <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
@@ -1989,18 +2030,18 @@ const MobileAppHomepage = ({
 
         {/* Floating My Bookings Button */}
         <motion.div
-           initial={{ scale: 0, opacity: 0 }}
-           animate={{ scale: 1, opacity: 1 }}
-           whileHover={{ scale: 1.1 }}
-           whileTap={{ scale: 0.9 }}
-           onClick={() => setIsBookingsOpen(true)}
-           className=" fixed bottom-28 right-8 z-[100] cursor-pointer "
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setIsBookingsOpen(true)}
+          className=" fixed bottom-28 right-8 z-[100] cursor-pointer "
         >
           <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 shadow-xl" />
           <div className="relative bg-white text-gray-900 p-4 rounded-full shadow-2xl flex items-center justify-center border border-gray-100">
             <CalendarDaysIcon className="w-8 h-8 text-blue-600" />
             <div className="absolute right-full mr-4 bg-gray-900 text-white px-4 py-2 rounded-2xl shadow-xl text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 pointer-events-none">
-               Track your requests <span>🚚</span>
+              Track your requests <span>🚚</span>
             </div>
           </div>
           {requestCount > 0 && (
@@ -2028,8 +2069,55 @@ const MobileAppHomepage = ({
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      <main className="px-4 py-4">
-        {/* Mobile Top Categories - Horizontal Scroll */}
+      <main className="px-4 pt-2 pb-4">
+        {/* Mobile Elite Banner - Full Width Dynamic Location & Image */}
+        <motion.div
+          initial={{ opacity: 0, y: 0 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative h-[480px] -mx-4 overflow-hidden mb-12 shadow-2xl"
+          onClick={() => navigate('/ai-help-center')}
+        >
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={bannerLocationIndex}
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+              src={bannerImages[bannerLocationIndex]}
+              className="absolute inset-0 w-full h-full object-cover"
+              alt={`Experience ${bannerLocations[bannerLocationIndex]}`}
+            />
+          </AnimatePresence>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
+          <div className="absolute inset-0 p-8 flex flex-col justify-end">
+            <motion.div 
+              key={`text-${bannerLocationIndex}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-5 h-5 text-rose-400" />
+                <span className="text-white/80 text-[10px] font-black tracking-[0.25em] uppercase">VIBE OF THE NATION</span>
+              </div>
+              <h2 className="text-4xl font-black text-white leading-[0.85] mb-4 tracking-tighter">
+                EXPERIENCE <br />
+                <span className="text-rose-500">{bannerLocations[bannerLocationIndex]}.</span>
+              </h2>
+              <p className="text-white/90 text-[14px] font-medium mb-8 leading-relaxed max-w-[280px]">
+                Book authentic homes and on-demand services that come directly to your door in {bannerLocations[bannerLocationIndex].toLowerCase()}.
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="px-8 py-4 bg-white text-gray-900 rounded-2xl text-[12px] font-black shadow-xl uppercase tracking-widest">
+                  EXPLORE {bannerLocations[bannerLocationIndex]}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+
+        {/* Mobile Top Categories - Horizontal Scroll (Now under the banner) */}
         <section className="mb-8 -mx-4 px-4">
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-bold text-gray-900 text-lg">Top categories</h2>
@@ -2044,7 +2132,7 @@ const MobileAppHomepage = ({
                 transition={{ delay: index * 0.05 }}
                 onClick={() => {
                   const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner', 'barber', 'hair', 'nails', 'massage', 'chef', 'tattoo', 'nanny'];
-                  const services = ['baker', 'carwash', 'photograph', 'transport', 'landscaping', 'electrician','handyman', 'catering', 'schoolTransport', 'daycare', 'daily', 'delivery', 'usedbooks'];
+                  const services = ['baker', 'carwash', 'photograph', 'transport', 'landscaping', 'electrician', 'handyman', 'catering', 'schoolTransport', 'daycare', 'daily', 'delivery', 'usedbooks'];
                   const properties = ['rental', 'guesthouse', 'sale', 'overnight', 'vacation', 'office', 'land'];
 
                   if (helpers.includes(category.id)) {
@@ -2076,42 +2164,10 @@ const MobileAppHomepage = ({
             ))}
           </div>
         </section>
-        {/* Mobile Elite Banner - Refined Identity */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          className="relative h-80 rounded-[2.5rem] overflow-hidden mb-8 shadow-2xl"
-          onClick={() => navigate('/ai-help-center')}
-        >
-          <img 
-            src="/soweto_bg.png" 
-            className="absolute inset-0 w-full h-full object-cover" 
-            alt="loopOut Experience" 
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
-          <div className="absolute inset-0 p-8 flex flex-col justify-end">
-             <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-5 h-5 text-rose-400" />
-                <span className="text-white/80 text-[10px] font-black tracking-[0.25em] uppercase">VIBE OF THE NATION</span>
-             </div>
-             <h2 className="text-3xl font-black text-white leading-[0.85] mb-3 tracking-tighter">
-               EXPERIENCE <br />
-               <span className="text-rose-500">YOUR CITY.</span>
-             </h2>
-             <p className="text-white/90 text-[13px] font-medium mb-6 leading-relaxed max-w-[260px]">
-               Book authentic homes and on-demand services that come directly to your door.
-             </p>
-             <div className="flex items-center gap-3">
-                <div className="px-6 py-3 bg-white text-gray-900 rounded-2xl text-[11px] font-black shadow-xl uppercase tracking-widest">
-                  EXPLORE NOW
-                </div>
-             </div>
-          </div>
-        </motion.div>
 
         {/* NEW: MOBILE WEEKLY SPECIALS */}
         <div className="mb-10">
-           <WeeklySpecialsSection navigate={navigate} />
+          <WeeklySpecialsSection navigate={navigate} />
         </div>
 
 
@@ -2149,124 +2205,97 @@ const MobileAppHomepage = ({
           </section>
         )}
 
-        <SmartRecommendations 
-          recommendations={aiRecommendations} 
-          insights={aiInsights} 
-          loading={loadingProperties || aiRecommendations.length === 0} 
-          onItemClick={(item, type) => onItemClick(item, type)} 
-        />
 
-        {recentlyViewedItems.length > 0 && (
-          <section className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="font-semibold text-gray-900">Recently viewed</h2>
-              <button onClick={() => navigate('/recently-viewed')} className="text-sm text-gray-500 underline">See all</button>
-            </div>
-            <div className="flex overflow-x-auto gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
-              {recentlyViewedItems.slice(0, 5).map((item) => (
-                <div key={item._id} onClick={() => onItemClick(item, item.itemType)} className="flex-shrink-0 w-36 cursor-pointer">
-                  <div className="relative aspect-[3/2] rounded-xl overflow-hidden mb-2 bg-gray-200">
-                    <ImageGallery
-                      imageUrls={item.imageUrls || []}
-                      alt={item.name}
-                      type={item.type || 'default'}
-                    />
-                    <button onClick={(e) => { e.stopPropagation(); onRecentlyViewedLike(item._id, !item.isLiked); }} className="absolute top-2 right-2 p-1 z-20">
-                      {item.isLiked ? <HeartIconSolid className="w-5 h-5 text-rose-500" /> : <HeartIcon className="w-5 h-5 text-white drop-shadow-md" />}
-                    </button>
-                  </div>
-                  <p className="font-medium text-sm truncate">{item.name}</p>
-                  <p className="text-sm text-gray-500">R{item.regularPrice}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        <section className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-semibold text-gray-900">Popular homes</h2>
-            <Link to="/listing-home-page" className="text-sm text-gray-500 underline">See all</Link>
+        {/* MOBILE CONSOLIDATED FEED */}
+        <section className="mt-10 mb-8">
+          <div className="flex overflow-x-auto gap-8 pb-6 border-b border-gray-100 mb-8 no-scrollbar">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <motion.button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex flex-col items-center gap-3 transition-all duration-300 shrink-0 ${isActive ? 'opacity-100' : 'opacity-40'}`}
+                >
+                  <motion.div 
+                    className={`w-14 h-14 flex items-center justify-center rounded-xl transition-all ${isActive ? `${getTabColor(tab.id)} shadow-lg` : 'bg-transparent'}`}
+                    whileTap={{ scale: 0.8 }}
+                    animate={isActive ? {
+                      y: [0, -5, 0],
+                      transition: { repeat: Infinity, duration: 2, ease: "easeInOut" }
+                    } : {}}
+                  >
+                    <motion.div
+                      whileHover={{ 
+                        rotate: [0, 10, -10, 0],
+                        scale: 1.2,
+                        transition: { duration: 0.5 }
+                      }}
+                    >
+                      {tab.image ? (
+                        <img src={tab.image} className="w-10 h-10 object-contain drop-shadow-md" alt={tab.id} />
+                      ) : (
+                        <span className="text-2xl drop-shadow-md">{tab.emoji}</span>
+                      )}
+                    </motion.div>
+                  </motion.div>
+                  <span className={`text-[9px] font-black uppercase tracking-widest ${isActive ? 'text-gray-950' : 'text-gray-400'}`}>
+                    {tab.id}
+                  </span>
+                </motion.button>
+              );
+            })}
           </div>
-          {loadingProperties ? (
-            <div className="grid grid-cols-2 gap-4">
-              {[...Array(4)].map((_, i) => <AirbnbCardSkeleton key={i} />)}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4">
-              {featuredProperties.slice(0, 4).map((property) => (
-                <AirbnbCard key={property._id} item={property} type="property" onClick={() => navigate(`/listing/${property._id}`)} hideDistance={true} />
-              ))}
-            </div>
-          )}
-        </section>
 
-        <section className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-semibold text-gray-900">Top services</h2>
-            <Link to="/service-home-page" className="text-sm text-gray-500 underline">See all</Link>
-          </div>
-          <div className="flex overflow-x-auto gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
-            {featuredServices.slice(0, 3).map((service) => (
-              <div key={service._id} onClick={() => navigate(`/service/${service._id}`)} className="flex-shrink-0 w-60 cursor-pointer">
-                <div className="relative aspect-[3/2] rounded-xl overflow-hidden mb-2 bg-gray-200">
-                  <ImageGallery
-                    imageUrls={service.imageUrls || []}
-                    alt={service.name}
-                    type="service"
-                  />
-                </div>
-                <p className="font-medium text-sm truncate">{service.name}</p>
-                <p className="font-semibold text-sm mt-1">R{service.regularPrice}</p>
-              </div>
+          <div className="grid grid-cols-1 gap-10">
+            {getFilteredItems().slice(0, 6).map((item, idx) => (
+              <motion.div
+                key={item._id || idx}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+              >
+                <AirbnbCard
+                  item={item}
+                  type={activeTab === 'Universe' ? (item.itemType || 'property') : activeTab.slice(0, -1).toLowerCase()}
+                  onClick={(path) => navigate(path)}
+                />
+              </motion.div>
             ))}
           </div>
+
+          <button 
+            onClick={() => navigate('/search')}
+            className="w-full mt-12 py-5 bg-gray-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
+          >
+            Explore the Universe
+          </button>
         </section>
 
-        {/* LoopOut Pulse (Live Community Feed) - Mobile */}
-        <div className="mb-6 -mx-4 mt-6">
+        {/* Mobile Community Highlights */}
+        <div className="mb-10 -mx-4">
           <LoopOutPulse />
         </div>
 
         <CommunityNeedsSection navigate={navigate} />
 
-        <AirbnbDiscoverSection 
-          title="Premium Events" 
-          items={featuredEvents} 
-          type="event" 
-          navigate={navigate} 
-        />
-
-
-        <AirbnbDiscoverSection 
-          title="Verified Helpers" 
-          items={featuredHelpers} 
-          type="helper" 
-          navigate={navigate} 
-        />
-
-        {/* NEW: MOBILE SERVICES TO YOUR DOOR */}
-        <div className="mb-10">
-           <ServicesToYourDoor navigate={navigate} />
-        </div>
-
       </main>
 
       {/* Floating Track Requests Button - Mobile */}
       <motion.div
-         initial={{ scale: 0, opacity: 0 }}
-         animate={{ scale: 1, opacity: 1 }}
-         whileHover={{ scale: 1.1 }}
-         whileTap={{ scale: 0.9 }}
-         onClick={() => setIsBookingsOpen(true)}
-         className=" fixed bottom-24 right-4 z-[100] cursor-pointer "
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => setIsBookingsOpen(true)}
+        className=" fixed bottom-24 right-4 z-[100] cursor-pointer "
       >
         <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 shadow-xl" />
         <div className="relative bg-white text-gray-900 p-4 rounded-full shadow-2xl flex items-center justify-center border border-gray-100">
           <CalendarDaysIcon className="w-8 h-8 text-blue-600" />
           {/* Tooltip moved above the button to avoid side-overlapping on mobile */}
           <div className="absolute bottom-full right-0 mb-4 bg-gray-900 text-white px-4 py-2 rounded-2xl shadow-xl text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
-             Track your requests <span>🚚</span>
+            Track your requests <span>🚚</span>
           </div>
         </div>
         {requestCount > 0 && (
@@ -2435,7 +2464,7 @@ const Home = () => {
         fetch(`/api/listing/get?limit=50&sort=createdAt&order=desc`, {
           signal: controllers.properties.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
-          .then(data => { 
+          .then(data => {
             if (data?.length > 0) {
               const localMatches = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.POLOKWANE, detectedCity);
               if (localMatches.length > 0) {
@@ -2468,10 +2497,10 @@ const Home = () => {
         fetch(`/api/service/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc`, {
           signal: controllers.services.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
-          .then(data => { 
+          .then(data => {
             if (data?.length > 0) {
               const sorted = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity);
-              setFeaturedServices(sorted.slice(0, DATA_FETCH_LIMIT)); 
+              setFeaturedServices(sorted.slice(0, DATA_FETCH_LIMIT));
             }
           })
           .catch(() => { }).finally(() => setLoadingServices(false)),
@@ -2479,10 +2508,10 @@ const Home = () => {
         fetch(`/api/helper/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc`, {
           signal: controllers.helpers.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
-          .then(data => { 
+          .then(data => {
             if (data?.length > 0) {
               const sorted = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity);
-              setFeaturedHelpers(sorted.slice(0, DATA_FETCH_LIMIT)); 
+              setFeaturedHelpers(sorted.slice(0, DATA_FETCH_LIMIT));
             }
           })
           .catch(() => { }).finally(() => setLoadingHelpers(false)),
@@ -2490,10 +2519,10 @@ const Home = () => {
         fetch(`/api/event/get?limit=${DATA_FETCH_LIMIT}&sort=date&order=asc`, {
           signal: controllers.events.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
-          .then(data => { 
+          .then(data => {
             if (data?.length > 0) {
               const sorted = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity);
-              setFeaturedEvents(sorted.slice(0, DATA_FETCH_LIMIT)); 
+              setFeaturedEvents(sorted.slice(0, DATA_FETCH_LIMIT));
             }
           })
           .catch(() => { }).finally(() => setLoadingEvents(false))

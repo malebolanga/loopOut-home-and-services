@@ -534,15 +534,15 @@ export default function Header() {
           initial={{ y: 0 }}
           animate={{ 
             y: isNavVisible ? 0 : -120,
-            paddingTop: scrolled ? '0.25rem' : '0.5rem',
-            paddingBottom: scrolled ? '0.25rem' : '0.5rem',
+            paddingTop: scrolled ? '0.5rem' : '0.75rem',
+            paddingBottom: scrolled ? '0.5rem' : '0.75rem',
           }}
           transition={{ type: 'spring', damping: 25, stiffness: 120 }}
           ref={headerRef}
           className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-2xl shadow-lg border-b border-gray-100' : 'bg-transparent'}`}
         >
         <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-[34px]">
-          <div className="flex flex-row items-center justify-between h-10">
+          <div className="flex flex-row items-center justify-between h-20">
             
             {/* Left: Branding & Home Link */}
             <div className={`transition-all duration-500 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
@@ -575,15 +575,15 @@ export default function Header() {
             <div className={`flex-1 hidden md:flex justify-center transition-all duration-500 ${showSearch ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
               <button
                 onClick={() => setShowSearch(true)}
-                className="flex items-center gap-3 px-4 py-1.5 border border-gray-200 rounded-full shadow-sm hover:shadow-md transition-all cursor-pointer bg-white group"
+                className="flex items-center gap-3 px-6 py-2 border border-gray-200 rounded-full shadow-sm hover:shadow-md transition-all cursor-pointer bg-white group"
               >
                 <span className="text-[11px] font-bold text-gray-900">Anywhere</span>
                 <div className="w-[1px] h-3 bg-gray-200" />
                 <span className="text-[11px] font-bold text-gray-900">Any week</span>
                 <div className="w-[1px] h-3 bg-gray-200" />
                 <span className="text-[11px] font-medium text-gray-400">Add guests</span>
-                <div className="w-6 h-6 bg-rose-500 rounded-full flex items-center justify-center text-white ml-2 group-hover:bg-rose-600 transition-colors">
-                  <MagnifyingGlassIcon className="w-3 h-3 stroke-[3px]" />
+                <div className="w-8 h-8 bg-rose-500 rounded-full flex items-center justify-center text-white ml-2 group-hover:bg-rose-600 transition-colors">
+                  <MagnifyingGlassIcon className="w-4 h-4 stroke-[3px]" />
                 </div>
               </button>
             </div>
@@ -948,9 +948,9 @@ export default function Header() {
                </button>
                
                <button 
-                 onClick={() => { handleSearch(); setShowSearch(false); }}
-                 className="bg-rose-500 hover:bg-rose-600 text-white px-8 py-4 rounded-[1.2rem] flex items-center gap-3 shadow-xl transition-all active:scale-95"
-               >
+                  onClick={() => { handleSearch(); setShowSearch(false); }}
+                  className="bg-rose-500 hover:bg-rose-600 text-white px-10 py-5 rounded-[1.2rem] flex items-center gap-3 shadow-xl transition-all active:scale-95"
+                >
                  <BrandIcon className="w-6 h-6" color="white" />
                  <span className="text-sm font-black uppercase tracking-widest">Search</span>
                </button>
@@ -962,7 +962,7 @@ export default function Header() {
 
       {!isHeaderHidden && (
         <>
-          <div className="h-28 md:h-32"></div>
+          <div className="h-20 md:h-24"></div>
         </>
       )}
     </>

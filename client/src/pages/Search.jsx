@@ -775,9 +775,23 @@ const SearchPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [categorySearchQuery, setCategorySearchQuery] = useState('');
 
-  // Recent searches
+  // Recent searches and recently viewed
   const [recentSearches, setRecentSearches] = useState([]);
+  const [recentlyViewedItems, setRecentlyViewedItems] = useState([]);
   const [detectedLocation, setDetectedLocation] = useState(null);
+
+  useEffect(() => {
+    const loadRecentlyViewed = () => {
+      try {
+        const stored = localStorage.getItem('recentlyViewedItems');
+        if (stored) {
+          const items = JSON.parse(stored);
+          setRecentlyViewedItems(items.slice(0, 5));
+        }
+      } catch (error) { console.error('Failed to load recently viewed items:', error); }
+    };
+    loadRecentlyViewed();
+  }, []);
 
   // Location intelligence detection
   useEffect(() => {
@@ -1108,6 +1122,35 @@ const SearchPage = () => {
             ))}
           </div>
         </div>
+
+        {/* RECENTLY VIEWED SECTION */}
+        {recentlyViewedItems.length > 0 && (
+          <section className="mb-12">
+            <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight italic mb-6">Recently Viewed</h2>
+            <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+              {recentlyViewedItems.map((item) => (
+                <div key={item._id || Math.random().toString()} onClick={() => navigate(`/${item.itemType || item.type || 'listing'}/${item._id || item.id}`)} className="flex-shrink-0 w-48 cursor-pointer group">
+                  <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-3 bg-gray-100 shadow-sm group-hover:shadow-xl transition-all duration-300">
+                    <ImageWithFallback
+                      src={item.imageUrls?.[0] || item.images?.[0] || 'https://images.unsplash.com/photo-1615529182904-14819c35db37?w=800'}
+                      alt={item.name || item.title || 'Item'}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-2 left-2 px-2 py-1 bg-white/90 backdrop-blur-sm rounded-lg text-[9px] font-black uppercase tracking-widest text-gray-900 shadow-sm">
+                      {item.itemType || item.type || 'property'}
+                    </div>
+                  </div>
+                  <h3 className="font-bold text-sm text-gray-900 truncate group-hover:text-rose-500 transition-colors">
+                    {item.name || item.title || 'Untitled Masterpiece'}
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1 font-medium">
+                    {typeof (item.regularPrice || item.price) === 'number' ? `R${(item.regularPrice || item.price).toLocaleString()}` : (item.regularPrice || item.price || 'Contact')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Results Area */}
         <div className="mb-8 flex items-center justify-between">

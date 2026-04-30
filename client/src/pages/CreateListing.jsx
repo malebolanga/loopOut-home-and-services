@@ -1427,32 +1427,6 @@ export default function CreateListing() {
     );
   }
 
-  if (postLimitReached) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl border border-gray-200 p-8 text-center shadow-lg">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ExclamationTriangleIcon className="w-8 h-8 text-gray-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Listing Limit Reached</h2>
-          <p className="text-gray-600 mb-6">
-            You've used all 3 free listings. Upgrade to create more.
-          </p>
-          {paymentRequired ? (
-            <button
-              onClick={handlePayment}
-              disabled={loading}
-              className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
-            >
-              {loading ? "Processing..." : "Pay R35 for New Listing"}
-            </button>
-          ) : (
-            <p className="text-gray-500">Delete existing listings to create new ones.</p>
-          )}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen relative overflow-x-hidden bg-gray-50">
