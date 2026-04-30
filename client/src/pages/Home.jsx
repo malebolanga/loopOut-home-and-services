@@ -1213,7 +1213,7 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
       whileHover={{ y: -5 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => navigate(`/looking-for?id=${request._id}`)}
-      className="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-xl shadow-gray-100/30 flex flex-col gap-5 h-full cursor-pointer"
+      className="p-6 flex flex-col gap-5 h-full cursor-pointer"
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
@@ -1348,8 +1348,7 @@ const CommunityNeedsSection = ({ navigate }) => {
       className="mb-20 mt-10 relative"
     >
       {/* Cinematic Orbital Backdrop */}
-      <div className="absolute -top-20 -right-20 w-96 h-96 bg-rose-500/5 rounded-full blur-[100px] -z-10 animate-pulse-slow" />
-      <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-blue-500/5 rounded-full blur-[100px] -z-10 animate-pulse-slow-reverse" />
+
 
       <div className="flex justify-between items-end mb-10">
         <div>
@@ -1364,11 +1363,10 @@ const CommunityNeedsSection = ({ navigate }) => {
         </div>
         <button
           onClick={() => navigate('/looking-for')}
-          className="flex items-center gap-3 px-8 py-4 bg-gray-950 text-white rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-2xl overflow-hidden relative"
+          className="text-[10px] font-black text-rose-500 uppercase tracking-widest border-b-2 border-rose-500/10 hover:border-rose-500 transition-all pb-1 flex items-center gap-2"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-rose-600 to-rose-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <span className="relative z-10">Sync All Signals</span>
-          <ArrowRightIcon className="relative z-10 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          <span>Sync All Signals</span>
+          <ArrowRightIcon className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
         </button>
       </div>
 
@@ -1620,6 +1618,11 @@ const MobileAppHomepage = ({
   };
 
   const [activeTab, setActiveTab] = useState('Universe');
+  const [visibleCount, setVisibleCount] = useState(10);
+
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [activeTab]);
 
   const tabs = [
     { id: 'Universe', emoji: '✨' },
@@ -2208,6 +2211,13 @@ const MobileAppHomepage = ({
 
         {/* MOBILE CONSOLIDATED FEED */}
         <section className="mt-10 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-black text-gray-900 tracking-tight">Explore {activeTab}</h2>
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-100 rounded-full">
+              <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Live Pulse</span>
+            </div>
+          </div>
           <div className="flex overflow-x-auto gap-10 pb-6 border-b border-gray-100 mb-8 no-scrollbar -mx-4 px-6">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
@@ -2248,7 +2258,7 @@ const MobileAppHomepage = ({
           </div>
 
           <div className="grid grid-cols-1 gap-10">
-            {getFilteredItems().slice(0, 6).map((item, idx) => (
+            {getFilteredItems().slice(0, visibleCount).map((item, idx) => (
               <motion.div
                 key={item._id || idx}
                 initial={{ opacity: 0, y: 10 }}
@@ -2264,12 +2274,25 @@ const MobileAppHomepage = ({
             ))}
           </div>
 
-          <button 
-            onClick={() => navigate('/search')}
-            className="w-full mt-12 py-5 bg-gray-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
-          >
-            Explore the Universe
-          </button>
+          {visibleCount < getFilteredItems().length ? (
+            <button 
+              onClick={() => setVisibleCount(prev => prev + 6)}
+              className="w-full mt-12 py-5 bg-gray-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
+            >
+              Load More {activeTab}
+            </button>
+          ) : (
+            <div className="flex justify-center mt-16 mb-12">
+              <motion.button
+                whileHover={{ scale: 1.2, rotate: 5 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => navigate('/search')}
+                className="text-gray-400 hover:text-rose-500 transition-colors"
+              >
+                <MagnifyingGlassIcon className="w-10 h-10" />
+              </motion.button>
+            </div>
+          )}
         </section>
 
         {/* Mobile Community Highlights */}
