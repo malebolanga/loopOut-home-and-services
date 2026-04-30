@@ -303,11 +303,6 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
       
       {/* Top Overlays */}
       <div className="absolute top-5 left-5 z-10 pointer-events-none flex flex-col gap-4">
-        <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
-          <Sparkles className="w-3 h-3 text-rose-500" />
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{getPropertyTypeName(listing.type)}</span>
-        </div>
-
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -317,6 +312,11 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
         >
           <Heart className={`w-4 h-4 ${isFavorite ? 'text-rose-500 fill-rose-500' : 'text-gray-400'}`} />
         </button>
+
+        <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
+          <Sparkles className="w-3 h-3 text-rose-500" />
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{getPropertyTypeName(listing.type)}</span>
+        </div>
       </div>
 
       {/* Permanent Information Overlay (On Image) */}
