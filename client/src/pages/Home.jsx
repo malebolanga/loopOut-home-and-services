@@ -715,7 +715,7 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
       onClick={handleClick}
       className={`cursor-pointer flex flex-col ${reducedSize ? 'gap-1.5' : 'gap-2'}`}
     >
-      <div className={`relative aspect-[4/5] overflow-hidden rounded-[2rem] bg-gray-100 shadow-md ${reducedSize ? 'mb-1' : 'mb-0'}`}>
+      <div className={`relative aspect-[4/5] overflow-hidden md:rounded-[2rem] rounded-none -mx-4 md:mx-0 bg-gray-100 shadow-md ${reducedSize ? 'mb-1' : 'mb-0'}`}>
         <ImageGallery
           imageUrls={item.imageUrls || [item.image] || []}
           alt={item.name}
@@ -723,7 +723,7 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
         />
 
         {/* Bookings Counter Overlay */}
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center justify-center z-20 pointer-events-auto group/booking hover:-translate-y-1 transition-transform cursor-pointer">
+        <div className="absolute top-3 right-3 flex items-center justify-center z-20 pointer-events-auto group/booking hover:-translate-y-1 transition-transform cursor-pointer">
           <div className="px-2.5 py-1 bg-black/60 backdrop-blur-md border border-white/20 rounded-lg shadow-[0_10px_20px_rgba(0,0,0,0.2)] flex items-center justify-center text-white transition-all overflow-hidden flex-nowrap whitespace-nowrap">
             <BookOpen className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             <span className="text-[10px] font-black ml-1 shrink-0">{item.bookingsCount || 0}</span>
@@ -733,7 +733,7 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
 
         <button
           onClick={(e) => { e.stopPropagation(); onLike && onLike(item._id, !isLiked); }}
-          className="absolute top-3 right-3 p-2 text-white hover:scale-110 transition-transform z-20 drop-shadow-md"
+          className="absolute top-3 left-3 p-2 text-white hover:scale-110 transition-transform z-20 drop-shadow-md"
         >
           {isLiked ? (
             <HeartIconSolid className={`text-rose-500 fill-rose-500 ${reducedSize ? 'w-5 h-5' : 'w-6 h-6'}`} />
@@ -743,7 +743,7 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
         </button>
 
         {isGuestFavorite && type === 'property' && (
-          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-sm border border-black/5 z-20">
+          <div className="absolute top-14 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-sm border border-black/5 z-20">
             <span className="text-[10px] font-bold text-gray-900 uppercase tracking-wider">Guest favorite</span>
           </div>
         )}
@@ -933,7 +933,7 @@ const EliteHelperCard = ({ helper, onClick }) => {
       onClick={onClick}
       className="cursor-pointer flex flex-col gap-2 "
     >
-      <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100 ">
+      <div className="relative aspect-square overflow-hidden md:rounded-2xl rounded-none -mx-4 md:mx-0 bg-gray-100 ">
         <ImageGallery
           imageUrls={helper.imageUrls || []}
           alt={helper.name}
@@ -1000,7 +1000,7 @@ const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
       onClick={onClick}
       className="cursor-pointer flex flex-col gap-2 "
     >
-      <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100 ">
+      <div className="relative aspect-square overflow-hidden md:rounded-2xl rounded-none -mx-4 md:mx-0 bg-gray-100 ">
         <ImageGallery
           imageUrls={item.imageUrls || []}
           alt={item.name}

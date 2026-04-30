@@ -268,7 +268,7 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ y: -5 }}
-      className={`${className} group relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer`}
+      className={`${className} group relative aspect-square bg-white md:rounded-[3rem] rounded-none -mx-4 md:mx-0 border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer`}
       onClick={handleCardClick}
     >
       <div className="absolute inset-0 z-0">
@@ -293,7 +293,7 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
 
       
       {/* Bookings Counter Overlay */}
-      <div className="absolute top-5 left-1/2 -translate-x-1/2 flex items-center justify-center z-20 pointer-events-auto group/booking hover:-translate-y-1 transition-transform cursor-pointer">
+      <div className="absolute top-5 right-5 flex items-center justify-center z-20 pointer-events-auto group/booking hover:-translate-y-1 transition-transform cursor-pointer">
         <div className="px-3 py-1.5 bg-black/60 backdrop-blur-md border border-white/20 rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.2)] flex items-center justify-center text-white transition-all overflow-hidden flex-nowrap whitespace-nowrap">
           <BookOpen className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
           <span className="text-[10px] font-black ml-1.5 shrink-0">{listing.bookingsCount || 0}</span>
