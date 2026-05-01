@@ -1,257 +1,233 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   MapPin,
-  Home,
-  Wrench,
-  Users,
-  Calendar,
   X,
   Maximize2,
   Minimize2,
-  Navigation
+  Navigation,
+  Star,
+  Sparkles,
+  ChevronRight
 } from 'lucide-react';
 
-// Simple fallback map view without react-leaflet
+const defaultCenter = {
+  lat: -23.9058, // Polokwane
+  lng: 29.4505
+};
+
 const MapView = ({ 
   items = [], 
-  searchType = 'properties', 
+  searchType = 'all', 
   location = 'South Africa',
+  center,
   onItemClick 
 }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const mapContainerRef = useRef(null);
+  const leafletMapRef = useRef(null);
 
-  const handleItemClick = (item) => {
-    setSelectedItem(item);
-    if (onItemClick) {
-      onItemClick(item);
-    }
-  };
-
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
-  };
-
-  const handleResetView = () => {
-    setSelectedItem(null);
-  };
+  const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
 
   const handleLocateMe = () => {
-    if (navigator.geolocation) {
+    if (navigator.geolocation && leafletMapRef.current) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          alert(`Your location: ${position.coords.latitude}, ${position.coords.longitude}`);
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          alert('Unable to get your location. Please enable location services.');
+          const { latitude, longitude } = position.coords;
+          leafletMapRef.current.flyTo([latitude, longitude], 14, { duration: 1.5 });
         }
       );
+    }
+  };
+
+  useEffect(() => {
+    // Load Leaflet from CDN dynamically
+    if (!window.L) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.async = true;
+      script.onload = () => initMap();
+      document.body.appendChild(script);
     } else {
-      alert('Geolocation is not supported by your browser');
+      initMap();
     }
-  };
 
-  const getItemIcon = (itemType) => {
-    switch (itemType) {
-      case 'properties': return { emoji: '🏠', color: 'bg-blue-500' };
-      case 'services': return { emoji: '🔧', color: 'bg-green-500' };
-      case 'helpers': return { emoji: '👥', color: 'bg-orange-500' };
-      case 'events': return { emoji: '🎪', color: 'bg-red-500' };
-      default: return { emoji: '📍', color: 'bg-gray-500' };
+    function initMap() {
+      if (!mapContainerRef.current || leafletMapRef.current) return;
+
+      const L = window.L;
+      if (!L) return;
+
+      const startCenter = center ? [center.lat, center.lng] : [defaultCenter.lat, defaultCenter.lng];
+      
+      const map = L.map(mapContainerRef.current, {
+        zoomControl: false,
+        attributionControl: false
+      }).setView(startCenter, 13);
+
+      // Elite Silver Theme Tiles
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20
+      }).addTo(map);
+
+      // Custom Price Marker with Category Intelligence
+      const createPriceIcon = (item, isSelected) => {
+        const type = (item.itemType || item.type || 'listing').toLowerCase();
+        const price = item.regularPrice || item.price || 0;
+        
+        let bgColor = 'bg-gray-950'; // Default
+        if (type.includes('service')) bgColor = 'bg-orange-500';
+        else if (type.includes('listing')) bgColor = 'bg-rose-600';
+        else if (type.includes('helper') || type.includes('maid') || type.includes('cleaning')) bgColor = 'bg-emerald-500';
+        else if (type.includes('event')) bgColor = 'bg-gray-950';
+
+        return L.divIcon({
+          className: 'custom-price-marker',
+          html: `
+            <div class="relative flex items-center justify-center transition-all duration-300 ${isSelected ? 'scale-125 z-[1000]' : 'z-[100]'}">
+              ${isSelected ? `<div class="absolute w-12 h-12 ${bgColor.replace('bg-', 'bg-')}/20 rounded-full animate-ping"></div>` : ''}
+              <div class="relative px-3 py-1.5 ${bgColor} text-white rounded-full border-2 border-white shadow-2xl flex items-center justify-center whitespace-nowrap">
+                 <span class="text-[10px] font-black tracking-tight">R${price.toLocaleString()}</span>
+              </div>
+              <div class="absolute -bottom-1 w-2 h-2 ${bgColor} rotate-45 border-r-2 border-b-2 border-white"></div>
+            </div>
+          `,
+          iconSize: [60, 30],
+          iconAnchor: [30, 30]
+        });
+      };
+
+      items.forEach(item => {
+        const lat = item.latitude || (defaultCenter.lat + (Math.random() - 0.5) * 0.05);
+        const lng = item.longitude || (defaultCenter.lng + (Math.random() - 0.5) * 0.05);
+        
+        const marker = L.marker([lat, lng], { 
+          icon: createPriceIcon(item, selectedItem?._id === item._id) 
+        })
+        .addTo(map)
+        .on('click', () => {
+          setSelectedItem({ ...item, latitude: lat, longitude: lng });
+        });
+      });
+
+      leafletMapRef.current = map;
     }
-  };
 
-  const getItemType = (item) => {
-    return item.itemType || searchType;
-  };
+    return () => {
+      if (leafletMapRef.current) {
+        leafletMapRef.current.remove();
+        leafletMapRef.current = null;
+      }
+    };
+  }, [center, items]);
+
+  useEffect(() => {
+    if (leafletMapRef.current && center) {
+      leafletMapRef.current.flyTo([center.lat, center.lng], 13, { duration: 1.5 });
+    }
+  }, [center]);
 
   return (
-    <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-white' : ''}`}>
-      {/* Map Controls */}
-      <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
-        <button
-          onClick={toggleFullscreen}
-          className="p-2.5 bg-white rounded-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
-          title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
-        >
-          {isFullscreen ? (
-            <Minimize2 className="w-5 h-5 text-gray-700" />
-          ) : (
-            <Maximize2 className="w-5 h-5 text-gray-700" />
-          )}
-        </button>
-        
-        <button
-          onClick={handleResetView}
-          className="p-2.5 bg-white rounded-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
-          title="Reset View"
-        >
-          <X className="w-5 h-5 text-gray-700" />
-        </button>
-        
-        <button
-          onClick={handleLocateMe}
-          className="p-2.5 bg-white rounded-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
-          title="Locate Me"
-        >
-          <Navigation className="w-5 h-5 text-gray-700" />
-        </button>
-      </div>
+    <div className={`relative w-full h-full overflow-hidden p-0 m-0 ${isFullscreen ? 'fixed inset-0 z-[200] bg-white h-[100dvh]' : ''}`}>
+      <style>{`
+        .custom-price-marker { background: transparent; border: none; }
+        .leaflet-container { background: #f8fafc; cursor: crosshair !important; }
+      `}</style>
 
-      {/* Map Container (Static Image for now) */}
-      <div className={`${isFullscreen ? 'h-screen' : 'h-[600px]'} rounded-2xl overflow-hidden shadow-lg bg-gradient-to-br from-gray-50 to-gray-100 relative`}>
-        {/* Map Background */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-50 via-gray-100 to-gray-200 opacity-50"></div>
-        
-        {/* Grid Lines */}
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px),
-            linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px'
-        }}></div>
-        
-        {/* Items as markers on the map */}
-        {items.map((item, index) => {
-          const itemType = getItemType(item);
-          const icon = getItemIcon(itemType);
-          
-          // Random position for demo
-          const top = 20 + (index % 8) * 60;
-          const left = 20 + (Math.floor(index / 8) % 6) * 80;
-          
-          return (
-            <motion.button
-              key={item._id || index}
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.05 }}
-              onClick={() => handleItemClick(item)}
-              className={`absolute ${icon.color} w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 border-2 border-white`}
-              style={{ top: `${top}px`, left: `${left}px` }}
-            >
-              <span className="text-lg">{icon.emoji}</span>
-              
-              {/* Tooltip */}
-              <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block">
-                <div className="bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
-                  {item.title || item.name || 'Item'}
-                </div>
-                <div className="w-2 h-2 bg-gray-900 rotate-45 absolute -bottom-1 left-1/2 transform -translate-x-1/2"></div>
-              </div>
-            </motion.button>
-          );
-        })}
-        
-        {/* Map Center Indicator */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <div className="w-4 h-4 border-4 border-red-500 rounded-full animate-ping"></div>
-          <div className="w-8 h-8 border-4 border-red-500 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
-        </div>
-        
-        {/* Location Label */}
-        <div className="absolute bottom-8 left-8">
-          <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg px-4 py-2">
-            <div className="flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-blue-600" />
-              <span className="font-medium text-gray-900">{location}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Item Counter */}
-      <div className="absolute top-4 left-4 z-[1000]">
-        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg px-4 py-2">
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-medium text-gray-900">
-              {items.length} {searchType} in {location}
+      {/* HUD: Search Summary Overlay */}
+      <div className="absolute top-8 left-1/2 -translate-x-1/2 z-[500] hidden md:block pointer-events-none">
+         <div className="bg-gray-950/90 backdrop-blur-2xl border border-white/10 px-8 py-3 rounded-3xl shadow-2xl flex items-center gap-4">
+            <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">
+              Neural Scan: {items.length} Masterpieces Found
             </span>
-          </div>
-        </div>
+         </div>
       </div>
 
-      {/* Selected Item Details Panel */}
-      {selectedItem && !isFullscreen && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute bottom-4 left-4 right-4 z-[1000]"
-        >
-          <div className="bg-white rounded-xl shadow-2xl p-4 border border-gray-200 max-w-md mx-auto">
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h3 className="font-semibold text-gray-900 text-lg">
-                  {selectedItem.title || selectedItem.name || 'Untitled'}
-                </h3>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <MapPin className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-600">
-                    {selectedItem.location || selectedItem.city || selectedItem.address || 'Location not specified'}
-                  </span>
+      {/* Professional Leaflet Map Container */}
+      <div ref={mapContainerRef} className="w-full h-full grayscale-[0.2] contrast-[1.1]" />
+      
+      {/* Results Carousel Overlay for Mobile/HUD */}
+      <AnimatePresence>
+        {selectedItem && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="absolute bottom-10 left-6 right-6 md:left-10 md:right-auto md:w-96 z-[600]"
+          >
+             <div className="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] p-6 shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-white/20 relative group overflow-hidden">
+                <button 
+                  onClick={() => setSelectedItem(null)}
+                  className="absolute top-4 right-4 z-10 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+                <div className="flex gap-4">
+                   <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-lg">
+                      <img src={selectedItem.imageUrls?.[0] || selectedItem.image || 'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=400&q=80'} alt={selectedItem.name} className="w-full h-full object-cover" />
+                   </div>
+                   <div className="flex-1">
+                      <div className="text-xs font-black text-rose-500 uppercase tracking-widest mb-1">{selectedItem.itemType || 'Listing'}</div>
+                      <h4 className="text-lg font-black text-gray-950 leading-tight mb-1">{selectedItem.name || selectedItem.title}</h4>
+                      <div className="flex items-center gap-2 text-sm font-bold text-gray-500">
+                         <span className="text-gray-950 font-black">R{(selectedItem.regularPrice || selectedItem.price || 0).toLocaleString()}</span>
+                         <span>•</span>
+                         <span>{selectedItem.type || selectedItem.category}</span>
+                      </div>
+                   </div>
                 </div>
-              </div>
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-            
-            <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-              {selectedItem.description || 'No description available'}
-            </p>
-            
-            <div className="flex items-center justify-between">
-              {selectedItem.price && (
-                <div className="text-lg font-semibold text-green-600">
-                  {new Intl.NumberFormat('en-ZA', {
-                    style: 'currency',
-                    currency: 'ZAR',
-                    maximumFractionDigits: 0
-                  }).format(selectedItem.price)}
-                </div>
-              )}
-              
-              <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:shadow-md transition-all">
-                View Details
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
+                <button 
+                  onClick={() => onItemClick(selectedItem)}
+                  className="w-full mt-6 py-4 bg-gray-950 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
+                >
+                  Inspect Masterpiece <ChevronRight className="w-4 h-4 text-rose-500" />
+                </button>
+             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Map Legend */}
-      {!isFullscreen && (
-        <div className="absolute bottom-20 left-4 z-[1000]">
-          <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-3">
-            <h4 className="text-sm font-semibold text-gray-900 mb-2">Legend</h4>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-blue-500"></div>
-                <span className="text-xs text-gray-700">Properties</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-green-500"></div>
-                <span className="text-xs text-gray-700">Services</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-orange-500"></div>
-                <span className="text-xs text-gray-700">Helpers</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-red-500"></div>
-                <span className="text-xs text-gray-700">Events</span>
-              </div>
+      {/* Neural Discovery Legend (Color Guidelines) */}
+      <div className="absolute bottom-10 left-6 md:left-8 z-[500]">
+         <div className="bg-white/90 backdrop-blur-xl p-4 md:p-5 rounded-[2rem] shadow-2xl border border-gray-100 space-y-3 md:space-y-4">
+            <div className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 px-1">Guidelines</div>
+            <div className="flex flex-col gap-2 md:gap-3">
+               <div className="flex items-center gap-2 md:gap-3">
+                  <div className="w-2.5 h-2.5 bg-rose-600 rounded-full" />
+                  <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-950">Homes</span>
+               </div>
+               <div className="flex items-center gap-2 md:gap-3">
+                  <div className="w-2.5 h-2.5 bg-orange-500 rounded-full" />
+                  <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-950">Services</span>
+               </div>
+               <div className="flex items-center gap-2 md:gap-3">
+                  <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
+                  <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-950">Helpers</span>
+               </div>
+               <div className="flex items-center gap-2 md:gap-3">
+                  <div className="w-2.5 h-2.5 bg-gray-950 rounded-full" />
+                  <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-950">Events</span>
+               </div>
             </div>
-          </div>
-        </div>
-      )}
+         </div>
+      </div>
+
+      {/* Floating HUD Controls */}
+      <div className="absolute bottom-10 right-8 flex flex-col gap-4 z-[500]">
+         <button onClick={toggleFullscreen} className="w-16 h-16 bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-2xl flex items-center justify-center text-gray-950 active:scale-90 transition-all border border-gray-100">
+           {isFullscreen ? <Minimize2 className="w-6 h-6" /> : <Maximize2 className="w-6 h-6" />}
+         </button>
+         <button onClick={handleLocateMe} className="w-16 h-16 bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-2xl flex items-center justify-center text-gray-950 active:scale-90 transition-all border border-gray-100">
+           <Navigation className="w-6 h-6" />
+         </button>
+      </div>
     </div>
   );
 };

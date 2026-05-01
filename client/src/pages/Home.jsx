@@ -43,7 +43,8 @@ import {
   ChatBubbleOvalLeftEllipsisIcon,
   ChatBubbleLeftEllipsisIcon,
   PhoneIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  BriefcaseIcon
 } from '@heroicons/react/24/outline';
 import {
   StarIcon as StarIconSolid,
@@ -51,7 +52,7 @@ import {
   HandThumbUpIcon as HandThumbUpIconSolid,
   HandThumbDownIcon as HandThumbDownIconSolid
 } from '@heroicons/react/24/solid';
-import { Sparkles, BookOpen } from 'lucide-react';
+import { Sparkles, BookOpen, ChevronRight } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode } from 'swiper/modules';
 import 'swiper/css';
@@ -1565,6 +1566,93 @@ const WeeklySpecialsSection = ({ navigate }) => {
     </section>
   );
 };
+// --- NEW COMPONENT: LOOPOUT SUPER DISCOVERY (CAROUSEL VERSION) ---
+const LoopOutForBusiness = ({ navigate }) => {
+  const discoveryPillars = [
+    {
+      title: "Monthly Rentals",
+      desc: "Find a place or a room for a month with zero hassle.",
+      icon: <HomeIcon className="w-6 h-6 text-rose-500" />,
+      color: "border-rose-500/20",
+      path: "/search?filter=monthly"
+    },
+    {
+      title: "One-Day Services",
+      desc: "Book professional experts for immediate one-day results.",
+      icon: <BriefcaseIcon className="w-6 h-6 text-orange-500" />,
+      color: "border-orange-500/20",
+      path: "/search?type=services"
+    },
+    {
+      title: "Professional Helpers",
+      desc: "Request a cleaner so you can focus on your career work.",
+      icon: <UserGroupIcon className="w-6 h-6 text-emerald-500" />,
+      color: "border-emerald-500/20",
+      path: "/search?type=helper"
+    },
+    {
+      title: "Masterpiece Events",
+      desc: "Discover and attend the nation's most elite one-day events.",
+      icon: <Sparkles className="w-6 h-6 text-gray-950" />,
+      color: "border-gray-950/20",
+      path: "/search?type=event"
+    }
+  ];
+
+  return (
+    <section className="py-24 bg-white">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Super Discovery</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black text-gray-950">
+              Synchronized <span className="text-rose-500">Bookings.</span>
+            </h2>
+          </div>
+          <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 rounded-2xl border border-gray-100">
+             <div className="flex gap-0.5">
+                {[1,2,3,4,5].map(i => <StarIcon key={i} className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />)}
+             </div>
+             <span className="text-[10px] font-black uppercase tracking-widest text-gray-900">4.9/5 Excellent</span>
+          </div>
+        </div>
+
+        <div className="flex gap-6 overflow-x-auto no-scrollbar pb-10">
+          {discoveryPillars.map((pillar, idx) => (
+            <motion.div
+              key={idx}
+              whileHover={{ y: -10 }}
+              onClick={() => navigate(pillar.path)}
+              className={`flex-shrink-0 w-72 md:w-80 bg-white rounded-[2.5rem] p-8 border-2 ${pillar.color} shadow-2xl cursor-pointer transition-all hover:shadow-rose-500/5`}
+            >
+               <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mb-8 shadow-inner">
+                  {pillar.icon}
+               </div>
+               <h3 className="text-xl font-black text-gray-950 mb-4 tracking-tight">{pillar.title}</h3>
+               <p className="text-gray-500 text-sm font-medium leading-relaxed mb-8">
+                 "{pillar.desc}"
+               </p>
+               <div className="flex items-center text-[10px] font-black uppercase tracking-widest text-rose-500 gap-2">
+                 Execute Discovery <ChevronRight className="w-4 h-4" />
+               </div>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="mt-12 p-8 bg-gray-950 rounded-[2.5rem] relative overflow-hidden">
+           <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-rose-500/20 to-transparent pointer-events-none" />
+           <p className="text-white font-medium text-sm md:text-base max-w-2xl relative z-10 leading-relaxed">
+             <span className="text-rose-500 font-black">Super Chat loopOut</span> helps businesses and individuals reach their audience via professional bookings. Every discovery is a masterpiece.
+           </p>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const MobileAppHomepage = ({
   featuredProperties, featuredServices, featuredHelpers, featuredEvents,
   loadingProperties, loadingServices, loadingHelpers, loadingEvents,
@@ -1868,6 +1956,125 @@ const MobileAppHomepage = ({
             </div>
           </motion.section>
 
+          {/* WHAT IS LOOPOUT? - MISSION SECTION */}
+          <section className="mt-32 mb-20 px-6">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <motion.div 
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="space-y-8"
+              >
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-rose-50 rounded-full border border-rose-100">
+                  <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+                  <span className="text-xs font-black uppercase tracking-widest text-rose-600">The Neural Discovery Platform</span>
+                </div>
+                <h2 className="text-5xl font-black text-gray-950 leading-tight">
+                  What is <span className="text-rose-500">loopOut?</span>
+                </h2>
+                <p className="text-xl text-gray-600 leading-relaxed font-medium">
+                  LoopOut is South Africa s premier elite discovery engine. We connect high-achieving individuals with exclusive properties, professional services, local helpers, and world-class events in Polokwane and beyond.
+                </p>
+                <div className="grid grid-cols-2 gap-8 pt-4">
+                  <div>
+                    <div className="text-2xl font-black text-gray-950">Neural Scanning</div>
+                    <p className="text-sm text-gray-500 mt-2">AI-driven spatial discovery to find the perfect match for your lifestyle.</p>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-black text-gray-950">Elite Security</div>
+                    <p className="text-sm text-gray-500 mt-2">Every masterpiece is verified by our community of trusted hosts.</p>
+                  </div>
+                </div>
+              </motion.div>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="relative"
+              >
+                <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/20 to-blue-500/20 rounded-[3rem] blur-3xl" />
+                <img 
+                  src="https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=1200&q=80" 
+                  alt="Elite Discovery" 
+                  className="relative rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.1)] border border-white/20"
+                />
+              </motion.div>
+            </div>
+          </section>
+
+          {/* COMMUNITY TESTIMONIALS - NEURAL FEEDBACK CAROUSEL */}
+          <section className="py-32 bg-gray-950 overflow-hidden">
+            <div className="max-w-7xl mx-auto px-6 mb-16">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+                <div>
+                  <h2 className="text-4xl md:text-6xl font-black text-white mb-6">Masterpiece <span className="text-rose-500">Reviews</span></h2>
+                  <p className="text-gray-400 max-w-xl text-lg font-medium">Hear from our elite community about their experiences with LoopOut in Polokwane and across the nation.</p>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex -space-x-4">
+                    {[1,2,3,4].map(i => (
+                      <img key={i} className="w-12 h-12 rounded-full border-4 border-gray-900 object-cover" src={`https://i.pravatar.cc/150?u=${i}`} alt="user" />
+                    ))}
+                  </div>
+                  <div className="text-white text-sm font-black uppercase tracking-widest self-center">+ 2,400 Reviews</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-8 overflow-x-auto no-scrollbar px-6 md:px-20 pb-20">
+              {[
+                {
+                  name: "Thabo Mbeki",
+                  role: "Elite Property Owner",
+                  image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
+                  text: "LoopOut transformed how I find services in Polokwane. The neural search is absolute genius!",
+                  rating: 5
+                },
+                {
+                  name: "Lerato Modise",
+                  role: "Event Curator",
+                  image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80",
+                  text: "Finally, a platform that understands the premium South African market. Highly recommended.",
+                  rating: 5
+                },
+                {
+                  name: "Kabelo Zulu",
+                  role: "Service Provider",
+                  image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80",
+                  text: "The best tool for managing my helper services and finding quality bookings in the city.",
+                  rating: 5
+                },
+                {
+                  name: "Nomvula Dlamini",
+                  role: "Home Seeker",
+                  image: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&q=80",
+                  text: "Stunning interface and incredibly reliable. Found my dream property within days.",
+                  rating: 5
+                }
+              ].map((review, idx) => (
+                <motion.div 
+                  key={idx}
+                  whileHover={{ y: -10 }}
+                  className="flex-shrink-0 w-[350px] md:w-[450px] bg-white/5 backdrop-blur-3xl border border-white/10 p-10 rounded-[2.5rem] shadow-2xl"
+                >
+                  <div className="flex gap-1 mb-6">
+                    {[...Array(review.rating)].map((_, i) => (
+                      <StarIcon key={i} className="w-5 h-5 text-rose-500 fill-rose-500" />
+                    ))}
+                  </div>
+                  <p className="text-xl text-gray-300 font-medium mb-8 italic">"{review.text}"</p>
+                  <div className="flex items-center gap-4">
+                    <img src={review.image} alt={review.name} className="w-14 h-14 rounded-full object-cover border-2 border-rose-500/50" />
+                    <div>
+                      <div className="text-white font-black">{review.name}</div>
+                      <div className="text-rose-500 text-xs font-black uppercase tracking-widest">{review.role}</div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+
           {/* HOW IT WORKS SECTION */}
           <section className="mt-20 mb-20 px-4">
             <div className="text-center mb-12">
@@ -2010,6 +2217,7 @@ const MobileAppHomepage = ({
               </div>
             </div>
           </section>
+          <LoopOutForBusiness navigate={navigate} />
         </main>
 
         {/* Floating Smart Concierge */}
@@ -2301,7 +2509,7 @@ const MobileAppHomepage = ({
         </div>
 
         <CommunityNeedsSection navigate={navigate} />
-
+        <LoopOutForBusiness navigate={navigate} />
       </main>
 
       {/* Floating Track Requests Button - Mobile */}

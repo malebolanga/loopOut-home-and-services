@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 import NeuralLoader from '../components/NeuralLoader';
 import ImageWithFallback from '../components/ImageWithFallback';
 import useLocationCoords from '../hooks/useGeolocation';
+import MapView from '../components/MapView';
 import {
   MagnifyingGlassIcon,
   AdjustmentsHorizontalIcon,
@@ -42,7 +45,8 @@ import {
   PuzzlePieceIcon,
   SunIcon,
   CloudIcon,
-  ChatBubbleBottomCenterTextIcon
+  ChatBubbleBottomCenterTextIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
 import {
   StarIcon as StarIconSolid,
@@ -63,7 +67,10 @@ import {
   ThumbsUp,
   ThumbsDown,
   Share2,
-  BookOpen
+  BookOpen,
+  Calendar as CalendarIconLucide,
+  Search as SearchIconLucide,
+  Navigation
 } from 'lucide-react';
 import NeighborhoodInsights from '../components/NeighborhoodInsights';
 
@@ -549,14 +556,14 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
       variants={cardVariants}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      className="relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
+      className="group relative aspect-square bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-700 cursor-pointer h-full"
       onClick={() => navigate(getItemPath(item))}
     >
       <div className="absolute inset-0 z-0">
         <ImageWithFallback
           src={getImage()}
           alt={getTitle()}
-          className="w-full h-full object-cover transition-transform duration-1000 hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
         />
       </div>
 
@@ -603,8 +610,8 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
       </div>
 
       {/* Hover Action Overlay */}
-      <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-8 bg-gray-900/50 backdrop-blur-md opacity-0 hover:opacity-100 transition-all duration-500 pointer-events-none hover:pointer-events-auto">
-        <div className="w-full space-y-4 transform translate-y-4 hover:translate-y-0 transition-all duration-500">
+      <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-8 bg-gray-900/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none group-hover:pointer-events-auto">
+        <div className="w-full space-y-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
           <div className="flex gap-2">
             <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-green-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm">
               <ThumbsUp className="w-4 h-4" />
@@ -616,7 +623,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
             </div>
           </div>
           <div className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl" onClick={(e) => { e.stopPropagation(); navigate(getItemPath(item)); }}>
-            Inspect Original Masterpiece
+             Inspect Masterpiece
           </div>
         </div>
       </div>
@@ -775,6 +782,13 @@ const SearchPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [categorySearchQuery, setCategorySearchQuery] = useState('');
 
+  // Date selection state
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // Map center state
+  const [mapCenter, setMapCenter] = useState({ lat: -26.1076, lng: 28.0567 }); // Default Sandton
+
   // Recent searches and recently viewed
   const [recentSearches, setRecentSearches] = useState([]);
   const [recentlyViewedItems, setRecentlyViewedItems] = useState([]);
@@ -827,8 +841,16 @@ const SearchPage = () => {
       minRating: urlParams.get('minRating') || '',
       location: urlParams.get('location') || urlParams.get('address') || '',
       bedroomsMin: urlParams.get('bedroomsMin') || '',
-      bathroomsMin: urlParams.get('bathroomsMin') || ''
+      bathroomsMin: urlParams.get('bathroomsMin') || '',
+      center: urlParams.get('center') || '',
+      distance: urlParams.get('distance') || '',
+      mode: urlParams.get('mode') || ''
     });
+
+    if (urlParams.get('mode') === 'map') setViewMode('map');
+
+    const dateParam = urlParams.get('date');
+    if (dateParam) setSelectedDate(new Date(dateParam));
 
     // Set selected category if subType matches
     if (subType) {
@@ -991,7 +1013,36 @@ const SearchPage = () => {
     if (filters.minPrice) urlParams.set('minPrice', filters.minPrice);
     if (filters.maxPrice) urlParams.set('maxPrice', filters.maxPrice);
     if (filters.minRating) urlParams.set('minRating', filters.minRating);
-    if (filters.location) urlParams.set('location', filters.location);
+    if (filters.center) urlParams.set('center', filters.center);
+    if (filters.distance) urlParams.set('distance', filters.distance);
+    if (viewMode === 'map') urlParams.set('mode', 'map');
+    else urlParams.delete('mode');
+    urlParams.set('date', selectedDate.toISOString().split('T')[0]);
+
+    // Geocode location if searching for a specific place
+    if (filters.location) {
+      const cityCoords = {
+        'polokwane': { lat: -23.9058, lng: 29.4505 },
+        'sandton': { lat: -26.1076, lng: 28.0567 },
+        'johannesburg': { lat: -26.2041, lng: 28.0473 },
+        'cape town': { lat: -33.9249, lng: 18.4241 },
+        'durban': { lat: -29.8587, lng: 31.0218 },
+        'pretoria': { lat: -25.7479, lng: 28.2293 }
+      };
+
+      const lowerLoc = filters.location.toLowerCase();
+      const matchedCity = Object.keys(cityCoords).find(city => lowerLoc.includes(city));
+
+      if (matchedCity) {
+        setMapCenter(cityCoords[matchedCity]);
+      } else {
+        import('../utils/geocoding').then(({ geocodeAddress }) => {
+          geocodeAddress(filters.location).then(coords => {
+            if (coords) setMapCenter(coords);
+          });
+        });
+      }
+    }
 
     navigate(`/search?${urlParams.toString()}`);
 
@@ -1050,213 +1101,285 @@ const SearchPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Elite Persistent Header */}
-      <div className="fixed top-0 left-0 right-0 z-[60] bg-white/60 backdrop-blur-2xl border-b border-white/40 px-3 py-3 md:px-10 md:py-6 shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
-        <div className="max-w-[2520px] mx-auto xl:px-20 flex items-center gap-3 md:gap-6">
+    <div className="min-h-screen bg-white flex flex-col relative overflow-x-hidden no-scrollbar">
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+      {/* Fresha-style Split Header */}
+      <div className={`sticky top-0 z-[60] bg-white border-b border-gray-100 px-6 py-4 transition-transform duration-500 ${viewMode === 'map' ? 'max-md:-translate-y-full' : 'translate-y-0'}`}>
+        <div className="max-w-[2520px] mx-auto flex items-center gap-4">
           
-          {/* Futuristic Search Pill */}
-          <button
-            onClick={() => setShowFilters(true)}
-            className="flex-1 flex items-center gap-3 md:gap-6 bg-white border border-gray-100 rounded-full pl-4 md:pl-6 pr-2 py-1.5 md:py-2 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] transition-all duration-500 active:scale-[0.99] overflow-hidden relative"
+          {/* Brand Logo - Quick return */}
+          <div 
+            onClick={() => navigate('/')}
+            className="hidden md:flex items-center gap-2 cursor-pointer group"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-rose-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-rose-500 flex items-center justify-center shadow-lg shadow-rose-200 group-hover:rotate-12 transition-transform duration-500 flex-shrink-0">
-              <MagnifyingGlassIcon className="w-4 h-4 md:w-5 md:h-5 text-white" />
-            </div>
-            <div className="flex flex-col items-start overflow-hidden relative z-10">
-              <span className="text-xs md:text-sm font-black text-gray-900 truncate leading-tight tracking-tight max-w-[120px] md:max-w-none">
-                {searchTerm || 'Initiate Scan...'}
-              </span>
-              <div className="flex items-center gap-1.5 md:gap-2 text-[9px] md:text-[10px] text-gray-400 font-bold uppercase tracking-[0.15em] md:tracking-[0.2em] whitespace-nowrap opacity-70">
-                <span className="group-hover:text-rose-500 transition-colors truncate max-w-[60px] md:max-w-none">{filters.location || 'Anywhere'}</span>
-                <div className="w-1 h-1 rounded-full bg-gray-300 flex-shrink-0" />
-                <span className="hidden xs:inline">Any timeframe</span>
-                <div className="w-1 h-1 rounded-full bg-gray-300 flex-shrink-0 hidden xs:block" />
-                <span className="hidden xs:inline">Add Entity</span>
-              </div>
-            </div>
-          </button>
+             <div className="w-10 h-10 bg-gray-950 rounded-xl flex items-center justify-center group-hover:bg-rose-600 transition-colors">
+                <Sparkles className="w-6 h-6 text-white" />
+             </div>
+             <span className="text-xl font-black tracking-tighter uppercase italic">LoopOut</span>
+          </div>
 
-          {/* Luxury Filter Button */}
-          <button
-            onClick={() => setShowFilters(true)}
-            className="w-11 h-11 md:w-14 md:h-14 flex items-center justify-center rounded-full border border-gray-100 bg-white shadow-sm hover:shadow-xl hover:scale-110 transition-all duration-500 active:scale-90  flex-shrink-0"
-          >
-            <AdjustmentsHorizontalIcon className="w-5 h-5 md:w-6 md:h-6 text-gray-600 group-hover:text-rose-500 transition-colors" />
-          </button>
+          {/* Segmented Search Bar - Fresha Style */}
+          <div className="flex-1 max-w-4xl mx-auto flex items-center bg-white border border-gray-200 rounded-full shadow-[0_4px_15px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-all duration-500 overflow-hidden">
+            
+            {/* Segment: WHAT */}
+            <div className="flex-1 relative group/seg border-r border-gray-100">
+               <button 
+                 onClick={() => setShowFilters(true)}
+                 className="w-full px-6 py-3 flex flex-col items-start hover:bg-gray-50 transition-colors"
+               >
+                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-rose-500">Service or Venue</span>
+                 <span className="text-sm font-bold text-gray-900 truncate w-full text-left">
+                   {searchTerm || 'What are you looking for?'}
+                 </span>
+               </button>
+            </div>
+
+            {/* Segment: WHERE */}
+            <div className="flex-1 relative group/seg border-r border-gray-100">
+               <button 
+                 onClick={() => setShowFilters(true)}
+                 className="w-full px-6 py-3 flex flex-col items-start hover:bg-gray-50 transition-colors"
+               >
+                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-rose-500">Where?</span>
+                 <span className="text-sm font-bold text-gray-900 truncate w-full text-left">
+                   {filters.location || 'Anywhere'}
+                 </span>
+               </button>
+            </div>
+
+            {/* Segment: WHEN */}
+            <div className="flex-1 relative group/seg border-r border-gray-100">
+               <button 
+                 onClick={() => setShowDatePicker(!showDatePicker)}
+                 className="w-full px-6 py-3 flex flex-col items-start hover:bg-gray-50 transition-colors"
+               >
+                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-rose-500">When?</span>
+                 <span className="text-sm font-bold text-gray-900 truncate w-full text-left">
+                   {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                 </span>
+               </button>
+               
+               <AnimatePresence>
+                 {showDatePicker && (
+                   <motion.div 
+                     initial={{ opacity: 0, y: 10 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     exit={{ opacity: 0, y: 10 }}
+                     className="absolute top-full left-0 mt-4 bg-white rounded-[2rem] shadow-2xl border border-gray-100 p-6 z-[70] min-w-[350px]"
+                   >
+                     <Calendar 
+                       onChange={(date) => { setSelectedDate(date); setShowDatePicker(false); }} 
+                       value={selectedDate}
+                       className="border-0 font-sans"
+                     />
+                   </motion.div>
+                 )}
+               </AnimatePresence>
+            </div>
+
+            {/* Search Trigger */}
+            <button 
+              onClick={handleSearch}
+              className="m-2 p-3.5 bg-gray-950 text-white rounded-full hover:bg-rose-500 transition-all active:scale-90 shadow-lg shadow-gray-200"
+            >
+              <SearchIconLucide className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="hidden lg:flex items-center gap-3">
+             <button
+               onClick={() => setShowFilters(true)}
+               className="w-12 h-12 flex items-center justify-center rounded-full border border-gray-200 bg-white hover:bg-gray-50 transition-all hover:scale-110 active:scale-95"
+             >
+               <AdjustmentsHorizontalIcon className="w-5 h-5 text-gray-600" />
+             </button>
+             <button
+               onClick={() => setViewMode(viewMode === 'map' ? 'grid' : 'map')}
+               className={`w-12 h-12 flex items-center justify-center rounded-full border border-gray-200 transition-all hover:scale-110 active:scale-95 ${viewMode === 'map' ? 'bg-gray-950 text-white' : 'bg-white hover:bg-gray-50'}`}
+             >
+               {viewMode === 'map' ? <Bars3Icon className="w-5 h-5" /> : <MapIcon className="w-5 h-5" />}
+             </button>
+          </div>
         </div>
       </div>
 
-      <main className="pt-24 pb-32 px-4 md:px-10 lg:px-20 max-w-[2520px] mx-auto">
-        {/* Cinematic Categories Bar */}
-        <div className="mb-16 overflow-x-auto no-scrollbar py-6 border-b border-gray-100/50">
-          <div className="flex gap-12 items-center">
-            <button
-              onClick={() => { setSelectedCategory('all'); fetchData(); }}
-              className={` flex flex-col items-center gap-4 min-w-fit transition-all relative ${!selectedCategory || selectedCategory === 'all' ? 'text-gray-950 opacity-100' : 'text-gray-400 opacity-60 hover:opacity-100 hover:text-gray-600'}`}
-            >
-              <div className={`p-4 rounded-2xl transition-all duration-500 ${!selectedCategory || selectedCategory === 'all' ? 'bg-gray-950 text-white shadow-2xl scale-110 shadow-gray-200' : 'bg-transparent group-hover:bg-gray-100'}`}>
-                <Sparkles className="w-7 h-7" />
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-[0.25em]">Universe</span>
-              {(!selectedCategory || selectedCategory === 'all') && (
-                <motion.div layoutId="activeCategory" className="absolute -bottom-6 w-8 h-1 bg-gray-950 rounded-full" />
-              )}
-            </button>
-
-            {ALL_CATEGORIES.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => handleCategorySelect(cat)}
-                className={` flex flex-col items-center gap-4 min-w-fit transition-all relative ${selectedCategory === cat.id ? 'text-gray-950 opacity-100' : 'text-gray-400 opacity-60 hover:opacity-80'}`}
-              >
-                <div className={`p-4 rounded-2xl transition-all duration-500 ${selectedCategory === cat.id ? 'bg-rose-500 text-white shadow-2xl scale-110 shadow-rose-200' : 'bg-transparent group-hover:bg-gray-100'}`}>
-                  <cat.icon className="w-7 h-7" />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-[0.25em]">{cat.label}</span>
-                {selectedCategory === cat.id && (
-                  <motion.div layoutId="activeCategory" className="absolute -bottom-6 w-8 h-1 bg-rose-500 rounded-full" />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* RECENTLY VIEWED SECTION */}
-        {recentlyViewedItems.length > 0 && (
-          <section className="mb-12">
-            <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight italic mb-6">Recently Viewed</h2>
-            <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
-              {recentlyViewedItems.map((item) => (
-                <div key={item._id || Math.random().toString()} onClick={() => navigate(`/${item.itemType || item.type || 'listing'}/${item._id || item.id}`)} className="flex-shrink-0 w-48 cursor-pointer group">
-                  <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-3 bg-gray-100 shadow-sm group-hover:shadow-xl transition-all duration-300">
-                    <ImageWithFallback
-                      src={item.imageUrls?.[0] || item.images?.[0] || 'https://images.unsplash.com/photo-1615529182904-14819c35db37?w=800'}
-                      alt={item.name || item.title || 'Item'}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-2 left-2 px-2 py-1 bg-white/90 backdrop-blur-sm rounded-lg text-[9px] font-black uppercase tracking-widest text-gray-900 shadow-sm">
-                      {item.itemType || item.type || 'property'}
-                    </div>
-                  </div>
-                  <h3 className="font-bold text-sm text-gray-900 truncate group-hover:text-rose-500 transition-colors">
-                    {item.name || item.title || 'Untitled Masterpiece'}
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-1 font-medium">
-                    {typeof (item.regularPrice || item.price) === 'number' ? `R${(item.regularPrice || item.price).toLocaleString()}` : (item.regularPrice || item.price || 'Contact')}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Results Area */}
-        <div className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight italic">
-              {listings.length} Results Found
-            </h2>
-            {searchType !== 'all' && (
-              <span className="px-3 py-1 bg-rose-100 text-rose-600 text-[9px] font-black uppercase tracking-widest rounded-full">
-                {searchType}
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 bg-white/50 border border-slate-200/50 p-1 rounded-full shadow-sm">
-            <button
-              onClick={() => setViewMode('map')}
-              className={`p-2 rounded-full transition-all ${viewMode === 'map' ? 'bg-gray-950 text-white' : 'text-gray-400'}`}
-            >
-              <MapIcon className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-full transition-all ${viewMode === 'grid' ? 'bg-gray-950 text-white' : 'text-gray-400'}`}
-            >
-              <Squares2X2Icon className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-full transition-all ${viewMode === 'list' ? 'bg-gray-950 text-white' : 'text-gray-400'}`}
-            >
-              <Bars3Icon className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="py-24 space-y-12 w-full">
-            <div className="flex flex-col items-center justify-center">
-               <NeuralLoader text="Scanning Loop Matrix..." />
+      {/* Main Split View Content */}
+      <div className="flex-1 flex overflow-hidden relative">
+        
+        {/* Left Column: Results (Hidden or Squeezed in Map Mode) */}
+        <div className={`flex-1 overflow-y-auto no-scrollbar pt-6 pb-24 px-6 md:px-12 lg:px-16 transition-all duration-700 ${viewMode === 'map' ? 'lg:max-w-0 lg:px-0 lg:opacity-0' : 'max-w-none opacity-100'}`}>
+          
+          {/* Breadcrumbs / Summary */}
+          <div className="mb-8 flex items-end justify-between">
+            <div>
+               <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em] mb-2">Discovery Portal</p>
+               <h1 className="text-3xl font-black text-gray-900 tracking-tighter uppercase italic">
+                 {listings.length} {searchType !== 'all' ? searchType : 'Matches'} in {filters.location || 'The Matrix'}
+               </h1>
             </div>
             
-            {/* AI Insights Animation during loading */}
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="max-w-xl mx-auto p-8 rounded-[2rem] bg-rose-50/30 border border-rose-100/50 backdrop-blur-sm"
-            >
-               <div className="flex items-center gap-4 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-rose-500 flex items-center justify-center text-white shadow-lg">
-                     <Sparkles className="w-5 h-5" />
-                  </div>
-                  <div>
-                     <h4 className="text-xs font-black uppercase tracking-widest text-gray-900">Neural Insight</h4>
-                     <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest">Optimizing Discovery Path...</p>
-                  </div>
-               </div>
-               <p className="text-sm text-gray-500 font-medium leading-relaxed italic">
-                 "Our AI is currently cross-referencing your search with live availability and local frequency patterns to ensure the highest fidelity matches."
-               </p>
-            </motion.div>
-
-            <div className={`grid gap-x-6 gap-y-10 ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5' : 'grid-cols-1'}`}>
-               {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <SkeletonCard key={i} />)}
+            {/* View Mode Toggles (Compact) */}
+            <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl lg:hidden">
+                <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-white shadow-sm text-rose-600' : 'text-gray-400'}`}>
+                  <Squares2X2Icon className="w-4 h-4" />
+                </button>
+                <button onClick={() => setViewMode('map')} className={`p-2 rounded-lg ${viewMode === 'map' ? 'bg-white shadow-sm text-rose-600' : 'text-gray-400'}`}>
+                  <MapIcon className="w-4 h-4" />
+                </button>
             </div>
           </div>
-        ) : listings.length > 0 ? (
-          <div>
 
-            <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className={`grid gap-x-6 gap-y-10 ${viewMode === 'grid'
-              ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5'
-              : 'grid-cols-1'
-              }`}
-          >
-            {listings.map((item, idx) => (
-              <ResultCard
-                key={item._id || item.id || idx}
-                item={item}
-                viewMode={viewMode}
-                onClick={() => addToRecentlyViewed(item, item.itemType)}
-              />
-            ))}
-          </motion.div>
+          {/* Cinematic Categories Bar */}
+          <div className="mb-12 overflow-x-auto no-scrollbar py-4 border-y border-gray-50">
+            <div className="flex gap-8 items-center">
+              <button
+                onClick={() => { setSelectedCategory('all'); fetchData(); }}
+                className={` flex items-center gap-3 px-5 py-2.5 rounded-2xl transition-all whitespace-nowrap ${!selectedCategory || selectedCategory === 'all' ? 'bg-gray-950 text-white shadow-xl shadow-gray-200' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
+              >
+                <Sparkles className="w-4 h-4" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Universe</span>
+              </button>
+
+              {ALL_CATEGORIES.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategorySelect(cat)}
+                  className={` flex items-center gap-3 px-5 py-2.5 rounded-2xl transition-all whitespace-nowrap ${selectedCategory === cat.id ? 'bg-rose-500 text-white shadow-xl shadow-rose-100' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
+                >
+                  <cat.icon className="w-4 h-4" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">{cat.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        ) : (
-          <EmptyState onClear={clearFilters} />
-        )}
-      </main>
 
-      {/* Map Toggle Floating Button (Mobile) */}
-      <button
-        onClick={() => setViewMode(viewMode === 'map' ? 'grid' : 'map')}
-        className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[50] flex items-center gap-2 bg-gray-950 text-white px-6 py-4 rounded-full text-[11px] font-black uppercase tracking-widest shadow-2xl transition-all hover:scale-110 active:scale-95 border border-white/20"
-      >
-        {viewMode === 'map' ? (
-          <><Bars3Icon className="w-4 h-4" /> List View</>
-        ) : (
-          <><MapIcon className="w-4 h-4" /> Show Map View</>
-        )}
-      </button>
+          {/* Results Grid */}
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+               {[1,2,3,4,5,6].map(i => <SkeletonCard key={i} />)}
+            </div>
+          ) : listings.length > 0 ? (
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className={`grid gap-8 ${viewMode === 'map' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'}`}
+            >
+              {listings.map((item, idx) => (
+                <ResultCard
+                  key={item._id || item.id || idx}
+                  item={item}
+                  viewMode="grid"
+                  onClick={() => addToRecentlyViewed(item, item.itemType)}
+                />
+              ))}
+            </motion.div>
+          ) : (
+            <EmptyState onClear={clearFilters} />
+          )}
 
-      {/* Filter Modal */}
+          {/* Recently Viewed Footer Area */}
+          {recentlyViewedItems.length > 0 && (
+            <section className="mt-24 pt-12 border-t border-gray-100">
+              <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight italic mb-8">Pulse History</h2>
+              <div className="flex overflow-x-auto gap-6 pb-4 no-scrollbar">
+                {recentlyViewedItems.map((item) => (
+                  <div key={item._id || Math.random().toString()} onClick={() => navigate(`/${item.itemType || item.type || 'listing'}/${item._id || item.id}`)} className="flex-shrink-0 w-64 cursor-pointer group">
+                    <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden mb-4 bg-gray-50 shadow-sm group-hover:shadow-xl transition-all duration-500">
+                      <ImageWithFallback
+                        src={item.imageUrls?.[0] || item.images?.[0] || 'https://images.unsplash.com/photo-1615529182904-14819c35db37?w=800'}
+                        alt={item.name || item.title || 'Item'}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      />
+                      <div className="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-md rounded-full text-[8px] font-black uppercase tracking-widest text-gray-900 shadow-sm">
+                        {item.itemType || item.type || 'property'}
+                      </div>
+                    </div>
+                    <h3 className="font-black text-sm text-gray-900 truncate group-hover:text-rose-600 transition-colors px-2">
+                      {item.name || item.title || 'Untitled Masterpiece'}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1 font-bold uppercase tracking-widest px-2">
+                      {typeof (item.regularPrice || item.price) === 'number' ? `R${(item.regularPrice || item.price).toLocaleString()}` : (item.regularPrice || item.price || 'Contact')}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+
+        {/* Right Column: Map (Desktop Full Screen or Split) */}
+        <div className={`transition-all duration-700 overflow-hidden relative ${viewMode === 'map' ? 'w-full fixed inset-0 z-[150] h-[100dvh] md:z-[110]' : 'w-0 hidden lg:block border-l border-gray-100'}`}>
+           {/* Mobile & Desktop Back Button Overlay - Elite Redesign */}
+           {viewMode === 'map' && (
+             <motion.button 
+               initial={{ opacity: 0, x: -20 }}
+               animate={{ opacity: 1, x: 0 }}
+               onClick={() => setViewMode('grid')}
+               className="absolute top-8 left-8 z-[160] w-14 h-14 bg-gray-950/90 backdrop-blur-xl text-white rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex items-center justify-center active:scale-90 transition-all border border-white/10"
+             >
+               <ArrowLeftIcon className="w-6 h-6 text-rose-500" />
+             </motion.button>
+           )}
+
+           <div className="absolute inset-0">
+              <MapView 
+                items={listings} 
+                searchType={searchType} 
+                location={filters.location || 'South Africa'} 
+                center={mapCenter}
+                onItemClick={(item) => navigate(`/${item.itemType || item.type || 'listing'}/${item._id || item.id}`)}
+              />
+           </div>
+
+           {/* Results Carousel Overlay - Desktop Only (Hidden on Mobile as per request) */}
+           <AnimatePresence>
+             {viewMode === 'map' && listings.length > 0 && (
+               <motion.div 
+                 initial={{ opacity: 0 }}
+                 animate={{ opacity: 1 }}
+                 exit={{ opacity: 0 }}
+                 className="hidden md:flex absolute bottom-10 left-0 right-0 z-[115] px-6 justify-center"
+               >
+                 <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 max-w-full lg:max-w-6xl">
+                    {listings.map((item, idx) => (
+                      <div key={item._id || idx} className="flex-shrink-0 w-80">
+                         <ResultCard
+                           item={item}
+                           viewMode="grid"
+                           onClick={() => addToRecentlyViewed(item, item.itemType)}
+                         />
+                      </div>
+                    ))}
+                 </div>
+               </motion.div>
+             )}
+           </AnimatePresence>
+        </div>
+
+        {/* Floating Map Button (Mobile/Tablet) */}
+        <button
+          onClick={() => setViewMode(viewMode === 'map' ? 'grid' : 'map')}
+          className="lg:hidden fixed bottom-10 left-1/2 -translate-x-1/2 z-[50] flex items-center gap-3 bg-gray-950 text-white px-8 py-5 rounded-full text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl transition-all hover:scale-110 active:scale-95 border border-white/20"
+        >
+          {viewMode === 'map' ? (
+            <><Bars3Icon className="w-5 h-5 text-rose-500" /> Show Listings</>
+          ) : (
+            <><MapIcon className="w-5 h-5 text-rose-500" /> Explore Map</>
+          )}
+        </button>
+      </div>
+
+      {/* Filter Modal (Enhanced) */}
       <AnimatePresence>
         {showFilters && (
           <>
@@ -1265,159 +1388,125 @@ const SearchPage = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowFilters(false)}
-              className="fixed inset-0 bg-gray-950/40 backdrop-blur-sm z-[100]"
+              className="fixed inset-0 bg-gray-950/40 backdrop-blur-md z-[100]"
             />
             <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-0 bg-slate-50 z-[101] flex flex-col md:max-w-md md:left-auto md:right-0 md:shadow-2xl overflow-hidden"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="fixed inset-y-0 right-0 w-full max-w-md bg-white z-[101] flex flex-col shadow-2xl overflow-hidden"
             >
-              <div className="flex-shrink-0 bg-white/80 backdrop-blur-md px-6 pt-12 pb-4 border-b border-slate-200/50 flex items-center justify-between">
-                <div className="flex gap-8 overflow-x-auto scrollbar-hide py-2">
-                  {[
-                    { id: 'properties', label: 'Homes', icon: HomeIcon, color: 'rose' },
-                    { id: 'events', label: 'Experiences', icon: TicketIcon, color: 'rose' },
-                    { id: 'services', label: 'Services', icon: UserGroupIcon, color: 'rose' },
-                    { id: 'helpers', label: 'Helpers', icon: BriefcaseIcon, color: 'rose' }
-                  ].map((item) => {
-                    const Icon = item.icon;
-                    const isActive = searchType === item.id;
-
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => setSearchType(item.id)}
-                        className="flex flex-col items-center gap-2 relative outline-none"
-                      >
-                        <motion.div
-                          animate={isActive ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : { scale: 1, rotate: 0 }}
-                          transition={{ duration: 0.4, ease: "backOut" }}
-                          className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'bg-white text-gray-400 border border-slate-100'}`}
-                        >
-                          <Icon className="w-6 h-6" />
-                        </motion.div>
-
-                        <motion.span
-                          animate={{ opacity: isActive ? 1 : 0.4, scale: isActive ? 1.05 : 1 }}
-                          className={`text-[9px] font-black uppercase tracking-widest transition-colors ${isActive ? 'text-gray-900' : 'text-gray-400'}`}
-                        >
-                          {item.label}
-                        </motion.span>
-                      </button>
-                    );
-                  })}
+              <div className="flex-shrink-0 px-8 pt-12 pb-6 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                   <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em] mb-1">Matrix Overrides</p>
+                   <h2 className="text-3xl font-black text-gray-900 tracking-tighter italic uppercase">Deep Scan</h2>
                 </div>
-
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="w-10 h-10 rounded-full bg-white border border-slate-200/50 flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors"
+                  className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center hover:bg-gray-100 transition-colors"
                 >
-                  <XMarkIcon className="w-5 h-5 text-gray-950" />
+                  <XMarkIcon className="w-6 h-6 text-gray-950" />
                 </button>
               </div>
 
-              {/* Scrollable Content Area */}
-              <div className="flex-1 overflow-y-auto px-4 py-8 space-y-6">
-                {/* Section: WHERE? */}
-                <div className="bg-transparent rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 border border-slate-200/50">
-                  <h2 className="text-3xl font-black text-gray-900 mb-8 tracking-tighter italic uppercase">Where to?</h2>
-
-                  <div className="relative mb-8">
-                    <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-rose-500" />
+              <div className="flex-1 overflow-y-auto p-8 space-y-10 no-scrollbar">
+                
+                {/* Search Term */}
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">What?</label>
+                  <div className="relative">
+                    <SearchIconLucide className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-rose-500" />
                     <input
                       type="text"
-                      placeholder="Neural destination..."
-                      value={filters.location}
-                      onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
-                      className="w-full bg-slate-50/50 border border-slate-200/50 rounded-2xl py-5 pl-12 pr-4 focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all outline-none font-black text-sm uppercase tracking-widest placeholder:text-slate-300"
-                    />
-                  </div>
-
-                  <h2 className="text-3xl font-black text-gray-900 mb-8 tracking-tighter italic uppercase">What?</h2>
-                  <div className="relative mb-8">
-                    <Sparkles className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-rose-500" />
-                    <input
-                      type="text"
-                      placeholder="What in the matrix? (e.g. Pizza, Pool)"
+                      placeholder="Neural signal (e.g. Nails, Hair, Spa)"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-slate-50/50 border border-slate-200/50 rounded-2xl py-5 pl-12 pr-4 focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all outline-none font-black text-sm uppercase tracking-widest placeholder:text-slate-300"
+                      className="w-full bg-gray-50 border border-transparent focus:border-rose-500 rounded-3xl py-5 pl-14 pr-6 focus:ring-0 transition-all outline-none font-bold text-sm"
                     />
                   </div>
+                </div>
 
-                  <div className="space-y-4">
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] mb-6">Suggested Hubs</p>
-
-                    <button
-                      onClick={() => setFilters(prev => ({ ...prev, location: 'Nearby' }))}
-                      className="w-full flex items-center gap-5 p-4 rounded-3xl hover:bg-white/50 transition-all border border-transparent hover:border-slate-100 shadow-sm"
-                    >
-                      <div className="w-12 h-12 bg-blue-50/50 rounded-2xl flex items-center justify-center text-blue-500 shadow-inner">
-                        <MapPinIcon className="w-6 h-6" />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none mb-1">Nearby</p>
-                        <p className="text-[10px] font-bold text-gray-400">SYNC WITH LOCAL COORDINATES</p>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => setFilters(prev => ({ ...prev, location: 'Cape Town, Western Cape' }))}
-                      className="w-full flex items-center gap-5 p-4 rounded-3xl hover:bg-white/50 transition-all border border-transparent hover:border-slate-100 shadow-sm"
-                    >
-                      <div className="w-12 h-12 bg-teal-50/50 rounded-2xl flex items-center justify-center text-teal-500 shadow-inner">
-                        <BuildingOfficeIcon className="w-6 h-6" />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none mb-1">Cape Town</p>
-                        <p className="text-[10px] font-bold text-gray-400">COASTAL EXPEDITION HUB</p>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => setFilters(prev => ({ ...prev, location: 'Durban, KwaZulu-Natal' }))}
-                      className="w-full flex items-center gap-5 p-4 rounded-3xl hover:bg-white/50 transition-all border border-transparent hover:border-slate-100 shadow-sm"
-                    >
-                      <div className="w-12 h-12 bg-orange-50/50 rounded-2xl flex items-center justify-center text-orange-500 shadow-inner">
-                        <HomeIcon className="w-6 h-6" />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none mb-1">Durban</p>
-                        <p className="text-[10px] font-bold text-gray-400">SUBTROPICAL ADVENTURE MATRIX</p>
-                      </div>
-                    </button>
+                {/* Location */}
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Where?</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-rose-500" />
+                    <input
+                      type="text"
+                      placeholder="Location in the loop..."
+                      value={filters.location}
+                      onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
+                      className="w-full bg-gray-50 border border-transparent focus:border-rose-500 rounded-3xl py-5 pl-14 pr-6 focus:ring-0 transition-all outline-none font-bold text-sm"
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                     {['Sandton', 'Cape Town', 'Durban', 'Polokwane'].map(loc => (
+                       <button 
+                        key={loc}
+                        onClick={() => setFilters(prev => ({ ...prev, location: loc }))}
+                        className="px-4 py-2 bg-gray-50 hover:bg-rose-50 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-rose-600 transition-all"
+                       >
+                         {loc}
+                       </button>
+                     ))}
                   </div>
                 </div>
 
-                {/* Collapsed Sections: WHEN and WHO */}
-                <div className="bg-white/50 rounded-[2rem] p-6 flex items-center justify-between border border-slate-100 opacity-60">
-                  <span className="text-xs font-black uppercase tracking-widest text-gray-900">Neural Timeframe</span>
-                  <span className="text-[10px] font-black uppercase text-rose-500 tracking-widest underline underline-offset-4">Configure</span>
+                {/* Category Selection */}
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Category Loop</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    {ALL_CATEGORIES.slice(0, 8).map(cat => (
+                      <button
+                        key={cat.id}
+                        onClick={() => handleCategorySelect(cat)}
+                        className={`flex items-center gap-3 p-4 rounded-3xl border transition-all ${selectedCategory === cat.id ? 'bg-gray-950 text-white border-gray-950 shadow-xl' : 'bg-white border-gray-100 hover:border-rose-200'}`}
+                      >
+                        <cat.icon className={`w-5 h-5 ${selectedCategory === cat.id ? 'text-rose-500' : 'text-gray-400'}`} />
+                        <span className="text-[10px] font-black uppercase tracking-widest truncate">{cat.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="bg-white/50 rounded-[2rem] p-6 flex items-center justify-between border border-slate-100 opacity-60">
-                  <span className="text-xs font-black uppercase tracking-widest text-gray-900">Entity Count</span>
-                  <span className="text-[10px] font-black uppercase text-rose-500 tracking-widest underline underline-offset-4">Assign</span>
+                {/* Price Range */}
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Price Spectrum (R)</label>
+                  <div className="flex gap-4">
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={filters.minPrice}
+                      onChange={(e) => setFilters(prev => ({ ...prev, minPrice: e.target.value }))}
+                      className="flex-1 bg-gray-50 border border-transparent rounded-2xl py-4 px-6 focus:ring-0 outline-none text-sm font-bold"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={filters.maxPrice}
+                      onChange={(e) => setFilters(prev => ({ ...prev, maxPrice: e.target.value }))}
+                      className="flex-1 bg-gray-50 border border-transparent rounded-2xl py-4 px-6 focus:ring-0 outline-none text-sm font-bold"
+                    />
+                  </div>
                 </div>
+
               </div>
 
-              {/* Footer - Search Button */}
-              <div className="flex-shrink-0 bg-white/80 backdrop-blur-md border-t border-slate-200/50 p-8 flex items-center justify-between">
+              {/* Modal Footer */}
+              <div className="flex-shrink-0 p-8 border-t border-gray-100 bg-white flex items-center justify-between gap-4">
                 <button
-                  onClick={() => setFilters({ minPrice: '', maxPrice: '', minRating: '', location: '' })}
-                  className="text-[10px] font-black text-gray-400 underline underline-offset-8 hover:text-rose-600 transition-colors uppercase tracking-[0.2em]"
+                  onClick={clearFilters}
+                  className="text-[10px] font-black text-gray-400 uppercase tracking-widest underline underline-offset-8 hover:text-rose-600 transition-colors"
                 >
-                  Clear Loop
+                  Reset Loop
                 </button>
-
                 <button
                   onClick={() => { handleSearch(); setShowFilters(false); }}
-                  className="bg-gray-950 text-white px-10 py-5 rounded-[1.5rem] flex items-center gap-4 shadow-[0_20px_50px_rgba(0,0,0,0.2)] hover:bg-rose-500 transition-all active:scale-95 group"
+                  className="flex-1 bg-gray-950 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl hover:bg-rose-500 transition-all active:scale-95 flex items-center justify-center gap-3"
                 >
-                  <MagnifyingGlassIcon className="w-5 h-5 text-rose-500 group-hover:text-white transition-colors" />
-                  <span className="text-xs font-black uppercase tracking-widest">Execute Scan</span>
+                  <Navigation className="w-4 h-4 text-rose-500" />
+                  Execute Scan
                 </button>
               </div>
             </motion.div>
