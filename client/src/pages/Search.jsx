@@ -90,14 +90,14 @@ const ALL_CATEGORIES = [
   { id: 'moving', label: 'Moving & Transport', type: 'services', icon: TruckIcon, color: 'bg-amber-100 text-amber-800', description: 'Relocation services' },
 
   // Helpers
-  { id: 'domestic', label: 'Domestic Help', type: 'helpers', icon: HomeIcon, color: 'bg-teal-100 text-teal-800', description: 'Household assistance' },
-  { id: 'tattoo', label: 'Tattoo Artist', type: 'helpers', icon: PuzzlePieceIcon, color: 'bg-red-100 text-red-800', description: 'Tattoo & piercing' },
-  { id: 'tutor', label: 'Private Tutor', type: 'helpers', icon: AcademicCapIcon, color: 'bg-blue-100 text-blue-800', description: 'Personal teaching' },
-  { id: 'hair', label: 'Hair & Beauty', type: 'helpers', icon: ScissorsIcon, color: 'bg-rose-100 text-rose-800', description: 'Salon services' },
-  { id: 'nail', label: 'Nail Services', type: 'helpers', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Manicure & pedicure' },
-  { id: 'chef', label: 'Private Chef', type: 'helpers', icon: BriefcaseIcon, color: 'bg-amber-100 text-amber-800', description: 'Personal cooking' },
-  { id: 'barber', label: 'Barber', type: 'helpers', icon: ScissorsIcon, color: 'bg-sky-100 text-sky-800', description: 'Men\'s grooming' },
-  { id: 'nanny', label: 'Nanny', type: 'helpers', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Childcare assistance' },
+  { id: 'domestic', label: 'Domestic Help', type: 'helper', icon: HomeIcon, color: 'bg-teal-100 text-teal-800', description: 'Household assistance' },
+  { id: 'tattoo', label: 'Tattoo Artist', type: 'helper', icon: PuzzlePieceIcon, color: 'bg-red-100 text-red-800', description: 'Tattoo & piercing' },
+  { id: 'tutor', label: 'Private Tutor', type: 'helper', icon: AcademicCapIcon, color: 'bg-blue-100 text-blue-800', description: 'Personal teaching' },
+  { id: 'hair', label: 'Hair & Beauty', type: 'helper', icon: ScissorsIcon, color: 'bg-rose-100 text-rose-800', description: 'Salon services' },
+  { id: 'nail', label: 'Nail Services', type: 'helper', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Manicure & pedicure' },
+  { id: 'chef', label: 'Private Chef', type: 'helper', icon: BriefcaseIcon, color: 'bg-amber-100 text-amber-800', description: 'Personal cooking' },
+  { id: 'barber', label: 'Barber', type: 'helper', icon: ScissorsIcon, color: 'bg-sky-100 text-sky-800', description: 'Men\'s grooming' },
+  { id: 'nanny', label: 'Nanny', type: 'helper', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Childcare assistance' },
 
   // Transport
   { id: 'transport', label: 'Transport', type: 'services', icon: TruckIcon, color: 'bg-blue-100 text-blue-800', description: 'Transportation services' },
@@ -183,7 +183,7 @@ const SEARCH_TYPE_CONFIG = {
     subTypes: SERVICES_CATEGORY_CONFIG
   },
   helpers: {
-    label: 'Local Helpers',
+    label: 'Local Helper',
     icon: UserGroupIcon,
     color: 'from-amber-500 to-amber-600',
     bgColor: 'bg-amber-500',
@@ -277,7 +277,7 @@ const CategoryDropdown = ({
     switch (type) {
       case 'properties': return '🏠 Properties & Accommodation';
       case 'services': return '🔧 Services';
-      case 'helpers': return '👤 Helpers & Professionals';
+      case 'helper': return '👤 Helper & Professionals';
       case 'events': return '🎪 Events';
       default: return 'Other';
     }
@@ -382,7 +382,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
     const type = item.itemType || item.type || 'properties';
     if (type === 'listing' || type === 'property') return 'properties';
     if (type === 'service') return 'services';
-    if (type === 'helper') return 'helpers';
+    if (type === 'helper') return 'helper';
     if (type === 'event') return 'events';
     return type;
   };
@@ -688,7 +688,7 @@ const generateMockData = (urlParams) => {
     });
   }
 
-  if (type === 'all' || type === 'helpers') {
+  if (type === 'all' || type === 'helper') {
     const helperTypes = subType ? [subType] : ['beauty', 'barber', 'chef', 'tattoo', 'tutor', 'photography', 'domestic', 'hair', 'nail'];
     helperTypes.forEach((helperType, index) => {
       if (HELPER_CATEGORY_CONFIG[helperType]) {
@@ -696,7 +696,7 @@ const generateMockData = (urlParams) => {
           _id: `h${index}`,
           name: `Professional ${HELPER_CATEGORY_CONFIG[helperType].label}`,
           price: 300 + (index * 100),
-          itemType: 'helpers',
+          itemType: 'helper',
           subType: helperType,
           imageUrls: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800'],
           rating: 4.7 + (index * 0.05),

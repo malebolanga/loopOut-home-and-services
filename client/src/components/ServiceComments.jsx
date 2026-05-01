@@ -1,13 +1,17 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { FaSpinner, FaEllipsisH, FaHeart, FaRegHeart, FaChevronDown, FaChevronUp, FaStar, FaBroom, FaUserFriends } from 'react-icons/fa';
 import { FiSend } from 'react-icons/fi';
 
 const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, showSummary = false, cardStyle = false, externalRefreshTrigger = 0 }) => {
+  const navigate = useNavigate();
   const isService = !!serviceId;
   const entityId = serviceId || listingId;
   
   const { currentUser } = useSelector((state) => state.user);
+  const [hasBooked, setHasBooked] = useState(false);
+  const [isCheckingBooking, setIsCheckingBooking] = useState(true);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState('');
   const [focusedInput, setFocusedInput] = useState(null);
@@ -89,6 +93,32 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
     }
     fetchComments();
   }, [fetchComments, refreshTrigger, externalRefreshTrigger, entityId]);
+
+  const checkBookingStatus = useCallback(async () => {
+    if (!currentUser?._id || !entityId) {
+      setIsCheckingBooking(false);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/bookings/user/${currentUser._id}`);
+      if (res.ok) {
+        const data = await res.json();
+        const booked = data.some(b => 
+          (b.listing?._id === entityId || b.service?._id === entityId || b.helper?._id === entityId || b.event?._id === entityId) &&
+          ['confirmed', 'approved', 'assigned', 'ongoing', 'completed'].includes(b.status)
+        );
+        setHasBooked(booked);
+      }
+    } catch (err) {
+      console.error('Error checking booking status:', err);
+    } finally {
+      setIsCheckingBooking(false);
+    }
+  }, [currentUser?._id, entityId]);
+
+  useEffect(() => {
+    checkBookingStatus();
+  }, [checkBookingStatus]);
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
@@ -404,49 +434,68 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
 
       {/* Comment form for non-card style */}
       {!cardStyle && currentUser && (
-        <div className="mb-4 bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-          <form onSubmit={handleSubmitComment}>
-            <div className="flex items-start gap-3">
-              <img 
-                src={currentUser.avatar || '/default-avatar.jpg'} 
-                alt={currentUser.username}
-                className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-                onError={(e) => {
-                  e.target.src = '/default-avatar.jpg';
-                }}
-              />
-              <div className="flex-1 bg-gray-100 rounded-2xl px-3 py-2">
-                <textarea
-                  value={commentContent}
-                  onChange={(e) => setCommentContent(e.target.value)}
-                  placeholder="Write a comment..."
-                  className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500"
-                  rows={1}
-                  disabled={loading.submitting}
-                  onFocus={() => setFocusedInput('comment')}
-                  onBlur={() => setFocusedInput(null)}
+        isCheckingBooking ? (
+          <div className="mb-4 p-4 bg-gray-50 rounded-xl text-center animate-pulse">
+            <p className="text-gray-400 text-sm">Verifying booking history...</p>
+          </div>
+        ) : hasBooked ? (
+          <div className="mb-4 bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+            <form onSubmit={handleSubmitComment}>
+              <div className="flex items-start gap-3">
+                <img 
+                  src={currentUser.avatar || '/default-avatar.jpg'} 
+                  alt={currentUser.username}
+                  className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                  onError={(e) => {
+                    e.target.src = '/default-avatar.jpg';
+                  }}
                 />
-                {(focusedInput === 'comment' || commentContent) && (
-                  <div className="flex justify-end mt-1">
-                    <button
-                      type="submit"
-                      className="bg-blue-500 text-white p-1.5 rounded-full hover:bg-blue-600 disabled:opacity-50 transition-colors"
-                      disabled={!commentContent.trim() || loading.submitting}
-                    >
-                      {loading.submitting ? (
-                        <FaSpinner className="animate-spin" />
-                      ) : (
-                        <FiSend size={16} />
-                      )}
-                    </button>
-                  </div>
-                )}
+                <div className="flex-1 bg-gray-100 rounded-2xl px-3 py-2">
+                  <textarea
+                    value={commentContent}
+                    onChange={(e) => setCommentContent(e.target.value)}
+                    placeholder="Write a comment..."
+                    className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500"
+                    rows={1}
+                    disabled={loading.submitting}
+                    onFocus={() => setFocusedInput('comment')}
+                    onBlur={() => setFocusedInput(null)}
+                  />
+                  {(focusedInput === 'comment' || commentContent) && (
+                    <div className="flex justify-end mt-1">
+                      <button
+                        type="submit"
+                        className="bg-blue-500 text-white p-1.5 rounded-full hover:bg-blue-600 disabled:opacity-50 transition-colors"
+                        disabled={!commentContent.trim() || loading.submitting}
+                      >
+                        {loading.submitting ? (
+                          <FaSpinner className="animate-spin" />
+                        ) : (
+                          <FiSend size={16} />
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </form>
-        </div>
+            </form>
+          </div>
+        ) : (
+          <div className="mb-6 p-5 bg-rose-50 border border-rose-100 rounded-2xl text-center">
+             <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <FaStar className="text-rose-500 text-xl" />
+             </div>
+             <h3 className="text-rose-900 font-bold mb-1">Exclusive Review Access</h3>
+             <p className="text-gray-600 text-xs px-4 mb-4">Sharing your experience helps the community. Please complete a booking first to unlock reviews for this listing.</p>
+             <button 
+               onClick={() => navigate(isService ? `/service/${entityId}` : `/listing/${entityId}`)}
+               className="px-8 py-2.5 bg-rose-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-rose-600 transition-all shadow-lg shadow-rose-200 active:scale-95"
+             >
+               Book Now
+             </button>
+          </div>
+        )
       )}
-
       {!cardStyle && !currentUser && (
         <div className="mb-6 p-3 bg-gray-100 rounded-lg text-center">
           <p className="text-gray-600 text-sm">Please <a href="/sign-in" className="text-blue-500 hover:underline">sign in</a> to leave a {isService ? 'review' : 'comment'}</p>
@@ -455,51 +504,70 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
 
       {/* Comment form for card style */}
       {cardStyle && currentUser && (
-        <div className="mb-4 bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-          <form onSubmit={handleSubmitComment}>
-            <div className="flex items-start gap-3">
-              <img 
-                src={currentUser.avatar || '/default-avatar.jpg'} 
-                alt={currentUser.username}
-                className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-                onError={(e) => {
-                  e.target.src = '/default-avatar.jpg';
-                }}
-              />
-              <div className="flex-1 bg-gray-100 rounded-2xl px-3 py-2">
-                <textarea
-                  value={commentContent}
-                  onChange={(e) => setCommentContent(e.target.value)}
-                  placeholder="Write a comment..."
-                  className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500"
-                  rows={1}
-                  disabled={loading.submitting}
-                  onFocus={() => setFocusedInput('comment')}
-                  onBlur={() => setFocusedInput(null)}
+        isCheckingBooking ? (
+          <div className="mb-4 p-4 bg-gray-50 rounded-xl text-center animate-pulse col-span-full">
+            <p className="text-gray-400 text-sm">Verifying booking history...</p>
+          </div>
+        ) : hasBooked ? (
+          <div className="mb-4 bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+            <form onSubmit={handleSubmitComment}>
+              <div className="flex items-start gap-3">
+                <img 
+                  src={currentUser.avatar || '/default-avatar.jpg'} 
+                  alt={currentUser.username}
+                  className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                  onError={(e) => {
+                    e.target.src = '/default-avatar.jpg';
+                  }}
                 />
-                {(focusedInput === 'comment' || commentContent) && (
-                  <div className="flex justify-end mt-1">
-                    <button
-                      type="submit"
-                      className="bg-blue-500 text-white p-1.5 rounded-full hover:bg-blue-600 disabled:opacity-50 transition-colors"
-                      disabled={!commentContent.trim() || loading.submitting}
-                    >
-                      {loading.submitting ? (
-                        <FaSpinner className="animate-spin" />
-                      ) : (
-                        <FiSend size={16} />
-                      )}
-                    </button>
-                  </div>
-                )}
+                <div className="flex-1 bg-gray-100 rounded-2xl px-3 py-2">
+                  <textarea
+                    value={commentContent}
+                    onChange={(e) => setCommentContent(e.target.value)}
+                    placeholder="Write a comment..."
+                    className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500"
+                    rows={1}
+                    disabled={loading.submitting}
+                    onFocus={() => setFocusedInput('comment')}
+                    onBlur={() => setFocusedInput(null)}
+                  />
+                  {(focusedInput === 'comment' || commentContent) && (
+                    <div className="flex justify-end mt-1">
+                      <button
+                        type="submit"
+                        className="bg-blue-500 text-white p-1.5 rounded-full hover:bg-blue-600 disabled:opacity-50 transition-colors"
+                        disabled={!commentContent.trim() || loading.submitting}
+                      >
+                        {loading.submitting ? (
+                          <FaSpinner className="animate-spin" />
+                        ) : (
+                          <FiSend size={16} />
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </form>
-        </div>
+            </form>
+          </div>
+        ) : (
+          <div className="mb-6 p-5 bg-rose-50 border border-rose-100 rounded-2xl text-center col-span-full">
+             <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <FaStar className="text-rose-500 text-xl" />
+             </div>
+             <h3 className="text-rose-900 font-bold mb-1">Exclusive Review Access</h3>
+             <p className="text-gray-600 text-xs px-4 mb-4">Sharing your experience helps the community. Please complete a booking first to unlock reviews for this listing.</p>
+             <button 
+               onClick={() => navigate(isService ? `/service/${entityId}` : `/listing/${entityId}`)}
+               className="px-8 py-2.5 bg-rose-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-rose-600 transition-all shadow-lg shadow-rose-200 active:scale-95"
+             >
+               Book Now
+             </button>
+          </div>
+        )
       )}
-
       {cardStyle && !currentUser && (
-        <div className="mb-6 p-3 bg-gray-100 rounded-lg text-center">
+        <div className="mb-4 bg-white rounded-xl p-4 shadow-sm border border-gray-200 text-center">
           <p className="text-gray-600 text-sm">Please <a href="/sign-in" className="text-blue-500 hover:underline">sign in</a> to leave a {isService ? 'review' : 'comment'}</p>
         </div>
       )}

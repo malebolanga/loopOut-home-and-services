@@ -76,7 +76,7 @@ const Categories = () => {
   const categories = [
     { icon: '🏠', label: 'Homes', color: 'bg-blue-100', type: 'properties' },
     { icon: '✨', label: 'Services', color: 'bg-emerald-100', type: 'services' },
-    { icon: '👷', label: 'Helpers', color: 'bg-purple-100', type: 'helpers' },
+    { icon: '👷', label: 'Helper', color: 'bg-purple-100', type: 'helpers' },
     { icon: '🎪', label: 'Events', color: 'bg-amber-100', type: 'events' },
     { icon: '🏨', label: 'Hotels', color: 'bg-rose-100', type: 'properties', category: 'rent-short' },
     { icon: '🛒', label: 'Shopping', color: 'bg-yellow-100', type: 'services' },
@@ -125,7 +125,7 @@ const Categories = () => {
     },
     {
       id: 'helpers',
-      title: 'Helpers',
+      title: 'Helper',
       description: 'Find reliable help for various tasks',
       icon: UserGroupIcon,
       color: 'bg-purple-500',

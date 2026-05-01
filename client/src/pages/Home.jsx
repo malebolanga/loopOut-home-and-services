@@ -865,7 +865,7 @@ const TopCategoriesSection = ({ navigate }) => {
     if (needs.includes(category.id)) {
       navigate('/looking-for');
     } else if (helpers.includes(category.id)) {
-      navigate(`/search?category=${category.id}&type=helpers`);
+      navigate(`/search?category=${category.id}&type=helper`);
     } else if (services.includes(category.id)) {
       navigate(`/search?category=${category.id}&type=services`);
     } else if (properties.includes(category.id)) {
@@ -1625,18 +1625,18 @@ const MobileAppHomepage = ({
   }, [activeTab]);
 
   const tabs = [
-    { id: 'Universe', emoji: '✨' },
-    { id: 'Homes', image: '/3d_home_icon_1775252451792.png' },
-    { id: 'Services', image: '/3d_services_icon_1775252517283.png' },
-    { id: 'Helpers', image: '/3d_helper_icon_1775252697443.png' },
-    { id: 'Events', emoji: '🎪' }
+    { id: 'Universe', emoji: '🌌' },
+    { id: 'Homes', emoji: '🏡' },
+    { id: 'Services', emoji: '💼' },
+    { id: 'Helper', emoji: '💁' },
+    { id: 'Events', emoji: '🎭' }
   ];
 
   const getFilteredItems = () => {
     switch (activeTab) {
       case 'Homes': return featuredProperties;
       case 'Services': return featuredServices;
-      case 'Helpers': return featuredHelpers;
+      case 'Helper': return featuredHelpers;
       case 'Events': return featuredEvents;
       default: return [...featuredProperties.slice(0, 4), ...featuredServices.slice(0, 4)];
     }
@@ -1646,7 +1646,7 @@ const MobileAppHomepage = ({
     switch (id) {
       case 'Homes': return 'bg-rose-500';
       case 'Services': return 'bg-amber-500';
-      case 'Helpers': return 'bg-blue-500';
+      case 'Helper': return 'bg-blue-500';
       case 'Events': return 'bg-purple-500';
       default: return 'bg-gray-950';
     }
@@ -1760,7 +1760,7 @@ const MobileAppHomepage = ({
                       className={`flex flex-col items-center gap-4 relative transition-all duration-300 ${isActive ? 'opacity-100 scale-110' : 'opacity-40 hover:opacity-100'}`}
                     >
                       <motion.div 
-                        className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500 ${isActive ? `${getTabColor(tab.id)} shadow-[0_20px_40px_rgba(0,0,0,0.15)]` : 'bg-transparent'}`}
+                        className={`flex items-center justify-center transition-all duration-500 ${isActive ? 'scale-150' : 'opacity-60'}`}
                         whileHover={{ 
                           scale: 1.3,
                           rotateY: [0, 15, -15, 0],
@@ -1785,7 +1785,7 @@ const MobileAppHomepage = ({
                           {tab.image ? (
                             <img src={tab.image} className="w-12 h-12 object-contain drop-shadow-2xl" alt={tab.id} />
                           ) : (
-                            <span className="text-3xl drop-shadow-2xl">{tab.emoji}</span>
+                            <span className="text-3xl">{tab.emoji}</span>
                           )}
                         </motion.div>
                       </motion.div>
@@ -1856,7 +1856,7 @@ const MobileAppHomepage = ({
               {[
                 { value: stats.properties || '1,234', label: 'Properties', growth: '12%' },
                 { value: stats.services || '456', label: 'Services', growth: '8%' },
-                { value: stats.helpers || '789', label: 'Helpers', growth: '15%' },
+                { value: stats.helpers || '789', label: 'Helper', growth: '15%' },
                 { value: stats.events || '321', label: 'Events', growth: '5%' }
               ].map((stat, i) => (
                 <div key={i} className="text-center">
@@ -2139,7 +2139,7 @@ const MobileAppHomepage = ({
                   const properties = ['rental', 'guesthouse', 'sale', 'overnight', 'vacation', 'office', 'land'];
 
                   if (helpers.includes(category.id)) {
-                    navigate(`/search?category=${category.id}&type=helpers`);
+                    navigate(`/search?category=${category.id}&type=helper`);
                   } else if (services.includes(category.id)) {
                     navigate(`/search?category=${category.id}&type=services`);
                   } else if (properties.includes(category.id)) {
@@ -2228,7 +2228,7 @@ const MobileAppHomepage = ({
                   className={`flex flex-col items-center gap-3 transition-all duration-300 shrink-0 ${isActive ? 'opacity-100' : 'opacity-40'}`}
                 >
                   <motion.div 
-                    className={`w-14 h-14 flex items-center justify-center rounded-xl transition-all bg-transparent`}
+                    className={`flex items-center justify-center transition-all bg-transparent ${isActive ? 'scale-150' : 'opacity-60'}`}
                     whileTap={{ scale: 0.8 }}
                     animate={isActive ? {
                       y: [0, -5, 0],
@@ -2245,7 +2245,7 @@ const MobileAppHomepage = ({
                       {tab.image ? (
                         <img src={tab.image} className="w-10 h-10 object-contain drop-shadow-md" alt={tab.id} />
                       ) : (
-                        <span className="text-2xl drop-shadow-md">{tab.emoji}</span>
+                        <span className="text-2xl">{tab.emoji}</span>
                       )}
                     </motion.div>
                   </motion.div>
@@ -2267,7 +2267,7 @@ const MobileAppHomepage = ({
               >
                 <AirbnbCard
                   item={item}
-                  type={activeTab === 'Universe' ? (item.itemType || 'property') : activeTab.slice(0, -1).toLowerCase()}
+                  type={activeTab === 'Universe' ? (item.itemType || 'property') : activeTab === 'Helper' ? 'helper' : activeTab.slice(0, -1).toLowerCase()}
                   onClick={(path) => navigate(path)}
                 />
               </motion.div>

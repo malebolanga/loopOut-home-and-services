@@ -185,7 +185,7 @@ const WishList = () => {
     { id: 'all', label: 'All Saved', icon: <Layers className="w-5 h-5" /> },
     { id: 'listing', label: 'Properties', icon: <HomeIcon className="w-5 h-5" /> },
     { id: 'service', label: 'Services', icon: <Sparkles className="w-5 h-5" /> },
-    { id: 'helper', label: 'Helpers', icon: <User className="w-5 h-5" /> },
+    { id: 'helper', label: 'Helper', icon: <User className="w-5 h-5" /> },
     { id: 'event', label: 'Events', icon: <Calendar className="w-5 h-5" /> },
   ];
 

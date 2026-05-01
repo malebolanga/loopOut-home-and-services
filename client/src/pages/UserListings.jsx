@@ -42,7 +42,7 @@ const ListingTypeConfig = {
     style: 'bg-emerald-50 text-emerald-700 border-emerald-100',
   },
   online: {
-    label: 'Helpers',
+    label: 'Helper',
     icon: <FaEdit className="w-3.5 h-3.5" />,
     style: 'bg-indigo-50 text-indigo-700 border-indigo-100',
   },

@@ -316,16 +316,22 @@ function AppContent() {
     '/privacy',
     '/trust',
     '/terms',
-    '/host'
+    '/host',
+    '/search',
+    '/listing-home-page',
+    '/helper-home-page',
+    '/event-home-page',
+    '/service-home-page'
   ];
 
   // Helper types that should have zero headers/footers for immersive layout
   const specializedHelperPaths = [
-    '/helper', '/photography', '/beauty', '/barber', '/tattoo', '/chef', '/carwash', '/privatetutor', '/listing'
+    '/helper', '/photography', '/beauty', '/barber', '/tattoo', '/chef', '/carwash', '/privatetutor', '/listing', '/listings'
   ];
 
   const isSpecializedPage = specializedHelperPaths.some(path => location.pathname.startsWith(path));
-  const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage;
+  const isCreateListingPage = location.pathname.endsWith('/create-listing');
+  const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage || isCreateListingPage;
   const hideFooter = hideFooterPaths.includes(location.pathname) || isSpecializedPage;
   
   return (

@@ -1473,9 +1473,11 @@ export default function CreateListing() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 md:py-12">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-32 pb-12 md:pb-20">
         {/* Step Progress */}
-        <StepProgress currentStep={currentStep} />
+        <div className="mt-10">
+          <StepProgress currentStep={currentStep} />
+        </div>
 
         {/* Main Form Container */}
         <div className={`transition-all duration-500 ${fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -1503,8 +1505,8 @@ export default function CreateListing() {
                   />
                   <CategoryCard
                     id="online"
-                    icon={UserGroupIcon}
-                    label="Helpers"
+                    icon={UserIcon}
+                    label="Helper"
                     description="Register as a personal helper or specialist"
                     selected={selectedCategory === 'online'}
                     onSelect={setSelectedCategory}
