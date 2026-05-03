@@ -63,6 +63,7 @@ import {
 import ImageGallery from '../components/ImageGallery';
 import useLocationCoords from '../hooks/useGeolocation';
 import LoopOutPulse from '../components/LoopOutPulse';
+import { useWishlist } from '../hooks/useWishlist';
 import MyBookingsConsumer from '../components/MyBookingsConsumer';
 import LookingForItem from '../components/LookingForItem';
 
@@ -660,8 +661,10 @@ const FreshaCategoryCard = ({ category, onClick, index }) => {
 
 // --- Airbnb-Style Components (Preserved) ---
 
-const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDistance = false, reducedSize = false }) => {
+const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = false, reducedSize = false }) => {
   const isGuestFavorite = item.rating >= 4.8;
+  const wishlistType = type === 'property' ? 'listing' : type;
+  const { isFavorite, toggleFavorite } = useWishlist(item, wishlistType);
 
   const getPriceSuffix = () => {
     if (type !== 'property') return '';
@@ -732,10 +735,10 @@ const AirbnbCard = ({ item, onClick, isLiked, onLike, type = 'property', hideDis
         </div>
 
         <button
-          onClick={(e) => { e.stopPropagation(); onLike && onLike(item._id, !isLiked); }}
+          onClick={toggleFavorite}
           className="absolute top-3 left-3 p-2 text-white hover:scale-110 transition-transform z-20 drop-shadow-md"
         >
-          {isLiked ? (
+          {isFavorite ? (
             <HeartIconSolid className={`text-rose-500 fill-rose-500 ${reducedSize ? 'w-5 h-5' : 'w-6 h-6'}`} />
           ) : (
             <HeartIcon className={`stroke-[2px] ${reducedSize ? 'w-5 h-5' : 'w-6 h-6'}`} />
@@ -1324,16 +1327,43 @@ const CommunityNeedsSection = ({ navigate }) => {
 
   const handleInteraction = async (id, type) => {
     if (!currentUser) return navigate('/sign-in');
+    
+    // Optimistic UI update
+    setNeeds(prevNeeds => prevNeeds.map(need => {
+      if (need._id === id) {
+        let { likes = [], dislikes = [] } = need;
+        const userId = currentUser._id;
+        
+        if (type === 'like') {
+          if (likes.includes(userId)) {
+            likes = likes.filter(uid => uid !== userId);
+          } else {
+            likes = [...likes, userId];
+            dislikes = dislikes.filter(uid => uid !== userId);
+          }
+        } else if (type === 'dislike') {
+          if (dislikes.includes(userId)) {
+            dislikes = dislikes.filter(uid => uid !== userId);
+          } else {
+            dislikes = [...dislikes, userId];
+            likes = likes.filter(uid => uid !== userId);
+          }
+        }
+        return { ...need, likes, dislikes };
+      }
+      return need;
+    }));
+
     try {
       const res = await fetch(`/api/looking-for/${type}/${id}`, {
         method: 'POST',
       });
-      if (res.ok) {
-        // Optimistic UI update or re-fetch
-        fetchNeeds();
+      if (!res.ok) {
+        fetchNeeds(); // revert on fail
       }
     } catch (err) {
       console.error(err);
+      fetchNeeds(); // revert on fail
     }
   };
 
@@ -1867,6 +1897,18 @@ const MobileAppHomepage = ({
               ))}
             </div>
           </motion.section>
+
+          {/* WHAT IS LOOPOUT SECTION */}
+          <section className="mt-20 mb-10 px-4 max-w-5xl mx-auto">
+            <div className="bg-gradient-to-br from-rose-50 to-white border border-rose-100 rounded-[2rem] p-10 md:p-14 text-center shadow-sm hover:shadow-md transition-shadow">
+              <h2 className="text-3xl md:text-4xl font-black text-gray-950 leading-tight mb-6 tracking-tight">
+                What is <span className="text-rose-500">loopOut?</span>
+              </h2>
+              <p className="text-lg md:text-xl text-gray-600 leading-relaxed font-medium max-w-3xl mx-auto">
+                LoopOut is South Africa's premier elite discovery engine. We seamlessly connect you with exclusive properties, professional services, reliable local helpers, and world-class events in your city and beyond. Everything you need, all in one place.
+              </p>
+            </div>
+          </section>
 
           {/* HOW IT WORKS SECTION */}
           <section className="mt-20 mb-20 px-4">

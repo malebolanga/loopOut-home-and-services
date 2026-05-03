@@ -104,8 +104,11 @@ const MapView = ({
       };
 
       items.forEach(item => {
-        const lat = item.latitude || (defaultCenter.lat + (Math.random() - 0.5) * 0.05);
-        const lng = item.longitude || (defaultCenter.lng + (Math.random() - 0.5) * 0.05);
+        let lat = parseFloat(item.latitude);
+        let lng = parseFloat(item.longitude);
+        
+        if (isNaN(lat)) lat = defaultCenter.lat + (Math.random() - 0.5) * 0.05;
+        if (isNaN(lng)) lng = defaultCenter.lng + (Math.random() - 0.5) * 0.05;
         
         const marker = L.marker([lat, lng], { 
           icon: createPriceIcon(item, selectedItem?._id === item._id) 
@@ -128,8 +131,20 @@ const MapView = ({
   }, [center, items]);
 
   useEffect(() => {
-    if (leafletMapRef.current && center) {
-      leafletMapRef.current.flyTo([center.lat, center.lng], 13, { duration: 1.5 });
+    if (leafletMapRef.current && center && typeof center.lat === 'number' && !isNaN(center.lat) && typeof center.lng === 'number' && !isNaN(center.lng)) {
+      try {
+        leafletMapRef.current.invalidateSize();
+        const size = leafletMapRef.current.getSize();
+        
+        if (size.x > 0 && size.y > 0) {
+           leafletMapRef.current.flyTo([center.lat, center.lng], 13, { duration: 1.5 });
+        } else {
+           leafletMapRef.current.setView([center.lat, center.lng], 13, { animate: false });
+        }
+      } catch (e) {
+        console.warn("Leaflet map center update recovered:", e);
+        leafletMapRef.current.setView([center.lat, center.lng], 13, { animate: false });
+      }
     }
   }, [center]);
 

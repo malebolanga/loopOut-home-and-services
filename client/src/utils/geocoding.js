@@ -25,11 +25,12 @@ export const geocodeAddress = async (address) => {
 
     const data = await response.json();
 
-    if (data && data.length > 0) {
-      return {
-        lat: parseFloat(data[0].lat),
-        lng: parseFloat(data[0].lon),
-      };
+    if (Array.isArray(data) && data.length > 0 && data[0].lat && data[0].lon) {
+      const lat = parseFloat(data[0].lat);
+      const lng = parseFloat(data[0].lon);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        return { lat, lng };
+      }
     }
 
     return null;
