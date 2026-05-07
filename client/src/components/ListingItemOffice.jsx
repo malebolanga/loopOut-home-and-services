@@ -48,6 +48,7 @@ const formatPrice = (price, context) => {
   });
 
   const suffix = context?.type === 'over' ? '/night' : 
+                context?.type === 'resort' ? '/day' :
                 ['rent', 'office'].includes(context?.type) ? '/month' : '';
 
   return (
@@ -329,6 +330,7 @@ const ListingItem = ({ listing, distance, marketContext }) => {
                listing.type === 'rent-short' ? 'Short Term' :
                listing.type === 'rent-long' ? 'Long Term' :
                listing.type === 'office' ? 'Office Space' :
+               listing.type === 'resort' ? 'Resort' :
                listing.type === 'land' ? 'Land' :
                'Available'}
             </span>

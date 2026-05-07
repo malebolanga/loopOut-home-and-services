@@ -324,9 +324,8 @@ function AppContent() {
     '/service-home-page'
   ];
 
-  // Helper types that should have zero headers/footers for immersive layout
   const specializedHelperPaths = [
-    '/helper', '/photography', '/beauty', '/barber', '/tattoo', '/chef', '/carwash', '/privatetutor', '/listing', '/listings'
+    '/helper', '/photography', '/beauty', '/barber', '/tattoo', '/chef', '/carwash', '/privatetutor', '/listing', '/listings', '/sneaker', '/washingmat', '/animals'
   ];
 
   const isSpecializedPage = specializedHelperPaths.some(path => location.pathname.startsWith(path));

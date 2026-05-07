@@ -92,16 +92,16 @@ const Categories = () => {
     {
       id: 'properties',
       title: 'Properties',
-      description: 'Find your perfect home, office, or land',
+      description: 'Find your perfect home, office, or stay',
       icon: HomeIcon,
       color: 'bg-blue-500',
       gradient: 'from-blue-500 to-blue-600',
       subcategories: [
-        { id: 'sale', name: 'For Sale', count: 1234, icon: HomeIcon },
+        { id: 'sale', name: 'Hotels', count: 1234, icon: BuildingOfficeIcon },
         { id: 'rent-long', name: 'Long Term Rentals', count: 876, icon: HomeIcon },
         { id: 'rent-short', name: 'Short Term Rentals', count: 543, icon: HomeIcon },
         { id: 'office', name: 'Office Spaces', count: 321, icon: BuildingOfficeIcon },
-        { id: 'land', name: 'Land Plots', count: 198, icon: MapPinIcon },
+        { id: 'land', name: 'Self Catering', count: 198, icon: HomeIcon },
         { id: 'commercial', name: 'Commercial Properties', count: 267, icon: BuildingStorefrontIcon },
       ]
     },

@@ -302,8 +302,8 @@ export default function UpdateListing() {
                      { id: "rent", label: "Room/Home Rent", emoji: "🏠" },
                      { id: "over", label: "Guest House", emoji: "🛌" },
                      { id: "office", label: "Office", emoji: "🏢" },
-                     { id: "land", label: "Land", emoji: "🌳" },
-                     { id: "sale", label: "For Sale", emoji: "💰" },
+                     { id: "land", label: "Self Catering", emoji: "🍳" },
+                     { id: "sale", label: "Hotel", emoji: "🏨" },
                    ].map((type) => (
                      <button
                        key={type.id}
@@ -604,7 +604,7 @@ export default function UpdateListing() {
        {[
          {
            id: "bedrooms",
-           label: formData.type === "office" || formData.type === "land" ? "Square Meters" : "Bedrooms",
+           label: formData.type === "office" ? "Square Meters" : "Bedrooms",
            type: "number",
            min: formData.type === "land" ? 0 : 1,
            max: formData.type === "land" ? 1000000 : 10000,
@@ -634,7 +634,7 @@ export default function UpdateListing() {
            icon: <FaTag className="text-airbnb-red" />,
            additionalInfo: 
              formData.type === "rent" ? "/ month" :
-             formData.type === "over" ? "/ night" :
+             ['over', 'sale', 'land'].includes(formData.type) ? "/ night" :
              formData.type === "office" ? "/ month" : "",
          },
        ].map((input) => (

@@ -22,7 +22,7 @@ const ListingTypeConfig = {
     style: 'bg-amber-50 text-amber-700 border-amber-100',
   },
   office: {
-    label: 'Office Space',
+    label: 'Resort',
     icon: <FaBuilding className="w-3.5 h-3.5" />,
     style: 'bg-purple-50 text-purple-700 border-purple-100',
   },
@@ -240,10 +240,6 @@ export default function UserListings() {
               <div className="absolute inset-x-0 bottom-0 z-10 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none">
                 <div className="flex justify-between items-end gap-2">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-1 text-white">
-                      <Star className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
-                      <span className="text-xs font-black">4.8</span>
-                    </div>
                     <h3 className="text-base font-black text-white leading-tight truncate mb-0.5">
                       {listing.name}
                     </h3>

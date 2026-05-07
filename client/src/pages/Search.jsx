@@ -46,7 +46,8 @@ import {
   SunIcon,
   CloudIcon,
   ChatBubbleBottomCenterTextIcon,
-  ClockIcon
+  ClockIcon,
+  HomeModernIcon
 } from '@heroicons/react/24/outline';
 import {
   StarIcon as StarIconSolid,
@@ -84,7 +85,7 @@ const ALL_CATEGORIES = [
   // Properties & Accommodation
   { id: 'guesthouse', label: 'Guest House', type: 'properties', icon: HomeIcon, color: 'bg-purple-100 text-purple-800', description: 'Guest houses & B&Bs' },
   { id: 'rental', label: 'For Rent', type: 'properties', icon: HomeIcon, color: 'bg-blue-100 text-blue-800', description: 'Rental properties' },
-  { id: 'for_sale', label: 'For Sale', type: 'properties', icon: TagIcon, color: 'bg-emerald-100 text-emerald-800', description: 'Properties for sale' },
+  { id: 'for_sale', label: 'Hotel', type: 'properties', icon: BuildingOfficeIcon, color: 'bg-emerald-100 text-emerald-800', description: 'Hotel rentals' },
   { id: 'vacation', label: 'Vacation Rental', type: 'properties', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Short-term stays' },
 
   // Services
@@ -105,9 +106,16 @@ const ALL_CATEGORIES = [
   { id: 'chef', label: 'Private Chef', type: 'helper', icon: BriefcaseIcon, color: 'bg-amber-100 text-amber-800', description: 'Personal cooking' },
   { id: 'barber', label: 'Barber', type: 'helper', icon: ScissorsIcon, color: 'bg-sky-100 text-sky-800', description: 'Men\'s grooming' },
   { id: 'nanny', label: 'Nanny', type: 'helper', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Childcare assistance' },
+  { id: 'sneaker', label: 'Sneaker Cleaner', type: 'helper', icon: BoltIcon, color: 'bg-indigo-100 text-indigo-800', description: 'Premium shoe cleaning' },
+  { id: 'washingmat', label: 'Washing Mat', type: 'helper', icon: HomeModernIcon, color: 'bg-cyan-100 text-cyan-800', description: 'Expert mat cleaning' },
+  { id: 'animals', label: 'Animal Care', type: 'helper', icon: Sparkles, color: 'bg-amber-100 text-amber-800', description: 'Pet & animal services' },
 
   // Transport
   { id: 'transport', label: 'Transport', type: 'services', icon: TruckIcon, color: 'bg-blue-100 text-blue-800', description: 'Transportation services' },
+  
+  // Specific requested categories
+  { id: 'resort', label: 'Resort', type: 'properties', icon: Sparkles, color: 'bg-amber-100 text-amber-800', description: 'Luxury resort stays' },
+  { id: 'maid', label: 'Maid Services', type: 'helper', icon: HomeModernIcon, color: 'bg-cyan-100 text-cyan-800', description: 'Cleaning & maid help' },
 
   // Daily Essentials (for Homepage consistency)
   { id: 'daily', label: 'Daily Loop', type: 'services', icon: Sparkles, color: 'bg-green-100 text-green-800', description: 'Essentials & daily needs' },
@@ -116,10 +124,10 @@ const ALL_CATEGORIES = [
 // Property Types Configuration
 const PROPERTY_TYPE_CONFIG = {
   rent: { label: 'For Rent', color: 'bg-blue-100 text-blue-800', icon: '🏠', endpoint: 'listing' },
-  sale: { label: 'For Sale', color: 'bg-emerald-100 text-emerald-800', icon: '💰', endpoint: 'listing' },
+  sale: { label: 'Hotel', color: 'bg-emerald-100 text-emerald-800', icon: '🏨', endpoint: 'listing' },
   over: { label: 'Vacation Rental', color: 'bg-purple-100 text-purple-800', icon: '🌙', endpoint: 'listing' },
-  land: { label: 'Land', color: 'bg-amber-100 text-amber-800', icon: '🪨', endpoint: 'listing' },
-  office: { label: 'Office Space', color: 'bg-orange-100 text-orange-800', icon: '🏢', endpoint: 'listing' },
+  land: { label: 'Self Catering', color: 'bg-amber-100 text-amber-800', icon: '🍳', endpoint: 'listing' },
+  resort: { label: 'Resort', color: 'bg-amber-100 text-amber-800', icon: '🏖️', endpoint: 'listing' },
   guest_house: { label: 'Guest House', color: 'bg-pink-100 text-pink-800', icon: '🏨', endpoint: 'listing' }
 };
 
@@ -136,7 +144,11 @@ const HELPER_CATEGORY_CONFIG = {
   domestic: { label: 'Domestic Help', color: 'bg-teal-100 text-teal-800', icon: '🧹', endpoint: 'helper' },
   maid: { label: 'Maid Services', color: 'bg-cyan-100 text-cyan-800', icon: '🧼', endpoint: 'helper' },
   hair: { label: 'Hair & Beauty', color: 'bg-rose-100 text-rose-800', icon: '💇‍♀️', endpoint: 'helper' },
-  nail: { label: 'Nail Services', color: 'bg-pink-100 text-pink-800', icon: '💅', endpoint: 'helper' }
+  nail: { label: 'Nail Services', color: 'bg-pink-100 text-pink-800', icon: '💅', endpoint: 'helper' },
+  sneaker: { label: 'Sneaker Cleaner', color: 'bg-indigo-100 text-indigo-800', icon: '👟', endpoint: 'helper' },
+  washingmat: { label: 'Washing Mat', color: 'bg-cyan-100 text-cyan-800', icon: '🧼', endpoint: 'helper' },
+  animals: { label: 'Animal Care', color: 'bg-amber-100 text-amber-800', icon: '🐾', endpoint: 'helper' },
+  cleaner: { label: 'Cleaning', color: 'bg-cyan-100 text-cyan-800', icon: '🧼', endpoint: 'helper' }
 };
 
 // Services Categories Configuration
@@ -394,6 +406,23 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
     return type;
   };
 
+  const getSubCategoryLabel = () => {
+    if (type === 'properties') {
+      const config = PROPERTY_TYPE_CONFIG[item.type];
+      return config ? config.label : 'Property';
+    }
+    if (type === 'services') {
+      const config = SERVICES_CATEGORY_CONFIG[item.category || item.type];
+      return config ? config.label : (item.category || item.type || 'Service');
+    }
+    if (type === 'helper') {
+      const config = HELPER_CATEGORY_CONFIG[item.category || item.type];
+      return config ? config.label : (item.category || item.type || 'Helper');
+    }
+    if (type === 'events') return 'Event';
+    return type;
+  };
+
   const type = getItemType();
 
   const getPrice = () => {
@@ -401,7 +430,8 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
     if (!val) return 'Contact';
     const formatted = typeof val === 'number' ? `R${val.toLocaleString()}` : val;
     if (type === 'properties' && item.type === 'rent') return `${formatted} / mo`;
-    if (type === 'properties' && item.type === 'over') return `${formatted} / night`;
+    if (type === 'properties' && item.type === 'resort') return `${formatted} / day`;
+    if (type === 'properties' && ['over', 'sale', 'land'].includes(item.type)) return `${formatted} / night`;
     return formatted;
   };
 
@@ -501,7 +531,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
         </div>
         <div className="flex-1 min-w-0">
            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full">{type}</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">{getSubCategoryLabel()}</span>
               <div className="flex items-center gap-1">
                  <Star className="w-3 h-3 text-rose-500 fill-rose-500" />
                  <span className="text-xs font-black">{getRating()}</span>
@@ -571,7 +601,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
       <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
         <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
           <Sparkles className="w-3 h-3 text-rose-500" />
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{type}</span>
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{getSubCategoryLabel()}</span>
         </div>
 
         <button
@@ -676,7 +706,7 @@ const generateMockData = (urlParams) => {
   const mockData = [];
 
   if (type === 'all' || type === 'properties') {
-    const propertyTypes = subType ? [subType] : ['rent', 'sale', 'over', 'land', 'office', 'guest_house'];
+    const propertyTypes = subType ? [subType] : ['rent', 'sale', 'over', 'land', 'resort', 'guest_house'];
     propertyTypes.forEach((propType, index) => {
       if (PROPERTY_TYPE_CONFIG[propType]) {
         mockData.push({
@@ -829,7 +859,11 @@ const SearchPage = () => {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    const type = urlParams.get('type') || 'all';
+    let type = urlParams.get('type') || 'all';
+    // Handle singular/plural mismatch from different entry points
+    if (type === 'helper') type = 'helpers';
+    if (type === 'property') type = 'properties';
+    
     const subType = urlParams.get('subType') || urlParams.get('category') || '';
 
     setSearchTerm(urlParams.get('searchTerm') || '');
@@ -884,7 +918,10 @@ const SearchPage = () => {
     setLoading(true);
 
     try {
-      const type = urlParams.get('type') || 'all';
+      let type = urlParams.get('type') || 'all';
+      if (type === 'helper') type = 'helpers';
+      if (type === 'property') type = 'properties';
+
       const subType = urlParams.get('subType') || urlParams.get('category') || '';
       const searchTerm = urlParams.get('searchTerm') || '';
       const minPrice = urlParams.get('minPrice');

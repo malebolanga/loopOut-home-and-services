@@ -23,7 +23,7 @@ const formatPrice = (price, context = {}) => {
     maximumFractionDigits: 0,
   });
 
-  const suffix = context?.type === 'over' ? '/night' :
+  const suffix = ['over', 'sale', 'land'].includes(context?.type) ? '/night' :
     context?.type === 'office' ? '/hour' :
       ['rent', 'rent-short', 'rent-long'].includes(context?.type) ? '/month' : '';
 
@@ -37,11 +37,11 @@ const formatPrice = (price, context = {}) => {
 
 const getPropertyTypeName = (type) => {
   switch (type) {
-    case 'sale': return 'Sale';
+    case 'sale': return 'Hotel';
     case 'rent-short': return 'Short Term';
     case 'rent-long': return 'Long Term';
     case 'office': return 'Office';
-    case 'land': return 'Land Plot';
+    case 'land': return 'Self Catering';
     default: return 'Property';
   }
 };
@@ -355,7 +355,7 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
             className="block relative flex-grow-0"
             onClick={handleCardClick}
           >
-            <div className="relative pb-[75%] bg-gray-0 overflow-hidden rounded-t-xl">
+            <div className="relative pb-[75%] bg-gray-50 overflow-hidden rounded-t-xl">
               <Swiper
                 modules={[Pagination, Autoplay]}
                 pagination={{
@@ -363,6 +363,8 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
                   dynamicBullets: true,
                 }}
                 autoplay={{ delay: 5000, disableOnInteraction: false }}
+                observer={true}
+                observeParents={true}
                 className="absolute inset-0 h-full w-full"
               >
                 {enhancedImages.map((img, index) => (
@@ -426,7 +428,7 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
             </p>
 
             <div className="flex items-center space-x-2 text-gray-700 text-xs">
-              {listing.type !== 'land' && listing.type !== 'office' && (
+              {listing.type !== 'office' && (
                 <>
                   <div className="flex items-center gap-1">
                     <FaBed className="text-gray-500 text-xs" />
@@ -443,11 +445,7 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
                   <span>{listing.squareMeters || listing.bedrooms || 0} sqm</span>
                 </div>
               )}
-              {listing.type === 'land' && (
-                <div className="flex items-center gap-1">
-                  <span>{listing.landArea || listing.bathrooms || 0} sqm</span>
-                </div>
-              )}
+
             </div>
 
             <div className="flex items-center justify-between pt-1 mt-auto">

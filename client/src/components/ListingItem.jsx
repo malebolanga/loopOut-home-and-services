@@ -42,8 +42,10 @@ const formatPrice = (price, context = {}) => {
   });
 
   const suffix = context?.type === 'over' ? '/night' :
+    context?.type === 'resort' ? '/day' :
     context?.type === 'office' ? '/hour' :
-      ['rent', 'rent-short', 'rent-long'].includes(context?.type) ? '/month' : '';
+      ['rent', 'rent-short', 'rent-long'].includes(context?.type) ? '/month' :
+      ['over', 'sale', 'land'].includes(context?.type) ? '/night' : '';
 
   return (
     <span className="font-bold text-gray-900">
@@ -55,23 +57,25 @@ const formatPrice = (price, context = {}) => {
 
 const getPropertyTypeName = (type) => {
   switch (type) {
-    case 'sale': return 'Sale';
+    case 'sale': return 'Hotel';
     case 'rent-short': return 'Short Term';
     case 'rent-long': return 'Long Term';
     case 'office': return 'Office';
-    case 'land': return 'Land Plot';
+    case 'resort': return 'Resort';
+    case 'land': return 'Self Catering';
     default: return 'Property';
   }
 };
 
 const LISTING_TYPE_CONFIG = {
-  sale:       { icon: Home,         bg: 'bg-green-100',  text: 'text-green-700',  label: 'For Sale' },
+  sale:       { icon: Building,     bg: 'bg-green-100',  text: 'text-green-700',  label: 'Hotel' },
   rent:       { icon: Key,          bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'For Rent' },
   'rent-long':{ icon: Key,          bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Long Term' },
   'rent-short':{ icon: Moon,         bg: 'bg-rose-100',   text: 'text-rose-700',   label: 'Short Term' },
   over:       { icon: Moon,         bg: 'bg-rose-100',   text: 'text-rose-700',   label: 'Overnight' },
-  land:       { icon: Sparkles,     bg: 'bg-amber-100',  text: 'text-amber-700',  label: 'Land Plot' },
+  land:       { icon: Home,         bg: 'bg-amber-100',  text: 'text-amber-700',  label: 'Self Catering' },
   office:     { icon: Building,     bg: 'bg-purple-100', text: 'text-purple-700', label: 'Office' },
+  resort:     { icon: Building,     bg: 'bg-amber-100',  text: 'text-amber-700',  label: 'Resort' },
 };
 
 function ListingTypePill({ type }) {

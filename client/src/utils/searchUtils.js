@@ -53,7 +53,7 @@ export const generateSuggestions = (query, activeType, searchHistory) => {
       '3 bedroom apartment with pool',
       'Luxury penthouse with view',
       'Pet-friendly home with garden',
-      'Office space in CBD'
+      'Resort in CBD'
     ],
     services: [
       'Cleaning service for office',

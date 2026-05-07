@@ -27,7 +27,7 @@ import {
   FaShieldAlt, FaHotTub, FaDog, FaBolt, FaSnowflake, FaUserFriends, FaCoffee,
   FaCouch, FaShower, FaWind, FaDesktop, FaTree, FaUmbrellaBeach, FaDumbbell,
   FaSmokingBan, FaHome, FaFacebook, FaInstagram, FaTwitter, FaLinkedin, FaTiktok, FaGlobe,
-  FaHeart, FaWhatsapp, FaUsers, FaClock, FaReceipt, FaSpinner, FaBed, FaBath, FaChevronLeft, FaChevronRight
+  FaHeart, FaWhatsapp, FaUsers, FaClock, FaReceipt, FaSpinner, FaBed, FaBath, FaChevronLeft, FaChevronRight, FaHotel
 } from "react-icons/fa";
 import { MdCleanHands, MdOutlineGppGood, MdLogin, MdChat, MdLocationOn, MdAttachMoney, MdKingBed, MdBathtub, MdClose } from "react-icons/md";
 import NeuralLoader from "../components/NeuralLoader";
@@ -91,10 +91,10 @@ const HOST_RATING_CATEGORIES = [
 
 const LISTING_TYPES = {
   rent: { label: 'For Rent', color: 'bg-black text-white', icon: FaHome, period: '/month' },
-  sale: { label: 'For Sale', color: 'bg-rose-600 text-white', icon: FaHome, period: '' },
+  sale: { label: 'Hotel', color: 'bg-rose-600 text-white', icon: FaHotel, period: '/night' },
   over: { label: 'Vacation Rental', color: 'bg-rose-600 text-white', icon: FaUmbrellaBeach, period: '/night' },
-  land: { label: 'Land', color: 'bg-emerald-700 text-white', icon: FaTree, period: '' },
-  office: { label: 'Office Space', color: 'bg-blue-600 text-white', icon: FaDesktop, period: '/hour' }
+  land: { label: 'Self Catering', color: 'bg-emerald-700 text-white', icon: FaHome, period: '/night' },
+  office: { label: 'Resort', color: 'bg-blue-600 text-white', icon: FaUmbrellaBeach, period: '/day' }
 };
 
 const SOCIAL_PLATFORMS = [
@@ -151,7 +151,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
 
   // Get property type
   const propertyType = listing?.type || 'over';
-  const isOvernight = propertyType === 'over';
+  const isOvernight = propertyType === 'over' || propertyType === 'sale' || propertyType === 'land';
   const isOffice = propertyType === 'office';
   const isSale = propertyType === 'sale';
   const isRent = propertyType === 'rent';
@@ -397,15 +397,15 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       message += `_Sent via loopOut_`;
     } else if (isOffice) {
       // Office space message - Professional Formatting
-      message = `*🏢 WORKSPACE BOOKING 🏢*%0A%0A`;
+      message = `*🏢 RESORT BOOKING 🏖️*%0A%0A`;
       message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*📍 OFFICE DETAILS*%0A`;
+      message += `*📍 RESORT DETAILS*%0A`;
       message += `━━━━━━━━━━━━━━━━━━━━%0A`;
       message += `🏢 *Space:* ${listing?.name}%0A`;
       message += `📍 *Location:* ${listing?.address}%0A`;
       const mapLink = generateMapLink(listing?.address);
       if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
-      message += `💰 *Rate:* R${listing?.regularPrice?.toLocaleString()} / hour%0A%0A`;
+      message += `💰 *Rate:* R${listing?.regularPrice?.toLocaleString()} / day%0A%0A`;
 
       message += `━━━━━━━━━━━━━━━━━━━━%0A`;
       message += `*👤 CLIENT DETAILS*%0A`;
@@ -548,12 +548,12 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
              <div>
                <h2 className="text-2xl font-black text-gray-900 tracking-tight">
                  {isOvernight && 'Reservation Unit'}
-                 {isOffice && 'Workspace Suite'}
+                 {isOffice && 'Resort Suite'}
                  {(isSale || isRent) && 'Property Portfolio'}
                </h2>
                <p className="text-gray-400 text-xs mt-1 uppercase font-black tracking-widest opacity-60">
                  {isOvernight && 'Secure your overnight luxury stay'}
-                 {isOffice && 'Professional office booking environment'}
+                 {isOffice && 'Secure your resort vacation experience'}
                  {(isSale || isRent) && 'Direct inquiry to listing proprietor'}
                </p>
              </div>
@@ -779,7 +779,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
             </>
           )}
 
-          {/* Office Space Fields */}
+          {/* Resort Fields */}
           {isOffice && (
             <>
               <div className="space-y-4 pt-4 border-t border-gray-200">

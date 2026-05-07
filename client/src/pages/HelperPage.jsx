@@ -2249,6 +2249,17 @@ export default function HelperPage() {
               </div>
             </div>
 
+            {/* Response Rate */}
+            <div className="pb-6 border-b border-gray-200">
+              <div className="flex items-start gap-4">
+                <BoltIcon className="w-6 h-6 text-yellow-500 mt-1" />
+                <div>
+                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Response Rate</h3>
+                  <p className="text-gray-500 text-xs font-medium mt-1">{helper.responseRate || 'Usually responds within an hour'}</p>
+                </div>
+              </div>
+            </div>
+
             {/* Description */}
             <div className="pb-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">About this professional</h2>

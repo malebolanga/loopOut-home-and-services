@@ -69,10 +69,35 @@ import {
 
 import { Sparkles } from 'lucide-react';
 
+const PROPERTY_SUBTYPES = [
+  { id: 'rent', label: 'Rental', icon: '🏠' },
+  { id: 'sale', label: 'Hotel', icon: '🏨' },
+  { id: 'over', label: 'Vacation', icon: '🌙' },
+  { id: 'resort', label: 'Resort', icon: '🏖️' },
+  { id: 'office', label: 'Office', icon: '🏢' }
+];
+
+const SERVICE_SUBTYPES = [
+  { id: 'photography', label: 'Photography', icon: '📸' },
+  { id: 'carwash', label: 'Car Wash', icon: '🚗' },
+  { id: 'landscaping', label: 'Landscaping', icon: '🌿' },
+  { id: 'electrician', label: 'Electrician', icon: '⚡' },
+  { id: 'handyman', label: 'Handyman', icon: '🔧' }
+];
+
+const HELPER_SUBTYPES = [
+  { id: 'maid', label: 'Maid', icon: '🧼' },
+  { id: 'barber', label: 'Barber', icon: '💇' },
+  { id: 'chef', label: 'Chef', icon: '👨‍🍳' },
+  { id: 'tutor', label: 'Tutor', icon: '📚' },
+  { id: 'domestic', label: 'Domestic', icon: '🧹' }
+];
+
 export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState('all');
+  const [selectedSubCategory, setSelectedSubCategory] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [searchHistory, setSearchHistory] = useState(() => getSearchHistory());
   const [suggestions, setSuggestions] = useState([]);
@@ -368,7 +393,7 @@ export default function Header() {
     const isLocationOnly = extractedFilters.location && searchTerm.toLowerCase().trim() === extractedFilters.location.toLowerCase().trim();
     if (searchTerm && !isLocationOnly) urlParams.set('searchTerm', searchTerm);
     
-    urlParams.set('type', extractedFilters.type || searchType || 'properties');
+    urlParams.set('type', selectedSubCategory || extractedFilters.type || searchType || 'properties');
     urlParams.set('location', extractedFilters.location || currentLocation);
 
     // Join other extracted filters
@@ -883,6 +908,26 @@ export default function Header() {
                   </div>
 
                   <div className="space-y-4">
+                     {searchHistory.length > 0 && (
+                       <div className="mb-6">
+                         <div className="flex justify-between items-center mb-4">
+                           <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Recent searches</p>
+                           <button onClick={clearSearchHistory} className="text-[10px] font-bold text-gray-400 hover:text-rose-500 uppercase tracking-widest">Clear</button>
+                         </div>
+                         <div className="flex flex-wrap gap-2">
+                           {searchHistory.slice(0, 5).map((term, i) => (
+                             <button 
+                               key={i} 
+                               onClick={() => { setSearchTerm(term); handleSearch(); }}
+                               className="px-4 py-2 bg-gray-100 hover:bg-rose-50 hover:text-rose-600 rounded-xl text-xs font-bold text-gray-700 transition-all"
+                             >
+                               {term}
+                             </button>
+                           ))}
+                         </div>
+                       </div>
+                     )}
+
                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Suggested destinations</p>
                      
                      <button 
@@ -923,6 +968,70 @@ export default function Header() {
                            <p className="text-xs text-gray-500">For sights like uShaka Marine World</p>
                         </div>
                      </button>
+
+                     <button 
+                       onClick={() => { setSearchTerm('Tembisa, Gauteng'); handleSearch(); }}
+                       className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-all active:scale-98"
+                     >
+                        <div className="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500">
+                           <MapPinIcon className="w-6 h-6" />
+                        </div>
+                        <div className="text-left">
+                           <p className="text-sm font-bold text-gray-900">Tembisa, Gauteng</p>
+                           <p className="text-xs text-gray-500">Popular destination in Gauteng</p>
+                        </div>
+                     </button>
+                  </div>
+               </div>
+
+               {/* Section: CATEGORIES DISCOVERY */}
+               <div className="bg-white rounded-[2rem] shadow-xl p-6 border border-gray-100">
+                  <h2 className="text-lg font-black text-gray-900 mb-6 tracking-tight uppercase">Quick Discovery</h2>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { id: 'helpers', label: 'Helper', icon: '👨‍💼', color: 'bg-emerald-50' },
+                      { id: 'services', label: 'Services', icon: '🛠️', color: 'bg-blue-50' },
+                      { id: 'properties', label: 'Homes', icon: '🏠', color: 'bg-rose-50' },
+                      { id: 'events', label: 'Events', icon: '🎪', color: 'bg-amber-50' },
+                      { id: 'resort', label: 'Resort', icon: '🏖️', color: 'bg-cyan-50' },
+                      { id: 'hotel', label: 'Hotel', icon: '🏨', color: 'bg-indigo-50' },
+                      { id: 'guesthouse', label: 'Guest House', icon: '🏡', color: 'bg-emerald-50' },
+                      { id: 'room-rent', label: 'Room Rent', icon: '🛏️', color: 'bg-blue-50' },
+                      { id: 'house-rent', label: 'House Rent', icon: '🏠', color: 'bg-amber-50' },
+                      { id: 'self-catering', label: 'Catering', icon: '🍳', color: 'bg-orange-50' },
+                      { id: 'maid', label: 'Maids', icon: '🧹', color: 'bg-purple-50' },
+                      { id: 'carwash', label: 'Car Wash', icon: '🚗', color: 'bg-cyan-50' },
+                      { id: 'nanny', label: 'Nanny', icon: '👶', color: 'bg-pink-50' },
+                      { id: 'photograph', label: 'Photo', icon: '📸', color: 'bg-indigo-50' },
+                      { id: 'transport', label: 'Transport', icon: '🚐', color: 'bg-orange-50' },
+                      { id: 'electrician', label: 'Electric', icon: '⚡', color: 'bg-yellow-50' },
+                      { id: 'handyman', label: 'Handyman', icon: '🔨', color: 'bg-gray-100' },
+                      { id: 'catering', label: 'Catering', icon: '🍽️', color: 'bg-red-50' },
+                      { id: 'barber', label: 'Barber', icon: '💈', color: 'bg-blue-100' },
+                      { id: 'beauty', label: 'Beauty', icon: '💄', color: 'bg-rose-100' }
+                    ].map((cat) => (
+                      <button 
+                        key={cat.id}
+                        onClick={() => {
+                          const isCore = ['properties', 'services', 'helpers', 'events'].includes(cat.id);
+                          const isHospitality = ['resort', 'hotel', 'guesthouse', 'room-rent', 'house-rent', 'self-catering'].includes(cat.id);
+                          
+                          setSearchType(isCore ? cat.id : (isHospitality ? 'properties' : (['maid', 'nanny', 'barber', 'beauty'].includes(cat.id) ? 'helpers' : 'services')));
+                          
+                          if (!isCore) {
+                            setSelectedSubCategory(cat.id);
+                          }
+                          handleSearch();
+                        }}
+                        className="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 hover:border-rose-200 hover:bg-rose-50/30 transition-all text-left"
+                      >
+                        <div className={`w-10 h-10 ${cat.color} rounded-xl flex items-center justify-center text-lg shadow-sm`}>
+                          {cat.icon}
+                        </div>
+                        <span className="text-xs font-black text-gray-900 uppercase tracking-tighter">{cat.label}</span>
+                      </button>
+                    ))}
                   </div>
                </div>
 
@@ -933,9 +1042,38 @@ export default function Header() {
                </div>
 
                <div className="bg-white rounded-[1.5rem] shadow-sm p-5 flex items-center justify-between border border-gray-100 opacity-60">
-                  <span className="text-sm font-bold text-gray-900">Who</span>
+                  <span className="text-sm font-bold text-gray-900 Who">Who</span>
                   <span className="text-[11px] font-black uppercase text-gray-400 tracking-wider">Add guests</span>
                </div>
+
+               {/* Category Selection Section */}
+               {(searchType === 'properties' || searchType === 'services' || searchType === 'helpers') && (
+                 <div className="bg-white rounded-[2rem] shadow-xl p-6 border border-gray-100">
+                    <h2 className="text-xl font-black text-gray-900 mb-6 tracking-tight">Select Category</h2>
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                       {(searchType === 'properties' ? PROPERTY_SUBTYPES : 
+                         searchType === 'services' ? SERVICE_SUBTYPES : 
+                         HELPER_SUBTYPES).map((sub) => (
+                          <button
+                            key={sub.id}
+                            onClick={() => setSelectedSubCategory(sub.id === selectedSubCategory ? '' : sub.id)}
+                            className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all ${
+                              selectedSubCategory === sub.id 
+                                ? 'border-rose-500 bg-rose-50 shadow-md scale-105' 
+                                : 'border-gray-50 bg-gray-50 hover:border-gray-200'
+                            }`}
+                          >
+                            <span className="text-2xl">{sub.icon}</span>
+                            <span className={`text-[9px] font-black uppercase tracking-widest ${
+                              selectedSubCategory === sub.id ? 'text-rose-600' : 'text-gray-500'
+                            }`}>
+                              {sub.label}
+                            </span>
+                          </button>
+                       ))}
+                    </div>
+                 </div>
+               )}
             </div>
 
             {/* Footer - Search Button */}

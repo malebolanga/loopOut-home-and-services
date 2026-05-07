@@ -174,7 +174,7 @@ export default function OfficeListing() {
 
     const templateParams = {
       to_email: listing?.userEmail,
-      subject: "Office Space Booking Request",
+      subject: "Resort Booking Request",
       message: emailContent,
     };
 
@@ -194,16 +194,16 @@ export default function OfficeListing() {
 
     const doc = new jsPDF();
     doc.setFontSize(16);
-    doc.text("Office Space Booking Voucher", 20, 20);
+    doc.text("Resort Booking Voucher", 20, 20);
     doc.setFontSize(12);
     doc.text(`Name: ${name}`, 20, 40);
     doc.text(`Contact: ${contact}`, 20, 50);
-    doc.text(`Office: ${listing?.name}`, 20, 60);
+    doc.text(`Resort: ${listing?.name}`, 20, 60);
     doc.text(`Address: ${listing?.address}`, 20, 70);
     doc.text(`Booking Dates: ${startDate?.toLocaleDateString()} to ${endDate?.toLocaleDateString()}`, 20, 80);
     doc.text(`Price: R${listing?.offer ? listing.discountPrice : listing.regularPrice} per hour`, 20, 90);
     doc.text("Thank you for your booking!", 20, 110);
-    doc.save("OfficeBookingVoucher.pdf");
+    doc.save("ResortBookingVoucher.pdf");
   };
 
   const contactOwner = () => {
@@ -231,8 +231,8 @@ export default function OfficeListing() {
           <div className="w-16 h-16 rounded-full bg-rose-100 flex items-center justify-center mx-auto mb-4">
             <FaBuilding className="w-8 h-8 text-rose-600" />
           </div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2">Office Not Found</h2>
-          <p className="text-gray-600 mb-6">The office space you're looking for doesn't exist or has been removed.</p>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-2">Resort Not Found</h2>
+          <p className="text-gray-600 mb-6">The resort you're looking for doesn't exist or has been removed.</p>
           <button
             onClick={() => window.history.back()}
             className="px-6 py-3 bg-[#FF385C] text-white font-medium rounded-lg hover:bg-[#E31C5F] transition-colors"
@@ -335,17 +335,17 @@ export default function OfficeListing() {
 
             {/* Description */}
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">About this office space</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-3">About this resort</h2>
               <p className="text-gray-700 leading-relaxed">{listing.description}</p>
             </div>
 
             {/* Features Grid */}
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">What this office offers</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">What this resort offers</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                   <FaBed className="text-gray-700" />
-                  <span>{listing.bedrooms} {listing.bedrooms > 1 ? "Offices" : "Office"}</span>
+                  <span>{listing.bedrooms} {listing.bedrooms > 1 ? "Units" : "Unit"}</span>
                 </div>
                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                   <FaBath className="text-gray-700" />
@@ -381,7 +381,7 @@ export default function OfficeListing() {
             {/* Rules */}
             {listing.rules && (
               <div className="mb-8 p-6 bg-amber-50 rounded-xl">
-                <h2 className="text-xl font-semibold text-gray-900 mb-3">Office rules</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-3">Resort rules</h2>
                 <p className="text-gray-700">{listing.rules}</p>
               </div>
             )}
@@ -403,7 +403,7 @@ export default function OfficeListing() {
                   <textarea
                     value={userReview}
                     onChange={(e) => setUserReview(e.target.value)}
-                    placeholder="Share your experience with this office space..."
+                    placeholder="Share your experience with this resort..."
                     className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#FF385C] focus:border-transparent"
                     rows="3"
                   />
@@ -450,7 +450,7 @@ export default function OfficeListing() {
             <div className="sticky top-24 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-gray-900">Book this office</h3>
+                  <h3 className="text-xl font-semibold text-gray-900">Book this resort</h3>
                   <div className="flex items-center space-x-1">
                     <FaStar className="text-yellow-400" />
                     <span className="font-semibold">{rating.toFixed(1)}</span>
@@ -524,7 +524,7 @@ export default function OfficeListing() {
                   />
                   <div>
                     <h4 className="font-medium text-gray-900">Hosted by {listing.host}</h4>
-                    <p className="text-sm text-gray-600">Office space provider</p>
+                    <p className="text-sm text-gray-600">Resort provider</p>
                   </div>
                 </div>
                 <div className="space-y-2">

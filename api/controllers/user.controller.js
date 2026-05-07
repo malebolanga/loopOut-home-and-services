@@ -506,3 +506,35 @@ export const getMutualFriends = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getUserByPhone = async (req, res, next) => {
+  try {
+    const { phone } = req.params;
+    if (!phone) return next(errorHandler(400, 'Phone number is required'));
+
+    // Normalize input phone: strip all non-digits and take last 9 digits for robust matching
+    const normalizedInput = phone.replace(/\D/g, '').slice(-9);
+    
+    // We search for users whose stored phone number (when normalized) matches our normalized input
+    // This is computationally expensive but necessary if phone numbers are stored in various formats
+    // A better way would be to have a normalized_phone field in the DB.
+    // For now, we'll try a regex match on the end of the string if it's long enough, 
+    // or just find all and filter if the DB is small. 
+    // Given the prompt, let's do a more direct match first and fallback.
+
+    const user = await User.findOne({ 
+        $or: [
+            { phone: phone },
+            { phone: { $regex: normalizedInput + "$" } }
+        ]
+    }).select('username avatar phone _id');
+
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+};

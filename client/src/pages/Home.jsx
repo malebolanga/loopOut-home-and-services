@@ -66,6 +66,7 @@ import LoopOutPulse from '../components/LoopOutPulse';
 import { useWishlist } from '../hooks/useWishlist';
 import MyBookingsConsumer from '../components/MyBookingsConsumer';
 import LookingForItem from '../components/LookingForItem';
+import BottomNav from '../components/BottomNav';
 
 import {
   calculateDistance,
@@ -110,6 +111,113 @@ const itemVariants = {
     y: 0,
     transition: { duration: 0.5 }
   }
+};
+
+const CategoryIcon = ({ type, size = "w-10 h-10" }) => {
+  const icons = {
+    Universe: (
+      <svg viewBox="0 0 100 100" className={`${size} drop-shadow-[0_15px_15px_rgba(79,70,229,0.4)]`}>
+        <defs>
+          <radialGradient id="sphereGrad" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#818CF8" />
+            <stop offset="50%" stopColor="#4F46E5" />
+            <stop offset="100%" stopColor="#312E81" />
+          </radialGradient>
+          <radialGradient id="nebulaGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#EC4899" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#7C3AED" stopOpacity="0" />
+          </radialGradient>
+          <filter id="glassBlur">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
+          </filter>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#sphereGrad)" />
+        <circle cx="50" cy="50" r="30" fill="url(#nebulaGrad)" filter="url(#glassBlur)" className="animate-pulse" />
+        <path d="M20 50 Q50 20 80 50" fill="none" stroke="white" strokeWidth="1" opacity="0.3" strokeDasharray="4 2" />
+        <circle cx="40" cy="40" r="2" fill="white" className="animate-ping" />
+        <circle cx="60" cy="30" r="1.5" fill="white" opacity="0.8" />
+        <circle cx="30" cy="65" r="1" fill="white" opacity="0.6" />
+        <path d="M50 5 A45 45 0 0 1 95 50" fill="none" stroke="white" strokeWidth="0.5" opacity="0.5" />
+      </svg>
+    ),
+    Homes: (
+      <svg viewBox="0 0 100 100" className={`${size} drop-shadow-[0_15px_15px_rgba(239,68,68,0.3)]`}>
+        <defs>
+          <linearGradient id="roofGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#F87171" />
+            <stop offset="100%" stopColor="#B91C1C" />
+          </linearGradient>
+          <linearGradient id="wallGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FEE2E2" />
+            <stop offset="100%" stopColor="#FECACA" />
+          </linearGradient>
+        </defs>
+        <path d="M15 45 L50 15 L85 45 L85 85 L15 85 Z" fill="url(#wallGrad)" />
+        <path d="M10 45 L50 10 L90 45 L50 55 Z" fill="url(#roofGrad)" />
+        <path d="M50 10 L90 45 L50 55 L10 45 Z" fill="black" opacity="0.1" />
+        <rect x="35" y="60" width="30" height="25" fill="#991B1B" rx="2" />
+        <rect x="25" y="50" width="15" height="15" fill="white" rx="2" opacity="0.8" />
+        <rect x="60" y="50" width="15" height="15" fill="white" rx="2" opacity="0.8" />
+        <circle cx="30" cy="30" r="20" fill="white" opacity="0.2" />
+      </svg>
+    ),
+    Services: (
+      <svg viewBox="0 0 100 100" className={`${size} drop-shadow-[0_15px_15px_rgba(59,130,246,0.3)]`}>
+        <defs>
+          <linearGradient id="caseGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#60A5FA" />
+            <stop offset="100%" stopColor="#1D4ED8" />
+          </linearGradient>
+          <linearGradient id="handleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#94A3B8" />
+            <stop offset="100%" stopColor="#475569" />
+          </linearGradient>
+        </defs>
+        <rect x="15" y="30" width="70" height="55" rx="8" fill="url(#caseGrad)" />
+        <path d="M35 30 L35 20 Q35 15 40 15 L60 15 Q65 15 65 20 L65 30" fill="none" stroke="url(#handleGrad)" strokeWidth="6" />
+        <rect x="15" y="30" width="70" height="15" rx="8" fill="black" opacity="0.1" />
+        <circle cx="30" cy="55" r="5" fill="white" opacity="0.3" />
+        <circle cx="70" cy="55" r="5" fill="white" opacity="0.3" />
+        <rect x="45" y="45" width="10" height="25" rx="2" fill="white" opacity="0.2" />
+      </svg>
+    ),
+    Helper: (
+      <svg viewBox="0 0 100 100" className={`${size} drop-shadow-[0_15px_15px_rgba(16,185,129,0.3)]`}>
+        <defs>
+          <linearGradient id="headGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#34D399" />
+            <stop offset="100%" stopColor="#059669" />
+          </linearGradient>
+          <radialGradient id="highlight" cx="30%" cy="30%" r="50%">
+            <stop offset="0%" stopColor="white" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="white" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="35" r="25" fill="url(#headGrad)" />
+        <circle cx="50" cy="35" r="25" fill="url(#highlight)" />
+        <path d="M20 90 C20 60 80 60 80 90" fill="url(#headGrad)" />
+        <path d="M20 90 C20 65 80 65 80 90" fill="url(#highlight)" />
+        <circle cx="40" cy="30" r="3" fill="white" opacity="0.6" />
+        <circle cx="60" cy="30" r="3" fill="white" opacity="0.6" />
+        <path d="M40 45 Q50 55 60 45" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+      </svg>
+    ),
+    Events: (
+      <svg viewBox="0 0 100 100" className={`${size} drop-shadow-[0_15px_15px_rgba(245,158,11,0.3)]`}>
+        <defs>
+          <linearGradient id="ticketGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FBBF24" />
+            <stop offset="100%" stopColor="#D97706" />
+          </linearGradient>
+        </defs>
+        <rect x="15" y="30" width="70" height="45" rx="4" fill="url(#ticketGrad)" transform="rotate(-10 50 50)" />
+        <path d="M15 52.5 A5 5 0 0 1 15 42.5 M85 42.5 A5 5 0 0 1 85 52.5" fill="white" transform="rotate(-10 50 50)" />
+        <text x="50" y="55" fontFamily="Arial" fontWeight="bold" fontSize="12" fill="#92400E" textAnchor="middle" transform="rotate(-10 50 50)">PASS</text>
+        <circle cx="30" cy="40" r="15" fill="white" opacity="0.2" />
+      </svg>
+    )
+  };
+  return icons[type] || null;
 };
 
 // --- TOP CATEGORIES DATA (Fresha Style) ---
@@ -420,55 +528,38 @@ const TOP_CATEGORIES = [
     id: 'trending',
     name: 'Trending',
     image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?fm=jpg&q=60&w=800&auto=format&fit=crop',
-    count: '210',
     color: 'from-red-600 to-orange-500',
     emoji: '🚀'
   }
 ];
 
-// --- Mock Data with specific IDs for testing ---
 const MOCK_PROPERTIES = [
-  { _id: 'prop-1', name: 'Modern Apartment in City Center', price: 2500, regularPrice: 2500, type: 'rent-long', imageUrls: ['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.5, address: 'Johannesburg' },
-  { _id: 'prop-2', name: 'Luxury Villa with Pool', price: 8500000, regularPrice: 8500000, type: 'sale', imageUrls: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8, address: 'Cape Town' },
-  { _id: 'prop-3', name: 'Cozy Studio near University', price: 1200, regularPrice: 1200, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.3, address: 'Pretoria' },
-  { _id: 'prop-4', name: 'Modern Office Space', price: 500, regularPrice: 500, type: 'office', imageUrls: ['https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.6, address: 'Polokwane' },
-  { _id: 'prop-5', name: 'Family House in Suburbs', price: 3500, regularPrice: 3500, type: 'rent-long', imageUrls: ['https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.7, address: 'Durban' },
-  { _id: 'prop-6', name: 'Vacation Beach House', price: 1800, regularPrice: 1800, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1518780664697-55e3ad937233?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9, address: 'Port Elizabeth' },
-  { _id: 'prop-7', name: 'Commercial Land Plot', price: 250000, regularPrice: 250000, type: 'land', imageUrls: ['https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.4, address: 'Bloemfontein' },
-  { _id: 'prop-8', name: 'Penthouse with View', price: 12000000, regularPrice: 12000000, type: 'sale', imageUrls: ['https://images.unsplash.com/photo-1513584684374-8bab748fbf90?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8, address: 'Johannesburg' }
+  { _id: '663ad8e5f1e249b49f986025', itemType: 'property', name: 'Elite Modern Apartment', price: 2500, regularPrice: 2500, type: 'rent-long', imageUrls: ['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9, address: 'Johannesburg', comments: [1, 2, 3, 4], bookingsCount: 12, createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986026', itemType: 'property', name: 'Grand Presidential Hotel', price: 3500, regularPrice: 3500, type: 'sale', imageUrls: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8, address: 'Cape Town', comments: [1, 2], bookingsCount: 45, createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986027', itemType: 'property', name: 'Neural Guest House', price: 1200, regularPrice: 1200, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.7, address: 'Polokwane', comments: [1, 2, 3], bookingsCount: 8, createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986028', itemType: 'property', name: 'Roadside Oasis Motel', price: 800, regularPrice: 800, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1540518614846-7eded433c457?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.3, address: 'Bloemfontein', comments: [1], bookingsCount: 5, createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986029', itemType: 'property', name: 'University Studio Pro', price: 1200, regularPrice: 1200, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.6, address: 'Pretoria', comments: [1, 2, 3, 4, 5], bookingsCount: 15, createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986030', itemType: 'property', name: 'Quantum Office Suite', price: 500, regularPrice: 500, type: 'office', imageUrls: ['https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.6, address: 'Polokwane', comments: [1], bookingsCount: 22, createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986031', itemType: 'property', name: 'Suburban Family Mansion', price: 3500, regularPrice: 3500, type: 'rent-long', imageUrls: ['https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.7, address: 'Durban', comments: [1, 2], bookingsCount: 4, createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986032', itemType: 'property', name: 'Azure Beachfront Villa', price: 1800, regularPrice: 1800, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1518780664697-55e3ad937233?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9, address: 'Port Elizabeth', comments: [1, 2, 3, 4, 5, 6], bookingsCount: 31, createdAt: new Date().toISOString() }
 ];
 
 const MOCK_SERVICES = [
-  { _id: 'serv-1', name: 'Professional Cleaning Service', price: 200, regularPrice: 200, description: 'Deep cleaning service for your home or office', imageUrls: ['https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.7 },
-  { _id: 'serv-2', name: 'Moving & Relocation Assistance', price: 350, regularPrice: 350, description: 'Help with packing and moving to your new home', imageUrls: ['https://images.unsplash.com/photo-1541976590-713941681591?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8 },
-  { _id: 'serv-3', name: 'Landscaping & Garden Design', price: 450, regularPrice: 450, description: 'Garden maintenance and landscape design services', imageUrls: ['https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.6 },
-  { _id: 'serv-4', name: 'Home Repair & Maintenance', price: 300, regularPrice: 300, description: 'Professional home repair and maintenance services', imageUrls: ['https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9 },
-  { _id: 'serv-5', name: 'Car Wash & Detailing', price: 150, regularPrice: 150, description: 'Professional car washing and detailing services', imageUrls: ['https://images.unsplash.com/photo-1565689221354-d87f85d4aee2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.5 },
-  { _id: 'serv-6', name: 'Sneaker Cleaning & Restoration', price: 250, regularPrice: 250, description: 'Professional sneaker cleaning and restoration services', imageUrls: ['https://images.unsplash.com/photo-1463100099107-aa0980c362e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8 },
-  { _id: 'serv-7', name: 'Professional Mat Washing', price: 180, regularPrice: 180, description: 'Deep cleaning and sanitization of all types of mats', imageUrls: ['https://images.unsplash.com/photo-1582735689369-4fe89db7114c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.7, createdAt: '2024-03-01T10:00:00Z' },
-  { _id: 'serv-8', name: 'Pet Grooming & Care', price: 220, regularPrice: 220, description: 'Professional grooming, bathing, and care for your pets', imageUrls: ['https://images.unsplash.com/photo-1450778869180-41d0601e046e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9, createdAt: '2024-03-02T10:00:00Z' },
-  { _id: 'serv-handyman-1', name: 'Expert Handyman Services', price: 350, regularPrice: 350, description: 'All-in-one home repair, plumbing, and electrical fixes by certified professionals.', imageUrls: ['https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9, createdAt: new Date().toISOString() }
+  { _id: '663ad8e5f1e249b49f986033', itemType: 'service', name: 'Professional Cleaning Service', price: 200, regularPrice: 200, description: 'Deep cleaning service for your home or office', imageUrls: ['https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.7, comments: [1, 2], createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986034', itemType: 'service', name: 'Moving & Relocation Assistance', price: 350, regularPrice: 350, description: 'Help with packing and moving to your new home', imageUrls: ['https://images.unsplash.com/photo-1541976590-713941681591?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8, comments: [1], createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986035', itemType: 'service', name: 'Landscaping & Garden Design', price: 450, regularPrice: 450, description: 'Garden maintenance and landscape design services', imageUrls: ['https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.6, comments: [1, 2, 3], createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986036', itemType: 'service', name: 'Home Repair & Maintenance', price: 300, regularPrice: 300, description: 'Professional home repair and maintenance services', imageUrls: ['https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9, comments: [1, 2, 3, 4], createdAt: new Date().toISOString() }
 ];
 
-// Updated MOCK_HELPERS with specific IDs that match your database
 const MOCK_HELPERS = [
-  { _id: '69a6a956f0c40835a3119612', name: 'John\'s Sneaker Care', type: 'sneaker', rating: 4.8, regularPrice: 250, imageUrls: ['https://images.unsplash.com/photo-1491553895911-0055eca6402d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Johannesburg', host: 'John Smith', description: 'Professional sneaker cleaning and restoration services using premium products. I restore and clean all types of sneakers with care and attention to detail.', travelFee: 50 },
-  { _id: 'help-2', name: 'Jane Smith', type: 'Elderly Caregiver', rating: 4.9, regularPrice: 150, imageUrls: ['https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Cape Town', host: 'Jane Smith', description: 'Experienced caregiver providing compassionate care for elderly individuals.', travelFee: 30 },
-  { _id: 'help-3', name: 'Mike Johnson', type: 'barber', rating: 4.7, regularPrice: 200, imageUrls: ['https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Durban', host: 'Mike Johnson', description: 'Professional barber with 10+ years of experience in modern and classic cuts.', travelFee: 40 },
-  { _id: 'help-4', name: 'Sarah Wilson', type: 'domestic', rating: 4.6, regularPrice: 180, imageUrls: ['https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Pretoria', host: 'Sarah Wilson', description: 'Reliable domestic helper for cleaning, laundry, and household chores.', travelFee: 25 },
-  { _id: 'help-5', name: 'David Brown', type: 'tutor', rating: 4.8, regularPrice: 250, imageUrls: ['https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Johannesburg', host: 'David Brown', description: 'Qualified math and science tutor for high school and university students.', travelFee: 35 },
-  { _id: 'help-6', name: 'Emily Davis', type: 'photography', rating: 4.9, regularPrice: 300, imageUrls: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Cape Town', host: 'Emily Davis', description: 'Professional photographer specializing in portraits, events, and commercial work.', travelFee: 60 },
-  { _id: 'help-7', name: 'Mike\'s Sneaker Care', type: 'sneaker', rating: 4.8, regularPrice: 250, imageUrls: ['https://images.unsplash.com/photo-1491553895911-0055eca6402d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Johannesburg', host: 'Mike Johnson', description: 'Expert sneaker cleaning and restoration services. I use premium products to restore your sneakers to like-new condition.', travelFee: 45 },
-  { _id: 'help-8', name: 'Clean Mats SA', type: 'washingmat', rating: 4.7, regularPrice: 180, imageUrls: ['https://images.unsplash.com/photo-1582735689369-4fe89db7114c?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Durban', host: 'Sarah Williams', description: 'Professional mat washing service using industrial machines. I clean all types of mats including doormats, bath mats, and gym mats.', travelFee: 40 },
-  { _id: 'help-9', name: 'Paws & Claws Care', type: 'animals', rating: 4.9, regularPrice: 220, imageUrls: ['https://images.unsplash.com/photo-1450778869180-41d0601e046e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Cape Town', host: 'Dr. James Wilson', description: 'Loving and experienced animal care provider. I offer pet sitting, dog walking, grooming, and medication administration for all types of pets.', travelFee: 35, createdAt: '2024-03-02T12:00:00Z' },
-  { _id: 'help-handyman-1', name: 'Handy Andy', type: 'handyman', rating: 4.9, regularPrice: 350, imageUrls: ['https://images.unsplash.com/photo-1621905251189-08b45d6a269e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], address: 'Polokwane', host: 'Andrew M.', description: 'Your reliable local handyman for all home maintenance and repair needs.', travelFee: 50, createdAt: new Date().toISOString() }
+  { _id: '69a6a956f0c40835a3119612', itemType: 'helper', name: 'John\'s Sneaker Care', type: 'sneaker', rating: 4.8, regularPrice: 250, imageUrls: ['https://images.unsplash.com/photo-1491553895911-0055eca6402d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Johannesburg', host: 'John Smith', description: 'Professional sneaker cleaning and restoration services using premium products.', travelFee: 50, comments: [1, 2, 3], createdAt: new Date().toISOString() },
+  { _id: '69a6a956f0c40835a3119613', itemType: 'helper', name: 'Jane Smith', type: 'Elderly Caregiver', rating: 4.9, regularPrice: 150, imageUrls: ['https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Cape Town', host: 'Jane Smith', description: 'Experienced caregiver providing compassionate care for elderly individuals.', travelFee: 30, comments: [1, 2], createdAt: new Date().toISOString() },
+  { _id: '69a6a956f0c40835a3119614', itemType: 'helper', name: 'Mike Johnson', type: 'barber', rating: 4.7, regularPrice: 200, imageUrls: ['https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Durban', host: 'Mike Johnson', description: 'Professional barber with 10+ years of experience in modern and classic cuts.', travelFee: 40, comments: [1], createdAt: new Date().toISOString() }
 ];
 
 const MOCK_EVENTS = [
-  { _id: 'ev-1', name: 'Local Music Festival 2024', price: 50, regularPrice: 50, date: '2024-03-15', address: 'City Park, Johannesburg', attendingCount: 120, imageUrls: ['https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'] },
-  { _id: 'ev-2', name: 'Art & Craft Workshop', price: 30, regularPrice: 30, date: '2024-03-20', address: 'Art Center, Cape Town', attendingCount: 45, imageUrls: ['https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'] },
-  { _id: 'ev-3', name: 'Food & Wine Tasting Experience', price: 75, regularPrice: 75, date: '2024-03-25', address: 'Downtown Square, Durban', attendingCount: 89, imageUrls: ['https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'] },
-  { _id: 'ev-4', name: 'Tech Startup Conference', price: 100, regularPrice: 100, date: '2024-04-05', address: 'Convention Center, Pretoria', attendingCount: 210, imageUrls: ['https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'] }
+  { _id: '663ad8e5f1e249b49f986040', itemType: 'event', name: 'Local Music Festival 2024', price: 50, regularPrice: 50, date: '2024-03-15', address: 'City Park, Johannesburg', attendingCount: 120, imageUrls: ['https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8, comments: [1, 2, 3, 4, 5], createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986041', itemType: 'event', name: 'Art & Craft Workshop', price: 30, regularPrice: 30, date: '2024-03-20', address: 'Art Center, Cape Town', attendingCount: 45, imageUrls: ['https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.6, comments: [1, 2], createdAt: new Date().toISOString() }
 ];
 
 // --- AI Recommendation Engine (Preserved) ---
@@ -671,22 +762,31 @@ const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = false, re
     switch (item.type) {
       case 'rent': return '/ month';
       case 'over': return '/ night';
-      case 'sale': return '';
+      case 'sale': return '/ night';
       case 'office': return '/ hour';
-      case 'land': return '';
+      case 'land': return '/ night';
       default: return item.type?.includes('rent') ? '/ month' : '';
     }
   };
 
-  const getPropertyTypeLabel = () => {
-    switch (item.type) {
-      case 'rent-long': return 'Long term rental';
-      case 'rent-short': return 'Short stay';
-      case 'sale': return 'For sale';
-      case 'office': return 'Office space';
-      case 'land': return 'Land plot';
-      default: return '';
+  const getCategoryLabel = () => {
+    if (type === 'property' || type === 'listing') {
+      switch (item.type) {
+        case 'rent': return 'Rental';
+        case 'rent-long': return 'Rental';
+        case 'rent-short': return 'Short Stay';
+        case 'sale': return 'Hotel';
+        case 'resort': return 'Resort';
+        case 'office': return 'Office';
+        case 'land': return 'Self Catering';
+        case 'guest_house': return 'Guest House';
+        default: return 'Property';
+      }
     }
+    if (type === 'service') return item.category || item.type || 'Service';
+    if (type === 'helper') return item.type || item.category || 'Helper';
+    if (type === 'event') return 'Event';
+    return type.charAt(0).toUpperCase() + type.slice(1);
   };
 
   const formatPrice = () => {
@@ -698,7 +798,7 @@ const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = false, re
   };
 
   const handleClick = () => {
-    if (type === 'property') {
+    if (type === 'property' || type === 'listing') {
       onClick(`/listing/${item._id}`);
     } else if (type === 'service') {
       onClick(`/service/${item._id}`);
@@ -718,7 +818,7 @@ const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = false, re
       onClick={handleClick}
       className={`cursor-pointer flex flex-col ${reducedSize ? 'gap-1.5' : 'gap-2'}`}
     >
-      <div className={`relative aspect-[4/5] overflow-hidden md:rounded-[2rem] rounded-none -mx-4 md:mx-0 bg-gray-100 shadow-md ${reducedSize ? 'mb-1' : 'mb-0'}`}>
+      <div className={`relative aspect-[3/2] overflow-hidden rounded-[2.5rem] bg-gray-100 shadow-md ${reducedSize ? 'mb-1' : 'mb-0'}`}>
         <ImageGallery
           imageUrls={item.imageUrls || [item.image] || []}
           alt={item.name}
@@ -766,9 +866,12 @@ const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = false, re
           </div>
         </div>
 
-        <h4 className={`text-gray-500 truncate font-semibold ${reducedSize ? 'text-[11px] mt-0' : 'text-[14px] mt-0.5'}`}>
-          {getPropertyTypeLabel() || item.name}
+        <h4 className={`text-gray-400 truncate font-bold uppercase tracking-widest ${reducedSize ? 'text-[8px] mt-0' : 'text-[9px] mt-0.5'}`}>
+          {getCategoryLabel()}
         </h4>
+        <p className={`text-gray-500 truncate font-semibold ${reducedSize ? 'text-[11px] mt-0' : 'text-[14px] mt-0.5'}`}>
+          {item.name}
+        </p>
 
         {item._distance && item._distance !== Infinity && !hideDistance ? (
           <p className="text-[14px] text-gray-500 mt-0.5">
@@ -860,15 +963,15 @@ const TopCategoriesSection = ({ navigate }) => {
   };
 
   const handleCategoryClick = (category) => {
-    const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner', 'nanny'];
-    const services = ['barber', 'baker', 'carwash', 'photograph', 'transport', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician', 'handyman', 'catering', 'schoolTransport', 'daily', 'daycare'];
+    const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner', 'nanny', 'barber'];
+    const services = ['baker', 'carwash', 'photograph', 'transport', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician', 'handyman', 'catering', 'schoolTransport', 'daily', 'daycare'];
     const properties = ['rental', 'guesthouse'];
     const needs = ['roommate', 'nanny-need'];
 
     if (needs.includes(category.id)) {
       navigate('/looking-for');
     } else if (helpers.includes(category.id)) {
-      navigate(`/search?category=${category.id}&type=helper`);
+      navigate(`/search?category=${category.id}&type=helpers`);
     } else if (services.includes(category.id)) {
       navigate(`/search?category=${category.id}&type=services`);
     } else if (properties.includes(category.id)) {
@@ -948,6 +1051,9 @@ const EliteHelperCard = ({ helper, onClick }) => {
           <CheckCircleIcon className="w-3.5 h-3.5 text-rose-500" />
           <span className="text-[10px] font-bold text-gray-900 uppercase tracking-wider">Verified</span>
         </div>
+        <div className="absolute bottom-3 left-3 bg-white/40 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/30 z-20">
+          <span className="text-[8px] font-black text-white uppercase tracking-widest">{helper.type || 'Helper'}</span>
+        </div>
       </div>
 
       <div className="flex flex-col pt-1">
@@ -1003,7 +1109,7 @@ const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
       onClick={onClick}
       className="cursor-pointer flex flex-col gap-3"
     >
-      <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-gray-100 shadow-sm">
+      <div className="relative aspect-square overflow-hidden rounded-[2.5rem] bg-gray-100 shadow-sm">
         <ImageGallery
           imageUrls={item.imageUrls || []}
           alt={item.name}
@@ -1011,6 +1117,9 @@ const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
         />
         <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/30 z-20">
           <span className="text-[10px] font-bold text-white uppercase tracking-wider">New Listing</span>
+        </div>
+        <div className="absolute bottom-3 left-3 bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/30 z-20">
+          <span className="text-[8px] font-black text-white uppercase tracking-widest">{type.charAt(0).toUpperCase() + type.slice(1)}</span>
         </div>
       </div>
 
@@ -1190,6 +1299,7 @@ const AirbnbDiscoverSection = ({ title, items, type, navigate, actionText, onAct
             key={item._id || idx}
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.1 }}
             transition={{ delay: idx * 0.1, duration: 0.8, ease: "easeOut" }}
             className="snap-start shrink-0 w-[200px] md:w-[240px]"
           >
@@ -1406,6 +1516,8 @@ const CommunityNeedsSection = ({ navigate }) => {
           freeMode={true}
           slidesPerView={'auto'}
           spaceBetween={16}
+          observer={true}
+          observeParents={true}
           className="community-feed-swiper !overflow-visible"
           breakpoints={{
             320: { slidesPerView: 1.15, spaceBetween: 12 },
@@ -1607,6 +1719,7 @@ const MobileAppHomepage = ({
   const [activeCategory, setActiveCategory] = useState('Homes');
   const [showAIInsights, setShowAIInsights] = useState(true);
   const [isBookingsOpen, setIsBookingsOpen] = useState(false);
+  const [activeFeaturedTab, setActiveFeaturedTab] = useState('Properties');
   const [bannerLocationIndex, setBannerLocationIndex] = useState(0);
 
   const bannerLocations = [
@@ -1655,26 +1768,42 @@ const MobileAppHomepage = ({
   }, [activeTab]);
 
   const tabs = [
-    { id: 'Universe', emoji: '🌌' },
-    { id: 'Homes', emoji: '🏡' },
-    { id: 'Services', emoji: '💼' },
-    { id: 'Helper', emoji: '💁' },
-    { id: 'Events', emoji: '🎭' }
+    { id: 'Universe', iconType: 'Universe' },
+    { id: 'Properties', iconType: 'Homes' },
+    { id: 'Services', iconType: 'Services' },
+    { id: 'Helper', iconType: 'Helper' },
+    { id: 'Events', iconType: 'Events' }
   ];
 
   const getFilteredItems = () => {
     switch (activeTab) {
-      case 'Homes': return featuredProperties;
+      case 'Properties': return featuredProperties;
       case 'Services': return featuredServices;
       case 'Helper': return featuredHelpers;
       case 'Events': return featuredEvents;
-      default: return [...featuredProperties.slice(0, 4), ...featuredServices.slice(0, 4)];
+      default: {
+        // Universe Tab: Prioritize AI recommendations if available
+        if (aiRecommendations && aiRecommendations.recommendations?.length > 0) {
+          return aiRecommendations.recommendations;
+        }
+        
+        // Fallback: Smartly combine all types for a diverse discovery feed
+        const universeItems = [
+          ...featuredProperties.slice(0, 10),
+          ...featuredServices.slice(0, 8),
+          ...featuredHelpers.slice(0, 8),
+          ...featuredEvents.slice(0, 6)
+        ];
+        
+        // Shuffle or sort by something meaningful (e.g. rating)
+        return universeItems.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      }
     }
   };
 
   const getTabColor = (id) => {
     switch (id) {
-      case 'Homes': return 'bg-rose-500';
+      case 'Properties': return 'bg-rose-500';
       case 'Services': return 'bg-amber-500';
       case 'Helper': return 'bg-blue-500';
       case 'Events': return 'bg-purple-500';
@@ -1686,7 +1815,7 @@ const MobileAppHomepage = ({
 
   if (isDesktop) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-white">
         <style>{`
           .scrollbar-hide::-webkit-scrollbar { display: none; }
           .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -1750,6 +1879,52 @@ const MobileAppHomepage = ({
             </div>
           </section>
 
+          {/* FEATURED DISCOVERY GRID - Advanced selection for quick discovery */}
+          <section className="mb-24">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+              <div>
+                <h2 className="text-[28px] font-black text-gray-900 tracking-tighter uppercase italic">
+                  Featured <span className="text-rose-500">{activeFeaturedTab}</span>
+                </h2>
+                <p className="text-gray-400 text-xs font-black tracking-[0.2em] uppercase mt-1">Handpicked elite experiences</p>
+              </div>
+              
+              {/* Featured Selection Tabs */}
+              <div className="flex items-center gap-2 p-1.5 bg-gray-100 rounded-[2rem]">
+                {['Properties', 'Services', 'Helper', 'Events'].map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveFeaturedTab(tab)}
+                    className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${activeFeaturedTab === tab ? 'bg-white text-gray-950 shadow-lg' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-16">
+              {(activeFeaturedTab === 'Properties' ? featuredProperties : 
+                activeFeaturedTab === 'Services' ? featuredServices : 
+                activeFeaturedTab === 'Helper' ? featuredHelpers : featuredEvents)
+                .slice(0, 8).map((item, idx) => (
+                <motion.div
+                  key={`featured-${activeFeaturedTab}-${item._id || idx}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.05 }}
+                >
+                  <AirbnbCard
+                    item={item}
+                    type={activeFeaturedTab === 'Properties' ? 'property' : activeFeaturedTab.toLowerCase()}
+                    onClick={(path) => navigate(path)}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </section>
+
           {/* NEW: WEEKLY SPECIALS SECTION */}
           <WeeklySpecialsSection navigate={navigate} />
 
@@ -1787,43 +1962,28 @@ const MobileAppHomepage = ({
                     <motion.button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`flex flex-col items-center gap-4 relative transition-all duration-300 ${isActive ? 'opacity-100 scale-110' : 'opacity-40 hover:opacity-100'}`}
+                      className={`flex items-center gap-4 px-8 py-5 rounded-[2.5rem] border relative transition-all duration-500 overflow-hidden ${
+                        isActive 
+                          ? 'bg-white border-gray-200 shadow-[0_30px_60px_rgba(0,0,0,0.12)] scale-110 z-10' 
+                          : 'bg-gray-50/50 border-transparent opacity-50 hover:opacity-100 hover:bg-white/80 hover:shadow-xl'
+                      }`}
                     >
                       <motion.div 
-                        className={`flex items-center justify-center transition-all duration-500 ${isActive ? 'scale-150' : 'opacity-60'}`}
-                        whileHover={{ 
-                          scale: 1.3,
-                          rotateY: [0, 15, -15, 0],
-                          rotateX: [0, -10, 10, 0],
-                          y: [0, -20, 0],
-                          transition: {
-                            duration: 0.8,
-                            ease: "easeInOut",
-                            repeat: Infinity,
-                            repeatType: "mirror"
-                          }
-                        }}
-                        style={{ transformStyle: 'preserve-3d', perspective: '1000px' }}
+                        whileHover={{ rotateY: 180 }}
+                        transition={{ duration: 0.6 }}
+                        className="flex-shrink-0"
+                        style={{ perspective: '1000px' }}
                       >
-                        <motion.div
-                          animate={isActive ? {
-                            scale: [1, 1.2, 1],
-                            rotate: [0, 5, -5, 0],
-                            transition: { repeat: Infinity, duration: 4 }
-                          } : {}}
-                        >
-                          {tab.image ? (
-                            <img src={tab.image} className="w-12 h-12 object-contain drop-shadow-2xl" alt={tab.id} />
-                          ) : (
-                            <span className="text-3xl">{tab.emoji}</span>
-                          )}
-                        </motion.div>
+                        <CategoryIcon type={tab.iconType} size={isActive ? "w-11 h-11" : "w-9 h-9"} />
                       </motion.div>
-                      <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors ${isActive ? 'text-gray-950' : 'text-gray-400'}`}>
+                      <span className={`text-[11px] font-black uppercase tracking-[0.3em] transition-colors ${isActive ? 'text-gray-950' : 'text-gray-400'}`}>
                         {tab.id}
                       </span>
                       {isActive && (
-                        <motion.div layoutId="activeTabUnderline" className={`absolute -bottom-6 w-10 h-1 ${getTabColor(tab.id)} rounded-full`} />
+                        <motion.div 
+                          layoutId="activeTabUnderline" 
+                          className={`absolute bottom-0 left-0 right-0 h-1.5 ${getTabColor(tab.id)}`} 
+                        />
                       )}
                     </motion.button>
                   );
@@ -1846,7 +2006,7 @@ const MobileAppHomepage = ({
                 >
                   <AirbnbCard
                     item={item}
-                    type={activeTab === 'Universe' ? (item.itemType || 'property') : activeTab.slice(0, -1).toLowerCase()}
+                    type={activeTab === 'Universe' ? (item.itemType || 'property') : activeTab === 'Helper' ? 'helper' : activeTab === 'Properties' ? 'property' : activeTab.slice(0, -1).toLowerCase()}
                     onClick={(path) => navigate(path)}
                   />
                 </motion.div>
@@ -2098,6 +2258,8 @@ const MobileAppHomepage = ({
 
         {/* Bookings Modal */}
         <MyBookingsConsumer isOpen={isBookingsOpen} onClose={() => setIsBookingsOpen(false)} />
+        
+        <BottomNav />
       </div>
     );
   }
@@ -2216,6 +2378,39 @@ const MobileAppHomepage = ({
         </div>
 
 
+        {/* MOBILE FEATURED DISCOVERY - Tabbed Slider */}
+        <section className="mb-12">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase">Featured</h2>
+            <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+              {['Properties', 'Services', 'Helper', 'Events'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveFeaturedTab(tab)}
+                  className={`whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${activeFeaturedTab === tab ? 'bg-rose-500 text-white shadow-lg shadow-rose-100' : 'bg-gray-100 text-gray-400'}`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex overflow-x-auto gap-10 pb-6 -mx-4 px-4 scrollbar-hide snap-x">
+            {(activeFeaturedTab === 'Properties' ? featuredProperties : 
+              activeFeaturedTab === 'Services' ? featuredServices : 
+              activeFeaturedTab === 'Helper' ? featuredHelpers : featuredEvents)
+              .slice(0, 6).map((item, idx) => (
+              <div key={`mobile-featured-${activeFeaturedTab}-${item._id || idx}`} className="snap-start shrink-0 w-[300px]">
+                <AirbnbCard
+                  item={item}
+                  type={activeFeaturedTab === 'Properties' ? 'property' : activeFeaturedTab.toLowerCase()}
+                  onClick={(path) => navigate(path)}
+                  reducedSize={true}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* Mobile Location Status Indicator */}
         {locationStatus && (
           <div className="mb-6 p-4 bg-rose-50 rounded-2xl border border-rose-100 flex items-center gap-3">
@@ -2260,38 +2455,23 @@ const MobileAppHomepage = ({
               <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Live Pulse</span>
             </div>
           </div>
-          <div className="flex overflow-x-auto gap-10 pb-6 border-b border-gray-100 mb-8 no-scrollbar -mx-4 px-6">
+          <div className="flex overflow-x-auto gap-4 pb-8 border-b border-gray-50 mb-10 scrollbar-hide -mx-4 px-6">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <motion.button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex flex-col items-center gap-3 transition-all duration-300 shrink-0 ${isActive ? 'opacity-100' : 'opacity-40'}`}
+                  className={`flex items-center gap-3 px-6 py-4 rounded-3xl border transition-all duration-500 shrink-0 ${
+                    isActive 
+                      ? 'bg-white border-gray-200 shadow-xl scale-105' 
+                      : 'bg-gray-50/50 border-transparent opacity-60'
+                  }`}
                 >
-                  <motion.div 
-                    className={`flex items-center justify-center transition-all bg-transparent ${isActive ? 'scale-150' : 'opacity-60'}`}
-                    whileTap={{ scale: 0.8 }}
-                    animate={isActive ? {
-                      y: [0, -5, 0],
-                      transition: { repeat: Infinity, duration: 2, ease: "easeInOut" }
-                    } : {}}
-                  >
-                    <motion.div
-                      whileHover={{ 
-                        rotate: [0, 10, -10, 0],
-                        scale: 1.2,
-                        transition: { duration: 0.5 }
-                      }}
-                    >
-                      {tab.image ? (
-                        <img src={tab.image} className="w-10 h-10 object-contain drop-shadow-md" alt={tab.id} />
-                      ) : (
-                        <span className="text-2xl">{tab.emoji}</span>
-                      )}
-                    </motion.div>
-                  </motion.div>
-                  <span className={`text-[9px] font-black uppercase tracking-widest ${isActive ? 'text-gray-950' : 'text-gray-400'}`}>
+                  <div className="flex-shrink-0">
+                    <CategoryIcon type={tab.iconType} size={isActive ? "w-11 h-11" : "w-8 h-8"} />
+                  </div>
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-gray-950' : 'text-gray-400'}`}>
                     {tab.id}
                   </span>
                 </motion.button>
@@ -2309,7 +2489,7 @@ const MobileAppHomepage = ({
               >
                 <AirbnbCard
                   item={item}
-                  type={activeTab === 'Universe' ? (item.itemType || 'property') : activeTab === 'Helper' ? 'helper' : activeTab.slice(0, -1).toLowerCase()}
+                  type={activeTab === 'Universe' ? (item.itemType || 'property') : activeTab === 'Helper' ? 'helper' : activeTab === 'Properties' ? 'property' : activeTab.slice(0, -1).toLowerCase()}
                   onClick={(path) => navigate(path)}
                 />
               </motion.div>
@@ -2533,26 +2713,31 @@ const Home = () => {
             if (data?.length > 0) {
               const localMatches = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.POLOKWANE, detectedCity);
               if (localMatches.length > 0) {
-                setFeaturedProperties(localMatches.slice(0, DATA_FETCH_LIMIT));
+                setFeaturedProperties(localMatches.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
                 setLocationStatus({
-                  title: `Top Homes in ${detectedCity}`,
+                  title: `Top Properties in ${detectedCity}`,
                   description: "Showing the best properties within your immediate area."
                 });
               } else {
                 const nearby = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.NEARBY, detectedCity);
                 if (nearby.length > 0) {
-                  setFeaturedProperties(nearby.slice(0, DATA_FETCH_LIMIT));
+                  setFeaturedProperties(nearby.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
                   setLocationStatus({
-                    title: `Homes near ${detectedCity}`,
+                    title: `Properties near ${detectedCity}`,
                     description: "No direct matches in your city, showing nearby neighborhoods."
                   });
                 } else {
                   const regional = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.REGIONAL, detectedCity);
-                  setFeaturedProperties(regional.slice(0, DATA_FETCH_LIMIT));
-                  setLocationStatus({
-                    title: "Homes in South Africa",
-                    description: "No local matches found, showing trending homes nationwide."
-                  });
+                  if (regional.length > 0) {
+                    setFeaturedProperties(regional.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
+                    setLocationStatus({
+                      title: "Properties in South Africa",
+                      description: "No local matches found, showing trending properties nationwide."
+                    });
+                  } else {
+                    // Fallback to MOCK_PROPERTIES if live data returns empty regional matches
+                    setFeaturedProperties(MOCK_PROPERTIES);
+                  }
                 }
               }
             }
@@ -2565,7 +2750,13 @@ const Home = () => {
           .then(data => {
             if (data?.length > 0) {
               const sorted = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity);
-              setFeaturedServices(sorted.slice(0, DATA_FETCH_LIMIT));
+              if (sorted.length > 0) {
+                setFeaturedServices(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'service' })));
+              } else {
+                setFeaturedServices(MOCK_SERVICES);
+              }
+            } else {
+              setFeaturedServices(MOCK_SERVICES);
             }
           })
           .catch(() => { }).finally(() => setLoadingServices(false)),
@@ -2576,7 +2767,13 @@ const Home = () => {
           .then(data => {
             if (data?.length > 0) {
               const sorted = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity);
-              setFeaturedHelpers(sorted.slice(0, DATA_FETCH_LIMIT));
+              if (sorted.length > 0) {
+                setFeaturedHelpers(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'helper' })));
+              } else {
+                setFeaturedHelpers(MOCK_HELPERS);
+              }
+            } else {
+              setFeaturedHelpers(MOCK_HELPERS);
             }
           })
           .catch(() => { }).finally(() => setLoadingHelpers(false)),
@@ -2587,7 +2784,13 @@ const Home = () => {
           .then(data => {
             if (data?.length > 0) {
               const sorted = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity);
-              setFeaturedEvents(sorted.slice(0, DATA_FETCH_LIMIT));
+              if (sorted.length > 0) {
+                setFeaturedEvents(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'event' })));
+              } else {
+                setFeaturedEvents(MOCK_EVENTS);
+              }
+            } else {
+              setFeaturedEvents(MOCK_EVENTS);
             }
           })
           .catch(() => { }).finally(() => setLoadingEvents(false))

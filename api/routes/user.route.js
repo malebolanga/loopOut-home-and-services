@@ -19,7 +19,8 @@ import {
     unfollowUser,
     getFollowers,
     getFollowing,
-    getMutualFriends
+    getMutualFriends,
+    getUserByPhone
 } from '../controllers/user.controller.js';
 
 import { verifyToken } from '../utils/verifyUser.js';
@@ -74,6 +75,7 @@ router.get('/public/:id', getPublicUser);
 
 // Route to get user details
 router.get('/:id', verifyToken, getUser);
+router.get('/phone/:phone', verifyToken, getUserByPhone);
 router.get('/mutual/:id', verifyToken, getMutualFriends);
 
 // Add this route after the test route

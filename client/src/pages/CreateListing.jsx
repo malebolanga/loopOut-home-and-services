@@ -44,7 +44,8 @@ import {
   MinusIcon,
   QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Users } from 'lucide-react';
+import MutualFriends from '../components/MutualFriends';
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
 
@@ -471,6 +472,9 @@ export default function CreateListing() {
     serviceList: [],
   });
 
+  const [foundHost, setFoundHost] = useState(null);
+  const [mutualConnections, setMutualConnections] = useState([]);
+  const [checkingPhone, setCheckingPhone] = useState(false);
   const stepRef = useRef(null);
 
   // Handle scroll effect for header
@@ -490,7 +494,7 @@ export default function CreateListing() {
         ...prev,
         category: selectedCategory,
         type: selectedType,
-        kind: selectedCategory === 'stays' ? getDefaultKind(selectedType) : prev.kind,
+        kind: selectedCategory === 'property' ? getDefaultKind(selectedType) : prev.kind,
         near: prev.near || getDefaultNearPlaceholder(selectedCategory, selectedType),
       }));
     }
@@ -501,15 +505,15 @@ export default function CreateListing() {
       case 'rent': return 'apartment';
       case 'over': return 'guest_house';
       case 'office': return 'hourly_room';
-      case 'land': return 'plot';
-      case 'sale': return 'house';
+      case 'land': return 'Self Catering';
+      case 'sale': return 'Hotel';
       default: return 'apartment';
     }
   };
 
   const getDefaultNearPlaceholder = (category, type) => {
     switch(category) {
-      case 'stays':
+      case 'property':
         return "Nearby attractions, restaurants, parks, etc.";
       case 'experiences':
         if (type === 'daycare') return "Your experience with childcare, certifications, training...";
@@ -554,7 +558,11 @@ export default function CreateListing() {
           const apiUrl = import.meta.env.VITE_API_BASE_URL || '';
           const res = await fetch(`${apiUrl}/api/user/post-count`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            credentials: 'include',
             body: JSON.stringify({ userId: currentUser._id }),
           });
 
@@ -600,6 +608,57 @@ export default function CreateListing() {
     return () => clearTimeout(timer);
   }, [currentStep]);
 
+  // Handle Host Discovery by Phone Number
+  useEffect(() => {
+    const contact = listingForm.contact;
+    if (contact && contact.length >= 10) {
+      const checkHost = async () => {
+        try {
+          setCheckingPhone(true);
+          const res = await fetch(`/api/user/phone/${encodeURIComponent(contact)}`, {
+            headers: { 
+              'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            credentials: 'include'
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setFoundHost(data);
+            
+            // If found, also fetch mutual connections for current user with this found host
+            if (currentUser && data._id && currentUser._id !== data._id) {
+               const mutualRes = await fetch(`/api/user/mutual/${data._id}`, {
+                 headers: { 
+                   'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                 },
+                 credentials: 'include'
+               });
+               if (mutualRes.ok) {
+                 const mutualData = await mutualRes.json();
+                 setMutualConnections(mutualData);
+               }
+            }
+          } else {
+            setFoundHost(null);
+            setMutualConnections([]);
+          }
+        } catch (err) {
+          console.error("Error checking host phone:", err);
+          setFoundHost(null);
+          setMutualConnections([]);
+        } finally {
+          setCheckingPhone(false);
+        }
+      };
+
+      const timer = setTimeout(checkHost, 1000); // Debounce
+      return () => clearTimeout(timer);
+    } else {
+      setFoundHost(null);
+      setMutualConnections([]);
+    }
+  }, [listingForm.contact, currentUser]);
+
   const handleNextStep = () => {
     setDirection('next');
     
@@ -635,7 +694,7 @@ export default function CreateListing() {
         return;
       }
       
-      if (selectedCategory === 'stays') {
+      if (selectedCategory === 'property') {
         if (!listingForm.kind.trim()) {
           setError("Please enter the property type");
           return;
@@ -728,7 +787,7 @@ export default function CreateListing() {
         return;
       }
       
-      if (selectedCategory === 'stays' && +listingForm.regularPrice < +listingForm.discountPrice) {
+      if (selectedCategory === 'property' && +listingForm.regularPrice < +listingForm.discountPrice) {
         setError("Discount price must be lower than regular price");
         return;
       }
@@ -740,7 +799,7 @@ export default function CreateListing() {
 
   const getNearLabel = (category, type) => {
     switch(category) {
-      case 'stays':
+      case 'property':
         return "information about nearby attractions";
       case 'experiences':
         if (type === 'daycare') return "your experience and qualifications";
@@ -1180,6 +1239,7 @@ export default function CreateListing() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem('access_token')}`
         },
+        credentials: 'include',
         body: JSON.stringify(requestBody),
       });
 
@@ -1204,13 +1264,8 @@ export default function CreateListing() {
         
         setError(errorMessage);
       } else {
-        if (selectedCategory === 'stays') {
-          setNewListingId(data._id || data.listing?._id);
-          setShowPromotionPopup(true);
-        } else {
-          navigate(`/${selectedCategory === 'experiences' ? 'service' : 
-                   selectedCategory === 'online' ? 'helper' : 'event'}/${data._id || data.listing?._id}`);
-        }
+        setNewListingId(data._id || data.listing?._id);
+        setShowPromotionPopup(true);
       }
     } catch (err) {
       console.error("Submission error:", err);
@@ -1222,7 +1277,7 @@ export default function CreateListing() {
 
   const getAmenitiesByCategory = () => {
     switch (selectedCategory) {
-      case 'stays':
+      case 'property':
         return [
           { id: "wifi", label: "WiFi", emoji: "📶", checked: listingForm.wifi },
           { id: "kitchen", label: "Kitchen", emoji: "🍳", checked: listingForm.kitchen },
@@ -1295,13 +1350,13 @@ export default function CreateListing() {
 
   const getTypesByCategory = () => {
     switch (selectedCategory) {
-      case 'stays':
+      case 'property':
         return [
-          { id: "rent", label: "Room/Home Rent", emoji: "🏠", description: "Monthly rental" },
+          { id: "rent", label: "Room/Home to Rent", emoji: "🏠", description: "Monthly rental" },
           { id: "over", label: "Guest House", emoji: "🛌", description: "Nightly stays" },
-          { id: "office", label: "Hourly Stay", emoji: "🕒", description: "Per hour accommodation" },
-          { id: "land", label: "Land", emoji: "🌳", description: "Plot for sale" },
-          { id: "sale", label: "For Sale", emoji: "💰", description: "Property sale" },
+          { id: "land", label: "Self Catering", emoji: "🍳", description: "Self catering rentals" },
+          { id: "sale", label: "Hotel", emoji: "🏨", description: "Hotel rentals" },
+          { id: "resort", label: "Resort", emoji: "🏖️", description: "Resort stays" },
         ];
       case 'experiences':
         return [
@@ -1347,7 +1402,11 @@ export default function CreateListing() {
     try {
       const res = await fetch("/api/payment", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('access_token')}`
+        },
+        credentials: 'include',
         body: JSON.stringify({ userId: currentUser._id, amount: 35 }),
       });
       const data = await res.json();
@@ -1372,7 +1431,11 @@ export default function CreateListing() {
     try {
       const res = await fetch("/api/promotion/payment", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('access_token')}`
+        },
+        credentials: 'include',
         body: JSON.stringify({
           userId: currentUser._id,
           listingId: newListingId,
@@ -1488,11 +1551,11 @@ export default function CreateListing() {
               <SectionCard title="What would you like to list?">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <CategoryCard
-                    id="stays"
+                    id="property"
                     icon={HomeIcon}
-                    label="Places to Stay"
+                    label="Property"
                     description="Rent out your property, room, or entire home"
-                    selected={selectedCategory === 'stays'}
+                    selected={selectedCategory === 'property'}
                     onSelect={setSelectedCategory}
                   />
                   <CategoryCard
@@ -1533,7 +1596,7 @@ export default function CreateListing() {
 
             {/* Step 2: Select Type */}
             {currentStep === 2 && (
-              <SectionCard title={`What type of ${selectedCategory === 'stays' ? 'place' : 
+              <SectionCard title={`What type of ${selectedCategory === 'property' ? 'property' : 
                 selectedCategory === 'experiences' ? 'service' :
                 selectedCategory === 'online' ? 'helper' : 'event'}?`}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1556,13 +1619,13 @@ export default function CreateListing() {
                   <div className="space-y-6">
                     <FormInput
                       label="Create a title"
-                      icon={selectedCategory === 'stays' ? HomeIcon : 
+                      icon={selectedCategory === 'property' ? HomeIcon : 
                             selectedCategory === 'events' ? CalendarIcon : UserIcon}
                       id="name"
                       value={listingForm.name}
                       onChange={handleFormChange}
                       placeholder={
-                        selectedCategory === 'stays' ? "Cozy mountain cabin with amazing views" :
+                        selectedCategory === 'property' ? "Cozy mountain cabin with amazing views" :
                         selectedCategory === 'experiences' && selectedType === 'carwash' ? "Premium Car Wash & Detailing Service" :
                         selectedCategory === 'experiences' ? "Professional Handyman Service" :
                         selectedCategory === 'online' && selectedType === 'sneaker' ? "Expert Sneaker Cleaning & Restoration" :
@@ -1581,7 +1644,7 @@ export default function CreateListing() {
                       value={listingForm.description}
                       onChange={handleFormChange}
                       placeholder={
-                        selectedCategory === 'stays' ? "Describe what makes your place special..." :
+                        selectedCategory === 'property' ? "Describe what makes your place special..." :
                         selectedCategory === 'experiences' && selectedType === 'carwash' ? "Professional car wash and detailing services..." :
                         selectedCategory === 'experiences' ? "Describe your service in detail..." :
                         selectedCategory === 'online' && selectedType === 'sneaker' ? "Expert sneaker cleaning using premium products. I restore and clean all types of sneakers..." :
@@ -1613,11 +1676,69 @@ export default function CreateListing() {
                         placeholder="Phone number"
                         required
                       />
+                      <AnimatePresence>
+                        {foundHost && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="col-span-full"
+                          >
+                            <div className="bg-rose-50/50 border border-rose-100 rounded-[2rem] p-6 flex flex-col gap-4 mt-2">
+                               <div className="flex items-center gap-4">
+                                  <div className="relative">
+                                    <img 
+                                      src={foundHost.avatar} 
+                                      alt={foundHost.username}
+                                      className="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-sm"
+                                    />
+                                    <div className="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white" />
+                                  </div>
+                                  <div className="flex-1">
+                                     <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1">Mutual Connection Identified</p>
+                                     <h4 className="text-lg font-black text-gray-900 tracking-tight">{foundHost.username}</h4>
+                                  </div>
+                                  <button 
+                                    type="button"
+                                    onClick={() => setListingForm(prev => ({ ...prev, host: foundHost.username }))}
+                                    className="px-4 py-2 bg-white rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-900 shadow-sm hover:shadow-md transition-all active:scale-95"
+                                  >
+                                    Use as Host
+                                  </button>
+                               </div>
+
+                               {mutualConnections.length > 0 && (
+                                 <div className="pt-4 border-t border-rose-100/50">
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Linked via your contacts</p>
+                                    <div className="flex -space-x-2">
+                                       {mutualConnections.slice(0, 5).map((m, i) => (
+                                         <img 
+                                           key={m._id || i}
+                                           src={m.avatar}
+                                           title={m.username}
+                                           className="w-8 h-8 rounded-full border-2 border-white object-cover"
+                                         />
+                                       ))}
+                                       {mutualConnections.length > 5 && (
+                                         <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[10px] font-black text-gray-500">
+                                            +{mutualConnections.length - 5}
+                                         </div>
+                                       )}
+                                    </div>
+                                    <p className="text-xs font-bold text-gray-500 mt-2">
+                                       You and {foundHost.username} share {mutualConnections.length} mutual connections.
+                                    </p>
+                                 </div>
+                               )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
 
                     {/* Host/Organizer Name Field */}
                     <FormInput
-                      label={selectedCategory === 'stays' ? "Host name" : 
+                      label={selectedCategory === 'property' ? "Host name" : 
                              selectedCategory === 'events' ? "Organizer name" : 
                              "Provider name"}
                       icon={UserIcon}
@@ -1625,7 +1746,7 @@ export default function CreateListing() {
                       value={listingForm.host}
                       onChange={handleFormChange}
                       placeholder={
-                        selectedCategory === 'stays' ? "Your name or property manager" :
+                        selectedCategory === 'property' ? "Your name or property manager" :
                         selectedCategory === 'events' ? "Event organizer or venue name" :
                         selectedCategory === 'experiences' ? "Business or service provider name" :
                         "Your name or business name"
@@ -1644,7 +1765,7 @@ export default function CreateListing() {
                       rows={3}
                     />
 
-                    {selectedCategory === 'stays' && (
+                    {selectedCategory === 'property' && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-200">
                         <FormInput
                           label="Property Type"
@@ -1968,8 +2089,8 @@ export default function CreateListing() {
                   <div className="space-y-6">
                     <div>
                       <label className="block text-base font-medium text-gray-900 mb-2">
-                        Price per {selectedCategory === 'stays' ? 
-                          (selectedType === "rent" ? "month" : selectedType === "over" ? "night" : "hour") :
+                        Price per {selectedCategory === 'property' ? 
+                          (selectedType === "rent" ? "month" : selectedType === "over" ? "night" : selectedType === "resort" ? "day" : "hour") :
                           selectedCategory === 'events' ? "ticket" : "service"}
                       </label>
                       <div className="relative">
@@ -1986,7 +2107,7 @@ export default function CreateListing() {
                       </div>
                     </div>
 
-                    {selectedCategory === 'stays' && (
+                    {selectedCategory === 'property' && (
                       <div className="pt-4 border-t border-gray-200">
                         <label className="flex items-center gap-3 cursor-pointer">
                           <input
@@ -2038,7 +2159,7 @@ export default function CreateListing() {
                   </div>
                 </SectionCard>
 
-                {selectedCategory === 'stays' && (
+                {selectedCategory === 'property' && (
                   <SectionCard title="Room details">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
@@ -2445,7 +2566,13 @@ export default function CreateListing() {
                     🚀 Promote Now
                   </button>
                   <button
-                    onClick={() => navigate(`/listing/${newListingId}`)}
+                    onClick={() => {
+                      const path = selectedCategory === 'property' ? `/listing/${newListingId}` :
+                                 selectedCategory === 'experiences' ? `/service/${newListingId}` :
+                                 selectedCategory === 'online' ? `/helper/${newListingId}` :
+                                 `/event/${newListingId}`;
+                      navigate(path);
+                    }}
                     className="px-10 py-5 bg-white border-2 border-gray-100 text-gray-400 rounded-[1.5rem] font-black uppercase tracking-[0.2em] hover:bg-gray-50 hover:text-gray-900 transition-all active:scale-95"
                   >
                     Discover it

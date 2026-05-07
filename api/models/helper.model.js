@@ -157,7 +157,8 @@ const helperSchema = new mongoose.Schema({
             price: { type: Number, required: true }
         }
     ],
-    bookingsCount: { type: Number, default: 0 }
+    bookingsCount: { type: Number, default: 0 },
+    responseRate: { type: String, default: 'Usually responds within an hour' }
   },
   { timestamps: true });
 
