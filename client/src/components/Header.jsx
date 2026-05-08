@@ -915,13 +915,13 @@ export default function Header() {
                            <button onClick={clearSearchHistory} className="text-[10px] font-bold text-gray-400 hover:text-rose-500 uppercase tracking-widest">Clear</button>
                          </div>
                          <div className="flex flex-wrap gap-2">
-                           {searchHistory.slice(0, 5).map((term, i) => (
+                           {searchHistory.slice(0, 5).map((item, i) => (
                              <button 
                                key={i} 
-                               onClick={() => { setSearchTerm(term); handleSearch(); }}
+                               onClick={() => { setSearchTerm(item.term); handleSearch(); }}
                                className="px-4 py-2 bg-gray-100 hover:bg-rose-50 hover:text-rose-600 rounded-xl text-xs font-bold text-gray-700 transition-all"
                              >
-                               {term}
+                               {item.term}
                              </button>
                            ))}
                          </div>
