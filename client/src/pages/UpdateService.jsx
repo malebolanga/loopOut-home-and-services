@@ -32,6 +32,17 @@ export default function UpdateService() {
     pets: false,
     offer: false,
     serviceList: [],
+    experience: '',
+    performers: [],
+    operatingHours: {
+      monday: { open: '08:00', close: '19:00', closed: false },
+      tuesday: { open: '08:00', close: '19:00', closed: false },
+      wednesday: { open: '08:00', close: '19:00', closed: false },
+      thursday: { open: '08:00', close: '19:00', closed: false },
+      friday: { open: '08:00', close: '19:00', closed: false },
+      saturday: { open: '08:00', close: '19:00', closed: false },
+      sunday: { open: '08:00', close: '19:00', closed: true }
+    },
   });
 
   useEffect(() => {
@@ -80,6 +91,24 @@ export default function UpdateService() {
     const newList = [...formData.serviceList];
     newList[index][field] = value;
     setFormData({ ...formData, serviceList: newList });
+  };
+
+  const handleAddPerformer = () => {
+    setFormData({
+      ...formData,
+      performers: [...(formData.performers || []), { name: '', image: '', experience: '' }],
+    });
+  };
+
+  const handleRemovePerformer = (index) => {
+    const newList = formData.performers.filter((_, i) => i !== index);
+    setFormData({ ...formData, performers: newList });
+  };
+
+  const handlePerformerChange = (index, field, value) => {
+    const newList = [...formData.performers];
+    newList[index][field] = value;
+    setFormData({ ...formData, performers: newList });
   };
 
   const handleFileChange = (e) => {
@@ -197,6 +226,14 @@ export default function UpdateService() {
             value={formData.description}
           />
           <textarea
+            placeholder='Professional Experience (e.g. Expert with 10 years experience)'
+            className='border p-3 rounded-lg'
+            id='experience'
+            required
+            onChange={handleChange}
+            value={formData.experience}
+          />
+          <textarea
             placeholder='What we will do / Amenities'
             className='border p-3 rounded-lg'
             id='near'
@@ -231,6 +268,88 @@ export default function UpdateService() {
             onChange={handleChange}
             value={formData.host}
           />
+          {/* Operating Schedule Section */}
+          <div className="col-span-full pt-8 border-t border-gray-100">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-xl font-black text-gray-900 tracking-tight">Operating Schedule</h3>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Define your weekly availability</p>
+              </div>
+              <div className="p-3 bg-rose-50 rounded-2xl">
+                <ClockIcon className="w-6 h-6 text-rose-500" />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                <div key={day} className={`grid grid-cols-1 md:grid-cols-4 gap-6 p-6 rounded-3xl border-2 transition-all ${formData.operatingHours[day].closed ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-white border-gray-50 shadow-sm'}`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-[10px] uppercase tracking-tighter ${formData.operatingHours[day].closed ? 'bg-gray-200 text-gray-400' : 'bg-rose-500 text-white'}`}>
+                      {day.slice(0, 3)}
+                    </div>
+                    <span className="font-black text-gray-900 capitalize">{day}</span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={formData.operatingHours[day].closed}
+                          onChange={(e) => setFormData(prev => ({
+                            ...prev,
+                            operatingHours: {
+                              ...prev.operatingHours,
+                              [day]: { ...prev.operatingHours[day], closed: e.target.checked }
+                            }
+                          }))}
+                        />
+                        <div className={`w-12 h-6 rounded-full transition-colors ${formData.operatingHours[day].closed ? 'bg-rose-500' : 'bg-gray-200'}`} />
+                        <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${formData.operatingHours[day].closed ? 'translate-x-6' : ''}`} />
+                      </div>
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-rose-500 transition-colors">Closed</span>
+                    </label>
+                  </div>
+
+                  {!formData.operatingHours[day].closed && (
+                    <>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-2">Opens</label>
+                        <input
+                          type="time"
+                          value={formData.operatingHours[day].open}
+                          onChange={(e) => setFormData(prev => ({
+                            ...prev,
+                            operatingHours: {
+                              ...prev.operatingHours,
+                              [day]: { ...prev.operatingHours[day], open: e.target.value }
+                            }
+                          }))}
+                          className="px-4 py-2 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-rose-500 focus:bg-white transition-all font-bold text-xs"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-2">Closes</label>
+                        <input
+                          type="time"
+                          value={formData.operatingHours[day].close}
+                          onChange={(e) => setFormData(prev => ({
+                            ...prev,
+                            operatingHours: {
+                              ...prev.operatingHours,
+                              [day]: { ...prev.operatingHours[day], close: e.target.value }
+                            }
+                          }))}
+                          className="px-4 py-2 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-rose-500 focus:bg-white transition-all font-bold text-xs"
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
           <div className='flex gap-6 flex-wrap'>
             <div className='flex gap-2'>
               <input
@@ -341,9 +460,105 @@ export default function UpdateService() {
             )}
           </div>
 
+          <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50 mt-4'>
+            <div className='flex justify-between items-center'>
+              <h3 className='font-semibold text-lg'>Service Performers</h3>
+              <button
+                type='button'
+                onClick={handleAddPerformer}
+                className='bg-gray-900 text-white px-3 py-1 rounded-lg text-sm hover:opacity-95 transition-all'
+              >
+                Add Performer
+              </button>
+            </div>
+            {formData.performers && formData.performers.length > 0 ? (
+              <div className='flex flex-col gap-4 mt-2'>
+                {formData.performers.map((performer, index) => (
+                  <div key={index} className='bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-3'>
+                    <div className='flex justify-between items-start'>
+                      <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>Performer {index + 1}</span>
+                      <button
+                        type='button'
+                        onClick={() => handleRemovePerformer(index)}
+                        className='text-red-500 hover:text-red-700 transition-colors'
+                      >
+                        <FaTimes />
+                      </button>
+                    </div>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                      <input
+                        type='text'
+                        placeholder='Performer Name'
+                        className='border p-2 rounded-lg'
+                        value={performer.name}
+                        onChange={(e) => handlePerformerChange(index, 'name', e.target.value)}
+                        required
+                      />
+                      <input
+                        type='text'
+                        placeholder='Experience (e.g. 5 years)'
+                        className='border p-2 rounded-lg'
+                        value={performer.experience}
+                        onChange={(e) => handlePerformerChange(index, 'experience', e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className='flex items-center gap-4 mt-2'>
+                      {performer.image ? (
+                        <div className='relative w-16 h-16 rounded-lg overflow-hidden border'>
+                          <img src={performer.image} alt="performer" className='w-full h-full object-cover' />
+                          <button
+                            type='button'
+                            onClick={() => handlePerformerChange(index, 'image', '')}
+                            className='absolute inset-0 bg-black/40 flex items-center justify-center text-white opacity-0 hover:opacity-100 transition-opacity'
+                          >
+                            <FaTimes />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className='flex items-center gap-2'>
+                           <input
+                            type="file"
+                            accept="image/*"
+                            id={`perf-img-${index}`}
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                try {
+                                  setUploading(true);
+                                  const url = await storeImage(file);
+                                  handlePerformerChange(index, 'image', url);
+                                  setUploading(false);
+                                } catch (err) {
+                                  setError("Failed to upload performer image");
+                                  setUploading(false);
+                                }
+                              }
+                            }}
+                          />
+                          <label
+                            htmlFor={`perf-img-${index}`}
+                            className='px-3 py-1 border border-gray-300 rounded-lg text-xs font-semibold cursor-pointer hover:bg-gray-50'
+                          >
+                            Upload Photo
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className='text-center py-4 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg'>
+                No performers added yet
+              </div>
+            )}
+          </div>
+
           <button
             disabled={loading || uploading}
-            className='p-3 bg-red-600 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80'
+            className='p-3 bg-red-600 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80 mt-4'
           >
             {loading ? 'Updating...' : 'Update Experience'}
           </button>

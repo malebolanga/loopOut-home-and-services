@@ -325,6 +325,10 @@ export default function DashBoard() {
             location: b.listing?.address || b.helper?.address || b.service?.address || b.location || 'N/A',
             totalAmount: b.totalPrice,
             subtype: b.subtype || '',
+            selectedPerformer: b.selectedPerformer,
+            performerExperience: b.performerExperience,
+            performerImage: b.performerImage,
+            itemId: b.listing?._id || b.helper?._id || b.service?._id || b.itemId,
             specialRequirements: cleanMessage(b.message || '')
           }));
           setBookings(formatted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
@@ -820,6 +824,39 @@ export default function DashBoard() {
                               {getServiceType(booking)}
                             </p>
                           </div>
+                          {booking.selectedPerformer && (
+                            <div 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/${booking.type}/${booking.itemId}`);
+                              }}
+                              className="mt-4 p-3 bg-slate-50 rounded-2xl border border-slate-100 group-hover:bg-rose-50/30 group-hover:border-rose-100 transition-all duration-500 cursor-pointer hover:scale-[1.02] active:scale-95 shadow-sm"
+                            >
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                <UserGroupIcon className="w-3 h-3" />
+                                Assigned Performer
+                              </p>
+                              <div className="flex items-center gap-3">
+                                {booking.performerImage ? (
+                                  <img 
+                                    src={booking.performerImage} 
+                                    alt={booking.selectedPerformer} 
+                                    className="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-sm"
+                                  />
+                                ) : (
+                                  <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-rose-500 font-bold text-xs shadow-sm">
+                                    {booking.selectedPerformer.charAt(0)}
+                                  </div>
+                                )}
+                                <div className="min-w-0">
+                                  <p className="text-xs font-black text-slate-900 truncate">{booking.selectedPerformer}</p>
+                                  {booking.performerExperience && (
+                                    <p className="text-[9px] font-bold text-rose-500 uppercase tracking-tight">{booking.performerExperience} Experience</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
                           {booking.subtype && (
                             <div className="mt-3 flex flex-wrap gap-2">
                               <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-rose-100 shadow-sm truncate max-w-full">
@@ -881,6 +918,11 @@ export default function DashBoard() {
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                 <span className="text-[11px] font-bold text-gray-400">{booking.clientPhone}</span>
                              </div>
+                             {booking.selectedPerformer && (
+                               <div className="mt-2 py-1 px-2 bg-rose-50 rounded-lg border border-rose-100/50 w-fit">
+                                 <p className="text-[8px] font-black text-rose-500 uppercase tracking-tighter">Requested Performer: {booking.selectedPerformer}</p>
+                               </div>
+                             )}
                            </div>
                         </div>
                         

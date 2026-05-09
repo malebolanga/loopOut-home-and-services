@@ -85,10 +85,34 @@ const BookingProtocolCard = ({ booking, idx, handleUpdateStatusGlobal }) => {
         {/* Operational Context */}
         <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-8 p-8 bg-white/[0.02] border border-white/5 rounded-[2.5rem]">
            <div>
-              <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-2">Subject Node</p>
-              <h5 className="text-xs font-black text-white uppercase tracking-tight truncate">{booking.listing?.name || booking.helper?.name || 'Manual Deploy'}</h5>
-              <p className="text-[8px] font-bold text-rose-500/60 uppercase mt-1">Sector: {booking.type?.toUpperCase() || 'GENERAL'}</p>
-           </div>
+               <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-2">Subject Node</p>
+               <h5 className="text-xs font-black text-white uppercase tracking-tight truncate">{booking.listing?.name || booking.helper?.name || 'Manual Deploy'}</h5>
+               <p className="text-[8px] font-bold text-rose-500/60 uppercase mt-1">Sector: {booking.type?.toUpperCase() || 'GENERAL'}</p>
+               {booking.selectedPerformer && (
+                  <div 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const id = booking.listing?._id || booking.helper?._id || booking.service?._id;
+                      const type = booking.listing ? 'listing' : (booking.helper ? 'helper' : 'service');
+                      navigate(`/${type}/${id}`);
+                    }}
+                    className="mt-3 pt-3 border-t border-white/5 cursor-pointer hover:bg-white/5 rounded-xl transition-all active:scale-95 group/perf"
+                  >
+                     <p className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em] mb-1 group-hover/perf:text-rose-500 transition-colors">Assigned Performer</p>
+                     <div className="flex items-center gap-3">
+                        {booking.performerImage && (
+                           <img src={booking.performerImage} alt={booking.selectedPerformer} className="w-8 h-8 rounded-full object-cover border border-white/10" />
+                        )}
+                        <div className="min-w-0">
+                           <p className="text-[10px] font-black text-emerald-400 uppercase tracking-tight">{booking.selectedPerformer}</p>
+                           {booking.performerExperience && (
+                              <p className="text-[7px] font-bold text-white/40 uppercase mt-0.5">{booking.performerExperience} Exp</p>
+                           )}
+                        </div>
+                     </div>
+                  </div>
+               )}
+            </div>
            <div>
               <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-2">Schedule Window</p>
               <div className="flex items-center gap-2">

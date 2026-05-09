@@ -289,6 +289,8 @@ const ListingRedirect = () => {
 };
 
 import EmergencySOS from './components/EmergencySOS';
+import OnboardingGuide from './components/OnboardingGuide';
+
 
 function AppContent() {
   const location = useLocation();
@@ -335,8 +337,10 @@ function AppContent() {
   
   return (
     <>
+      <OnboardingGuide />
       <EmergencySOS />
       <NeuralSplash />
+
       <ScrollToTop />
       <AuthSessionManager />
       {!hideHeader && <Header />}

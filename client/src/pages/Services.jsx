@@ -1,5 +1,6 @@
 // Services.jsx - Airbnb-Style Professional Design
 import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
@@ -272,6 +273,7 @@ const ServicePage = () => {
   const [attachments, setAttachments] = useState([]);
   const [similarServices, setSimilarServices] = useState([]);
   const [bookingSummary, setBookingSummary] = useState({ count: 0, recentBookers: [] });
+  const [zoomedImage, setZoomedImage] = useState(null);
 
   const RECENTLY_VIEWED_KEY = 'recentlyViewed';
 
@@ -353,8 +355,8 @@ const ServicePage = () => {
     tirePolish: false,
     backPolish: false,
     interiorPolish: false,
-    foodProvided: 'no',
-    electricityProvided: 'no'
+    electricityProvided: 'no',
+    selectedPerformer: ''
   });
 
   const [enhancedServiceData] = useState({
@@ -622,7 +624,9 @@ const ServicePage = () => {
     }
 
     message += `📅 *Date:* ${bookingData.date || 'Not specified'}\n`;
-    message += `⏰ *Time:* ${bookingData.time || 'Not specified'}\n\n`;
+    message += `⏰ *Time:* ${bookingData.time || 'Not specified'}\n`;
+    if (bookingData.selectedPerformer) message += `👤 *Performer:* ${bookingData.selectedPerformer}\n\n`;
+    else message += `\n`;
 
     message += `━━━━━━━━━━━━━━━━━━━━\n`;
     message += `*👤 CLIENT INFORMATION*\n`;
@@ -828,6 +832,9 @@ const ServicePage = () => {
           phone: bookingData.phone,
           message: bookingData.specialRequirements || result.fullMessage,
           subtype: bookingSubtype,
+          selectedPerformer: bookingData.selectedPerformer,
+          performerExperience: service.performers?.find(p => p.name === bookingData.selectedPerformer)?.experience,
+          performerImage: service.performers?.find(p => p.name === bookingData.selectedPerformer)?.image,
           status: 'pending'
         };
 
@@ -1056,9 +1063,38 @@ const ServicePage = () => {
                 </div>
               </div>
 
+              <div className="py-4 space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <ClockIcon className="w-5 h-5 text-gray-900" />
+                  <h3 className="font-bold text-gray-900">Weekly Schedule</h3>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => {
+                    const schedule = service.operatingHours?.[day] || { closed: true };
+                    const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() === day;
+                    
+                    return (
+                      <div 
+                        key={day} 
+                        className={`flex flex-col p-3 rounded-xl border ${isToday ? 'border-rose-500 bg-rose-50/20' : 'border-gray-100 bg-gray-50/50'}`}
+                      >
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${isToday ? 'text-rose-600' : 'text-gray-400'}`}>
+                          {day.slice(0, 3)}
+                        </span>
+                        {schedule.closed ? (
+                          <span className="text-[10px] font-bold text-gray-500 mt-1">Closed</span>
+                        ) : (
+                          <span className="text-[10px] font-black text-gray-900 mt-1">{schedule.open} - {schedule.close}</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="flex items-start gap-4">
                 <div className="p-2 bg-gray-100 rounded-lg">
-                  <ClockIcon className="w-5 h-5 text-gray-700" />
+                  <BoltIcon className="w-5 h-5 text-gray-700" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900">{enhancedServiceData.responseTime}</h3>
@@ -1196,6 +1232,35 @@ const ServicePage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Service Performers Section */}
+            {service.performers && service.performers.length > 0 && (
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">Service Performers</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {service.performers.map((performer, idx) => (
+                    <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm">
+                      <div 
+                        onClick={() => performer.image && setZoomedImage(performer.image)}
+                        className={`w-16 h-16 rounded-full overflow-hidden bg-slate-100 flex-shrink-0 ${performer.image ? 'cursor-pointer hover:ring-2 hover:ring-rose-500 transition-all' : ''}`}
+                      >
+                        {performer.image ? (
+                          <img src={performer.image} alt={performer.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400">
+                            <FaUser />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-900">{performer.name}</h4>
+                        <p className="text-xs text-slate-500">{performer.experience} experience</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Reviews */}
             <div className="pb-6 border-b border-gray-200">
@@ -1347,6 +1412,24 @@ const ServicePage = () => {
                       />
                     </div>
                   </div>
+
+                  {/* Performer Selection in Card */}
+                  {service.performers && service.performers.length > 0 && (
+                    <div className="p-3 border-b border-gray-300">
+                      <label className="block text-xs font-bold text-gray-900 uppercase">Select Performer</label>
+                      <select
+                        name="selectedPerformer"
+                        value={bookingData.selectedPerformer}
+                        onChange={handleBookingChange}
+                        className="w-full text-sm text-gray-600 outline-none bg-transparent"
+                      >
+                        <option value="">Any available member</option>
+                        {service.performers.map((p, i) => (
+                          <option key={i} value={p.name}>{p.name} ({p.experience})</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   <div className="p-3">
                     <label className="block text-xs font-bold text-gray-900 uppercase">Guests</label>
                     <select
@@ -1602,6 +1685,39 @@ const ServicePage = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Performer Selection in Overlay */}
+              {service.performers && service.performers.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Select professional</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setBookingData(prev => ({ ...prev, selectedPerformer: '' }))}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${!bookingData.selectedPerformer ? 'border-rose-500 bg-rose-50' : 'border-gray-100 hover:border-gray-200'}`}
+                    >
+                      <div className="font-bold text-gray-900">Any Available Member</div>
+                      <p className="text-xs text-gray-500">Best for faster confirmation</p>
+                    </button>
+                    {service.performers.map((p, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setBookingData(prev => ({ ...prev, selectedPerformer: p.name }))}
+                        className={`p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4 ${bookingData.selectedPerformer === p.name ? 'border-rose-500 bg-rose-50' : 'border-gray-100 hover:border-gray-200'}`}
+                      >
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100">
+                          {p.image && <img src={p.image} alt={p.name} className="w-full h-full object-cover" />}
+                        </div>
+                        <div>
+                          <div className="font-bold text-gray-900">{p.name}</div>
+                          <p className="text-[10px] text-gray-500 uppercase font-bold">{p.experience} exp</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Date & Time */}
               <div>
@@ -2000,6 +2116,41 @@ const ServicePage = () => {
           </button>
         </div>
       </div>
+
+      {/* Zoomed Performer Image Modal */}
+      <AnimatePresence>
+        {zoomedImage && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setZoomedImage(null)}
+              className="fixed inset-0 bg-black/90 backdrop-blur-md z-[2000] cursor-zoom-out"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              className="fixed inset-0 z-[2001] flex items-center justify-center p-4 pointer-events-none"
+            >
+              <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center pointer-events-auto">
+                <button
+                  onClick={() => setZoomedImage(null)}
+                  className="absolute -top-12 right-0 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/20 group"
+                >
+                  <XMarkIcon className="w-6 h-6 group-hover:rotate-90 transition-transform" />
+                </button>
+                <img
+                  src={zoomedImage}
+                  alt="Zoomed Performer"
+                  className="w-full h-full object-contain rounded-3xl shadow-2xl border border-white/10"
+                />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

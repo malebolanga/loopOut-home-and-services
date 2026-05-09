@@ -166,6 +166,36 @@ const BookingCard = ({ booking, onCancel }) => {
         </button>
       </div>
 
+      {booking.selectedPerformer && (
+        <div 
+          onClick={(e) => {
+            e.stopPropagation();
+            // We need the type and itemId. Let's make sure they are in the booking object.
+            const route = booking.type === 'listing' ? `/listing/${booking.itemId}` : (booking.type === 'helper' ? `/helper/${booking.itemId}` : `/service/${booking.itemId}`);
+            // Use window.location.href or navigate if available. 
+            // In MyBookingsConsumer, navigate is not currently imported or used, let's use window.location.href for simplicity or add navigate.
+            window.location.href = route;
+          }}
+          className="mb-4 px-4 py-2 bg-rose-50 border border-rose-100 rounded-xl flex items-center justify-between cursor-pointer hover:bg-rose-100 transition-all active:scale-95 shadow-sm"
+        >
+          <div className="flex items-center gap-3">
+            {booking.performerImage ? (
+              <img 
+                src={booking.performerImage} 
+                alt={booking.selectedPerformer} 
+                className="w-6 h-6 rounded-full object-cover border border-rose-200"
+              />
+            ) : (
+              <FaUser className="text-rose-500 text-[10px]" />
+            )}
+            <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest">{booking.selectedPerformer}</span>
+          </div>
+          {booking.performerExperience && (
+            <span className="text-[9px] font-bold text-rose-400 uppercase tracking-tight">{booking.performerExperience} Exp</span>
+          )}
+        </div>
+      )}
+
       <div className="space-y-4">
         <BookingStatus status={booking.status} />
         
@@ -176,20 +206,26 @@ const BookingCard = ({ booking, onCancel }) => {
             <div className="flex items-center gap-4">
                <div className="relative">
                  <div className="w-14 h-14 rounded-full bg-white border-4 border-emerald-50 shadow-inner overflow-hidden flex items-center justify-center">
-                   <img src={booking.proAvatar} alt={booking.proName} className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://i.pravatar.cc/150?u=pro'} />
+                   <img src={booking.selectedPerformer ? (booking.performerImage || 'https://i.pravatar.cc/150?u=pro') : booking.proAvatar} alt={booking.selectedPerformer || booking.proName} className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://i.pravatar.cc/150?u=pro'} />
                  </div>
                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center shadow-lg">
                     <FaWhatsapp className="text-white text-[10px]" />
                  </div>
                </div>
-               <div className="min-w-0">
-                 <p className="text-[10px] text-emerald-600 font-black uppercase tracking-[0.2em] mb-1">Your Professional</p>
-                 <h4 className="text-base font-black text-gray-900 leading-none truncate">{booking.proName}</h4>
-                 <div className="flex items-center gap-2 mt-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[11px] font-bold text-gray-400">Available on WhatsApp</span>
-                 </div>
-               </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] text-emerald-600 font-black uppercase tracking-[0.2em] mb-1">
+                    {booking.selectedPerformer ? 'Service Performer' : 'Your Professional'}
+                  </p>
+                  <h4 className="text-base font-black text-gray-900 leading-none truncate">
+                    {booking.selectedPerformer || booking.proName}
+                  </h4>
+                  <div className="flex items-center gap-2 mt-1.5">
+                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                     <span className="text-[11px] font-bold text-gray-400">
+                       {booking.selectedPerformer ? `Team Member of ${booking.proName}` : 'Available on WhatsApp'}
+                     </span>
+                  </div>
+                </div>
             </div>
             
             <div className="flex gap-2">
@@ -240,7 +276,12 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
             proWhatsapp: b.phone || 'N/A',
             icon: b.listing ? <FaHome /> : (b.service?.type === 'carwash' ? <FaCar /> : <FaHandsWash />),
             color: b.listing ? 'bg-rose-500' : 'bg-blue-500',
-            subtype: b.subtype || ''
+            subtype: b.subtype || '',
+            selectedPerformer: b.selectedPerformer,
+            performerExperience: b.performerExperience,
+            performerImage: b.performerImage,
+            type: b.listing ? 'listing' : (b.helper ? 'helper' : 'service'),
+            itemId: b.listing?._id || b.helper?._id || b.service?._id
           }));
           setActiveBookings(formatted.sort((a, b) => new Date(b.startDate) - new Date(a.startDate)));
         }

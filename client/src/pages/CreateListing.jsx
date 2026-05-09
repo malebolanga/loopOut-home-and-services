@@ -290,7 +290,9 @@ const StepProgress = ({ currentStep }) => {
     { label: "Category", icon: MapIcon },
     { label: "Type", icon: TagIcon },
     { label: "Details", icon: InformationCircleIcon },
-    { label: "Features", icon: Sparkles },
+    { label: "Amenities", icon: Sparkles },
+    { label: "Services", icon: TagIcon },
+    { label: "Team", icon: UserGroupIcon },
     { label: "Media", icon: CameraIcon },
     { label: "Review", icon: CheckCircleIcon }
   ];
@@ -367,6 +369,8 @@ export default function CreateListing() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [performerUploading, setPerformerUploading] = useState(false);
+  const [performerFile, setPerformerFile] = useState(null);
   const [postLimitReached, setPostLimitReached] = useState(false);
   const [paymentRequired, setPaymentRequired] = useState(false);
   const [newListingId, setNewListingId] = useState(null);
@@ -454,22 +458,20 @@ export default function CreateListing() {
     shoeTypes: '', // For sneaker cleaner
     cleaningMethod: '', // For sneaker cleaner
     turnaroundTime: '', // For sneaker cleaner
-    machineType: '', // For washing mat
-    matTypes: '', // For washing mat
-    dryingMethod: '', // For washing mat
     animalTypes: '', // For animals
     servicesOffered: '', // For animals
     experience: '', // For animals
     certifications: '', // For animals
     
+    // Performers & Services
+    performers: [],
+    serviceList: [],
+
     // Event specific
     date: "",
     time: "",
     foodAvailable: false,
     familyFriendly: false,
-    
-    // Multi-service pricing
-    serviceList: [],
   });
 
   const [foundHost, setFoundHost] = useState(null);
@@ -748,16 +750,7 @@ export default function CreateListing() {
           }
         }
         
-        if (selectedType === 'washingmat') {
-          if (!listingForm.matTypes) {
-            setError("Please specify what types of mats you clean");
-            return;
-          }
-          if (!listingForm.machineType) {
-            setError("Please specify your washing machine type");
-            return;
-          }
-        }
+
         
         if (selectedType === 'animals') {
           if (!listingForm.animalTypes) {
@@ -781,7 +774,7 @@ export default function CreateListing() {
       }
     }
     
-    if (currentStep === 5) {
+    if (currentStep === 7) {
       if (listingForm.imageUrls.length < 1) {
         setError("You must upload at least one image");
         return;
@@ -794,7 +787,7 @@ export default function CreateListing() {
     }
     
     setError(null);
-    setCurrentStep(prev => Math.min(prev + 1, 6));
+    setCurrentStep(prev => Math.min(prev + 1, 8));
   };
 
   const getNearLabel = (category, type) => {
@@ -1063,6 +1056,28 @@ export default function CreateListing() {
     }
   };
 
+  const handlePerformerImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setPerformerUploading(true);
+      setError(null);
+      
+      const compressedFile = await compressImage(file);
+      const url = await storeImage(compressedFile);
+      
+      setListingForm(prev => ({
+        ...prev,
+        newPerformerImage: url
+      }));
+      setPerformerUploading(false);
+    } catch (err) {
+      setPerformerUploading(false);
+      setError("Failed to upload performer photo: " + err.message);
+    }
+  };
+
   const handleVideoUpload = async () => {
     try {
       if (!videoFile) {
@@ -1160,15 +1175,7 @@ export default function CreateListing() {
           return setError("Please enter your turnaround time");
         }
       }
-      
-      if (selectedType === 'washingmat') {
-        if (!listingForm.matTypes) {
-          return setError("Please specify what types of mats you clean");
-        }
-        if (!listingForm.machineType) {
-          return setError("Please specify your washing machine type");
-        }
-      }
+
       
       if (selectedType === 'animals') {
         if (!listingForm.animalTypes) {
@@ -1228,6 +1235,7 @@ export default function CreateListing() {
         experience: listingForm.experience || "",
         certifications: listingForm.certifications || "",
         serviceList: (selectedCategory === 'experiences' || selectedCategory === 'online') ? listingForm.serviceList : [],
+        performers: (selectedCategory === 'experiences' || selectedCategory === 'online') ? listingForm.performers : [],
       };
 
       console.log("Submitting to:", endpoint);
@@ -1318,13 +1326,7 @@ export default function CreateListing() {
             { id: "ecoFriendly", label: "Eco-Friendly Products", emoji: "🌱", checked: listingForm.ecoFriendly },
           ];
         }
-        if (selectedType === 'washingmat') {
-          return [
-            { id: "security", label: "Background Check", emoji: "✅", checked: listingForm.security },
-            { id: "delivery", label: "Pickup & Delivery", emoji: "🚚", checked: listingForm.delivery },
-            { id: "ecoFriendly", label: "Eco-Friendly", emoji: "🌱", checked: listingForm.ecoFriendly },
-          ];
-        }
+
         if (selectedType === 'animals') {
           return [
             { id: "security", label: "Background Check", emoji: "✅", checked: listingForm.security },
@@ -1373,7 +1375,6 @@ export default function CreateListing() {
       case 'online':
         return [
           { id: "domestic", label: "Domestic Helper", emoji: "🧹", description: "Cleaning, laundry, chores" },
-          { id: "errand", label: "Errand Runner", emoji: "🏃", description: "Shopping, deliveries, tasks" },
           { id: "tutor", label: "Private Tutor", emoji: "📚", description: "Academic tutoring" },
           { id: "chef", label: "Private Chef", emoji: "👨‍🍳", description: "Meal preparation" },
           { id: "beauty", label: "Beauty Specialist", emoji: "💅", description: "Hair, nails, makeup" },
@@ -1382,7 +1383,6 @@ export default function CreateListing() {
           { id: "photography", label: "Photographer", emoji: "📷", description: "Photo sessions" },
           { id: "baker", label: "Baker", emoji: "🍰", description: "Custom baked goods" },
           { id: "sneaker", label: "Sneaker Cleaner", emoji: "👟", description: "Sneaker cleaning & restoration" },
-          { id: "washingmat", label: "Mat Washer", emoji: "🧼", description: "Professional mat washing service" },
           { id: "animals", label: "Animal Care", emoji: "🐕", description: "Pet sitting, walking, grooming" },
         ];
       case 'events':
@@ -1615,7 +1615,10 @@ export default function CreateListing() {
             {/* Step 3: Form Details */}
             {currentStep === 3 && (
               <div className="space-y-8">
-                <SectionCard title="Tell us about your place">
+                <SectionCard title={`Tell us about your ${
+                  selectedCategory === 'property' ? 'place' : 
+                  selectedCategory === 'experiences' ? 'service' :
+                  selectedCategory === 'online' ? 'helper' : 'event'}`}>
                   <div className="space-y-6">
                     <FormInput
                       label="Create a title"
@@ -1629,7 +1632,6 @@ export default function CreateListing() {
                         selectedCategory === 'experiences' && selectedType === 'carwash' ? "Premium Car Wash & Detailing Service" :
                         selectedCategory === 'experiences' ? "Professional Handyman Service" :
                         selectedCategory === 'online' && selectedType === 'sneaker' ? "Expert Sneaker Cleaning & Restoration" :
-                        selectedCategory === 'online' && selectedType === 'washingmat' ? "Professional Mat Washing Service" :
                         selectedCategory === 'online' && selectedType === 'animals' ? "Loving Pet Care & Walking Services" :
                         selectedCategory === 'online' ? "John's Tutoring Services" :
                         "Summer Music Festival"
@@ -1648,7 +1650,6 @@ export default function CreateListing() {
                         selectedCategory === 'experiences' && selectedType === 'carwash' ? "Professional car wash and detailing services..." :
                         selectedCategory === 'experiences' ? "Describe your service in detail..." :
                         selectedCategory === 'online' && selectedType === 'sneaker' ? "Expert sneaker cleaning using premium products. I restore and clean all types of sneakers..." :
-                        selectedCategory === 'online' && selectedType === 'washingmat' ? "Professional mat washing service using industrial machines. I clean all types of mats..." :
                         selectedCategory === 'online' && selectedType === 'animals' ? "Loving and experienced animal care provider. I offer pet sitting, walking, and grooming..." :
                         selectedCategory === 'online' ? "Describe your skills and experience..." :
                         "Describe the event, activities, and what attendees can expect..."
@@ -1831,39 +1832,7 @@ export default function CreateListing() {
                       </div>
                     )}
 
-                    {/* Mat Washer Specific Fields */}
-                    {selectedCategory === 'online' && selectedType === 'washingmat' && (
-                      <div className="space-y-6 pt-4 border-t border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900">Mat Washing Details</h3>
-                        
-                        <FormInput
-                          label="Types of Mats You Clean"
-                          id="matTypes"
-                          value={listingForm.matTypes}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Doormats, Bath mats, Gym mats, Car mats"
-                          required
-                        />
-
-                        <FormInput
-                          label="Machine Type"
-                          id="machineType"
-                          value={listingForm.machineType}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Industrial washer, Commercial dryer"
-                          required
-                        />
-
-                        <FormInput
-                          label="Drying Method"
-                          id="dryingMethod"
-                          value={listingForm.dryingMethod}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Air dry, Machine dry, Both"
-                          helpText="How do you dry the mats?"
-                        />
-                      </div>
-                    )}
+                    
 
                     {/* Animal Care Specific Fields */}
                     {selectedCategory === 'online' && selectedType === 'animals' && (
@@ -2009,104 +1978,6 @@ export default function CreateListing() {
                       </div>
                     )}
 
-                    {/* Multi-Service Pricing Section for Services and Helpers */}
-                    {(selectedCategory === 'experiences' || selectedCategory === 'online') && (
-                      <div className="space-y-6 pt-6 border-t border-gray-200">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-xl font-semibold text-gray-900">Service List & Pricing</h3>
-                            <p className="text-sm text-gray-500 mt-1">Add specific services and their individual prices (optional)</p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={handleAddService}
-                            className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-all shadow-sm"
-                          >
-                            <PlusIcon className="w-4 h-4" />
-                            Add Service
-                          </button>
-                        </div>
-
-                        {listingForm.serviceList.length > 0 && (
-                          <div className="space-y-4">
-                            {listingForm.serviceList.map((service, index) => (
-                              <div key={index} className="flex flex-col sm:flex-row gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 relative group animate-fadeIn">
-                                <div className="flex-1">
-                                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 px-1">Service Name</label>
-                                  <input
-                                    type="text"
-                                    placeholder="e.g., Nails, Hair Style, 3 Bags"
-                                    value={service.name}
-                                    onChange={(e) => handleServiceChange(index, "name", e.target.value)}
-                                    className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all"
-                                    required
-                                  />
-                                </div>
-                                <div className="sm:w-32">
-                                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 px-1">Price (R)</label>
-                                  <input
-                                    type="number"
-                                    placeholder="200"
-                                    value={service.price}
-                                    onChange={(e) => handleServiceChange(index, "price", e.target.value)}
-                                    className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all"
-                                    required
-                                    min="0"
-                                  />
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveService(index)}
-                                  className="self-end sm:self-center p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                  title="Remove Service"
-                                >
-                                  <XMarkIcon className="w-5 h-5" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {listingForm.serviceList.length === 0 && (
-                          <div className="text-center py-10 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                            <Sparkles className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                            <p className="text-gray-500 font-medium">No individual services added yet.</p>
-                            <button
-                              type="button"
-                              onClick={handleAddService}
-                              className="mt-3 text-black font-semibold hover:underline"
-                            >
-                              Click here to add your first service
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </SectionCard>
-
-                <SectionCard title="Set your price">
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-base font-medium text-gray-900 mb-2">
-                        Price per {selectedCategory === 'property' ? 
-                          (selectedType === "rent" ? "month" : selectedType === "over" ? "night" : selectedType === "resort" ? "day" : "hour") :
-                          selectedCategory === 'events' ? "ticket" : "service"}
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-900 font-semibold text-lg">R</span>
-                        <input
-                          type="number"
-                          id="regularPrice"
-                          value={listingForm.regularPrice}
-                          onChange={handleFormChange}
-                          className="w-full pl-10 pr-4 py-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all"
-                          min="0"
-                          required
-                        />
-                      </div>
-                    </div>
-
                     {selectedCategory === 'property' && (
                       <div className="pt-4 border-t border-gray-200">
                         <label className="flex items-center gap-3 cursor-pointer">
@@ -2213,8 +2084,190 @@ export default function CreateListing() {
               </div>
             )}
 
-            {/* Step 5: Images & Media */}
+            {/* Step 5: Services & Pricing */}
             {currentStep === 5 && (
+              <div className="space-y-8">
+                <SectionCard title="Services & Pricing">
+                  <p className="text-gray-600 mb-6">List the specific services you offer and their prices.</p>
+                  
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormInput
+                        label="Service Name"
+                        placeholder="e.g. Standard Haircut"
+                        id="newServiceName"
+                        value={listingForm.newServiceName || ""}
+                        onChange={(e) => setListingForm({...listingForm, newServiceName: e.target.value})}
+                      />
+                      <FormInput
+                        label="Price (R)"
+                        type="number"
+                        placeholder="0"
+                        id="newServicePrice"
+                        value={listingForm.newServicePrice || ""}
+                        onChange={(e) => setListingForm({...listingForm, newServicePrice: e.target.value})}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (listingForm.newServiceName && listingForm.newServicePrice) {
+                          setListingForm({
+                            ...listingForm,
+                            serviceList: [...listingForm.serviceList, { name: listingForm.newServiceName, price: listingForm.newServicePrice }],
+                            newServiceName: "",
+                            newServicePrice: ""
+                          });
+                        }
+                      }}
+                      className="px-8 py-4 bg-gray-900 text-white rounded-[1.5rem] font-bold text-sm hover:bg-rose-500 transition-all active:scale-95"
+                    >
+                      Add Service
+                    </button>
+
+                    {listingForm.serviceList.length > 0 && (
+                      <div className="mt-8 space-y-4">
+                        <h3 className="font-bold text-gray-900 uppercase tracking-widest text-[10px]">Your Service List</h3>
+                        <div className="space-y-3">
+                          {listingForm.serviceList.map((service, index) => (
+                            <div key={index} className="flex items-center justify-between p-6 bg-gray-50 rounded-[2rem] border-2 border-transparent hover:border-gray-100 transition-all">
+                              <div>
+                                <p className="font-bold text-gray-900">{service.name}</p>
+                                <p className="text-rose-500 font-black">R{service.price}</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setListingForm({
+                                  ...listingForm,
+                                  serviceList: listingForm.serviceList.filter((_, i) => i !== index)
+                                })}
+                                className="p-3 text-gray-400 hover:text-rose-500 transition-colors"
+                              >
+                                <XMarkIcon className="w-5 h-5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </SectionCard>
+              </div>
+            )}
+
+            {/* Step 6: Team Members / Performers */}
+            {currentStep === 6 && (
+              <div className="space-y-8">
+                <SectionCard title="Our Team">
+                  <p className="text-gray-600 mb-6">Introduce the people who will be performing the services.</p>
+                  
+                  <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormInput
+                        label="Performer Name"
+                        placeholder="e.g. John Doe"
+                        id="newPerformerName"
+                        value={listingForm.newPerformerName || ""}
+                        onChange={(e) => setListingForm({...listingForm, newPerformerName: e.target.value})}
+                      />
+                      <FormInput
+                        label="Experience / Role"
+                        placeholder="e.g. Master Stylist (5 years)"
+                        id="newPerformerExp"
+                        value={listingForm.newPerformerExp || ""}
+                        onChange={(e) => setListingForm({...listingForm, newPerformerExp: e.target.value})}
+                      />
+                    </div>
+                    
+                    <div className="flex flex-col gap-6 p-10 bg-gray-50/50 border-4 border-dashed border-gray-100 rounded-[3rem] transition-all hover:border-gray-200">
+                      <div className="flex flex-col md:flex-row items-center gap-8">
+                        <div className="w-32 h-32 rounded-[2.5rem] bg-white shadow-inner flex items-center justify-center overflow-hidden border-2 border-gray-50 flex-shrink-0 relative group">
+                          {performerUploading ? (
+                            <div className="flex flex-col items-center gap-2">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500"></div>
+                              <span className="text-[8px] font-black text-rose-500 uppercase tracking-tighter">Uploading</span>
+                            </div>
+                          ) : listingForm.newPerformerImage ? (
+                            <img src={listingForm.newPerformerImage} alt="Preview" className="w-full h-full object-cover" />
+                          ) : (
+                            <CameraIcon className="w-10 h-10 text-gray-200" />
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 space-y-4 text-center md:text-left">
+                          <h4 className="text-sm font-black text-gray-900 uppercase tracking-[0.1em]">Performer Photo</h4>
+                          <p className="text-xs text-gray-400 font-medium leading-relaxed">Add a face to the name. Choose a clear, professional photo from your device.</p>
+                          
+                          <label className="inline-flex items-center gap-3 px-8 py-4 bg-white border-2 border-gray-100 rounded-[1.5rem] text-xs font-black uppercase tracking-[0.15em] text-gray-900 cursor-pointer hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all active:scale-95 shadow-sm">
+                            <PlusIcon className="w-4 h-4" />
+                            <span>Select Photo</span>
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              accept="image/*"
+                              onChange={handlePerformerImageChange}
+                              disabled={performerUploading}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={performerUploading}
+                      onClick={() => {
+                        if (listingForm.newPerformerName && listingForm.newPerformerExp) {
+                          setListingForm({
+                            ...listingForm,
+                            performers: [...listingForm.performers, { 
+                              name: listingForm.newPerformerName, 
+                              experience: listingForm.newPerformerExp,
+                              image: listingForm.newPerformerImage || "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=200"
+                            }],
+                            newPerformerName: "",
+                            newPerformerExp: "",
+                            newPerformerImage: ""
+                          });
+                        }
+                      }}
+                      className="px-10 py-5 bg-gray-900 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-gray-200 hover:bg-rose-500 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      {performerUploading ? "Please Wait..." : "Add Team Member"}
+                    </button>
+
+                    {listingForm.performers.length > 0 && (
+                      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {listingForm.performers.map((performer, index) => (
+                          <div key={index} className="relative p-6 bg-white border-2 border-gray-100 rounded-[2.5rem] flex items-center gap-6 group hover:border-gray-900 transition-all">
+                            <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-gray-50">
+                              <img src={performer.image} alt={performer.name} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-black text-gray-900">{performer.name}</p>
+                              <p className="text-sm font-bold text-gray-400">{performer.experience}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setListingForm({
+                                ...listingForm,
+                                performers: listingForm.performers.filter((_, i) => i !== index)
+                              })}
+                              className="absolute top-4 right-4 p-2 text-gray-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
+                            >
+                              <XMarkIcon className="w-5 h-5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </SectionCard>
+              </div>
+            )}
+
+            {/* Step 7: Images & Media */}
+            {currentStep === 7 && (
               <div className="space-y-8">
                 <SectionCard title="Add some photos of your place">
                   <p className="text-gray-600 mb-6">You'll need 1 photo to get started. You can add more later.</p>
@@ -2281,8 +2334,8 @@ export default function CreateListing() {
               </div>
             )}
 
-            {/* Step 6: Review & Submit */}
-            {currentStep === 6 && (
+            {/* Step 8: Review & Submit */}
+            {currentStep === 8 && (
               <div className="space-y-8">
                 <SectionCard title="Review your listing">
                   <div className="space-y-6">
@@ -2324,6 +2377,39 @@ export default function CreateListing() {
                       </div>
                     </div>
 
+                    {(selectedCategory === 'experiences' || selectedCategory === 'online') && (
+                      <>
+                        <div className="bg-gray-50 rounded-xl p-6">
+                          <h3 className="font-semibold text-lg text-gray-900 mb-4">Services</h3>
+                          <div className="space-y-2 text-sm">
+                            {listingForm.serviceList.map((s, i) => (
+                              <div key={i} className="flex justify-between py-1 border-b border-gray-100 last:border-0">
+                                <span className="text-gray-600">{s.name}</span>
+                                <span className="font-medium text-gray-900">R{s.price}</span>
+                              </div>
+                            ))}
+                            {listingForm.serviceList.length === 0 && <p className="text-gray-500">No services added</p>}
+                          </div>
+                        </div>
+
+                        <div className="bg-gray-50 rounded-xl p-6">
+                          <h3 className="font-semibold text-lg text-gray-900 mb-4">Team Members</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {listingForm.performers.map((p, i) => (
+                              <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-100">
+                                <img src={p.image} className="w-10 h-10 rounded-lg object-cover" />
+                                <div>
+                                  <p className="font-bold text-gray-900 text-xs">{p.name}</p>
+                                  <p className="text-[10px] text-gray-500">{p.experience}</p>
+                                </div>
+                              </div>
+                            ))}
+                            {listingForm.performers.length === 0 && <p className="text-gray-500 text-sm">No team members added</p>}
+                          </div>
+                        </div>
+                      </>
+                    )}
+
                     <div className="bg-gray-50 rounded-xl p-6">
                       <h3 className="font-semibold text-lg text-gray-900 mb-4">Amenities</h3>
                       <div className="flex flex-wrap gap-2">
@@ -2361,25 +2447,7 @@ export default function CreateListing() {
                       </div>
                     )}
 
-                    {selectedCategory === 'online' && selectedType === 'washingmat' && (
-                      <div className="bg-gray-50 rounded-xl p-6">
-                        <h3 className="font-semibold text-lg text-gray-900 mb-4">Mat Washing Details</h3>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between py-1">
-                            <span className="text-gray-600">Mat Types:</span>
-                            <span className="font-medium text-gray-900">{listingForm.matTypes}</span>
-                          </div>
-                          <div className="flex justify-between py-1">
-                            <span className="text-gray-600">Machine Type:</span>
-                            <span className="font-medium text-gray-900">{listingForm.machineType}</span>
-                          </div>
-                          <div className="flex justify-between py-1">
-                            <span className="text-gray-600">Drying Method:</span>
-                            <span className="font-medium text-gray-900">{listingForm.dryingMethod || "Not specified"}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+
 
                     {selectedCategory === 'online' && selectedType === 'animals' && (
                       <div className="bg-gray-50 rounded-xl p-6">
@@ -2449,7 +2517,7 @@ export default function CreateListing() {
                 Go Back
               </button>
               
-              {currentStep < 6 ? (
+              {currentStep < 8 ? (
                 <button
                   type="button"
                   onClick={handleNextStep}
@@ -2748,4 +2816,4 @@ export default function CreateListing() {
       )}
     </div>
   );
-}
+}

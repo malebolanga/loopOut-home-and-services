@@ -166,7 +166,27 @@ const serviceSchema = new mongoose.Schema(
         price: { type: Number, required: true }
       }
     ],
-    bookingsCount: { type: Number, default: 0 }
+    bookingsCount: { type: Number, default: 0 },
+    experience: {
+      type: String, // e.g., "5 years", "Expert", "Junior"
+      required: false
+    },
+    performers: [
+      {
+        name: { type: String, required: true },
+        image: { type: String, required: true },
+        experience: { type: String, required: true }
+      }
+    ],
+    operatingHours: {
+        monday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },
+        tuesday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },
+        wednesday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },
+        thursday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },
+        friday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },
+        saturday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },
+        sunday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: true } }
+    }
   },
   { timestamps: true }
 );

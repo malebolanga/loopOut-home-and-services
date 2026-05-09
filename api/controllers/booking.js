@@ -61,7 +61,7 @@ export const calculateBookingDetails = async (req, res) => {
 // Create booking
 export const createBooking = async (req, res) => {
   try {
-    const { userId, listingId, helperId, serviceId, eventId, startDate, endDate, totalPrice, phone, message, subtype } = req.body;
+    const { userId, listingId, helperId, serviceId, eventId, startDate, endDate, totalPrice, phone, message, subtype, selectedPerformer, performerExperience, performerImage } = req.body;
 
     // Validate input
     const mainId = listingId || helperId || serviceId || eventId;
@@ -101,6 +101,9 @@ export const createBooking = async (req, res) => {
       phone,
       message,
       subtype,
+      selectedPerformer,
+      performerExperience,
+      performerImage,
       status: 'pending'
     });
 

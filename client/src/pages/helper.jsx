@@ -532,6 +532,51 @@ export default function Helper() {
                   </div>
                 </div>
 
+                {/* Meet the Team / Performers Section */}
+                {helper.performers && helper.performers.length > 0 && (
+                  <div className="mb-10">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="bg-gradient-to-r from-rose-500 to-rose-600 p-2 rounded-xl">
+                        <FaUser className="text-white text-2xl" />
+                      </div>
+                      <h2 className="text-3xl font-bold text-slate-900">Meet the Team</h2>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {helper.performers.map((performer, idx) => (
+                        <div 
+                          key={idx} 
+                          className="group bg-white border border-slate-100 rounded-3xl p-6 hover:shadow-2xl hover:shadow-rose-500/10 transition-all duration-500 relative overflow-hidden"
+                        >
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-bl-full -mr-10 -mt-10 group-hover:scale-110 transition-transform duration-700"></div>
+                          
+                          <div className="relative z-10 flex items-center gap-4">
+                            <div className="relative">
+                              <div className="w-20 h-20 rounded-2xl overflow-hidden border-4 border-white shadow-lg">
+                                <img 
+                                  src={performer.image} 
+                                  alt={performer.name} 
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                />
+                              </div>
+                              <div className="absolute -bottom-1 -right-1 bg-green-500 w-5 h-5 rounded-full border-4 border-white shadow-sm flex items-center justify-center">
+                                <MdOutlineVerified className="w-2.5 h-2.5 text-white" />
+                              </div>
+                            </div>
+                            
+                            <div className="flex-1">
+                              <h3 className="text-xl font-bold text-slate-900 mb-1">{performer.name}</h3>
+                              <p className="text-xs font-black text-rose-500 uppercase tracking-widest bg-rose-50 px-3 py-1 rounded-full inline-block">
+                                {performer.experience}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Services Offered */}
                 <div>
                   <div className="flex items-center gap-3 mb-6">

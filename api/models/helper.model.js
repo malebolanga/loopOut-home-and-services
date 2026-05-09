@@ -158,7 +158,23 @@ const helperSchema = new mongoose.Schema({
         }
     ],
     bookingsCount: { type: Number, default: 0 },
-    responseRate: { type: String, default: 'Usually responds within an hour' }
+    responseRate: { type: String, default: 'Usually responds within an hour' },
+    performers: [
+      {
+        name: { type: String, required: true },
+        image: { type: String, required: true },
+        experience: { type: String, required: true }
+      }
+    ],
+    operatingHours: {
+        monday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },
+        tuesday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },
+        wednesday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },
+        thursday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },
+        friday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },
+        saturday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },
+        sunday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: true } }
+    }
   },
   { timestamps: true });
 

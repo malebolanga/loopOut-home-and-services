@@ -873,6 +873,54 @@ const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = false, re
           {item.name}
         </p>
 
+        {/* Provider Detail (for Helper/Service) */}
+        {(type === 'helper' || type === 'service') && (
+          <div className="flex items-center gap-2 mt-1.5 px-2 py-1.5 bg-gray-50/50 rounded-xl border border-gray-100 hover:bg-white hover:shadow-sm transition-all duration-300">
+            {item.performers && item.performers.length > 0 ? (
+              <>
+                <div className="relative shrink-0">
+                  <div className="w-6 h-6 rounded-lg overflow-hidden border border-white shadow-sm">
+                    <img src={item.performers[0].image} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  {item.performers.length > 1 && (
+                    <div className="absolute -top-1 -right-1 bg-gray-900 text-white text-[7px] font-black w-3 h-3 rounded-full flex items-center justify-center border border-white shadow-sm">
+                      +{item.performers.length - 1}
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[10px] font-black text-gray-900 truncate tracking-tight">
+                    {item.performers[0].name}
+                  </span>
+                  <span className="text-[8px] font-black text-rose-500 uppercase tracking-widest leading-none">
+                    {item.performers[0].experience}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="w-6 h-6 rounded-lg overflow-hidden border border-white shadow-sm shrink-0">
+                  {item.userRef?.avatar ? (
+                    <img src={item.userRef.avatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center text-[8px] font-bold text-gray-400">
+                      {item.userRef?.username?.charAt(0).toUpperCase() || 'P'}
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[10px] font-black text-gray-900 truncate tracking-tight">
+                    {item.userRef?.username || 'Verified Pro'}
+                  </span>
+                  <span className="text-[8px] font-black text-rose-500 uppercase tracking-widest leading-none">
+                    {item.experience || 'Expert'}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
         {item._distance && item._distance !== Infinity && !hideDistance ? (
           <p className="text-[14px] text-gray-500 mt-0.5">
             {item._distance < 1 ? "Near you" : `${Math.round(item._distance)} km away`}
