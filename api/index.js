@@ -54,6 +54,7 @@ app.use(cookieParser());
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:5174',
+    'https://loupeout-home-7rlt.onrender.com', // Explicitly add Render URL
     process.env.CLIENT_URL
 ].filter(Boolean);
 
@@ -61,12 +62,12 @@ app.use(cors({
     origin: function (origin, callback) {
         // allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) === -1) {
-            var msg = 'The CORS policy for this site does not ' +
-                'allow access from the specified Origin.';
-            return callback(new Error(msg), false);
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
         }
-        return callback(null, true);
+        // Instead of returning an error (which triggers 500), return false
+        // This will result in a 403 or blocked request, which is easier to debug
+        return callback(null, false);
     },
     credentials: true,
 }));
@@ -147,7 +148,14 @@ app.get('*', (req, res) => {
     if (req.url.startsWith('/assets/')) {
         return res.status(404).send('Asset not found');
     }
-    res.sendFile(path.join(distPath, 'index.html'));
+    
+    const indexFile = path.join(distPath, 'index.html');
+    res.sendFile(indexFile, (err) => {
+        if (err) {
+            console.error('Error sending index.html:', err);
+            res.status(500).send('<h1>Server Configuration Error</h1><p>The application was built but the server cannot find the entry point. Please check the build artifacts.</p>');
+        }
+    });
 });
 
 // Error handling middleware (MUST be last)
