@@ -17,7 +17,7 @@ const MapComponent = ({ latitude, longitude, address, title }) => {
 
   // Load Google Maps API
   // Using an environment variable or a default placeholder
-  const { isLoaded } = useJsApiLoader({
+  const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ""
   });
@@ -53,7 +53,7 @@ const MapComponent = ({ latitude, longitude, address, title }) => {
     ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || "")}`;
 
-  if (!isLoaded && (import.meta.env.VITE_GOOGLE_MAPS_API_KEY)) {
+  if (!isLoaded && !loadError && (import.meta.env.VITE_GOOGLE_MAPS_API_KEY)) {
     return (
       <div className="w-full h-full bg-gray-100 flex items-center justify-center animate-pulse rounded-xl">
         <div className="text-gray-400">Loading Map...</div>
@@ -61,8 +61,8 @@ const MapComponent = ({ latitude, longitude, address, title }) => {
     );
   }
 
-  // Fallback if no API key or not loaded
-  if (!import.meta.env.VITE_GOOGLE_MAPS_API_KEY || !isLoaded) {
+  // Fallback if no API key, load error (expired key), or not loaded
+  if (!import.meta.env.VITE_GOOGLE_MAPS_API_KEY || !isLoaded || loadError) {
     return (
       <div className="w-full h-full bg-gray-50 flex flex-col items-center justify-center border border-gray-200 rounded-xl p-6 text-center">
         <FaMapMarkerAlt className="text-4xl text-rose-500 mb-3 opacity-50" />
@@ -76,7 +76,12 @@ const MapComponent = ({ latitude, longitude, address, title }) => {
         >
           View on Google Maps <FaExternalLinkAlt className="text-xs" />
         </a>
-        {!import.meta.env.VITE_GOOGLE_MAPS_API_KEY && (
+        {loadError && (
+          <p className="text-[10px] text-rose-500 mt-4 italic font-bold">
+            Google Maps Error: {loadError.message || "Invalid or Expired API Key"}.
+          </p>
+        )}
+        {!import.meta.env.VITE_GOOGLE_MAPS_API_KEY && !loadError && (
           <p className="text-[10px] text-gray-400 mt-4 italic">Interactive map requires a Google Maps API key.</p>
         )}
       </div>
