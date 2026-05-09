@@ -137,10 +137,17 @@ app.use('/api/ai-help', aiHelpRouter);
 app.use('/api/verification', verificationRouter);
 app.use('/api/sos', sosRouter);
 
-app.use(express.static(path.join(__dirname, '/client/dist')));
+// Serve static files from the React app dist folder
+const distPath = path.join(__dirname, 'client', 'dist');
+app.use(express.static(distPath));
 
+// For any other request, send back index.html
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
+    // If it's a request for an asset that wasn't found, don't send index.html
+    if (req.url.startsWith('/assets/')) {
+        return res.status(404).send('Asset not found');
+    }
+    res.sendFile(path.join(distPath, 'index.html'));
 });
 
 // Error handling middleware (MUST be last)
