@@ -51,7 +51,7 @@ import {
   HandThumbUpIcon as HandThumbUpIconSolid,
   HandThumbDownIcon as HandThumbDownIconSolid
 } from '@heroicons/react/24/solid';
-import { Sparkles, BookOpen } from 'lucide-react';
+import { Sparkles, BookOpen, Check } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode } from 'swiper/modules';
 import 'swiper/css';
@@ -873,51 +873,11 @@ const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = false, re
           {item.name}
         </p>
 
-        {/* Provider Detail (for Helper/Service) */}
         {(type === 'helper' || type === 'service') && (
-          <div className="flex items-center gap-2 mt-1.5 px-2 py-1.5 bg-gray-50/50 rounded-xl border border-gray-100 hover:bg-white hover:shadow-sm transition-all duration-300">
-            {item.performers && item.performers.length > 0 ? (
-              <>
-                <div className="relative shrink-0">
-                  <div className="w-6 h-6 rounded-lg overflow-hidden border border-white shadow-sm">
-                    <img src={item.performers[0].image} alt="" className="w-full h-full object-cover" />
-                  </div>
-                  {item.performers.length > 1 && (
-                    <div className="absolute -top-1 -right-1 bg-gray-900 text-white text-[7px] font-black w-3 h-3 rounded-full flex items-center justify-center border border-white shadow-sm">
-                      +{item.performers.length - 1}
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[10px] font-black text-gray-900 truncate tracking-tight">
-                    {item.performers[0].name}
-                  </span>
-                  <span className="text-[8px] font-black text-rose-500 uppercase tracking-widest leading-none">
-                    {item.performers[0].experience}
-                  </span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="w-6 h-6 rounded-lg overflow-hidden border border-white shadow-sm shrink-0">
-                  {item.userRef?.avatar ? (
-                    <img src={item.userRef.avatar} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gray-200 flex items-center justify-center text-[8px] font-bold text-gray-400">
-                      {item.userRef?.username?.charAt(0).toUpperCase() || 'P'}
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[10px] font-black text-gray-900 truncate tracking-tight">
-                    {item.userRef?.username || 'Verified Pro'}
-                  </span>
-                  <span className="text-[8px] font-black text-rose-500 uppercase tracking-widest leading-none">
-                    {item.experience || 'Expert'}
-                  </span>
-                </div>
-              </>
-            )}
+          <div className="mt-1 flex items-center gap-1">
+            <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest opacity-60">
+              Provided by {item.userRef?.username || 'Pro'}
+            </span>
           </div>
         )}
 
@@ -1094,11 +1054,7 @@ const EliteHelperCard = ({ helper, onClick }) => {
           type="avatar"
         />
 
-        {/* Verified Badge */}
-        <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-sm border border-black/5 z-20 flex items-center gap-1.5">
-          <CheckCircleIcon className="w-3.5 h-3.5 text-rose-500" />
-          <span className="text-[10px] font-bold text-gray-900 uppercase tracking-wider">Verified</span>
-        </div>
+        {/* Verification removed */}
         <div className="absolute bottom-3 left-3 bg-white/40 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/30 z-20">
           <span className="text-[8px] font-black text-white uppercase tracking-widest">{helper.type || 'Helper'}</span>
         </div>
@@ -1106,9 +1062,11 @@ const EliteHelperCard = ({ helper, onClick }) => {
 
       <div className="flex flex-col pt-1">
         <div className="flex justify-between items-start gap-2">
-          <h3 className="font-bold text-[15px] text-gray-900 truncate">
-            {helper.address || "South Africa"}
-          </h3>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <h3 className="font-bold text-[15px] text-gray-900 truncate">
+              {helper.address || "South Africa"}
+            </h3>
+          </div>
           <div className="flex items-center gap-1 shrink-0">
             <StarIconSolid className="w-3.5 h-3.5 text-gray-950" />
             <span className="text-[14px] font-medium text-gray-950 flex items-center gap-1">

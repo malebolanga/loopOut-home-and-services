@@ -71,7 +71,8 @@ import {
   BookOpen,
   Calendar as CalendarIconLucide,
   Search as SearchIconLucide,
-  Navigation
+  Navigation,
+  Check
 } from 'lucide-react';
 import NeighborhoodInsights from '../components/NeighborhoodInsights';
 
@@ -623,45 +624,29 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
               <Star className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
               <span className="text-xs font-black">{getRating()}</span>
             </div>
-            <h3 className="text-base font-black text-white leading-tight truncate mb-0.5">
-              {getTitle()}
-            </h3>
+            <div className="flex items-center gap-2 mb-0.5">
+              <h3 className="text-base font-black text-white leading-tight truncate">
+                {getTitle()}
+              </h3>
+            </div>
             <p className="text-xs text-white/70 font-medium truncate mb-3">
               {getLocation()}
             </p>
 
-            {/* Provider Profile Badge */}
+            {/* Minimal Provider Name Only */}
             {(type === 'helper' || type === 'services') && (
-              <div className="flex items-center gap-2 mt-2 bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 w-fit group-hover:bg-white/20 transition-all duration-300">
-                <div className="w-7 h-7 rounded-xl overflow-hidden border border-white/30 shadow-inner shrink-0">
-                  {item.userRef?.avatar ? (
-                    <img 
-                      src={item.userRef.avatar} 
-                      alt={item.userRef.username} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-rose-500 flex items-center justify-center text-white text-[9px] font-black">
-                      {item.userRef?.username?.charAt(0).toUpperCase() || (type === 'helper' ? 'H' : 'S')}
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col min-w-0 pr-2">
-                  <span className="text-[8px] font-black text-white uppercase tracking-wider truncate">
-                    {item.userRef?.username || 'Verified Pro'}
-                  </span>
-                  <span className="text-[7px] font-bold text-rose-300 uppercase tracking-tight">
-                    {item.experience || 'Experienced'}
-                  </span>
-                </div>
+              <div className="mt-2">
+                <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">
+                  {item.userRef?.username}
+                </span>
               </div>
             )}
           </div>
-          <div className="text-right">
+          <div className="text-right flex flex-col items-end pointer-events-auto">
             <div className="text-xl font-black text-white tracking-tighter leading-none mb-1">
               {getPrice()}
             </div>
-            <div className="text-[8px] font-black text-white/50 uppercase tracking-[0.2em] leading-none text-nowrap">Perspective</div>
+            <div className="text-[7px] font-black text-white/50 uppercase tracking-[0.2em] leading-none text-nowrap">Perspective</div>
           </div>
         </div>
       </div>

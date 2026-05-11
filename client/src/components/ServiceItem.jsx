@@ -18,7 +18,8 @@ import {
   Wrench,
   Camera,
   Truck,
-  Users
+  Users,
+  Check
 } from 'lucide-react';
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
@@ -178,39 +179,24 @@ function ServiceItem({ service, className = "" }) {
               <Star className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
               <span className="text-xs font-black">{ratingData.count > 0 ? ratingData.average.toFixed(1) : 'New'}</span>
             </div>
-            <h3 className="text-base font-black text-white leading-tight truncate mb-0.5">
-              {service.name}
-            </h3>
+            <div className="flex items-center gap-2 mb-0.5">
+              <h3 className="text-base font-black text-white leading-tight truncate">
+                {service.name}
+              </h3>
+            </div>
             <p className="text-xs text-white/70 font-medium truncate mb-3">
                {getLocationLabel()}
             </p>
 
-            {/* Provider Profile Badge */}
-            <div className="flex items-center gap-2 mt-2 bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 w-fit group-hover:bg-white/20 transition-all duration-300">
-              <div className="w-8 h-8 rounded-xl overflow-hidden border border-white/30 shadow-inner shrink-0">
-                {service.userRef?.avatar ? (
-                  <img 
-                    src={service.userRef.avatar} 
-                    alt={service.userRef.username} 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-amber-500 flex items-center justify-center text-white text-[10px] font-black">
-                    {service.userRef?.username?.charAt(0).toUpperCase() || 'S'}
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col min-w-0 pr-2">
-                <span className="text-[9px] font-black text-white uppercase tracking-wider truncate">
-                  {service.userRef?.username || 'Service Pro'}
-                </span>
-                <span className="text-[8px] font-bold text-amber-300 uppercase tracking-tight">
-                  {service.experience || 'Professional'}
-                </span>
-              </div>
+            {/* Minimal Provider Name Only */}
+            <div className="mt-2">
+              <span className="text-[9px] font-black text-white uppercase tracking-widest opacity-60">
+                {service.userRef?.username}
+              </span>
             </div>
           </div>
-          <div className="text-right">
+
+          <div className="text-right flex flex-col items-end pointer-events-auto">
             <div className="text-xl font-black text-white tracking-tighter leading-none mb-1">
               R{service.regularPrice?.toLocaleString()}
             </div>
