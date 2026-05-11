@@ -1081,7 +1081,6 @@ const EliteHelperCard = ({ helper, onClick }) => {
 
         <div className="mt-1 flex items-baseline gap-1">
           <span className="text-[15px] font-bold text-gray-900">{formatPrice()}</span>
-          <span className="text-[14px] text-gray-900/80">/ session</span>
         </div>
       </div>
     </motion.div>

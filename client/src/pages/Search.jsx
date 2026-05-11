@@ -643,10 +643,9 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
             )}
           </div>
           <div className="text-right flex flex-col items-end pointer-events-auto">
-            <div className="text-xl font-black text-white tracking-tighter leading-none mb-1">
+            <div className="text-xl font-black text-white tracking-tighter leading-none">
               {getPrice()}
             </div>
-            <div className="text-[7px] font-black text-white/50 uppercase tracking-[0.2em] leading-none text-nowrap">Perspective</div>
           </div>
         </div>
       </div>

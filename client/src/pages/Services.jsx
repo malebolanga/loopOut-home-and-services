@@ -416,6 +416,52 @@ const ServicePage = () => {
     fetchService();
   }, [serviceId]);
 
+  const getOperatingStatus = () => {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const now = new Date();
+    const currentDay = days[now.getDay()];
+    
+    // Default schedule: 08:00 - 19:00, closed on Sunday
+    const defaultSchedule = { open: '08:00', close: '19:00', closed: currentDay === 'sunday' };
+    const schedule = service?.operatingHours?.[currentDay] || defaultSchedule;
+
+    if (!schedule || schedule.closed) return { isClosed: true, reason: 'Closed today' };
+
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    const [openH, openM] = schedule.open.split(':').map(Number);
+    const [closeH, closeM] = (schedule.close || '19:00').split(':').map(Number);
+    const openTime = openH * 60 + openM;
+    const closeTime = closeH * 60 + closeM;
+
+    if (currentTime < openTime) return { isClosed: true, reason: `Opens at ${schedule.open}` };
+    if (currentTime >= closeTime) return { isClosed: true, reason: `Closed at ${schedule.close || '19:00'}` };
+
+    return { isClosed: false };
+  };
+
+  const operatingStatus = getOperatingStatus();
+
+  const isSelectedTimeClosed = () => {
+    if (!bookingData.time || !bookingData.date) return false;
+    const date = new Date(bookingData.date);
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayName = days[date.getDay()];
+    
+    const defaultSchedule = { open: '08:00', close: '19:00', closed: dayName === 'sunday' };
+    const schedule = service?.operatingHours?.[dayName] || defaultSchedule;
+    
+    if (!schedule || schedule.closed) return true;
+
+    const [selH, selM] = bookingData.time.split(':').map(Number);
+    const selectedTime = selH * 60 + selM;
+    const [openH, openM] = schedule.open.split(':').map(Number);
+    const [closeH, closeM] = (schedule.close || '19:00').split(':').map(Number);
+    const openTime = openH * 60 + openM;
+    const closeTime = closeH * 60 + closeM;
+
+    return selectedTime < openTime || selectedTime >= closeTime;
+  };
+
   // Fetch ratings and top comments
   useEffect(() => {
     const fetchCommentData = async () => {
@@ -731,6 +777,11 @@ const ServicePage = () => {
       return;
     }
 
+    if (isSelectedTimeClosed()) {
+      alert("The selected time falls outside of this service's operating hours. Please check their schedule and select another time.");
+      return;
+    }
+
     const { url } = await buildWhatsAppMessage(true);
     if (url) window.open(url, '_blank');
   };
@@ -795,6 +846,11 @@ const ServicePage = () => {
 
     if (!bookingData.date || !bookingData.time) {
       alert("Please select date and time for your booking.");
+      return;
+    }
+
+    if (isSelectedTimeClosed()) {
+      alert("The selected time falls outside of this service's operating hours. Please check their schedule and select another time.");
       return;
     }
 
@@ -999,7 +1055,15 @@ const ServicePage = () => {
           <div className="lg:col-span-2 space-y-8">
             {/* Header Info */}
             <div className="border-b border-gray-200 pb-6">
-              <h1 className="text-3xl font-semibold text-gray-900 mb-2">{service.name}</h1>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+                <h1 className="text-3xl font-semibold text-gray-900">{service.name}</h1>
+                {operatingStatus.isClosed && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 border border-rose-200 rounded-xl animate-pulse">
+                    <ClockIcon className="w-4 h-4 text-rose-500" />
+                    <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest">The business is closed</span>
+                  </div>
+                )}
+              </div>
               <div className="flex flex-wrap items-center gap-4 text-gray-600">
                 <span className="flex items-center gap-1">
                   <StarIconSolid className="w-4 h-4 text-[#FFB400]" />
@@ -1084,7 +1148,14 @@ const ServicePage = () => {
                         {schedule.closed ? (
                           <span className="text-[10px] font-bold text-gray-500 mt-1">Closed</span>
                         ) : (
-                          <span className="text-[10px] font-black text-gray-900 mt-1">{schedule.open} - {schedule.close}</span>
+                          <div className="flex flex-col">
+                            <span className={`text-[10px] font-black mt-1 ${isToday && operatingStatus.isClosed ? 'text-rose-500' : 'text-gray-900'}`}>
+                              {schedule.open} - {schedule.close}
+                            </span>
+                            {isToday && operatingStatus.isClosed && (
+                              <span className="text-[8px] font-black text-rose-500 uppercase tracking-widest mt-0.5">Closed</span>
+                            )}
+                          </div>
                         )}
                       </div>
                     );
@@ -1743,8 +1814,14 @@ const ServicePage = () => {
                       value={bookingData.time}
                       onChange={handleBookingChange}
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className={`w-full px-4 py-2 border ${isSelectedTimeClosed() ? 'border-rose-500 bg-rose-50' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent`}
                     />
+                    {isSelectedTimeClosed() && (
+                      <p className="text-[10px] font-bold text-rose-500 mt-1 uppercase tracking-widest flex items-center gap-1">
+                        <ClockIcon className="w-3 h-3" />
+                        Outside business hours
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

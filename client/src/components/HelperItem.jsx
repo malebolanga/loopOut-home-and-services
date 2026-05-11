@@ -172,10 +172,9 @@ function HelperItem({ helper, className = "" }) {
           </div>
 
           <div className="text-right flex flex-col items-end pointer-events-auto">
-            <div className="text-xl font-black text-white tracking-tighter leading-none mb-1">
+            <div className="text-xl font-black text-white tracking-tighter leading-none">
               R{formatPriceValue(helper.regularPrice)}
             </div>
-            <div className="text-[8px] font-black text-white/50 uppercase tracking-[0.2em] leading-none text-nowrap">Perspective</div>
           </div>
         </div>
       </div>

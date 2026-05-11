@@ -774,6 +774,53 @@ export default function HelperPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // Business Hours Logic
+  const getOperatingStatus = () => {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const now = new Date();
+    const currentDay = days[now.getDay()];
+    
+    // Default schedule: 08:00 - 19:00, closed on Sunday
+    const defaultSchedule = { open: '08:00', close: '19:00', closed: currentDay === 'sunday' };
+    const schedule = helper?.operatingHours?.[currentDay] || defaultSchedule;
+
+    if (!schedule || schedule.closed) return { isClosed: true, reason: 'Closed today' };
+
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    const [openH, openM] = schedule.open.split(':').map(Number);
+    const [closeH, closeM] = (schedule.close || '19:00').split(':').map(Number);
+    const openTime = openH * 60 + openM;
+    const closeTime = closeH * 60 + closeM;
+
+    if (currentTime < openTime) return { isClosed: true, reason: `Opens at ${schedule.open}` };
+    if (currentTime >= closeTime) return { isClosed: true, reason: `Closed at ${schedule.close || '19:00'}` };
+
+    return { isClosed: false };
+  };
+
+  const operatingStatus = getOperatingStatus();
+
+  const isSelectedTimeClosed = () => {
+    if (!bookingData.time || !bookingData.date) return false;
+    const date = new Date(bookingData.date);
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayName = days[date.getDay()];
+    
+    const defaultSchedule = { open: '08:00', close: '19:00', closed: dayName === 'sunday' };
+    const schedule = helper?.operatingHours?.[dayName] || defaultSchedule;
+    
+    if (!schedule || schedule.closed) return true;
+
+    const [selH, selM] = bookingData.time.split(':').map(Number);
+    const selectedTime = selH * 60 + selM;
+    const [openH, openM] = schedule.open.split(':').map(Number);
+    const [closeH, closeM] = (schedule.close || '19:00').split(':').map(Number);
+    const openTime = openH * 60 + openM;
+    const closeTime = closeH * 60 + closeM;
+
+    return selectedTime < openTime || selectedTime >= closeTime;
+  };
+
   // Calculate total price
   useEffect(() => {
     if (helper) {
@@ -1570,6 +1617,12 @@ export default function HelperPage() {
       return;
     }
 
+    // Business hours validation
+    if (isSelectedTimeClosed()) {
+      alert("The selected time falls outside of this professional's operating hours. Please check their schedule and select another time.");
+      return;
+    }
+
     // Enhanced location validation for quick booking
     if (bookingData.locationOption === 'comeToYou' && !bookingData.address) {
       alert("Please provide your address for home service in the booking form.");
@@ -1705,6 +1758,12 @@ export default function HelperPage() {
 
     if (!helper?.contact) {
       alert(`${getProfessionalTitle(helper?.type)} contact information is missing. Please try another contact method.`);
+      return;
+    }
+
+    // Business hours validation
+    if (isSelectedTimeClosed()) {
+      alert("The selected time falls outside of this professional's operating hours. Please check their schedule and select another time.");
       return;
     }
 
@@ -2164,9 +2223,17 @@ export default function HelperPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-60">
         {/* Content Section */}
         <div className="mb-10 pt-8 border-b border-slate-200/60 pb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
-            {getProfessionalTitle(helper.type)} services by {helper.name}
-          </h1>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900">
+              {getProfessionalTitle(helper.type)} services by {helper.name}
+            </h1>
+            {operatingStatus.isClosed && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-rose-50 border border-rose-200 rounded-2xl animate-pulse">
+                <ClockIcon className="w-5 h-5 text-rose-500" />
+                <span className="text-sm font-black text-rose-600 uppercase tracking-widest">The business is closed</span>
+              </div>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
             <div className="flex items-center gap-2">
               <StarIconSolid className="text-amber-400 w-4 h-4" />
@@ -2297,8 +2364,12 @@ export default function HelperPage() {
                           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Closed</span>
                         ) : (
                           <div className="flex flex-col items-end">
-                            <span className="text-xs font-black text-gray-900 tracking-tight">{schedule.open} — {schedule.close}</span>
-                            <span className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest">Available</span>
+                            <span className={`text-sm font-bold ${isToday && operatingStatus.isClosed && new Date().getHours() * 60 >= (schedule.close.split(':')[0] * 60) ? 'text-rose-500' : 'text-gray-900'}`}>
+                              {schedule.open} - {schedule.close}
+                            </span>
+                            {isToday && operatingStatus.isClosed && (
+                              <span className="text-[8px] font-black text-rose-500 uppercase tracking-widest mt-0.5">Currently Closed</span>
+                            )}
                           </div>
                         )}
                       </div>
@@ -2880,8 +2951,14 @@ export default function HelperPage() {
                       value={bookingData.time}
                       onChange={handleBookingChange}
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className={`w-full px-4 py-2 border ${isSelectedTimeClosed() ? 'border-rose-500 bg-rose-50' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent`}
                     />
+                    {isSelectedTimeClosed() && (
+                      <p className="text-[10px] font-bold text-rose-500 mt-1 uppercase tracking-widest flex items-center gap-1">
+                        <ClockIcon className="w-3 h-3" />
+                        Outside business hours
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2933,8 +3010,14 @@ export default function HelperPage() {
                         name="time"
                         value={bookingData.time}
                         onChange={handleBookingChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        className={`w-full p-3 border ${isSelectedTimeClosed() ? 'border-rose-500 bg-rose-50' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent`}
                       />
+                      {isSelectedTimeClosed() && (
+                        <p className="text-[10px] font-bold text-rose-500 mt-1 uppercase tracking-widest flex items-center gap-1">
+                          <ClockIcon className="w-3 h-3" />
+                          Outside business hours
+                        </p>
+                      )}
                     </div>
                   </div>
 
