@@ -10,6 +10,7 @@ import { app } from '../firebase';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaCamera, FaVideo, FaTimes, FaParking, FaSwimmingPool,FaUsers,FaWifi, FaTv, FaUtensils, FaBed, FaBath, FaShower, FaDog, FaCookie, FaBackspace, FaShieldAlt, FaChair, FaBolt, FaBoxes,  FaRulerCombined, FaPercent, FaTag} from "react-icons/fa";
+import { ClockIcon } from '@heroicons/react/24/outline';
 
 export default function UpdateListing() {
   const { currentUser } = useSelector((state) => state.user);
@@ -50,6 +51,15 @@ export default function UpdateListing() {
     prepaid: false,
     fridge: false,
     share: false,
+    operatingHours: {
+      monday: { open: '08:00', close: '19:00', closed: false },
+      tuesday: { open: '08:00', close: '19:00', closed: false },
+      wednesday: { open: '08:00', close: '19:00', closed: false },
+      thursday: { open: '08:00', close: '19:00', closed: false },
+      friday: { open: '08:00', close: '19:00', closed: false },
+      saturday: { open: '08:00', close: '19:00', closed: false },
+      sunday: { open: '08:00', close: '19:00', closed: true }
+    },
   });
 
   // eslint-disable-next-line no-unused-vars
@@ -595,7 +605,90 @@ export default function UpdateListing() {
                      </label>
                    ))}
                  </div>
-               </div>
+                </div>
+
+                {/* Operating Schedule Section */}
+                <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-semibold">Operating Schedule</h2>
+                      <p className="text-sm text-gray-500">Define your weekly availability</p>
+                    </div>
+                    <div className="p-3 bg-rose-50 rounded-2xl">
+                      <ClockIcon className="w-6 h-6 text-rose-500" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                      <div key={day} className={`grid grid-cols-1 md:grid-cols-4 gap-6 p-6 rounded-2xl border-2 transition-all ${formData.operatingHours[day].closed ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-white border-gray-50 shadow-sm'}`}>
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-[10px] uppercase tracking-tighter ${formData.operatingHours[day].closed ? 'bg-gray-200 text-gray-400' : 'bg-rose-500 text-white'}`}>
+                            {day.slice(0, 3)}
+                          </div>
+                          <span className="font-bold text-gray-900 capitalize">{day}</span>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <label className="flex items-center gap-3 cursor-pointer group">
+                            <div className="relative">
+                              <input
+                                type="checkbox"
+                                className="sr-only"
+                                checked={formData.operatingHours[day].closed}
+                                onChange={(e) => setFormData(prev => ({
+                                  ...prev,
+                                  operatingHours: {
+                                    ...prev.operatingHours,
+                                    [day]: { ...prev.operatingHours[day], closed: e.target.checked }
+                                  }
+                                }))}
+                              />
+                              <div className={`w-12 h-6 rounded-full transition-colors ${formData.operatingHours[day].closed ? 'bg-rose-500' : 'bg-gray-200'}`} />
+                              <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${formData.operatingHours[day].closed ? 'translate-x-6' : ''}`} />
+                            </div>
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-rose-500 transition-colors">Closed</span>
+                          </label>
+                        </div>
+
+                        {!formData.operatingHours[day].closed && (
+                          <>
+                            <div className="flex flex-col gap-2">
+                              <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-2">Opens</label>
+                              <input
+                                type="time"
+                                value={formData.operatingHours[day].open}
+                                onChange={(e) => setFormData(prev => ({
+                                  ...prev,
+                                  operatingHours: {
+                                    ...prev.operatingHours,
+                                    [day]: { ...prev.operatingHours[day], open: e.target.value }
+                                  }
+                                }))}
+                                className="px-4 py-2 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-rose-500 focus:bg-white transition-all font-bold text-xs"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-2">Closes</label>
+                              <input
+                                type="time"
+                                value={formData.operatingHours[day].close}
+                                onChange={(e) => setFormData(prev => ({
+                                  ...prev,
+                                  operatingHours: {
+                                    ...prev.operatingHours,
+                                    [day]: { ...prev.operatingHours[day], close: e.target.value }
+                                  }
+                                }))}
+                                className="px-4 py-2 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-rose-500 focus:bg-white transition-all font-bold text-xs"
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
    
                {/* Property Details */}
    <div className="bg-white p-6 rounded-xl shadow-sm">

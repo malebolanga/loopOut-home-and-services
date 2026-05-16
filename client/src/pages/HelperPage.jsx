@@ -7,6 +7,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
 import { app } from "../firebase";
+import MutualFriends from '../components/MutualFriends';
+import OperatingSchedule from '../components/OperatingSchedule';
 import { useWishlist } from '../hooks/useWishlist';
 import { Link } from "react-router-dom";
 import {
@@ -82,7 +84,6 @@ import 'swiper/css/free-mode';
 // Swiper styles already imported above
 
 import ImageWithFallback from '../components/ImageWithFallback';
-import MutualFriends from '../components/MutualFriends';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
@@ -2326,58 +2327,11 @@ export default function HelperPage() {
 
             {/* Response Rate */}
             {/* Operating Hours / Weekly Schedule */}
-            <div className="pb-8 border-b border-gray-200">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-rose-50 rounded-2xl">
-                    <ClockIcon className="w-6 h-6 text-rose-500" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black text-gray-900 tracking-tight">Operating Schedule</h3>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Weekly availability window</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => {
-                  const schedule = helper.operatingHours?.[day] || { closed: true };
-                  const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() === day;
-                  
-                  return (
-                    <div 
-                      key={day} 
-                      className={`flex items-center justify-between p-4 rounded-2xl border ${isToday ? 'border-rose-200 bg-rose-50/30' : 'border-gray-50 bg-gray-50/20'}`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-black uppercase ${schedule.closed ? 'bg-gray-100 text-gray-400' : 'bg-rose-500 text-white shadow-sm'}`}>
-                          {day.slice(0, 3)}
-                        </div>
-                        <span className={`text-sm font-bold capitalize ${isToday ? 'text-gray-900' : 'text-gray-600'}`}>
-                          {day}
-                          {isToday && <span className="ml-2 text-[8px] font-black text-rose-500 uppercase tracking-widest">Today</span>}
-                        </span>
-                      </div>
-                      
-                      <div className="text-right">
-                        {schedule.closed ? (
-                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Closed</span>
-                        ) : (
-                          <div className="flex flex-col items-end">
-                            <span className={`text-sm font-bold ${isToday && operatingStatus.isClosed && new Date().getHours() * 60 >= (schedule.close.split(':')[0] * 60) ? 'text-rose-500' : 'text-gray-900'}`}>
-                              {schedule.open} - {schedule.close}
-                            </span>
-                            {isToday && operatingStatus.isClosed && (
-                              <span className="text-[8px] font-black text-rose-500 uppercase tracking-widest mt-0.5">Currently Closed</span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <OperatingSchedule 
+              operatingHours={helper.operatingHours} 
+              isClosedToday={operatingStatus.isClosed}
+              reason={operatingStatus.reason}
+            />
 
             {/* Response Rate */}
             <div className="pb-6 border-b border-gray-200">

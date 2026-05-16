@@ -13,6 +13,7 @@ import Calendar from "react-calendar";
 import CommentsSidePanel from '../components/CommentsSidePanel';
 import ImageWithFallback from '../components/ImageWithFallback';
 import MutualFriends from '../components/MutualFriends';
+import OperatingSchedule from '../components/OperatingSchedule';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import { useWishlist } from '../hooks/useWishlist';
 
@@ -1883,6 +1884,29 @@ export default function Listing() {
     }
   }, [listingId, navigate]);
 
+  const getOperatingStatus = () => {
+    if (!listing?.operatingHours) return { isClosed: false };
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const now = new Date();
+    const currentDay = days[now.getDay()];
+    const schedule = listing.operatingHours[currentDay];
+
+    if (!schedule || schedule.closed) return { isClosed: true, reason: 'Closed today' };
+
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    const [openH, openM] = (schedule.open || '08:00').split(':').map(Number);
+    const [closeH, closeM] = (schedule.close || '19:00').split(':').map(Number);
+    const openTime = openH * 60 + openM;
+    const closeTime = closeH * 60 + closeM;
+
+    if (currentTime < openTime) return { isClosed: true, reason: `Opens at ${schedule.open}` };
+    if (currentTime >= closeTime) return { isClosed: true, reason: `Closed at ${schedule.close}` };
+
+    return { isClosed: false };
+  };
+
+  const operatingStatus = getOperatingStatus();
+
   useEffect(() => {
     if (listing) {
       verifySocialMedia(listing.userRef);
@@ -2224,6 +2248,15 @@ export default function Listing() {
                   </button>
                 )}
               </div>
+            )}
+
+            {/* Operating Schedule */}
+            {listing.operatingHours && (
+              <OperatingSchedule 
+                operatingHours={listing.operatingHours} 
+                isClosedToday={operatingStatus.isClosed}
+                reason={operatingStatus.reason}
+              />
             )}
 
             {/* Calendar - Only for overnight and office */}

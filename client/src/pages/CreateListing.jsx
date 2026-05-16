@@ -290,6 +290,7 @@ const StepProgress = ({ currentStep }) => {
     { label: "Category", icon: MapIcon },
     { label: "Type", icon: TagIcon },
     { label: "Details", icon: InformationCircleIcon },
+    { label: "Schedule", icon: ClockIcon }, // NEW STEP
     { label: "Amenities", icon: Sparkles },
     { label: "Services", icon: TagIcon },
     { label: "Team", icon: UserGroupIcon },
@@ -472,6 +473,17 @@ export default function CreateListing() {
     time: "",
     foodAvailable: false,
     familyFriendly: false,
+
+    // Operating Schedule
+    operatingHours: {
+        monday: { open: '08:00', close: '19:00', closed: false },
+        tuesday: { open: '08:00', close: '19:00', closed: false },
+        wednesday: { open: '08:00', close: '19:00', closed: false },
+        thursday: { open: '08:00', close: '19:00', closed: false },
+        friday: { open: '08:00', close: '19:00', closed: false },
+        saturday: { open: '08:00', close: '19:00', closed: false },
+        sunday: { open: '08:00', close: '19:00', closed: true }
+    }
   });
 
   const [foundHost, setFoundHost] = useState(null);
@@ -774,7 +786,7 @@ export default function CreateListing() {
       }
     }
     
-    if (currentStep === 7) {
+    if (currentStep === 8) {
       if (listingForm.imageUrls.length < 1) {
         setError("You must upload at least one image");
         return;
@@ -787,7 +799,7 @@ export default function CreateListing() {
     }
     
     setError(null);
-    setCurrentStep(prev => Math.min(prev + 1, 8));
+    setCurrentStep(prev => Math.min(prev + 1, 9));
   };
 
   const getNearLabel = (category, type) => {
@@ -1137,11 +1149,11 @@ export default function CreateListing() {
       return setError("You must upload at least one image");
     }
     
-    if (selectedCategory === 'stays' && +listingForm.regularPrice < +listingForm.discountPrice) {
+    if (selectedCategory === 'property' && +listingForm.regularPrice < +listingForm.discountPrice) {
       return setError("Discount price must be lower than regular price");
     }
     
-    if (selectedCategory === 'stays') {
+    if (selectedCategory === 'property') {
       if (!listingForm.kind.trim()) {
         return setError("Property type is required");
       }
@@ -1198,7 +1210,7 @@ export default function CreateListing() {
     setError(null);
 
     try {
-      const endpoint = selectedCategory === 'stays' ? '/api/listing/create' :
+      const endpoint = selectedCategory === 'property' ? '/api/listing/create' :
                       selectedCategory === 'experiences' ? '/api/service/create' :
                       selectedCategory === 'online' ? '/api/helper/create' :
                       '/api/event/create';
@@ -1208,7 +1220,7 @@ export default function CreateListing() {
         userRef: currentUser._id,
         type: selectedType,
         category: selectedCategory,
-        listingType: selectedCategory === 'stays' ? 'property' : selectedCategory,
+        listingType: selectedCategory,
         kind: listingForm.kind || "apartment",
         cancel: listingForm.cancel || "Flexible - Free cancellation 48 hours before check-in",
         period: listingForm.period || "Immediate",
@@ -2014,8 +2026,86 @@ export default function CreateListing() {
               </div>
             )}
 
-            {/* Step 4: Amenities */}
+            {/* Step 4: Operating Schedule - Alpha Feature */}
             {currentStep === 4 && (
+              <SectionCard title="Operating Schedule">
+                <p className="text-gray-600 mb-10 leading-relaxed font-medium">Define when you are available for bookings. This helps customers know when they can reach you or visit your location.</p>
+                <div className="space-y-4">
+                  {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                    <motion.div 
+                      key={day}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className={`p-6 rounded-[2.5rem] border-4 transition-all duration-700 ${listingForm.operatingHours[day].closed ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-white border-gray-50 shadow-sm hover:shadow-md'}`}
+                    >
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                        <div className="flex items-center gap-5 min-w-[140px]">
+                          <div className={`w-4 h-4 rounded-full ${listingForm.operatingHours[day].closed ? 'bg-gray-300' : 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)] animate-pulse'}`} />
+                          <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight">{day}</h3>
+                        </div>
+                        
+                        {!listingForm.operatingHours[day].closed ? (
+                          <div className="flex items-center gap-4 flex-1 justify-center bg-gray-50/50 p-2 rounded-[1.5rem]">
+                            <div className="flex flex-col items-center">
+                              <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Open</span>
+                              <input 
+                                type="time" 
+                                value={listingForm.operatingHours[day].open}
+                                onChange={(e) => setListingForm({
+                                  ...listingForm,
+                                  operatingHours: {
+                                    ...listingForm.operatingHours,
+                                    [day]: { ...listingForm.operatingHours[day], open: e.target.value }
+                                  }
+                                })}
+                                className="px-5 py-3 bg-white rounded-xl border-2 border-transparent focus:border-rose-500 outline-none font-black text-sm transition-all shadow-inner"
+                              />
+                            </div>
+                            <div className="h-8 w-[2px] bg-gray-200 mt-4" />
+                            <div className="flex flex-col items-center">
+                              <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Close</span>
+                              <input 
+                                type="time" 
+                                value={listingForm.operatingHours[day].close}
+                                onChange={(e) => setListingForm({
+                                  ...listingForm,
+                                  operatingHours: {
+                                    ...listingForm.operatingHours,
+                                    [day]: { ...listingForm.operatingHours[day], close: e.target.value }
+                                  }
+                                })}
+                                className="px-5 py-3 bg-white rounded-xl border-2 border-transparent focus:border-rose-500 outline-none font-black text-sm transition-all shadow-inner"
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex-1 text-center py-6 bg-gray-100/50 rounded-[1.5rem] border-2 border-dashed border-gray-200">
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Unavailable for Business</span>
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => setListingForm({
+                            ...listingForm,
+                            operatingHours: {
+                              ...listingForm.operatingHours,
+                              [day]: { ...listingForm.operatingHours[day], closed: !listingForm.operatingHours[day].closed }
+                            }
+                          })}
+                          className={`min-w-[120px] px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${listingForm.operatingHours[day].closed ? 'bg-rose-500 text-white shadow-[0_10px_30px_rgba(244,63,94,0.3)] hover:scale-105 active:scale-95' : 'bg-gray-100 text-gray-400 hover:bg-gray-900 hover:text-white shadow-sm'}`}
+                        >
+                          {listingForm.operatingHours[day].closed ? 'Activate' : 'Deactivate'}
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </SectionCard>
+            )}
+
+            {/* Step 5: Amenities */}
+            {currentStep === 5 && (
               <div className="space-y-8">
                 <SectionCard title="What amenities do you offer?">
                   <p className="text-gray-600 mb-6">Select all that apply</p>
@@ -2084,8 +2174,8 @@ export default function CreateListing() {
               </div>
             )}
 
-            {/* Step 5: Services & Pricing */}
-            {currentStep === 5 && (
+            {/* Step 6: Services & Pricing */}
+            {currentStep === 6 && (
               <div className="space-y-8">
                 <SectionCard title="Services & Pricing">
                   <p className="text-gray-600 mb-6">List the specific services you offer and their prices.</p>
@@ -2155,8 +2245,8 @@ export default function CreateListing() {
               </div>
             )}
 
-            {/* Step 6: Team Members / Performers */}
-            {currentStep === 6 && (
+            {/* Step 7: Team Members / Performers */}
+            {currentStep === 7 && (
               <div className="space-y-8">
                 <SectionCard title="Our Team">
                   <p className="text-gray-600 mb-6">Introduce the people who will be performing the services.</p>
@@ -2266,8 +2356,8 @@ export default function CreateListing() {
               </div>
             )}
 
-            {/* Step 7: Images & Media */}
-            {currentStep === 7 && (
+            {/* Step 8: Images & Media */}
+            {currentStep === 8 && (
               <div className="space-y-8">
                 <SectionCard title="Add some photos of your place">
                   <p className="text-gray-600 mb-6">You'll need 1 photo to get started. You can add more later.</p>
@@ -2334,8 +2424,8 @@ export default function CreateListing() {
               </div>
             )}
 
-            {/* Step 8: Review & Submit */}
-            {currentStep === 8 && (
+            {/* Step 9: Review & Submit */}
+            {currentStep === 9 && (
               <div className="space-y-8">
                 <SectionCard title="Review your listing">
                   <div className="space-y-6">
@@ -2423,6 +2513,22 @@ export default function CreateListing() {
                         {getAmenitiesByCategory().filter(amenity => listingForm[amenity.id]).length === 0 && (
                           <p className="text-gray-500 text-sm">No amenities selected</p>
                         )}
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-xl p-6">
+                      <h3 className="font-semibold text-lg text-gray-900 mb-4">Operating Schedule</h3>
+                      <div className="grid grid-cols-1 gap-2 text-sm">
+                        {Object.entries(listingForm.operatingHours).map(([day, hours]) => (
+                          <div key={day} className="flex justify-between py-1 border-b border-gray-100 last:border-0">
+                            <span className="text-gray-600 capitalize font-bold">{day}</span>
+                            {hours.closed ? (
+                              <span className="text-rose-500 font-black text-[10px] uppercase tracking-widest bg-rose-50 px-2 py-0.5 rounded">Closed</span>
+                            ) : (
+                              <span className="font-black text-gray-900">{hours.open} - {hours.close}</span>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     </div>
 
@@ -2517,7 +2623,7 @@ export default function CreateListing() {
                 Go Back
               </button>
               
-              {currentStep < 8 ? (
+              {currentStep < 9 ? (
                 <button
                   type="button"
                   onClick={handleNextStep}

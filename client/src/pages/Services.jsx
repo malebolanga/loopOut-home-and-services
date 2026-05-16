@@ -63,6 +63,7 @@ import CommentsSidePanelService from '../components/CommentsSidePanelService';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import { useWishlist } from '../hooks/useWishlist';
 import ServiceItem from '../components/ServiceItem';
+import OperatingSchedule from '../components/OperatingSchedule';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, Thumbs, FreeMode } from 'swiper/modules';
@@ -1632,6 +1633,15 @@ const ServicePage = () => {
             </div>
           </div>
         )}
+
+        {/* Operating Schedule */}
+        <div className="mt-12 pt-8 border-t border-gray-200">
+          <OperatingSchedule 
+            operatingHours={service.operatingHours} 
+            isClosedToday={operatingStatus.isClosed}
+            reason={operatingStatus.reason}
+          />
+        </div>
 
         {/* Location Map */}
         <div className="mt-12 pt-8 border-t border-gray-200">

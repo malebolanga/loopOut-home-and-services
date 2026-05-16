@@ -69,6 +69,36 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    // Check Operating Hours
+    let item;
+    if (listingId) item = await Listing.findById(listingId);
+    else if (helperId) item = await Helper.findById(helperId);
+    else if (serviceId) item = await Service.findById(serviceId);
+    else if (eventId) item = await Event.findById(eventId);
+
+    if (item && item.operatingHours) {
+      const start = new Date(startDate);
+      const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      const dayName = days[start.getUTCDay()];
+      const schedule = item.operatingHours[dayName];
+
+      if (schedule) {
+        if (schedule.closed) {
+          return res.status(400).json({ error: `The provider is closed on ${dayName}.` });
+        }
+
+        const bookingTime = start.getUTCHours() * 60 + start.getUTCMinutes();
+        const [openH, openM] = (schedule.open || '08:00').split(':').map(Number);
+        const [closeH, closeM] = (schedule.close || '19:00').split(':').map(Number);
+        const openTime = openH * 60 + openM;
+        const closeTime = closeH * 60 + closeM;
+
+        if (bookingTime < openTime || bookingTime >= closeTime) {
+          return res.status(400).json({ error: `The selected time is outside of operating hours (${schedule.open} - ${schedule.close}).` });
+        }
+      }
+    }
+
     // Check for overlaps to prevent dual booking
     const overlapQuery = {
       status: { $in: ['pending', 'confirmed', 'approved', 'ongoing', 'assigned'] },
