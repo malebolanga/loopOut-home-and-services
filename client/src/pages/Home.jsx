@@ -53,9 +53,11 @@ import {
 } from '@heroicons/react/24/solid';
 import { Sparkles, BookOpen, Check } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { FreeMode } from 'swiper/modules';
+import { FreeMode, Autoplay, Pagination, EffectFade } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/free-mode';
+import 'swiper/css/pagination';
+import 'swiper/css/effect-fade';
 import {
   FaApple,
   FaGooglePlay
@@ -225,21 +227,21 @@ const TOP_CATEGORIES = [
   {
     id: 'beauty',
     name: 'Beauty',
-    image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/3319333/pexels-photo-3319333.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '3,210',
     color: 'from-pink-500 to-rose-400'
   },
   {
     id: 'maid',
     name: 'Maid',
-    image: 'https://images.unsplash.com/photo-1584820927498-cafe3c157921?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: '/loopout_maid_celebration_banner_1778961389258.png',
     count: '1,890',
     color: 'from-purple-500 to-indigo-500'
   },
   {
     id: 'cleaner',
     name: 'Cleaner',
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/4098911/pexels-photo-4098911.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '2,145',
     color: 'from-cyan-500 to-blue-500'
   },
@@ -254,7 +256,7 @@ const TOP_CATEGORIES = [
   {
     id: 'baker',
     name: 'Baker',
-    image: 'https://plus.unsplash.com/premium_photo-1759145128249-96ba5361d5d9?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/205961/pexels-photo-205961.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '856',
     color: 'from-amber-600 to-orange-500',
     emoji: '🥐'
@@ -270,7 +272,7 @@ const TOP_CATEGORIES = [
   {
     id: 'delivery',
     name: 'Delivery',
-    image: 'https://images.unsplash.com/photo-1617347454431-f49d7ff5c3b1?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/4391470/pexels-photo-4391470.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '3,567',
     color: 'from-green-600 to-emerald-500',
     emoji: '📦'
@@ -278,7 +280,7 @@ const TOP_CATEGORIES = [
   {
     id: 'usedbooks',
     name: 'Used Books',
-    image: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80',
+    image: 'https://images.pexels.com/photos/159711/books-bookstore-book-reading-159711.jpeg?auto=compress&cs=tinysrgb&w=400',
     count: '142',
     color: 'from-orange-600 to-amber-500',
     emoji: '📚'
@@ -294,7 +296,7 @@ const TOP_CATEGORIES = [
   {
     id: 'transport',
     name: 'Transport',
-    image: 'https://plus.unsplash.com/premium_photo-1661963219843-f1a50a6cfcd3?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/1051544/pexels-photo-1051544.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '1,567',
     color: 'from-red-600 to-rose-500',
     emoji: '🚕'
@@ -310,7 +312,7 @@ const TOP_CATEGORIES = [
   {
     id: 'tutor',
     name: 'Private Tutor',
-    image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/4050312/pexels-photo-4050312.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '678',
     color: 'from-violet-600 to-purple-500',
     emoji: '📖'
@@ -326,7 +328,7 @@ const TOP_CATEGORIES = [
   {
     id: 'guesthouse',
     name: 'Guest House',
-    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '1,234',
     color: 'from-cyan-600 to-blue-500',
     emoji: '🏡'
@@ -334,7 +336,7 @@ const TOP_CATEGORIES = [
   {
     id: 'hair',
     name: 'Hair & Style',
-    image: 'https://images.unsplash.com/photo-1634449571010-02389ed0f9b0?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/3993311/pexels-photo-3993311.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '3,890',
     color: 'from-fuchsia-600 to-pink-500',
     emoji: '💇'
@@ -342,7 +344,7 @@ const TOP_CATEGORIES = [
   {
     id: 'nails',
     name: 'Nails',
-    image: 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/3997391/pexels-photo-3997391.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '2,456',
     color: 'from-rose-400 to-pink-400',
     emoji: '💅'
@@ -350,7 +352,7 @@ const TOP_CATEGORIES = [
   {
     id: 'massage',
     name: 'Massage',
-    image: 'https://images.unsplash.com/photo-1600334129128-685c5582fd35?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/3757942/pexels-photo-3757942.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '1,678',
     color: 'from-emerald-600 to-teal-500',
     emoji: '💆'
@@ -358,7 +360,7 @@ const TOP_CATEGORIES = [
   {
     id: 'tattoo',
     name: 'Tattoo Artist',
-    image: 'https://images.unsplash.com/photo-1552627019-947c3789ffb5?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/2183131/pexels-photo-2183131.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '445',
     color: 'from-slate-800 to-gray-900',
     emoji: '💉'
@@ -366,7 +368,7 @@ const TOP_CATEGORIES = [
   {
     id: 'chef',
     name: 'Private Chef',
-    image: 'https://plus.unsplash.com/premium_photo-1682097301631-902c29a12a21?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/210661/pexels-photo-210661.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '334',
     color: 'from-orange-500 to-red-500',
     emoji: '👨‍🍳'
@@ -374,7 +376,7 @@ const TOP_CATEGORIES = [
   {
     id: 'landscaping',
     name: 'Landscaping',
-    image: 'https://images.unsplash.com/photo-1597201278257-3687be27d954?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/1012334/pexels-photo-1012334.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '889',
     color: 'from-green-700 to-emerald-600',
     emoji: '🌳'
@@ -415,7 +417,7 @@ const TOP_CATEGORIES = [
   {
     id: 'washingmat',
     name: 'Mat Washer',
-    image: 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/4597284/pexels-photo-4597284.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '234',
     color: 'from-cyan-600 to-blue-600',
     emoji: '🧺'
@@ -423,7 +425,7 @@ const TOP_CATEGORIES = [
   {
     id: 'animals',
     name: 'Animal Care',
-    image: 'https://images.unsplash.com/photo-1450778869180-41d0601e046e?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '789',
     color: 'from-amber-600 to-orange-500',
     emoji: '🐾'
@@ -431,7 +433,7 @@ const TOP_CATEGORIES = [
   {
     id: 'grocery',
     name: 'Grocery Runner',
-    image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/3962294/pexels-photo-3962294.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '1,200',
     color: 'from-green-500 to-emerald-500',
     emoji: '🍎'
@@ -439,7 +441,7 @@ const TOP_CATEGORIES = [
   {
     id: 'laundry',
     name: 'Laundry',
-    image: 'https://images.unsplash.com/photo-1545173153-5dd921a1fefc?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/5591581/pexels-photo-5591581.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '850',
     color: 'from-blue-400 to-cyan-400',
     emoji: '🧼'
@@ -447,7 +449,7 @@ const TOP_CATEGORIES = [
   {
     id: 'pharmacy',
     name: 'Pharmacy Drop',
-    image: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/5910953/pexels-photo-5910953.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '430',
     color: 'from-red-400 to-rose-400',
     emoji: '💊'
@@ -455,7 +457,7 @@ const TOP_CATEGORIES = [
   {
     id: 'events',
     name: 'Events',
-    image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '120+',
     color: 'from-indigo-600 to-purple-600',
     emoji: '🎟️'
@@ -463,7 +465,7 @@ const TOP_CATEGORIES = [
   {
     id: 'beachfront',
     name: 'Beachfront',
-    image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '89',
     color: 'from-blue-400 to-cyan-400',
     emoji: '🏖️'
@@ -471,7 +473,7 @@ const TOP_CATEGORIES = [
   {
     id: 'cabin',
     name: 'Log Cabin',
-    image: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '76',
     color: 'from-orange-800 to-brown-600',
     emoji: '🪵'
@@ -479,7 +481,7 @@ const TOP_CATEGORIES = [
   {
     id: 'roommate',
     name: 'Finding Roommate',
-    image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop',
+    image: 'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '340',
     color: 'from-emerald-500 to-teal-400',
     emoji: '👤'
@@ -487,7 +489,7 @@ const TOP_CATEGORIES = [
   {
     id: 'nanny-need',
     name: 'Looking for Nanny',
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=300&fit=crop',
+    image: 'https://images.pexels.com/photos/3768914/pexels-photo-3768914.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '120',
     color: 'from-pink-400 to-rose-400',
     emoji: '🍼'
@@ -495,7 +497,7 @@ const TOP_CATEGORIES = [
   {
     id: 'catering',
     name: 'Catering',
-    image: 'https://images.unsplash.com/photo-1555244162-803834f70033?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '345',
     color: 'from-orange-500 to-amber-500',
     emoji: '🍱'
@@ -503,7 +505,7 @@ const TOP_CATEGORIES = [
   {
     id: 'schoolTransport',
     name: 'School Transport',
-    image: 'https://images.unsplash.com/photo-1556316301-38e938166c30?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '234',
     color: 'from-yellow-500 to-orange-400',
     emoji: '🚌'
@@ -511,7 +513,7 @@ const TOP_CATEGORIES = [
   {
     id: 'daycare',
     name: 'Daycare Centers',
-    image: 'https://images.unsplash.com/photo-1543333995-a78aea2353cf?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/3768914/pexels-photo-3768914.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '156',
     color: 'from-pink-500 to-rose-400',
     emoji: '🧸'
@@ -519,7 +521,7 @@ const TOP_CATEGORIES = [
   {
     id: 'daily',
     name: 'Daily Loop',
-    image: 'https://plus.unsplash.com/premium_photo-1664371457497-28005391697a?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/3768131/pexels-photo-3768131.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: '890',
     color: 'from-emerald-500 to-green-400',
     emoji: '🔄'
@@ -527,39 +529,39 @@ const TOP_CATEGORIES = [
   {
     id: 'trending',
     name: 'Trending',
-    image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?fm=jpg&q=60&w=800&auto=format&fit=crop',
+    image: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800',
     color: 'from-red-600 to-orange-500',
     emoji: '🚀'
   }
 ];
 
 const MOCK_PROPERTIES = [
-  { _id: '663ad8e5f1e249b49f986025', itemType: 'property', name: 'Elite Modern Apartment', price: 2500, regularPrice: 2500, type: 'rent-long', imageUrls: ['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9, address: 'Johannesburg', comments: [1, 2, 3, 4], bookingsCount: 12, createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986026', itemType: 'property', name: 'Grand Presidential Hotel', price: 3500, regularPrice: 3500, type: 'sale', imageUrls: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8, address: 'Cape Town', comments: [1, 2], bookingsCount: 45, createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986027', itemType: 'property', name: 'Neural Guest House', price: 1200, regularPrice: 1200, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.7, address: 'Polokwane', comments: [1, 2, 3], bookingsCount: 8, createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986028', itemType: 'property', name: 'Roadside Oasis Motel', price: 800, regularPrice: 800, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1540518614846-7eded433c457?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.3, address: 'Bloemfontein', comments: [1], bookingsCount: 5, createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986029', itemType: 'property', name: 'University Studio Pro', price: 1200, regularPrice: 1200, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.6, address: 'Pretoria', comments: [1, 2, 3, 4, 5], bookingsCount: 15, createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986030', itemType: 'property', name: 'Quantum Office Suite', price: 500, regularPrice: 500, type: 'office', imageUrls: ['https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.6, address: 'Polokwane', comments: [1], bookingsCount: 22, createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986031', itemType: 'property', name: 'Suburban Family Mansion', price: 3500, regularPrice: 3500, type: 'rent-long', imageUrls: ['https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.7, address: 'Durban', comments: [1, 2], bookingsCount: 4, createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986032', itemType: 'property', name: 'Azure Beachfront Villa', price: 1800, regularPrice: 1800, type: 'rent-short', imageUrls: ['https://images.unsplash.com/photo-1518780664697-55e3ad937233?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9, address: 'Port Elizabeth', comments: [1, 2, 3, 4, 5, 6], bookingsCount: 31, createdAt: new Date().toISOString() }
+  { _id: '663ad8e5f1e249b49f986025', itemType: 'property', name: 'Elite Modern Apartment', price: 2500, regularPrice: 2500, type: 'rent-long', imageUrls: ['https://images.pexels.com/photos/439391/pexels-photo-439391.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.9, address: 'Johannesburg', comments: [1, 2, 3, 4], bookingsCount: 12, createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986026', itemType: 'property', name: 'Grand Presidential Hotel', price: 3500, regularPrice: 3500, type: 'sale', imageUrls: ['https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.8, address: 'Cape Town', comments: [1, 2], bookingsCount: 45, createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986027', itemType: 'property', name: 'Neural Guest House', price: 1200, regularPrice: 1200, type: 'rent-short', imageUrls: ['https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.7, address: 'Polokwane', comments: [1, 2, 3], bookingsCount: 8, createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986028', itemType: 'property', name: 'Roadside Oasis Motel', price: 800, regularPrice: 800, type: 'rent-short', imageUrls: ['https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.3, address: 'Bloemfontein', comments: [1], bookingsCount: 5, createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986029', itemType: 'property', name: 'University Studio Pro', price: 1200, regularPrice: 1200, type: 'rent-short', imageUrls: ['https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.6, address: 'Pretoria', comments: [1, 2, 3, 4, 5], bookingsCount: 15, createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986030', itemType: 'property', name: 'Quantum Office Suite', price: 500, regularPrice: 500, type: 'office', imageUrls: ['https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.6, address: 'Polokwane', comments: [1], bookingsCount: 22, createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986031', itemType: 'property', name: 'Suburban Family Mansion', price: 3500, regularPrice: 3500, type: 'rent-long', imageUrls: ['https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.7, address: 'Durban', comments: [1, 2], bookingsCount: 4, createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986032', itemType: 'property', name: 'Azure Beachfront Villa', price: 1800, regularPrice: 1800, type: 'rent-short', imageUrls: ['https://images.pexels.com/photos/439391/pexels-photo-439391.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.9, address: 'Port Elizabeth', comments: [1, 2, 3, 4, 5, 6], bookingsCount: 31, createdAt: new Date().toISOString() }
 ];
 
 const MOCK_SERVICES = [
-  { _id: '663ad8e5f1e249b49f986033', itemType: 'service', name: 'Professional Cleaning Service', price: 200, regularPrice: 200, description: 'Deep cleaning service for your home or office', imageUrls: ['https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.7, comments: [1, 2], createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986034', itemType: 'service', name: 'Moving & Relocation Assistance', price: 350, regularPrice: 350, description: 'Help with packing and moving to your new home', imageUrls: ['https://images.unsplash.com/photo-1541976590-713941681591?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8, comments: [1], createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986035', itemType: 'service', name: 'Landscaping & Garden Design', price: 450, regularPrice: 450, description: 'Garden maintenance and landscape design services', imageUrls: ['https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.6, comments: [1, 2, 3], createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986036', itemType: 'service', name: 'Home Repair & Maintenance', price: 300, regularPrice: 300, description: 'Professional home repair and maintenance services', imageUrls: ['https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.9, comments: [1, 2, 3, 4], createdAt: new Date().toISOString() }
+  { _id: '663ad8e5f1e249b49f986033', itemType: 'service', name: 'Professional Cleaning Service', price: 200, regularPrice: 200, description: 'Deep cleaning service for your home or office', imageUrls: ['https://images.pexels.com/photos/4099467/pexels-photo-4099467.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.7, comments: [1, 2], createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986034', itemType: 'service', name: 'Moving & Relocation Assistance', price: 350, regularPrice: 350, description: 'Help with packing and moving to your new home', imageUrls: ['https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.8, comments: [1], createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986035', itemType: 'service', name: 'Landscaping & Garden Design', price: 450, regularPrice: 450, description: 'Garden maintenance and landscape design services', imageUrls: ['https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.6, comments: [1, 2, 3], createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986036', itemType: 'service', name: 'Home Repair & Maintenance', price: 300, regularPrice: 300, description: 'Professional home repair and maintenance services', imageUrls: ['https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.9, comments: [1, 2, 3, 4], createdAt: new Date().toISOString() }
 ];
 
 const MOCK_HELPERS = [
-  { _id: '69a6a956f0c40835a3119612', itemType: 'helper', name: 'John\'s Sneaker Care', type: 'sneaker', rating: 4.8, regularPrice: 250, imageUrls: ['https://images.unsplash.com/photo-1491553895911-0055eca6402d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Johannesburg', host: 'John Smith', description: 'Professional sneaker cleaning and restoration services using premium products.', travelFee: 50, comments: [1, 2, 3], createdAt: new Date().toISOString() },
-  { _id: '69a6a956f0c40835a3119613', itemType: 'helper', name: 'Jane Smith', type: 'Elderly Caregiver', rating: 4.9, regularPrice: 150, imageUrls: ['https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Cape Town', host: 'Jane Smith', description: 'Experienced caregiver providing compassionate care for elderly individuals.', travelFee: 30, comments: [1, 2], createdAt: new Date().toISOString() },
-  { _id: '69a6a956f0c40835a3119614', itemType: 'helper', name: 'Mike Johnson', type: 'barber', rating: 4.7, regularPrice: 200, imageUrls: ['https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'], address: 'Durban', host: 'Mike Johnson', description: 'Professional barber with 10+ years of experience in modern and classic cuts.', travelFee: 40, comments: [1], createdAt: new Date().toISOString() }
+  { _id: '69a6a956f0c40835a3119612', itemType: 'helper', name: 'John\'s Sneaker Care', type: 'sneaker', rating: 4.8, regularPrice: 250, imageUrls: ['https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?auto=compress&cs=tinysrgb&w=800'], address: 'Johannesburg', host: 'John Smith', description: 'Professional sneaker cleaning and restoration services using premium products.', travelFee: 50, comments: [1, 2, 3], createdAt: new Date().toISOString() },
+  { _id: '69a6a956f0c40835a3119613', itemType: 'helper', name: 'Jane Smith', type: 'Elderly Caregiver', rating: 4.9, regularPrice: 150, imageUrls: ['https://images.pexels.com/photos/3768914/pexels-photo-3768914.jpeg?auto=compress&cs=tinysrgb&w=800'], address: 'Cape Town', host: 'Jane Smith', description: 'Experienced caregiver providing compassionate care for elderly individuals.', travelFee: 30, comments: [1, 2], createdAt: new Date().toISOString() },
+  { _id: '69a6a956f0c40835a3119614', itemType: 'helper', name: 'Mike Johnson', type: 'barber', rating: 4.7, regularPrice: 200, imageUrls: ['https://images.pexels.com/photos/3993311/pexels-photo-3993311.jpeg?auto=compress&cs=tinysrgb&w=800'], address: 'Durban', host: 'Mike Johnson', description: 'Professional barber with 10+ years of experience in modern and classic cuts.', travelFee: 40, comments: [1], createdAt: new Date().toISOString() }
 ];
 
 const MOCK_EVENTS = [
-  { _id: '663ad8e5f1e249b49f986040', itemType: 'event', name: 'Local Music Festival 2024', price: 50, regularPrice: 50, date: '2024-03-15', address: 'City Park, Johannesburg', attendingCount: 120, imageUrls: ['https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.8, comments: [1, 2, 3, 4, 5], createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986041', itemType: 'event', name: 'Art & Craft Workshop', price: 30, regularPrice: 30, date: '2024-03-20', address: 'Art Center, Cape Town', attendingCount: 45, imageUrls: ['https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'], rating: 4.6, comments: [1, 2], createdAt: new Date().toISOString() }
+  { _id: '663ad8e5f1e249b49f986040', itemType: 'event', name: 'Local Music Festival 2024', price: 50, regularPrice: 50, date: '2024-03-15', address: 'City Park, Johannesburg', attendingCount: 120, imageUrls: ['https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.8, comments: [1, 2, 3, 4, 5], createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986041', itemType: 'event', name: 'Art & Craft Workshop', price: 30, regularPrice: 30, date: '2024-03-20', address: 'Art Center, Cape Town', attendingCount: 45, imageUrls: ['https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.6, comments: [1, 2], createdAt: new Date().toISOString() }
 ];
 
 // --- AI Recommendation Engine (Preserved) ---
@@ -1151,123 +1153,183 @@ const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
   );
 };
 
-// --- PREMIUM LOOP OUT HERO ---
+// --- PREMIUM LOOP OUT HERO (Redesigned: Sliding Neural Network) ---
 const LoopOutHomeHero = ({ navigate }) => {
   return (
-    <div className="relative h-[750px] w-full overflow-hidden bg-gray-900">
-      {/* Background with Ambient Motion */}
-      <motion.div
-        initial={{ scale: 1.1, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 1.8, ease: "easeOut" }}
-        className="absolute inset-0"
+    <div className="relative h-[850px] w-full overflow-hidden bg-gray-950">
+      <Swiper
+        modules={[Autoplay, Pagination, EffectFade]}
+        effect="fade"
+        speed={1500}
+        autoplay={{ delay: 8000, disableOnInteraction: false }}
+        pagination={{ clickable: true, bulletActiveClass: 'swiper-pagination-bullet-active !bg-rose-500' }}
+        className="h-full w-full hero-swiper"
       >
-        <img
-          src="/soweto_bg.png"
-          alt="loopOut Elite Experience"
-          className="w-full h-full object-cover"
-        />
-        {/* Elite Overlay Gradients */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80" />
-        <div className="absolute inset-0 bg-gradient-to-r from-rose-900/40 via-transparent to-indigo-900/40" />
-      </motion.div>
-
-      {/* Hero Content */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
-        <motion.div
-          initial={{ y: 40, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.6, duration: 0.8 }}
-          className="max-w-4xl"
-        >
-          {/* Tagline */}
-          <motion.div
-            initial={{ opacity: 0, letterSpacing: "0.5em" }}
-            animate={{ opacity: 1, letterSpacing: "0.2em" }}
-            transition={{ delay: 0.8, duration: 1 }}
-            className="inline-block px-5 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white text-[10px] font-black tracking-[0.25em] uppercase mb-8 shadow-2xl"
-          >
-            VIBE OF THE NATION
-          </motion.div>
-
-          <h1 className="text-6xl lg:text-8xl font-black text-white mb-8 tracking-tighter leading-[0.85] drop-shadow-2xl">
-            EXPERIENCE <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-amber-400 to-rose-500 animate-gradient-x">
-              YOUR CITY.
-            </span>
-          </h1>
-
-          <p className="text-xl lg:text-2xl text-white/90 max-w-2xl mx-auto mb-12 font-medium leading-relaxed drop-shadow-lg">
-            Immerse in the culture. Discover authentic homes, verified local helpers, and premium community services securely.
-          </p>
-
-
-          <div className="flex flex-wrap items-center justify-center gap-6">
-            <motion.button
-              whileHover={{ scale: 1.05, y: -5 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/listing-home-page')}
-              className="relative px-10 py-5 bg-white text-gray-900 rounded-[2rem] font-black shadow-[0_20px_40px_rgba(0,0,0,0.3)] transition-all overflow-hidden"
+        {/* Slide 1: LoopOut for Everyone */}
+        <SwiperSlide>
+          <div className="relative h-full w-full">
+            <motion.div
+              initial={{ scale: 1.1 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 10 }}
+              className="absolute inset-0"
             >
-              <div className="relative z-10 flex items-center gap-3">
-                <HomeIcon className="w-6 h-6" />
-                EXPLORE HOMES
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity" />
-            </motion.button>
+              <img
+                src="/loopout_for_everyone.png"
+                alt="LoopOut for Everyone"
+                className="w-full h-full object-cover opacity-50 mix-blend-overlay"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-gray-950/60 via-transparent to-gray-950" />
+              <div className="absolute inset-0 bg-gradient-to-r from-rose-950/80 via-gray-950/40 to-transparent" />
+            </motion.div>
 
-            <motion.button
-              whileHover={{ scale: 1.05, y: -5 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/helper-home-page')}
-              className=" relative px-10 py-5 bg-rose-600 text-white rounded-[2rem] font-black shadow-[0_20px_40px_rgba(225,29,72,0.3)] transition-all overflow-hidden border border-rose-500/50"
-            >
-              <div className="relative z-10 flex items-center gap-3">
-                <UserGroupIcon className="w-6 h-6" />
-                FIND HELPERS
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-rose-700 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </motion.button>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Floating 3D Elements Placeholder (Abstract UI) */}
-      <motion.div
-        animate={{
-          y: [0, -20, 0],
-          rotate: [0, 5, 0]
-        }}
-        transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-        className="absolute top-1/4 left-10 w-20 h-20 rounded-3xl bg-white/5 backdrop-blur-3xl border border-white/10 hidden lg:block"
-      />
-      <motion.div
-        animate={{
-          y: [0, 20, 0],
-          rotate: [0, -10, 0]
-        }}
-        transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-        className="absolute bottom-1/4 right-10 w-32 h-32 rounded-full bg-rose-500/10 backdrop-blur-3xl border border-rose-500/20 hidden lg:block"
-      />
-
-      {/* Hero Stats/Features Bar */}
-      <div className="absolute bottom-0 inset-x-0 bg-black/20 backdrop-blur-2xl border-t border-white/10 py-8 z-20 hidden md:block">
-        <div className="max-w-7xl mx-auto px-12 flex justify-between items-center">
-          {[
-            { label: "VERIFIED HOMES", value: "1.2k+", icon: <HomeIcon className="w-5 h-5 text-rose-400" /> },
-            { label: "EXPERT HELPERS", value: "850+", icon: <UserGroupIcon className="w-5 h-5 text-blue-400" /> },
-            { label: "DAILY SERVICES", value: "24/7", icon: <Sparkles className="w-5 h-5 text-amber-400" /> },
-            { label: "LOCAL EVENTS", value: "100+", icon: <FireIcon className="w-5 h-5 text-orange-400" /> }
-          ].map((stat, i) => (
-            <div key={i} className="flex items-center gap-4">
-              <div className="p-3 bg-white/10 rounded-2xl group-hover:bg-white/20 transition-colors">{stat.icon}</div>
-              <div>
-                <div className="text-white text-xl font-black leading-tight tracking-tight">{stat.value}</div>
-                <div className="text-white/40 text-[9px] font-black tracking-[0.2em]">{stat.label}</div>
-              </div>
+            <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
+              <motion.div
+                initial={{ y: 40, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.8 }}
+                className="max-w-5xl"
+              >
+                <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-rose-500/10 backdrop-blur-xl border border-rose-500/20 text-rose-500 text-[10px] font-black tracking-[0.3em] uppercase mb-10 shadow-2xl">
+                  <Sparkles className="w-4 h-4" />
+                  Neural Discovery Network
+                </div>
+                <h1 className="text-7xl lg:text-9xl font-black text-white mb-8 tracking-tighter leading-[0.8] drop-shadow-2xl">
+                  LOOPOUT FOR <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-rose-400 to-amber-500">
+                    EVERYONE.
+                  </span>
+                </h1>
+                <p className="text-xl lg:text-2xl text-white/60 max-w-3xl mx-auto mb-12 font-medium leading-relaxed drop-shadow-lg">
+                  From <span className="text-white">Johannesburg</span> to <span className="text-white">Rustenburg</span>, we connect you to the masterpieces of your community.
+                </p>
+                <button
+                  onClick={() => navigate('/explore')}
+                  className="px-12 py-6 bg-rose-500 text-white rounded-[2.5rem] font-black shadow-[0_20px_50px_rgba(225,29,72,0.4)] transition-all flex items-center gap-3 text-xs tracking-widest uppercase mx-auto"
+                >
+                  <MagnifyingGlassIcon className="w-5 h-5" />
+                  Start Neural Search
+                </button>
+              </motion.div>
             </div>
-          ))}
-        </div>
+          </div>
+        </SwiperSlide>
+
+        {/* Slide 2: LoopOut Maid Celebration */}
+        <SwiperSlide>
+          <div className="relative h-full w-full">
+            <motion.div
+              initial={{ scale: 1.1 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 10 }}
+              className="absolute inset-0"
+            >
+              <img
+                src="/loopout_maid_celebration.png"
+                alt="LoopOut Maid Celebration"
+                className="w-full h-full object-cover opacity-50 mix-blend-overlay"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-gray-950/60 via-transparent to-gray-950" />
+              <div className="absolute inset-0 bg-gradient-to-l from-rose-950/80 via-gray-950/40 to-transparent" />
+            </motion.div>
+
+            <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
+              <motion.div
+                initial={{ y: 40, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.8 }}
+                className="max-w-5xl"
+              >
+                <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-rose-500/10 backdrop-blur-xl border border-rose-500/20 text-rose-500 text-[10px] font-black tracking-[0.3em] uppercase mb-10 shadow-2xl">
+                  <HeartIcon className="w-4 h-4" />
+                  Professional Domestic Care
+                </div>
+                <h1 className="text-7xl lg:text-9xl font-black text-white mb-8 tracking-tighter leading-[0.8] drop-shadow-2xl">
+                  THE PERFECT <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-rose-400 to-rose-500">
+                    WORK.
+                  </span>
+                </h1>
+                <p className="text-xl lg:text-2xl text-white/60 max-w-3xl mx-auto mb-12 font-medium leading-relaxed drop-shadow-lg">
+                  Celebrating the bond between <span className="text-white">families</span> and their <span className="text-white">helpers</span>. Trusted, verified, and professional.
+                </p>
+                <button
+                  onClick={() => navigate('/search?category=maid&type=helper')}
+                  className="px-12 py-6 bg-white text-gray-950 rounded-[2.5rem] font-black shadow-2xl transition-all flex items-center gap-3 text-xs tracking-widest uppercase mx-auto"
+                >
+                  <UserGroupIcon className="w-5 h-5" />
+                  Find Your Maid
+                </button>
+              </motion.div>
+            </div>
+          </div>
+        </SwiperSlide>
+
+        {/* Slide 3: LoopOut Removal & Delivery */}
+        <SwiperSlide>
+          <div className="relative h-full w-full">
+            <motion.div
+              initial={{ scale: 1.1 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 10 }}
+              className="absolute inset-0"
+            >
+              <img
+                src="/loopout_removal_delivery.png"
+                alt="LoopOut Removal & Delivery"
+                className="w-full h-full object-cover opacity-50 mix-blend-overlay"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-gray-950/60 via-transparent to-gray-950" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-rose-950/80 via-gray-950/40 to-transparent" />
+            </motion.div>
+
+            <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
+              <motion.div
+                initial={{ y: 40, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.8 }}
+                className="max-w-5xl"
+              >
+                <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-rose-500/10 backdrop-blur-xl border border-rose-500/20 text-rose-500 text-[10px] font-black tracking-[0.3em] uppercase mb-10 shadow-2xl">
+                  <TruckIcon className="w-4 h-4" />
+                  Elite Community Logistics
+                </div>
+                <h1 className="text-7xl lg:text-9xl font-black text-white mb-8 tracking-tighter leading-[0.8] drop-shadow-2xl">
+                  REMOVAL & <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-rose-400 to-amber-500">
+                    DELIVERY.
+                  </span>
+                </h1>
+                <p className="text-xl lg:text-2xl text-white/60 max-w-3xl mx-auto mb-12 font-medium leading-relaxed drop-shadow-lg">
+                  Professional moving, removal, and on-demand delivery services tailored for your community. Secure, reliable, and branded excellence.
+                </p>
+                <button
+                  onClick={() => navigate('/search?category=delivery&type=services')}
+                  className="px-12 py-6 bg-rose-500 text-white rounded-[2.5rem] font-black shadow-[0_20px_50px_rgba(225,29,72,0.4)] transition-all flex items-center gap-3 text-xs tracking-widest uppercase mx-auto"
+                >
+                  <TruckIcon className="w-5 h-5" />
+                  Book Removal
+                </button>
+              </motion.div>
+            </div>
+          </div>
+        </SwiperSlide>
+      </Swiper>
+
+      {/* Animated City Indicators (Persistent Overlay) */}
+      <div className="absolute bottom-12 left-12 z-20 hidden lg:flex flex-col gap-4">
+        {["Pretoria", "PMB", "JHB", "Rustenburg"].map((city, i) => (
+          <motion.div
+            key={city}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 0.4, x: 0 }}
+            transition={{ delay: 1 + (i * 0.2) }}
+            className="flex items-center gap-3 text-[10px] font-black text-white uppercase tracking-widest"
+          >
+            <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+            {city} Hub Active
+          </motion.div>
+        ))}
       </div>
     </div>
   );
@@ -1633,6 +1695,7 @@ const ServicesToYourDoor = ({ navigate }) => {
             key={service.id}
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
             transition={{ delay: idx * 0.1 }}
             whileHover={{ y: -10 }}
             onClick={() => navigate(`/search?category=${service.id}&type=helpers`)}
@@ -1663,7 +1726,7 @@ const WeeklySpecialsSection = ({ navigate }) => {
       discount: 'PREMIUM',
       desc: 'Trust only the best local experts in your area',
       color: 'bg-indigo-600',
-      image: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=80&w=1470'
+      image: '/special_verified.png'
     },
     {
       id: 'promo-favor',
@@ -1671,7 +1734,7 @@ const WeeklySpecialsSection = ({ navigate }) => {
       discount: 'R50 + R50',
       desc: 'Refer a neighbor and both get credits',
       color: 'bg-emerald-600',
-      image: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&q=80&w=1470'
+      image: '/special_flavor.png'
     },
     {
       id: 'promo-1',
@@ -1679,7 +1742,7 @@ const WeeklySpecialsSection = ({ navigate }) => {
       discount: 'R20 OFF',
       desc: 'On your first home experience booking',
       color: 'bg-rose-600',
-      image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=1470'
+      image: '/special_first.png'
     },
   ];
 
@@ -1733,14 +1796,14 @@ const MobileAppHomepage = ({
 
   const bannerImages = [
     "/soweto_bg.png",
-    "https://images.unsplash.com/photo-1549488344-1f9b8d2bd1f3?auto=format&fit=crop&q=80&w=1470",
-    "https://plus.unsplash.com/premium_photo-1742493691326-1237999b6827?q=80&w=1151&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    "https://images.unsplash.com/photo-1576485290814-1c72aa4bbb8e?auto=format&fit=crop&q=80&w=1470",
-    "https://images.unsplash.com/photo-1603553224936-a0466e549586?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    "https://images.unsplash.com/photo-1656776832776-cc37b01dd59f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    "https://images.unsplash.com/photo-1520116468816-95b69f847357?auto=format&fit=crop&q=80&w=1470",
-    "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&q=80&w=1470",
-    "https://images.unsplash.com/photo-1523800503107-5bc3ba2a6f81?auto=format&fit=crop&q=80&w=1470"
+    "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800"
   ];
 
   useEffect(() => {
@@ -2174,49 +2237,6 @@ const MobileAppHomepage = ({
               </div>
             </div>
           </section>
-
-          {/* Desktop Promo Banner: Become a Provider */}
-          <section className="mb-20 mt-16 ">
-            <div className="relative h-[480px] rounded-[3rem] overflow-hidden shadow-2xl">
-              <img
-                src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1469"
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[10s]"
-                alt="Business Growth"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/60 to-transparent" />
-
-              <div className="absolute inset-0 p-16 flex flex-col justify-center max-w-2xl">
-                <div className="flex items-center gap-2 mb-6">
-                  <div className="w-10 h-[1px] bg-rose-500" />
-                  <span className="text-rose-500 text-xs font-black tracking-[0.3em] uppercase">Enterprise Protocol</span>
-                </div>
-
-                <h2 className="text-5xl font-black text-white leading-tight tracking-tighter mb-8">
-                  TURN YOUR ASSETS <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-amber-400 italic">
-                    INTO A POWERHOUSE.
-                  </span>
-                </h2>
-
-                <p className="text-xl text-gray-300 font-medium mb-12 leading-relaxed">
-                  Scale your property, service, or expertise with the world's most sophisticated AI-driven business ecosystem.
-                </p>
-
-                <div className="flex items-center gap-6">
-                  <button
-                    onClick={() => navigate('/for-business')}
-                    className="px-10 py-5 bg-white text-gray-950 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all shadow-2xl flex items-center gap-3 group/btn"
-                  >
-                    Join loopOut Business
-                    <ArrowRightIcon className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
-                  </button>
-                  <button className="px-10 py-5 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-white/20 transition-all">
-                    Learn More
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
         </main>
 
         {/* Floating Smart Concierge */}
@@ -2282,52 +2302,98 @@ const MobileAppHomepage = ({
       `}</style>
 
       <main className="px-4 pt-2 pb-4">
-        {/* Mobile Elite Banner - Full Width Dynamic Location & Image */}
-        <motion.div
-          initial={{ opacity: 0, y: 0 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative h-[480px] -mx-4 overflow-hidden mb-12 shadow-2xl"
-          onClick={() => navigate('/ai-help-center')}
-        >
-          <AnimatePresence mode="wait">
-            <motion.img
-              key={bannerLocationIndex}
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 1.5, ease: "easeInOut" }}
-              src={bannerImages[bannerLocationIndex]}
-              className="absolute inset-0 w-full h-full object-cover"
-              alt={`Experience ${bannerLocations[bannerLocationIndex]}`}
-            />
-          </AnimatePresence>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
-          <div className="absolute inset-0 p-8 flex flex-col justify-end">
-            <motion.div 
-              key={`text-${bannerLocationIndex}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-5 h-5 text-rose-400" />
-                <span className="text-white/80 text-[10px] font-black tracking-[0.25em] uppercase">VIBE OF THE NATION</span>
-              </div>
-              <h2 className="text-4xl font-black text-white leading-[0.85] mb-4 tracking-tighter">
-                EXPERIENCE <br />
-                <span className="text-rose-500">{bannerLocations[bannerLocationIndex]}.</span>
-              </h2>
-              <p className="text-white/90 text-[14px] font-medium mb-8 leading-relaxed max-w-[280px]">
-                Book authentic homes and on-demand services that come directly to your door in {bannerLocations[bannerLocationIndex].toLowerCase()}.
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="px-8 py-4 bg-white text-gray-900 rounded-2xl text-[12px] font-black shadow-xl uppercase tracking-widest">
-                  EXPLORE {bannerLocations[bannerLocationIndex]}
+        {/* Mobile Elite Slider Banner */}
+        <div className="relative h-[550px] -mx-4 overflow-hidden mb-12 shadow-2xl">
+          <Swiper
+            modules={[Autoplay, Pagination]}
+            autoplay={{ delay: 6000 }}
+            pagination={{ clickable: true, bulletActiveClass: 'swiper-pagination-bullet-active !bg-rose-500' }}
+            className="h-full w-full mobile-hero-swiper"
+          >
+            {/* Mobile Slide 1: LoopOut for Everyone */}
+            <SwiperSlide>
+              <div className="relative h-full w-full" onClick={() => navigate('/explore')}>
+                <img
+                  src="/loopout_for_everyone.png"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  alt="LoopOut for Everyone"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
+                <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Sparkles className="w-5 h-5 text-rose-500" />
+                    <span className="text-white text-[10px] font-black tracking-[0.3em] uppercase">Universal Discovery</span>
+                  </div>
+                  <h2 className="text-4xl font-black text-white leading-[0.85] mb-6 tracking-tighter">
+                    LOOPOUT FOR <br />
+                    <span className="text-rose-500">EVERYONE.</span>
+                  </h2>
+                  <p className="text-white/70 text-[14px] font-medium mb-8 leading-relaxed max-w-[280px]">
+                    Active in <span className="text-white">JHB</span>, <span className="text-white">Pretoria</span>, <span className="text-white">PMB</span>, and <span className="text-white">Rustenburg</span>.
+                  </p>
+                  <button className="w-full py-5 bg-rose-500 text-white rounded-2xl text-[12px] font-black shadow-xl uppercase tracking-widest active:scale-95 transition-all">
+                    Start Your Journey
+                  </button>
                 </div>
               </div>
-            </motion.div>
-          </div>
-        </motion.div>
+            </SwiperSlide>
+
+            {/* Mobile Slide 2: LoopOut Maid Celebration */}
+            <SwiperSlide>
+              <div className="relative h-full w-full" onClick={() => navigate('/search?category=maid&type=helper')}>
+                <img
+                  src="/loopout_maid_celebration.png"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  alt="LoopOut Maid"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
+                <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                  <div className="flex items-center gap-2 mb-4">
+                    <HeartIcon className="w-5 h-5 text-rose-500" />
+                    <span className="text-white text-[10px] font-black tracking-[0.3em] uppercase">Professional Care</span>
+                  </div>
+                  <h2 className="text-4xl font-black text-white leading-[0.85] mb-6 tracking-tighter">
+                    THE PERFECT <br />
+                    <span className="text-rose-500">WORK.</span>
+                  </h2>
+                  <p className="text-white/70 text-[14px] font-medium mb-8 leading-relaxed max-w-[280px]">
+                    Celebrating the bond between <span className="text-white">families</span> and their <span className="text-white">trusted helpers</span>.
+                  </p>
+                  <button className="w-full py-5 bg-white text-gray-950 rounded-2xl text-[12px] font-black shadow-xl uppercase tracking-widest active:scale-95 transition-all">
+                    Find Your Maid
+                  </button>
+                </div>
+              </div>
+            </SwiperSlide>
+            {/* Mobile Slide 3: LoopOut Removal & Delivery */}
+            <SwiperSlide>
+              <div className="relative h-full w-full" onClick={() => navigate('/search?category=delivery&type=services')}>
+                <img
+                  src="/loopout_removal_delivery.png"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  alt="LoopOut Delivery"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
+                <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                  <div className="flex items-center gap-2 mb-4">
+                    <TruckIcon className="w-5 h-5 text-rose-500" />
+                    <span className="text-white text-[10px] font-black tracking-[0.3em] uppercase">Elite Logistics</span>
+                  </div>
+                  <h2 className="text-4xl font-black text-white leading-[0.85] mb-6 tracking-tighter">
+                    REMOVAL & <br />
+                    <span className="text-rose-500">DELIVERY.</span>
+                  </h2>
+                  <p className="text-white/70 text-[14px] font-medium mb-8 leading-relaxed max-w-[280px]">
+                    Professional removal and delivery services for your home and business.
+                  </p>
+                  <button className="w-full py-5 bg-rose-500 text-white rounded-2xl text-[12px] font-black shadow-xl uppercase tracking-widest active:scale-95 transition-all">
+                    Book Delivery
+                  </button>
+                </div>
+              </div>
+            </SwiperSlide>
+          </Swiper>
+        </div>
 
         {/* Mobile Top Categories - Horizontal Scroll (Now under the banner) */}
         <section className="mb-8 -mx-4 px-4">

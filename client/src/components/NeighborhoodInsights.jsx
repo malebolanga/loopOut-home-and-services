@@ -114,8 +114,8 @@ const NeighborhoodInsights = ({ location }) => {
            amenities: ["Public Libraries", "Heritage Sites", "Recreation Parks"]
          },
          spotlight: [
-           { type: 'Service', name: 'Elite Car Detailing', rating: 4.9, img: 'https://images.unsplash.com/photo-1565689221354-d87f85d4aee2?w=400', price: 'R150', desc: 'Professional car care in the heart of the community.' },
-           { type: 'Property', name: 'Modern Studio Suite', rating: 4.8, img: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400', price: 'R4,200', desc: 'Secure, modern living with high-speed fiber.' },
+           { type: 'Service', name: 'Elite Car Detailing', rating: 4.9, img: 'https://images.pexels.com/photos/3354675/pexels-photo-3354675.jpeg?auto=compress&cs=tinysrgb&w=800', price: 'R150', desc: 'Professional car care in the heart of the community.' },
+           { type: 'Property', name: 'Modern Studio Suite', rating: 4.8, img: 'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=800', price: 'R4,200', desc: 'Secure, modern living with high-speed fiber.' },
          ],
          culture: {
            history: selected.history,

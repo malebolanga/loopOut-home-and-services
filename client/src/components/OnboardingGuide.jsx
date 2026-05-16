@@ -32,35 +32,35 @@ const OnboardingGuide = () => {
       title: "Welcome to loopOut",
       description: "Your immersive gateway to homes, services, and local experiences. Let's show you how to navigate the future of community commerce.",
       icon: <SparklesIcon className="w-12 h-12 text-rose-500" />,
-      image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800",
+      image: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800",
       accent: "bg-rose-500"
     },
     {
       title: "Seamless Navigation",
       description: "Explore categories through our dynamic header. Switch between Homes, Services, and Events with a single tap. Use the 'Explore' tab to find hidden gems near you.",
       icon: <MapIcon className="w-12 h-12 text-indigo-500" />,
-      image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=800",
+      image: "https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800",
       accent: "bg-indigo-500"
     },
     {
       title: "Empower Your Skills",
       description: "Ready to share? Click 'Become a Host' or use the 'Create' button in your profile to list your space, service, or upcoming event. Our Neural guide will walk you through the setup.",
       icon: <PlusCircleIcon className="w-12 h-12 text-emerald-500" />,
-      image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=800",
+      image: "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800",
       accent: "bg-emerald-500"
     },
     {
       title: "Master the Booking",
       description: "Found something perfect? Select your dates, review the details, and book instantly. You can track all your upcoming trips and bookings in your personal dashboard.",
       icon: <CalendarDaysIcon className="w-12 h-12 text-amber-500" />,
-      image: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&q=80&w=800",
+      image: "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=800",
       accent: "bg-amber-500"
     },
     {
       title: "Your Neural Identity",
       description: "Your profile is your hub. Manage listings, view mutual connections, and keep your preferences synced across the platform.",
       icon: <UserCircleIcon className="w-12 h-12 text-violet-500" />,
-      image: "https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&q=80&w=800",
+      image: "https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=800",
       accent: "bg-violet-500"
     }
   ];

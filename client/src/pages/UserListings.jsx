@@ -57,6 +57,12 @@ export default function UserListings() {
   const [loading, setLoading] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(null);
 
+  useEffect(() => {
+    if (!currentUser) {
+      navigate('/sign-in');
+    }
+  }, [currentUser, navigate]);
+
   const fetchListings = async () => {
     setLoading(true);
     try {
@@ -159,7 +165,7 @@ export default function UserListings() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div>
               <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
-                Welcome back, {currentUser.username?.split(' ')[0]}
+                Welcome back, {currentUser?.username?.split(' ')[0] || 'User'}
               </h1>
               <p className="mt-2 text-lg text-gray-500 flex items-center gap-2">
                 <FaCheckCircle className="text-rose-500" />

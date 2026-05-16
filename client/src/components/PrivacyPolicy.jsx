@@ -46,7 +46,7 @@ const PrivacyPolicy = () => {
       {/* Cinematic Header */}
       <section className="relative h-[60vh] flex items-center justify-center overflow-hidden bg-gray-950">
          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=1470')] bg-cover bg-center opacity-30" />
+            <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&w=800')] bg-cover bg-center opacity-30" />
             <div className="absolute inset-0 bg-gradient-to-b from-gray-950/40 via-gray-950 to-white" />
          </div>
 

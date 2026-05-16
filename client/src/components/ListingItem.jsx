@@ -26,6 +26,8 @@ import "swiper/css/pagination";
 import "../styles/ListingDetails.scss";
 import ImageWithFallback from "./ImageWithFallback";
 import { useWishlist } from "../hooks/useWishlist";
+import { useSearchIntelligence } from "../hooks/useSearchIntelligence";
+import LoopOutBanner from "./LoopOutBanner";
 
 const NEW_LISTING_THRESHOLD_DAYS = 14;
 const CLICKS_PER_STAR = 20;
@@ -91,6 +93,7 @@ function ListingTypePill({ type }) {
 
 function ListingItem({ listing, onClick, className = "", compactMode = false }) {
   const { isFavorite, toggleFavorite } = useWishlist(listing, 'listing');
+  const { recordView } = useSearchIntelligence();
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isNewListing, setIsNewListing] = useState(false);
@@ -123,9 +126,8 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
   }, [listing]);
 
   const handleCardClick = () => {
-    if (!listing?._id) return;
-
     try {
+      recordView(listing);
       const storedClicks = JSON.parse(localStorage.getItem('listingClicks')) || {};
       const newCount = (storedClicks[listing._id] || 0) + 1;
       storedClicks[listing._id] = newCount;
@@ -272,7 +274,7 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ y: -5 }}
-      className={`${className} group relative aspect-square bg-white md:rounded-[3rem] rounded-none -mx-4 md:mx-0 border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer`}
+      className={`${className} group relative aspect-square bg-white sm:rounded-[2.5rem] md:rounded-[3rem] rounded-xl sm:mx-0 -mx-4 border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer`}
       onClick={handleCardClick}
     >
       <div className="absolute inset-0 z-0">
@@ -322,6 +324,9 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{getPropertyTypeName(listing.type)}</span>
         </div>
       </div>
+
+      {/* LoopOut Brand Banner Overlay */}
+      <LoopOutBanner className="group-hover:translate-y-2 transition-transform duration-500" />
 
       {/* Permanent Information Overlay (On Image) */}
       <div className="absolute inset-x-0 bottom-0 z-10 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none">

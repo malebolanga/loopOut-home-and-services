@@ -7,6 +7,8 @@ import ListingItem from '../components/ListingItem';
 import ServiceItem from '../components/ServiceItem';
 import HelperItem from '../components/HelperItem';
 import EventItem from '../components/EventItem';
+import { useSearchIntelligence } from '../hooks/useSearchIntelligence';
+import { motion } from 'framer-motion';
 
 // Icons
 import {
@@ -22,126 +24,34 @@ import {
   FiCalendar,
   FiRefreshCw,
   FiNavigation,
-  FiAlertCircle
+  FiAlertCircle,
+  FiCpu,
+  FiClock,
+  FiSearch
 } from "react-icons/fi";
 import { TbBuilding, TbTools, TbUsers, TbCalendarEvent } from "react-icons/tb";
 
-// Mock data generators
-const generateMockItems = (count, type) => {
-  const types = ['properties', 'services', 'helpers', 'events'];
-  const itemType = type || types[Math.floor(Math.random() * types.length)];
-
-  const baseItem = {
-    _id: Math.random().toString(36).substr(2, 9),
-    itemType,
-    title: '',
-    description: '',
-    price: 0,
-    rating: 0,
-    reviewCount: 0,
-    image: ''
-  };
-
-  const propertyTitles = [
-    'Modern Apartment in City Center',
-    'Luxury Villa with Ocean View',
-    'Cozy Studio Near University',
-    'Spacious Family House',
-    'Penthouse with Rooftop Terrace'
-  ];
-
-  const serviceTitles = [
-    'Professional Cleaning Service',
-    'Home Renovation Experts',
-    'Personal Chef for Events',
-    'Gardening & Landscaping',
-    'Plumbing & Electrical Services'
-  ];
-
-  const helperTitles = [
-    'Experienced Babysitter',
-    'Senior Care Companion',
-    'Personal Fitness Trainer',
-    'Home Tutor for Mathematics',
-    'Pet Sitter & Walker'
-  ];
-
-  const eventTitles = [
-    'Weekend Music Festival',
-    'Food & Wine Tasting',
-    'Yoga Retreat Workshop',
-    'Business Networking Event',
-    'Art Exhibition Opening'
-  ];
-
-  const images = [
-    'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w-800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=800&auto=format&fit=crop'
-  ];
-
-  const items = [];
-
-  for (let i = 0; i < count; i++) {
-    let title, price, rating;
-
-    switch (itemType) {
-      case 'properties':
-        title = propertyTitles[Math.floor(Math.random() * propertyTitles.length)];
-        price = Math.floor(Math.random() * 5000) + 1000;
-        rating = (Math.random() * 2 + 3).toFixed(1);
-        break;
-      case 'services':
-        title = serviceTitles[Math.floor(Math.random() * serviceTitles.length)];
-        price = Math.floor(Math.random() * 200) + 50;
-        rating = (Math.random() * 2 + 3).toFixed(1);
-        break;
-      case 'helpers':
-        title = helperTitles[Math.floor(Math.random() * helperTitles.length)];
-        price = Math.floor(Math.random() * 100) + 20;
-        rating = (Math.random() * 2 + 3).toFixed(1);
-        break;
-      case 'events':
-        title = eventTitles[Math.floor(Math.random() * eventTitles.length)];
-        price = Math.floor(Math.random() * 150) + 10;
-        rating = (Math.random() * 2 + 3).toFixed(1);
-        break;
-      default:
-        title = propertyTitles[Math.floor(Math.random() * propertyTitles.length)];
-        price = Math.floor(Math.random() * 5000) + 1000;
-        rating = (Math.random() * 2 + 3).toFixed(1);
-    }
-
-    items.push({
-      ...baseItem,
-      _id: `${itemType}_${i}_${Math.random().toString(36).substr(2, 9)}`,
-      title: `${title} ${i + 1}`,
-      description: `This is a wonderful ${itemType} that offers great value and quality service. Perfect for your needs.`,
-      price,
-      rating: parseFloat(rating),
-      reviewCount: Math.floor(Math.random() * 200) + 10,
-      image: images[Math.floor(Math.random() * images.length)],
-      location: 'Cape Town, South Africa',
-      isFeatured: i < 2,
-      isTrending: i < 3
-    });
-  }
-
-  return items;
-};
+const RECENTLY_VIEWED_KEY = 'loopOut_recentlyViewed';
 
 const ExplorePage = () => {
   const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
+  const { 
+    searchHistory, 
+    viewHistory, 
+    userLocation, 
+    preferredCategories,
+    recordSearch,
+    updateLocation 
+  } = useSearchIntelligence();
+
   const [featuredItems, setFeaturedItems] = useState([]);
   const [trendingItems, setTrendingItems] = useState([]);
   const [nearbyItems, setNearbyItems] = useState([]);
+  const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState('all');
-  const [userLocation, setUserLocation] = useState(null);
   const [locationError, setLocationError] = useState(null);
   const [userCity, setUserCity] = useState(null);
 
@@ -157,29 +67,19 @@ const ExplorePage = () => {
 
   // Popular destinations
   const popularDestinations = [
-    { id: 1, name: 'Cape Town', image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4', count: 1245 },
-    { id: 2, name: 'Johannesburg', image: 'https://images.unsplash.com/photo-1580060839134-75a5edca2e99', count: 987 },
-    { id: 3, name: 'Durban', image: 'https://images.unsplash.com/photo-1523480717984-24cba35ae1eb', count: 765 },
-    { id: 4, name: 'Pretoria', image: 'https://images.unsplash.com/photo-1548013146-72479768bada', count: 543 },
-    { id: 5, name: 'Stellenbosch', image: 'https://images.unsplash.com/photo-1529400971008-f566de0e6dfc', count: 432 },
-    { id: 6, name: 'Port Elizabeth', image: 'https://images.unsplash.com/photo-1516426122078-c23e76319801', count: 321 }
-  ];
-
-  // Popular searches
-  const popularSearches = [
-    'Beachfront properties',
-    'Office spaces',
-    'Cleaning services',
-    'Personal chefs',
-    'Weekend events',
-    'Pet-friendly stays',
-    'Luxury villas',
-    'Moving services'
+    { id: 1, name: 'Cape Town', image: 'https://images.pexels.com/photos/259447/pexels-photo-259447.jpeg?auto=compress&cs=tinysrgb&w=800', count: 1245 },
+    { id: 2, name: 'Johannesburg', image: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800', count: 987 },
+    { id: 3, name: 'Durban', image: 'https://images.pexels.com/photos/439391/pexels-photo-439391.jpeg?auto=compress&cs=tinysrgb&w=800', count: 765 },
+    { id: 4, name: 'Pretoria', image: 'https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800', count: 543 },
+    { id: 5, name: 'Stellenbosch', image: 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800', count: 432 },
+    { id: 6, name: 'Port Elizabeth', image: 'https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=800', count: 321 }
   ];
 
   useEffect(() => {
     fetchExploreData();
-    getUserLocation();
+    if (!userLocation) {
+      getUserLocation();
+    }
     loadRecentlyViewed();
   }, [activeCategory]);
 
@@ -188,7 +88,6 @@ const ExplorePage = () => {
       const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
       if (stored) {
         const items = JSON.parse(stored);
-        // Only show last 4 recently viewed on explore page
         setRecentlyViewed(items.slice(0, 4));
       }
     } catch (error) {
@@ -210,19 +109,14 @@ const ExplorePage = () => {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        setUserLocation({ latitude, longitude });
+        updateLocation({ latitude, longitude });
 
-        // Reverse geocode to get city name
         try {
           const city = await reverseGeocode(latitude, longitude);
           setUserCity(city);
-
-          // Fetch nearby items based on location
           fetchNearbyItems(latitude, longitude, city);
         } catch (error) {
-          console.error('Error getting city name:', error);
           setLocationError('Could not determine your city');
-          // Still fetch with coordinates
           fetchNearbyItems(latitude, longitude, null);
         } finally {
           setIsLocationLoading(false);
@@ -230,32 +124,13 @@ const ExplorePage = () => {
       },
       (error) => {
         setIsLocationLoading(false);
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            setLocationError('Location access was denied. Please enable location services.');
-            break;
-          case error.POSITION_UNAVAILABLE:
-            setLocationError('Location information is unavailable.');
-            break;
-          case error.TIMEOUT:
-            setLocationError('Location request timed out.');
-            break;
-          default:
-            setLocationError('An unknown error occurred.');
-            break;
-        }
-        // Fetch generic nearby items if location fails
+        setLocationError('Location access was denied or unavailable.');
         fetchGenericNearbyItems();
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
-  // Reverse geocode coordinates to get city name
   const reverseGeocode = async (latitude, longitude) => {
     try {
       const response = await fetch(
@@ -281,17 +156,14 @@ const ExplorePage = () => {
       };
       const backendCategory = categoryMap[activeCategory] || 'all';
 
-      // Fetch Featured from API
       const featuredRes = await fetch(`/api/explore/featured?category=${backendCategory}&limit=6`);
       const featuredData = await featuredRes.json();
       setFeaturedItems(featuredData || []);
 
-      // Fetch Trending from API
       const trendingRes = await fetch(`/api/explore/trending?category=${backendCategory}&limit=6`);
       const trendingData = await trendingRes.json();
       setTrendingItems(trendingData || []);
     } catch (error) {
-      console.error('Error fetching explore data:', error);
       setFeaturedItems([]);
       setTrendingItems([]);
     } finally {
@@ -299,7 +171,6 @@ const ExplorePage = () => {
     }
   };
 
-  // Fetch nearby items based on user's location
   const fetchNearbyItems = async (latitude, longitude, city) => {
     try {
       const categoryMap = {
@@ -312,25 +183,17 @@ const ExplorePage = () => {
       const backendCategory = categoryMap[activeCategory] || 'all';
 
       let url = `/api/explore/nearby?category=${backendCategory}&limit=6`;
-
-      if (latitude && longitude) {
-        url += `&lat=${latitude}&lng=${longitude}`;
-      }
-
-      if (city) {
-        url += `&city=${encodeURIComponent(city)}`;
-      }
+      if (latitude && longitude) url += `&lat=${latitude}&lng=${longitude}`;
+      if (city) url += `&city=${encodeURIComponent(city)}`;
 
       const nearbyRes = await fetch(url);
       const nearbyData = await nearbyRes.json();
       setNearbyItems(nearbyData || []);
     } catch (error) {
-      console.error('Error fetching nearby items:', error);
       fetchGenericNearbyItems();
     }
   };
 
-  // Fetch generic nearby items when location is not available
   const fetchGenericNearbyItems = async () => {
     try {
       const categoryMap = {
@@ -341,46 +204,34 @@ const ExplorePage = () => {
         events: 'event'
       };
       const backendCategory = categoryMap[activeCategory] || 'all';
-
       const nearbyRes = await fetch(`/api/explore/nearby?category=${backendCategory}&limit=6`);
       const nearbyData = await nearbyRes.json();
       setNearbyItems(nearbyData || []);
     } catch (error) {
-      console.error('Error fetching generic nearby items:', error);
       setNearbyItems([]);
     }
   };
 
-  // Handle location refresh
-  const handleRefreshLocation = () => {
-    getUserLocation();
-  };
+  const handleRefreshLocation = () => getUserLocation();
 
-  // Render item based on type
   const renderItem = (item) => {
     const itemType = item.type || 'listing';
     switch (itemType) {
-      case 'service':
-        return <ServiceItem key={item._id} service={item} />;
-      case 'helper':
-        return <HelperItem key={item._id} helper={item} />;
-      case 'event':
-        return <EventItem key={item._id} event={item} />;
-      default:
-        return <ListingItem key={item._id} listing={item} />;
+      case 'service': return <ServiceItem key={item._id} service={item} />;
+      case 'helper': return <HelperItem key={item._id} helper={item} />;
+      case 'event': return <EventItem key={item._id} event={item} />;
+      default: return <ListingItem key={item._id} listing={item} />;
     }
   };
 
-  // Skeleton loader
   const SkeletonGrid = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
       {[...Array(6)].map((_, i) => (
-        <div key={i} className="animate-pulse bg-white rounded-xl shadow-sm overflow-hidden h-72">
-          <div className="h-48 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"></div>
-          <div className="p-4 space-y-3">
-            <div className="h-5 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+        <div key={i} className="animate-pulse bg-white rounded-[2.5rem] shadow-sm overflow-hidden h-72">
+          <div className="h-48 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100"></div>
+          <div className="p-6 space-y-3">
+            <div className="h-5 bg-gray-100 rounded-full w-3/4"></div>
+            <div className="h-4 bg-gray-100 rounded-full w-1/2"></div>
           </div>
         </div>
       ))}
@@ -388,322 +239,251 @@ const ExplorePage = () => {
   );
 
   return (
-    <div className="min-h-screen">
-      {/* Add padding top to account for fixed header */}
+    <div className="min-h-screen bg-[#FDFDFD]">
       <div className="pt-2 md:pt-4">
         <main className="pt-4 pb-4">
           {/* Hero Section */}
-          <div className="relative bg-gradient-to-r from-rose-50 to-blue-50 rounded-3xl overflow-hidden mb-8">
-            <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-blue-500/10"></div>
-            <div className="relative z-10 px-8 py-12 md:py-16">
-              <div className="text-center max-w-3xl mx-auto">
-                <h1 className="text-2xl md:text-5xl font-bold text-gray-900 mb-4">
-                  Discover Amazing Places & Services
-                </h1>
-                <p className="text-lg text-gray-600 mb-8 max-w-2xl">
-                  Find properties, services, helpers, and events that match your lifestyle
-                </p>
+          <div className="relative mx-4 md:mx-8 xl:mx-12 bg-gray-950 rounded-[3rem] md:rounded-[4rem] overflow-hidden mb-12 shadow-2xl group">
+            <div className="absolute inset-0">
+               <img 
+                 src="https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1200" 
+                 className="w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-[10s] ease-linear"
+                 alt="Hero"
+               />
+               <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
+            </div>
+            
+            <div className="relative z-10 px-8 py-16 md:py-24 lg:py-32 xl:px-20">
+              <div className="max-w-4xl">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8 }}
+                >
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="px-3 py-1 bg-rose-500 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-white">Neural Discovery</div>
+                    <div className="flex items-center gap-1.5">
+                       <FiCpu className="w-4 h-4 text-emerald-400" />
+                       <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">AI Intelligence Active</span>
+                    </div>
+                  </div>
+                  <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 leading-[1.1] tracking-tighter">
+                    Explore the <span className="text-rose-500">Unseen</span><br />Masterpieces.
+                  </h1>
+                  <p className="text-lg md:text-xl text-white/70 mb-10 max-w-2xl font-medium leading-relaxed">
+                    Personalized properties, elite services, and curated events—all powered by LoopOut's neural engine.
+                  </p>
 
-                {/* Search Bar */}
-                <div className="max-w-2xl mx-auto">
-                  <SearchInput
-                    placeholder="Search for properties, services, helpers, events..."
-                    searchTypes={categories.slice(1).map(cat => ({
-                      key: cat.id,
-                      label: cat.label,
-                      icon: cat.icon
-                    }))}
-                    className="w-full"
-                    autoFocus={false}
-                  />
-                </div>
+                  <div className="max-w-xl">
+                    <SearchInput
+                      placeholder="What are you looking for?"
+                      searchTypes={categories.slice(1).map(cat => ({
+                        key: cat.id,
+                        label: cat.label,
+                        icon: cat.icon
+                      }))}
+                      onSearch={(term) => recordSearch(term)}
+                      className="w-full scale-110 origin-left"
+                    />
+                  </div>
+                </motion.div>
               </div>
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-            {/* Category Navigation */}
-            <div className="mb-8 md:mb-12">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Browse Categories</h2>
-              <div className="flex flex-wrap gap-2 md:gap-3">
+          <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-[20px] py-8">
+            
+            {/* Recent Searches */}
+            {searchHistory.length > 0 && (
+              <div className="mb-12">
+                <div className="flex items-center gap-2 mb-4">
+                  <FiClock className="w-5 h-5 text-gray-400" />
+                  <h3 className="text-sm font-black uppercase tracking-widest text-gray-500">Recent Explorations</h3>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {searchHistory.slice(0, 5).map((term, i) => (
+                    <button
+                      key={i}
+                      onClick={() => navigate(`/search?searchTerm=${encodeURIComponent(term)}`)}
+                      className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-black text-gray-900 shadow-sm hover:shadow-md hover:border-rose-200 transition-all flex items-center gap-2"
+                    >
+                      <FiSearch className="w-3 h-3 text-rose-500" />
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Categories */}
+            <div className="mb-16">
+              <h2 className="text-2xl font-black text-gray-950 mb-8 tracking-tight">Browse by Category</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
                 {categories.map(category => (
                   <button
                     key={category.id}
                     onClick={() => setActiveCategory(category.id)}
-                    className={`flex items-center gap-1 md:gap-2 px-3 md:px-5 py-2 md:py-3 rounded-xl transition-all text-sm md:text-base ${activeCategory === category.id ? `${category.color} text-white shadow-lg` : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'}`}
+                    className={`relative flex flex-col items-center justify-center gap-4 p-6 rounded-[2.5rem] transition-all duration-500 ${activeCategory === category.id ? `${category.color} text-white shadow-2xl scale-105` : 'bg-white text-gray-950 border border-gray-100 hover:shadow-xl hover:-translate-y-1'}`}
                   >
-                    {category.icon}
-                    <span className="font-medium">{category.label}</span>
+                    <div className={`p-4 rounded-2xl ${activeCategory === category.id ? 'bg-white/20' : 'bg-gray-50'}`}>
+                      {category.icon}
+                    </div>
+                    <span className="text-xs font-black uppercase tracking-widest">{category.label}</span>
+                    {preferredCategories[0] === category.id && activeCategory !== category.id && (
+                       <div className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[8px] px-2 py-1 rounded-full font-black animate-bounce shadow-lg">SMART CHOICE</div>
+                    )}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Featured Section */}
-            <section className="mb-12 md:mb-16">
-              <div className="flex justify-between items-center mb-4 md:mb-6">
-                <h2 className="text-xl md:text-2xl font-bold text-gray-900">Featured Listings</h2>
-                <Link
-                  to={`/search?type=${activeCategory}`}
-                  className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium text-sm md:text-base"
-                >
-                  View all
-                  <FiChevronRight className="w-4 h-4 md:w-5 md:h-5" />
-                </Link>
-              </div>
-
-              {isLoading ? (
-                <SkeletonGrid />
-              ) : featuredItems.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                  {featuredItems.map(renderItem)}
+            {/* Recommendations */}
+            <section className="mb-20">
+              <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                <div>
+                  <h2 className="text-3xl font-black text-gray-950 tracking-tight">Neural Recommendations</h2>
+                  <p className="text-gray-500 font-medium mt-1">Curated masterpieces based on your behavior</p>
                 </div>
-              ) : (
-                <div className="text-center py-8 md:py-12 bg-white rounded-2xl border border-gray-200">
-                  <FiCompass className="w-12 h-12 md:w-16 md:h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg md:text-xl font-medium text-gray-900 mb-2">No featured items found</h3>
-                  <p className="text-gray-600 text-sm md:text-base">Check back later for new featured listings</p>
+                <div className="flex items-center gap-2 px-4 py-2 bg-rose-50 rounded-2xl border border-rose-100">
+                   <FiCpu className="w-4 h-4 text-rose-500" />
+                   <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Optimized for you</span>
+                </div>
+              </div>
+              {isLoading ? <SkeletonGrid /> : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {featuredItems.map(renderItem)}
                 </div>
               )}
             </section>
 
+            {/* Main Brand Mission Banner - Redesigned 'LoopOut for Everyone' */}
+            <section className="mb-20">
+              <div className="relative overflow-hidden rounded-[3rem] bg-gray-950 p-8 md:p-16 border border-white/10 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
+                {/* Visual Background Asset */}
+                <div className="absolute inset-0 z-0">
+                  <img 
+                    src="/loopout_for_everyone.png" 
+                    className="w-full h-full object-cover opacity-30 mix-blend-overlay"
+                    alt="LoopOut for Everyone"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/80 to-transparent"></div>
+                </div>
+
+                <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
+                  <div className="flex-shrink-0">
+                     <div className="relative group">
+                        <div className="absolute inset-0 bg-rose-500 blur-3xl opacity-20 rounded-full group-hover:opacity-40 transition-opacity"></div>
+                        <BrandIcon className="w-32 h-32 md:w-48 md:h-48 relative z-10 drop-shadow-[0_0_30px_rgba(225,29,72,0.4)] transition-transform group-hover:scale-105 duration-700" />
+                     </div>
+                  </div>
+                  
+                  <div className="flex-1 text-center md:text-left">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-rose-500/20 rounded-full mb-6 border border-rose-500/30 backdrop-blur-md">
+                       <Sparkles className="w-4 h-4 text-rose-400" />
+                       <span className="text-[10px] font-black text-rose-100 uppercase tracking-[0.2em]">Universal Access</span>
+                    </div>
+                    <h2 className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight tracking-tighter">
+                      LoopOut for <span className="text-rose-500">Everyone.</span>
+                    </h2>
+                    <p className="text-lg md:text-xl text-white/70 mb-8 max-w-2xl leading-relaxed font-medium">
+                      From the vibrant streets of <span className="text-white">Johannesburg</span> and <span className="text-white">Pretoria</span> to the community hubs of <span className="text-white">Pietermaritzburg</span> and <span className="text-white">Rustenburg</span>, LoopOut connects you to the masterpieces of your community. Search, discover, and support local—this is discovery for everyone.
+                    </p>
+                    <div className="flex flex-wrap justify-center md:justify-start gap-4">
+                      <button 
+                        onClick={() => navigate('/contact')}
+                        className="px-10 py-5 bg-rose-500 text-white rounded-[2rem] font-black uppercase tracking-widest text-xs hover:bg-rose-600 transition-all shadow-2xl hover:-translate-y-1 active:scale-95 flex items-center gap-3"
+                      >
+                        <FiSearch className="w-4 h-4" />
+                        Contact & Support Us
+                      </button>
+                      <button 
+                        onClick={() => navigate('/about')}
+                        className="px-10 py-5 bg-white/5 text-white border border-white/10 backdrop-blur-md rounded-[2rem] font-black uppercase tracking-widest text-xs hover:bg-white/10 transition-all"
+                      >
+                        Learn what we're doing
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
             {/* Popular Destinations */}
-            <section className="mb-12 md:mb-16">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Popular Destinations</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <section className="mb-20">
+              <div className="flex items-end justify-between mb-8">
+                <div>
+                  <h2 className="text-3xl font-black text-gray-950 tracking-tight">Global Hotspots</h2>
+                  <p className="text-gray-500 font-medium mt-1">Where the world is booking right now</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 {popularDestinations.map(destination => (
                   <Link
                     key={destination.id}
                     to={`/search?q=${destination.name}&type=properties`}
-                    className="group relative overflow-hidden rounded-2xl aspect-video"
+                    className="group relative overflow-hidden rounded-[2.5rem] aspect-[3/4]"
                   >
                     <div
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-110"
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                       style={{ backgroundImage: `url(${destination.image})` }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
-                    <div className="absolute inset-0 p-4 md:p-6 flex flex-col justify-end">
-                      <h3 className="text-lg md:text-2xl font-bold text-white mb-1 md:mb-2">{destination.name}</h3>
-                      <p className="text-white/80 text-sm md:text-base">{destination.count.toLocaleString()} listings</p>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    <div className="absolute inset-0 p-6 flex flex-col justify-end">
+                      <h3 className="text-xl font-black text-white mb-1 leading-tight tracking-tight">{destination.name}</h3>
+                      <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">{destination.count.toLocaleString()} spots</p>
                     </div>
                   </Link>
                 ))}
               </div>
             </section>
 
-            {/* Trending Now */}
-            <section className="mb-12 md:mb-16">
-              <div className="flex justify-between items-center mb-4 md:mb-6">
-                <h2 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
-                  <FiTrendingUp className="w-5 h-5 md:w-6 md:h-6" />
-                  Trending Now
-                </h2>
-                <Link
-                  to="/search?sort=trending"
-                  className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium text-sm md:text-base"
-                >
-                  View all trending
-                  <FiChevronRight className="w-4 h-4 md:w-5 md:h-5" />
-                </Link>
-              </div>
-
-              {isLoading ? (
-                <SkeletonGrid />
-              ) : trendingItems.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                  {trendingItems.map(renderItem)}
-                </div>
-              ) : (
-                <div className="text-center py-8 md:py-12 bg-white rounded-2xl border border-gray-200">
-                  <FiTrendingUp className="w-12 h-12 md:w-16 md:h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg md:text-xl font-medium text-gray-900 mb-2">No trending items</h3>
-                  <p className="text-gray-600 text-sm md:text-base">Check back later for trending listings</p>
-                </div>
-              )}
-            </section>
-
-            {/* Popular Searches */}
-            <section className="mb-12 md:mb-16">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Popular Searches</h2>
-              <div className="flex flex-wrap gap-2 md:gap-3">
-                {popularSearches.map((search, index) => (
-                  <Link
-                    key={index}
-                    to={`/search?q=${encodeURIComponent(search)}`}
-                    className="px-3 py-2 md:px-4 md:py-3 bg-white border border-gray-200 rounded-xl hover:border-blue-500 hover:text-blue-600 transition-colors text-sm md:text-base"
-                  >
-                    {search}
-                  </Link>
-                ))}
-              </div>
-            </section>
-
-            {/* Nearby You - Enhanced with location detection */}
-            <section className="mb-12 md:mb-16">
-              <div className="flex justify-between items-center mb-4 md:mb-6">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <FiMapPin className="w-5 h-5 md:w-6 md:h-6" />
-                    <span className="truncate max-w-[150px] md:max-w-none">
-                      {userCity ? `Nearby in ${userCity}` : 'Recommended For You'}
-                    </span>
+            {/* Nearby Section */}
+            <section className="mb-20">
+              <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+                <div>
+                  <h2 className="text-3xl font-black text-gray-950 tracking-tight flex items-center gap-3">
+                    <FiMapPin className="text-rose-500" />
+                    {userCity ? `Local Treasures: ${userCity}` : 'Local Treasures'}
                   </h2>
-                  {isLocationLoading && (
-                    <div className="flex items-center gap-1 text-xs md:text-sm text-gray-500">
-                      <FiRefreshCw className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
-                      <span className="hidden sm:inline">Detecting location...</span>
-                    </div>
-                  )}
+                  <p className="text-gray-500 font-medium mt-1">Discover what's around your immediate coordinates</p>
                 </div>
-                <div className="flex items-center gap-2 md:gap-3">
-                  {locationError && (
-                    <div className="flex items-center gap-1 text-xs md:text-sm text-amber-600">
-                      <FiAlertCircle className="w-3 h-3 md:w-4 md:h-4" />
-                      <span className="hidden sm:inline">Location error</span>
-                    </div>
-                  )}
-                  <button
-                    onClick={handleRefreshLocation}
-                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium text-sm md:text-base"
-                    disabled={isLocationLoading}
-                  >
-                    <FiNavigation className="w-3 h-3 md:w-4 md:h-4" />
-                    <span className="hidden sm:inline">
-                      {isLocationLoading ? 'Detecting...' : 'Refresh Location'}
-                    </span>
-                  </button>
-                </div>
+                <button
+                  onClick={handleRefreshLocation}
+                  disabled={isLocationLoading}
+                  className="px-6 py-3 bg-gray-950 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95 flex items-center gap-2"
+                >
+                  <FiNavigation className={isLocationLoading ? 'animate-pulse' : ''} />
+                  {isLocationLoading ? 'Detecting...' : 'Refresh Location'}
+                </button>
               </div>
 
               {locationError && (
-                <div className="mb-4 md:mb-6 p-3 md:p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                  <div className="flex items-start gap-2 md:gap-3">
-                    <FiAlertCircle className="w-4 h-4 md:w-5 md:h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-amber-800 font-medium mb-1 text-sm md:text-base">Location Access Required</p>
-                      <p className="text-amber-700 text-xs md:text-sm">{locationError}</p>
-                      <p className="text-amber-600 text-xs md:text-sm mt-1 md:mt-2">
-                        Showing general recommendations. Enable location services for personalized results.
-                      </p>
-                    </div>
+                <div className="mb-8 p-6 bg-amber-50 border border-amber-100 rounded-[2.5rem] flex items-center gap-4">
+                  <FiAlertCircle className="w-8 h-8 text-amber-500" />
+                  <div>
+                    <p className="text-amber-900 font-black text-sm uppercase tracking-widest">Neural Precision Restricted</p>
+                    <p className="text-amber-700 text-sm mt-1">{locationError} Enable location for peak performance.</p>
                   </div>
                 </div>
               )}
 
-              {isLoading || isLocationLoading ? (
-                <SkeletonGrid />
-              ) : nearbyItems.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                  {nearbyItems.map(renderItem)}
-                </div>
-              ) : (
-                <div className="text-center py-8 md:py-12 bg-white rounded-2xl border border-gray-200">
-                  <FiMapPin className="w-12 h-12 md:w-16 md:h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg md:text-xl font-medium text-gray-900 mb-2">
-                    {locationError ? 'General Recommendations' : 'No nearby items found'}
-                  </h3>
-                  <p className="text-gray-600 text-sm md:text-base mb-3 md:mb-4">
-                    {locationError
-                      ? 'Enable location services for personalized recommendations'
-                      : 'Try refreshing your location or browse other categories'}
-                  </p>
-                  {!locationError && (
-                    <button
-                      onClick={handleRefreshLocation}
-                      className="px-3 py-2 md:px-4 md:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 mx-auto text-sm md:text-base"
-                    >
-                      <FiRefreshCw className="w-3 h-3 md:w-4 md:h-4" />
-                      Refresh Location
-                    </button>
+              {isLoading || isLocationLoading ? <SkeletonGrid /> : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {nearbyItems.length > 0 ? nearbyItems.map(renderItem) : (
+                    <div className="col-span-full py-20 bg-gray-50 rounded-[4rem] text-center">
+                       <FiMapPin className="w-16 h-16 text-gray-200 mx-auto mb-6" />
+                       <h3 className="text-xl font-black text-gray-400 uppercase tracking-widest">No local signals detected</h3>
+                       <p className="text-gray-400 mt-2">Try searching a different quadrant</p>
+                    </div>
                   )}
                 </div>
               )}
             </section>
-
-            {/* Recently Viewed */}
-            {recentlyViewed.length > 0 && (
-              <section className="mb-12 md:mb-16">
-                <div className="flex justify-between items-center mb-4 md:mb-6">
-                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <FiRefreshCw className="w-5 h-5 md:w-6 md:h-6" />
-                    Pick up where you left off
-                  </h2>
-                  <Link
-                    to="/recently-viewed"
-                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium text-sm md:text-base"
-                  >
-                    View history
-                    <FiChevronRight className="w-4 h-4 md:w-5 md:h-5" />
-                  </Link>
-                </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                  {recentlyViewed.map((item, index) => (
-                    <div 
-                      key={`${item._id}-${index}`}
-                      className="group relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer"
-                      onClick={() => navigate(`/${item.itemType || item.type || 'listing'}/${item._id}`)}
-                    >
-                      <div className="aspect-[4/3] overflow-hidden">
-                        <img 
-                          src={item.image || item.imageUrls?.[0] || item.images?.[0] || '/placeholder.jpg'} 
-                          alt={item.title || item.name}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                        />
-                      </div>
-                      <div className="p-3 md:p-4">
-                        <h3 className="font-bold text-gray-900 text-sm md:text-base line-clamp-1 mb-1">
-                          {item.title || item.name}
-                        </h3>
-                        <p className="text-gray-500 text-xs md:text-sm line-clamp-1 mb-2">
-                          {item.location || item.address}
-                        </p>
-                        <div className="flex items-center justify-between mt-auto">
-                          <span className="text-blue-600 font-bold text-sm">
-                            {item.price ? `R${item.price.toLocaleString()}` : item.regularPrice ? `R${item.regularPrice.toLocaleString()}` : 'Contact'}
-                          </span>
-                          <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-600 uppercase font-bold">
-                            {item.itemType || item.type || 'Item'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* CTA Section */}
-            <div className="mt-12 md:mt-16 p-6 md:p-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl text-center">
-              <h2 className="text-xl md:text-3xl font-bold text-white mb-3 md:mb-4">
-                Ready to find your perfect match?
-              </h2>
-              <p className="text-blue-100 mb-4 md:mb-6 max-w-2xl mx-auto text-sm md:text-base">
-                Join thousands of satisfied users who found exactly what they were looking for
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
-                <Link
-                  to="/search"
-                  className="px-6 py-2 md:px-8 md:py-3 bg-white text-blue-600 rounded-xl font-bold hover:bg-blue-50 transition-colors text-sm md:text-base"
-                >
-                  Start Searching
-                </Link>
-                {!currentUser && (
-                  <Link
-                    to="/sign-up"
-                    className="px-6 py-2 md:px-8 md:py-3 border-2 border-white text-white rounded-xl font-bold hover:bg-white/10 transition-colors text-sm md:text-base"
-                  >
-                    Create Account
-                  </Link>
-                )}
-              </div>
-            </div>
           </div>
         </main>
       </div>
 
-      {/* Add bottom padding to account for the Footer's fixed bottom navigation */}
-      <div className="pb-32"></div>
+      <div className="pb-40"></div>
     </div>
   );
 };

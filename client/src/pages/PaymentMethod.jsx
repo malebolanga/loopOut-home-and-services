@@ -145,4 +145,4 @@ const PaymentMethod = () => {
   );
 };
 
-export default PaymentMethod;
+export default PaymentMethod;

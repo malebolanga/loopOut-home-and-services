@@ -168,7 +168,7 @@ const Trip = () => {
         aiPick: {
           name: `${destination} Grand Plaza`,
           vibe: "Cinematic Luxury",
-          image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800",
+          image: "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
           description: `The absolute peak of ${destination}'s social life. Highly recommended by the Google Neural Feed.`
         },
         safety: { level: 'Verified', tip: `Precinct coordinates in ${destination} are currently stable. Recommended deployment at 14:00.` }
@@ -576,7 +576,7 @@ const Trip = () => {
 
                     {/* AI Highlight Card */}
                     {dbResults.aiPick && (
-                      <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} className="bg-gray-950 rounded-[3rem] shadow-2xl overflow-hidden group relative">
+                      <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="bg-gray-950 rounded-[3rem] shadow-2xl overflow-hidden group relative">
                         <div className="h-56 overflow-hidden relative">
                            <img src={dbResults.aiPick.image} className="w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-[5s]" alt="Neural Highlight" />
                            <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent" />

@@ -53,7 +53,7 @@ export default function HelperDetails() {
           regularPrice: Math.floor(Math.random() * 300) + 100,
           description: `Professional ${typeLabels[type].toLowerCase()} with ${i + 3} years of experience`,
           imageUrls: Array(4).fill().map((_, imgIndex) =>
-            `https://source.unsplash.com/random/400x300/?${type},${i},${imgIndex}`
+            `https://images.pexels.com/photos/3768914/pexels-photo-3768914.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop`
           ),
           host: `Host ${i + 1}`,
           period: i % 2 === 0 ? 'Weekdays' : 'Flexible',

@@ -150,7 +150,7 @@ const UserProfile = () => {
       {/* Cover Photo */}
       <div className="relative h-64 md:h-80 lg:h-96">
         <img
-          src={userData.coverPhoto || "https://images.unsplash.com/photo-1557683316-973673baf926?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"}
+          src={userData.coverPhoto || "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800"}
           alt="Cover"
           className="w-full h-full object-cover transition-all duration-700"
         />

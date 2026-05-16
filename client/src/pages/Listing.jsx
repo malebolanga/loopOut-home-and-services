@@ -1804,11 +1804,11 @@ export default function Listing() {
 
         if (!listingData.imageUrls || !Array.isArray(listingData.imageUrls)) {
           listingData.imageUrls = [
-            'https://images.unsplash.com/photo-1613490493576-7fde63acd811?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80',
-            'https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80',
-            'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80',
-            'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80',
-            'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80',
+            'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800',
+            'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800',
+            'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800',
+            'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800',
+            'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800',
           ];
         }
 
@@ -1828,11 +1828,11 @@ export default function Listing() {
           address: "12 Ocean Drive, Camps Bay, Cape Town",
           description: "Experience luxury living in this stunning modern villa featuring panoramic ocean views. This beautifully designed property offers spacious living areas, state-of-the-art amenities, and direct access to a private beach. The open-plan living area features floor-to-ceiling windows, gourmet kitchen with marble countertops, and a cozy fireplace. The master suite includes a private balcony, walk-in closet, and spa-like bathroom with rain shower and freestanding tub. Outside, enjoy the infinity pool, outdoor kitchen, and beautifully landscaped garden with panoramic ocean views.",
           imageUrls: [
-            "https://images.unsplash.com/photo-1613490493576-7fde63acd811?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80",
-            "https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80",
-            "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80",
-            "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80",
-            "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80",
+            "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
+            "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
+            "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
+            "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
+            "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
           ],
           contact: "0821234567",
           phone: "0821234567",
@@ -1841,7 +1841,7 @@ export default function Listing() {
             _id: "user123",
             username: "John",
             email: "john@luxurystays.com",
-            avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+            avatar: "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
             createdAt: "2022-01-01"
           },
           wifi: true,
@@ -2433,7 +2433,7 @@ export default function Listing() {
                           <div className="relative group">
                             <div className="absolute inset-0 bg-rose-500 rounded-full blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
                             <img
-                              src={booker.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
+                              src={booker.avatar || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'}
                               alt={booker.username}
                               className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-0 border-white shadow-lg relative z-10 transition-transform duration-500 group-hover:scale-105"
                             />

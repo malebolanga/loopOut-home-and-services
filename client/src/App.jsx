@@ -377,8 +377,8 @@ export default function App() {
   }, [dispatch, currentUser]);
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AppContent />
     </BrowserRouter>
   );
-}
+}

@@ -62,7 +62,7 @@ const Become = () => {
               initial={{ scale: 1.2 }}
               animate={{ scale: 1 }}
               transition={{ duration: 2 }}
-              src="https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&q=80&w=1470" 
+              src="https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800" 
               className="w-full h-full object-cover opacity-30"
             />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-950/80 to-gray-950" />

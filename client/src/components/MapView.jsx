@@ -186,7 +186,7 @@ const MapView = ({
                 </button>
                 <div className="flex gap-4">
                    <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-lg">
-                      <img src={selectedItem.imageUrls?.[0] || selectedItem.image || 'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=400&q=80'} alt={selectedItem.name} className="w-full h-full object-cover" />
+                      <img src={selectedItem.imageUrls?.[0] || selectedItem.image || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?w=400&q=80'} alt={selectedItem.name} className="w-full h-full object-cover" />
                    </div>
                    <div className="flex-1">
                       <div className="text-xs font-black text-rose-500 uppercase tracking-widest mb-1">{selectedItem.itemType || 'Listing'}</div>

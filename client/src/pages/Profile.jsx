@@ -1065,7 +1065,7 @@ export default function Profile() {
                     <div className="mb-8 p-1 bg-gray-50 rounded-2xl border border-dashed border-[#DDDDDD] overflow-hidden">
                       <div className="relative h-40 md:h-48 group cursor-pointer" onClick={() => coverFileRef.current.click()}>
                         <img
-                          src={formData.coverPhoto || currentUser?.coverPhoto || "https://images.unsplash.com/photo-1557683316-973673baf926?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"}
+                          src={formData.coverPhoto || currentUser?.coverPhoto || "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800"}
                           alt="Cover"
                           className="w-full h-full object-cover rounded-xl transition-opacity hover:opacity-90"
                         />

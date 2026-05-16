@@ -77,9 +77,16 @@ const MapComponent = ({ latitude, longitude, address, title }) => {
           View on Google Maps <FaExternalLinkAlt className="text-xs" />
         </a>
         {loadError && (
-          <p className="text-[10px] text-rose-500 mt-4 italic font-bold">
-            Google Maps Error: {loadError.message || "Invalid or Expired API Key"}.
-          </p>
+          <div className="mt-4 p-3 bg-rose-50 border border-rose-100 rounded-lg">
+            <p className="text-[10px] text-rose-600 italic font-black uppercase tracking-widest mb-1">
+              Google Maps Protocol Failure
+            </p>
+            <p className="text-[11px] text-gray-700 font-medium">
+              {loadError.message?.includes('ExpiredKeyMapError') 
+                ? "The Google Maps API key has expired. Please rotate the VITE_GOOGLE_MAPS_API_KEY in the cloud console." 
+                : loadError.message || "Invalid or Expired API Key"}
+            </p>
+          </div>
         )}
         {!import.meta.env.VITE_GOOGLE_MAPS_API_KEY && !loadError && (
           <p className="text-[10px] text-gray-400 mt-4 italic">Interactive map requires a Google Maps API key.</p>

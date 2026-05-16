@@ -277,7 +277,7 @@ export default function HostYourHome() {
                <div className="absolute inset-0 bg-gradient-to-br from-rose-500/20 to-orange-400/20 rounded-[3rem] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
                <div className="relative aspect-video bg-gray-900 rounded-[3.5rem] overflow-hidden shadow-2xl border-[12px] border-white ring-1 ring-gray-100">
                   <img 
-                    src="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=1600&q=80" 
+                    src="https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?w=1600&q=80" 
                     className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-1000"
                     alt="Host Experience"
                   />

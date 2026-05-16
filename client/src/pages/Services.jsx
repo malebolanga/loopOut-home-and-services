@@ -1009,7 +1009,7 @@ const ServicePage = () => {
                 alt={service.name}
                 className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
                 onError={(e) => {
-                  e.target.src = 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=80';
+                  e.target.src = 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800';
                 }}
               />
               <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors duration-500" />
@@ -1026,7 +1026,7 @@ const ServicePage = () => {
                   alt={`${service.name} ${index + 2}`}
                   className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-110"
                   onError={(e) => {
-                    e.target.src = 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=600&q=80';
+                    e.target.src = 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800';
                   }}
                 />
                 <div className="absolute inset-0 bg-black/0 hover:bg-black/15 transition-colors duration-500" />
@@ -1091,10 +1091,10 @@ const ServicePage = () => {
               >
                 <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 shadow-sm border border-gray-100">
                   <img
-                    src={service.userRef?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
+                    src={service.userRef?.avatar || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'}
                     alt={service.userRef?.username || service.name}
                     className="w-full h-full object-cover"
-                    onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'; }}
+                    onError={(e) => { e.target.src = 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'; }}
                   />
                 </div>
                 <div className="flex-1">
@@ -1620,7 +1620,7 @@ const ServicePage = () => {
                       <div className="relative group">
                         <div className="absolute inset-0 bg-rose-500 rounded-full blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
                         <img
-                          src={booker.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}
+                          src={booker.avatar || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'}
                           alt={booker.username}
                           className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-0 border-white shadow-lg relative z-10 transition-transform duration-500 group-hover:scale-105"
                         />

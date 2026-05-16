@@ -441,7 +441,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
   const getImage = () => {
     if (item.imageUrls && item.imageUrls.length > 0) return item.imageUrls[0];
     if (item.images && item.images.length > 0) return item.images[0];
-    return 'https://images.unsplash.com/photo-1615529182904-14819c35db37?w=800&q=80';
+    return 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800';
   };
 
   const getTitle = () => item.name || item.title || item.eventName || 'Untitled Masterpiece';
@@ -726,7 +726,7 @@ const generateMockData = (urlParams) => {
           price: 5000 + (index * 2000),
           itemType: 'properties',
           subType: propType,
-          imageUrls: ['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800'],
+          imageUrls: ['https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'],
           rating: 4.5 + (index * 0.1),
           address: 'Polokwane, Limpopo',
           bedrooms: 2 + index,
@@ -746,7 +746,7 @@ const generateMockData = (urlParams) => {
           price: 300 + (index * 100),
           itemType: 'helper',
           subType: helperType,
-          imageUrls: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800'],
+          imageUrls: ['https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'],
           rating: 4.7 + (index * 0.05),
           address: 'Johannesburg',
           skills: [HELPER_CATEGORY_CONFIG[helperType].label],
@@ -765,7 +765,7 @@ const generateMockData = (urlParams) => {
           price: 350 + (index * 50),
           itemType: 'services',
           subType: serviceType,
-          imageUrls: ['https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800'],
+          imageUrls: ['https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'],
           rating: 4.8,
           address: 'Cape Town',
         });
@@ -783,7 +783,7 @@ const generateMockData = (urlParams) => {
           price: 150 + (index * 50),
           itemType: 'events',
           subType: eventType,
-          imageUrls: ['https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800'],
+          imageUrls: ['https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'],
           rating: 4.9,
           address: 'Durban',
         });
@@ -1344,7 +1344,7 @@ const SearchPage = () => {
                   <div key={item._id || Math.random().toString()} onClick={() => navigate(`/${item.itemType || item.type || 'listing'}/${item._id || item.id}`)} className="flex-shrink-0 w-64 cursor-pointer group">
                     <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden mb-4 bg-gray-50 shadow-sm group-hover:shadow-xl transition-all duration-500">
                       <ImageWithFallback
-                        src={item.imageUrls?.[0] || item.images?.[0] || 'https://images.unsplash.com/photo-1615529182904-14819c35db37?w=800'}
+                        src={item.imageUrls?.[0] || item.images?.[0] || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'}
                         alt={item.name || item.title || 'Item'}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />

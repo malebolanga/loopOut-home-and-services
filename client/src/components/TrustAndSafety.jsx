@@ -48,7 +48,7 @@ const TrustAndSafety = () => {
       {/* Cinematic Hero */}
       <section className="relative h-[70vh] flex items-center justify-center overflow-hidden bg-gray-950 text-center">
          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1557597774-9d2739f85a94?auto=format&fit=crop&q=80&w=1470')] bg-cover bg-center opacity-30" />
+            <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800')] bg-cover bg-center opacity-30" />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-950/80 to-white" />
          </div>
 
@@ -127,7 +127,7 @@ const TrustAndSafety = () => {
                </div>
                <div className="relative h-96 lg:h-auto overflow-hidden">
                   <img 
-                    src="https://images.unsplash.com/photo-1541888941259-79273c4d9b97?auto=format&fit=crop&q=80&w=1470" 
+                    src="https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800" 
                     className="w-full h-full object-cover opacity-60 grayscale group-hover:grayscale-0 transition-all duration-1000"
                     alt="Operations Center"
                   />

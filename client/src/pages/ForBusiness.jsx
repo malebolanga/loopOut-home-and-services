@@ -37,7 +37,7 @@ const ForBusiness = () => {
       title: 'Property Hosting',
       description: 'List your luxury apartments, homes, or commercial spaces. Manage bookings with AI-powered yield optimization.',
       icon: <HomeIcon className="w-8 h-8 text-rose-500" />,
-      image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1470',
+      image: 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800',
       action: () => navigate('/list'),
       tag: 'Real Estate'
     },
@@ -46,7 +46,7 @@ const ForBusiness = () => {
       title: 'Professional Services',
       description: 'Scale your beauty salon, car wash, or maintenance business. Automated scheduling and POS integration.',
       icon: <SparklesIcon className="w-8 h-8 text-blue-500" />,
-      image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=1374',
+      image: 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800',
       action: () => navigate('/become'),
       tag: 'B2C Services'
     },
@@ -55,7 +55,7 @@ const ForBusiness = () => {
       title: 'Expert Helpers',
       description: 'Offer your skills as a tutor, cleaner, or personal chef. Control your schedule and earn securely.',
       icon: <UserGroupIcon className="w-8 h-8 text-amber-500" />,
-      image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=1470',
+      image: 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800',
       action: () => navigate('/become'),
       tag: 'Individual Professional'
     },
@@ -64,7 +64,7 @@ const ForBusiness = () => {
       title: 'Event Excellence',
       description: 'Organize concerts, workshops, or exhibitions. Managed tickets and attendee engagement tools.',
       icon: <CalendarDaysIcon className="w-8 h-8 text-purple-500" />,
-      image: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=1470',
+      image: 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800',
       action: () => navigate(currentUser ? `/${currentUser._id}/create-listing?tab=events` : '/sign-in'),
       tag: 'Entertainment'
     }
@@ -102,7 +102,7 @@ const ForBusiness = () => {
             initial={{ scale: 1.1 }}
             animate={{ scale: 1 }}
             transition={{ duration: 10, repeat: Infinity, repeatType: 'reverse' }}
-            src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1469" 
+            src="https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800" 
             className="w-full h-full object-cover opacity-40"
             alt="Business Hero"
           />
@@ -238,7 +238,7 @@ const ForBusiness = () => {
              className="relative"
            >
               <div className="relative rounded-[3rem] overflow-hidden shadow-2xl">
-                 <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1415" alt="Analytics" />
+                 <img src="https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Analytics" />
                  <div className="absolute inset-0 bg-gradient-to-t from-gray-950/60 to-transparent" />
               </div>
               {/* Overlay UI elements */}

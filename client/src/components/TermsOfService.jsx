@@ -42,7 +42,7 @@ const TermsOfService = () => {
       {/* Cinematic Header */}
       <section className="relative h-[50vh] flex items-center justify-center overflow-hidden bg-gray-950">
          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=1470')] bg-cover bg-center opacity-20" />
+            <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800')] bg-cover bg-center opacity-20" />
             <div className="absolute inset-0 bg-gradient-to-b from-gray-950/50 via-gray-950 to-white" />
          </div>
 

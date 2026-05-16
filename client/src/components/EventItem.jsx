@@ -24,6 +24,7 @@ import "swiper/css/pagination";
 import "../styles/ListingDetails.scss";
 import ImageWithFallback from "./ImageWithFallback";
 import { useWishlist } from "../hooks/useWishlist";
+import LoopOutBanner from "./LoopOutBanner";
 
 const NEW_EVENT_THRESHOLD_DAYS = 14;
 const CLICKS_PER_STAR = 20;
@@ -88,7 +89,7 @@ function EventItem({ event, className = "" }) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ y: -5 }}
-      className={`${className} group relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 cursor-pointer`}
+      className={`${className} group relative aspect-square bg-white sm:rounded-[2.5rem] md:rounded-[3rem] rounded-xl border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 cursor-pointer`}
       onClick={handleCardClick}
     >
       <div className="absolute inset-0 z-0 overflow-hidden">
@@ -135,6 +136,8 @@ function EventItem({ event, className = "" }) {
           <Heart className={`w-4 h-4 ${isFavorite ? 'text-rose-500 fill-rose-500' : 'text-gray-400'}`} />
         </button>
       </div>
+
+      <LoopOutBanner className="bottom-24" />
 
       {/* Permanent Information Overlay (On Image) */}
       <div className="absolute inset-x-0 bottom-0 z-10 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none">

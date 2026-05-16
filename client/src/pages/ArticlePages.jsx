@@ -29,7 +29,7 @@ export default function ArticlePage() {
 
         {/* Hero Image */}
         <img 
-          src="https://images.unsplash.com/photo-1560518883-ce09059eeffa" 
+          src="https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800" 
           alt="Property keys" 
           className="w-full h-64 sm:h-80 object-cover rounded-xl shadow-sm"
         />

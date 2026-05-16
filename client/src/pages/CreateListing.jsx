@@ -2223,7 +2223,7 @@ export default function CreateListing() {
                             performers: [...listingForm.performers, { 
                               name: listingForm.newPerformerName, 
                               experience: listingForm.newPerformerExp,
-                              image: listingForm.newPerformerImage || "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=200"
+                              image: listingForm.newPerformerImage || "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800"
                             }],
                             newPerformerName: "",
                             newPerformerExp: "",
@@ -2816,4 +2816,4 @@ export default function CreateListing() {
       )}
     </div>
   );
-}
+}

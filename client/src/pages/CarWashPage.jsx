@@ -483,7 +483,7 @@ export default function CarWashPage() {
             onClick={() => setShowImageModal(true)}
           >
             <img
-              src={carWash.imageUrls?.[0] || 'https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=1200&q=80'}
+              src={carWash.imageUrls?.[0] || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'}
               alt={carWash.name}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
@@ -502,7 +502,7 @@ export default function CarWashPage() {
                 }}
               >
                 <img
-                  src={carWash.imageUrls?.[index] || carWash.imageUrls?.[0] || 'https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=600&q=80'}
+                  src={carWash.imageUrls?.[index] || carWash.imageUrls?.[0] || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'}
                   alt={`${carWash.name} ${index + 1}`}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />

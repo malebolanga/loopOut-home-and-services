@@ -41,7 +41,7 @@ const CookiePolicy = () => {
       {/* Cinematic Header */}
       <section className="relative h-[55vh] flex items-center justify-center overflow-hidden bg-gray-950 text-center">
          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544256718-3bcf237f3974?auto=format&fit=crop&q=80&w=1471')] bg-cover bg-center opacity-20" />
+            <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/59526/pexels-photo-59526.jpeg?auto=compress&cs=tinysrgb&w=800')] bg-cover bg-center opacity-20" />
             <div className="absolute inset-0 bg-gradient-to-b from-gray-950/60 via-gray-950 to-white" />
          </div>
 

@@ -68,6 +68,7 @@ import {
 } from "../redux/user/userSlice";
 
 import { Sparkles } from 'lucide-react';
+import { useSearchIntelligence } from '../hooks/useSearchIntelligence';
 
 const PROPERTY_SUBTYPES = [
   { id: 'rent', label: 'Rental', icon: '🏠' },
@@ -114,7 +115,7 @@ export default function Header() {
   const [currentLocation, setCurrentLocation] = useState('Polokwane');
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
-  const notificationSound = useRef(new Audio('https://assets.mixkit.co/sfx/preview/mixkit-positive-notification-951.mp3'));
+  const notificationSound = useRef(new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3'));
 
   // Currency and Language states
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
@@ -374,9 +375,14 @@ export default function Header() {
   ];
 
   // Handle search submission
+  const { recordSearch } = useSearchIntelligence();
+
   const handleSearch = (e) => {
     if (e) e.preventDefault();
     if (!searchTerm.trim()) return;
+
+    // Record search for intelligence engine
+    recordSearch(searchTerm);
 
     // Save search history
     const updatedHistory = saveSearchHistory(searchTerm, 'all');
