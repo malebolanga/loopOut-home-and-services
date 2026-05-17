@@ -880,6 +880,10 @@ const ServicePage = () => {
           bookingSubtype = 'School Transport';
         }
 
+        // Determine device type
+        const deviceType = /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
+        const requestLocation = bookingData.address || '';
+
         const bookingToSave = {
           userId: currentUser?._id || "guest",
           serviceId: service._id,
@@ -892,6 +896,8 @@ const ServicePage = () => {
           selectedPerformer: bookingData.selectedPerformer,
           performerExperience: service.performers?.find(p => p.name === bookingData.selectedPerformer)?.experience,
           performerImage: service.performers?.find(p => p.name === bookingData.selectedPerformer)?.image,
+          deviceType,
+          requestLocation,
           status: 'pending'
         };
 

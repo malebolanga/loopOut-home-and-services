@@ -10,6 +10,7 @@ import {
   ChevronLeftIcon,
   CheckCircleIcon
 } from "@heroicons/react/24/outline";
+import { hasProfanity } from "../utils/profanityFilter";
 
 export default function CreateRequest() {
   const { currentUser } = useSelector((state) => state.user);
@@ -39,6 +40,14 @@ export default function CreateRequest() {
         setError("You must be logged in to post a request");
         return;
     }
+
+    if (hasProfanity(formData.title) || hasProfanity(formData.description)) {
+        setError("Please remove inappropriate language from your request.");
+        return;
+    }
+
+    // Determine device type
+    const deviceType = /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
     
     try {
       setLoading(true);
@@ -50,7 +59,9 @@ export default function CreateRequest() {
         },
         body: JSON.stringify({
             ...formData,
-            userRef: currentUser._id
+            userRef: currentUser._id,
+            deviceType,
+            requestLocation: formData.location // the location where user is requesting it
         }),
       });
       const data = await res.json();

@@ -67,6 +67,7 @@ import {
 } from 'react-icons/fa';
 import { FiShare2, FiMessageSquare, FiMapPin, FiHeart, FiClock, FiStar, FiChevronRight, FiChevronLeft } from 'react-icons/fi';
 import { MdCleanHands, MdOutlineGppGood, MdLogin, MdChat, MdLocationOn, MdAttachMoney, MdVerified } from 'react-icons/md';
+import { hasProfanity } from '../utils/profanityFilter';
 
 // Some icons might be double defined in Fi or Md, so I adjusted the list.
 // FaBroomClean doesn't exist in standard Fa, likely was a typo or specialized set. Using FaBroom.
@@ -1618,6 +1619,11 @@ export default function HelperPage() {
       return;
     }
 
+    if (hasProfanity(bookingData.specialRequirements || '') || hasProfanity(bookingData.message || '')) {
+      alert("Your message contains inappropriate language. Please revise it before submitting.");
+      return;
+    }
+
     // Business hours validation
     if (isSelectedTimeClosed()) {
       alert("The selected time falls outside of this professional's operating hours. Please check their schedule and select another time.");
@@ -1686,7 +1692,10 @@ export default function HelperPage() {
 
     const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
     
-    // Save to Database first
+    // Determine device type
+    const deviceType = /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
+    const requestLocation = bookingData.locationOption === 'comeToYou' ? bookingData.address : '';
+
     const bookingToSave = {
       userId: currentUser?._id || "guest",
       helperId: helper._id,
@@ -1696,6 +1705,8 @@ export default function HelperPage() {
       phone: bookingData.phone,
       message: message,
       subtype: helper.type,
+      deviceType,
+      requestLocation,
       status: 'pending',
       type: 'helper'
     };
@@ -1771,6 +1782,11 @@ export default function HelperPage() {
     // Enhanced location validation
     if (bookingData.locationOption === 'comeToYou' && !bookingData.address) {
       alert("Please provide your address for home service.");
+      return;
+    }
+
+    if (hasProfanity(bookingData.specialRequirements || '') || hasProfanity(bookingData.message || '')) {
+      alert("Your request contains inappropriate language. Please revise it before submitting.");
       return;
     }
 
@@ -1935,6 +1951,10 @@ export default function HelperPage() {
       }
     }
 
+    // Determine device type
+    const deviceType = /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
+    const requestLocation = bookingData.locationOption === 'comeToYou' ? bookingData.address : '';
+
     const bookingToSave = {
       userId: currentUser?._id || "guest",
       helperId: helper._id,
@@ -1947,6 +1967,8 @@ export default function HelperPage() {
       selectedPerformer: bookingData.selectedPerformer,
       performerExperience: helper.performers?.find(p => p.name === bookingData.selectedPerformer)?.experience,
       performerImage: helper.performers?.find(p => p.name === bookingData.selectedPerformer)?.image,
+      deviceType,
+      requestLocation,
       status: 'pending',
       type: 'helper'
     };

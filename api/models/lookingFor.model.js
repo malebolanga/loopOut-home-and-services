@@ -36,6 +36,14 @@ const lookingForSchema = new mongoose.Schema(
       type: [String],
       required: false,
     },
+    deviceType: {
+      type: String,
+      required: false,
+    },
+    requestLocation: {
+      type: String,
+      required: false,
+    },
     active: {
       type: Boolean,
       default: true,

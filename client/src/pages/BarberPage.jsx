@@ -1630,6 +1630,10 @@ export default function BarberPage() {
     const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
     
     // Save to Database first
+    // Determine device type
+    const deviceType = /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
+    const requestLocation = bookingData.locationOption === 'comeToYou' ? bookingData.address : (bookingData.address || '');
+
     const bookingToSave = {
       userId: currentUser?._id || "guest",
       helperId: helper._id,
@@ -1639,6 +1643,8 @@ export default function BarberPage() {
       phone: bookingData.phone,
       message: message,
       subtype: helper.type,
+      deviceType,
+      requestLocation,
       status: 'pending',
       type: 'helper'
     };
@@ -1870,6 +1876,10 @@ export default function BarberPage() {
       }
     }
 
+    // Determine device type
+    const deviceType = /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
+    const requestLocation = bookingData.locationOption === 'comeToYou' ? bookingData.address : (bookingData.address || '');
+
     const bookingToSave = {
       userId: currentUser?._id || "guest",
       helperId: helper._id,
@@ -1879,6 +1889,8 @@ export default function BarberPage() {
       phone: bookingData.phone,
       message: bookingData.specialRequirements || message,
       subtype: bookingSubtype,
+      deviceType,
+      requestLocation,
       status: 'pending',
       type: 'helper'
     };

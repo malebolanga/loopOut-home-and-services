@@ -1157,6 +1157,87 @@ const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
 
 // --- PREMIUM LOOP OUT HERO (Redesigned: Sliding Neural Network) ---
 const LoopOutHomeHero = ({ navigate }) => {
+  const slides = [
+    {
+      id: 1,
+      image: 'https://images.unsplash.com/photo-1618220179428-22790b46a0eb?auto=format&fit=crop&w=1600&q=80',
+      tagIcon: Sparkles,
+      tagText: 'Premium Reflections',
+      titleLine1: 'LOOPOUT',
+      titleLine2: 'MIRROR.',
+      titleGradient: 'from-rose-500 via-rose-400 to-amber-500',
+      description: 'Reflect your best self in every space. Discover luxury in the details.',
+      buttonAction: () => navigate('/explore'),
+      buttonText: 'Start Neural Search',
+      buttonIcon: MagnifyingGlassIcon
+    },
+    {
+      id: 2,
+      image: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=1600&q=80',
+      tagIcon: ScissorsIcon,
+      tagText: 'Elite Salon Experience',
+      titleLine1: 'LOOPOUT',
+      titleLine2: 'SALON.',
+      titleGradient: 'from-amber-400 via-rose-400 to-rose-500',
+      description: 'Premium seating, premium styling. Our signature on every chair.',
+      buttonAction: () => navigate('/search?category=hair&type=services'),
+      buttonText: 'Find Your Salon',
+      buttonIcon: ScissorsIcon
+    },
+    {
+      id: 3,
+      image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1600&q=80',
+      tagIcon: UserGroupIcon,
+      tagText: 'Professional Grooming',
+      titleLine1: 'LOOPOUT',
+      titleLine2: 'BARBER.',
+      titleGradient: 'from-indigo-400 via-purple-400 to-rose-500',
+      description: 'Experience luxury from the moment you sit down. Draped in excellence.',
+      buttonAction: () => navigate('/search?category=barber&type=services'),
+      buttonText: 'Book a Barber',
+      buttonIcon: ScissorsIcon
+    },
+    {
+      id: 4,
+      image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1600&q=80',
+      tagIcon: HomeModernIcon,
+      tagText: 'Curated Living Spaces',
+      titleLine1: 'LOOPOUT',
+      titleLine2: 'ROOMS.',
+      titleGradient: 'from-emerald-400 via-teal-400 to-cyan-500',
+      description: 'Inside the room for rent, every detail is curated for you. Even the curtains.',
+      buttonAction: () => navigate('/search?category=rental&type=properties'),
+      buttonText: 'Explore Rooms',
+      buttonIcon: HomeModernIcon
+    },
+    {
+      id: 5,
+      image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1600&q=80',
+      tagIcon: Sparkles,
+      tagText: 'Signature Comfort',
+      titleLine1: 'LOOPOUT',
+      titleLine2: 'BEDDING.',
+      titleGradient: 'from-rose-400 via-pink-400 to-purple-500',
+      description: 'Rest in luxury with our signature LoopOut logo on your bedding.',
+      buttonAction: () => navigate('/search?category=guesthouse&type=properties'),
+      buttonText: 'View Guest Houses',
+      buttonIcon: Sparkles
+    },
+    {
+      id: 6,
+      image: 'https://images.unsplash.com/photo-1542314831-c53cd3816002?auto=format&fit=crop&w=1600&q=80',
+      tagIcon: StarIcon,
+      tagText: 'Grand Hospitality',
+      titleLine1: 'LOOPOUT',
+      titleLine2: 'HOTEL.',
+      titleGradient: 'from-amber-300 via-yellow-400 to-orange-500',
+      description: 'From the banner at the gate to the reception table, welcome to excellence.',
+      buttonAction: () => navigate('/search?type=properties'),
+      buttonText: 'Discover Hotels',
+      buttonIcon: StarIcon
+    }
+  ];
+
   return (
     <div className="relative h-[850px] w-full overflow-hidden bg-gray-950">
       <Swiper
@@ -1167,155 +1248,56 @@ const LoopOutHomeHero = ({ navigate }) => {
         pagination={{ clickable: true, bulletActiveClass: 'swiper-pagination-bullet-active !bg-rose-500' }}
         className="h-full w-full hero-swiper"
       >
-        {/* Slide 1: LoopOut for Everyone */}
-        <SwiperSlide>
-          <div className="relative h-full w-full">
-            <motion.div
-              initial={{ scale: 1.1 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 10 }}
-              className="absolute inset-0"
-            >
-              <img
-                src="/loopout_for_everyone.png"
-                alt="LoopOut for Everyone"
-                className="w-full h-full object-cover opacity-50 mix-blend-overlay"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-gray-950/60 via-transparent to-gray-950" />
-              <div className="absolute inset-0 bg-gradient-to-r from-rose-950/80 via-gray-950/40 to-transparent" />
-            </motion.div>
-
-            <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
+        {slides.map((slide) => (
+          <SwiperSlide key={slide.id}>
+            <div className="relative h-full w-full">
               <motion.div
-                initial={{ y: 40, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.8 }}
-                className="max-w-5xl"
+                initial={{ scale: 1.1 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 10 }}
+                className="absolute inset-0"
               >
-                <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-rose-500/10 backdrop-blur-xl border border-rose-500/20 text-rose-500 text-[10px] font-black tracking-[0.3em] uppercase mb-10 shadow-2xl">
-                  <Sparkles className="w-4 h-4" />
-                  Neural Discovery Network
-                </div>
-                <h1 className="text-7xl lg:text-9xl font-black text-white mb-8 tracking-tighter leading-[0.8] drop-shadow-2xl">
-                  LOOPOUT FOR <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-rose-400 to-amber-500">
-                    EVERYONE.
-                  </span>
-                </h1>
-                <p className="text-xl lg:text-2xl text-white/60 max-w-3xl mx-auto mb-12 font-medium leading-relaxed drop-shadow-lg">
-                  From <span className="text-white">Johannesburg</span> to <span className="text-white">Rustenburg</span>, we connect you to the masterpieces of your community.
-                </p>
-                <button
-                  onClick={() => navigate('/explore')}
-                  className="px-12 py-6 bg-rose-500 text-white rounded-[2.5rem] font-black shadow-[0_20px_50px_rgba(225,29,72,0.4)] transition-all flex items-center gap-3 text-xs tracking-widest uppercase mx-auto"
-                >
-                  <MagnifyingGlassIcon className="w-5 h-5" />
-                  Start Neural Search
-                </button>
+                <img
+                  src={slide.image}
+                  alt={slide.titleLine1 + ' ' + slide.titleLine2}
+                  className="w-full h-full object-cover opacity-50 mix-blend-overlay"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-gray-950/60 via-transparent to-gray-950" />
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-950/80 via-gray-950/40 to-transparent" />
               </motion.div>
-            </div>
-          </div>
-        </SwiperSlide>
 
-        {/* Slide 2: LoopOut Maid Celebration */}
-        <SwiperSlide>
-          <div className="relative h-full w-full">
-            <motion.div
-              initial={{ scale: 1.1 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 10 }}
-              className="absolute inset-0"
-            >
-              <img
-                src="/loopout_maid_celebration.png"
-                alt="LoopOut Maid Celebration"
-                className="w-full h-full object-cover opacity-50 mix-blend-overlay"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-gray-950/60 via-transparent to-gray-950" />
-              <div className="absolute inset-0 bg-gradient-to-l from-rose-950/80 via-gray-950/40 to-transparent" />
-            </motion.div>
-
-            <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
-              <motion.div
-                initial={{ y: 40, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.8 }}
-                className="max-w-5xl"
-              >
-                <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-rose-500/10 backdrop-blur-xl border border-rose-500/20 text-rose-500 text-[10px] font-black tracking-[0.3em] uppercase mb-10 shadow-2xl">
-                  <HeartIcon className="w-4 h-4" />
-                  Professional Domestic Care
-                </div>
-                <h1 className="text-7xl lg:text-9xl font-black text-white mb-8 tracking-tighter leading-[0.8] drop-shadow-2xl">
-                  THE PERFECT <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-rose-400 to-rose-500">
-                    WORK.
-                  </span>
-                </h1>
-                <p className="text-xl lg:text-2xl text-white/60 max-w-3xl mx-auto mb-12 font-medium leading-relaxed drop-shadow-lg">
-                  Celebrating the bond between <span className="text-white">families</span> and their <span className="text-white">helpers</span>. Trusted, verified, and professional.
-                </p>
-                <button
-                  onClick={() => navigate('/search?category=maid&type=helper')}
-                  className="px-12 py-6 bg-white text-gray-950 rounded-[2.5rem] font-black shadow-2xl transition-all flex items-center gap-3 text-xs tracking-widest uppercase mx-auto"
+              <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
+                <motion.div
+                  initial={{ y: 40, opacity: 0 }}
+                  whileInView={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.8 }}
+                  className="max-w-5xl"
                 >
-                  <UserGroupIcon className="w-5 h-5" />
-                  Find Your Maid
-                </button>
-              </motion.div>
+                  <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white text-[10px] font-black tracking-[0.3em] uppercase mb-10 shadow-2xl">
+                    <slide.tagIcon className="w-4 h-4 text-rose-500" />
+                    {slide.tagText}
+                  </div>
+                  <h1 className="text-7xl lg:text-9xl font-black text-white mb-8 tracking-tighter leading-[0.8] drop-shadow-2xl">
+                    {slide.titleLine1} <br />
+                    <span className={`text-transparent bg-clip-text bg-gradient-to-r ${slide.titleGradient}`}>
+                      {slide.titleLine2}
+                    </span>
+                  </h1>
+                  <p className="text-xl lg:text-2xl text-white/80 max-w-3xl mx-auto mb-12 font-medium leading-relaxed drop-shadow-lg">
+                    {slide.description}
+                  </p>
+                  <button
+                    onClick={slide.buttonAction}
+                    className="px-12 py-6 bg-rose-500 text-white rounded-[2.5rem] font-black shadow-[0_20px_50px_rgba(225,29,72,0.4)] transition-all flex items-center gap-3 text-xs tracking-widest uppercase mx-auto hover:bg-rose-600 hover:scale-105"
+                  >
+                    <slide.buttonIcon className="w-5 h-5" />
+                    {slide.buttonText}
+                  </button>
+                </motion.div>
+              </div>
             </div>
-          </div>
-        </SwiperSlide>
-
-        {/* Slide 3: LoopOut Removal & Delivery */}
-        <SwiperSlide>
-          <div className="relative h-full w-full">
-            <motion.div
-              initial={{ scale: 1.1 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 10 }}
-              className="absolute inset-0"
-            >
-              <img
-                src="/loopout_removal_delivery.png"
-                alt="LoopOut Removal & Delivery"
-                className="w-full h-full object-cover opacity-50 mix-blend-overlay"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-gray-950/60 via-transparent to-gray-950" />
-              <div className="absolute inset-0 bg-gradient-to-tr from-rose-950/80 via-gray-950/40 to-transparent" />
-            </motion.div>
-
-            <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
-              <motion.div
-                initial={{ y: 40, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.8 }}
-                className="max-w-5xl"
-              >
-                <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-rose-500/10 backdrop-blur-xl border border-rose-500/20 text-rose-500 text-[10px] font-black tracking-[0.3em] uppercase mb-10 shadow-2xl">
-                  <TruckIcon className="w-4 h-4" />
-                  Elite Community Logistics
-                </div>
-                <h1 className="text-7xl lg:text-9xl font-black text-white mb-8 tracking-tighter leading-[0.8] drop-shadow-2xl">
-                  REMOVAL & <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-rose-400 to-amber-500">
-                    DELIVERY.
-                  </span>
-                </h1>
-                <p className="text-xl lg:text-2xl text-white/60 max-w-3xl mx-auto mb-12 font-medium leading-relaxed drop-shadow-lg">
-                  Professional moving, removal, and on-demand delivery services tailored for your community. Secure, reliable, and branded excellence.
-                </p>
-                <button
-                  onClick={() => navigate('/search?category=delivery&type=services')}
-                  className="px-12 py-6 bg-rose-500 text-white rounded-[2.5rem] font-black shadow-[0_20px_50px_rgba(225,29,72,0.4)] transition-all flex items-center gap-3 text-xs tracking-widest uppercase mx-auto"
-                >
-                  <TruckIcon className="w-5 h-5" />
-                  Book Removal
-                </button>
-              </motion.div>
-            </div>
-          </div>
-        </SwiperSlide>
+          </SwiperSlide>
+        ))}
       </Swiper>
 
       {/* Animated City Indicators (Persistent Overlay) */}

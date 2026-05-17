@@ -464,6 +464,10 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
 
     // Save booking to Database
     try {
+      // Determine device type
+      const deviceType = /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
+      const requestLocation = listing?.address || '';
+
       const bookingData = {
         userId: currentUser?._id || "guest",
         listingId: listing._id,
@@ -472,6 +476,8 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
         totalPrice: totalPrice,
         phone: bookingDetails.phone,
         message: bookingDetails.specialRequests || message,
+        deviceType,
+        requestLocation,
         status: 'pending'
       };
 

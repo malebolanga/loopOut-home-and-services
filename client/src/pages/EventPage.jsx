@@ -323,6 +323,10 @@ export default function EventPage() {
 
     const message = `*🎟️ EVENT REGISTRATION*%0A*Event:* ${event.name}%0A*Name:* ${registrationData.name}%0A*Tickets:* ${registrationData.quantity}`;
     
+    // Determine device type
+    const deviceType = /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
+    const requestLocation = event.address || '';
+
     // Save to database for accurate tracking
     try {
       await fetch('/api/bookings', {
@@ -336,6 +340,8 @@ export default function EventPage() {
           totalPrice: (event.regularPrice || 0) * registrationData.quantity,
           phone: registrationData.phone,
           message: registrationData.note || message,
+          deviceType,
+          requestLocation,
           status: 'pending'
         })
       });

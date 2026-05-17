@@ -20,6 +20,8 @@ const bookingSchema = new mongoose.Schema({
   selectedPerformer: { type: String },
   performerExperience: { type: String },
   performerImage: { type: String },
+  deviceType: { type: String },
+  requestLocation: { type: String },
   createdAt: { type: Date, default: Date.now }
 });
 

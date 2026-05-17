@@ -4,6 +4,7 @@ import Helper from '../models/helper.model.js';
 import Service from '../models/service.model.js';
 import Event from '../models/event.model.js';
 import Notification from '../models/notification.model.js';
+import { hasProfanity, logProfanityEvent } from '../utils/profanityFilter.js';
 
 // Calculate price and validate dates
 export const calculateBookingDetails = async (req, res) => {
@@ -67,6 +68,11 @@ export const createBooking = async (req, res) => {
     const mainId = listingId || helperId || serviceId || eventId;
     if (!userId || !mainId || !startDate || !endDate || !totalPrice) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (hasProfanity(message)) {
+      logProfanityEvent(userId, 'booking_create', message);
+      return res.status(400).json({ error: 'Your booking request contains inappropriate language. Please revise it.' });
     }
 
     // Check Operating Hours
@@ -345,6 +351,19 @@ export const getHelperBookingSummary = async (req, res) => {
       
     const count = bookings.length;
     
+    // Analytics
+    const deviceStats = { Mobile: 0, Desktop: 0 };
+    const locationStats = {};
+    
+    bookings.forEach(b => {
+      if (b.deviceType) {
+        deviceStats[b.deviceType] = (deviceStats[b.deviceType] || 0) + 1;
+      }
+      if (b.requestLocation) {
+        locationStats[b.requestLocation] = (locationStats[b.requestLocation] || 0) + 1;
+      }
+    });
+    
     // Get unique users who booked
     const recentBookers = [];
     const seenUsers = new Set();
@@ -359,7 +378,8 @@ export const getHelperBookingSummary = async (req, res) => {
 
     res.json({
       count,
-      recentBookers
+      recentBookers,
+      analytics: { deviceStats, locationStats }
     });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -377,6 +397,19 @@ export const getServiceBookingSummary = async (req, res) => {
       
     const count = bookings.length;
     
+    // Analytics
+    const deviceStats = { Mobile: 0, Desktop: 0 };
+    const locationStats = {};
+    
+    bookings.forEach(b => {
+      if (b.deviceType) {
+        deviceStats[b.deviceType] = (deviceStats[b.deviceType] || 0) + 1;
+      }
+      if (b.requestLocation) {
+        locationStats[b.requestLocation] = (locationStats[b.requestLocation] || 0) + 1;
+      }
+    });
+    
     const recentBookers = [];
     const seenUsers = new Set();
     
@@ -390,7 +423,8 @@ export const getServiceBookingSummary = async (req, res) => {
 
     res.json({
       count,
-      recentBookers
+      recentBookers,
+      analytics: { deviceStats, locationStats }
     });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -408,6 +442,19 @@ export const getListingBookingSummary = async (req, res) => {
       
     const count = bookings.length;
     
+    // Analytics
+    const deviceStats = { Mobile: 0, Desktop: 0 };
+    const locationStats = {};
+    
+    bookings.forEach(b => {
+      if (b.deviceType) {
+        deviceStats[b.deviceType] = (deviceStats[b.deviceType] || 0) + 1;
+      }
+      if (b.requestLocation) {
+        locationStats[b.requestLocation] = (locationStats[b.requestLocation] || 0) + 1;
+      }
+    });
+    
     const recentBookers = [];
     const seenUsers = new Set();
     
@@ -421,7 +468,8 @@ export const getListingBookingSummary = async (req, res) => {
 
     res.json({
       count,
-      recentBookers
+      recentBookers,
+      analytics: { deviceStats, locationStats }
     });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -438,6 +486,19 @@ export const getEventBookingSummary = async (req, res) => {
       
     const count = bookings.length;
     
+    // Analytics
+    const deviceStats = { Mobile: 0, Desktop: 0 };
+    const locationStats = {};
+    
+    bookings.forEach(b => {
+      if (b.deviceType) {
+        deviceStats[b.deviceType] = (deviceStats[b.deviceType] || 0) + 1;
+      }
+      if (b.requestLocation) {
+        locationStats[b.requestLocation] = (locationStats[b.requestLocation] || 0) + 1;
+      }
+    });
+    
     const recentBookers = [];
     const seenUsers = new Set();
     
@@ -451,7 +512,8 @@ export const getEventBookingSummary = async (req, res) => {
 
     res.json({
       count,
-      recentBookers
+      recentBookers,
+      analytics: { deviceStats, locationStats }
     });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });

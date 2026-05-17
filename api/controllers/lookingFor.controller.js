@@ -1,8 +1,15 @@
 import LookingFor from '../models/lookingFor.model.js';
 import { errorHandler } from '../utils/error.js';
+import { hasProfanity, logProfanityEvent } from '../utils/profanityFilter.js';
 
 export const createLookingFor = async (req, res, next) => {
   try {
+    const { title, description, userRef } = req.body;
+    if (hasProfanity(title) || hasProfanity(description)) {
+      logProfanityEvent(userRef || 'guest', 'lookingFor_create', `${title} | ${description}`);
+      return next(errorHandler(400, 'Your request contains inappropriate language. Please revise it.'));
+    }
+
     const lookingFor = await LookingFor.create(req.body);
     return res.status(201).json(lookingFor);
   } catch (error) {
@@ -39,6 +46,12 @@ export const updateLookingFor = async (req, res, next) => {
   }
 
   try {
+    const { title, description } = req.body;
+    if (hasProfanity(title) || hasProfanity(description)) {
+      logProfanityEvent(req.user.id, 'lookingFor_update', `${title} | ${description}`);
+      return next(errorHandler(400, 'Your request contains inappropriate language. Please revise it.'));
+    }
+
     const updatedLookingFor = await LookingFor.findByIdAndUpdate(
       req.params.id,
       req.body,
