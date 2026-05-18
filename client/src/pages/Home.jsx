@@ -1791,8 +1791,8 @@ const ServicesToYourDoor = ({ navigate }) => {
 };
 
 // --- NEW COMPONENT: WEEKLY SPECIALS (DEFINE YOUR DAY) ---
-const WeeklySpecialsSection = ({ navigate }) => {
-  const specials = [
+const WeeklySpecialsSection = ({ navigate, isMobile = false }) => {
+  const allSpecials = [
     {
       id: 'promo-verified',
       title: 'Verified Excellence',
@@ -1843,13 +1843,17 @@ const WeeklySpecialsSection = ({ navigate }) => {
     }
   ];
 
+  const specials = isMobile 
+    ? allSpecials.filter(s => s.id === 'promo-favor' || s.id === 'promo-1')
+    : allSpecials;
+
   return (
     <section className="mb-16">
       <div className="flex items-center gap-3 mb-8">
         <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
         <h2 className="text-xl font-black text-gray-950 tracking-widest uppercase">DEFINE YOUR DAY</h2>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
+      <div className={`grid grid-cols-1 md:grid-cols-3 ${isMobile ? 'lg:grid-cols-2' : 'lg:grid-cols-6'} gap-6`}>
         {specials.map((promo, idx) => (
           <motion.div
             key={promo.id}
@@ -2099,7 +2103,7 @@ const MobileAppHomepage = ({
           </section>
 
           {/* NEW: WEEKLY SPECIALS SECTION */}
-          <WeeklySpecialsSection navigate={navigate} />
+          <WeeklySpecialsSection navigate={navigate} isMobile={false} />
 
 
 
@@ -2633,7 +2637,7 @@ const MobileAppHomepage = ({
         </section>
 
         <div className="mb-10">
-          <WeeklySpecialsSection navigate={navigate} />
+          <WeeklySpecialsSection navigate={navigate} isMobile={true} />
         </div>
 
         {/* LoopOut Brand Campaign Banner */}
