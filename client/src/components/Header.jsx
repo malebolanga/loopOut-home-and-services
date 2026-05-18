@@ -702,10 +702,10 @@ export default function Header() {
                   <HeartIcon className="w-4 h-4 stroke-[2px]" />
                 </button>
 
-                {/* Notification Bell Icon - Desktop */}
+                {/* Notification Bell Icon - Desktop and Mobile */}
                 <button
                   onClick={() => handleNavigate('/notifications')}
-                  className="relative p-2 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
+                  className="relative p-2 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition flex text-[#222222]"
                 >
                   <BellIcon className="w-4 h-4 stroke-[2px]" />
                   {unreadCount > 0 && (

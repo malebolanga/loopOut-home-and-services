@@ -31,6 +31,7 @@ import lookingForRouter from './routes/lookingFor.route.js';
 import aiHelpRouter from './routes/ai-help.route.js';
 import verificationRouter from './routes/verification.route.js';
 import sosRouter from './routes/sos.route.js';
+import { initBookingScheduler } from './utils/bookingScheduler.js';
 
 import path from 'path';
 dotenv.config();
@@ -38,6 +39,7 @@ dotenv.config();
 mongoose.connect(process.env.MONGO)
     .then(() => {
         console.log('Connected to MongoDB');
+        initBookingScheduler();
     }).catch((err) => {
         console.log(err);
     });

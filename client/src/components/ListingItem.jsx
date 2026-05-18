@@ -326,7 +326,7 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
       </div>
 
       {/* LoopOut Brand Banner Overlay */}
-      <LoopOutBanner className="group-hover:translate-y-2 transition-transform duration-500" />
+      <LoopOutBanner className="group-hover:translate-y-2 transition-transform duration-500" type="stay" />
 
       {/* Permanent Information Overlay (On Image) */}
       <div className="absolute inset-x-0 bottom-0 z-10 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none">

@@ -22,6 +22,7 @@ const bookingSchema = new mongoose.Schema({
   performerImage: { type: String },
   deviceType: { type: String },
   requestLocation: { type: String },
+  reminderSent: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 

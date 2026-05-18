@@ -1,0 +1,184 @@
+<svg viewBox="0 0 1200 675" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Lighting and Wall Gradients -->
+    <linearGradient id="wallGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E1E2F"/>
+      <stop offset="100%" stop-color="#0F0F1A"/>
+    </linearGradient>
+    <linearGradient id="floorGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2D1F18"/>
+      <stop offset="100%" stop-color="#170F0B"/>
+    </linearGradient>
+    <linearGradient id="lightRay" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDBA74" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FF385C" stop-opacity="0.0"/>
+    </linearGradient>
+    
+    <!-- Bedding Gradients -->
+    <linearGradient id="sheetGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F9FAFB"/>
+      <stop offset="100%" stop-color="#E5E7EB"/>
+    </linearGradient>
+    <linearGradient id="blanketGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF385C"/>
+      <stop offset="100%" stop-color="#D70466"/>
+    </linearGradient>
+    <linearGradient id="logoGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF385C"/>
+      <stop offset="50%" stop-color="#E61E4D"/>
+      <stop offset="100%" stop-color="#D70466"/>
+    </linearGradient>
+    
+    <!-- Shadow Filter -->
+    <filter id="pillowShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+    <filter id="bedShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="15" stdDeviation="15" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- 1. Background Walls and Flooring -->
+  <rect width="1200" height="420" fill="url(#wallGradient)"/>
+  <rect y="420" width="1200" height="255" fill="url(#floorGradient)"/>
+
+  <!-- Brick Wall Texture Lines (Subtle) -->
+  <path d="M 0 100 L 1200 100 M 0 200 L 1200 200 M 0 300 L 1200 300 M 0 400 L 1200 400" stroke="#FFFFFF" stroke-opacity="0.03" stroke-width="2"/>
+  <path d="M 150 0 L 150 100 M 450 0 L 450 100 M 750 0 L 750 100 M 1050 0 L 1050 100" stroke="#FFFFFF" stroke-opacity="0.03" stroke-width="2"/>
+  <path d="M 300 100 L 300 200 M 600 100 L 600 200 M 900 100 L 900 200" stroke="#FFFFFF" stroke-opacity="0.03" stroke-width="2"/>
+  <path d="M 150 200 L 150 300 M 450 200 L 450 300 M 750 200 L 750 300 M 1050 200 L 1050 300" stroke="#FFFFFF" stroke-opacity="0.03" stroke-width="2"/>
+
+  <!-- Wood Floor Planks (Subtle) -->
+  <path d="M 0 450 L 1200 450 M 0 500 L 1200 500 M 0 550 L 1200 550 M 0 600 L 1200 600 M 0 650 L 1200 650" stroke="#000000" stroke-opacity="0.4" stroke-width="1.5"/>
+
+  <!-- 2. Cozy Window with Sunshine -->
+  <rect x="900" y="60" width="220" height="260" rx="15" fill="#0D0D14" stroke="#FF385C" stroke-opacity="0.3" stroke-width="3"/>
+  <rect x="910" y="70" width="95" height="110" rx="8" fill="#FFFBEB" fill-opacity="0.9"/>
+  <rect x="1015" y="70" width="95" height="110" rx="8" fill="#FFFBEB" fill-opacity="0.9"/>
+  <rect x="910" y="195" width="95" height="110" rx="8" fill="#FFFBEB" fill-opacity="0.9"/>
+  <rect x="1015" y="195" width="95" height="110" rx="8" fill="#FFFBEB" fill-opacity="0.9"/>
+  
+  <!-- Sunshine Ray Overlay -->
+  <polygon points="900 60, 1120 60, 1200 675, 200 675" fill="url(#lightRay)"/>
+
+  <!-- 3. Minimalist Study Desk & Chair -->
+  <g id="desk-area" opacity="0.9">
+    <!-- Desk Drawer -->
+    <rect x="80" y="320" width="220" height="15" fill="#3E2B1F" rx="3"/>
+    <rect x="70" y="335" width="240" height="18" fill="#5C4033" rx="4"/>
+    <!-- Legs -->
+    <rect x="85" y="353" width="10" height="180" fill="#1F2937"/>
+    <rect x="295" y="353" width="10" height="180" fill="#1F2937"/>
+    <!-- Laptop on Desk -->
+    <rect x="150" y="305" width="80" height="30" rx="2" fill="#E5E7EB"/>
+    <polygon points="150 305, 230 305, 240 290, 140 290" fill="#9CA3AF"/>
+    <!-- Desk Lamp -->
+    <path d="M 95 335 L 95 280 L 120 270" stroke="#FF385C" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <path d="M 115 265 L 135 280 L 110 290 Z" fill="#FF385C"/>
+    <polygon points="110 290, 135 280, 180 335, 120 335" fill="#FDE047" opacity="0.2"/>
+    <!-- Modern Styling Chair -->
+    <rect x="155" y="390" width="70" height="50" rx="8" fill="#1F2937" filter="url(#pillowShadow)"/>
+    <path d="M 155 390 L 155 330 C 155 320, 225 320, 225 330 L 225 390 Z" fill="#111827"/>
+    <rect x="185" y="440" width="10" height="90" fill="#111827"/>
+    <path d="M 160 530 L 185 450 L 210 530" stroke="#111827" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <!-- 4. The Cozy Double Bed (The Main Feature) -->
+  <g id="double-bed" filter="url(#bedShadow)">
+    <!-- Wooden Headboard -->
+    <rect x="360" y="160" width="480" height="140" rx="15" fill="#3D2B1F" stroke="#2D1F18" stroke-width="4"/>
+    <rect x="380" y="180" width="80" height="100" rx="8" fill="#2D1F18" opacity="0.5"/>
+    <rect x="480" y="180" width="80" height="100" rx="8" fill="#2D1F18" opacity="0.5"/>
+    <rect x="580" y="180" width="80" height="100" rx="8" fill="#2D1F18" opacity="0.5"/>
+    <rect x="680" y="180" width="80" height="100" rx="8" fill="#2D1F18" opacity="0.5"/>
+    
+    <!-- Bed Frame Sideboards -->
+    <rect x="350" y="290" width="500" height="260" rx="20" fill="#5C4033"/>
+    
+    <!-- Plush Mattress -->
+    <rect x="360" y="270" width="480" height="260" rx="15" fill="url(#sheetGradient)"/>
+    
+    <!-- White Top Sheets -->
+    <path d="M 360 300 C 360 300, 480 320, 600 320 C 720 320, 840 300, 840 300 L 840 520 C 840 528, 832 530, 825 530 L 375 530 C 368 530, 360 528, 360 520 Z" fill="url(#sheetGradient)"/>
+
+    <!-- Premium Co-Branded Blanket/Duvet (Folds Down) -->
+    <path d="M 360 380 C 360 380, 480 400, 600 400 C 720 400, 840 380, 840 380 L 840 520 C 840 525, 835 530, 830 530 L 370 530 C 365 530, 360 525, 360 520 Z" fill="url(#blanketGradient)"/>
+    
+    <!-- Cozy Folded Quilt / Runner Accent at the Bottom -->
+    <rect x="360" y="470" width="480" height="50" rx="4" fill="#1F2937" opacity="0.85"/>
+  </g>
+
+  <!-- 5. Fluffy White Pillows with Clear, Custom LoopOut Branding (As Requested!) -->
+  <g id="loopout-branded-pillows">
+    <!-- PILLOW 1 (LEFT SIDE) -->
+    <g filter="url(#pillowShadow)">
+      <rect x="390" y="210" width="190" height="110" rx="25" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="2"/>
+      <!-- Soft Pillow Crease lines -->
+      <path d="M 405 265 C 430 270, 450 270, 465 265" stroke="#F3F4F6" stroke-width="3" stroke-linecap="round"/>
+      <path d="M 515 265 C 530 270, 550 270, 565 265" stroke="#F3F4F6" stroke-width="3" stroke-linecap="round"/>
+      
+      <!-- Embroidered Orange/Rose loopOut Brand Logo & Icon on Pillow 1 -->
+      <g transform="translate(450, 235) scale(0.45)">
+        <!-- Logo Icon Circle Base -->
+        <circle cx="60" cy="60" r="26" fill="rgba(255, 56, 92, 0.08)" stroke="url(#logoGradient)" stroke-width="9"/>
+        <!-- Logo Glowing Internal Spiral Curve -->
+        <path d="M 60 60 C 46 40, 83 50, 60 76" stroke="url(#logoGradient)" stroke-width="4.5" stroke-linecap="round"/>
+        <path d="M 46 60 C 46 48, 68 48, 68 60 C 68 72, 46 72, 46 60" stroke="#FF7A8F" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Logo Tail Handle -->
+        <path d="M 42 42 L 18 18" stroke="url(#logoGradient)" stroke-width="10.5" stroke-linecap="round"/>
+        
+        <!-- Embroidered brand name text next to the icon -->
+        <text x="100" y="70" fill="#1F2937" font-family="system-ui, sans-serif" font-weight="900" font-size="28px" letter-spacing="-1px">loop<tspan fill="#FF385C">Out</tspan></text>
+      </g>
+    </g>
+
+    <!-- PILLOW 2 (RIGHT SIDE) -->
+    <g filter="url(#pillowShadow)">
+      <rect x="620" y="210" width="190" height="110" rx="25" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="2"/>
+      <!-- Soft Pillow Crease lines -->
+      <path d="M 635 265 C 660 270, 680 270, 695 265" stroke="#F3F4F6" stroke-width="3" stroke-linecap="round"/>
+      <path d="M 745 265 C 760 270, 780 270, 795 265" stroke="#F3F4F6" stroke-width="3" stroke-linecap="round"/>
+      
+      <!-- Embroidered Orange/Rose loopOut Brand Logo & Icon on Pillow 2 -->
+      <g transform="translate(680, 235) scale(0.45)">
+        <!-- Logo Icon Circle Base -->
+        <circle cx="60" cy="60" r="26" fill="rgba(255, 56, 92, 0.08)" stroke="url(#logoGradient)" stroke-width="9"/>
+        <!-- Logo Glowing Internal Spiral Curve -->
+        <path d="M 60 60 C 46 40, 83 50, 60 76" stroke="url(#logoGradient)" stroke-width="4.5" stroke-linecap="round"/>
+        <path d="M 46 60 C 46 48, 68 48, 68 60 C 68 72, 46 72, 46 60" stroke="#FF7A8F" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Logo Tail Handle -->
+        <path d="M 42 42 L 18 18" stroke="url(#logoGradient)" stroke-width="10.5" stroke-linecap="round"/>
+        
+        <!-- Embroidered brand name text next to the icon -->
+        <text x="100" y="70" fill="#1F2937" font-family="system-ui, sans-serif" font-weight="900" font-size="28px" letter-spacing="-1px">loop<tspan fill="#FF385C">Out</tspan></text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Cozy Bedside Table (Clock & Plant) -->
+  <g id="bedside-cabinet" opacity="0.95">
+    <rect x="850" y="320" width="90" height="90" rx="8" fill="#3D2B1F" filter="url(#pillowShadow)"/>
+    <rect x="845" y="315" width="100" height="10" rx="2" fill="#5C4033"/>
+    <!-- Drawer Knob -->
+    <circle cx="895" cy="360" r="5" fill="#E5E7EB"/>
+    <!-- Potted Plant on Bedside -->
+    <path d="M 885 315 L 890 295 L 900 295 L 905 315 Z" fill="#9CA3AF"/>
+    <path d="M 895 295 C 885 270, 875 280, 885 260 C 895 275, 905 275, 915 260 C 925 280, 915 270, 895 295" fill="#10B981"/>
+  </g>
+
+  <!-- 6. Premium Brand Campaign Overlay Card Header -->
+  <rect x="40" y="40" width="300" height="85" rx="20" fill="#000000" fill-opacity="0.6" stroke="#FFFFFF" stroke-opacity="0.1" stroke-width="1.5" filter="url(#pillowShadow)"/>
+  <circle cx="75" cy="82" r="18" fill="#FF385C"/>
+  <!-- Embedded glowing mini-logo inside the header card icon -->
+  <g transform="translate(62, 69) scale(0.22)">
+    <circle cx="60" cy="60" r="26" fill="none" stroke="white" stroke-width="10"/>
+    <path d="M 42 42 L 18 18" stroke="white" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  
+  <text x="110" y="75" fill="#FF385C" font-family="system-ui, sans-serif" font-weight="900" font-size="11px" letter-spacing="3px">LOOPOUT</text>
+  <text x="110" y="95" fill="#FFFFFF" font-family="system-ui, sans-serif" font-weight="900" font-size="14px" letter-spacing="1px">VERIFIED STAY</text>
+  
+  <!-- Active Campaign Badge overlay at bottom right -->
+  <rect x="910" y="585" width="250" height="50" rx="15" fill="#FF385C" filter="url(#pillowShadow)"/>
+  <text x="935" y="615" fill="#FFFFFF" font-family="system-ui, sans-serif" font-weight="900" font-size="12px" letter-spacing="2px">SOWETO CO-BRANDED</text>
+</svg>

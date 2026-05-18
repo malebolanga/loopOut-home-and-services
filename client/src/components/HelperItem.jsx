@@ -150,7 +150,7 @@ function HelperItem({ helper, className = "" }) {
         </button>
       </div>
 
-      <LoopOutBanner className="bottom-24" />
+      <LoopOutBanner className="bottom-24" type="helper" />
 
       {/* Integrated Information Overlay (Always Visible Gradient) */}
       <div className="absolute inset-x-0 bottom-0 z-10 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none">

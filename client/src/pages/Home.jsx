@@ -71,6 +71,7 @@ import LookingForItem from '../components/LookingForItem';
 import BottomNav from '../components/BottomNav';
 import useSearchIntelligence from '../hooks/useSearchIntelligence';
 import HelperItem from '../components/HelperItem';
+import LoopOutBanner from '../components/LoopOutBanner';
 
 import {
   calculateDistance,
@@ -1186,7 +1187,7 @@ const LoopOutHomeHero = ({ navigate }) => {
     },
     {
       id: 3,
-      image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1600&q=80',
+      image: '/barber_loopout_campaign.png',
       tagIcon: UserGroupIcon,
       tagText: 'Professional Grooming',
       titleLine1: 'LOOPOUT',
@@ -1225,7 +1226,7 @@ const LoopOutHomeHero = ({ navigate }) => {
     },
     {
       id: 6,
-      image: 'https://images.unsplash.com/photo-1542314831-c53cd3816002?auto=format&fit=crop&w=1600&q=80',
+      image: '/hotel_reception_loopout_campaign.png',
       tagIcon: StarIcon,
       tagText: 'Grand Hospitality',
       titleLine1: 'LOOPOUT',
@@ -1816,6 +1817,30 @@ const WeeklySpecialsSection = ({ navigate }) => {
       color: 'bg-rose-600',
       image: '/special_first.png'
     },
+    {
+      id: 'promo-barber',
+      title: 'LoopOut Barber',
+      discount: 'EXCELLENCE',
+      desc: 'Draped in excellence, styled by premier groomers',
+      color: 'bg-indigo-600',
+      image: '/barber_loopout_campaign.png'
+    },
+    {
+      id: 'promo-hotel',
+      title: 'LoopOut Hotel',
+      discount: 'EXCLUSIVE',
+      desc: 'Welcome to premium comfort at partner destinations',
+      color: 'bg-amber-600',
+      image: '/hotel_reception_loopout_campaign.png'
+    },
+    {
+      id: 'promo-rooms',
+      title: 'LoopOut Soweto Stay',
+      discount: 'SOWETO',
+      desc: 'Rest in luxury with co-branded pillows at premier guest houses',
+      color: 'bg-emerald-600',
+      image: '/student_room_loopout_campaign.svg'
+    }
   ];
 
   return (
@@ -1824,7 +1849,7 @@ const WeeklySpecialsSection = ({ navigate }) => {
         <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
         <h2 className="text-xl font-black text-gray-950 tracking-widest uppercase">DEFINE YOUR DAY</h2>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
         {specials.map((promo, idx) => (
           <motion.div
             key={promo.id}
@@ -1970,6 +1995,11 @@ const MobileAppHomepage = ({
         <main className="max-w-7xl mx-auto px-8 py-12">
           {/* FRESHA-STYLE TOP CATEGORIES SECTION */}
           <TopCategoriesSection navigate={navigate} />
+
+          {/* LoopOut Brand Campaign Banner */}
+          <div className="relative h-24 mb-16">
+            <LoopOutBanner type="all" className="relative !bottom-0 !left-0 !right-0 !px-0" />
+          </div>
 
           {/* NEURAL PICKS SECTION - Alpha Algorithm */}
           <NeuralPicksSection navigate={navigate} />
@@ -2467,6 +2497,90 @@ const MobileAppHomepage = ({
                 </div>
               </div>
             </SwiperSlide>
+
+            {/* Mobile Slide 4: LoopOut Barber Campaign */}
+            <SwiperSlide>
+              <div className="relative h-full w-full" onClick={() => navigate('/search?category=barber&type=services')}>
+                <img
+                  src="/barber_loopout_campaign.png"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  alt="LoopOut Barber"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
+                <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                  <div className="flex items-center gap-2 mb-4">
+                    <ScissorsIcon className="w-5 h-5 text-rose-500" />
+                    <span className="text-white text-[10px] font-black tracking-[0.3em] uppercase">Professional Grooming</span>
+                  </div>
+                  <h2 className="text-4xl font-black text-white leading-[0.85] mb-6 tracking-tighter">
+                    LOOPOUT <br />
+                    <span className="text-rose-500">BARBER.</span>
+                  </h2>
+                  <p className="text-white/70 text-[14px] font-medium mb-8 leading-relaxed max-w-[280px]">
+                    Experience luxury from the moment you sit down. <span className="text-white">Draped in excellence.</span>
+                  </p>
+                  <button className="w-full py-5 bg-rose-500 text-white rounded-2xl text-[12px] font-black shadow-xl uppercase tracking-widest active:scale-95 transition-all">
+                    Book a Barber
+                  </button>
+                </div>
+              </div>
+            </SwiperSlide>
+
+            {/* Mobile Slide 5: LoopOut Hotel Campaign */}
+            <SwiperSlide>
+              <div className="relative h-full w-full" onClick={() => navigate('/search?type=properties')}>
+                <img
+                  src="/hotel_reception_loopout_campaign.png"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  alt="LoopOut Hotel"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
+                <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                  <div className="flex items-center gap-2 mb-4">
+                    <StarIcon className="w-5 h-5 text-rose-500" />
+                    <span className="text-white text-[10px] font-black tracking-[0.3em] uppercase">Grand Hospitality</span>
+                  </div>
+                  <h2 className="text-4xl font-black text-white leading-[0.85] mb-6 tracking-tighter">
+                    LOOPOUT <br />
+                    <span className="text-rose-500">HOTEL.</span>
+                  </h2>
+                  <p className="text-white/70 text-[14px] font-medium mb-8 leading-relaxed max-w-[280px]">
+                    From the gate to the reception desk, <span className="text-white">welcome to excellence.</span>
+                  </p>
+                  <button className="w-full py-5 bg-white text-gray-950 rounded-2xl text-[12px] font-black shadow-xl uppercase tracking-widest active:scale-95 transition-all">
+                    Discover Hotels
+                  </button>
+                </div>
+              </div>
+            </SwiperSlide>
+
+            {/* Mobile Slide 6: LoopOut Soweto Bedroom Campaign */}
+            <SwiperSlide>
+              <div className="relative h-full w-full" onClick={() => navigate('/search?category=guesthouse&type=properties')}>
+                <img
+                  src="/student_room_loopout_campaign.svg"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  alt="LoopOut Soweto Stay"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
+                <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                  <div className="flex items-center gap-2 mb-4">
+                    <HomeModernIcon className="w-5 h-5 text-rose-500" />
+                    <span className="text-white text-[10px] font-black tracking-[0.3em] uppercase">Soweto Bedroom</span>
+                  </div>
+                  <h2 className="text-4xl font-black text-white leading-[0.85] mb-6 tracking-tighter">
+                    LOOPOUT <br />
+                    <span className="text-rose-500">SOWETO.</span>
+                  </h2>
+                  <p className="text-white/70 text-[14px] font-medium mb-8 leading-relaxed max-w-[280px]">
+                    Boutique guest houses like Twin Beez. <span className="text-white">Rest in luxury with co-branded pillows.</span>
+                  </p>
+                  <button className="w-full py-5 bg-rose-500 text-white rounded-2xl text-[12px] font-black shadow-xl uppercase tracking-widest active:scale-95 transition-all">
+                    Book Soweto Stay
+                  </button>
+                </div>
+              </div>
+            </SwiperSlide>
           </Swiper>
         </div>
 
@@ -2520,6 +2634,11 @@ const MobileAppHomepage = ({
 
         <div className="mb-10">
           <WeeklySpecialsSection navigate={navigate} />
+        </div>
+
+        {/* LoopOut Brand Campaign Banner */}
+        <div className="relative h-20 mb-10">
+          <LoopOutBanner type="all" className="relative !bottom-0 !left-0 !right-0 !px-0" />
         </div>
 
         {/* NEURAL PICKS SECTION - Alpha Algorithm (Mobile) */}

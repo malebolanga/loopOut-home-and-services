@@ -92,16 +92,7 @@ const BrandLogo = ({ className = "h-8 w-auto", showText = true, textColor = "tex
         >
             <BrandIcon className="h-14 w-14" />
 
-            {showText && (
-                <div className="hidden lg:flex flex-col -gap-1">
-                    <span className={`text-[28px] font-black tracking-tighter leading-none ${textColor}`}>
-                        loop<span className="text-rose-600 drop-shadow-sm">Out</span>
-                    </span>
-                    <span className="text-[10px] font-black tracking-[0.35em] uppercase opacity-40 translate-x-[2px] text-gray-500">
-                        Elite Discovery
-                    </span>
-                </div>
-            )}
+            {/* showText is disabled to display the standalone loopout_icon.svg icon alone */}
         </motion.div>
     );
 };
