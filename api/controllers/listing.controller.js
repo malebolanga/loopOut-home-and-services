@@ -1,6 +1,7 @@
 import Listing from '../models/listing.model.js';
 import { errorHandler } from '../utils/error.js';
 import { createAreaNotifications } from '../utils/notificationUtils.js';
+import { fuzzItemsLocation, fuzzSingleItemLocation } from '../utils/locationFuzzer.js';
 
 // Create Listing
 export const createListing = async (req, res, next) => {
@@ -149,7 +150,10 @@ export const getListing = async (req, res, next) => {
     if (!listing) {
       return next(errorHandler(404, 'Listing not found!'));
     }
-    res.status(200).json(listing);
+    
+    // Check if the user is the owner (if authenticated)
+    // For now we fuzz for all public responses to be safe
+    res.status(200).json(fuzzSingleItemLocation(listing));
 
   } catch (error) {
     next(error);
@@ -318,7 +322,7 @@ export const getListings = async (req, res, next) => {
       .limit(limit)
       .skip(startIndex);
 
-    return res.status(200).json(listings);
+    return res.status(200).json(fuzzItemsLocation(listings));
   } catch (error) {
     next(error);
   }
@@ -340,7 +344,7 @@ export const getSimilarListings = async (req, res, next) => {
       .limit(4)
       .sort({ createdAt: -1 });
 
-    res.status(200).json(similarListings);
+    res.status(200).json(fuzzItemsLocation(similarListings));
   } catch (error) {
     next(error);
   }

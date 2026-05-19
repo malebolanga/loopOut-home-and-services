@@ -1,6 +1,7 @@
 import Service from '../models/service.model.js';
 import { errorHandler } from '../utils/error.js';
 import { createAreaNotifications } from '../utils/notificationUtils.js';
+import { fuzzItemsLocation, fuzzSingleItemLocation } from '../utils/locationFuzzer.js';
 
 // Create Service
 export const createService = async (req, res, next) => {
@@ -140,7 +141,7 @@ export const getService = async (req, res, next) => {
       serviceData.userRef = serviceData.creator;
     }
 
-    res.status(200).json(serviceData);
+    res.status(200).json(fuzzSingleItemLocation(serviceData));
   } catch (error) {
     next(error);
   }
@@ -205,7 +206,7 @@ export const getServices = async (req, res, next) => {
       .limit(limit)
       .skip(startIndex);
 
-    return res.status(200).json(services);
+    return res.status(200).json(fuzzItemsLocation(services));
   } catch (error) {
     next(error);
   }
@@ -226,7 +227,7 @@ export const getSimilarServices = async (req, res, next) => {
       .limit(4)
       .sort({ createdAt: -1 });
 
-    res.status(200).json(similarServices);
+    res.status(200).json(fuzzItemsLocation(similarServices));
   } catch (error) {
     next(errorHandler(500, 'Failed to fetch similar services'));
   }

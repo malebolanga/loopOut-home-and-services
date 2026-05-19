@@ -1,4 +1,5 @@
-// backend/api/search.js (example)
+import { fuzzItemsLocation } from './utils/locationFuzzer.js';
+
 export const searchHandler = async (req, res) => {
   try {
     const {
@@ -52,9 +53,11 @@ export const searchHandler = async (req, res) => {
       itemType: type
     }));
     
+    const securedResults = fuzzItemsLocation(typedResults);
+    
     res.status(200).json({
       success: true,
-      data: typedResults,
+      data: securedResults,
       total,
       hasMore,
       page: parseInt(page),

@@ -78,8 +78,37 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from 'framer-motion';
 import WishList from "./WishListProfile";
 import MyListing from "./MyListing";
-import { Camera, CheckCircle, X, MessageCircle, Mail, Phone, ChevronRight, Globe, Shield, Bell, User, Home, Heart, List, Settings, LogOut, Plus, Trash2, Edit3, MapPin, Calendar, Star, Award, HelpCircle, Download, BarChart, Gift, Wallet } from 'lucide-react';
-import { CheckBadgeIcon } from '@heroicons/react/24/outline';
+import { 
+  CameraIcon, 
+  CheckCircleIcon, 
+  XMarkIcon, 
+  ChatBubbleLeftRightIcon, 
+  EnvelopeIcon, 
+  PhoneIcon, 
+  ChevronRightIcon, 
+  GlobeAltIcon, 
+  ShieldCheckIcon, 
+  BellIcon, 
+  UserIcon, 
+  HomeIcon, 
+  HeartIcon, 
+  ListBulletIcon, 
+  Cog6ToothIcon, 
+  ArrowRightOnRectangleIcon, 
+  PlusIcon, 
+  TrashIcon, 
+  PencilSquareIcon, 
+  MapPinIcon, 
+  CalendarIcon, 
+  StarIcon, 
+  TrophyIcon, 
+  QuestionMarkCircleIcon, 
+  ArrowDownTrayIcon, 
+  ChartBarIcon, 
+  GiftIcon, 
+  WalletIcon,
+  CheckBadgeIcon
+} from '@heroicons/react/24/outline';
 
 // Masterpiece Elite Color Palette
 const colors = {
@@ -104,7 +133,7 @@ const InputField = ({ label, id, type = "text", value, handleChange, helperText,
     <div className="relative">
       {Icon && (
         <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#767676]">
-          <Icon size={18} />
+          <Icon className="w-[18px] h-[18px]" />
         </div>
       )}
       <input
@@ -156,11 +185,16 @@ const Checkbox = ({ label, checked, onChange, helperText }) => (
 
 // Airbnb Section Card
 const SectionCard = ({ children, title, icon: Icon }) => (
-  <div className="bg-white rounded-xl border border-[#DDDDDD] shadow-sm p-6 mb-6">
+  <div className="glass rounded-[2rem] shadow-xl shadow-slate-200/50 p-8 mb-8 border border-white/60 relative overflow-hidden">
+    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-rose-50 to-transparent rounded-full blur-3xl -z-10 opacity-50" />
     {title && (
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-[#DDDDDD]">
-        {Icon && <Icon className="text-[#FF5A5F]" size={24} />}
-        <h3 className="text-xl font-bold text-[#484848]">{title}</h3>
+      <div className="flex items-center gap-4 mb-8">
+        {Icon && (
+          <div className="p-3 bg-white rounded-2xl shadow-sm border border-rose-100 text-rose-500">
+            <Icon className="w-6 h-6" />
+          </div>
+        )}
+        <h3 className="text-2xl font-black text-gray-900 tracking-tight">{title}</h3>
       </div>
     )}
     {children}
@@ -179,7 +213,7 @@ const MenuItem = ({ icon: Icon, label, active, onClick, badge }) => (
   >
     <div className="flex items-center gap-4">
       <div className={`p-2 rounded-xl ${active ? 'bg-white/20' : 'bg-rose-50'}`}>
-        <Icon size={18} className={active ? 'text-white' : 'text-rose-600'} />
+        <Icon className={`w-5 h-5 ${active ? 'text-white' : 'text-rose-600'}`} />
       </div>
       <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>
     </div>
@@ -200,14 +234,14 @@ const SettingsRow = ({ icon: Icon, title, description, onClick, danger }) => (
   >
     <div className="flex items-center gap-4 text-left">
       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:rotate-6 ${danger ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-900 group-hover:bg-rose-50 group-hover:text-rose-600'}`}>
-        <Icon size={20} />
+        <Icon className="w-5 h-5" />
       </div>
       <div>
         <h4 className="text-xs font-black uppercase tracking-widest leading-none mb-1">{title}</h4>
         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest opacity-60 leading-none">{description}</p>
       </div>
     </div>
-    <ChevronRight size={16} className="text-gray-300 group-hover:text-rose-600 transition-colors" />
+    <ChevronRightIcon className="w-4 h-4 text-gray-300 group-hover:text-rose-600 transition-colors" />
   </motion.button>
 );
 
@@ -919,7 +953,7 @@ export default function Profile() {
                   onClick={() => fileRef.current.click()}
                   className="absolute bottom-2 right-2 p-3 bg-white text-gray-950 rounded-full shadow-2xl hover:bg-rose-500 hover:text-white transition-all scale-0 group-hover/avatar:scale-100 duration-300"
                 >
-                  <Camera size={18} />
+                  <CameraIcon className="w-5 h-5" />
                 </button>
               </div>
               <input type="file" hidden ref={fileRef} accept="image/*" onChange={(e) => setFile(e.target.files[0])} />
@@ -937,7 +971,7 @@ export default function Profile() {
                 </div>
               </div>
               <p className="text-gray-400 font-medium mb-6 flex items-center justify-center md:justify-start gap-2">
-                <Mail size={16} className="text-rose-500" />
+                <EnvelopeIcon className="w-4 h-4 text-rose-500" />
                 {currentUser?.email}
               </p>
 
@@ -961,7 +995,7 @@ export default function Profile() {
                 onClick={() => handleNavigate('/messages')}
                 className="w-full sm:w-auto px-8 py-5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-[2rem] text-xs font-black uppercase tracking-widest backdrop-blur-xl transition-all flex items-center justify-center gap-3 active:scale-95 shadow-2xl"
               >
-                <MessageCircle size={18} />
+                <ChatBubbleLeftRightIcon className="w-5 h-5" />
                 Protocol Signals
               </button>
               
@@ -969,7 +1003,7 @@ export default function Profile() {
                 onClick={() => navigate('/')}
                 className="w-full sm:w-auto px-8 py-5 bg-white text-gray-950 hover:bg-rose-50 rounded-[2rem] text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3 active:scale-95 shadow-2xl"
               >
-                <Home size={18} />
+                <HomeIcon className="w-5 h-5" />
                 Return to Core
               </button>
             </div>
@@ -988,43 +1022,43 @@ export default function Profile() {
                   <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-6 pl-4">System Protocols</h3>
                   <div className="space-y-2">
                     <MenuItem
-                      icon={User}
+                      icon={UserIcon}
                       label="Identity Parameters"
                       active={activeSection === "personal"}
                       onClick={() => setActiveSection("personal")}
                     />
                     <MenuItem
-                      icon={Shield}
+                      icon={ShieldCheckIcon}
                       label="Security Protocols"
                       active={activeSection === "login"}
                       onClick={() => setActiveSection("login")}
                     />
                     <MenuItem
-                      icon={Bell}
+                      icon={BellIcon}
                       label="Signal Alerts"
                       active={activeSection === "notifications"}
                       onClick={() => setActiveSection("notifications")}
                     />
                     <MenuItem
-                      icon={Globe}
+                      icon={GlobeAltIcon}
                       label="Privacy Firewall"
                       active={activeSection === "privacy"}
                       onClick={() => setActiveSection("privacy")}
                     />
                     <MenuItem
-                      icon={Home}
+                      icon={HomeIcon}
                       label="Command Dashboard"
                       active={activeSection === "host-account"}
                       onClick={() => setActiveSection("host-account")}
                     />
                     <MenuItem
-                      icon={Heart}
+                      icon={HeartIcon}
                       label="Wishlist Vault"
                       active={activeSection === "wishlist"}
                       onClick={() => setActiveSection("wishlist")}
                     />
                     <MenuItem
-                      icon={List}
+                      icon={ListBulletIcon}
                       label="Active Deployments"
                       active={activeSection === "my-listings"}
                       onClick={() => setActiveSection("my-listings")}
@@ -1037,13 +1071,13 @@ export default function Profile() {
 
                 <div className="p-4 space-y-4">
                   <SettingsRow
-                    icon={HelpCircle}
+                    icon={QuestionMarkCircleIcon}
                     title="Intelligence Support"
                     description="Manuals & Core Support"
                     onClick={handleNavigateToHelp}
                   />
                   <SettingsRow
-                    icon={LogOut}
+                    icon={ArrowRightOnRectangleIcon}
                     title="Sign out"
                     description="Securely disconnect"
                     onClick={handleSignOut}
@@ -1059,7 +1093,7 @@ export default function Profile() {
             {/* Personal Info Section */}
             {activeSection === "personal" && (
               <>
-                <SectionCard title="Personal info" icon={User}>
+                <SectionCard title="Personal info" icon={UserIcon}>
                   <div className="max-w-2xl">
                     {/* Cover Photo Upload */}
                     <div className="mb-8 p-1 bg-gray-50 rounded-2xl border border-dashed border-[#DDDDDD] overflow-hidden">
@@ -1100,7 +1134,7 @@ export default function Profile() {
                           id="username"
                           value={formData.username || currentUser?.username || ''}
                           handleChange={handleChange}
-                          icon={User}
+                          icon={UserIcon}
                         />
                         <InputField
                           label="Email address"
@@ -1108,7 +1142,7 @@ export default function Profile() {
                           id="email"
                           value={formData.email || currentUser?.email || ''}
                           handleChange={handleChange}
-                          icon={Mail}
+                          icon={EnvelopeIcon}
                         />
                       </div>
 
@@ -1118,7 +1152,7 @@ export default function Profile() {
                         id="phone"
                         value={formData.phone || currentUser?.phone || ''}
                         handleChange={handleChange}
-                        icon={Phone}
+                        icon={PhoneIcon}
                       />
 
                       <InputField
@@ -1126,7 +1160,7 @@ export default function Profile() {
                         id="location"
                         value={formData.location || currentUser?.location || ''}
                         handleChange={handleChange}
-                        icon={MapPin}
+                        icon={MapPinIcon}
                       />
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1142,7 +1176,7 @@ export default function Profile() {
                           id="interests"
                           value={formData.interests || currentUser?.interests || ''}
                           handleChange={handleChange}
-                          icon={Heart}
+                          icon={HeartIcon}
                         />
                       </div>
 
@@ -1179,7 +1213,7 @@ export default function Profile() {
                       <div className="pt-6 border-t border-[#DDDDDD] space-y-6">
                         <div>
                           <h4 className="font-semibold text-[#484848] mb-4 flex items-center gap-2">
-                             <Shield size={20} className="text-[#FF5A5F]" />
+                             <ShieldCheckIcon className="w-5 h-5 text-[#FF5A5F]" />
                              Account Verification
                           </h4>
                           
@@ -1201,7 +1235,7 @@ export default function Profile() {
                               </button>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-[#00A699] font-medium bg-[#00A699]/10 px-3 py-1 rounded-full">
-                                <CheckCircle size={14} />
+                                <CheckCircleIcon className="w-3.5 h-3.5" />
                                 Verified
                               </span>
                             )}
@@ -1218,7 +1252,7 @@ export default function Profile() {
                               </div>
                               {currentUser?.isVerified ? (
                                 <span className="inline-flex items-center gap-1 text-[#00A699] font-medium bg-[#00A699]/10 px-3 py-1 rounded-full">
-                                  <CheckCircle size={14} />
+                                  <CheckCircleIcon className="w-3.5 h-3.5" />
                                   Verified
                                 </span>
                               ) : (
@@ -1297,7 +1331,7 @@ export default function Profile() {
                           </div>
                           {accessContacts && (
                             <p className="text-[10px] text-[#00A699] font-medium flex items-center gap-1">
-                               <CheckCircle size={10} /> Contact syncing active
+                               <CheckCircleIcon className="w-2.5 h-2.5" /> Contact syncing active
                             </p>
                           )}
                         </div>
@@ -1343,7 +1377,7 @@ export default function Profile() {
                     {updateSuccess && (
                       <div className="mt-4 p-4 bg-[#00A699]/10 border border-[#00A699] rounded-lg">
                         <p className="text-[#00A699] flex items-center gap-2 font-medium">
-                          <CheckCircle size={18} />
+                          <CheckCircleIcon className="w-[18px] h-[18px]" />
                           Profile updated successfully
                         </p>
                       </div>
@@ -1363,7 +1397,7 @@ export default function Profile() {
 
             {/* Login & Security Section */}
             {activeSection === "login" && (
-              <SectionCard title="Login & security" icon={Shield}>
+              <SectionCard title="Login & security" icon={ShieldCheckIcon}>
                 <div className="max-w-2xl space-y-8">
                   <div>
                     <h4 className="font-semibold text-[#484848] mb-4">Password</h4>
@@ -1406,7 +1440,7 @@ export default function Profile() {
 
             {/* Notifications Section */}
             {activeSection === "notifications" && (
-              <SectionCard title="Notifications" icon={Bell}>
+              <SectionCard title="Notifications" icon={BellIcon}>
                 <div className="max-w-2xl space-y-6">
                   <div>
                     <h4 className="font-semibold text-[#484848] mb-4">Email notifications</h4>
@@ -1461,7 +1495,7 @@ export default function Profile() {
 
             {/* Privacy Section */}
             {activeSection === "privacy" && (
-              <SectionCard title="Privacy & sharing" icon={Globe}>
+              <SectionCard title="Privacy & sharing" icon={GlobeAltIcon}>
                 <div className="max-w-2xl space-y-8">
                   <div>
                     <h4 className="font-semibold text-[#484848] mb-4">Profile visibility</h4>
@@ -1480,14 +1514,14 @@ export default function Profile() {
                       <button className="flex items-center justify-between w-full p-4 border border-[#DDDDDD] rounded-lg hover:bg-[#F7F7F7] transition-colors">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-[#F7F7F7] flex items-center justify-center">
-                            <Download size={20} className="text-[#484848]" />
+                            <ArrowDownTrayIcon className="w-5 h-5 text-[#484848]" />
                           </div>
                           <div className="text-left">
                             <p className="font-medium text-[#484848]">Download your data</p>
                             <p className="text-sm text-[#767676]">Get a copy of your personal information</p>
                           </div>
                         </div>
-                        <ChevronRight size={20} className="text-[#767676]" />
+                        <ChevronRightIcon className="w-5 h-5 text-[#767676]" />
                       </button>
 
                       <button
@@ -1496,14 +1530,14 @@ export default function Profile() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
-                            <Trash2 size={20} className="text-red-500" />
+                            <TrashIcon className="w-5 h-5 text-red-500" />
                           </div>
                           <div className="text-left">
                             <p className="font-medium text-red-600">Delete account</p>
                             <p className="text-sm text-red-400">Permanently remove your account</p>
                           </div>
                         </div>
-                        <ChevronRight size={20} className="text-red-400" />
+                        <ChevronRightIcon className="w-5 h-5 text-red-400" />
                       </button>
                     </div>
                   </div>
@@ -1528,19 +1562,19 @@ export default function Profile() {
                     <p className="text-sm text-[#767676] mb-1">Rating</p>
                     <div className="flex items-center gap-2">
                       <p className="text-3xl font-bold text-[#484848]">0.0</p>
-                      <Star size={20} className="text-[#FF5A5F] fill-[#FF5A5F]" />
+                      <StarIcon className="w-5 h-5 text-[#FF5A5F] fill-[#FF5A5F]" />
                     </div>
                   </div>
                 </div>
 
-                <SectionCard title="Hosting tools" icon={Home}>
+                <SectionCard title="Hosting tools" icon={HomeIcon}>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <button
                       onClick={handleNavigateToHostDashboard}
                       className="p-6 border border-[#DDDDDD] rounded-xl hover:border-[#FF5A5F] hover:shadow-md transition-all text-left group"
                     >
                       <div className="w-12 h-12 rounded-full bg-[#F7F7F7] flex items-center justify-center mb-4 group-hover:bg-[#FF5A5F]/10">
-                        <BarChart size={24} className="text-[#FF5A5F]" />
+                        <ChartBarIcon className="w-6 h-6 text-[#FF5A5F]" />
                       </div>
                       <h4 className="font-semibold text-[#484848] mb-1">Dashboard</h4>
                       <p className="text-sm text-[#767676]">View performance insights</p>
@@ -1551,7 +1585,7 @@ export default function Profile() {
                       className="p-6 border border-[#DDDDDD] rounded-xl hover:border-[#FF5A5F] hover:shadow-md transition-all text-left group"
                     >
                       <div className="w-12 h-12 rounded-full bg-[#F7F7F7] flex items-center justify-center mb-4 group-hover:bg-[#FF5A5F]/10">
-                        <Wallet size={24} className="text-[#FF5A5F]" />
+                        <WalletIcon className="w-6 h-6 text-[#FF5A5F]" />
                       </div>
                       <h4 className="font-semibold text-[#484848] mb-1">Earnings</h4>
                       <p className="text-sm text-[#767676]">Track income & payments</p>
@@ -1573,7 +1607,7 @@ export default function Profile() {
                     <div className="flex items-center justify-between p-4 bg-[#F7F7F7] rounded-lg">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
-                          <Award size={24} className="text-[#FF5A5F]" />
+                          <TrophyIcon className="w-6 h-6 text-[#FF5A5F]" />
                         </div>
                         <div>
                           <p className="font-semibold text-[#484848]">Become a Superhost</p>
@@ -1594,7 +1628,7 @@ export default function Profile() {
 
             {/* Wishlist Section */}
             {activeSection === "wishlist" && (
-              <SectionCard title="Wishlists" icon={Heart}>
+              <SectionCard title="Wishlists" icon={HeartIcon}>
                 <p className="text-[#767676] mb-6">Places you've saved for future trips</p>
                 <WishList />
               </SectionCard>
@@ -1602,14 +1636,14 @@ export default function Profile() {
 
             {/* My Listings Section */}
             {activeSection === "my-listings" && (
-              <SectionCard title="My listings" icon={List}>
+              <SectionCard title="My listings" icon={ListBulletIcon}>
                 <div className="flex justify-between items-center mb-6">
                   <p className="text-[#767676]">Manage your properties</p>
                   <Link
                     to={`/${currentUser?._id}/create-listing`}
                     className="flex items-center gap-2 bg-[#FF5A5F] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#E00B41] transition-colors"
                   >
-                    <Plus size={18} />
+                    <PlusIcon className="w-4 h-4" />
                     Create listing
                   </Link>
                 </div>
@@ -1651,14 +1685,14 @@ export default function Profile() {
                               to={`/update-listing/${listing._id}`}
                               className="flex-1 flex items-center justify-center gap-2 py-2 border border-[#DDDDDD] rounded-lg text-[#484848] hover:bg-[#F7F7F7] transition-colors font-medium"
                             >
-                              <Edit3 size={16} />
+                              <PencilSquareIcon className="w-4 h-4" />
                               Edit
                             </Link>
                             <button
                               onClick={() => handleListingDelete(listing._id)}
                               className="flex-1 flex items-center justify-center gap-2 py-2 border border-red-200 rounded-lg text-red-600 hover:bg-red-50 transition-colors font-medium"
                             >
-                              <Trash2 size={16} />
+                              <TrashIcon className="w-4 h-4" />
                               Delete
                             </button>
                           </div>
@@ -1668,14 +1702,14 @@ export default function Profile() {
                   </div>
                 ) : (
                   <div className="text-center py-12 bg-[#F7F7F7] rounded-xl">
-                    <Home size={48} className="mx-auto text-[#DDDDDD] mb-4" />
+                    <HomeIcon className="w-12 h-12 mx-auto text-[#DDDDDD] mb-4" />
                     <h4 className="text-lg font-semibold text-[#484848] mb-2">No listings yet</h4>
                     <p className="text-[#767676] mb-6">Start hosting and earn income</p>
                     <Link
                       to={`/${currentUser?._id}/create-listing`}
                       className="inline-flex items-center gap-2 bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors"
                     >
-                      <Plus size={18} />
+                      <PlusIcon className="w-[18px] h-[18px]" />
                       Create your first listing
                     </Link>
                   </div>
@@ -1685,7 +1719,7 @@ export default function Profile() {
 
             {/* Events Section */}
             {activeSection === "events" && (
-              <SectionCard title="My events" icon={Calendar}>
+              <SectionCard title="My events" icon={CalendarIcon}>
                 <div className="flex justify-between items-center mb-6">
                   <p className="text-[#767676]">Manage your upcoming events</p>
                   <span className="bg-[#F7F7F7] text-[#484848] px-3 py-1 rounded-full text-sm font-medium">
@@ -1714,10 +1748,10 @@ export default function Profile() {
                                 <h4 className="font-semibold text-[#484848]">{event.name}</h4>
                                 <div className="flex items-center gap-4 text-sm text-[#767676] mt-2">
                                   <span className="flex items-center gap-1">
-                                    <Calendar size={14} /> {event.date}
+                                    <CalendarIcon className="w-3.5 h-3.5" /> {event.date}
                                   </span>
                                   <span className="flex items-center gap-1">
-                                    <MapPin size={14} /> {event.address}
+                                    <MapPinIcon className="w-3.5 h-3.5" /> {event.address}
                                   </span>
                                 </div>
                               </div>
@@ -1726,13 +1760,13 @@ export default function Profile() {
                                   to={`/update-event/${event._id}`}
                                   className="p-2 text-[#484848] hover:bg-[#F7F7F7] rounded-lg transition-colors"
                                 >
-                                  <Edit3 size={18} />
+                                  <PencilSquareIcon className="w-[18px] h-[18px]" />
                                 </Link>
                                 <button
                                   onClick={() => handleEventDelete(event._id)}
                                   className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                 >
-                                  <Trash2 size={18} />
+                                  <TrashIcon className="w-[18px] h-[18px]" />
                                 </button>
                               </div>
                             </div>
@@ -1744,11 +1778,11 @@ export default function Profile() {
                   </div>
                 ) : (
                   <div className="text-center py-12 bg-[#F7F7F7] rounded-xl">
-                    <Calendar size={48} className="mx-auto text-[#DDDDDD] mb-4" />
+                    <CalendarIcon className="w-12 h-12 mx-auto text-[#DDDDDD] mb-4" />
                     <h4 className="text-lg font-semibold text-[#484848] mb-2">No events yet</h4>
                     <p className="text-[#767676] mb-6">Create events to connect with your community</p>
                     <button className="inline-flex items-center gap-2 bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors">
-                      <Plus size={18} />
+                      <PlusIcon className="w-[18px] h-[18px]" />
                       Create event
                     </button>
                   </div>
@@ -1839,14 +1873,14 @@ export default function Profile() {
                 />
                 {isFaceVerified && (
                   <div className="absolute bottom-2 right-2 bg-[#00A699] text-white p-2 rounded-full border-4 border-white shadow-md">
-                    <Shield size={20} />
+                    <ShieldCheckIcon className="w-5 h-5" />
                   </div>
                 )}
               </div>
 
               <h2 className="text-2xl font-bold text-[#484848] mb-1">{currentUser?.username || 'User'}</h2>
               <div className="flex items-center justify-center gap-2 text-[#767676] mb-4">
-                <MapPin size={16} />
+                <MapPinIcon className="w-4 h-4" />
                 {currentUser?.location || 'No location set'}
               </div>
 
@@ -1906,7 +1940,7 @@ export default function Profile() {
                 value={whatsappNumber}
                 handleChange={(e) => setWhatsappNumber(e.target.value)}
                 placeholder="+27 82 123 4567"
-                icon={Phone}
+                icon={PhoneIcon}
               />
 
               {!whatsappConnected ? (
@@ -1920,7 +1954,7 @@ export default function Profile() {
               ) : (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
-                    <CheckCircle size={20} />
+                    <CheckCircleIcon className="w-5 h-5" />
                     <span className="font-medium">Connected: {whatsappNumber}</span>
                   </div>
 

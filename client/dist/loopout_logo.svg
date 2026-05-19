@@ -1,0 +1,45 @@
+<svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Brand Gradient -->
+    <linearGradient id="brandGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF385C" />
+      <stop offset="50%" stop-color="#E61E4D" />
+      <stop offset="100%" stop-color="#D70466" />
+    </linearGradient>
+    
+    <!-- Outer Glow Filter -->
+    <filter id="logoGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#FF385C" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Glowing background aura behind the icon (very soft) -->
+  <circle cx="250" cy="200" r="100" fill="#FF385C" opacity="0.04" filter="blur(40px)"/>
+
+  <!-- 1. OFFICIAL LOOPOUT ICON (Centered & Enlarged) -->
+  <g transform="translate(140, 90)" filter="url(#logoGlow)">
+    <!-- Base outer O-Ring -->
+    <circle cx="130" cy="130" r="56" fill="rgba(255, 56, 92, 0.02)" stroke="url(#brandGradient)" stroke-width="18"/>
+    
+    <!-- Internal glowing loops -->
+    <path d="M 130 130 C 100 86, 180 108, 130 165" stroke="url(#brandGradient)" stroke-width="9" stroke-linecap="round" opacity="0.8"/>
+    <path d="M 99 130 C 99 104, 147 104, 147 130 C 147 156, 99 156, 99 130" stroke="#FF7A8F" stroke-width="6.5" stroke-linecap="round"/>
+    
+    <!-- Handle (pointed top-left) -->
+    <path d="M 91 91 L 39 39" stroke="url(#brandGradient)" stroke-width="22" stroke-linecap="round"/>
+    
+    <!-- Inner Lens shine reflection -->
+    <circle cx="112" cy="112" r="11" fill="white" opacity="0.25"/>
+  </g>
+
+  <!-- 2. TYPOGRAPHY & BRANDING (Centered at Bottom) -->
+  <!-- "loop" text -->
+  <text x="250" y="375" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="62px" letter-spacing="-2px" fill="#1F2937">
+    loop<tspan fill="#FF385C">Out</tspan>
+  </text>
+
+  <!-- Subtitle: "ELITE DISCOVERY" -->
+  <text x="250" y="420" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="15px" letter-spacing="9px" fill="#1F2937" opacity="0.4">
+    ELITE DISCOVERY
+  </text>
+</svg>

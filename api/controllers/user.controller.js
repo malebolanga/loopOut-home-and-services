@@ -16,7 +16,7 @@ export const test = (req, res) => {
 export const getUsers = async (req, res, next) => {
   try {
     // Exclude sensitive information from the response
-    const users = await User.find({}, { password: 0, __v: 0, createdAt: 0, updatedAt: 0 });
+    const users = await User.find({}, { password: 0, __v: 0, otp: 0, otpExpiry: 0, idDocumentUrl: 0, liveSelfieUrl: 0, faceData: 0, contacts: 0, plannerTasks: 0 });
     res.status(200).json(users);
   } catch (error) {
     next(errorHandler(500, 'Failed to fetch users'));
@@ -114,7 +114,7 @@ export const getUserServices = async (req, res, next) => {
 
 export const getUser = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id).select('-password -__v');
+    const user = await User.findById(req.params.id).select('-password -__v -otp -otpExpiry -idDocumentUrl -liveSelfieUrl -faceData -contacts -plannerTasks');
     if (!user) return next(errorHandler(404, 'User not found!'));
     res.status(200).json(user);
   } catch (error) {
@@ -360,7 +360,7 @@ export const getPublicUser = async (req, res, next) => {
     const user = await User.findById(req.params.id);
     if (!user) return next(errorHandler(404, 'User not found!'));
 
-    const { password, ...rest } = user._doc;
+    const { password, otp, otpExpiry, idDocumentUrl, liveSelfieUrl, faceData, contacts, plannerTasks, ...rest } = user._doc;
 
     // Fetch all user's content concurrently
     const [listings, services, helpers, events] = await Promise.all([

@@ -86,7 +86,7 @@ const MAX_RECENTLY_VIEWED = 12;
 const DATA_FETCH_LIMIT = 8;
 const AI_RECOMMENDATION_LIMIT = 6;
 const USER_PREFERENCE_KEY = 'userPreferences';
-const API_TIMEOUT = 3000;
+const API_TIMEOUT = 15000;
 
 // --- Framer Motion Animation Variants ---
 const fadeInUp = {
@@ -1984,417 +1984,19 @@ const MobileAppHomepage = ({
 
   if (isDesktop) {
     return (
-      <div className="min-h-screen bg-white">
-        <style>{`
-          .scrollbar-hide::-webkit-scrollbar { display: none; }
-          .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-          body { overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
-          body::-webkit-scrollbar { display: none; }
-          * { scrollbar-width: none; -ms-overflow-style: none; }
-          *::-webkit-scrollbar { display: none; }
-        `}</style>
-
-        <LoopOutHomeHero navigate={navigate} />
-
-        <main className="max-w-7xl mx-auto px-8 py-12">
-          {/* FRESHA-STYLE TOP CATEGORIES SECTION */}
-          <TopCategoriesSection navigate={navigate} />
-
-          {/* LoopOut Brand Campaign Banner */}
-          <div className="relative h-24 mb-16">
-            <LoopOutBanner type="all" className="relative !bottom-0 !left-0 !right-0 !px-0" />
-          </div>
-
-          {/* NEURAL PICKS SECTION - Alpha Algorithm */}
-          <NeuralPicksSection navigate={navigate} />
-
-          {/* Location Status Indicator */}
-          {locationStatus && (
-            <div className="mb-8 p-4 bg-rose-50 rounded-2xl border border-rose-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-rose-500 rounded-full flex items-center justify-center text-white">
-                  <MapPinIcon className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">{locationStatus.title}</h4>
-                  <p className="text-sm text-gray-600">{locationStatus.description}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-rose-600 bg-white px-3 py-1.5 rounded-full text-xs font-bold border border-rose-200 shadow-sm">
-                <CheckCircleIcon className="w-4 h-4" />
-                ADJUSTED RADIUS
-              </div>
-            </div>
-          )}
-
-          {/* PROMOTED LISTINGS SECTION (SAMPLE) */}
-          <section className="mb-16 bg-gradient-to-r from-amber-500/10 to-rose-500/10 p-6 rounded-[2.5rem] border border-amber-500/20 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/20 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-rose-500/20 rounded-full blur-3xl" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-[2px] bg-amber-500" />
-                <span className="text-amber-600 text-sm font-black tracking-[0.2em] uppercase flex items-center gap-2">
-                  <FireIcon className="w-5 h-5" /> Promoted by Hosts
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {[
-                  { item: MOCK_PROPERTIES[0], type: 'property', path: `/listing/${MOCK_PROPERTIES[0]._id}` },
-                  { item: MOCK_SERVICES[0], type: 'service', path: `/service/${MOCK_SERVICES[0]._id}` },
-                  { item: MOCK_HELPERS[0], type: 'helper', path: `/helper/${MOCK_HELPERS[0]._id}` },
-                  { item: MOCK_EVENTS[0], type: 'event', path: `/event/${MOCK_EVENTS[0]._id}` }
-                ].filter(promo => promo.item).map((promo, idx) => (
-                  <div key={`promoted-${promo.type}-${idx}`} className="relative">
-                    <AirbnbCard item={promo.item} type={promo.type} onClick={() => navigate(promo.path)} hideDistance={true} />
-                    <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg z-30 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" /> Ad
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* FEATURED DISCOVERY GRID - Advanced selection for quick discovery */}
-          <section className="mb-24">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
-              <div>
-                <h2 className="text-[28px] font-black text-gray-900 tracking-tighter uppercase italic">
-                  Featured <span className="text-rose-500">{activeFeaturedTab}</span>
-                </h2>
-                <p className="text-gray-400 text-xs font-black tracking-[0.2em] uppercase mt-1">Handpicked elite experiences</p>
-              </div>
-              
-              {/* Featured Selection Tabs */}
-              <div className="flex items-center gap-2 p-1.5 bg-gray-100 rounded-[2rem]">
-                {['Properties', 'Services', 'Helper', 'Events'].map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveFeaturedTab(tab)}
-                    className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${activeFeaturedTab === tab ? 'bg-white text-gray-950 shadow-lg' : 'text-gray-400 hover:text-gray-600'}`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-16">
-              {(activeFeaturedTab === 'Properties' ? featuredProperties : 
-                activeFeaturedTab === 'Services' ? featuredServices : 
-                activeFeaturedTab === 'Helper' ? featuredHelpers : featuredEvents)
-                .slice(0, 8).map((item, idx) => (
-                <motion.div
-                  key={`featured-${activeFeaturedTab}-${item._id || idx}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.05 }}
-                >
-                  <AirbnbCard
-                    item={item}
-                    type={activeFeaturedTab === 'Properties' ? 'property' : activeFeaturedTab.toLowerCase()}
-                    onClick={(path) => navigate(path)}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </section>
-
-          {/* NEW: WEEKLY SPECIALS SECTION */}
-          <WeeklySpecialsSection navigate={navigate} isMobile={false} />
-
-
-
-          {/* SERVICES TO YOUR DOOR SECTION */}
-          <ServicesToYourDoor navigate={navigate} />
-
-
-
-          {recentlyAddedItems.length > 0 && (
-            <section className="mb-16">
-              <SectionTitle title="Recently added" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {recentlyAddedItems.slice(0, 8).map((item) => (
-                  <RecentlyAddedCard
-                    key={item._id}
-                    item={item}
-                    type={item.itemType === 'listing' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property') : item.itemType}
-                    onClick={() => navigate(`/${item.itemType || 'listing'}/${item._id}`)}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-
-          {/* CONSOLIDATED DISCOVER FEED */}
-          <section className="mb-20">
-            <div className="flex items-center justify-between mb-12">
-              <div className="flex items-center gap-10">
-                {tabs.map((tab) => {
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <motion.button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center gap-4 px-8 py-5 rounded-[2.5rem] border relative transition-all duration-500 overflow-hidden ${
-                        isActive 
-                          ? 'bg-white border-gray-200 shadow-[0_30px_60px_rgba(0,0,0,0.12)] scale-110 z-10' 
-                          : 'bg-gray-50/50 border-transparent opacity-50 hover:opacity-100 hover:bg-white/80 hover:shadow-xl'
-                      }`}
-                    >
-                      <motion.div 
-                        whileHover={{ rotateY: 180 }}
-                        transition={{ duration: 0.6 }}
-                        className="flex-shrink-0"
-                        style={{ perspective: '1000px' }}
-                      >
-                        <CategoryIcon type={tab.iconType} size={isActive ? "w-11 h-11" : "w-9 h-9"} />
-                      </motion.div>
-                      <span className={`text-[11px] font-black uppercase tracking-[0.3em] transition-colors ${isActive ? 'text-gray-950' : 'text-gray-400'}`}>
-                        {tab.id}
-                      </span>
-                      {isActive && (
-                        <motion.div 
-                          layoutId="activeTabUnderline" 
-                          className={`absolute bottom-0 left-0 right-0 h-1.5 ${getTabColor(tab.id)}`} 
-                        />
-                      )}
-                    </motion.button>
-                  );
-                })}
-              </div>
-
-              <div className="flex items-center gap-3 bg-gray-100 p-1.5 rounded-2xl border border-gray-200/50">
-                <div className="px-4 py-2 bg-white rounded-xl shadow-sm text-[10px] font-black uppercase tracking-widest text-gray-900">Elite Filter</div>
-                <FunnelIcon className="w-5 h-5 text-gray-400 mr-2" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-              {getFilteredItems().map((item, idx) => (
-                <motion.div
-                  key={item._id || idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                >
-                  <AirbnbCard
-                    item={item}
-                    type={activeTab === 'Universe' ? (item.itemType || 'property') : activeTab === 'Helper' ? 'helper' : activeTab === 'Properties' ? 'property' : activeTab.slice(0, -1).toLowerCase()}
-                    onClick={(path) => navigate(path)}
-                  />
-                </motion.div>
-              ))}
-            </div>
-            
-            <div className="mt-16 flex justify-center">
-              <button 
-                onClick={() => navigate('/search')}
-                className="px-12 py-5 bg-gray-950 text-white rounded-[2rem] text-xs font-black uppercase tracking-[0.3em] hover:bg-rose-500 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.2)] active:scale-95"
-              >
-                Expand the Matrix
-              </button>
-            </div>
-          </section>
-
-          {/* LoopOut Pulse (Live Community Feed) */}
-          <div className="mb-20">
-            <LoopOutPulse />
-          </div>
-
-          <CommunityNeedsSection navigate={navigate} />
-
-
-          <motion.section initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="bg-gray-50 rounded-3xl p-8">
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h2 className="text-2xl font-semibold text-gray-900">loopOut by the numbers</h2>
-                <p className="text-gray-500 mt-1">Connecting people with spaces, services, and experiences</p>
-              </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <ChartBarIcon className="w-5 h-5 mr-2" />
-                Live statistics
-              </div>
-            </div>
-            <div className="grid grid-cols-4 gap-8">
-              {[
-                { value: stats.properties || '1,234', label: 'Properties', growth: '12%' },
-                { value: stats.services || '456', label: 'Services', growth: '8%' },
-                { value: stats.helpers || '789', label: 'Helper', growth: '15%' },
-                { value: stats.events || '321', label: 'Events', growth: '5%' }
-              ].map((stat, i) => (
-                <div key={i} className="text-center">
-                  <div className="text-4xl font-semibold text-gray-900 mb-1">{stat.value}+</div>
-                  <div className="text-gray-500 text-sm">{stat.label}</div>
-                  <div className="text-green-600 text-xs mt-1 font-medium">↑ {stat.growth} this month</div>
-                </div>
-              ))}
-            </div>
-          </motion.section>
-
-          {/* WHAT IS LOOPOUT SECTION */}
-          <section className="mt-20 mb-10 px-4 max-w-5xl mx-auto">
-            <div className="bg-gradient-to-br from-rose-50 to-white border border-rose-100 rounded-[2rem] p-10 md:p-14 text-center shadow-sm hover:shadow-md transition-shadow">
-              <h2 className="text-3xl md:text-4xl font-black text-gray-950 leading-tight mb-6 tracking-tight">
-                What is <span className="text-rose-500">loopOut?</span>
-              </h2>
-              <p className="text-lg md:text-xl text-gray-600 leading-relaxed font-medium max-w-3xl mx-auto">
-                LoopOut is South Africa's premier elite discovery engine. We seamlessly connect you with exclusive properties, professional services, reliable local helpers, and world-class events in your city and beyond. Everything you need, all in one place.
-              </p>
-            </div>
-          </section>
-
-          {/* HOW IT WORKS SECTION */}
-          <section className="mt-20 mb-20 px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">How loopOut works</h2>
-              <p className="text-gray-500">The easiest way to find and book services in Polokwane</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mx-auto">
-              {[
-                {
-                  icon: <MagnifyingGlassIcon className="w-10 h-10 text-rose-500" />,
-                  title: "1. Discover",
-                  desc: "Use our AI-powered search to find the perfect stay, helper, or service near you."
-                },
-                {
-                  icon: <Sparkles className="w-10 h-10 text-amber-500" />,
-                  title: "2. Personalize",
-                  desc: "Select options that fit your schedule and budget. See verified reviews and ratings."
-                },
-                {
-                  icon: <CheckCircleIcon className="w-10 h-10 text-green-500" />,
-                  title: "3. Book & Enjoy",
-                  desc: "Book instantly via WhatsApp and enjoy professional services from the best in the city."
-                }
-              ].map((step, i) => (
-                <div key={i} className="flex flex-col items-center text-center ">
-                  <div className="mb-6 p-6 rounded-3xl shadow-sm border border-gray-100 group-hover:shadow-xl group-hover:-translate-y-2 transition-all duration-300">
-                    {step.icon}
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{step.title}</h3>
-                  <p className="text-gray-500 leading-relaxed">{step.desc}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Download App Banner */}
-          <section className="mt-16 mb-8 bg-gray-900 rounded-3xl p-10 lg:p-14 overflow-hidden relative flex flex-col md:flex-row items-center justify-between">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500 rounded-full blur-3xl opacity-20 -mr-20 -mt-20 pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500 rounded-full blur-3xl opacity-20 -ml-20 -mb-20 pointer-events-none"></div>
-
-            <div className="relative z-10 md:w-1/2 text-left mb-10 md:mb-0">
-              <div className="inline-block bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4">
-                Available Now
-              </div>
-              <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6 tracking-tight leading-tight">loopOut is better on the app</h2>
-              <p className="text-gray-300 mb-8 max-w-md text-base lg:text-lg leading-relaxed">Get real-time notifications, exclusive app-only deals, and discover exactly what you need with our AI-powered search. Download now for iOS and Android.</p>
-              <div className="flex flex-wrap gap-4">
-                <a href="#" className="flex items-center gap-3 bg-white text-black px-6 py-3 rounded-xl hover:bg-gray-100 transition-colors shadow-lg hover:-translate-y-1 transform duration-200">
-                  <FaApple className="text-3xl" />
-                  <div className="flex flex-col text-left">
-                    <span className="text-[10px] uppercase font-semibold leading-none text-gray-500 pb-0.5">Download on the</span>
-                    <span className="text-base font-bold leading-none">App Store</span>
-                  </div>
-                </a>
-                <a href="#" className="flex items-center gap-3 bg-white text-black px-6 py-3 rounded-xl hover:bg-gray-100 transition-colors shadow-lg hover:-translate-y-1 transform duration-200">
-                  <FaGooglePlay className="text-3xl text-emerald-500" />
-                  <div className="flex flex-col text-left">
-                    <span className="text-[10px] uppercase font-semibold leading-none text-gray-500 pb-0.5">GET IT ON</span>
-                    <span className="text-base font-bold leading-none">Google Play</span>
-                  </div>
-                </a>
-              </div>
-            </div>
-            <div className="relative z-10 md:w-5/12 flex justify-center hidden md:flex">
-              <div className="w-[260px] h-[520px] bg-gray-800 rounded-[3rem] border-8 border-gray-700 shadow-2xl overflow-hidden relative -mb-24 lg:-mb-10 mr-4 transform rotate-12 hover:rotate-0 transition-transform duration-500">
-                <div className="absolute top-0 inset-x-0 h-7 bg-gray-700 w-32 mx-auto rounded-b-2xl flex items-center justify-center gap-2 z-20">
-                  <div className="w-12 h-1.5 bg-gray-800 rounded-full"></div>
-                  <div className="w-1.5 h-1.5 bg-gray-800 rounded-full"></div>
-                </div>
-                <div className="w-full h-full bg-gradient-to-br from-rose-500 to-indigo-600 p-6 flex flex-col items-center justify-center text-center relative z-10">
-                  <div className="absolute inset-0 bg-black/10"></div>
-
-                  <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-xl mb-6 relative z-10">
-                    <span className="text-4xl font-black text-rose-500">L</span>
-                  </div>
-                  <h3 className="text-white font-bold text-2xl mb-2 relative z-10">loopOut</h3>
-                  <p className="text-white/90 text-sm text-center px-4 relative z-10">Discover homes, services, and experiences instantly.</p>
-
-                  <div className="mt-8 w-full space-y-3 relative z-10">
-                    <div className="w-full h-24 bg-white/20 backdrop-blur-md rounded-2xl p-3 flex gap-3">
-                      <div className="w-12 h-12 bg-white/30 rounded-xl"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="w-full h-3 bg-white/30 rounded-full"></div>
-                        <div className="w-2/3 h-3 bg-white/30 rounded-full"></div>
-                      </div>
-                    </div>
-                    <div className="w-full h-24 bg-white/20 backdrop-blur-md rounded-2xl p-3 flex gap-3">
-                      <div className="w-12 h-12 bg-white/30 rounded-xl"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="w-full h-3 bg-white/30 rounded-full"></div>
-                        <div className="w-2/3 h-3 bg-white/30 rounded-full"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </main>
-
-        {/* Floating Smart Concierge */}
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          whileHover={{ scale: 1.1, rotate: 10 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => navigate('/ai-help-center')}
-          className=" fixed bottom-8 right-8 z-[100] cursor-pointer "
-        >
-          <div className="absolute -inset-2 bg-gradient-to-r from-rose-600 to-pink-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 animate-pulse" />
-          <div className="relative bg-rose-600 text-white p-4 rounded-full shadow-2xl flex items-center justify-center border-2 border-white/20">
-            <Sparkles className="w-8 h-8" />
-            <div className="absolute right-full mr-4 bg-white px-4 py-2 rounded-2xl shadow-xl text-gray-900 font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 pointer-events-none">
-              Need help finding something? <span>✨</span>
-            </div>
-          </div>
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
-        </motion.div>
-
-        {/* Floating My Bookings Button */}
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setIsBookingsOpen(true)}
-          className=" fixed bottom-28 right-8 z-[100] cursor-pointer "
-        >
-          <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 shadow-xl" />
-          <div className="relative bg-white text-gray-900 p-4 rounded-full shadow-2xl flex items-center justify-center border border-gray-100">
-            <CalendarDaysIcon className="w-8 h-8 text-blue-600" />
-            <div className="absolute right-full mr-4 bg-gray-900 text-white px-4 py-2 rounded-2xl shadow-xl text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 pointer-events-none">
-              Track your requests <span>🚚</span>
-            </div>
-          </div>
-          {requestCount > 0 && (
-            <div className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-rose-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] text-white font-bold shadow-lg z-10 transition-transform duration-300 group-hover:scale-110 animate-pulse">
-              {requestCount}
-            </div>
-          )}
-        </motion.div>
-
-        {/* Bookings Modal */}
-        <MyBookingsConsumer isOpen={isBookingsOpen} onClose={() => setIsBookingsOpen(false)} />
-        
-        <BottomNav />
-      </div>
+      <DesktopHomepage
+        tabs={tabs}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        aiInsights={aiInsights}
+        showAIInsights={showAIInsights}
+        setShowAIInsights={setShowAIInsights}
+        getFilteredItems={getFilteredItems}
+        navigate={navigate}
+        isBookingsOpen={isBookingsOpen}
+        setIsBookingsOpen={setIsBookingsOpen}
+        requestCount={requestCount}
+      />
     );
   }
 
@@ -2410,9 +2012,9 @@ const MobileAppHomepage = ({
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      <main className="px-4 pt-2 pb-4">
+      <main className="px-4 pt-2 pb-4 lg:max-w-7xl lg:mx-auto w-full">
         {/* Mobile Elite Slider Banner */}
-        <div className="relative h-[550px] -mx-4 overflow-hidden mb-12 shadow-2xl">
+        <div className="relative h-[550px] -mx-4 lg:mx-0 lg:rounded-[2rem] overflow-hidden mb-12 shadow-2xl">
           <Swiper
             modules={[Autoplay, Pagination]}
             autoplay={{ delay: 6000 }}
@@ -2589,7 +2191,7 @@ const MobileAppHomepage = ({
         </div>
 
         {/* Mobile Top Categories - Horizontal Scroll (Now under the banner) */}
-        <section className="mb-8 -mx-4 px-4">
+        <section className="mb-8 -mx-4 lg:mx-0 px-4 lg:px-0">
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-bold text-gray-900 text-lg">Top categories</h2>
             <button onClick={() => navigate('/categories')} className="text-sm text-rose-500 font-medium">See all</button>
@@ -2667,7 +2269,7 @@ const MobileAppHomepage = ({
               ))}
             </div>
           </div>
-          <div className="flex overflow-x-auto gap-10 pb-6 -mx-4 px-4 scrollbar-hide snap-x">
+          <div className="flex overflow-x-auto gap-10 pb-6 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide snap-x">
             {(activeFeaturedTab === 'Properties' ? featuredProperties : 
               activeFeaturedTab === 'Services' ? featuredServices : 
               activeFeaturedTab === 'Helper' ? featuredHelpers : featuredEvents)
@@ -2704,7 +2306,7 @@ const MobileAppHomepage = ({
         {recentlyAddedItems.length > 0 && (
           <section className="mb-8">
             <h2 className="font-semibold text-gray-900 mb-4">Recently added</h2>
-            <div className="flex overflow-x-auto gap-10 pb-4 -mx-4 px-6 scrollbar-hide snap-x">
+            <div className="flex overflow-x-auto gap-10 pb-4 -mx-4 px-6 lg:mx-0 lg:px-0 scrollbar-hide snap-x">
               {recentlyAddedItems.slice(0, 5).map((item) => (
                 <div key={item._id} className="flex-shrink-0 w-56 snap-start">
                   <RecentlyAddedCard
@@ -2728,7 +2330,7 @@ const MobileAppHomepage = ({
               <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Live Pulse</span>
             </div>
           </div>
-          <div className="flex overflow-x-auto gap-4 pb-8 border-b border-gray-50 mb-10 scrollbar-hide -mx-4 px-6">
+          <div className="flex overflow-x-auto gap-4 pb-8 border-b border-gray-50 mb-10 scrollbar-hide -mx-4 px-6 lg:mx-0 lg:px-0">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -2752,7 +2354,7 @@ const MobileAppHomepage = ({
             })}
           </div>
 
-          <div className="grid grid-cols-1 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
             {getFilteredItems().slice(0, visibleCount).map((item, idx) => (
               <motion.div
                 key={item._id || idx}
@@ -2791,7 +2393,7 @@ const MobileAppHomepage = ({
         </section>
 
         {/* Mobile Community Highlights */}
-        <div className="mb-10 -mx-4">
+        <div className="mb-10 -mx-4 lg:mx-0">
           <LoopOutPulse />
         </div>
 
@@ -2821,6 +2423,166 @@ const MobileAppHomepage = ({
             {requestCount}
           </div>
         )}
+      </motion.div>
+
+      {/* Bookings Modal */}
+      <MyBookingsConsumer isOpen={isBookingsOpen} onClose={() => setIsBookingsOpen(false)} />
+    </div>
+  );
+};
+
+// --- Airbnb-Style Desktop Homepage ---
+const DesktopHomepage = ({
+  tabs,
+  activeTab,
+  setActiveTab,
+  aiInsights,
+  showAIInsights,
+  setShowAIInsights,
+  getFilteredItems,
+  navigate,
+  isBookingsOpen,
+  setIsBookingsOpen,
+  requestCount
+}) => {
+  return (
+    <div className="min-h-screen bg-white">
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        body { overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        body::-webkit-scrollbar { display: none; }
+        * { scrollbar-width: none; -ms-overflow-style: none; }
+        *::-webkit-scrollbar { display: none; }
+      `}</style>
+
+      {/* Sticky Airbnb-style Categories Bar */}
+      <div className="sticky top-[80px] z-40 bg-white border-b border-gray-100 py-3 shadow-sm">
+        <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
+          <div className="flex items-center gap-12 overflow-x-auto scrollbar-hide py-1">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className="flex flex-col items-center gap-2 group relative pb-3 pt-1 cursor-pointer transition-all focus:outline-none"
+                >
+                  <CategoryIcon type={tab.iconType} size="w-6 h-6" />
+                  <span className={`text-xs font-semibold tracking-wide transition-colors duration-200 ${isActive ? 'text-gray-900 font-bold' : 'text-gray-500 group-hover:text-gray-900'}`}>
+                    {tab.id}
+                  </span>
+                  {isActive ? (
+                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-rose-500" />
+                  ) : (
+                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-transparent group-hover:bg-gray-200 transition-colors duration-200" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Premium Filter Button */}
+          <button 
+            onClick={() => navigate('/search')}
+            className="flex items-center gap-2 px-4 py-3 border border-gray-200 rounded-xl hover:border-gray-900 transition-all font-medium text-xs tracking-wider text-gray-700 bg-white shadow-sm hover:shadow-md"
+          >
+            <FunnelIcon className="w-4 h-4 text-gray-500" />
+            <span>Filters</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Main Clean Feed Grid */}
+      <main className="max-w-7xl mx-auto px-8 py-10">
+        {/* AI Insights & Recommendations (Subtle & elegant, not busy) */}
+        {showAIInsights && aiInsights && aiInsights.length > 0 && (
+          <div className="mb-10 bg-gradient-to-r from-rose-50 to-amber-50 p-5 rounded-2xl border border-rose-100 flex items-center justify-between shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-rose-200/20 rounded-full blur-2xl" />
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="w-10 h-10 bg-rose-500 rounded-xl flex items-center justify-center text-white shadow-md">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900 text-sm">AI Pulse Insights</h4>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  {aiInsights[0]?.icon || '✨'} {aiInsights[0]?.text || aiInsights[0]}
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowAIInsights(false)} 
+              className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5 border border-gray-200 rounded-lg bg-white/50 backdrop-blur-md relative z-10 transition-colors"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {/* Simple Grid Header */}
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-xl font-bold text-gray-900 tracking-tight">
+            {activeTab === 'Universe' ? 'Top Discoveries' : `Exclusive ${activeTab}`}
+          </h1>
+          <span className="text-xs text-gray-500 font-medium">
+            Showing {getFilteredItems().length} options in Polokwane
+          </span>
+        </div>
+
+        {/* Listings Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
+          {getFilteredItems().map((item, idx) => (
+            <motion.div
+              key={item._id || idx}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: idx * 0.03 }}
+            >
+              <AirbnbCard
+                item={item}
+                type={activeTab === 'Universe' ? (item.itemType || 'property') : activeTab === 'Helper' ? 'helper' : activeTab === 'Properties' ? 'property' : activeTab.slice(0, -1).toLowerCase()}
+                onClick={(path) => navigate(path)}
+              />
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Clean footer / end of feed */}
+        <div className="mt-20 pt-10 border-t border-gray-100 text-center">
+          <p className="text-sm text-gray-500 font-medium">You've reached the end of the discoveries.</p>
+          <button 
+            onClick={() => navigate('/search')}
+            className="mt-4 px-6 py-3 bg-gray-950 text-white rounded-xl text-xs font-semibold hover:bg-rose-600 transition-colors shadow-md"
+          >
+            Search All Listings
+          </button>
+        </div>
+      </main>
+      
+      {/* Floating AI Agent & Bookings Tracker */}
+      <motion.div
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => navigate('/ai-help-center')}
+        className="fixed bottom-6 right-6 z-50 cursor-pointer shadow-xl rounded-full bg-rose-600 hover:bg-rose-500 text-white p-4 flex items-center justify-center border border-rose-500"
+      >
+        <Sparkles className="w-6 h-6" />
+      </motion.div>
+      
+      <motion.div
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setIsBookingsOpen(true)}
+        className="fixed bottom-20 right-6 z-50 cursor-pointer shadow-xl rounded-full bg-white hover:bg-gray-50 text-gray-950 p-4 flex items-center justify-center border border-gray-200"
+      >
+        <div className="relative">
+          <CalendarDaysIcon className="w-6 h-6 text-gray-700" />
+          {requestCount > 0 && (
+            <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+              {requestCount}
+            </span>
+          )}
+        </div>
       </motion.div>
 
       {/* Bookings Modal */}
@@ -2945,17 +2707,17 @@ const Home = () => {
   const [locationStatus, setLocationStatus] = useState(null);
 
   useEffect(() => {
-    const fetchHomepageData = async () => {
-      const controllers = {
-        properties: new AbortController(),
-        services: new AbortController(),
-        helpers: new AbortController(),
-        events: new AbortController()
-      };
-      const timeoutId = setTimeout(() => {
-        Object.values(controllers).forEach(controller => controller.abort());
-      }, API_TIMEOUT);
+    const controllers = {
+      properties: new AbortController(),
+      services: new AbortController(),
+      helpers: new AbortController(),
+      events: new AbortController()
+    };
+    const timeoutId = setTimeout(() => {
+      Object.values(controllers).forEach(controller => controller.abort());
+    }, API_TIMEOUT);
 
+    const fetchHomepageData = async () => {
       let searchCoords = coords || null;
       let detectedCity = city || null;
 
@@ -3069,14 +2831,23 @@ const Home = () => {
           .catch(() => { }).finally(() => setLoadingEvents(false))
       ];
 
-      await Promise.all(fetchPromises);
-      clearTimeout(timeoutId);
-      setStats({ properties: 1234, services: 456, helpers: 789, events: 321 });
+      try {
+        await Promise.all(fetchPromises);
+        clearTimeout(timeoutId);
+        setStats({ properties: 1234, services: 456, helpers: 789, events: 321 });
+      } catch (err) {
+        // Ignored or logged (aborted fetches will fail)
+      }
     };
 
     if (!geoLoading) {
       fetchHomepageData();
     }
+
+    return () => {
+      clearTimeout(timeoutId);
+      Object.values(controllers).forEach(controller => controller.abort());
+    };
   }, [coords, city, geoLoading]);
 
   const recentlyAddedItems = useMemo(() => {

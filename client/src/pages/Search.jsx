@@ -587,7 +587,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
       variants={cardVariants}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      className="group relative aspect-square bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-700 cursor-pointer h-full"
+      className="group relative aspect-square bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-700 cursor-pointer h-full"
       onClick={() => navigate(getItemPath(item))}
     >
       <div className="absolute inset-0 z-0">
@@ -610,9 +610,9 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
             e.stopPropagation();
             setIsLiked(!isLiked);
           }}
-          className="w-10 h-10 bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg flex items-center justify-center text-gray-900 hover:bg-rose-500 hover:text-white transition-all active:scale-90 pointer-events-auto"
+          className="w-10 h-10 bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg flex items-center justify-center text-gray-900 hover:bg-rose-500 hover:text-white transition-all active:scale-75 hover:animate-pulse-slow pointer-events-auto"
         >
-          <Heart className={`w-4 h-4 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}`} strokeWidth={isLiked ? 0 : 2} />
+          <Heart className={`w-4 h-4 ${isLiked ? 'fill-rose-500 text-rose-500 animate-bounce' : ''}`} strokeWidth={isLiked ? 0 : 2} />
         </button>
       </div>
 
@@ -696,16 +696,16 @@ const EmptyState = ({ onClear }) => (
 );
 
 const SkeletonCard = () => (
-  <div className="relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-sm animate-pulse">
-    <div className="absolute inset-0 bg-gray-100" />
+  <div className="relative aspect-square glass rounded-[3rem] border border-white/20 overflow-hidden shadow-sm animate-pulse-slow">
+    <div className="absolute inset-0 bg-gray-100/50 animate-shimmer" />
     <div className="absolute inset-x-0 bottom-0 p-6 space-y-3">
       <div className="flex justify-between items-end">
         <div className="space-y-2 flex-1">
-          <div className="h-2 bg-gray-200 rounded w-1/4" />
-          <div className="h-4 bg-gray-200 rounded w-3/4" />
-          <div className="h-2 bg-gray-200 rounded w-1/2" />
+          <div className="h-2 bg-gray-200/60 rounded w-1/4" />
+          <div className="h-4 bg-gray-200/60 rounded w-3/4" />
+          <div className="h-2 bg-gray-200/60 rounded w-1/2" />
         </div>
-        <div className="h-8 bg-gray-200 rounded-xl w-16" />
+        <div className="h-8 bg-gray-200/60 rounded-xl w-16" />
       </div>
     </div>
   </div>
@@ -1320,7 +1320,7 @@ const SearchPage = () => {
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className={`grid gap-8 ${viewMode === 'map' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'}`}
+              className={`grid gap-8 ${viewMode === 'map' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'}`}
             >
               {listings.map((item, idx) => (
                 <ResultCard

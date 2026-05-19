@@ -574,212 +574,245 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
-          {/* Guest Information - Always shown */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <UserGroupIcon className="w-5 h-5 text-rose-500" />
-              Your Information
-            </h3>
+        <form onSubmit={handleSubmit} className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-10 max-h-[calc(100vh-200px)] overflow-y-auto no-scrollbar">
+          
+          {/* Left Column: Input Fields */}
+          <div className="lg:col-span-7 space-y-8">
+            
+            {/* Guest Information - Always shown */}
+            <div className="space-y-6">
+              <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg">
+                <UserGroupIcon className="w-6 h-6 text-rose-500" />
+                Guest Details
+              </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={bookingDetails.fullName}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${errors.fullName ? 'border-rose-500' : 'border-gray-300'
-                    }`}
-                  placeholder="John Doe"
-                />
-                {errors.fullName && (
-                  <p className="mt-1 text-xs text-rose-500">{errors.fullName}</p>
-                )}
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="md:col-span-2">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      id="fullName"
+                      name="fullName"
+                      value={bookingDetails.fullName}
+                      onChange={handleChange}
+                      className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 placeholder-transparent bg-white transition-colors ${errors.fullName ? 'border-rose-500' : 'border-gray-300'}`}
+                      placeholder="John Doe"
+                    />
+                    <label htmlFor="fullName" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-xs font-semibold ${errors.fullName ? 'text-rose-500' : 'text-gray-500 peer-focus:text-rose-500'}`}>
+                      Full Name <span className="text-rose-500">*</span>
+                    </label>
+                  </div>
+                  {errors.fullName && <p className="mt-1.5 text-xs text-rose-500 font-medium">{errors.fullName}</p>}
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={bookingDetails.email}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${errors.email ? 'border-rose-500' : 'border-gray-300'
-                    }`}
-                  placeholder="john@example.com"
-                />
-                {errors.email && (
-                  <p className="mt-1 text-xs text-rose-500">{errors.email}</p>
-                )}
-              </div>
+                <div>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={bookingDetails.email}
+                      onChange={handleChange}
+                      className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 placeholder-transparent bg-white transition-colors ${errors.email ? 'border-rose-500' : 'border-gray-300'}`}
+                      placeholder="john@example.com"
+                    />
+                    <label htmlFor="email" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-xs font-semibold ${errors.email ? 'text-rose-500' : 'text-gray-500 peer-focus:text-rose-500'}`}>
+                      Email Address <span className="text-rose-500">*</span>
+                    </label>
+                  </div>
+                  {errors.email && <p className="mt-1.5 text-xs text-rose-500 font-medium">{errors.email}</p>}
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={bookingDetails.phone}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${errors.phone ? 'border-rose-500' : 'border-gray-300'
-                    }`}
-                  placeholder="082 123 4567"
-                />
-                {errors.phone && (
-                  <p className="mt-1 text-xs text-rose-500">{errors.phone}</p>
-                )}
+                <div>
+                  <div className="relative">
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      value={bookingDetails.phone}
+                      onChange={handleChange}
+                      className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 placeholder-transparent bg-white transition-colors ${errors.phone ? 'border-rose-500' : 'border-gray-300'}`}
+                      placeholder="082 123 4567"
+                    />
+                    <label htmlFor="phone" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-xs font-semibold ${errors.phone ? 'text-rose-500' : 'text-gray-500 peer-focus:text-rose-500'}`}>
+                      Phone Number <span className="text-rose-500">*</span>
+                    </label>
+                  </div>
+                  {errors.phone && <p className="mt-1.5 text-xs text-rose-500 font-medium">{errors.phone}</p>}
+                </div>
               </div>
             </div>
-          </div>
 
           {/* Overnight Stay Fields */}
           {isOvernight && (
             <>
               {/* Booking Dates */}
-              <div className="space-y-4 pt-4 border-t border-gray-200">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <CalendarIcon className="w-5 h-5 text-rose-500" />
-                  Stay Dates
+              <div className="space-y-6 pt-6 border-t border-gray-100">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg">
+                  <CalendarIcon className="w-6 h-6 text-rose-500" />
+                  Reservation Dates
                 </h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Check-in Date <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      name="checkIn"
-                      value={bookingDetails.checkIn}
-                      onChange={handleChange}
-                      min={today}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${errors.checkIn ? 'border-rose-500' : 'border-gray-300'
-                        }`}
-                    />
-                    {errors.checkIn && (
-                      <p className="mt-1 text-xs text-rose-500">{errors.checkIn}</p>
-                    )}
+                    <div className="relative">
+                      <input
+                        type="date"
+                        id="checkIn"
+                        name="checkIn"
+                        value={bookingDetails.checkIn}
+                        onChange={handleChange}
+                        min={today}
+                        className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white transition-colors ${errors.checkIn ? 'border-rose-500' : 'border-gray-300'}`}
+                      />
+                      <label htmlFor="checkIn" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold ${errors.checkIn ? 'text-rose-500' : 'text-gray-500 peer-focus:text-rose-500'}`}>
+                        Check-in Date <span className="text-rose-500">*</span>
+                      </label>
+                    </div>
+                    {errors.checkIn && <p className="mt-1.5 text-xs text-rose-500 font-medium">{errors.checkIn}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Check-out Date <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      name="checkOut"
-                      value={bookingDetails.checkOut}
-                      onChange={handleChange}
-                      min={bookingDetails.checkIn || today}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${errors.checkOut ? 'border-rose-500' : 'border-gray-300'
-                        }`}
-                    />
-                    {errors.checkOut && (
-                      <p className="mt-1 text-xs text-rose-500">{errors.checkOut}</p>
-                    )}
+                    <div className="relative">
+                      <input
+                        type="date"
+                        id="checkOut"
+                        name="checkOut"
+                        value={bookingDetails.checkOut}
+                        onChange={handleChange}
+                        min={bookingDetails.checkIn || today}
+                        className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white transition-colors ${errors.checkOut ? 'border-rose-500' : 'border-gray-300'}`}
+                      />
+                      <label htmlFor="checkOut" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold ${errors.checkOut ? 'text-rose-500' : 'text-gray-500 peer-focus:text-rose-500'}`}>
+                        Check-out Date <span className="text-rose-500">*</span>
+                      </label>
+                    </div>
+                    {errors.checkOut && <p className="mt-1.5 text-xs text-rose-500 font-medium">{errors.checkOut}</p>}
                   </div>
                 </div>
 
                 {nights > 0 && (
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      <span className="font-semibold">{nights} night{nights > 1 ? 's' : ''}</span> total stay
+                  <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-500">
+                      <CalendarIcon className="w-4 h-4" />
+                    </div>
+                    <p className="text-sm text-rose-900 font-medium">
+                      You are booking for <span className="font-bold">{nights} night{nights > 1 ? 's' : ''}</span>
                     </p>
                   </div>
                 )}
               </div>
 
               {/* Room & Guest Details */}
-              <div className="space-y-4 pt-4 border-t border-gray-200">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <HomeModernIcon className="w-5 h-5 text-rose-500" />
-                  Room & Guest Details
+              <div className="space-y-6 pt-6 border-t border-gray-100">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg">
+                  <HomeModernIcon className="w-6 h-6 text-rose-500" />
+                  Accommodations
                 </h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Rooms
-                    </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="relative">
                     <select
+                      id="rooms"
                       name="rooms"
                       value={bookingDetails.rooms}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
                     >
                       {[1, 2, 3, 4, 5].map(num => (
                         <option key={num} value={num}>{num} {num === 1 ? 'Room' : 'Rooms'}</option>
                       ))}
                     </select>
+                    <label htmlFor="rooms" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                      Rooms
+                    </label>
+                    <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Guests
-                    </label>
+                  <div className="relative">
                     <select
+                      id="guests"
                       name="guests"
                       value={bookingDetails.guests}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
                     >
                       {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
                         <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
                       ))}
                     </select>
+                    <label htmlFor="guests" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                      Guests
+                    </label>
+                    <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Children
-                    </label>
+                  <div className="relative">
                     <select
+                      id="childGuests"
                       name="childGuests"
                       value={bookingDetails.childGuests}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
                     >
                       {[0, 1, 2, 3, 4].map(num => (
-                        <option key={num} value={num}>{num}</option>
+                        <option key={num} value={num}>{num} {num === 1 ? 'Child' : 'Children'}</option>
                       ))}
                     </select>
+                    <label htmlFor="childGuests" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                      Children
+                    </label>
+                    <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+                  <div 
+                    className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group"
+                    onClick={() => document.getElementById('breakfast').click()}
+                  >
                     <input
                       type="checkbox"
                       name="breakfast"
                       id="breakfast"
                       checked={bookingDetails.breakfast}
                       onChange={handleChange}
-                      className="w-5 h-5 text-rose-500 rounded focus:ring-rose-500"
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-5 h-5 text-rose-500 border-gray-300 rounded focus:ring-rose-500 cursor-pointer"
                     />
-                    <label htmlFor="breakfast" className="text-gray-700">
-                      Add Breakfast (R150/person/night)
-                    </label>
+                    <div>
+                      <label htmlFor="breakfast" className="text-sm font-semibold text-gray-900 block cursor-pointer group-hover:text-rose-600 transition-colors">
+                        Add Breakfast
+                      </label>
+                      <p className="text-xs text-gray-500 mt-0.5">R150/person per night</p>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+                  <div 
+                    className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group"
+                    onClick={() => document.getElementById('pets').click()}
+                  >
                     <input
                       type="checkbox"
                       name="pets"
                       id="pets"
                       checked={bookingDetails.pets}
                       onChange={handleChange}
-                      className="w-5 h-5 text-rose-500 rounded focus:ring-rose-500"
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-5 h-5 text-rose-500 border-gray-300 rounded focus:ring-rose-500 cursor-pointer"
                     />
-                    <label htmlFor="pets" className="text-gray-700">
-                      Bringing Pets
-                    </label>
+                    <div>
+                      <label htmlFor="pets" className="text-sm font-semibold text-gray-900 block cursor-pointer group-hover:text-rose-600 transition-colors">
+                        Bringing Pets
+                      </label>
+                      <p className="text-xs text-gray-500 mt-0.5">Subject to host approval</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -789,68 +822,79 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
           {/* Resort Fields */}
           {isOffice && (
             <>
-              <div className="space-y-4 pt-4 border-t border-gray-200">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <ClockIcon className="w-5 h-5 text-rose-500" />
-                  Booking Date & Time
+              <div className="space-y-6 pt-6 border-t border-gray-100">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg">
+                  <ClockIcon className="w-6 h-6 text-rose-500" />
+                  Session Schedule
                 </h3>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Select Date <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="selectedDate"
-                    value={bookingDetails.selectedDate}
-                    onChange={handleChange}
-                    min={today}
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 ${errors.selectedDate ? 'border-rose-500' : 'border-gray-300'
-                      }`}
-                  />
-                  {errors.selectedDate && (
-                    <p className="mt-1 text-xs text-rose-500">{errors.selectedDate}</p>
-                  )}
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="md:col-span-1">
+                    <div className="relative">
+                      <input
+                        type="date"
+                        id="selectedDate"
+                        name="selectedDate"
+                        value={bookingDetails.selectedDate}
+                        onChange={handleChange}
+                        min={today}
+                        className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white transition-colors ${errors.selectedDate ? 'border-rose-500' : 'border-gray-300'}`}
+                      />
+                      <label htmlFor="selectedDate" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold ${errors.selectedDate ? 'text-rose-500' : 'text-gray-500 peer-focus:text-rose-500'}`}>
+                        Select Date <span className="text-rose-500">*</span>
+                      </label>
+                    </div>
+                    {errors.selectedDate && <p className="mt-1.5 text-xs text-rose-500 font-medium">{errors.selectedDate}</p>}
+                  </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Start Time
-                    </label>
+                  <div className="relative">
                     <select
+                      id="startTime"
                       name="startTime"
                       value={bookingDetails.startTime}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
                     >
                       {generateTimeOptions().map(time => (
                         <option key={time} value={time}>{time}</option>
                       ))}
                     </select>
+                    <label htmlFor="startTime" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                      Start Time
+                    </label>
+                    <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      End Time
-                    </label>
+                  <div className="relative">
                     <select
+                      id="endTime"
                       name="endTime"
                       value={bookingDetails.endTime}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
                     >
-                      {generateTimeOptions().map(time => (
+                      {generateTimeOptions(true).map(time => (
                         <option key={time} value={time}>{time}</option>
                       ))}
                     </select>
+                    <label htmlFor="endTime" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                      End Time
+                    </label>
+                    <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
                   </div>
                 </div>
 
                 {hours > 0 && (
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      <span className="font-semibold">{hours.toFixed(1)} hours</span> total booking time
+                  <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-500">
+                      <ClockIcon className="w-4 h-4" />
+                    </div>
+                    <p className="text-sm text-rose-900 font-medium">
+                      You are booking for <span className="font-bold">{hours.toFixed(1)} hours</span>
                     </p>
                   </div>
                 )}
@@ -858,26 +902,33 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
             </>
           )}
 
-          {/* Special Requests - Always shown */}
-          <div className="space-y-2 pt-4 border-t border-gray-200">
-            <label className="block text-sm font-medium text-gray-700">
-              {isSale || isRent ? 'Message / Questions' : 'Special Requests'}
-            </label>
-            <textarea
-              name="specialRequests"
-              value={bookingDetails.specialRequests}
-              onChange={handleChange}
-              rows="4"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
-              placeholder={isSale || isRent
-                ? "I'm interested in this property. Please provide more information..."
-                : "Any special requirements or requests..."}
-            />
+          {/* Special Requests */}
+          <div className="space-y-4 pt-6 border-t border-gray-100">
+            <div className="relative">
+              <textarea
+                id="specialRequests"
+                name="specialRequests"
+                value={bookingDetails.specialRequests}
+                onChange={handleChange}
+                rows="3"
+                className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white resize-none placeholder-transparent"
+                placeholder={isSale || isRent ? "I'm interested in this property..." : "Any special requirements..."}
+              />
+              <label htmlFor="specialRequests" className="absolute left-4 -top-2.5 bg-white px-1 text-xs transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                {isSale || isRent ? 'Message / Questions' : 'Special Requests'}
+              </label>
+            </div>
           </div>
 
-          {/* Price Summary - Only for overnight and office */}
-          {((isOvernight && nights > 0) || (isOffice && hours > 0)) && (
-            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6 space-y-4">
+          </div>
+
+          {/* Right Column: Sticky Summary */}
+          <div className="lg:col-span-5 relative">
+            <div className="sticky top-0 space-y-6">
+              
+              {/* Price Summary - Only for overnight and office */}
+              {((isOvernight && nights > 0) || (isOffice && hours > 0)) && (
+                <div className="bg-white border border-gray-200 rounded-[2rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
                 <TicketIcon className="w-4 h-4 text-gray-400" />
                 <h4 className="font-bold text-gray-900 uppercase text-xs tracking-widest">Pricing Breakdown</h4>
@@ -978,31 +1029,27 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
-            >
-              Cancel
-            </button>
+          <div className="pt-4 border-t border-gray-200">
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-4 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white rounded-xl font-bold text-lg transition-all shadow-xl shadow-rose-200 disabled:opacity-50 flex items-center justify-center gap-2 active:scale-[0.98]"
             >
               {isSubmitting ? (
                 <>
-                  <ArrowPathIcon className="w-5 h-5 animate-spin" />
-                  Sending...
+                  <ArrowPathIcon className="w-6 h-6 animate-spin" />
+                  Processing...
                 </>
               ) : (
                 <>
-                  <FaWhatsapp className="text-xl" />
-                  {isSale || isRent ? 'Send Inquiry' : 'Send Booking Request'}
+                  <FaWhatsapp className="text-2xl" />
+                  {isSale || isRent ? 'Request Info via WhatsApp' : 'Reserve via WhatsApp'}
                 </>
               )}
             </button>
+            <p className="text-center text-xs font-medium text-gray-500 mt-4">You won't be charged yet</p>
+          </div>
+            </div>
           </div>
         </form>
       </div>
@@ -2045,49 +2092,51 @@ export default function Listing() {
       </nav>
 
       {/* Image Gallery Grid - Full Width Airbnb Style */}
-      <div className="relative w-full overflow-hidden bg-slate-900">
-        <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-[400px] md:h-[500px] lg:h-[600px] w-full">
-          {/* Main Image - Takes left half (2 cols, 2 rows) */}
-          <div
-            className="md:col-span-2 md:row-span-2 relative overflow-hidden cursor-pointer group"
-            onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
-          >
-            <ImageWithFallback
-              src={listing.imageUrls[0]}
-              imageUrls={listing.imageUrls}
-              alt={listing.name}
-              type="property"
-              className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
-          </div>
-
-          {/* Side Images - 2x2 grid on right */}
-          {listing.imageUrls.slice(1, 5).map((url, index) => (
+      <div className="max-w-[85rem] mx-auto md:px-4 lg:px-8 md:pt-24 md:pb-6">
+        <div className="relative w-full overflow-hidden bg-slate-900 md:rounded-2xl shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-[400px] md:h-[500px] lg:h-[600px] w-full">
+            {/* Main Image - Takes left half (2 cols, 2 rows) */}
             <div
-              key={index}
-              className="relative overflow-hidden cursor-pointer hidden md:block group"
-              onClick={() => { setGalleryIndex(index + 1); setShowFullGallery(true); }}
+              className="md:col-span-2 md:row-span-2 relative overflow-hidden cursor-pointer group"
+              onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
             >
               <ImageWithFallback
-                src={url}
-                imageUrls={listing.imageUrls.slice(index + 1)}
-                alt={`${listing.name} ${index + 2}`}
+                src={listing.imageUrls[0]}
+                imageUrls={listing.imageUrls}
+                alt={listing.name}
                 type="property"
-                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
             </div>
-          ))}
 
-          {/* Show All Photos Button */}
-          <button
-            onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
-            className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50"
-          >
-            <PhotoIcon className="w-5 h-5" />
-            <span>Show all {listing.imageUrls.length} photos</span>
-          </button>
+            {/* Side Images - 2x2 grid on right */}
+            {listing.imageUrls.slice(1, 5).map((url, index) => (
+              <div
+                key={index}
+                className="relative overflow-hidden cursor-pointer hidden md:block group"
+                onClick={() => { setGalleryIndex(index + 1); setShowFullGallery(true); }}
+              >
+                <ImageWithFallback
+                  src={url}
+                  imageUrls={listing.imageUrls.slice(index + 1)}
+                  alt={`${listing.name} ${index + 2}`}
+                  type="property"
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
+              </div>
+            ))}
+
+            {/* Show All Photos Button */}
+            <button
+              onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
+              className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50"
+            >
+              <PhotoIcon className="w-5 h-5" />
+              <span>Show all {listing.imageUrls.length} photos</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -2529,8 +2578,8 @@ export default function Listing() {
           </div>
 
           {/* Right Column - Booking Card */}
-          <div className="lg:col-span-1">
-            <div className={`${isScrolled ? 'lg:sticky lg:top-24' : ''} space-y-4`}>
+          <div className="lg:col-span-1 relative">
+            <div className="lg:sticky lg:top-28 space-y-4 pb-8 z-10">
               <div className="border border-slate-200/50 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 lg:p-8 bg-transparent">
                 {/* Price Header */}
                 <div className="flex items-baseline justify-between mb-4 lg:mb-6">
