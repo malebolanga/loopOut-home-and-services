@@ -2132,34 +2132,6 @@ const MobileAppHomepage = ({
               </div>
             </SwiperSlide>
 
-            {/* Mobile Slide 5: LoopOut Hotel Campaign */}
-            <SwiperSlide>
-              <div className="relative h-full w-full" onClick={() => navigate('/search?type=properties')}>
-                <img
-                  src="/hotel_reception_loopout_campaign.png"
-                  className="absolute inset-0 w-full h-full object-cover"
-                  alt="LoopOut Hotel"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
-                <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                  <div className="flex items-center gap-2 mb-4">
-                    <StarIcon className="w-5 h-5 text-rose-500" />
-                    <span className="text-white text-[10px] font-black tracking-[0.3em] uppercase">Grand Hospitality</span>
-                  </div>
-                  <h2 className="text-4xl font-black text-white leading-[0.85] mb-6 tracking-tighter">
-                    LOOPOUT <br />
-                    <span className="text-rose-500">HOTEL.</span>
-                  </h2>
-                  <p className="text-white/70 text-[14px] font-medium mb-8 leading-relaxed max-w-[280px]">
-                    From the gate to the reception desk, <span className="text-white">welcome to excellence.</span>
-                  </p>
-                  <button className="w-full py-5 bg-white text-gray-950 rounded-2xl text-[12px] font-black shadow-xl uppercase tracking-widest active:scale-95 transition-all">
-                    Discover Hotels
-                  </button>
-                </div>
-              </div>
-            </SwiperSlide>
-
             {/* Mobile Slide 6: LoopOut Soweto Bedroom Campaign */}
             <SwiperSlide>
               <div className="relative h-full w-full" onClick={() => navigate('/search?category=guesthouse&type=properties')}>
