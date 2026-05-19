@@ -167,10 +167,41 @@ async function generateAndroidIcons() {
   }
 }
 
+const LOGO_SVG_PATH = path.join(__dirname, 'public', 'loopout_logo.svg');
+const SRC_LOGOS_DIR = path.join(__dirname, 'src', 'logos');
+
+async function generateSrcLogos() {
+  console.log('Generating client/src/logos/ assets...');
+  if (!fs.existsSync(SRC_LOGOS_DIR)) {
+    console.warn(`src/logos directory not found at ${SRC_LOGOS_DIR}, skipping.`);
+    return;
+  }
+
+  // 1. l.png - generated from the icon SVG
+  const lPath = path.join(SRC_LOGOS_DIR, 'l.png');
+  await sharp(SVG_PATH)
+    .resize(512, 512)
+    .png()
+    .toFile(lPath);
+  console.log('- Generated src/logos/l.png (512x512 from icon)');
+
+  // 2. All other logo files - generated from the full logo with text SVG
+  const textLogos = ['lop2.png', 'lou43.png', 'loue3.png', 'loup.png', 'loup33.png', 'loup334.png'];
+  for (const filename of textLogos) {
+    const filePath = path.join(SRC_LOGOS_DIR, filename);
+    await sharp(LOGO_SVG_PATH)
+      .resize(800, 800)
+      .png()
+      .toFile(filePath);
+    console.log(`- Generated src/logos/${filename} (800x800 from logo)`);
+  }
+}
+
 async function main() {
   try {
     await generateWebIcons();
     await generateAndroidIcons();
+    await generateSrcLogos();
     console.log('\nAll assets generated successfully!');
   } catch (err) {
     console.error('Error generating assets:', err);
