@@ -1161,7 +1161,7 @@ const LoopOutHomeHero = ({ navigate }) => {
   const slides = [
     {
       id: 1,
-      image: 'https://images.unsplash.com/photo-1618220179428-22790b46a0eb?auto=format&fit=crop&w=1600&q=80',
+      image: '/maskable.png',
       tagIcon: Sparkles,
       tagText: 'Premium Reflections',
       titleLine1: 'LOOPOUT',
@@ -1174,7 +1174,7 @@ const LoopOutHomeHero = ({ navigate }) => {
     },
     {
       id: 2,
-      image: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=1600&q=80',
+      image: '/maskable.png',
       tagIcon: ScissorsIcon,
       tagText: 'Elite Salon Experience',
       titleLine1: 'LOOPOUT',
@@ -1200,7 +1200,7 @@ const LoopOutHomeHero = ({ navigate }) => {
     },
     {
       id: 4,
-      image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1600&q=80',
+      image: '/maskable.png',
       tagIcon: HomeModernIcon,
       tagText: 'Curated Living Spaces',
       titleLine1: 'LOOPOUT',
@@ -1213,7 +1213,7 @@ const LoopOutHomeHero = ({ navigate }) => {
     },
     {
       id: 5,
-      image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1600&q=80',
+      image: '/maskable.png',
       tagIcon: Sparkles,
       tagText: 'Signature Comfort',
       titleLine1: 'LOOPOUT',
