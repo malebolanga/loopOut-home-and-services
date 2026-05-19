@@ -1839,7 +1839,7 @@ const WeeklySpecialsSection = ({ navigate, isMobile = false }) => {
       discount: 'SOWETO',
       desc: 'Rest in luxury with co-branded pillows at premier guest houses',
       color: 'bg-emerald-600',
-      image: '/student_room_loopout_campaign.svg'
+      image: '/soweto_bg.png'
     }
   ];
 
@@ -2136,7 +2136,7 @@ const MobileAppHomepage = ({
             <SwiperSlide>
               <div className="relative h-full w-full" onClick={() => navigate('/search?category=guesthouse&type=properties')}>
                 <img
-                  src="/student_room_loopout_campaign.svg"
+                  src="/soweto_bg.png"
                   className="absolute inset-0 w-full h-full object-cover"
                   alt="LoopOut Soweto Stay"
                 />

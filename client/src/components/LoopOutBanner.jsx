@@ -225,10 +225,10 @@ const LoopOutBanner = ({ className = "", type = "all" }) => {
                   <img
                     src={
                       type === 'stay'
-                        ? '/student_room_loopout_campaign.svg'
+                        ? '/soweto_bg.png'
                         : type === 'helper'
                         ? '/barber_loopout_campaign.png'
-                        : '/student_room_loopout_campaign.svg'
+                        : '/soweto_bg.png'
                     }
                     alt="loopOut Campaign Preview"
                     className="w-full h-full object-cover"
