@@ -18,8 +18,8 @@ const WEB_TARGETS = [
   { name: 'logo256.jpg', size: 256, isTransparent: false, bgColor: '#FFFFFF', isJpg: true, writeToRootOnly: true },
   { name: 'logo384.jpg', size: 384, isTransparent: false, bgColor: '#FFFFFF', isJpg: true, writeToRootOnly: true },
   { name: 'logo512.jpg', size: 512, isTransparent: false, bgColor: '#FFFFFF', isJpg: true, writeToRootOnly: true },
-  // Favicon.ico in root
-  { name: 'favicon.ico', size: 32, isTransparent: true, writeToRootOnly: true }
+  // Favicon.ico in root and public
+  { name: 'favicon.ico', size: 32, isTransparent: true, writeToRoot: true }
 ];
 
 // Android launcher targets inside client/android/app/src/main/res/
