@@ -16,7 +16,20 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: undefined
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('@mui') || id.includes('@emotion')) {
+              return 'vendor-mui';
+            }
+            if (id.includes('swiper') || id.includes('framer-motion') || id.includes('leaflet')) {
+              return 'vendor-visuals';
+            }
+            if (id.includes('firebase') || id.includes('@firebase')) {
+              return 'vendor-firebase';
+            }
+            return 'vendor-core';
+          }
+        }
       }
     }
   }

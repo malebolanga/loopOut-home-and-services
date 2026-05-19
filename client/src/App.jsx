@@ -5,133 +5,136 @@ import Footer from "./components/Footer";
 import PrivateRoute from "./components/PrivateRoute";
 import AuthSessionManager from "./components/AuthSessionManager";
 import NeuralSplash from "./components/NeuralSplash";
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import ScrollToTop from "./components/ScrollToTop";
 import { useSelector, useDispatch } from "react-redux";
 import { signOutUserSuccess } from "./redux/user/userSlice";
 import { AnimatePresence } from 'framer-motion';
 import PageTransition from './components/PageTransition';
+import NeuralLoader from "./components/NeuralLoader";
 
-// Core Pages
+// Core Pages (Statically imported to guarantee instant initial rendering)
 import Home from "./pages/Home";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
-import Profile from "./pages/Profile";
-import Search from "./pages/Search";
-import Message from "./pages/Message";
+
+// Dynamic / Code-Splitted Pages (Lazy-loaded on-demand)
+const Profile = lazy(() => import("./pages/Profile"));
+const Search = lazy(() => import("./pages/Search"));
+const Message = lazy(() => import("./pages/Message"));
 
 // Dashboard Page
-import DashBoard from "./pages/DashBoard";
-import HostDashboard from "./pages/HostDashboard";
-import HostEarnings from "./pages/HostEarnings";
-import HostTools from "./pages/HostTools";
+const DashBoard = lazy(() => import("./pages/DashBoard"));
+const HostDashboard = lazy(() => import("./pages/HostDashboard"));
+const HostEarnings = lazy(() => import("./pages/HostEarnings"));
+const HostTools = lazy(() => import("./pages/HostTools"));
 
 // Listing Related Pages
-import CreateListing from "./pages/CreateListing";
-import UpdateListing from "./pages/UpdateListing";
-import Listing from "./pages/Listing";
-import RentPage from "./pages/RentPage";
-import List from "./pages/List";
-import MyListing from "./pages/MyListing";
-import ListingsPage from "./pages/ListingsPage";
-import ForSale from "./pages/ForSale";
-import ForRent from "./pages/ForRent";
-import OverNight from "./pages/OverNight";
-import Commercial from "./pages/Commercial";
-import HelperList from "./pages/HelperList";
-import HelpersHomePage from './pages/HelpersHomePage';
-import EventsHomePage from './pages/EventsHomePage';
-import ListingsHomePage from './pages/ListingsHomePage';
-import ServicesHomePage from './pages/ServicesHomePage';
+const CreateListing = lazy(() => import("./pages/CreateListing"));
+const UpdateListing = lazy(() => import("./pages/UpdateListing"));
+const Listing = lazy(() => import("./pages/Listing"));
+const RentPage = lazy(() => import("./pages/RentPage"));
+const List = lazy(() => import("./pages/List"));
+const MyListing = lazy(() => import("./pages/MyListing"));
+const ListingsPage = lazy(() => import("./pages/ListingsPage"));
+const ForSale = lazy(() => import("./pages/ForSale"));
+const ForRent = lazy(() => import("./pages/ForRent"));
+const OverNight = lazy(() => import("./pages/OverNight"));
+const Commercial = lazy(() => import("./pages/Commercial"));
+const HelperList = lazy(() => import("./pages/HelperList"));
+const HelpersHomePage = lazy(() => import('./pages/HelpersHomePage'));
+const EventsHomePage = lazy(() => import('./pages/EventsHomePage'));
+const ListingsHomePage = lazy(() => import('./pages/ListingsHomePage'));
+const ServicesHomePage = lazy(() => import('./pages/ServicesHomePage'));
 
 // Service Pages
-import Services from './pages/Services';
-import HelperPage from './pages/HelperPage';
-import EventPage from './pages/EventPage';
-import PrivateTutor from './pages/PrivateTutor';
-import UpdateHelper from './pages/UpdateHelper';
-import UpdateService from './pages/UpdateService';
+const Services = lazy(() => import('./pages/Services'));
+const HelperPage = lazy(() => import('./pages/HelperPage'));
+const EventPage = lazy(() => import('./pages/EventPage'));
+const PrivateTutor = lazy(() => import('./pages/PrivateTutor'));
+const UpdateHelper = lazy(() => import('./pages/UpdateHelper'));
+const UpdateService = lazy(() => import('./pages/UpdateService'));
 
 // Car Wash Page
-import CarWashPage from './pages/CarWashPage';
+const CarWashPage = lazy(() => import('./pages/CarWashPage'));
 
 // AI & Content Pages
-import Ai from "./pages/Ai";
-import Content from "./pages/Content";
-import ArticlePages from './pages/ArticlePages';
-import AIHelpCenter from './pages/AIHelpCenter';
-import HelpCenter from './pages/HelpCenter';
-import Planner from './pages/Planner';
-import ForBusiness from './pages/ForBusiness';
+const Ai = lazy(() => import("./pages/Ai"));
+const Content = lazy(() => import("./pages/Content"));
+const ArticlePages = lazy(() => import('./pages/ArticlePages'));
+const AIHelpCenter = lazy(() => import('./pages/AIHelpCenter'));
+const HelpCenter = lazy(() => import('./pages/HelpCenter'));
+const Planner = lazy(() => import('./pages/Planner'));
+const ForBusiness = lazy(() => import('./pages/ForBusiness'));
 
 // Informational Pages
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Become from "./pages/Become";
-import Adiver from "./pages/Adiver";
-import LifestyleDecor from "./pages/LifestyleDecor";
-import Users from './pages/Users';
-import UserListings from './pages/UserListings';
-import Pricing from './pages/Pricing';
-import Verification from './pages/Verification';
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Become = lazy(() => import("./pages/Become"));
+const Adiver = lazy(() => import("./pages/Adiver"));
+const LifestyleDecor = lazy(() => import("./pages/LifestyleDecor"));
+const Users = lazy(() => import('./pages/Users'));
+const UserListings = lazy(() => import('./pages/UserListings'));
+const Pricing = lazy(() => import('./pages/Pricing'));
+const Verification = lazy(() => import('./pages/Verification'));
 
 // Payment & Promotion
-import PromotionSelection from './pages/PromotionSelection';
-import PaymentMethod from './pages/PaymentMethod';
-import Sale from "./pages/Sale";
-import RecentlyViewedPage from "./pages/RecentlyViewedPage";
+const PromotionSelection = lazy(() => import('./pages/PromotionSelection'));
+const PaymentMethod = lazy(() => import('./pages/PaymentMethod'));
+const Sale = lazy(() => import("./pages/Sale"));
+const RecentlyViewedPage = lazy(() => import("./pages/RecentlyViewedPage"));
 
 // Help & Resources
-import PropertySafety from "./components/PropertySafety";
-import SafetyHelper from "./components/SafetyHelper";
-import SafetyServices from "./components/SafetyServices";
-import Newsroom from "./components/Newsroom";
-import HowItWorks from './components/HowItWorks';
-import Investors from './components/Investors';
-import DiversityPage from './components/DiversityPage';
-import HostingResources from './components/HostingResources';
-import HostYourHome from './components/HostYourHome';
-import HostExperience from './components/HostExperience';
-import ResponsibleHosting from './components/ResponsibleHosting';
-import CommunityCenter from './components/CommunityCenter';
-import TrustAndSafety from './components/TrustAndSafety';
-import SiteMap from './components/SiteMap';
-import CookiePolicy from './components/CookiePolicy';
-import PrivacyPolicy from './components/PrivacyPolicy';
-import AboutLoop from './components/AboutLoop';
-import TermsOfService from './components/TermsOfService';
-import LoginRequiredPage from './components/LoginRequiredPage';
+const PropertySafety = lazy(() => import("./components/PropertySafety"));
+const SafetyHelper = lazy(() => import("./components/SafetyHelper"));
+const SafetyServices = lazy(() => import("./components/SafetyServices"));
+const Newsroom = lazy(() => import("./components/Newsroom"));
+const HowItWorks = lazy(() => import('./components/HowItWorks'));
+const Investors = lazy(() => import('./components/Investors'));
+const DiversityPage = lazy(() => import('./components/DiversityPage'));
+const HostingResources = lazy(() => import('./components/HostingResources'));
+const HostYourHome = lazy(() => import('./components/HostYourHome'));
+const HostExperience = lazy(() => import('./components/HostExperience'));
+const ResponsibleHosting = lazy(() => import('./components/ResponsibleHosting'));
+const CommunityCenter = lazy(() => import('./components/CommunityCenter'));
+const TrustAndSafety = lazy(() => import('./components/TrustAndSafety'));
+const SiteMap = lazy(() => import('./components/SiteMap'));
+const CookiePolicy = lazy(() => import('./components/CookiePolicy'));
+const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
+const AboutLoop = lazy(() => import('./components/AboutLoop'));
+const TermsOfService = lazy(() => import('./components/TermsOfService'));
+const LoginRequiredPage = lazy(() => import('./components/LoginRequiredPage'));
 
 // User Features
-import Wishlist from './pages/WishList';
-import Events from './pages/Events';
-import Private from "./pages/Private";
-import Notifications from './pages/Notifications';
+const Wishlist = lazy(() => import('./pages/WishList'));
+const Events = lazy(() => import('./pages/Events'));
+const Private = lazy(() => import("./pages/Private"));
+const Notifications = lazy(() => import('./pages/Notifications'));
 
 // User Profile
-import UserProfile from './pages/UserProfile';
+const UserProfile = lazy(() => import('./pages/UserProfile'));
 
 // Photography Helper Page
-import PhotographyHelperPage from './pages/PhotographyHelperPage';
-import BeautyPage from './pages/BeautyPage';
-import BarberPage from './pages/BarberPage';
-import TattooPage from './pages/TattooPage';
-import ChefPage from './pages/ChefPage';
+const PhotographyHelperPage = lazy(() => import('./pages/PhotographyHelperPage'));
+const BeautyPage = lazy(() => import('./pages/BeautyPage'));
+const BarberPage = lazy(() => import('./pages/BarberPage'));
+const TattooPage = lazy(() => import('./pages/TattooPage'));
+const ChefPage = lazy(() => import('./pages/ChefPage'));
 
 // Trip Components
-import TripSearch from './pages/TripSearch';
-import TripDetail from './pages/TripDetail';
-import Trips from './pages/Trips';
-import Trip from './pages/Trip';
+const TripSearch = lazy(() => import('./pages/TripSearch'));
+const TripDetail = lazy(() => import('./pages/TripDetail'));
+const Trips = lazy(() => import('./pages/Trips'));
+const Trip = lazy(() => import('./pages/Trip'));
 
-import SmartSearchPage from './pages/SmartSearchPage';
-import ExplorePage from "./pages/ExplorePage";
-import Inbox from './pages/Inbox';
-import LookingForDiscovery from './pages/LookingForDiscovery';
-import CreateRequest from './pages/CreateRequest';
+const SmartSearchPage = lazy(() => import('./pages/SmartSearchPage'));
+const ExplorePage = lazy(() => import("./pages/ExplorePage"));
+const Inbox = lazy(() => import('./pages/Inbox'));
+const LookingForDiscovery = lazy(() => import('./pages/LookingForDiscovery'));
+const CreateRequest = lazy(() => import('./pages/CreateRequest'));
 
 // Categories page
-import Categories from './pages/Categories';
+const Categories = lazy(() => import('./pages/Categories'));
 
 import 'leaflet/dist/leaflet.css';
 
@@ -344,7 +347,9 @@ function AppContent() {
       <ScrollToTop />
       <AuthSessionManager />
       {!hideHeader && <Header />}
-      <AnimatedRoutes />
+      <Suspense fallback={<NeuralLoader fullScreen={true} />}>
+        <AnimatedRoutes />
+      </Suspense>
       {!hideFooter && <Footer />}
     </>
   );

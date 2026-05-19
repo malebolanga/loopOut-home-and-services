@@ -1,0 +1,1 @@
+const t=["fuck","shit","bitch","asshole","cunt","dick","pussy","bastard","slut","whore","motherfucker","nigger","faggot"],n=e=>{if(!e)return!1;const r=e.toLowerCase();return t.some(s=>new RegExp(`\\b${s}\\b`,"i").test(r))};export{n as h};
