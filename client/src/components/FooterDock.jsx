@@ -25,7 +25,7 @@ const FooterDock = ({ unreadCount = 0 }) => {
   ];
 
   return (
-    <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-2 bg-[#020617]/60 backdrop-blur-3xl px-3 sm:px-5 py-2 sm:py-3 rounded-full border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] z-[1000] max-w-[98vw] sm:max-w-none">
+    <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-2 bg-[#020617]/60 backdrop-blur-3xl px-3 sm:px-5 py-1.5 sm:py-2 rounded-full border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] z-[1000] max-w-[98vw] sm:max-w-none">
        {navItems.map((item, i) => {
          const isActive = location.pathname === item.route;
          return (
@@ -33,9 +33,9 @@ const FooterDock = ({ unreadCount = 0 }) => {
              key={i} 
              onClick={() => navigate(item.route)}
              title={item.label}
-             className={`p-2 sm:p-3 rounded-full transition-all flex flex-col items-center gap-1 group relative ${isActive ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20 scale-110 mx-1 sm:mx-2' : 'text-white/50 hover:text-white hover:bg-white/5'}`}
+             className={`p-1.5 sm:p-2 rounded-full transition-all flex flex-col items-center gap-1 group relative ${isActive ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20 scale-110 mx-1 sm:mx-2' : 'text-white/50 hover:text-white hover:bg-white/5'}`}
            >
-              <item.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${item.badge > 0 ? 'animate-bounce text-rose-500' : ''}`} />
+              <item.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${item.badge > 0 ? 'animate-bounce text-rose-500' : ''}`} />
               {item.badge > 0 && (
                 <span className="absolute top-0 right-0 w-4 h-4 sm:w-5 sm:h-5 bg-rose-500 text-white rounded-full flex items-center justify-center text-[9px] sm:text-[10px] font-black border-2 border-[#020617] shadow-lg">
                   {item.badge}
