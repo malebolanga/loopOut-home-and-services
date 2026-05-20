@@ -193,9 +193,9 @@ export default function Header() {
             });
           }
 
-          if (Notification.permission === 'granted' && document.hidden) {
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted' && document.hidden) {
             const latest = data.notifications?.[0];
-            new Notification(latest?.title || 'loopOut Alert', {
+            new window.Notification(latest?.title || 'loopOut Alert', {
               body: latest?.message || 'You have a new notification',
               icon: '/favicon.ico'
             });
@@ -215,8 +215,8 @@ export default function Header() {
     fetchNotifications();
 
     // Request notification permission
-    if (Notification.permission === 'default') {
-      Notification.requestPermission();
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      window.Notification.requestPermission();
     }
 
     // Function to unlock audio on first interaction
