@@ -2538,7 +2538,7 @@ export default function Listing() {
             <div className="py-6 border-t border-gray-200">
               <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">Where you'll be</h2>
               <p className="text-gray-700 mb-4 text-sm lg:text-base">{listing.address}</p>
-              <div className="h-48 lg:h-64 bg-gray-200 rounded-xl overflow-hidden relative">
+              <div className="w-full h-[450px] bg-black rounded-[2rem] overflow-hidden relative border border-slate-100/10 shadow-2xl">
                 <GoogleMapComponent 
                   latitude={listing.latitude} 
                   longitude={listing.longitude} 

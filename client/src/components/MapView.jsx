@@ -27,6 +27,8 @@ const MapView = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const mapContainerRef = useRef(null);
   const leafletMapRef = useRef(null);
+  // Keep references to marker layers for easy cleanup on data update
+  const markersRef = useRef([]);
 
   const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
 
@@ -72,11 +74,11 @@ const MapView = ({
       }).setView(startCenter, 13);
 
       // Elite Silver Theme Tiles
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 20
       }).addTo(map);
 
-      // Custom Price Marker with Category Intelligence
+      // Helper to create custom price icons
       const createPriceIcon = (item, isSelected) => {
         const type = (item.itemType || item.type || 'listing').toLowerCase();
         const price = item.regularPrice || item.price || 0;
@@ -103,23 +105,38 @@ const MapView = ({
         });
       };
 
-      items.forEach(item => {
-        let lat = parseFloat(item.latitude);
-        let lng = parseFloat(item.longitude);
-        
-        if (isNaN(lat)) lat = defaultCenter.lat + (Math.random() - 0.5) * 0.05;
-        if (isNaN(lng)) lng = defaultCenter.lng + (Math.random() - 0.5) * 0.05;
-        
-        const marker = L.marker([lat, lng], { 
-          icon: createPriceIcon(item, selectedItem?._id === item._id) 
-        })
-        .addTo(map)
-        .on('click', () => {
-          setSelectedItem({ ...item, latitude: lat, longitude: lng });
+      // Function to add markers for a given item list
+      const addMarkers = (data) => {
+        // Clean up existing markers
+        markersRef.current.forEach(m => map.removeLayer(m));
+        markersRef.current = [];
+
+        data.forEach(item => {
+          let lat = parseFloat(item.latitude);
+          let lng = parseFloat(item.longitude);
+          
+          if (isNaN(lat)) lat = defaultCenter.lat + (Math.random() - 0.5) * 0.05;
+          if (isNaN(lng)) lng = defaultCenter.lng + (Math.random() - 0.5) * 0.05;
+          
+          const marker = L.marker([lat, lng], { 
+            icon: createPriceIcon(item, selectedItem?._id === item._id) 
+          })
+          .addTo(map)
+          .on('click', () => {
+            setSelectedItem({ ...item, latitude: lat, longitude: lng });
+          });
+
+          markersRef.current.push(marker);
         });
-      });
+      };
+
+      // Initial marker load
+      addMarkers(items);
 
       leafletMapRef.current = map;
+
+      // Expose a method to refresh markers when items change
+      leafletMapRef.current.refreshMarkers = addMarkers;
     }
 
     return () => {
@@ -129,6 +146,13 @@ const MapView = ({
       }
     };
   }, [center, items]);
+
+  // Whenever the items prop changes, refresh markers on the existing map
+  useEffect(() => {
+    if (leafletMapRef.current && typeof leafletMapRef.current.refreshMarkers === 'function') {
+      leafletMapRef.current.refreshMarkers(items);
+    }
+  }, [items]);
 
   useEffect(() => {
     if (leafletMapRef.current && center && typeof center.lat === 'number' && !isNaN(center.lat) && typeof center.lng === 'number' && !isNaN(center.lng)) {
@@ -149,10 +173,10 @@ const MapView = ({
   }, [center]);
 
   return (
-    <div className={`relative w-full h-full overflow-hidden p-0 m-0 ${isFullscreen ? 'fixed inset-0 z-[200] bg-white h-[100dvh]' : ''}`}>
+    <div className={`relative w-full h-full overflow-hidden p-0 m-0 ${isFullscreen ? 'fixed inset-0 z-[200] bg-black h-[100dvh]' : ''}`}>
       <style>{`
         .custom-price-marker { background: transparent; border: none; }
-        .leaflet-container { background: #f8fafc; cursor: crosshair !important; }
+        .leaflet-container { background: #0a0a0a; cursor: crosshair !important; }
       `}</style>
 
       {/* HUD: Search Summary Overlay */}
@@ -166,7 +190,7 @@ const MapView = ({
       </div>
 
       {/* Professional Leaflet Map Container */}
-      <div ref={mapContainerRef} className="w-full h-full grayscale-[0.2] contrast-[1.1]" />
+      <div ref={mapContainerRef} className="w-full h-full" />
       
       {/* Results Carousel Overlay for Mobile/HUD */}
       <AnimatePresence>

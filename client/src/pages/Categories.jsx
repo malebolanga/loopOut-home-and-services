@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { 
   HomeIcon,
   BuildingStorefrontIcon,
@@ -239,6 +240,10 @@ const Categories = () => {
 
   return (
     <div className="min-h-screen pb-0">
+      <Helmet>
+        <title>All Categories | LoopOut</title>
+        <meta name="description" content="Browse all categories on LoopOut: Properties, Services, Helpers, Events, and more." />
+      </Helmet>
       {/* Header - Sticky */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
         <div className={`${isDesktop ? 'px-6 max-w-7xl mx-auto' : 'px-4'} py-4`}>

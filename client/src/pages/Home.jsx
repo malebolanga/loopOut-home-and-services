@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo, cloneElement } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   HomeIcon,
@@ -539,8 +540,8 @@ const TOP_CATEGORIES = [
 ];
 
 const MOCK_PROPERTIES = [
-  { _id: '663ad8e5f1e249b49f986025', itemType: 'property', name: 'Elite Modern Apartment', price: 2500, regularPrice: 2500, type: 'rent-long', imageUrls: ['https://images.pexels.com/photos/439391/pexels-photo-439391.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.9, address: 'Johannesburg', comments: [1, 2, 3, 4], bookingsCount: 12, createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986026', itemType: 'property', name: 'Grand Presidential Hotel', price: 3500, regularPrice: 3500, type: 'sale', imageUrls: ['https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.8, address: 'Cape Town', comments: [1, 2], bookingsCount: 45, createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986025', itemType: 'property', name: 'Elite Modern Apartment', price: 2500, regularPrice: 2500, type: 'rent-long', imageUrls: ['https://images.pexels.com/photos/439391/pexels-photo-439391.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.9, comments: [1, 2, 3, 4], bookingsCount: 12, createdAt: new Date().toISOString() },
+  { _id: '663ad8e5f1e249b49f986026', itemType: 'property', name: 'Grand Presidential Hotel', price: 3500, regularPrice: 3500, type: 'sale', imageUrls: ['https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.8, comments: [1, 2], bookingsCount: 45, createdAt: new Date().toISOString() },
   { _id: '663ad8e5f1e249b49f986027', itemType: 'property', name: 'Neural Guest House', price: 1200, regularPrice: 1200, type: 'rent-short', imageUrls: ['https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.7, address: 'Polokwane', comments: [1, 2, 3], bookingsCount: 8, createdAt: new Date().toISOString() },
   { _id: '663ad8e5f1e249b49f986028', itemType: 'property', name: 'Roadside Oasis Motel', price: 800, regularPrice: 800, type: 'rent-short', imageUrls: ['https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.3, address: 'Bloemfontein', comments: [1], bookingsCount: 5, createdAt: new Date().toISOString() },
   { _id: '663ad8e5f1e249b49f986029', itemType: 'property', name: 'University Studio Pro', price: 1200, regularPrice: 1200, type: 'rent-short', imageUrls: ['https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.6, address: 'Pretoria', comments: [1, 2, 3, 4, 5], bookingsCount: 15, createdAt: new Date().toISOString() },
@@ -2302,17 +2303,17 @@ const MobileAppHomepage = ({
               <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Live Pulse</span>
             </div>
           </div>
-          <div className="flex overflow-x-auto gap-4 pb-8 border-b border-gray-50 mb-10 scrollbar-hide -mx-4 px-6 lg:mx-0 lg:px-0">
+          <div className="sticky top-0 z-40 bg-white pt-2 flex overflow-x-auto gap-4 pb-4 mb-10 scrollbar-hide -mx-4 px-6 lg:mx-0 lg:px-0">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <motion.button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-3 px-6 py-4 rounded-3xl border transition-all duration-500 shrink-0 ${
+                  className={`flex items-center gap-3 px-6 py-4 rounded-3xl transition-all duration-500 shrink-0 ${
                     isActive 
-                      ? 'bg-white border-gray-200 shadow-xl scale-105' 
-                      : 'bg-gray-50/50 border-transparent opacity-60'
+                      ? 'bg-white shadow-xl scale-105' 
+                      : 'bg-gray-50/50 opacity-60'
                   }`}
                 >
                   <div className="flex-shrink-0">
@@ -2419,6 +2420,10 @@ const DesktopHomepage = ({
 }) => {
   return (
     <div className="min-h-screen bg-white">
+      <Helmet>
+        <title>LoopOut | Premium Marketplace for Properties, Services, and Events</title>
+        <meta name="description" content="Discover verified helpers, book top services, and explore exclusive properties and events in your area with LoopOut." />
+      </Helmet>
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -2429,7 +2434,7 @@ const DesktopHomepage = ({
       `}</style>
 
       {/* Sticky Airbnb-style Categories Bar */}
-      <div className="sticky top-[80px] z-40 bg-white border-b border-gray-100 py-3 shadow-sm">
+      <div className="sticky top-0 z-40 bg-white py-3 shadow-sm">
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
           <div className="flex items-center gap-12 overflow-x-auto scrollbar-hide py-1">
             {tabs.map((tab) => {
@@ -2446,9 +2451,7 @@ const DesktopHomepage = ({
                   </span>
                   {isActive ? (
                     <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-rose-500" />
-                  ) : (
-                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-transparent group-hover:bg-gray-200 transition-colors duration-200" />
-                  )}
+                  ) : null}
                 </button>
               );
             })}

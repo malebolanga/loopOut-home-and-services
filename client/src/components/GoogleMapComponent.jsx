@@ -1,7 +1,32 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+
+            
 import { geocodeAddress } from '../utils/geocoding';
 import { FaMapMarkerAlt, FaExternalLinkAlt } from 'react-icons/fa';
+
+const darkMapStyles = [
+  { elementType: 'geometry', stylers: [{ color: '#212121' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#212121' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
+  { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#757575' }] },
+  { featureType: 'administrative.country', elementType: 'labels.text.fill', stylers: [{ color: '#9e9e9e' }] },
+  { featureType: 'administrative.land_parcel', stylers: [{ visibility: 'off' }] },
+  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#bdbdbd' }] },
+  { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
+  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#263c3f' }] },
+  { featureType: 'poi.park', elementType: 'labels.text.fill', stylers: [{ color: '#6b9a76' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#38414e' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#212a37' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#9ca5b3' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#746855' }] },
+  { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#1f2835' }] },
+  { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#f3d19c' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] },
+  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#515c6d' }] },
+  { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#17263c' }] },
+];
 
 const containerStyle = {
   width: '100%',
@@ -9,7 +34,7 @@ const containerStyle = {
   borderRadius: '0.75rem'
 };
 
-const MapComponent = ({ latitude, longitude, address, title }) => {
+const GoogleMapComponent = ({ latitude, longitude, address, title }) => {
   const [map, setMap] = useState(null);
   const [coords, setCoords] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -55,8 +80,8 @@ const MapComponent = ({ latitude, longitude, address, title }) => {
 
   if (!isLoaded && !loadError && (import.meta.env.VITE_GOOGLE_MAPS_API_KEY)) {
     return (
-      <div className="w-full h-full bg-gray-100 flex items-center justify-center animate-pulse rounded-xl">
-        <div className="text-gray-400">Loading Map...</div>
+      <div className="w-full h-full bg-black flex items-center justify-center animate-pulse rounded-2xl border border-slate-800">
+        <div className="text-slate-400 font-bold uppercase tracking-widest text-xs">Loading Transmission Map...</div>
       </div>
     );
   }
@@ -64,24 +89,25 @@ const MapComponent = ({ latitude, longitude, address, title }) => {
   // Fallback if no API key, load error (expired key), or not loaded
   if (!import.meta.env.VITE_GOOGLE_MAPS_API_KEY || !isLoaded || loadError) {
     return (
-      <div className="w-full h-full bg-gray-50 flex flex-col items-center justify-center border border-gray-200 rounded-xl p-6 text-center">
-        <FaMapMarkerAlt className="text-4xl text-rose-500 mb-3 opacity-50" />
-        <h4 className="font-semibold text-gray-900 mb-1">{title || "Location"}</h4>
-        <p className="text-sm text-gray-600 mb-4 px-4 line-clamp-2">{address}</p>
+      <div className="w-full h-full bg-black flex flex-col items-center justify-center border border-slate-800/80 rounded-2xl p-6 text-center text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-rose-500/10 to-transparent pointer-events-none" />
+        <FaMapMarkerAlt className="text-4xl text-rose-500 mb-3 animate-bounce relative z-10" />
+        <h4 className="font-black uppercase tracking-widest text-sm mb-1 text-white relative z-10">{title || "Location"}</h4>
+        <p className="text-xs text-slate-400 mb-4 px-4 line-clamp-2 max-w-md relative z-10">{address}</p>
         <a 
           href={googleMapsUrl} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+          className="flex items-center gap-2 px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 shadow-lg shadow-rose-600/30 hover:scale-105 active:scale-95 relative z-10 border border-rose-500/20"
         >
-          View on Google Maps <FaExternalLinkAlt className="text-xs" />
+          View on Google Maps <FaExternalLinkAlt className="text-[10px]" />
         </a>
         {loadError && (
-          <div className="mt-4 p-3 bg-rose-50 border border-rose-100 rounded-lg">
-            <p className="text-[10px] text-rose-600 italic font-black uppercase tracking-widest mb-1">
+          <div className="mt-4 p-3 bg-rose-950/40 border border-rose-900/50 rounded-2xl max-w-sm relative z-10 backdrop-blur-sm">
+            <p className="text-[10px] text-rose-500 italic font-black uppercase tracking-widest mb-1">
               Google Maps Protocol Failure
             </p>
-            <p className="text-[11px] text-gray-700 font-medium">
+            <p className="text-[10px] text-slate-300 font-medium">
               {loadError.message?.includes('ExpiredKeyMapError') 
                 ? "The Google Maps API key has expired. Please rotate the VITE_GOOGLE_MAPS_API_KEY in the cloud console." 
                 : loadError.message || "Invalid or Expired API Key"}
@@ -89,7 +115,7 @@ const MapComponent = ({ latitude, longitude, address, title }) => {
           </div>
         )}
         {!import.meta.env.VITE_GOOGLE_MAPS_API_KEY && !loadError && (
-          <p className="text-[10px] text-gray-400 mt-4 italic">Interactive map requires a Google Maps API key.</p>
+          <p className="text-[10px] text-slate-500 mt-4 italic relative z-10">Interactive map requires a Google Maps API key.</p>
         )}
       </div>
     );
@@ -112,6 +138,7 @@ const MapComponent = ({ latitude, longitude, address, title }) => {
             streetViewControl: false,
             rotateControl: false,
             fullscreenControl: true,
+            styles: darkMapStyles,
           }}
         >
           <Marker 
@@ -138,10 +165,16 @@ const MapComponent = ({ latitude, longitude, address, title }) => {
           )}
         </GoogleMap>
       ) : (
-        <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center rounded-xl p-4 text-center">
-           <FaMapMarkerAlt className="text-3xl text-gray-300 mb-2" />
-           <p className="text-sm text-gray-500">Coordinates not available for this address.</p>
-           <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 underline mt-2">
+        <div className="w-full h-full bg-black flex flex-col items-center justify-center border border-slate-800 rounded-2xl p-4 text-center text-white relative overflow-hidden">
+           <div className="absolute inset-0 bg-gradient-to-b from-slate-500/5 to-transparent pointer-events-none" />
+           <FaMapMarkerAlt className="text-3xl text-slate-500 mb-2 animate-pulse relative z-10" />
+           <p className="text-sm text-slate-300 relative z-10">Coordinates not available for this address.</p>
+           <a 
+             href={googleMapsUrl} 
+             target="_blank" 
+             rel="noopener noreferrer" 
+             className="text-xs text-rose-500 hover:text-rose-400 font-bold uppercase tracking-wider underline mt-2 relative z-10 block transition-colors"
+           >
              Try searching on Google Maps
            </a>
         </div>
@@ -150,4 +183,4 @@ const MapComponent = ({ latitude, longitude, address, title }) => {
   );
 };
 
-export default MapComponent;
+export default GoogleMapComponent;

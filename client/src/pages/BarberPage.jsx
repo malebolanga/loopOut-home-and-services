@@ -2468,7 +2468,7 @@ export default function BarberPage() {
             {/* Location */}
             <div className="pb-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Where you'll be</h2>
-              <div className="aspect-video bg-gray-100 rounded-xl overflow-hidden relative">
+              <div className="w-full h-[450px] bg-black rounded-[2rem] overflow-hidden relative border border-slate-100/10 shadow-2xl">
                 <GoogleMapComponent 
                   address={helper.address || 'Johannesburg, South Africa'} 
                   title={`${helper.name}'s Location`} 

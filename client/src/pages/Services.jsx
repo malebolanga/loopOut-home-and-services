@@ -1652,7 +1652,7 @@ const ServicePage = () => {
         {/* Location Map */}
         <div className="mt-12 pt-8 border-t border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Location</h2>
-          <div className="aspect-[21/9] bg-gray-100 rounded-2xl overflow-hidden relative shadow-inner border border-gray-200">
+          <div className="w-full h-[450px] bg-black rounded-[2rem] overflow-hidden relative border border-slate-100/10 shadow-2xl">
             <GoogleMapComponent 
               address={service.address || 'Available in your area'} 
               title={`${service.name}'s Service Area`} 
