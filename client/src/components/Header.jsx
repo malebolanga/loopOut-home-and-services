@@ -379,17 +379,21 @@ export default function Header() {
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
-    if (!searchTerm.trim()) return;
+    
+    // Only block if absolutely no criteria is provided
+    if (!searchTerm.trim() && !selectedSubCategory && !searchType) return;
 
-    // Record search for intelligence engine
-    recordSearch(searchTerm);
+    if (searchTerm.trim()) {
+      // Record search for intelligence engine
+      recordSearch(searchTerm);
 
-    // Save search history
-    const updatedHistory = saveSearchHistory(searchTerm, 'all');
-    setSearchHistory(updatedHistory);
+      // Save search history
+      const updatedHistory = saveSearchHistory(searchTerm, 'all');
+      setSearchHistory(updatedHistory);
+    }
 
     // AI-like extraction of filters from query
-    const extractedFilters = extractFiltersFromQuery(searchTerm);
+    const extractedFilters = searchTerm.trim() ? extractFiltersFromQuery(searchTerm) : {};
     console.log('Extracted filters:', extractedFilters);
 
     // Build search parameters
@@ -397,9 +401,9 @@ export default function Header() {
     
     // If searchTerm is exactly the same as the extracted location, don't set it as a keyword
     const isLocationOnly = extractedFilters.location && searchTerm.toLowerCase().trim() === extractedFilters.location.toLowerCase().trim();
-    if (searchTerm && !isLocationOnly) urlParams.set('searchTerm', searchTerm);
+    if (searchTerm.trim() && !isLocationOnly) urlParams.set('searchTerm', searchTerm);
     
-    urlParams.set('type', selectedSubCategory || extractedFilters.type || searchType || 'properties');
+    urlParams.set('type', selectedSubCategory || extractedFilters.type || searchType || 'all');
     urlParams.set('location', extractedFilters.location || currentLocation);
 
     // Join other extracted filters
@@ -680,10 +684,25 @@ export default function Header() {
                     console.log('Globe clicked - toggling language dropdown');
                     setShowLanguageDropdown(!showLanguageDropdown);
                     setShowProfileDropdown(false);
+                    setShowCurrencyDropdown(false);
                   }}
                   className="language-button p-2 md:py-1 md:px-2 border-[1px] border-[#DDDDDD] flex flex-row items-center gap-3 rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
                 >
                   <GlobeAltIcon className="w-4 h-4" />
+                </button>
+
+                {/* Currency Selector */}
+                <button
+                  onClick={() => {
+                    console.log('Currency clicked - toggling currency dropdown');
+                    setShowCurrencyDropdown(!showCurrencyDropdown);
+                    setShowLanguageDropdown(false);
+                    setShowProfileDropdown(false);
+                  }}
+                  className="currency-button px-3 py-1.5 border-[1px] border-[#DDDDDD] flex flex-row items-center gap-1 rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222] font-black text-[10px] h-9"
+                >
+                  <span>{getCurrencySymbol()}</span>
+                  <span>{selectedCurrency}</span>
                 </button>
 
                 {/* Home Icon - Desktop */}
@@ -721,27 +740,26 @@ export default function Header() {
                     console.log('User menu clicked - toggling profile dropdown');
                     setShowProfileDropdown(!showProfileDropdown);
                     setShowLanguageDropdown(false);
+                    setShowCurrencyDropdown(false);
                   }}
-                  className="flex flex-row items-center justify-center w-14 h-14 bg-white rounded-full cursor-pointer shadow-[0_20px_40px_-15px_rgba(225,29,72,0.2)] hover:shadow-[0_30px_60px_-12px_rgba(225,29,72,0.3)] hover:scale-105 transition-all duration-500 border border-rose-100 text-rose-600 hover:bg-rose-50"
+                  className="flex flex-row items-center gap-3 px-4 py-2 bg-white rounded-full cursor-pointer shadow-[0_15px_30px_-10px_rgba(225,29,72,0.15)] hover:shadow-[0_20px_40px_-8px_rgba(225,29,72,0.25)] hover:scale-[1.02] transition-all duration-300 border border-rose-100 text-gray-600 hover:bg-rose-50/50 h-14"
                 >
-                  <Bars3Icon className="w-7 h-7 stroke-[2.5px] hover:scale-110 transition-transform" />
-                  <div className="hidden">
-                    {currentUser ? (
-                      <img
-                        src={currentUser.avatar}
-                        alt="profile"
-                        className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
-                        }}
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-[#717171] flex items-center justify-center">
-                        <UserIcon className="w-5 h-5 text-white" />
-                      </div>
-                    )}
-                  </div>
+                  <Bars3Icon className="w-5 h-5 stroke-[2.5px] text-gray-500" />
+                  {currentUser ? (
+                    <img
+                      src={currentUser.avatar}
+                      alt="profile"
+                      className="w-8 h-8 rounded-full object-cover border border-rose-100 shadow-sm"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-150 flex items-center justify-center text-gray-400">
+                      <UserIcon className="w-4 h-4" />
+                    </div>
+                  )}
                 </button>
               </div>
 
@@ -779,6 +797,31 @@ export default function Header() {
                         <span>{language.name}</span>
                       </div>
                       {selectedLanguage === language.name && (
+                        <CheckIcon className="w-4 h-4 text-[#FF5A5F]" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Currency Dropdown Menu */}
+              {showCurrencyDropdown && (
+                <div
+                  ref={currencyDropdownRef}
+                  className="absolute rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] w-[260px] bg-white overflow-hidden right-12 top-12 text-sm border border-gray-100 max-h-[400px] overflow-y-auto hidden md:block z-[60]"
+                >
+                  <div className="p-4 border-b border-[#DDDDDD] font-semibold text-[#222222]">
+                    Choose currency
+                  </div>
+                  {currencies.map((currency) => (
+                    <button
+                      key={currency.code}
+                      onClick={() => handleCurrencyChange(currency.code)}
+                      className="w-full px-4 py-3 hover:bg-gray-100 transition text-left flex items-center justify-between text-[#222222]"
+                    >
+                      <span className="font-bold text-xs">{currency.code} ({currency.symbol})</span>
+                      <span className="text-gray-500 text-xs">{currency.name}</span>
+                      {selectedCurrency === currency.code && (
                         <CheckIcon className="w-4 h-4 text-[#FF5A5F]" />
                       )}
                     </button>
