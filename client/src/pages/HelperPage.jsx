@@ -45,7 +45,8 @@ import {
   ArrowDownIcon,
   PlusCircleIcon,
   MapPinIcon,
-  CheckIcon
+  CheckIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import { 
   StarIcon as StarIconSolid, 
@@ -107,10 +108,9 @@ export default function HelperPage() {
   const [likeCount, setLikeCount] = useState(0);
   const [dislikeCount, setDislikeCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [ratings, setRatings] = useState(null);
+  
   const { isFavorite, toggleFavorite } = useWishlist(helper, 'helper');
-  const [ratingLoading, setRatingLoading] = useState(false);
-  const [totalPrice, setTotalPrice] = useState(0);
-  const [ratings, setRatings] = useState({ cleanliness: 0, communication: 0, overall: 0 });
   const [topComments, setTopComments] = useState([]);
   const [similarHelpers, setSimilarHelpers] = useState([]);
   const [bookingSummary, setBookingSummary] = useState({ count: 0, recentBookers: [] });
@@ -759,6 +759,7 @@ export default function HelperPage() {
     ownSupplies: false,
     selectedPerformer: ''
   });
+  const [totalPrice, setTotalPrice] = useState(0);
 
   // AI Assessment States
   const [aiAssessment, setAiAssessment] = useState({
@@ -2132,7 +2133,7 @@ export default function HelperPage() {
         <div className="bg-red-50 border border-red-200 p-6 rounded-2xl">
           <div className="flex items-start">
             <div className="flex-shrink-0">
-              <FaExclamationTriangle className="h-6 w-6 text-red-500" />
+              <ExclamationTriangleIcon className="h-6 w-6 text-red-500" />
             </div>
             <div className="ml-4">
               <h3 className="text-lg font-semibold text-red-800">Error loading profile</h3>

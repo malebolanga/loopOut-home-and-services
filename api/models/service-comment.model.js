@@ -27,6 +27,7 @@ const serviceCommentSchema = new mongoose.Schema({
     required: [true, 'Comment content is required'],
     maxlength: [1000, 'Comment cannot exceed 1000 characters']
   },
+  rating: { type: Number, required: true, min: 0, max: 5 },
   serviceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Service',

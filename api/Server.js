@@ -10,6 +10,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+app.use(require('cookie-parser')());
 
 // Connect to MongoDB
 mongoose

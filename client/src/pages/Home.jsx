@@ -1673,7 +1673,7 @@ const NeuralPicksSection = ({ navigate }) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: idx * 0.1 }}
-            className="group relative"
+            className="relative"
           >
             <HelperItem helper={helper} />
             {/* Neural Overlay Tag */}
@@ -2443,7 +2443,7 @@ const DesktopHomepage = ({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className="flex flex-col items-center gap-2 group relative pb-3 pt-1 cursor-pointer transition-all focus:outline-none"
+                  className="flex flex-col items-center gap-2  relative pb-3 pt-1 cursor-pointer transition-all focus:outline-none"
                 >
                   <CategoryIcon type={tab.iconType} size="w-6 h-6" />
                   <span className={`text-xs font-semibold tracking-wide transition-colors duration-200 ${isActive ? 'text-gray-900 font-bold' : 'text-gray-500 group-hover:text-gray-900'}`}>
