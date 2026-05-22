@@ -73,7 +73,7 @@ import { hasProfanity } from '../utils/profanityFilter';
 // FaBroomClean doesn't exist in standard Fa, likely was a typo or specialized set. Using FaBroom.
 
 
-import { Swiper, SwiperSlide } from 'swiper/react';
+import ServiceItem from '../components/ServiceItem';
 import { Navigation, Zoom, Thumbs, Pagination, FreeMode } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -645,6 +645,18 @@ export default function HelperPage() {
     { id: 'setIn', name: 'Set-in Stains' }
   ];
 
+        {/* Related Services Section */}
+        {relatedServices.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-black text-gray-900 mb-4">Related Services</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {relatedServices.map(service => (
+                <ServiceItem key={service._id} service={service} />
+              ))}
+            </div>
+          </div>
+        )}
+
   // Enhanced Location States
   const [locationData, setLocationData] = useState({
     latitude: null,
@@ -702,7 +714,17 @@ export default function HelperPage() {
   });
   const [verifyingSocialMedia, setVerifyingSocialMedia] = useState(false);
 
-  const [bookingData, setBookingData] = useState({
+  const [relatedServices, setRelatedServices] = useState([]);
+
+  // Fetch related services when helper loads
+  useEffect(() => {
+    if (helper?._id) {
+      fetch(`/api/services/related/${helper._id}`)
+        .then(res => res.json())
+        .then(data => setRelatedServices(data))
+        .catch(err => console.error('Error fetching related services:', err));
+    }
+  }, [helper]);
     name: '',
     phone: '',
     selectedServices: [],
