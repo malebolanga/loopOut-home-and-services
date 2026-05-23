@@ -134,6 +134,11 @@ export const checkBookingsAndActions = async () => {
  * Initializes the background scheduler job
  */
 export const initBookingScheduler = () => {
+  if (process.env.NODE_ENV === 'test') {
+    console.log('🕒 loopOut Booking Scheduler bypass in test mode.');
+    return;
+  }
+
   console.log('🕒 Initializing loopOut Booking Background Scheduler...');
   
   // Run immediately on startup

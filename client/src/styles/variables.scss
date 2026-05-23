@@ -4,6 +4,24 @@ $lightgrey: #F7F8F8;
 $grey: #bdb9b9;
 $darkgrey: #969393;
 
+// HSL color palette
+$primary-h: 210; // hue for primary blue
+$primary-s: 70%; // saturation
+$primary-l: 50%; // lightness
+
+$accent-h: 340; // hue for accent pink
+$accent-s: 80%;
+$accent-l: 55%;
+
+// Glassmorphism mixin
+@mixin glass {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+
 
 @mixin shadow {
   box-shadow: 0 3px 10px 2px rgba(0, 0, 0, 0.2);

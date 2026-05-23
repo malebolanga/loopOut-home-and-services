@@ -587,7 +587,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
       variants={cardVariants}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      className="group relative aspect-square bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-700 cursor-pointer h-full"
+      className=" relative aspect-square bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-700 cursor-pointer h-full"
       onClick={() => navigate(getItemPath(item))}
     >
       <div className="absolute inset-0 z-0">
@@ -1166,12 +1166,12 @@ const SearchPage = () => {
           {/* Brand Logo - Quick return */}
           <div 
             onClick={() => navigate('/')}
-            className="hidden md:flex items-center gap-2 cursor-pointer group"
+            className="hidden md:flex items-center gap-2 cursor-pointer "
           >
              <div className="w-10 h-10 bg-gray-950 rounded-xl flex items-center justify-center group-hover:bg-rose-600 transition-colors">
                 <Sparkles className="w-6 h-6 text-white" />
              </div>
-             <span className="text-xl font-black tracking-tighter uppercase italic">LoopOut</span>
+             <span className="text-xl font-black tracking-tighter">loopOut</span>
           </div>
 
           {/* Segmented Search Bar - Fresha Style */}

@@ -32,8 +32,10 @@ export const sendEmail = async (to, subject, text, html) => {
   }
 
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.warn('⚠️  SMTP credentials missing in .env. Email not sent, but logged above.');
+    if (process.env.NODE_ENV === 'test' || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      if (process.env.NODE_ENV !== 'test') {
+        console.warn('⚠️  SMTP credentials missing in .env. Email not sent, but logged above.');
+      }
       return { success: true, simulated: true };
     }
 

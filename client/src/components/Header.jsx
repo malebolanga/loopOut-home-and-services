@@ -36,6 +36,7 @@ import {
   BuildingOfficeIcon,
   HomeModernIcon,
   ShieldCheckIcon,
+  ChartBarIcon,
   CpuChipIcon,
   InboxIcon,
   MapIcon,
@@ -51,7 +52,7 @@ import {
   UserCircleIcon as UserCircleIconSolid,
   ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid,
   Squares2X2Icon as Squares2X2IconSolid,
-  MapPinIcon as MapPinIconSolid,
+  ChartBarIcon as ChartBarIconSolid,
 } from '@heroicons/react/24/solid';
 
 import {
@@ -364,6 +365,7 @@ export default function Header() {
   // Command Center Navigation
   const MASTER_COMMANDS = [
     { label: 'HOME HUB', route: '/', icon: <HomeIcon className="w-5 h-5" />, color: 'bg-rose-500' },
+    { label: 'DASHBOARD', route: '/dashboard', icon: <HomeModernIcon className="w-5 h-5" />, color: 'bg-indigo-500' },
     { label: 'AI PLANNER', route: '/planner', icon: <MapIcon className="w-5 h-5" />, color: 'bg-pink-500' },
     { label: 'CREATE LISTING', route: `/${currentUser?._id}/create-listing`, icon: <PlusCircleIcon className="w-5 h-5" />, color: 'bg-emerald-500' },
     { label: 'MY LISTINGS', route: `/${currentUser?._id}/listings`, icon: <QueueListIcon className="w-5 h-5" />, color: 'bg-blue-500' },
@@ -372,6 +374,10 @@ export default function Header() {
     { label: 'VERIFY IDENTITY', route: '/verification', icon: <CheckBadgeIcon className="w-5 h-5" />, color: 'bg-rose-600' },
     { label: 'SECURITY LAB', route: '/trust', icon: <ShieldCheckIcon className="w-5 h-5" />, color: 'bg-gray-800' },
     { label: 'FOR BUSINESS', route: '/for-business', icon: <BriefcaseIcon className="w-5 h-5" />, color: 'bg-rose-500' },
+    { label: 'HOST EARNINGS', route: '/host-earnings', icon: <ChartBarIcon className="w-5 h-5" />, color: 'bg-amber-500' },
+    { label: 'HOST TOOLS', route: '/host-tools', icon: <Squares2X2Icon className="w-5 h-5" />, color: 'bg-indigo-500' },
+    { label: 'FAVORITES', route: '/wishlist', icon: <HeartIcon className="w-5 h-5" />, color: 'bg-pink-500' },
+    { label: 'SETTINGS', route: '/settings', icon: <Cog6ToothIcon className="w-5 h-5" />, color: 'bg-indigo-500' }
   ];
 
   // Handle search submission
@@ -543,19 +549,43 @@ export default function Header() {
           </div>
 
           <div className="sticky bottom-0 bg-white pt-2 border-t border-gray-100 mt-2 -mx-4 px-4 pb-2">
-            <button 
-              onClick={handleSignOut}
-              className="flex items-center justify-center gap-2 w-full py-3.5 text-xs font-black uppercase text-gray-500 hover:text-rose-600 transition-colors tracking-[0.2em] bg-gray-50 rounded-2xl hover:bg-rose-50 border border-transparent hover:border-rose-100/50"
-            >
-              <ArrowRightOnRectangleIcon className="w-4 h-4" />
-              Sign out
-            </button>
-          </div>
+  <button 
+    onClick={handleSignOut}
+    className="flex items-center justify-center gap-2 w-full py-3.5 text-xs font-black uppercase text-gray-500 hover:text-rose-600 transition-colors tracking-[0.2em] bg-gray-50 rounded-2xl hover:bg-rose-50 border border-transparent hover:border-rose-100/50"
+  >
+    <ArrowRightOnRectangleIcon className="w-4 h-4" />
+    Sign out
+  </button>
+</div>
+<div className="text-center text-xs text-gray-500 mt-2">
+  <a href="/terms" className="hover:underline">Terms</a>
+  <span className="mx-1">|</span>
+  <a href="/privacy" className="hover:underline">Privacy</a>
+  <span className="mx-1">|</span>
+  <a href="/teams" className="hover:underline">Teams</a>
+  <span className="mx-1">|</span>
+  <span>@ 2026</span>
+</div>
         </>
       ) : (
         <div className="p-4 space-y-3">
-           <button onClick={() => handleNavigate('/sign-in')} className="w-full py-5 bg-gray-950 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-2xl hover:bg-black transition-all">Sign In</button>
-           <button onClick={() => handleNavigate('/sign-up')} className="w-full py-5 border-2 border-gray-100 text-gray-900 rounded-[2rem] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">Create Account</button>
+          <button
+            onClick={() => handleNavigate('/sign-in')}
+            className="w-full py-5 bg-gray-950 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-2xl hover:bg-black transition-all"
+          >Sign In</button>
+          <button
+            onClick={() => handleNavigate('/sign-up')}
+            className="w-full py-5 border-2 border-gray-100 text-gray-900 rounded-[2rem] font-black uppercase tracking-widest hover:bg-gray-50 transition-all"
+          >Create Account</button>
+          <div className="text-center text-xs text-gray-500 mt-2">
+  <a href="/terms" className="hover:underline">Terms</a>
+  <span className="mx-1">|</span>
+  <a href="/privacy" className="hover:underline">Privacy</a>
+  <span className="mx-1">|</span>
+  <a href="/teams" className="hover:underline">Teams</a>
+  <span className="mx-1">|</span>
+  <span>@ 2026</span>
+</div>
         </div>
       )}
     </div>
@@ -770,7 +800,7 @@ export default function Header() {
                     initial={{ opacity: 0, scale: 0.95, y: 15 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                    className="hidden md:block absolute rounded-[2.5rem] shadow-[0_45px_100px_-20px_rgba(0,0,0,0.4)] w-[360px] bg-white right-0 top-16 border border-gray-100 p-4 z-[60] max-h-[85vh] overflow-y-auto scrollbar-hide pb-4"
+                    className="hidden md:block absolute rounded-[2.5rem] shadow-[0_45px_100px_-20px_rgba(0,0,0,0.4)] w-[360px] bg-gradient-to-r from-rose-500/80 to-pink-500/80 backdrop-blur-xl right-0 top-16 border border-gray-100 p-4 z-[60] max-h-[85vh] overflow-y-auto scrollbar-hide pb-4"
                   >
                     {profileMenuContent}
                   </motion.div>

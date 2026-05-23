@@ -114,6 +114,7 @@ const Notifications = lazy(() => import('./pages/Notifications'));
 
 // User Profile
 const UserProfile = lazy(() => import('./pages/UserProfile'));
+const SettingsPage = lazy(() => import('./pages/settings'));
 
 // Photography Helper Page
 const PhotographyHelperPage = lazy(() => import('./pages/PhotographyHelperPage'));
@@ -207,6 +208,7 @@ const AnimatedRoutes = () => {
         <Route path="/events/:id" element={<PageTransition><Events /></PageTransition>} />
         <Route path="/notifications" element={<PageTransition><Notifications /></PageTransition>} />
         <Route path="/messages/:id" element={<PageTransition><Inbox /></PageTransition>} />
+        <Route path="/settings" element={<PageTransition><SettingsPage /></PageTransition>} />
 
         {/* Dynamic User Routes */}
         <Route path="/:userId/list" element={<PageTransition><MyListing /></PageTransition>} />
