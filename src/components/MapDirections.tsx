@@ -3,7 +3,7 @@ import {StyleSheet, View, ActivityIndicator, Text} from 'react-native';
 import MapboxGL from '@react-native-mapbox-gl/maps';
 
 // TODO: Replace with your actual public access token from Mapbox
-const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoibG9vcG91dHNlcnZpY2VzIiwiYSI6ImNtcGR0YWp5dTBlOTMycnFuMDVwZWp3Zm0ifQ.o8_BSuZ_1Gomsq8UeZAKkg';
+const MAPBOX_ACCESS_TOKEN = process.env.MAPBOX_TOKEN || "";
 MapboxGL.setAccessToken(MAPBOX_ACCESS_TOKEN);
 
 /**
