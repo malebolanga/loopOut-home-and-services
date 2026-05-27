@@ -2148,7 +2148,7 @@ const MobileAppHomepage = ({
                     <span className="text-white text-[10px] font-black tracking-[0.3em] uppercase">Soweto Bedroom</span>
                   </div>
                   <h2 className="text-4xl font-black text-white leading-[0.85] mb-6 tracking-tighter">
-                    LOOPOUT <br />
+                    loopOut <br />
                     <span className="text-rose-500">SOWETO.</span>
                   </h2>
                   <p className="text-white/70 text-[14px] font-medium mb-8 leading-relaxed max-w-[280px]">

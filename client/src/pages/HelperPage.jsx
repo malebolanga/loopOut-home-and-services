@@ -116,6 +116,17 @@ export default function HelperPage() {
   const [bookingSummary, setBookingSummary] = useState({ count: 0, recentBookers: [] });
   const [zoomedImage, setZoomedImage] = useState(null);
 
+  // Performer Rating States
+  const [userBookings, setUserBookings] = useState([]);
+  const [showPerformerRatingModal, setShowPerformerRatingModal] = useState(false);
+  const [selectedPerformerToRate, setSelectedPerformerToRate] = useState(null);
+  const [performerRating, setPerformerRating] = useState(5);
+  const [hoveredPerformerRating, setHoveredPerformerRating] = useState(0);
+  const [ratingError, setRatingError] = useState('');
+  const [ratingSuccess, setRatingSuccess] = useState(false);
+  const [submittingRating, setSubmittingRating] = useState(false);
+  const [ratingInfoMessage, setRatingInfoMessage] = useState(null);
+
   const RECENTLY_VIEWED_KEY = 'recentlyViewed';
 
   useEffect(() => {
@@ -1245,6 +1256,85 @@ export default function HelperPage() {
   }, [id]);
 
   useEffect(() => {
+    const fetchUserBookings = async () => {
+      if (!currentUser?._id || !helper?._id) return;
+      try {
+        const res = await fetch(`/api/bookings/user/${currentUser._id}`);
+        if (res.ok) {
+          const data = await res.json();
+          // Filter bookings that are for this helper
+          const filtered = data.filter(b => {
+            const hId = b.helper?._id || b.helper;
+            return hId === helper._id;
+          });
+          setUserBookings(filtered);
+        }
+      } catch (error) {
+        console.error('Error fetching user bookings:', error);
+      }
+    };
+    fetchUserBookings();
+  }, [currentUser, helper]);
+
+  const handleRatePerformerSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedPerformerToRate) return;
+    try {
+      setSubmittingRating(true);
+      setRatingError('');
+      setRatingSuccess(false);
+
+      const res = await fetch(`/api/helper/${helper._id}/performer/rate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          performerName: selectedPerformerToRate.name,
+          rating: performerRating
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to submit rating');
+      }
+
+      setRatingSuccess(true);
+      
+      // Update helper state locally to reflect the new performer rating dynamically
+      setHelper(prev => {
+        if (!prev) return prev;
+        const updatedPerformers = prev.performers.map(p => {
+          if (p.name === selectedPerformerToRate.name) {
+            return {
+              ...p,
+              rating: data.performer.rating,
+              ratingsCount: data.performer.ratingsCount
+            };
+          }
+          return p;
+        });
+        return {
+          ...prev,
+          performers: updatedPerformers
+        };
+      });
+
+      setTimeout(() => {
+        setShowPerformerRatingModal(false);
+        setSelectedPerformerToRate(null);
+        setRatingSuccess(false);
+      }, 1500);
+
+    } catch (err) {
+      setRatingError(err.message || 'Something went wrong');
+    } finally {
+      setSubmittingRating(false);
+    }
+  };
+
+  useEffect(() => {
     const fetchStatuses = async () => {
       if (!helper || !currentUser) return;
 
@@ -2372,26 +2462,78 @@ export default function HelperPage() {
               <div className="py-6 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">Service Performers</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {helper.performers.map((performer, idx) => (
-                    <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm">
-                      <div 
-                        onClick={() => performer.image && setZoomedImage(performer.image)}
-                        className={`w-16 h-16 rounded-full overflow-hidden bg-slate-100 flex-shrink-0 ${performer.image ? 'cursor-pointer hover:ring-2 hover:ring-rose-500 transition-all' : ''}`}
-                      >
-                        {performer.image ? (
-                          <img src={performer.image} alt={performer.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-400">
-                            <FaUser />
+                  {helper.performers.map((performer, idx) => {
+                    const hasBookedPerformer = userBookings.some(b => b.selectedPerformer === performer.name);
+                    const perfRating = performer.rating || 5;
+                    const perfRatingsCount = performer.ratingsCount || 0;
+
+                    return (
+                      <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-4">
+                          <div 
+                            onClick={() => performer.image && setZoomedImage(performer.image)}
+                            className={`w-16 h-16 rounded-full overflow-hidden bg-slate-100 flex-shrink-0 ${performer.image ? 'cursor-pointer hover:ring-2 hover:ring-rose-500 transition-all' : ''}`}
+                          >
+                            {performer.image ? (
+                              <img src={performer.image} alt={performer.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                <FaUser />
+                              </div>
+                            )}
                           </div>
-                        )}
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-bold text-slate-900">{performer.name}</h4>
+                              <div className="flex items-center gap-0.5 bg-rose-50 px-2 py-0.5 rounded-full text-rose-600">
+                                <StarIconSolid className="w-3.5 h-3.5 text-rose-500" />
+                                <span className="text-[11px] font-black">{Number(perfRating).toFixed(1)}</span>
+                              </div>
+                            </div>
+                            <p className="text-xs text-slate-500">{performer.experience} experience</p>
+                            {perfRatingsCount > 0 && (
+                              <p className="text-[10px] text-slate-400 font-medium">({perfRatingsCount} {perfRatingsCount === 1 ? 'rating' : 'ratings'})</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Premium Rating Button or Tooltip */}
+                        <div className="relative">
+                          {hasBookedPerformer ? (
+                            <button
+                              onClick={() => {
+                                setSelectedPerformerToRate(performer);
+                                setPerformerRating(perfRating);
+                                setShowPerformerRatingModal(true);
+                              }}
+                              className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95 shadow-md shadow-rose-200"
+                            >
+                              Rate
+                            </button>
+                          ) : (
+                            <div className="group relative">
+                              <button
+                                onClick={() => {
+                                  setRatingInfoMessage(performer.name);
+                                  setTimeout(() => setRatingInfoMessage(null), 3000);
+                                }}
+                                className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-400 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+                              >
+                                Rate
+                              </button>
+                              {/* Beautiful dynamic info bubble on click or hover */}
+                              {ratingInfoMessage === performer.name && (
+                                <div className="absolute right-0 bottom-full mb-2 w-48 bg-slate-900 text-white text-[10px] p-2 rounded-xl shadow-xl z-10 animate-fade-in font-medium">
+                                  You can rate {performer.name} after booking their service!
+                                  <div className="absolute top-full right-4 border-4 border-transparent border-t-slate-900" />
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-bold text-slate-900">{performer.name}</h4>
-                        <p className="text-xs text-slate-500">{performer.experience} experience</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -3551,6 +3693,117 @@ export default function HelperPage() {
                   alt="Zoomed Performer"
                   className="w-full h-full object-contain rounded-3xl shadow-2xl border border-white/10"
                 />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Performer Rating Modal */}
+      <AnimatePresence>
+        {showPerformerRatingModal && selectedPerformerToRate && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPerformerRatingModal(false)}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[2050]"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 30 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+              className="fixed inset-0 z-[2051] flex items-center justify-center p-4"
+            >
+              <div className="relative w-full max-w-md bg-white/80 backdrop-blur-xl border border-white/20 rounded-[2.5rem] shadow-2xl p-8 flex flex-col items-center text-center overflow-hidden">
+                {/* Decorative gradients */}
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-rose-300 rounded-full blur-3xl opacity-30 pointer-events-none" />
+                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-300 rounded-full blur-3xl opacity-30 pointer-events-none" />
+
+                <button
+                  onClick={() => setShowPerformerRatingModal(false)}
+                  className="absolute top-4 right-4 p-2 bg-slate-100 hover:bg-slate-200 text-slate-400 rounded-full transition-all group"
+                >
+                  <XMarkIcon className="w-5 h-5 group-hover:rotate-90 transition-transform" />
+                </button>
+
+                <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-rose-100 shadow-md mb-4 bg-slate-100">
+                  {selectedPerformerToRate.image ? (
+                    <img src={selectedPerformerToRate.image} alt={selectedPerformerToRate.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-400 text-2xl">
+                      <FaUser />
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-[10px] text-rose-600 font-black uppercase tracking-[0.2em] mb-1">Rate Service Performer</p>
+                <h3 className="text-xl font-black text-slate-900 mb-1">{selectedPerformerToRate.name}</h3>
+                <p className="text-xs text-slate-500 mb-6">{selectedPerformerToRate.experience} experience</p>
+
+                {ratingSuccess ? (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center py-6"
+                  >
+                    <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white mb-3 shadow-lg shadow-emerald-100">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-6 h-6">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    </div>
+                    <p className="text-sm font-bold text-slate-800">Rating Submitted successfully!</p>
+                    <p className="text-xs text-slate-400 mt-1">Thank you for your feedback.</p>
+                  </motion.div>
+                ) : (
+                  <form onSubmit={handleRatePerformerSubmit} className="w-full flex flex-col items-center">
+                    {/* Stars Selection */}
+                    <div className="flex items-center gap-2 mb-6">
+                      {[1, 2, 3, 4, 5].map((star) => {
+                        const isFilled = hoveredPerformerRating ? star <= hoveredPerformerRating : star <= performerRating;
+                        return (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setPerformerRating(star)}
+                            onMouseEnter={() => setHoveredPerformerRating(star)}
+                            onMouseLeave={() => setHoveredPerformerRating(0)}
+                            className="p-1 transition-all hover:scale-125 duration-150 active:scale-95 cursor-pointer"
+                          >
+                            {isFilled ? (
+                              <StarIconSolid className="w-9 h-9 text-yellow-400 fill-yellow-400 drop-shadow-sm" />
+                            ) : (
+                              <StarIcon className="w-9 h-9 text-slate-300 hover:text-yellow-400 transition-colors" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {ratingError && (
+                      <p className="text-xs text-red-500 font-bold mb-4 bg-red-50 px-4 py-2 rounded-xl border border-red-100">{ratingError}</p>
+                    )}
+
+                    <div className="w-full flex gap-3 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowPerformerRatingModal(false)}
+                        className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl text-sm font-black uppercase tracking-wider transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={submittingRating}
+                        className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl text-sm font-black uppercase tracking-wider shadow-lg shadow-rose-200 transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50"
+                      >
+                        {submittingRating ? 'Submitting...' : 'Submit'}
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             </motion.div>
           </>

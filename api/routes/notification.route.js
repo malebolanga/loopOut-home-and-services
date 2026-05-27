@@ -125,6 +125,27 @@ router.put('/:id/read', verifyToken, async(req, res) => {
     }
 });
 
+// Clear all notifications (RESTful DELETE /clear-all)
+router.delete('/clear-all', verifyToken, async(req, res) => {
+    try {
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const userId = req.user.id;
+        await Notification.deleteMany({ userId });
+
+        res.json({ success: true, message: 'All notifications cleared successfully' });
+    } catch (error) {
+        console.error('[NOTIF] Clear All Error:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Failed to clear notifications',
+            error: error.message 
+        });
+    }
+});
+
 // Delete a notification (RESTful DELETE /:id)
 router.delete('/:id', verifyToken, async(req, res) => {
     try {

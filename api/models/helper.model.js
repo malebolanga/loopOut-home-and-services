@@ -163,7 +163,9 @@ const helperSchema = new mongoose.Schema({
       {
         name: { type: String, required: true },
         image: { type: String, required: true },
-        experience: { type: String, required: true }
+        experience: { type: String, required: true },
+        rating: { type: Number, default: 5, min: 1, max: 5 },
+        ratingsCount: { type: Number, default: 1 }
       }
     ],
     operatingHours: {

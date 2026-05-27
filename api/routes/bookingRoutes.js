@@ -1,5 +1,5 @@
 import express from 'express';
-import { calculateBookingDetails, createBooking, getBookedDates, getHostBookings, getUserBookings, updateBookingStatus, getHelperBookingSummary, getServiceBookingSummary, getListingBookingSummary, getEventBookingSummary } from '../controllers/booking.js';
+import { calculateBookingDetails, createBooking, getBookedDates, getHostBookings, getUserBookings, updateBookingStatus, getHelperBookingSummary, getServiceBookingSummary, getListingBookingSummary, getEventBookingSummary, getBookingById } from '../controllers/booking.js';
 
 const router = express.Router();
 
@@ -13,5 +13,6 @@ router.get('/service-summary/:serviceId', getServiceBookingSummary);
 router.get('/listing-summary/:listingId', getListingBookingSummary);
 router.get('/event-summary/:eventId', getEventBookingSummary);
 router.post('/update/:bookingId', updateBookingStatus);
+router.get('/:id', getBookingById);
 
 export default router;

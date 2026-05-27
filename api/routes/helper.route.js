@@ -6,6 +6,7 @@ import {
   getHelpers,
   updateHelper,
   getSimilarHelpers,
+  rateHelperPerformer,
 } from '../controllers/helper.controller.js';
 import { verifyToken } from '../utils/verifyUser.js';
 
@@ -17,5 +18,6 @@ router.get('/get', getHelpers);
 router.post('/update/:id', verifyToken, updateHelper);
 router.delete('/delete/:id', verifyToken, deleteHelper);
 router.get('/similar/:id', getSimilarHelpers);
+router.post('/:id/performer/rate', verifyToken, rateHelperPerformer);
 
 export default router;

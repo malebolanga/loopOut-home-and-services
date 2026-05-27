@@ -264,6 +264,27 @@ export const getUserBookings = async (req, res) => {
   }
 };
 
+// Get single booking by ID
+export const getBookingById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const booking = await Booking.findById(id)
+      .populate('listing')
+      .populate('helper')
+      .populate('service')
+      .populate('user', 'username email avatar phone')
+      .populate('event');
+      
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    
+    res.json(booking);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 // Update booking status
 export const updateBookingStatus = async (req, res) => {
   try {

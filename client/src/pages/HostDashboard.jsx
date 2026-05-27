@@ -34,7 +34,7 @@ const BookingProtocolCard = ({ booking, idx, handleUpdateStatusGlobal }) => {
   
   const handleStatusUpdate = async (newStatus) => {
     try {
-      const res = await fetch(`/api/bookings/status/${booking._id}`, {
+      const res = await fetch(`/api/bookings/update/${booking._id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
