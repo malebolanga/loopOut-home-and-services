@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+export default {
   darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
@@ -10,9 +11,6 @@
         background: 'hsl(210, 20%, 98%)',
         foreground: 'hsl(210, 30%, 20%)',
       },
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
-  theme: {
-    extend: {
       
       dropShadow: {
         'emoji': '0 2px 1px rgba(0, 0, 0, 0.3)',
