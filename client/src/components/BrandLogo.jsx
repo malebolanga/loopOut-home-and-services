@@ -89,9 +89,10 @@ const BrandLogo = ({ className = "h-8 w-auto", showText = true, textColor = "tex
       whileHover={{ scale: 1.02 }}
       className={`flex items-center gap-3 ${className} select-none cursor-pointer`}
     >
+      <BrandIcon className="h-full w-auto aspect-square" />
       {showText && (
         <span className="text-2xl font-bold bg-gradient-to-r from-[#FF385C] via-[#E61E4D] to-[#D70466] text-transparent bg-clip-text">
-          Out
+          loopOut
         </span>
       )}
     </motion.div>
