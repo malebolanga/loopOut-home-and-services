@@ -12,8 +12,12 @@ export default defineConfig({
       },
     },
   },
-  plugins: [react()],
+    plugins: [react()],
   build: {
+    sourcemap: false,
+    minify: 'esbuild',
+    chunkSizeWarningLimit: 500,
+    assetsInlineLimit: 4096,
     rollupOptions: {
       output: {
         manualChunks(id) {

@@ -120,110 +120,61 @@ const itemVariants = {
 };
 
 const CategoryIcon = ({ type, size = "w-10 h-10" }) => {
-  const icons = {
-    Universe: (
-      <svg viewBox="0 0 100 100" className={`${size} drop-shadow-[0_15px_15px_rgba(79,70,229,0.4)]`}>
-        <defs>
-          <radialGradient id="sphereGrad" cx="30%" cy="30%" r="70%">
-            <stop offset="0%" stopColor="#818CF8" />
-            <stop offset="50%" stopColor="#4F46E5" />
-            <stop offset="100%" stopColor="#312E81" />
-          </radialGradient>
-          <radialGradient id="nebulaGrad" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#EC4899" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#7C3AED" stopOpacity="0" />
-          </radialGradient>
-          <filter id="glassBlur">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
-          </filter>
-        </defs>
-        <circle cx="50" cy="50" r="45" fill="url(#sphereGrad)" />
-        <circle cx="50" cy="50" r="30" fill="url(#nebulaGrad)" filter="url(#glassBlur)" className="animate-pulse" />
-        <path d="M20 50 Q50 20 80 50" fill="none" stroke="white" strokeWidth="1" opacity="0.3" strokeDasharray="4 2" />
-        <circle cx="40" cy="40" r="2" fill="white" className="animate-ping" />
-        <circle cx="60" cy="30" r="1.5" fill="white" opacity="0.8" />
-        <circle cx="30" cy="65" r="1" fill="white" opacity="0.6" />
-        <path d="M50 5 A45 45 0 0 1 95 50" fill="none" stroke="white" strokeWidth="0.5" opacity="0.5" />
-      </svg>
-    ),
-    Homes: (
-      <svg viewBox="0 0 100 100" className={`${size} drop-shadow-[0_15px_15px_rgba(239,68,68,0.3)]`}>
-        <defs>
-          <linearGradient id="roofGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#F87171" />
-            <stop offset="100%" stopColor="#B91C1C" />
-          </linearGradient>
-          <linearGradient id="wallGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#FEE2E2" />
-            <stop offset="100%" stopColor="#FECACA" />
-          </linearGradient>
-        </defs>
-        <path d="M15 45 L50 15 L85 45 L85 85 L15 85 Z" fill="url(#wallGrad)" />
-        <path d="M10 45 L50 10 L90 45 L50 55 Z" fill="url(#roofGrad)" />
-        <path d="M50 10 L90 45 L50 55 L10 45 Z" fill="black" opacity="0.1" />
-        <rect x="35" y="60" width="30" height="25" fill="#991B1B" rx="2" />
-        <rect x="25" y="50" width="15" height="15" fill="white" rx="2" opacity="0.8" />
-        <rect x="60" y="50" width="15" height="15" fill="white" rx="2" opacity="0.8" />
-        <circle cx="30" cy="30" r="20" fill="white" opacity="0.2" />
-      </svg>
-    ),
-    Services: (
-      <svg viewBox="0 0 100 100" className={`${size} drop-shadow-[0_15px_15px_rgba(59,130,246,0.3)]`}>
-        <defs>
-          <linearGradient id="caseGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#60A5FA" />
-            <stop offset="100%" stopColor="#1D4ED8" />
-          </linearGradient>
-          <linearGradient id="handleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#94A3B8" />
-            <stop offset="100%" stopColor="#475569" />
-          </linearGradient>
-        </defs>
-        <rect x="15" y="30" width="70" height="55" rx="8" fill="url(#caseGrad)" />
-        <path d="M35 30 L35 20 Q35 15 40 15 L60 15 Q65 15 65 20 L65 30" fill="none" stroke="url(#handleGrad)" strokeWidth="6" />
-        <rect x="15" y="30" width="70" height="15" rx="8" fill="black" opacity="0.1" />
-        <circle cx="30" cy="55" r="5" fill="white" opacity="0.3" />
-        <circle cx="70" cy="55" r="5" fill="white" opacity="0.3" />
-        <rect x="45" y="45" width="10" height="25" rx="2" fill="white" opacity="0.2" />
-      </svg>
-    ),
-    Helper: (
-      <svg viewBox="0 0 100 100" className={`${size} drop-shadow-[0_15px_15px_rgba(16,185,129,0.3)]`}>
-        <defs>
-          <linearGradient id="headGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#34D399" />
-            <stop offset="100%" stopColor="#059669" />
-          </linearGradient>
-          <radialGradient id="highlight" cx="30%" cy="30%" r="50%">
-            <stop offset="0%" stopColor="white" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="white" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <circle cx="50" cy="35" r="25" fill="url(#headGrad)" />
-        <circle cx="50" cy="35" r="25" fill="url(#highlight)" />
-        <path d="M20 90 C20 60 80 60 80 90" fill="url(#headGrad)" />
-        <path d="M20 90 C20 65 80 65 80 90" fill="url(#highlight)" />
-        <circle cx="40" cy="30" r="3" fill="white" opacity="0.6" />
-        <circle cx="60" cy="30" r="3" fill="white" opacity="0.6" />
-        <path d="M40 45 Q50 55 60 45" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
-      </svg>
-    ),
-    Events: (
-      <svg viewBox="0 0 100 100" className={`${size} drop-shadow-[0_15px_15px_rgba(245,158,11,0.3)]`}>
-        <defs>
-          <linearGradient id="ticketGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#FBBF24" />
-            <stop offset="100%" stopColor="#D97706" />
-          </linearGradient>
-        </defs>
-        <rect x="15" y="30" width="70" height="45" rx="4" fill="url(#ticketGrad)" transform="rotate(-10 50 50)" />
-        <path d="M15 52.5 A5 5 0 0 1 15 42.5 M85 42.5 A5 5 0 0 1 85 52.5" fill="white" transform="rotate(-10 50 50)" />
-        <text x="50" y="55" fontFamily="Arial" fontWeight="bold" fontSize="12" fill="#92400E" textAnchor="middle" transform="rotate(-10 50 50)">PASS</text>
-        <circle cx="30" cy="40" r="15" fill="white" opacity="0.2" />
-      </svg>
-    )
+  const [emojiIndex, setEmojiIndex] = useState(0);
+
+  const emojis = {
+    Universe: ['🪐', '🌍', '🌌', '🚀'],
+    Homes: ['🏠', '🏢', '🏡', '🏨'],
+    Services: ['🛠️', '⚡', '🧽', '⚙️'],
+    Helper: ['🧹', '💅', '💄', '💈', '👨‍🍳'],
+    Events: ['🎟️', '🎪', '🎭', '🎫']
   };
-  return icons[type] || null;
+
+  useEffect(() => {
+    // Add a slight random offset to interval so they don't all flip at the exact same millisecond
+    const randomOffset = Math.random() * 500;
+    const interval = setInterval(() => {
+      setEmojiIndex(prev => {
+        const count = emojis[type] ? emojis[type].length : 1;
+        return (prev + 1) % count;
+      });
+    }, 2500 + randomOffset);
+    return () => clearInterval(interval);
+  }, [type]);
+
+  const currentEmoji = emojis[type] ? emojis[type][emojiIndex] : '✨';
+
+  return (
+    <div className={`${size} relative flex items-center justify-center`}>
+      <motion.div
+        animate={{
+          y: [0, -4, 0],
+          rotateX: [0, 15, -15, 0],
+          rotateY: [0, 15, -15, 0]
+        }}
+        transition={{
+          repeat: Infinity,
+          duration: 5,
+          ease: "easeInOut"
+        }}
+        style={{ perspective: 1000 }}
+        className="relative w-full h-full hover:scale-125 transition-transform duration-300 flex items-center justify-center"
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentEmoji}
+            initial={{ opacity: 0, scale: 0.8, rotateX: 90 }}
+            animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+            exit={{ opacity: 0, scale: 0.8, rotateX: -90 }}
+            transition={{ duration: 0.4 }}
+            className="absolute text-4xl drop-shadow-[0_15px_15px_rgba(0,0,0,0.4)]"
+          >
+            {currentEmoji}
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
+    </div>
+  );
 };
 
 // --- TOP CATEGORIES DATA (Fresha Style) ---

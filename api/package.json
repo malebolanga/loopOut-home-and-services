@@ -1,0 +1,19 @@
+{
+  "name": "moderation-api",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Image and text moderation backend with repeat-offender handling",
+  "main": "moderation.js",
+  "scripts": {
+    "start": "node moderation.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "sqlite3": "^5.1.7"
+  },
+  "author": "",
+  "license": "MIT"
+}

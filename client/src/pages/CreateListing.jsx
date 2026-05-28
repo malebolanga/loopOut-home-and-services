@@ -395,7 +395,7 @@ export default function CreateListing() {
     address: "",
     contact: "",
     host: "",
-    regularPrice: 50,
+    regularPrice: 100,
     type: "",
     category: "",
     

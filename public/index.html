@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Premium Moderation Demo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Content Moderation Dashboard</h1>
+    <div class="card glass">
+      <h2>Image Moderation</h2>
+      <input type="url" id="imageUrl" placeholder="Enter image URL" />
+      <button id="moderateImageBtn">Check Image</button>
+    </div>
+    <div class="card glass">
+      <h2>Text / Profile Moderation</h2>
+      <textarea id="textInput" rows="4" placeholder="Enter text or profile description"></textarea>
+      <button id="moderateTextBtn">Check Text</button>
+    </div>
+    <div id="result" class="card glass hidden"></div>
+  </div>
+  <script src="moderation.js"></script>
+</body>
+</html>

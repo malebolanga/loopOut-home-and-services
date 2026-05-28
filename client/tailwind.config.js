@@ -1,5 +1,15 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+  darkMode: 'class',
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        primary: 'hsl(210, 40%, 50%)',
+        secondary: 'hsl(340, 30%, 45%)',
+        accent: 'hsl(50, 80%, 55%)',
+        background: 'hsl(210, 20%, 98%)',
+        foreground: 'hsl(210, 30%, 20%)',
+      },
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
