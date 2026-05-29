@@ -2,16 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import {  } from 'react-icons/fi';
-import { 
-  FaCalendarAlt, 
-  FaClock, 
-  FaMapMarkerAlt, 
-  FaTicketAlt, 
-  FaParking, 
-  FaUtensils, 
-  FaChild 
-} from 'react-icons/fa';
+import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaTicketAlt, FaParking, FaUtensils, FaChild } from 'react-icons/fa';
+import InfoBadge from '../components/InfoBadge';
 
 export default function EventPage() {
   const { currentUser } = useSelector((state) => state.user);
@@ -45,7 +37,7 @@ export default function EventPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-airbnb-red mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-airbnb-red mx-auto" />
           <p className="mt-4 text-gray-600">Loading event details...</p>
         </div>
       </div>
@@ -58,72 +50,50 @@ export default function EventPage() {
         <div className="text-center">
           <div className="text-red-500 text-2xl mb-4">⚠️</div>
           <p className="text-gray-700 text-lg">{error}</p>
-          <Link
-            to="/events"
-            className="mt-4 inline-block px-4 py-2 bg-airbnb-red text-white rounded-lg hover:bg-red-700"
-          >
-            Browse All Events
-          </Link>
+          <Link to="/events" className="mt-4 inline-block px-4 py-2 bg-airbnb-red text-white rounded-lg hover:bg-red-700">Browse All Events</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans">
+      {/* Sticky back navigation */}
+      <button onClick={() => navigate('/events')} className="mb-4 text-airbnb-red hover:underline flex items-center gap-1">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+        Back to events
+      </button>
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="relative">
-          {event.imageUrls.length > 0 && (
-            <img
-              src={event.imageUrls[0]}
-              alt={event.name}
-              className="w-full h-96 object-cover"
-            />
+          {event.imageUrls && event.imageUrls.length > 0 && (
+            <img src={event.imageUrls[0]} alt={event.name} className="w-full h-96 object-cover" />
           )}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6">
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
             <h1 className="text-3xl font-bold text-white">{event.name}</h1>
             <div className="flex flex-wrap gap-3 mt-2">
-              <span className="inline-flex items-center px-3 py-1 bg-white bg-opacity-20 text-white rounded-full">
-                <FaCalendarAlt className="mr-2" />
-                {event.date}
-              </span>
-              <span className="inline-flex items-center px-3 py-1 bg-white bg-opacity-20 text-white rounded-full">
-                <FaClock className="mr-2" />
-                {event.time}
-              </span>
+              <InfoBadge icon={<FaCalendarAlt className="h-4 w-4" />}>{event.date}</InfoBadge>
+              <InfoBadge icon={<FaClock className="h-4 w-4" />}>{event.time}</InfoBadge>
             </div>
           </div>
         </div>
-
         <div className="p-6 md:p-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="md:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Left: Details */}
+            <div>
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">Event Details</h2>
               <p className="text-gray-600 whitespace-pre-line mb-6">{event.description}</p>
-              
-
               <h3 className="text-xl font-semibold text-gray-800 mb-3">Event Features</h3>
               <div className="flex flex-wrap gap-3 mb-6">
                 {event.parking && (
-                  <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full">
-                    <FaParking className="mr-2" />
-                    Parking Available
-                  </span>
+                  <InfoBadge icon={<FaParking className="h-4 w-4" />}>Parking Available</InfoBadge>
                 )}
                 {event.foodAvailable && (
-                  <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full">
-                    <FaUtensils className="mr-2" />
-                    Food & Drinks
-                  </span>
+                  <InfoBadge icon={<FaUtensils className="h-4 w-4" />}>Food & Drinks</InfoBadge>
                 )}
                 {event.familyFriendly && (
-                  <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full">
-                    <FaChild className="mr-2" />
-                    Family Friendly
-                  </span>
+                  <InfoBadge icon={<FaChild className="h-4 w-4" />}>Family Friendly</InfoBadge>
                 )}
               </div>
-
               {event.videoUrl && (
                 <div className="mb-6">
                   <h3 className="text-xl font-semibold text-gray-800 mb-3">Event Video</h3>
@@ -135,111 +105,37 @@ export default function EventPage() {
                   </div>
                 </div>
               )}
-
-              {event.imageUrls.length > 1 && (
+              {event.imageUrls && event.imageUrls.length > 1 && (
                 <div className="mb-6">
                   <h3 className="text-xl font-semibold text-gray-800 mb-3">More Photos</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {event.imageUrls.slice(1).map((url, index) => (
                       <div key={index} className="aspect-square">
-                        <img
-                          src={url}
-                          alt={`${event.name} ${index + 2}`}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
+                        <img src={url} alt={`${event.name} ${index + 2}`} className="w-full h-full object-cover rounded-lg" />
                       </div>
                     ))}
                   </div>
                 </div>
               )}
             </div>
-
-            <div className="md:col-span-1">
-              <div className="bg-gray-50 rounded-xl p-6 sticky top-6">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Event Information</h2>
-                
-                <div className="space-y-4">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 text-airbnb-red mt-1">
-                      <FaMapMarkerAlt className="text-xl" />
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="font-medium text-gray-700">Venue</h3>
-                      <p className="text-gray-600">{event.address}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 text-airbnb-red mt-1">
-                      <FaCalendarAlt className="text-xl" />
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="font-medium text-gray-700">Date</h3>
-                      <p className="text-gray-600">{event.date}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 text-airbnb-red mt-1">
-                      <FaClock className="text-xl" />
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="font-medium text-gray-700">Time</h3>
-                      <p className="text-gray-600">{event.time}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 text-airbnb-red mt-1">
-                      <FaTicketAlt className="text-xl" />
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="font-medium text-gray-700">Ticket Price</h3>
-                      <p className="text-gray-600">
-                        {event.regularPrice === 0
-                          ? 'Free Entry'
-                          : `R${event.regularPrice}`}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 text-airbnb-red mt-1">
-                      <div className="w-5 h-5 rounded-full bg-airbnb-red flex items-center justify-center">
-                        <span className="text-white text-xs">i</span>
-                      </div>
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="font-medium text-gray-700">Hosted By</h3>
-                      <p className="text-gray-600">{event.host}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 text-airbnb-red mt-1">
-                      <div className="w-5 h-5 rounded-full bg-airbnb-red flex items-center justify-center">
-                        <span className="text-white text-xs">i</span>
-                      </div>
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="font-medium text-gray-700">Contact</h3>
-                      <p className="text-gray-600">{event.contact}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <button className="mt-6 w-full bg-airbnb-red text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors">
-                  Get Tickets
-                </button>
-                
-                <div className="mt-4 text-center">
-                  <Link
-                    to="/events"
-                    className="text-airbnb-red hover:underline"
-                  >
-                    ← Back to all events
-                  </Link>
-                </div>
+            {/* Right: Information */}
+            <div className="bg-gray-50 rounded-xl p-6 sticky top-6 h-fit">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">Event Information</h2>
+              <div className="space-y-4">
+                <InfoBadge icon={<FaMapMarkerAlt className="h-4 w-4" />}>{event.address}</InfoBadge>
+                <InfoBadge icon={<FaCalendarAlt className="h-4 w-4" />}>{event.date}</InfoBadge>
+                <InfoBadge icon={<FaClock className="h-4 w-4" />}>{event.time}</InfoBadge>
+                <InfoBadge icon={<FaTicketAlt className="h-4 w-4" />}>{event.regularPrice === 0 ? 'Free Entry' : `R${event.regularPrice}`}</InfoBadge>
+                <InfoBadge icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}>{event.host}</InfoBadge>
+                <InfoBadge icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8a6 6 0 01-12 0" /></svg>}>{event.contact}</InfoBadge>
+              </div>
+              <button className="mt-6 w-full bg-airbnb-red text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors">
+                Get Tickets
+              </button>
+              <div className="mt-4 text-center">
+                <Link to="/events" className="text-airbnb-red hover:underline">
+                  ← Back to all events
+                </Link>
               </div>
             </div>
           </div>

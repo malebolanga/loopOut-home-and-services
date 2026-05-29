@@ -1404,6 +1404,7 @@ export default function CreateListing() {
           { id: "art", label: "Art & Culture", emoji: "🎨", description: "Exhibitions, shows" },
           { id: "community", label: "Community", emoji: "🧑‍🤝‍🧑", description: "Meetups, gatherings" },
           { id: "food", label: "Food & Drink", emoji: "🍔", description: "Food festivals, tastings" },
+                  { id: "hiking", label: "Hiking", emoji: "🥾", description: "Outdoor hiking events" },
         ];
       default:
         return [];

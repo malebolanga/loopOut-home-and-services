@@ -35,7 +35,7 @@ export const getEvents = async (req, res, next) => {
         { title: { $regex: searchTerm, $options: 'i' } },
         { description: { $regex: searchTerm, $options: 'i' } }
       ],
-      ...(category && { category }),
+      ...(category && { type: category }),
       ...(location && { location: { $regex: location, $options: 'i' } })
     };
 

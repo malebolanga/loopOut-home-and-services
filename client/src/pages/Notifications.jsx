@@ -425,16 +425,69 @@ export default function Notifications() {
                                                 </div>
                                             )}
                                             {bookingDetails.status && (
-                                                <div>
-                                                    <p className="text-sm text-gray-500">Status</p>
-                                                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium uppercase ${
-                                                        bookingDetails.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                                        bookingDetails.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                        bookingDetails.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                                        'bg-gray-100 text-gray-800'
-                                                    }`}>
-                                                        {bookingDetails.status}
-                                                    </span>
+                                                <div className="col-span-full">
+                                                    <p className="text-sm text-gray-500 mb-2">Status</p>
+                                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold uppercase tracking-wider ${
+                                                            bookingDetails.status === 'confirmed' ? 'bg-green-100 text-green-800 border border-green-200' :
+                                                            bookingDetails.status === 'pending' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                                                            bookingDetails.status === 'cancelled' ? 'bg-red-100 text-red-800 border border-red-200' :
+                                                            'bg-gray-100 text-gray-800 border border-gray-200'
+                                                        }`}>
+                                                            {bookingDetails.status}
+                                                        </span>
+
+                                                        {bookingDetails.status === 'pending' && selectedNotification.title === 'New Booking Request' && (
+                                                            <div className="flex items-center gap-3 w-full sm:w-auto">
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        try {
+                                                                            const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
+                                                                                method: 'POST',
+                                                                                headers: {
+                                                                                    'Content-Type': 'application/json',
+                                                                                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                                                                },
+                                                                                body: JSON.stringify({ status: 'cancelled', cancelledBy: 'host' })
+                                                                            });
+                                                                            if (res.ok) {
+                                                                                const updatedBooking = await res.json();
+                                                                                setBookingDetails(updatedBooking);
+                                                                            }
+                                                                        } catch (err) {
+                                                                            console.error('Failed to decline booking:', err);
+                                                                        }
+                                                                    }}
+                                                                    className="flex-1 sm:flex-none px-5 py-2 text-red-600 bg-red-50 hover:bg-red-100 font-medium rounded-lg transition-colors border border-red-200"
+                                                                >
+                                                                    Decline
+                                                                </button>
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        try {
+                                                                            const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
+                                                                                method: 'POST',
+                                                                                headers: {
+                                                                                    'Content-Type': 'application/json',
+                                                                                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                                                                },
+                                                                                body: JSON.stringify({ status: 'confirmed' })
+                                                                            });
+                                                                            if (res.ok) {
+                                                                                const updatedBooking = await res.json();
+                                                                                setBookingDetails(updatedBooking);
+                                                                            }
+                                                                        } catch (err) {
+                                                                            console.error('Failed to approve booking:', err);
+                                                                        }
+                                                                    }}
+                                                                    className="flex-1 sm:flex-none px-5 py-2 text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg transition-colors shadow-sm"
+                                                                >
+                                                                    Approve
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
