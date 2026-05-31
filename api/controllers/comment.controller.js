@@ -1,6 +1,7 @@
 import Listing from '../models/listing.model.js';
 import LookingFor from '../models/lookingFor.model.js';
 import Comment from '../models/comment.model.js';
+import Sell from '../models/sell.model.js';
 import { errorHandler } from '../utils/error.js';
 import { createUserNotification } from '../utils/notificationUtils.js';
 
@@ -20,6 +21,10 @@ export const createComment = async (req, res, next) => {
     if (!target) {
       target = await LookingFor.findById(listingId);
       targetType = 'lookingFor';
+    }
+    if (!target) {
+      target = await Sell.findById(listingId);
+      targetType = 'sell';
     }
 
     if (!target) {
@@ -85,8 +90,9 @@ export const getComments = async (req, res, next) => {
 
     const listingExists = await Listing.exists({ _id: listingId });
     const requestExists = !listingExists ? await LookingFor.exists({ _id: listingId }) : false;
+    const sellExists = !listingExists && !requestExists ? await Sell.exists({ _id: listingId }) : false;
 
-    if (!listingExists && !requestExists) {
+    if (!listingExists && !requestExists && !sellExists) {
       return next(errorHandler(404, 'Listing or Request not found'));
     }
 

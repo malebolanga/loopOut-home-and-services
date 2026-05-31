@@ -39,6 +39,10 @@ const List = lazy(() => import("./pages/List"));
 const MyListing = lazy(() => import("./pages/MyListing"));
 const ListingsPage = lazy(() => import("./pages/ListingsPage"));
 const ForSale = lazy(() => import("./pages/ForSale"));
+const Sell = lazy(() => import("./pages/Sell"));
+const Output = lazy(() => import("./pages/Output"));
+const ListingSuccess = lazy(() => import("./pages/ListingSuccess"));
+const SellListing = lazy(() => import("./pages/SellListing"));
 const ForRent = lazy(() => import("./pages/ForRent"));
 const OverNight = lazy(() => import("./pages/OverNight"));
 const Commercial = lazy(() => import("./pages/Commercial"));
@@ -170,6 +174,10 @@ const AnimatedRoutes = () => {
         <Route path="/listings/:type" element={<PageTransition><ListingsPage /></PageTransition>} />
         <Route path="/for-rent" element={<PageTransition><ForRent /></PageTransition>} />
         <Route path="/for-sale" element={<PageTransition><ForSale /></PageTransition>} />
+        <Route path="/sell" element={<PageTransition><Sell /></PageTransition>} />
+        <Route path="/output" element={<PageTransition><Output /></PageTransition>} />
+        <Route path="/listing-success" element={<PageTransition><ListingSuccess /></PageTransition>} />
+        <Route path="/sell-item/:id" element={<PageTransition><SellListing /></PageTransition>} />
         <Route path="/helper-list" element={<PageTransition><HelperList /></PageTransition>} />
         <Route path="/commercial" element={<PageTransition><Commercial /></PageTransition>} />
         <Route path="/overnight" element={<PageTransition><OverNight /></PageTransition>} />
@@ -333,7 +341,7 @@ function AppContent() {
   ];
 
   const specializedHelperPaths = [
-    '/helper', '/photography', '/beauty', '/barber', '/tattoo', '/chef', '/carwash', '/privatetutor', '/listing', '/listings', '/sneaker', '/washingmat', '/animals'
+    '/helper', '/photography', '/beauty', '/barber', '/tattoo', '/chef', '/carwash', '/privatetutor', '/listing', '/listings', '/sneaker', '/washingmat', '/animals', '/sell-item'
   ];
 
   const isSpecializedPage = specializedHelperPaths.some(path => location.pathname.startsWith(path));

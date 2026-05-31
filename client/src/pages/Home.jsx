@@ -44,7 +44,8 @@ import {
   ChatBubbleOvalLeftEllipsisIcon,
   ChatBubbleLeftEllipsisIcon,
   PhoneIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  TagIcon
 } from '@heroicons/react/24/outline';
 import {
   StarIcon as StarIconSolid,
@@ -73,6 +74,7 @@ import BottomNav from '../components/BottomNav';
 import useSearchIntelligence from '../hooks/useSearchIntelligence';
 import HelperItem from '../components/HelperItem';
 import LoopOutBanner from '../components/LoopOutBanner';
+import ForSale from './ForSale';
 
 import {
   calculateDistance,
@@ -1641,6 +1643,119 @@ const NeuralPicksSection = ({ navigate }) => {
   );
 };
 
+// --- SELL ITEMS SECTION ---
+const SellItemsSection = ({ navigate }) => {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const CATEGORY_EMOJIS = {
+    furniture: '🛋️',
+    electronics: '📱',
+    clothes: '👗',
+    universities: '🎓',
+    books: '📚',
+  };
+
+  const CATEGORY_COLORS = {
+    furniture: 'from-amber-500 to-orange-500',
+    electronics: 'from-blue-500 to-indigo-600',
+    clothes: 'from-rose-400 to-pink-500',
+    universities: 'from-violet-500 to-purple-600',
+    books: 'from-emerald-500 to-teal-500',
+  };
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const res = await fetch('/api/sell?limit=10');
+        const data = await res.json();
+        if (data.success && data.data?.length > 0) {
+          setItems(data.data);
+        }
+      } catch (err) {
+        console.error('Failed to load sell items:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchItems();
+  }, []);
+
+  if (loading || items.length === 0) return null;
+
+  return (
+    <motion.section
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={fadeInUp}
+      className="mb-16"
+    >
+      <div className="flex justify-between items-end mb-8">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <TagIcon className="w-4 h-4 text-rose-500" />
+            <span className="text-rose-500 text-[10px] font-black tracking-[0.3em] uppercase">Community Marketplace</span>
+          </div>
+          <h2 className="text-3xl font-black text-gray-900 tracking-tighter">ITEMS FOR SALE</h2>
+          <p className="text-gray-400 text-[11px] font-black uppercase tracking-[0.2em] mt-1">Preloved items from your community</p>
+        </div>
+        <button
+          onClick={() => navigate('/sell')}
+          className="text-[10px] font-black text-rose-500 uppercase tracking-widest border-b-2 border-rose-500/10 hover:border-rose-500 transition-all pb-1 flex items-center gap-2"
+        >
+          <span>View All</span>
+          <ArrowRightIcon className="w-3 h-3" />
+        </button>
+      </div>
+
+      <div className="flex overflow-x-auto gap-5 pb-4 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
+        {items.map((item, idx) => (
+          <motion.div
+            key={item._id}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: idx * 0.06 }}
+            whileHover={{ y: -6, scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate(`/sell-item/${item._id}`)}
+            className="flex-shrink-0 w-[220px] cursor-pointer"
+          >
+            <div className="relative aspect-square rounded-[2rem] overflow-hidden bg-gray-100 mb-3 shadow-md">
+              <img
+                src={item.imageUrls?.[0] || 'https://via.placeholder.com/300'}
+                alt={item.title}
+                className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+              />
+              {/* Category badge */}
+              <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-xl bg-gradient-to-r ${CATEGORY_COLORS[item.category] || 'from-gray-700 to-gray-900'} shadow-lg`}>
+                <span className="text-[10px] font-black text-white uppercase tracking-widest">
+                  {CATEGORY_EMOJIS[item.category] || '🏷️'} {item.category}
+                </span>
+              </div>
+              {/* Price badge */}
+              <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-xl shadow-lg">
+                <span className="text-[13px] font-black text-gray-900">R {item.price}</span>
+              </div>
+            </div>
+
+            <div className="px-1">
+              <h3 className="font-bold text-[15px] text-gray-900 truncate mb-1">{item.title}</h3>
+              <div className="flex items-center gap-2">
+                {item.creator?.avatar && (
+                  <img src={item.creator.avatar} alt={item.creator.username} className="w-5 h-5 rounded-full object-cover border border-gray-200" />
+                )}
+                <p className="text-[12px] text-gray-500 truncate">{item.creator?.username || 'Anonymous'}</p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.section>
+  );
+};
+
 const SmartRecommendations = ({ recommendations, insights, loading, onItemClick }) => {
   if (loading) {
     return (
@@ -2245,6 +2360,7 @@ const MobileAppHomepage = ({
         )}
 
 
+
         {/* MOBILE CONSOLIDATED FEED */}
         <section className="mt-10 mb-8">
           <div className="flex items-center justify-between mb-6">
@@ -2321,7 +2437,10 @@ const MobileAppHomepage = ({
           <LoopOutPulse />
         </div>
 
-        <CommunityNeedsSection navigate={navigate} />
+
+
+        {/* Sell Items Section - moved to bottom of mobile feed */}
+        <SellItemsSection navigate={navigate} />
 
       </main>
 
@@ -2472,6 +2591,10 @@ const DesktopHomepage = ({
             </motion.div>
           ))}
         </div>
+
+        {/* Sell Items Section (Desktop) */}
+        <SellItemsSection navigate={navigate} />
+
 
         {/* Clean footer / end of feed */}
         <div className="mt-20 pt-10 border-t border-gray-100 text-center">

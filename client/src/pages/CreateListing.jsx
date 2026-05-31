@@ -285,32 +285,52 @@ const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFi
   </div>
 );
 
-const StepProgress = ({ currentStep }) => {
-  const steps = [
-    { label: "Category", icon: MapIcon },
-    { label: "Type", icon: TagIcon },
-    { label: "Details", icon: InformationCircleIcon },
-    { label: "Schedule", icon: ClockIcon }, // NEW STEP
-    { label: "Amenities", icon: Sparkles },
-    { label: "Services", icon: TagIcon },
-    { label: "Team", icon: UserGroupIcon },
-    { label: "Media", icon: CameraIcon },
-    { label: "Review", icon: CheckCircleIcon }
+const getVisibleSteps = (category) => {
+  const allSteps = [
+    { id: 1, label: "Category", icon: MapIcon },
+    { id: 2, label: "Type", icon: TagIcon },
+    { id: 3, label: "Details", icon: InformationCircleIcon },
+    { id: 4, label: "Schedule", icon: ClockIcon },
+    { id: 5, label: "Amenities", icon: Sparkles },
+    { id: 6, label: "Services", icon: TagIcon },
+    { id: 7, label: "Team", icon: UserGroupIcon },
+    { id: 8, label: "Media", icon: CameraIcon },
+    { id: 9, label: "Review", icon: CheckCircleIcon }
   ];
+
+  if (!category) {
+    return allSteps.filter(s => s.id <= 3 || s.id >= 8);
+  }
+
+  return allSteps.filter(step => {
+    if (category === 'selling') {
+      return step.id === 1 || step.id === 2 || step.id === 3 || step.id === 8 || step.id === 9;
+    }
+    if (category === 'events') {
+      return step.id === 1 || step.id === 2 || step.id === 3 || step.id === 5 || step.id === 8 || step.id === 9;
+    }
+    if (category === 'property') {
+      return step.id !== 6 && step.id !== 7;
+    }
+    return true;
+  });
+};
+
+const StepProgress = ({ currentStep, category }) => {
+  const visibleSteps = getVisibleSteps(category);
 
   return (
     <div className="mb-16 md:mb-20 overflow-x-auto scrollbar-hide">
       <div className="flex items-center justify-between min-w-[700px] max-w-4xl mx-auto px-4">
-        {steps.map((step, index) => {
-          const stepNum = index + 1;
-          const isActive = stepNum === currentStep;
-          const isCompleted = stepNum < currentStep;
+        {visibleSteps.map((step, index) => {
+          const isActive = step.id === currentStep;
+          const isCompleted = visibleSteps.some((s, idx) => s.id === currentStep && idx > index);
           const StepIcon = step.icon;
 
           return (
-            <div key={index} className="flex flex-col items-center flex-1 relative">
+            <div key={step.id} className="flex flex-col items-center flex-1 relative">
               {/* Connector Line */}
-              {index < steps.length - 1 && (
+              {index < visibleSteps.length - 1 && (
                 <div className={`absolute top-6 left-1/2 w-full h-[3px] transition-all duration-700 ${isCompleted ? 'bg-rose-500' : 'bg-gray-100'}`} />
               )}
 
@@ -463,6 +483,11 @@ export default function CreateListing() {
     servicesOffered: '', // For animals
     experience: '', // For animals
     certifications: '', // For animals
+    
+    // Book specific fields
+    bookAuthor: '',
+    bookYear: '',
+    bookUsageHistory: '',
     
     // Performers & Services
     performers: [],
@@ -780,6 +805,21 @@ export default function CreateListing() {
         }
       }
       
+      if (selectedCategory === 'selling' && selectedType === 'books') {
+        if (!listingForm.bookAuthor) {
+          setError("Please specify the author of the book");
+          return;
+        }
+        if (!listingForm.bookYear) {
+          setError("Please specify the release year");
+          return;
+        }
+        if (!listingForm.bookUsageHistory) {
+          setError("Please specify the history of usage");
+          return;
+        }
+      }
+      
       if (!listingForm.near.trim()) {
         setError(`Please provide ${getNearLabel(selectedCategory, selectedType)}`);
         return;
@@ -799,7 +839,13 @@ export default function CreateListing() {
     }
     
     setError(null);
-    setCurrentStep(prev => Math.min(prev + 1, 9));
+    const visible = getVisibleSteps(selectedCategory);
+    const currIdx = visible.findIndex(s => s.id === currentStep);
+    if (currIdx !== -1 && currIdx < visible.length - 1) {
+      setCurrentStep(visible[currIdx + 1].id);
+    } else {
+      setCurrentStep(prev => Math.min(prev + 1, 9));
+    }
   };
 
   const getNearLabel = (category, type) => {
@@ -822,6 +868,8 @@ export default function CreateListing() {
         return "your services and experience";
       case 'events':
         return "event highlights and features";
+      case 'selling':
+        return "item condition and details";
       default:
         return "additional information";
     }
@@ -829,8 +877,14 @@ export default function CreateListing() {
 
   const handlePrevStep = () => {
     setDirection('prev');
-    setCurrentStep(prev => Math.max(prev - 1, 1));
     setError(null);
+    const visible = getVisibleSteps(selectedCategory);
+    const currIdx = visible.findIndex(s => s.id === currentStep);
+    if (currIdx > 0) {
+      setCurrentStep(visible[currIdx - 1].id);
+    } else {
+      setCurrentStep(prev => Math.max(prev - 1, 1));
+    }
   };
 
   const compressImage = async (file) => {
@@ -1202,6 +1256,18 @@ export default function CreateListing() {
       }
     }
     
+    if (selectedCategory === 'selling' && selectedType === 'books') {
+      if (!listingForm.bookAuthor) {
+        return setError("Please specify the author of the book");
+      }
+      if (!listingForm.bookYear) {
+        return setError("Please specify the release year");
+      }
+      if (!listingForm.bookUsageHistory) {
+        return setError("Please specify the history of usage");
+      }
+    }
+    
     if (!listingForm.near.trim()) {
       return setError(`${getNearLabel(selectedCategory, selectedType)} is required`);
     }
@@ -1213,13 +1279,14 @@ export default function CreateListing() {
       const endpoint = selectedCategory === 'property' ? '/api/listing/create' :
                       selectedCategory === 'experiences' ? '/api/service/create' :
                       selectedCategory === 'online' ? '/api/helper/create' :
+                      selectedCategory === 'selling' ? '/api/sell' :
                       '/api/event/create';
 
       const requestBody = {
         ...listingForm,
         userRef: currentUser._id,
         type: selectedType,
-        category: selectedCategory,
+        category: selectedCategory === 'selling' ? selectedType : selectedCategory,
         listingType: selectedCategory,
         kind: listingForm.kind || "apartment",
         cancel: listingForm.cancel || "Flexible - Free cancellation 48 hours before check-in",
@@ -1246,6 +1313,9 @@ export default function CreateListing() {
         servicesOffered: listingForm.servicesOffered || "",
         experience: listingForm.experience || "",
         certifications: listingForm.certifications || "",
+        bookAuthor: listingForm.bookAuthor || "",
+        bookYear: listingForm.bookYear || "",
+        bookUsageHistory: listingForm.bookUsageHistory || "",
         serviceList: (selectedCategory === 'experiences' || selectedCategory === 'online') ? listingForm.serviceList : [],
         performers: (selectedCategory === 'experiences' || selectedCategory === 'online') ? listingForm.performers : [],
       };
@@ -1285,7 +1355,11 @@ export default function CreateListing() {
         setError(errorMessage);
       } else {
         setNewListingId(data._id || data.listing?._id);
-        setShowPromotionPopup(true);
+        if (selectedCategory === 'selling') {
+          navigate('/listing-success', { state: { listingId: data._id || data.listing?._id, type: selectedCategory } });
+        } else {
+          setShowPromotionPopup(true);
+        }
       }
     } catch (err) {
       console.error("Submission error:", err);
@@ -1405,6 +1479,14 @@ export default function CreateListing() {
           { id: "community", label: "Community", emoji: "🧑‍🤝‍🧑", description: "Meetups, gatherings" },
           { id: "food", label: "Food & Drink", emoji: "🍔", description: "Food festivals, tastings" },
                   { id: "hiking", label: "Hiking", emoji: "🥾", description: "Outdoor hiking events" },
+        ];
+      case 'selling':
+        return [
+          { id: "furniture", label: "Furniture", emoji: "🛋️", description: "Sofas, beds, tables" },
+          { id: "electronics", label: "Electronics", emoji: "💻", description: "Phones, computers, TVs" },
+          { id: "clothes", label: "Clothes", emoji: "👕", description: "Apparel, shoes, accessories" },
+          { id: "universities", label: "Universities", emoji: "🎓", description: "University related items" },
+          { id: "books", label: "Books", emoji: "📚", description: "Textbooks, novels" },
         ];
       default:
         return [];
@@ -1552,7 +1634,7 @@ export default function CreateListing() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-32 pb-12 md:pb-20">
         {/* Step Progress */}
         <div className="mt-10">
-          <StepProgress currentStep={currentStep} />
+          <StepProgress currentStep={currentStep} category={selectedCategory} />
         </div>
 
         {/* Main Form Container */}
@@ -1603,6 +1685,14 @@ export default function CreateListing() {
                     selected={selectedCategory === 'needs'}
                     onSelect={() => navigate('/create-request')}
                   />
+                  <CategoryCard
+                    id="selling"
+                    icon={TagIcon}
+                    label="Selling"
+                    description="Sell furniture, electronics, clothes, etc."
+                    selected={selectedCategory === 'selling'}
+                    onSelect={setSelectedCategory}
+                  />
                 </div>
               </SectionCard>
             )}
@@ -1611,7 +1701,8 @@ export default function CreateListing() {
             {currentStep === 2 && (
               <SectionCard title={`What type of ${selectedCategory === 'property' ? 'property' : 
                 selectedCategory === 'experiences' ? 'service' :
-                selectedCategory === 'online' ? 'helper' : 'event'}?`}>
+                selectedCategory === 'online' ? 'helper' : 
+                selectedCategory === 'selling' ? 'item' : 'event'}?`}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {getTypesByCategory().map((type) => (
                     <TypeCard
@@ -1631,12 +1722,14 @@ export default function CreateListing() {
                 <SectionCard title={`Tell us about your ${
                   selectedCategory === 'property' ? 'place' : 
                   selectedCategory === 'experiences' ? 'service' :
-                  selectedCategory === 'online' ? 'helper' : 'event'}`}>
+                  selectedCategory === 'online' ? 'helper' : 
+                  selectedCategory === 'selling' ? 'item' : 'event'}`}>
                   <div className="space-y-6">
                     <FormInput
                       label="Create a title"
                       icon={selectedCategory === 'property' ? HomeIcon : 
-                            selectedCategory === 'events' ? CalendarIcon : UserIcon}
+                            selectedCategory === 'events' ? CalendarIcon :
+                            selectedCategory === 'selling' ? TagIcon : UserIcon}
                       id="name"
                       value={listingForm.name}
                       onChange={handleFormChange}
@@ -1647,6 +1740,7 @@ export default function CreateListing() {
                         selectedCategory === 'online' && selectedType === 'sneaker' ? "Expert Sneaker Cleaning & Restoration" :
                         selectedCategory === 'online' && selectedType === 'animals' ? "Loving Pet Care & Walking Services" :
                         selectedCategory === 'online' ? "John's Tutoring Services" :
+                        selectedCategory === 'selling' ? "Vintage Leather Sofa in Excellent Condition" :
                         "Summer Music Festival"
                       }
                       required
@@ -1665,6 +1759,7 @@ export default function CreateListing() {
                         selectedCategory === 'online' && selectedType === 'sneaker' ? "Expert sneaker cleaning using premium products. I restore and clean all types of sneakers..." :
                         selectedCategory === 'online' && selectedType === 'animals' ? "Loving and experienced animal care provider. I offer pet sitting, walking, and grooming..." :
                         selectedCategory === 'online' ? "Describe your skills and experience..." :
+                        selectedCategory === 'selling' ? "Describe the item's condition, features, history, or why you are selling it..." :
                         "Describe the event, activities, and what attendees can expect..."
                       }
                       required
@@ -1672,6 +1767,17 @@ export default function CreateListing() {
                     />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {selectedCategory === 'selling' && (
+                        <FormInput
+                          label="Item Price"
+                          type="number"
+                          id="regularPrice"
+                          value={listingForm.regularPrice}
+                          onChange={handleFormChange}
+                          placeholder="Price"
+                          required
+                        />
+                      )}
                       <FormInput
                         label="Address"
                         icon={MapPinIcon}
@@ -1887,6 +1993,42 @@ export default function CreateListing() {
                           onChange={handleFormChange}
                           placeholder="e.g., Pet first aid, Animal behavior training, etc."
                           helpText="List any relevant certifications or training"
+                        />
+                      </div>
+                    )}
+
+                    {/* Book Specific Fields */}
+                    {selectedCategory === 'selling' && selectedType === 'books' && (
+                      <div className="space-y-6 pt-4 border-t border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-900">Book Details</h3>
+                        
+                        <FormInput
+                          label="Author"
+                          id="bookAuthor"
+                          value={listingForm.bookAuthor}
+                          onChange={handleFormChange}
+                          placeholder="e.g., J.K. Rowling"
+                          required
+                        />
+
+                        <FormInput
+                          label="Year of Release"
+                          id="bookYear"
+                          value={listingForm.bookYear}
+                          onChange={handleFormChange}
+                          placeholder="e.g., 1997"
+                          required
+                        />
+
+                        <FormInput
+                          label="History of Usage"
+                          type="textarea"
+                          id="bookUsageHistory"
+                          value={listingForm.bookUsageHistory}
+                          onChange={handleFormChange}
+                          placeholder="e.g., Read once, kept on a shelf for 2 years, no folded pages."
+                          required
+                          rows={3}
                         />
                       </div>
                     )}
@@ -2517,21 +2659,23 @@ export default function CreateListing() {
                       </div>
                     </div>
 
-                    <div className="bg-gray-50 rounded-xl p-6">
-                      <h3 className="font-semibold text-lg text-gray-900 mb-4">Operating Schedule</h3>
-                      <div className="grid grid-cols-1 gap-2 text-sm">
-                        {Object.entries(listingForm.operatingHours).map(([day, hours]) => (
-                          <div key={day} className="flex justify-between py-1 border-b border-gray-100 last:border-0">
-                            <span className="text-gray-600 capitalize font-bold">{day}</span>
-                            {hours.closed ? (
-                              <span className="text-rose-500 font-black text-[10px] uppercase tracking-widest bg-rose-50 px-2 py-0.5 rounded">Closed</span>
-                            ) : (
-                              <span className="font-black text-gray-900">{hours.open} - {hours.close}</span>
-                            )}
-                          </div>
-                        ))}
+                    {selectedCategory !== 'selling' && selectedCategory !== 'events' && (
+                      <div className="bg-gray-50 rounded-xl p-6">
+                        <h3 className="font-semibold text-lg text-gray-900 mb-4">Operating Schedule</h3>
+                        <div className="grid grid-cols-1 gap-2 text-sm">
+                          {Object.entries(listingForm.operatingHours).map(([day, hours]) => (
+                            <div key={day} className="flex justify-between py-1 border-b border-gray-100 last:border-0">
+                              <span className="text-gray-600 capitalize font-bold">{day}</span>
+                              {hours.closed ? (
+                                <span className="text-rose-500 font-black text-[10px] uppercase tracking-widest bg-rose-50 px-2 py-0.5 rounded">Closed</span>
+                              ) : (
+                                <span className="font-black text-gray-900">{hours.open} - {hours.close}</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Show specific details based on type */}
                     {selectedCategory === 'online' && selectedType === 'sneaker' && (
@@ -2612,7 +2756,7 @@ export default function CreateListing() {
                   setDirection('back');
                   setFadeIn(false);
                   setTimeout(() => {
-                    setCurrentStep(currentStep - 1);
+                    handlePrevStep();
                     setFadeIn(true);
                   }, 300);
                 }}

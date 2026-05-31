@@ -36,6 +36,7 @@
     "leaflet": "^1.9.4",
     "lucide-react": "^0.474.0",
     "mongoose": "^8.2.0",
+    "multer": "^2.1.1",
     "next-pwa": "^5.6.0",
     "nodemailer": "^7.0.3",
     "prop-types": "^15.8.1",

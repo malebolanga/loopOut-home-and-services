@@ -350,3 +350,16 @@ export const getSimilarListings = async (req, res, next) => {
   }
 };
 
+// Get distinct property kinds for a given type
+export const getKinds = async (req, res, next) => {
+  try {
+    const { type } = req.query;
+    const query = type ? { type } : {};
+    const kinds = await Listing.distinct('kind', query);
+    res.status(200).json(kinds);
+  } catch (error) {
+    next(error);
+  }
+};
+
+

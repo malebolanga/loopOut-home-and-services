@@ -11,6 +11,7 @@ import authRouter from './routes/auth.route.js';
 import listingRouter from './routes/listing.route.js';
 import commentRouter from './routes/comment.route.js'; // Add this line
 import serviceRouter from './routes/service.route.js'; // Add this line
+import sellRouter from './routes/sell.route.js'; // Added sell router
 import https from 'https';
 import fs from 'fs';
 
@@ -59,20 +60,19 @@ app.use(cookieParser());
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:5174',
-    'https://loupeout-home-7rlt.onrender.com', // Explicitly add Render URL
-    process.env.CLIENT_URL
+    process.env.CLIENT_URL,
 ].filter(Boolean);
 
+// In production, you might want to restrict origins, but for now allow all origins for debugging
 app.use(cors({
-    origin: function (origin, callback) {
-        // allow requests with no origin (like mobile apps or curl requests)
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl)
         if (!origin) return callback(null, true);
         if (allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
-        // Instead of returning an error (which triggers 500), return false
-        // This will result in a 403 or blocked request, which is easier to debug
-        return callback(null, false);
+        // Allow all origins if none match (use with caution)
+        return callback(null, true);
     },
     credentials: true,
 }));
@@ -119,9 +119,8 @@ app.use((req, res, next) => {
 app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/listing', listingRouter);
-app.use('/api/comment', commentRouter); // Add this line
-app.use('/api/comments', commentRouter); // Add this line
-app.use('/api/helper', helperRouter); // ADD THIS LINE
+app.use('/api/comments', commentRouter); // Unified comment route
+app.use('/api/helper', helperRouter);
 app.use('/api/event', eventRouter);
 app.use('/api/carwash', carwashRoutes); // Add this line
 app.use('/api/service-comments', serviceCommentRouter);
@@ -142,6 +141,7 @@ app.use('/api/looking-for', lookingForRouter);
 app.use('/api/ai-help', aiHelpRouter);
 app.use('/api/verification', verificationRouter);
 app.use('/api/sos', sosRouter);
+app.use('/api/sell', sellRouter);
 
 // Serve static files from the React app dist folder
 const distPath = path.join(__dirname, 'client', 'dist');
@@ -168,13 +168,8 @@ app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
     
-    // Log full error stack for 500 errors
-    if (statusCode === 500) {
-        console.error('SERVER ERROR STACK:', err.stack || err);
-    } else {
-        console.error('SERVER ERROR:', message);
-    }
-    
+    // Simplified error logging
+    console.error('SERVER ERROR:', err);
     return res.status(statusCode).json({
         success: false,
         statusCode,
