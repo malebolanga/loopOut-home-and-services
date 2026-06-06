@@ -488,6 +488,7 @@ export default function CreateListing() {
     bookAuthor: '',
     bookYear: '',
     bookUsageHistory: '',
+    numberOfUsed: '',
     
     // Performers & Services
     performers: [],
@@ -816,6 +817,10 @@ export default function CreateListing() {
         }
         if (!listingForm.bookUsageHistory) {
           setError("Please specify the history of usage");
+          return;
+        }
+        if (!listingForm.numberOfUsed && listingForm.numberOfUsed !== 0) {
+          setError("Please specify the number of times used");
           return;
         }
       }
@@ -1266,6 +1271,9 @@ export default function CreateListing() {
       if (!listingForm.bookUsageHistory) {
         return setError("Please specify the history of usage");
       }
+      if (!listingForm.numberOfUsed && listingForm.numberOfUsed !== 0) {
+        return setError("Please specify the number of times used");
+      }
     }
     
     if (!listingForm.near.trim()) {
@@ -1316,6 +1324,7 @@ export default function CreateListing() {
         bookAuthor: listingForm.bookAuthor || "",
         bookYear: listingForm.bookYear || "",
         bookUsageHistory: listingForm.bookUsageHistory || "",
+        numberOfUsed: listingForm.numberOfUsed || 0,
         serviceList: (selectedCategory === 'experiences' || selectedCategory === 'online') ? listingForm.serviceList : [],
         performers: (selectedCategory === 'experiences' || selectedCategory === 'online') ? listingForm.performers : [],
       };
@@ -2029,6 +2038,16 @@ export default function CreateListing() {
                           placeholder="e.g., Read once, kept on a shelf for 2 years, no folded pages."
                           required
                           rows={3}
+                        />
+
+                        <FormInput
+                          label="Number of Times Used"
+                          type="number"
+                          id="numberOfUsed"
+                          value={listingForm.numberOfUsed}
+                          onChange={handleFormChange}
+                          placeholder="e.g., 1"
+                          required
                         />
                       </div>
                     )}

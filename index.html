@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Log Dashboard – Premium Viewer</title>
+  <meta name="description" content="Interactive, glass‑morphic dashboard for visualising API request logs with dark‑mode, search, sorting, CSV export and optional live‑API integration." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="logo-title">
+      <img src="file:///C:/Users/MaleboLanga/.gemini/antigravity/brain/4ec8731a-474a-4929-813a-d3552ddda24d/api_dashboard_logo_1780775182305.png" alt="Dashboard Logo" class="logo" style="height:40px;margin-right:12px;" />
+      <h1>API Log Dashboard</h1>
+    </div>
+    <div class="controls">
+      <label class="theme-switch" for="themeToggle">
+        <input type="checkbox" id="themeToggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="toolbar">
+      <input type="text" id="searchBox" placeholder="Search…" class="search-input" />
+      <input type="date" id="startDate" class="date-input" />
+      <input type="date" id="endDate" class="date-input" />
+      <button id="exportBtn" class="btn btn-primary">Export CSV</button>
+    </section>
+
+    <section class="table-container">
+      <table id="logTable" class="glass-table">
+        <thead>
+          <tr>
+            <th data-key="method">Method</th>
+            <th data-key="endpoint">Endpoint</th>
+            <th data-key="status">Status</th>
+            <th data-key="duration">Duration (ms)</th>
+            <th data-key="timestamp">Time</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

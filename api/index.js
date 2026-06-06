@@ -143,6 +143,9 @@ app.use('/api/verification', verificationRouter);
 app.use('/api/sos', sosRouter);
 app.use('/api/sell', sellRouter);
 
+// Serve uploads folder statically
+app.use('/uploads', express.static(path.join(__dirname, 'client', 'public', 'uploads')));
+
 // Serve static files from the React app dist folder
 const distPath = path.join(__dirname, 'client', 'dist');
 app.use(express.static(distPath));

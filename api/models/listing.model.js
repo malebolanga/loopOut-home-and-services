@@ -46,6 +46,10 @@ const listingSchema = new mongoose.Schema(
     isPromoted: { type: Boolean, default: false },
     promotionPackage: { type: String, enum: ['standard', 'premium'], default: null },
     bookingsCount: { type: Number, default: 0 },
+    bookAuthor: { type: String, required: false },
+    bookYear: { type: String, required: false },
+    bookUsageHistory: { type: String, required: false },
+    numberOfUsed: { type: Number, required: false },
     operatingHours: {
       monday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },
       tuesday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },

@@ -1,0 +1,58 @@
+[
+  {
+    "method": "GET",
+    "endpoint": "/",
+    "status": 304,
+    "duration": 191,
+    "timestamp": "2026-06-06T20:30:00Z"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/user/68764d5a6b70a9ce2c8fe564",
+    "status": 304,
+    "duration": 401,
+    "timestamp": "2026-06-06T20:31:10Z"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/get?limit=20",
+    "status": 304,
+    "duration": 501,
+    "timestamp": "2026-06-06T20:32:05Z"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/get?limit=20",
+    "status": 304,
+    "duration": 477,
+    "timestamp": "2026-06-06T20:33:20Z"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/get?limit=8&sort=date&order=asc",
+    "status": 304,
+    "duration": 197,
+    "timestamp": "2026-06-06T20:34:12Z"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/get?limit=8&sort=createdAt&order=desc",
+    "status": 304,
+    "duration": 232,
+    "timestamp": "2026-06-06T20:35:05Z"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/get?limit=50&sort=createdAt&order=desc",
+    "status": 304,
+    "duration": 570,
+    "timestamp": "2026-06-06T20:36:15Z"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/get?limit=8&sort=createdAt&order=desc",
+    "status": 304,
+    "duration": 648,
+    "timestamp": "2026-06-06T20:37:30Z"
+  }
+]

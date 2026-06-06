@@ -13,6 +13,7 @@ const ListingItem = ({ listing, distance, hideBedroom = false }) => { // Added h
   const [isFavorite, setIsFavorite] = useState(false);
   const [clickTimestamps, setClickTimestamps] = useState([]);
   const [setUserListings] = useState([]);
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   // Calculate recent clicks within last 5 days
   const recentClicks = clickTimestamps.filter(timestamp => {
@@ -149,9 +150,57 @@ const ListingItem = ({ listing, distance, hideBedroom = false }) => { // Added h
           )}
         </div>
 
-        <p className="text-gray-600 text-sm line-clamp-2 mb-3">
-          {listing.description || 'No description provided'}
-        </p>
+        {/* Book specific fields */}
+        {(listing.bookAuthor || listing.bookYear || listing.bookUsageHistory || listing.numberOfUsed !== undefined) && (
+          <div className="bg-gray-50 rounded-md p-3 mb-3 text-xs text-gray-700 space-y-1">
+            {listing.bookAuthor && (
+              <div className="flex justify-between">
+                <span className="font-semibold">Author:</span>
+                <span>{listing.bookAuthor}</span>
+              </div>
+            )}
+            {listing.bookYear && (
+              <div className="flex justify-between">
+                <span className="font-semibold">Year Released:</span>
+                <span>{listing.bookYear}</span>
+              </div>
+            )}
+            {listing.numberOfUsed !== undefined && (
+              <div className="flex justify-between">
+                <span className="font-semibold">Number of Used:</span>
+                <span>{listing.numberOfUsed}</span>
+              </div>
+            )}
+            {listing.bookUsageHistory && (
+              <div className="flex flex-col">
+                <span className="font-semibold">History of Used:</span>
+                <span className="text-gray-600 mt-0.5">{listing.bookUsageHistory}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="text-gray-600 text-sm mb-3">
+          <p style={{ whiteSpace: 'pre-line' }}>
+            {showFullDescription 
+              ? (listing.description || 'No description provided')
+              : (listing.description?.length > 300 
+                  ? `${listing.description.substring(0, 300)}...` 
+                  : (listing.description || 'No description provided'))}
+          </p>
+          {listing.description?.length > 300 && (
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowFullDescription(!showFullDescription);
+              }}
+              className="text-blue-600 hover:underline mt-1 font-medium text-xs"
+            >
+              {showFullDescription ? 'Show less' : 'Read more'}
+            </button>
+          )}
+        </div>
 
         <div className="flex justify-between items-center mb-3">
           <div className="text-lg font-bold text-slate-700">
