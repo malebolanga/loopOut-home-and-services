@@ -1,4 +1,4 @@
-/* src/index.css */
+@import './native.css';
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @tailwind base;
@@ -133,4 +133,4 @@ body {
 /* Gradient Text */
 .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-orange-500;
-}
+}

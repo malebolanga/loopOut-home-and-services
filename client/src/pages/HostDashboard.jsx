@@ -295,7 +295,7 @@ export default function HostDashboard() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('/api/notifications');
+      const res = await fetch('/api/notifications', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setNotifications(data.notifications || []);
@@ -308,7 +308,7 @@ export default function HostDashboard() {
 
   const markAllAsRead = async () => {
     try {
-      const res = await fetch('/api/notifications/read', { method: 'POST' });
+      const res = await fetch('/api/notifications/read', { method: 'POST', credentials: 'include' });
       if (res.ok) {
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
         setUnreadCount(0);

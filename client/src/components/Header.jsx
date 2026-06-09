@@ -488,7 +488,7 @@ export default function Header() {
     }
   };
 
-  const hiddenRoutes = ['/profile', '/wishlist', '/search', '/host-dashboard'];
+  const hiddenRoutes = ['/profile', '/wishlist', '/search', '/host-dashboard', '/planner'];
   const hiddenPrefixes = ['/user/', '/user-profile/', '/listing/', '/rent/', '/helper/', '/service/', '/event/', '/carwash/'];
   
   const isHeaderHidden = 

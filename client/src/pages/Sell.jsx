@@ -85,7 +85,7 @@ const Sell = () => {
         <h2 className="text-2xl font-bold mb-6">Sell Listings</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {sellListings.map(listing => (
-            <ListingItem key={listing._id} item={listing} isSale={true} />
+            <ListingItem key={listing._id} listing={listing} isSale={true} />
           ))}
         </div>
         {loading && (

@@ -69,7 +69,7 @@ const Content = lazy(() => import("./pages/Content"));
 const ArticlePages = lazy(() => import('./pages/ArticlePages'));
 const AIHelpCenter = lazy(() => import('./pages/AIHelpCenter'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
-const Planner = lazy(() => import('./pages/Planner'));
+import Planner from './pages/Planner';
 const ForBusiness = lazy(() => import('./pages/ForBusiness'));
 
 // Informational Pages

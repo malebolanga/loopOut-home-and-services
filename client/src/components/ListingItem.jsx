@@ -163,7 +163,7 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
   const getUserAvatar = () => {
     if (listing?.userRef?.avatar) {
       return (
-        <img
+        <img loading="lazy"
           src={listing.userRef.avatar}
           alt={getUserFirstName()}
           className="w-full h-full rounded-full object-cover"

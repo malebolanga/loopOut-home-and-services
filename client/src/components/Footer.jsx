@@ -2,14 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from 'react-redux';
-import { 
-  HomeIcon, 
-  MapIcon, 
-  HeartIcon, 
-  UserIcon,
-  ChatBubbleLeftRightIcon,
-  CpuChipIcon
-} from '@heroicons/react/24/outline';
+import { HomeIcon, MapIcon, HeartIcon, UserIcon, CpuChipIcon } from '@heroicons/react/24/outline';
 import { BrandIcon } from './BrandLogo';
 
 const Footer = () => {
@@ -157,7 +150,7 @@ const Footer = () => {
             { id: '/', label: 'Explore', icon: HomeIcon },
             { id: '/wishlist', label: 'Saved', icon: HeartIcon },
             { id: '/host-dashboard', label: 'Dashboard', icon: CpuChipIcon },
-            { id: '/messages', label: 'Inbox', icon: ChatBubbleLeftRightIcon },
+            { id: '/planner', label: 'Planner', icon: MapIcon },
             { id: '/profile', label: 'Profile', icon: UserIcon }
           ].map((item) => {
             const isActive = location.pathname === item.id;

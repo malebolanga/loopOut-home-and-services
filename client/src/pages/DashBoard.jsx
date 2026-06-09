@@ -346,7 +346,7 @@ export default function DashBoard() {
   const fetchNotifications = async () => {
     if (!currentUser?._id) return;
     try {
-      const res = await fetch('/api/notifications'); // The route handles user.id via verifyToken
+      const res = await fetch('/api/notifications', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setNotifications(data.notifications || []);
@@ -365,7 +365,7 @@ export default function DashBoard() {
 
   const markAllAsRead = async () => {
     try {
-      const res = await fetch('/api/notifications/read', { method: 'POST' });
+      const res = await fetch('/api/notifications/read', { method: 'POST', credentials: 'include' });
       if (res.ok) {
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
         setUnreadCount(0);

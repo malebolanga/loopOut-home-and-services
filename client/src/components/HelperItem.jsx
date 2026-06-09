@@ -108,102 +108,68 @@ function HelperItem({ helper, className = "" }) {
   if (!helper?._id) return <div className="animate-pulse bg-gray-50 rounded-[2.5rem] h-[400px] w-full" />;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ y: -5 }}
-      className={`${className} group relative aspect-square bg-white sm:rounded-[2.5rem] md:rounded-[3rem] rounded-xl border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 cursor-pointer`}
+    <div
       onClick={handleCardClick}
+      className={`${className} cursor-pointer flex flex-col bg-transparent w-full border-0 shadow-none rounded-none group`}
     >
-      <div className="absolute inset-0 z-0">
+      {/* Image section */}
+      <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 mb-2">
         <ImageGallery
           imageUrls={helper.imageUrls || []}
           type="helper"
           alt={helper.name}
-          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+          className="w-full h-full object-cover"
         />
-      </div>
-
-      
-      {/* Bookings Counter Overlay */}
-      <div className="absolute top-5 left-1/2 -translate-x-1/2 flex items-center justify-center z-20 pointer-events-auto group/booking hover:-translate-y-1 transition-transform cursor-pointer">
-        <div className="px-3 py-1.5 bg-black/60 backdrop-blur-md border border-white/20 rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.2)] flex items-center justify-center text-white transition-all overflow-hidden flex-nowrap whitespace-nowrap">
-          <BookOpen className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-          <span className="text-[10px] font-black ml-1.5 shrink-0">{helper.bookingsCount || 0}</span>
-          <span className="text-[8px] font-bold uppercase tracking-[0.2em] hidden group-hover/booking:inline-block transition-all ml-1.5 text-slate-200">Bookings</span>
+        {/* Bookings Counter Overlay */}
+        <div className="absolute top-3 right-3 flex items-center justify-center z-20 pointer-events-auto group/booking transition-transform cursor-pointer">
+          <div className="px-2.5 py-1 bg-black/60 backdrop-blur-md border border-white/20 rounded-lg shadow-md flex items-center justify-center text-white">
+            <BookOpen className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span className="text-[10px] font-black ml-1.5 shrink-0">{helper.bookingsCount || 0}</span>
+          </div>
         </div>
-      </div>
-      
-      {/* Top Overlays */}
-      <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
-        <HelperTypePill type={helper.type} />
-
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleFavorite();
-          }}
-          className="w-10 h-10 bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg flex items-center justify-center text-gray-900 hover:bg-rose-500 hover:text-white transition-all active:scale-90 pointer-events-auto"
-        >
-          <Heart className={`w-4 h-4 ${isFavorite ? 'text-rose-500 fill-rose-500' : 'text-gray-400'}`} />
-        </button>
-      </div>
-
-      <LoopOutBanner className="bottom-24" type="helper" />
-
-      {/* Integrated Information Overlay (Always Visible Gradient) */}
-      <div className="absolute inset-x-0 bottom-0 z-10 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none">
-        <div className="flex justify-between items-end gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 mb-1 text-white">
-              <Star className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
-              <span className="text-xs font-black">{ratingData.average.toFixed(1)}</span>
-            </div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <h3 className="text-base font-black text-white leading-tight truncate">
-                {helper.name}
-              </h3>
-            </div>
-            <p className="text-xs text-white/70 font-medium truncate mb-3">
-               {helper.address || 'Polokwane'}
-            </p>
-
-            {/* Minimal Provider Name Only */}
-            <div className="mt-2">
-              <span className="text-[9px] font-black text-white uppercase tracking-widest opacity-60">
-                {helper.userRef?.username}
-              </span>
-            </div>
-          </div>
-
-          <div className="text-right flex flex-col items-end pointer-events-auto">
-            <div className="text-xl font-black text-white tracking-tighter leading-none">
-              R{formatPriceValue(helper.regularPrice)}
-            </div>
-          </div>
+        
+        {/* Top Overlays */}
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10 pointer-events-none">
+          <HelperTypePill type={helper.type} />
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleFavorite();
+            }}
+            className="w-8 h-8 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-md flex items-center justify-center text-gray-900 active:scale-90 pointer-events-auto"
+          >
+            <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'text-rose-500 fill-rose-500' : 'text-gray-400'}`} />
+          </button>
         </div>
       </div>
 
-      {/* Hover Action Overlay */}
-      <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-8 bg-gray-900/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none group-hover:pointer-events-auto">
-        <div className="w-full space-y-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
-          <div className="flex gap-2">
-            <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-green-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm">
-              <ThumbsUp className="w-4 h-4" />
-              {helper.votes?.up || 0}
-            </div>
-            <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-rose-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm">
-              <ThumbsDown className="w-4 h-4" />
-              {helper.votes?.down || 0}
-            </div>
-          </div>
-          <div className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl">
-            Inspect Original
+      {/* Info Section below the image */}
+      <div className="flex flex-col">
+        <div className="flex justify-between items-start gap-2">
+          <h3 className="font-semibold text-gray-900 truncate text-[15px]">
+            {helper.address || 'Polokwane'}
+          </h3>
+          <div className="flex items-center gap-1 shrink-0 mt-0.5">
+            <Star className="w-3.5 h-3.5 text-black fill-black" />
+            <span className="text-[14px] font-medium text-gray-900">{ratingData.average.toFixed(1)}</span>
           </div>
         </div>
+        
+        <h4 className="text-gray-500 text-[14px] truncate leading-tight mt-0.5">
+          {helper.name}
+        </h4>
+        
+        <p className="text-gray-500 text-[14px] truncate leading-tight">
+          {helper.type ? helper.type.charAt(0).toUpperCase() + helper.type.slice(1) : 'Professional'}
+        </p>
+
+        <div className="flex items-baseline gap-1 mt-1">
+          <span className="font-semibold text-gray-900 text-[15px]">R {formatPriceValue(helper.regularPrice)}</span>
+          <span className="text-gray-500 font-normal text-[14px]">/ hour</span>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 

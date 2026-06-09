@@ -6,8 +6,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { 
   User, Shield, Lock, Bell, Moon, Sun, CreditCard, 
   Globe, Eye, HelpCircle, ArrowLeft, Check, Camera, 
-  RefreshCw, Smartphone, Mail, Phone, Settings, Sparkles, Key
+  RefreshCw, Smartphone, Mail, Phone, Settings, Sparkles, Key,
+  Trash2, Plus, AlertTriangle
 } from 'lucide-react';
+import { updateUserStart, updateUserSuccess, updateUserFailure } from '../redux/user/userSlice';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -22,6 +24,12 @@ export default function SettingsPage() {
   const [currency, setCurrency] = useState(localStorage.getItem('currency') || 'ZAR');
   const [isUpdating, setIsUpdating] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Guardian State
+  const [guardianContacts, setGuardianContacts] = useState(currentUser?.contacts || []);
+  const [accessContacts, setAccessContacts] = useState(currentUser?.accessContacts || false);
+  const [newContactName, setNewContactName] = useState('');
+  const [newContactPhone, setNewContactPhone] = useState('');
 
   // Form Fields
   const [username, setUsername] = useState(currentUser?.username || 'Guest User');
@@ -63,6 +71,47 @@ export default function SettingsPage() {
     }, 1500);
   };
 
+  const handleSaveGuardian = async (e) => {
+    e?.preventDefault();
+    try {
+      dispatch(updateUserStart());
+      setIsUpdating(true);
+      const res = await fetch(`/api/user/update/${currentUser._id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contacts: guardianContacts,
+          accessContacts: accessContacts,
+        }),
+      });
+      const data = await res.json();
+      setIsUpdating(false);
+      if (data.success === false) {
+        dispatch(updateUserFailure(data.message));
+        return;
+      }
+      dispatch(updateUserSuccess(data));
+      setSuccessMessage('Guardian settings updated successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error) {
+      setIsUpdating(false);
+      dispatch(updateUserFailure(error.message));
+    }
+  };
+
+  const addContact = () => {
+    if (!newContactName.trim() || !newContactPhone.trim()) return;
+    setGuardianContacts([...guardianContacts, { name: newContactName, phone: newContactPhone }]);
+    setNewContactName('');
+    setNewContactPhone('');
+  };
+
+  const removeContact = (index) => {
+    setGuardianContacts(guardianContacts.filter((_, i) => i !== index));
+  };
+
   const handleSaveSecurity = (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
@@ -90,6 +139,7 @@ export default function SettingsPage() {
 
   const tabs = [
     { id: 'account', label: 'My Profile', icon: User },
+    { id: 'guardian', label: 'Guardian Safety', icon: Shield },
     { id: 'security', label: 'Login & Security', icon: Lock },
     { id: 'customize', label: 'Interface Design', icon: Settings },
     { id: 'privacy', label: 'Privacy Control', icon: Eye },
@@ -264,6 +314,117 @@ export default function SettingsPage() {
                       </button>
                     </div>
                   </form>
+                </div>
+              )}
+
+              {/* Guardian Safety Tab */}
+              {activeTab === 'guardian' && (
+                <div className="space-y-8 animate-fadeIn">
+                  <div>
+                    <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                      <Shield className="w-6 h-6 text-rose-500" />
+                      loopOut Guardian
+                    </h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Configure your emergency contacts and safety preferences for peace of mind while using LoopOut.</p>
+                  </div>
+
+                  <div className="p-6 bg-gradient-to-br from-rose-500 to-rose-700 rounded-3xl text-white shadow-xl shadow-rose-500/20">
+                    <div className="flex items-start gap-4">
+                      <AlertTriangle className="w-8 h-8 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-black text-lg">SOS Trigger Active</h3>
+                        <p className="text-sm text-rose-100 mt-1">
+                          In case of emergency, triple-tap the LoopOut logo on the home screen to instantly alert your chosen contacts with your live location.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 bg-gray-50 dark:bg-gray-800/30 border border-gray-100/50 dark:border-gray-850 rounded-2xl gap-4">
+                      <div>
+                        <h4 className="text-sm font-black text-gray-900 dark:text-white">Enable Location Sharing</h4>
+                        <p className="text-xs text-gray-400">Allow LoopOut to send your live GPS coordinates to guardians during an SOS event.</p>
+                      </div>
+                      <button 
+                        onClick={() => setAccessContacts(!accessContacts)}
+                        className={`w-12 h-6 rounded-full transition-all relative flex-shrink-0 ${accessContacts ? 'bg-rose-500' : 'bg-gray-300 dark:bg-gray-700'}`}
+                      >
+                        <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${accessContacts ? 'right-1' : 'left-1'}`} />
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-black uppercase tracking-widest text-gray-400">Emergency Contacts</h4>
+                      
+                      {guardianContacts.length === 0 ? (
+                        <div className="p-8 text-center border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-3xl">
+                          <Shield className="w-10 h-10 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+                          <p className="text-sm font-bold text-gray-500 dark:text-gray-400">No emergency contacts added yet.</p>
+                          <p className="text-xs text-gray-400 mt-1">Add a trusted friend or family member below.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {guardianContacts.map((contact, index) => (
+                            <div key={index} className="flex items-center justify-between p-4 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm">
+                              <div>
+                                <h5 className="font-black text-sm text-gray-900 dark:text-white">{contact.name}</h5>
+                                <p className="text-xs text-gray-500">{contact.phone}</p>
+                              </div>
+                              <button 
+                                onClick={() => removeContact(index)}
+                                className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="relative">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input 
+                            type="text" 
+                            placeholder="Contact Name"
+                            value={newContactName}
+                            onChange={(e) => setNewContactName(e.target.value)}
+                            className="w-full pl-11 pr-5 py-3.5 bg-gray-50 dark:bg-gray-850 border border-gray-150 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        <div className="relative flex gap-3">
+                          <div className="relative flex-1">
+                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input 
+                              type="tel" 
+                              placeholder="Phone Number"
+                              value={newContactPhone}
+                              onChange={(e) => setNewContactPhone(e.target.value)}
+                              className="w-full pl-11 pr-5 py-3.5 bg-gray-50 dark:bg-gray-850 border border-gray-150 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all text-gray-900 dark:text-white"
+                            />
+                          </div>
+                          <button 
+                            onClick={addContact}
+                            className="w-12 h-[50px] bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md"
+                          >
+                            <Plus className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-gray-100 dark:border-gray-800">
+                      <button 
+                        onClick={handleSaveGuardian}
+                        disabled={isUpdating}
+                        className="w-full md:w-auto px-8 py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 shadow-lg shadow-rose-500/25 active:scale-95 transition-all"
+                      >
+                        {isUpdating ? <RefreshCw className="w-4 h-4 animate-spin" /> : null}
+                        <span>Save Guardian Preferences</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 

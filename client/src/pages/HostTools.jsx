@@ -29,7 +29,7 @@ export default function HostTools() {
 
   const fetchNotifications = React.useCallback(async () => {
     try {
-      const res = await fetch('/api/notifications');
+      const res = await fetch('/api/notifications', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setUnreadCount(data.unreadCount || 0);

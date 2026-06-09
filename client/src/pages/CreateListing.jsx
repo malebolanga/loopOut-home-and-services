@@ -45,6 +45,10 @@ import {
   QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
 import { Sparkles, Users } from 'lucide-react';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import BottomNav from '../components/BottomNav';
+import imageCompression from 'browser-image-compression';
 import MutualFriends from '../components/MutualFriends';
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
@@ -893,49 +897,19 @@ export default function CreateListing() {
   };
 
   const compressImage = async (file) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 1200;
-          const MAX_HEIGHT = 1200;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height *= MAX_WIDTH / width;
-              width = MAX_WIDTH;
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width *= MAX_HEIGHT / height;
-              height = MAX_HEIGHT;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-
-          canvas.toBlob(
-            (blob) => {
-              resolve(new File([blob], file.name, {
-                type: 'image/jpeg',
-                lastModified: Date.now(),
-              }));
-            },
-            'image/jpeg',
-            0.7
-          );
-        };
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1200,
+      useWebWorker: true,
+      fileType: 'image/jpeg',
+      initialQuality: 0.8
+    };
+    try {
+      return await imageCompression(file, options);
+    } catch (error) {
+      console.error("Compression failed, using original file:", error);
+      return file;
+    }
   };
 
   const handleFileChange = async (e) => {

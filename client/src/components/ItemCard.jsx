@@ -162,16 +162,23 @@ const ItemCard = ({ item, searchType = 'properties', index = 0 }) => {
       {/* Image/Preview Area */}
       <div className="relative h-48 bg-gray-100 overflow-hidden">
         {item.imageUrls?.[0] ? (
-          <img
+          <img loading="lazy"
             src={item.imageUrls[0]}
             alt={getItemTitle()}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
+            }}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
-        ) : (
-          <div className={`w-full h-full flex items-center justify-center ${config.color}`}>
-            <Icon className="w-12 h-12 text-white" />
-          </div>
-        )}
+        ) : null}
+        <div 
+          className={`w-full h-full flex items-center justify-center ${config.color}`}
+          style={{ display: item.imageUrls?.[0] ? 'none' : 'flex' }}
+        >
+          <Icon className="w-12 h-12 text-white" />
+        </div>
         
         {/* Price Badge */}
         {item.price && (

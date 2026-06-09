@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { ExclamationTriangleIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 
 export default function EmergencySOS() {
+    const navigate = useNavigate();
     const { currentUser } = useSelector((state) => state.user);
     const [isOpen, setIsOpen] = useState(false);
     const [isTriggering, setIsTriggering] = useState(false);
@@ -82,6 +84,20 @@ export default function EmergencySOS() {
                         <p className="text-sm text-gray-400">
                             Provide your live GPS to platform security and your emergency contacts. This action cannot be hidden.
                         </p>
+
+                        {(!currentUser?.contacts || currentUser.contacts.length === 0) && (
+                            <div className="bg-rose-950/50 border border-rose-500/30 rounded-xl p-3 w-full text-left mt-2">
+                                <p className="text-xs text-rose-200">
+                                    <span className="font-bold text-rose-400">Warning:</span> No emergency contacts configured. Only platform security will receive this alert.
+                                </p>
+                                <button 
+                                    onClick={() => { setIsOpen(false); navigate('/settings'); }}
+                                    className="text-[10px] font-black uppercase tracking-widest text-rose-400 mt-2 hover:text-white"
+                                >
+                                    Add Contacts in Settings →
+                                </button>
+                            </div>
+                        )}
 
                         <button 
                             onClick={handleTrigger}

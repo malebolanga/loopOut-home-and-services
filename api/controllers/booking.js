@@ -255,14 +255,17 @@ export const getUserBookings = async (req, res) => {
       .populate('listing')
       .populate('helper')
       .populate('service')
+      .populate('event')
       .populate('user')
       .sort({ createdAt: -1 });
     
     res.json(bookings);
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('[BOOKINGS] getUserBookings error:', error.message, error.stack);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 };
+
 
 // Get single booking by ID
 export const getBookingById = async (req, res) => {

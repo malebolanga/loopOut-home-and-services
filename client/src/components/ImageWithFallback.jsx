@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 const FALLBACK_IMAGES = {
     avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=800',
-    default: ''
+    default: 'https://placehold.co/600x400/E0E0E0/333333?text=No+Image'
 };
 
 const ImageWithFallback = ({ src, alt, className, type = 'default', imageUrls, onLoad, ...props }) => {
@@ -20,6 +20,8 @@ const ImageWithFallback = ({ src, alt, className, type = 'default', imageUrls, o
             setHasError(true);
             if (type === 'avatar') {
                 setImgSrc(FALLBACK_IMAGES.avatar);
+            } else {
+                setImgSrc(FALLBACK_IMAGES.default);
             }
             if (onLoad) onLoad(); // Trigger load when fallback sets to prevent infinite loading state
         }
@@ -35,7 +37,7 @@ const ImageWithFallback = ({ src, alt, className, type = 'default', imageUrls, o
             {isLoading && !hasError && (
                 <div className={`${className} bg-gray-200 animate-pulse`} />
             )}
-            <img
+            <img loading="lazy"
                 src={imgSrc || FALLBACK_IMAGES[type]}
                 alt={alt}
                 className={`${className} elite-image ${isLoading && !hasError ? 'hidden' : 'block'}`}
