@@ -551,13 +551,14 @@ export default function Header() {
           <div className="sticky bottom-0 bg-white pt-2 border-t border-gray-100 mt-2 -mx-4 px-4 pb-2">
   <button 
     onClick={handleSignOut}
-    className="flex items-center justify-center gap-2 w-full py-3.5 text-xs font-black uppercase text-gray-500 hover:text-rose-600 transition-colors tracking-[0.2em] bg-gray-50 rounded-2xl hover:bg-rose-50 border border-transparent hover:border-rose-100/50"
+    aria-label="Sign out"
+    className="flex items-center justify-center gap-2 w-full py-3.5 text-xs font-black uppercase text-gray-700 hover:text-rose-600 transition-colors tracking-[0.2em] bg-gray-50 rounded-2xl hover:bg-rose-50 border border-transparent hover:border-rose-100/50"
   >
     <ArrowRightOnRectangleIcon className="w-4 h-4" />
     Sign out
   </button>
 </div>
-<div className="text-center text-xs text-gray-500 mt-2">
+<div className="text-center text-xs text-gray-700 mt-2">
   <a href="/terms" className="hover:underline">Terms</a>
   <span className="mx-1">|</span>
   <a href="/privacy" className="hover:underline">Privacy</a>
@@ -577,7 +578,7 @@ export default function Header() {
             onClick={() => handleNavigate('/sign-up')}
             className="w-full py-5 border-2 border-gray-100 text-gray-900 rounded-[2rem] font-black uppercase tracking-widest hover:bg-gray-50 transition-all"
           >Create Account</button>
-          <div className="text-center text-xs text-gray-500 mt-2">
+          <div className="text-center text-xs text-gray-700 mt-2">
   <a href="/terms" className="hover:underline">Terms</a>
   <span className="mx-1">|</span>
   <a href="/privacy" className="hover:underline">Privacy</a>
@@ -619,6 +620,7 @@ export default function Header() {
                     setShowSearch(true);
                   }
                 }}
+                aria-label="loopOut Home"
                 className="flex items-center gap-2 cursor-pointer "
               >
                 <div className="relative">
@@ -640,13 +642,14 @@ export default function Header() {
             <div className={`flex-1 hidden md:flex justify-center transition-all duration-500 ${showSearch ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
               <button
                 onClick={() => setShowSearch(true)}
+                aria-label="Open search"
                 className="flex items-center gap-3 px-6 py-2 border border-gray-200 rounded-full shadow-sm hover:shadow-md transition-all cursor-pointer bg-white group"
               >
                 <span className="text-[11px] font-bold text-gray-900">Anywhere</span>
                 <div className="w-[1px] h-3 bg-gray-200" />
                 <span className="text-[11px] font-bold text-gray-900">Any week</span>
                 <div className="w-[1px] h-3 bg-gray-200" />
-                <span className="text-[11px] font-medium text-gray-400">Add guests</span>
+                <span className="text-[11px] font-medium text-gray-600">Add guests</span>
                 <div className="w-8 h-8 bg-rose-500 rounded-full flex items-center justify-center text-white ml-2 group-hover:bg-rose-600 transition-colors">
                   <MagnifyingGlassIcon className="w-4 h-4 stroke-[3px]" />
                 </div>
@@ -699,7 +702,7 @@ export default function Header() {
                             </div>
                             <div>
                               <p className="text-sm font-black text-[#222222]">{item.label}</p>
-                              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Start Now</p>
+                              <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest mt-0.5">Start Now</p>
                             </div>
                           </button>
                         ))}
@@ -716,6 +719,7 @@ export default function Header() {
                     setShowProfileDropdown(false);
                     setShowCurrencyDropdown(false);
                   }}
+                  aria-label="Select language"
                   className="language-button p-2 md:py-1 md:px-2 border-[1px] border-[#DDDDDD] flex flex-row items-center gap-3 rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
                 >
                   <GlobeAltIcon className="w-4 h-4" />
@@ -729,6 +733,7 @@ export default function Header() {
                     setShowLanguageDropdown(false);
                     setShowProfileDropdown(false);
                   }}
+                  aria-label={`Select currency. Current: ${selectedCurrency}`}
                   className="currency-button px-3 py-1.5 border-[1px] border-[#DDDDDD] flex flex-row items-center gap-1 rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222] font-black text-[10px] h-9"
                 >
                   <span>{getCurrencySymbol()}</span>
@@ -738,6 +743,7 @@ export default function Header() {
                 {/* Home Icon - Desktop */}
                 <Link
                   to="/"
+                  aria-label="Home"
                   className="relative p-2 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
                 >
                   <HomeIcon className="w-4 h-4 stroke-[2px]" />
@@ -746,6 +752,7 @@ export default function Header() {
                 {/* Wishlist Icon - Desktop */}
                 <button
                   onClick={() => handleNavigate('/wishlist')}
+                  aria-label="Wishlist"
                   className="relative p-2 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
                 >
                   <HeartIcon className="w-4 h-4 stroke-[2px]" />
@@ -754,6 +761,7 @@ export default function Header() {
                 {/* Notification Bell Icon - Desktop and Mobile */}
                 <button
                   onClick={() => handleNavigate('/notifications')}
+                  aria-label={`Notifications. ${unreadCount} unread`}
                   className="relative p-2 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition flex text-[#222222]"
                 >
                   <BellIcon className="w-4 h-4 stroke-[2px]" />
@@ -772,9 +780,10 @@ export default function Header() {
                     setShowLanguageDropdown(false);
                     setShowCurrencyDropdown(false);
                   }}
+                  aria-label="User menu"
                   className="flex flex-row items-center gap-3 px-4 py-2 bg-white rounded-full cursor-pointer shadow-[0_15px_30px_-10px_rgba(225,29,72,0.15)] hover:shadow-[0_20px_40px_-8px_rgba(225,29,72,0.25)] hover:scale-[1.02] transition-all duration-300 border border-rose-100 text-gray-600 hover:bg-rose-50/50 h-14"
                 >
-                  <Bars3Icon className="w-5 h-5 stroke-[2.5px] text-gray-500" />
+                  <Bars3Icon className="w-5 h-5 stroke-[2.5px] text-gray-700" />
                   {currentUser ? (
                     <img
                       src={currentUser.avatar}
@@ -850,7 +859,7 @@ export default function Header() {
                       className="w-full px-4 py-3 hover:bg-gray-100 transition text-left flex items-center justify-between text-[#222222]"
                     >
                       <span className="font-bold text-xs">{currency.code} ({currency.symbol})</span>
-                      <span className="text-gray-500 text-xs">{currency.name}</span>
+                      <span className="text-gray-700 text-xs">{currency.name}</span>
                       {selectedCurrency === currency.code && (
                         <CheckIcon className="w-4 h-4 text-[#FF5A5F]" />
                       )}
@@ -873,6 +882,7 @@ export default function Header() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setShowProfileDropdown(false)}
+            aria-hidden="true"
             className="md:hidden fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[1000] top-0 left-0"
           />
           <motion.div
@@ -897,6 +907,7 @@ export default function Header() {
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
             onClick={() => setShowSearch(false)} 
+            aria-hidden="true"
             className="fixed inset-0 bg-gray-900/60 backdrop-blur-md z-[1000]" 
           />
           <motion.div
@@ -934,14 +945,14 @@ export default function Header() {
                        <motion.div 
                          animate={isActive ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : { scale: 1, rotate: 0 }}
                          transition={{ duration: 0.4, ease: "backOut" }}
-                         className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-900 hover:-translate-y-1'}`}
+                         className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:-translate-y-1'}`}
                        >
                           <Icon className="w-6 h-6" />
                        </motion.div>
                        
                        <motion.span 
                          animate={{ opacity: isActive ? 1 : 0.4, scale: isActive ? 1.05 : 1 }}
-                         className={`text-[10px] font-black uppercase tracking-widest transition-colors ${isActive ? 'text-gray-900' : 'text-gray-400'}`}
+                         className={`text-[10px] font-black uppercase tracking-widest transition-colors ${isActive ? 'text-gray-900' : 'text-gray-600'}`}
                        >
                          {item.label}
                        </motion.span>
@@ -959,6 +970,7 @@ export default function Header() {
               
               <button 
                 onClick={() => setShowSearch(false)}
+                aria-label="Close search"
                 className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors"
               >
                 <XMarkIcon className="w-5 h-5 text-gray-900" />
@@ -979,9 +991,12 @@ export default function Header() {
                        value={searchTerm}
                        onChange={(e) => setSearchTerm(e.target.value)}
                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                       className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-12 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all outline-none font-medium placeholder-gray-400"
+                       className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-12 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all outline-none font-medium placeholder-gray-500"
                      />
-                     <button className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all">
+                     <button 
+                       aria-label="Voice search"
+                       className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-600 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                     >
                         <MicrophoneIcon className="w-5 h-5" />
                      </button>
                   </div>
@@ -990,8 +1005,8 @@ export default function Header() {
                      {searchHistory.length > 0 && (
                        <div className="mb-6">
                          <div className="flex justify-between items-center mb-4">
-                           <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Recent searches</p>
-                           <button onClick={clearSearchHistory} className="text-[10px] font-bold text-gray-400 hover:text-rose-500 uppercase tracking-widest">Clear</button>
+                           <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em]">Recent searches</p>
+                           <button onClick={clearSearchHistory} className="text-[10px] font-bold text-gray-600 hover:text-rose-500 uppercase tracking-widest">Clear</button>
                          </div>
                          <div className="flex flex-wrap gap-2">
                            {searchHistory.slice(0, 5).map((item, i) => (
@@ -1007,7 +1022,7 @@ export default function Header() {
                        </div>
                      )}
 
-                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Suggested destinations</p>
+                     <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em]">Suggested destinations</p>
                      
                      <button 
                        onClick={() => { setSearchTerm('Nearby'); handleSearch(); }}
@@ -1018,7 +1033,7 @@ export default function Header() {
                         </div>
                         <div className="text-left">
                            <p className="text-sm font-bold text-gray-900">Nearby</p>
-                           <p className="text-xs text-gray-500">Find what's around you</p>
+                           <p className="text-xs text-gray-700">Find what's around you</p>
                         </div>
                      </button>
 
@@ -1031,7 +1046,7 @@ export default function Header() {
                         </div>
                         <div className="text-left">
                            <p className="text-sm font-bold text-gray-900">Cape Town, Western Cape</p>
-                           <p className="text-xs text-gray-500">Popular beach destination</p>
+                           <p className="text-xs text-gray-700">Popular beach destination</p>
                         </div>
                      </button>
 
@@ -1044,7 +1059,7 @@ export default function Header() {
                         </div>
                         <div className="text-left">
                            <p className="text-sm font-bold text-gray-900">Durban, KwaZulu-Natal</p>
-                           <p className="text-xs text-gray-500">For sights like uShaka Marine World</p>
+                           <p className="text-xs text-gray-700">For sights like uShaka Marine World</p>
                         </div>
                      </button>
 
@@ -1057,7 +1072,7 @@ export default function Header() {
                         </div>
                         <div className="text-left">
                            <p className="text-sm font-bold text-gray-900">Tembisa, Gauteng</p>
-                           <p className="text-xs text-gray-500">Popular destination in Gauteng</p>
+                           <p className="text-xs text-gray-700">Popular destination in Gauteng</p>
                         </div>
                      </button>
                   </div>
@@ -1117,12 +1132,12 @@ export default function Header() {
                {/* Collapsed Sections: WHEN and WHO */}
                <div className="bg-white rounded-[1.5rem] shadow-sm p-5 flex items-center justify-between border border-gray-100 opacity-60">
                   <span className="text-sm font-bold text-gray-900">When</span>
-                  <span className="text-[11px] font-black uppercase text-gray-400 tracking-wider">Add dates</span>
+                  <span className="text-[11px] font-black uppercase text-gray-600 tracking-wider">Add dates</span>
                </div>
 
                <div className="bg-white rounded-[1.5rem] shadow-sm p-5 flex items-center justify-between border border-gray-100 opacity-60">
-                  <span className="text-sm font-bold text-gray-900 Who">Who</span>
-                  <span className="text-[11px] font-black uppercase text-gray-400 tracking-wider">Add guests</span>
+                  <span className="text-sm font-bold text-gray-900">Who</span>
+                  <span className="text-[11px] font-black uppercase text-gray-600 tracking-wider">Add guests</span>
                </div>
 
                {/* Category Selection Section */}
@@ -1144,7 +1159,7 @@ export default function Header() {
                           >
                             <span className="text-2xl">{sub.icon}</span>
                             <span className={`text-[9px] font-black uppercase tracking-widest ${
-                              selectedSubCategory === sub.id ? 'text-rose-600' : 'text-gray-500'
+                              selectedSubCategory === sub.id ? 'text-rose-600' : 'text-gray-700'
                             }`}>
                               {sub.label}
                             </span>

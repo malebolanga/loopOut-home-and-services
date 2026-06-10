@@ -208,21 +208,24 @@ export default function Planner() {
             <h1 className="text-xl font-black tracking-tighter leading-none">
               My <span className="text-rose-500">Planner</span>
             </h1>
-            <p className="text-white/30 text-[11px] font-medium mt-1">
+            <p className="text-gray-500 text-[11px] font-medium mt-1">
               {now.toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
           </div>
 
           {/* Right: inline clock pill + add button */}
           <div className="flex items-center gap-3">
-            <div className="bg-white/5 border border-white/8 rounded-xl px-4 py-2 flex items-center gap-2">
-              <ClockIcon className="w-3.5 h-3.5 text-white/30 shrink-0" />
+            <div className="bg-gray-500/5 border border-white/8 rounded-xl px-4 py-2 flex items-center gap-2">
+              <ClockIcon className="w-3.5 h-3.5 text-gray-400 shrink-0" />
               <span className="text-sm font-black tabular-nums tracking-tighter leading-none">
                 {now.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
             </div>
-            <button onClick={() => setShowAddModal(true)}
-              className="w-10 h-10 bg-rose-500 hover:bg-rose-400 text-white rounded-xl flex items-center justify-center shadow-[0_8px_20px_rgba(225,29,72,0.4)] hover:scale-110 active:scale-95 transition-all">
+            <button 
+              onClick={() => setShowAddModal(true)}
+              aria-label="Add plan or booking"
+              className="w-10 h-10 bg-rose-500 hover:bg-rose-400 text-white rounded-xl flex items-center justify-center shadow-[0_8px_20px_rgba(225,29,72,0.4)] hover:scale-110 active:scale-95 transition-all"
+            >
               <PlusIcon className="w-5 h-5 stroke-[2.5px]" />
             </button>
           </div>

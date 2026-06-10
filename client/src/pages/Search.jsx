@@ -1246,12 +1246,14 @@ const SearchPage = () => {
           <div className="hidden lg:flex items-center gap-3">
              <button
                onClick={() => setShowFilters(true)}
+               aria-label="Filter results"
                className="w-12 h-12 flex items-center justify-center rounded-full border border-gray-200 bg-white hover:bg-gray-50 transition-all hover:scale-110 active:scale-95"
              >
                <AdjustmentsHorizontalIcon className="w-5 h-5 text-gray-600" />
              </button>
              <button
                onClick={() => setViewMode(viewMode === 'map' ? 'grid' : 'map')}
+               aria-label={viewMode === 'map' ? "Show list view" : "Show map view"}
                className={`w-12 h-12 flex items-center justify-center rounded-full border border-gray-200 transition-all hover:scale-110 active:scale-95 ${viewMode === 'map' ? 'bg-gray-950 text-white' : 'bg-white hover:bg-gray-50'}`}
              >
                {viewMode === 'map' ? <Bars3Icon className="w-5 h-5" /> : <MapIcon className="w-5 h-5" />}
@@ -1261,7 +1263,7 @@ const SearchPage = () => {
       </div>
 
       {/* Main Split View Content */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <main className="flex-1 flex overflow-hidden relative">
         
         {/* Left Column: Results (Hidden or Squeezed in Map Mode) */}
         <div className={`flex-1 overflow-y-auto no-scrollbar pt-6 pb-24 px-6 md:px-12 lg:px-16 transition-all duration-700 ${viewMode === 'map' ? 'lg:max-w-0 lg:px-0 lg:opacity-0' : 'max-w-none opacity-100'}`}>
@@ -1425,7 +1427,7 @@ const SearchPage = () => {
             <><MapIcon className="w-5 h-5 text-rose-500" /> Explore Map</>
           )}
         </button>
-      </div>
+      </main>
 
       {/* Filter Modal (Enhanced) */}
       <AnimatePresence>

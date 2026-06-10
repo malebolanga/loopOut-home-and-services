@@ -120,9 +120,9 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
       {/* Info section - Placed exactly like Airbnb, borderless, clean */}
       <div className="flex flex-col">
         <div className="flex justify-between items-start gap-2">
-          <h3 className={`font-semibold text-gray-900 truncate ${reducedSize ? 'text-[14px]' : 'text-[15px]'}`}>
+          <p className={`font-semibold text-gray-900 truncate ${reducedSize ? 'text-[14px]' : 'text-[15px]'}`}>
             {item.address?.split(',')[0] || item.name || 'South Africa'}
-          </h3>
+          </p>
           <div className="flex items-center gap-1 shrink-0 mt-0.5">
             <StarIconSolid className="w-3.5 h-3.5 text-black" />
             <span className={`font-medium text-gray-900 ${reducedSize ? 'text-[12px]' : 'text-[14px]'}`}>
@@ -131,9 +131,9 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
           </div>
         </div>
         
-        <h4 className="text-gray-500 text-[14px] truncate leading-tight mt-0.5">
+        <p className="text-gray-500 text-[14px] truncate leading-tight mt-0.5">
           {item.name}
-        </h4>
+        </p>
         
         <p className="text-gray-500 text-[14px] truncate leading-tight">
           {getCategoryLabel()}

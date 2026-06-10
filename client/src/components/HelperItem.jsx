@@ -147,18 +147,18 @@ function HelperItem({ helper, className = "" }) {
       {/* Info Section below the image */}
       <div className="flex flex-col">
         <div className="flex justify-between items-start gap-2">
-          <h3 className="font-semibold text-gray-900 truncate text-[15px]">
+          <p className="font-semibold text-gray-900 truncate text-[15px]">
             {helper.address || 'Polokwane'}
-          </h3>
+          </p>
           <div className="flex items-center gap-1 shrink-0 mt-0.5">
             <Star className="w-3.5 h-3.5 text-black fill-black" />
             <span className="text-[14px] font-medium text-gray-900">{ratingData.average.toFixed(1)}</span>
           </div>
         </div>
         
-        <h4 className="text-gray-500 text-[14px] truncate leading-tight mt-0.5">
+        <p className="text-gray-500 text-[14px] truncate leading-tight mt-0.5">
           {helper.name}
-        </h4>
+        </p>
         
         <p className="text-gray-500 text-[14px] truncate leading-tight">
           {helper.type ? helper.type.charAt(0).toUpperCase() + helper.type.slice(1) : 'Professional'}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { FiBell, FiCheck, FiTrash2, FiClock } from 'react-icons/fi';
@@ -171,7 +171,8 @@ export default function Notifications() {
         setSelectedNotification(null);
     };
 
-    const formatDate = (dateString) => {
+    // Stable reference — never re-created between renders
+    const formatDate = useCallback((dateString) => {
         const date = new Date(dateString);
         const now = new Date();
         const diffTime = Math.abs(now - date);
@@ -190,7 +191,18 @@ export default function Notifications() {
             return `${diffDays} days ago`;
         }
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    };
+    }, []);
+
+    // Pre-compute all formatted dates once when notifications data changes
+    // avoids calling formatDate on every render for every list item
+    const formattedDates = useMemo(() => {
+        const map = {};
+        notifications.forEach(n => {
+            const key = n._id;
+            map[key] = formatDate(n.createdAt || new Date());
+        });
+        return map;
+    }, [notifications, formatDate]);
 
     if (loading) {
         return (
@@ -309,7 +321,7 @@ export default function Notifications() {
                                     <div className="flex items-center gap-4 text-xs font-medium text-gray-400">
                                         <span className="flex items-center gap-1">
                                             <FiClock className="w-3.5 h-3.5" />
-                                            {formatDate(notification.createdAt || new Date())}
+                                            {formattedDates[notification._id]}
                                         </span>
                                     </div>
                                 </div>
@@ -376,7 +388,7 @@ export default function Notifications() {
                                     <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{selectedNotification.title}</h2>
                                     <p className="text-gray-500 flex items-center gap-2 mt-1 text-sm sm:text-base">
                                         <FiClock className="w-4 h-4" />
-                                        {formatDate(selectedNotification.createdAt || new Date())}
+                                        {formattedDates[selectedNotification._id] ?? formatDate(selectedNotification.createdAt || new Date())}
                                     </p>
                                 </div>
                             </div>

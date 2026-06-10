@@ -41,12 +41,13 @@ const BottomNav = () => {
               key={item.id}
               whileTap={{ scale: 0.8 }}
               onClick={() => navigate(item.route)}
+              aria-label={item.label}
               className="flex flex-col items-center gap-1 group touch-target"
             >
               <div className={`p-1 rounded-xl transition-all duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
-                <Icon className={`w-5 h-5 ${isActive ? 'text-[#FF5A5F]' : 'text-gray-400'}`} />
+                <Icon className={`w-5 h-5 ${isActive ? 'text-[#FF5A5F]' : 'text-gray-600'}`} />
               </div>
-              <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-[#FF5A5F]' : 'text-gray-400'}`}>
+              <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-[#FF5A5F]' : 'text-gray-600'}`}>
                 {item.label}
               </span>
               {isActive && (

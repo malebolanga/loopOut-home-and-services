@@ -10,7 +10,8 @@
   <link rel="manifest" href="/manifest.json" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
   <meta name="theme-color" content="#f0f2f5" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="LoopOut - The ultimate marketplace for properties, services, helpers, and events. Discover premium listings and seamless booking experiences." />
@@ -30,8 +31,10 @@
   <meta property="og:image" content="/logo512.jpg" />
 
   <title>loopOut | Marketplace for Properties, Services, Helpers, and Events</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-</head>
+  <!-- Leaflet CSS: preloaded then applied after first paint to avoid render-blocking -->
+  <link rel="preload" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" as="style"
+        onload="this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" /></noscript>
 <style>
   * {
     box-sizing: border-box;
@@ -83,26 +86,15 @@
      background-color: var(--background-color);
   }
 
-  /* Rest of your existing styles... */
-
-/* Apply padding to all pages except home page */
-body:not(.home-page) {
-  padding-top: 0px;
-}
-
-  link {
-    mix-blend-mode: color-burn;
-    border-radius: 50%;
-    background-size: cover;
-
-
+  /* Apply padding to all pages except home page */
+  body:not(.home-page) {
+    padding-top: 0px;
   }
 
   .flex-child {
     flex-shrink: 1;
-    /* Allow shrinking */
+    flex: 1;
     min-width: 0;
-    /* Fixes flex item overflow */
   }
 
   .text-container {
@@ -125,13 +117,8 @@ body:not(.home-page) {
   }
 
   .app-container {
-    overflow: hidden;
-    /* Hide overflow */
-    /* OR */
     overflow: auto;
-    /* Add scrollbars when needed */
     min-height: 100vh;
-    /* Full viewport height */
     width: 100%;
     box-sizing: border-box;
     /* Include padding in width calculation */
@@ -166,11 +153,6 @@ body:not(.home-page) {
 
   .flex-parent {
     display: flex;
-    min-width: 0;
-  }
-
-  .flex-child {
-    flex: 1;
     min-width: 0;
   }
 
@@ -217,8 +199,24 @@ body:not(.home-page) {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-</style>
 
+  /* --- CLS Prevention: Leaflet & FontAwesome reserved dimensions --- */
+  /* Leaflet map containers always reserve space before stylesheet arrives */
+  .leaflet-container {
+    min-height: 300px;
+    width: 100%;
+    background: #e5e7eb;
+  }
+  /* FontAwesome icon containers: reserve line-height so layout doesn't shift */
+  .fa, .fas, .far, .fab, .fal {
+    display: inline-block;
+    min-width: 1em;
+    min-height: 1em;
+    line-height: 1;
+    font-style: normal;
+  }
+</style>
+</head>
 <body>
 
 
@@ -237,9 +235,17 @@ body:not(.home-page) {
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+  <!-- FontAwesome: loaded async to never block first paint -->
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+    as="style"
     integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA=="
-    crossorigin="anonymous" />
+    crossorigin="anonymous"
+    onload="this.rel='stylesheet'" />
+  <noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+      integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA=="
+      crossorigin="anonymous" />
+  </noscript>
 </body>
 
 </html>

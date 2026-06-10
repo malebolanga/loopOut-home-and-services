@@ -1737,7 +1737,7 @@ export default function Listing() {
     setAdvertisingState(prev => ({ ...prev, loading: true }));
     try {
       const token = currentUser?.token || currentUser?.access_token || '';
-      const response = await fetch('/api/listings/advertise', {
+      const response = await fetch('/api/listing/advertise', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2000,7 +2000,7 @@ export default function Listing() {
         return;
       }
       try {
-        const response = await fetch(`/api/comment/${listingId}?limit=6`);
+        const response = await fetch(`/api/comments/${listingId}?limit=6`);
         if (response.ok) {
           const data = await response.json();
           setCommentCount(data.totalComments || 0);
@@ -2060,7 +2060,7 @@ export default function Listing() {
   const breakfastTotal = mealPlan === 'breakfast' ? breakfastPrice * nights : 0;
   const grandTotal = roomTotal + breakfastTotal;
   return (
-    <div className="min-h-screen">
+    <main className="min-h-screen">
       {/* Navigation Header */}
       {/* Navigation Header - Transparent on top of image */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-50/90 backdrop-blur-md shadow-sm border-b border-slate-200/50' : 'bg-transparent'}`}>
@@ -2068,6 +2068,7 @@ export default function Listing() {
           <div className="flex items-center justify-between h-16 md:h-20">
             <button 
               onClick={() => navigate(-1)} 
+              aria-label="Go back"
               className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
             >
               <ArrowLeftIcon className="w-5 h-5" />
@@ -2076,12 +2077,14 @@ export default function Listing() {
             <div className="flex items-center gap-2">
               <button 
                 onClick={handleShare} 
+                aria-label="Share listing"
                 className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
               >
                 <ShareIcon className="w-5 h-5" />
               </button>
               <button 
                 onClick={toggleFavorite} 
+                aria-label={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
                 className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 backdrop-blur-sm'}`}
               >
                 {isFavorite ? <HeartIconSolid className="w-6 h-6 text-rose-500" /> : <HeartIcon className={`w-6 h-6 ${isScrolled ? 'text-slate-900' : 'text-white'}`} />}
@@ -2743,6 +2746,6 @@ export default function Listing() {
           </button>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

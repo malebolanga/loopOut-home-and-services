@@ -2281,6 +2281,7 @@ export default function HelperPage() {
           <div className="flex items-center justify-between h-16 md:h-20">
             <button
                onClick={() => navigate(-1)}
+               aria-label="Go back"
                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
              >
                <ArrowLeftIcon className="w-5 h-5" />
@@ -2289,12 +2290,14 @@ export default function HelperPage() {
              <div className="flex items-center gap-2">
                <button
                  onClick={handleShare}
+                 aria-label="Share professional profile"
                  className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
                >
                  <ShareIcon className="w-5 h-5" />
                </button>
               <button
                 onClick={toggleFavorite}
+                aria-label={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
                 className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 backdrop-blur-sm'}`}
               >
                 {isFavorite ?
@@ -2418,21 +2421,21 @@ export default function HelperPage() {
               <div className="flex items-start gap-4">
                 <Sparkles className="w-6 h-6 text-rose-500 mt-1" />
                 <div>
-                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Top rated professional</h3>
+                  <p className="font-black uppercase tracking-widest text-xs text-gray-950">Top rated professional</p>
                   <p className="text-gray-500 text-xs font-medium mt-1">Highly rated for quality, reliability, and customer satisfaction</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <ShieldCheckIcon className="w-6 h-6 text-blue-500 mt-1" />
                 <div>
-                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Experienced & Verified</h3>
+                  <p className="font-black uppercase tracking-widest text-xs text-gray-950">Experienced & Verified</p>
                   <p className="text-gray-500 text-xs font-medium mt-1">Background checked with verified credentials and references</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <ClockIcon className="w-6 h-6 text-teal-500 mt-1" />
                 <div>
-                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Flexible scheduling</h3>
+                  <p className="font-black uppercase tracking-widest text-xs text-gray-950">Flexible scheduling</p>
                   <p className="text-gray-500 text-xs font-medium mt-1">Available 7 days a week with flexible hours to suit your needs</p>
                 </div>
               </div>
@@ -2451,7 +2454,7 @@ export default function HelperPage() {
               <div className="flex items-start gap-4">
                 <BoltIcon className="w-6 h-6 text-yellow-500 mt-1" />
                 <div>
-                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Response Rate</h3>
+                  <p className="font-black uppercase tracking-widest text-xs text-gray-950">Response Rate</p>
                   <p className="text-gray-500 text-xs font-medium mt-1">{helper.responseRate || 'Usually responds within an hour'}</p>
                 </div>
               </div>
