@@ -1161,6 +1161,39 @@ const MobileAppHomepage = ({
           </div>
         </section>
 
+        {/* Discovery Protocols Hub */}
+        <section className="mb-12 mt-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="w-4 h-4 text-rose-500" />
+            <span className="text-gray-400 text-[10px] font-black tracking-[0.3em] uppercase">Discovery Hub</span>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <button 
+              onClick={() => navigate('/matchmaker')}
+              className="p-4 rounded-3xl bg-gradient-to-br from-rose-500/10 via-rose-500/5 to-transparent border border-rose-500/20 text-center flex flex-col items-center justify-center gap-2 hover:scale-105 transition-transform"
+            >
+              <span className="text-3xl">🔥</span>
+              <span className="text-[10px] font-black tracking-wider text-rose-500 uppercase">Matchmaker</span>
+            </button>
+            
+            <button 
+              onClick={() => navigate('/radar')}
+              className="p-4 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 text-center flex flex-col items-center justify-center gap-2 hover:scale-105 transition-transform"
+            >
+              <span className="text-3xl">🛰️</span>
+              <span className="text-[10px] font-black tracking-wider text-emerald-500 uppercase">Live Radar</span>
+            </button>
+
+            <button 
+              onClick={() => navigate('/quick-book')}
+              className="p-4 rounded-3xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 text-center flex flex-col items-center justify-center gap-2 hover:scale-105 transition-transform"
+            >
+              <span className="text-3xl">⚡</span>
+              <span className="text-[10px] font-black tracking-wider text-amber-500 uppercase">Quick Book</span>
+            </button>
+          </div>
+        </section>
+
         <div className="mb-10">
           <WeeklySpecialsSection navigate={navigate} isMobile={true} />
         </div>
@@ -1488,6 +1521,48 @@ const DesktopHomepage = ({
             </button>
           </div>
         )}
+
+        {/* Discovery Protocols Hub (Desktop) */}
+        <section className="mb-12">
+          <div className="flex items-center gap-2 mb-6">
+            <Sparkles className="w-5 h-5 text-rose-500" />
+            <h2 className="text-sm font-black text-gray-900 uppercase tracking-[0.2em]">Discovery Hub</h2>
+          </div>
+          <div className="grid grid-cols-3 gap-6">
+            <button 
+              onClick={() => navigate('/matchmaker')}
+              className="group p-8 rounded-[2.5rem] bg-gradient-to-br from-rose-500/10 via-rose-500/5 to-transparent border border-rose-500/20 text-left flex flex-col justify-between h-48 hover:shadow-[0_20px_40px_rgba(244,63,94,0.1)] transition-all duration-300 hover:-translate-y-1"
+            >
+              <span className="text-4xl">🔥</span>
+              <div>
+                <span className="text-xs font-black tracking-widest text-rose-500 uppercase block mb-1">Neural Matchmaker</span>
+                <span className="text-[11px] text-gray-500 font-medium">Swipe cards to instantly build your custom wishlist vault.</span>
+              </div>
+            </button>
+            
+            <button 
+              onClick={() => navigate('/radar')}
+              className="group p-8 rounded-[2.5rem] bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 text-left flex flex-col justify-between h-48 hover:shadow-[0_20px_40px_rgba(16,185,129,0.1)] transition-all duration-300 hover:-translate-y-1"
+            >
+              <span className="text-4xl">🛰️</span>
+              <div>
+                <span className="text-xs font-black tracking-widest text-emerald-500 uppercase block mb-1">Live Radar</span>
+                <span className="text-[11px] text-gray-500 font-medium">Explore properties, events and services geographically in real time.</span>
+              </div>
+            </button>
+
+            <button 
+              onClick={() => navigate('/quick-book')}
+              className="group p-8 rounded-[2.5rem] bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 text-left flex flex-col justify-between h-48 hover:shadow-[0_20px_40px_rgba(245,158,11,0.1)] transition-all duration-300 hover:-translate-y-1"
+            >
+              <span className="text-4xl">⚡</span>
+              <div>
+                <span className="text-xs font-black tracking-widest text-amber-500 uppercase block mb-1">One-Tap Quick Book</span>
+                <span className="text-[11px] text-gray-500 font-medium">Instantly deploy the nearest top-tier professional to your location.</span>
+              </div>
+            </button>
+          </div>
+        </section>
 
         {/* Simple Grid Header */}
         <div className="flex items-center justify-between mb-8">

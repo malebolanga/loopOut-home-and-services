@@ -100,10 +100,7 @@ function ListingItem({ listing = "", compactMode = false }) {
             </div>
           )}
         </>
-      ) : (
-        // ... (standard card layout remains unchanged)
-        
-      )}
+      ) : null}
     </div>
   );
 }

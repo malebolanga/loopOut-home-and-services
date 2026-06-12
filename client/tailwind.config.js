@@ -10,6 +10,13 @@ export default {
         accent: 'hsl(50, 80%, 55%)',
         background: 'hsl(210, 20%, 98%)',
         foreground: 'hsl(210, 30%, 20%)',
+        'airbnb-red': '#FF385C',
+        'airbnb-light-red': '#FFF1F2',
+        'airbnb-dark': '#222222',
+        'airbnb-gray': '#717171',
+        'airbnb-medium-gray': '#DDDDDD',
+        'airbnb-light-gray': '#F7F7F7',
+        'airbnb-yellow': '#FFB400',
       },
       
       dropShadow: {
@@ -19,15 +26,6 @@ export default {
       textShadow: {
         'default': '0 2px 0 rgba(0, 0, 0, 0.2)',
         'active': '0 3px 0 rgba(0, 0, 0, 0.2), 0 0 10px rgba(255, 50, 50, 0.5)',
-      },
-      colors: {
-        'airbnb-red': '#FF385C',
-        'airbnb-light-red': '#FFF1F2',
-        'airbnb-dark': '#222222',
-        'airbnb-gray': '#717171',
-        'airbnb-medium-gray': '#DDDDDD',
-        'airbnb-light-gray': '#F7F7F7',
-        'airbnb-yellow': '#FFB400',
       },
       boxShadow: {
         'airbnb': '0 8px 28px rgba(0,0,0,0.08)',

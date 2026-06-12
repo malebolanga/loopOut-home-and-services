@@ -86,26 +86,15 @@
      background-color: var(--background-color);
   }
 
-  /* Rest of your existing styles... */
-
-/* Apply padding to all pages except home page */
-body:not(.home-page) {
-  padding-top: 0px;
-}
-
-  link {
-    mix-blend-mode: color-burn;
-    border-radius: 50%;
-    background-size: cover;
-
-
+  /* Apply padding to all pages except home page */
+  body:not(.home-page) {
+    padding-top: 0px;
   }
 
   .flex-child {
     flex-shrink: 1;
-    /* Allow shrinking */
+    flex: 1;
     min-width: 0;
-    /* Fixes flex item overflow */
   }
 
   .text-container {
@@ -128,13 +117,8 @@ body:not(.home-page) {
   }
 
   .app-container {
-    overflow: hidden;
-    /* Hide overflow */
-    /* OR */
     overflow: auto;
-    /* Add scrollbars when needed */
     min-height: 100vh;
-    /* Full viewport height */
     width: 100%;
     box-sizing: border-box;
     /* Include padding in width calculation */
@@ -170,11 +154,6 @@ body:not(.home-page) {
 
   .flex-parent {
     display: flex;
-    min-width: 0;
-  }
-
-  .flex-child {
-    flex: 1;
     min-width: 0;
   }
 
@@ -221,35 +200,30 @@ body:not(.home-page) {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* --- CLS Prevention: Leaflet & FontAwesome reserved dimensions --- */
+  /* Leaflet map containers always reserve space before stylesheet arrives */
+  .leaflet-container {
+    min-height: 300px;
+    width: 100%;
+    background: #e5e7eb;
+  }
+  /* FontAwesome icon containers: reserve line-height so layout doesn't shift */
+  .fa, .fas, .far, .fab, .fal {
+    display: inline-block;
+    min-width: 1em;
+    min-height: 1em;
+    line-height: 1;
+    font-style: normal;
+  }
 </style>
-  <!-- Reserved dimensions: prevents CLS when Leaflet/FontAwesome arrive late -->
-  <style>
-    /* Leaflet map containers always reserve space before stylesheet arrives */
-    .leaflet-container {
-      min-height: 300px;
-      width: 100%;
-      background: #e5e7eb; /* neutral placeholder bg */
-    }
-    /* FontAwesome icon containers: reserve line-height so layout doesn't shift */
-    .fa, .fas, .far, .fab, .fal {
-      display: inline-block;
-      min-width: 1em;
-      min-height: 1em;
-      line-height: 1;
-      font-style: normal;
-    }
-    /* Google Font swap fallback: keep layout stable while webfont loads */
-    body {
-      font-display: swap;
-    }
-  </style>
-  <script type="module" crossorigin src="/assets/index-CQvS7pA4.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/vendor-core-CU7cahMV.js">
-  <link rel="modulepreload" crossorigin href="/assets/vendor-visuals-Dy1E0cko.js">
-  <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-CNf-9df5.js">
+  <script type="module" crossorigin src="/assets/index-DnW0YHsG.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/vendor-core-CZPavVHh.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-visuals-CXxfbvfN.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-DuQM_k1P.js">
   <link rel="stylesheet" crossorigin href="/assets/vendor-core-wLscaCOD.css">
   <link rel="stylesheet" crossorigin href="/assets/vendor-visuals-CGTUX06d.css">
-  <link rel="stylesheet" crossorigin href="/assets/index-BXlGU1Tk.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-DgY7zJwT.css">
 </head>
 <body>
 

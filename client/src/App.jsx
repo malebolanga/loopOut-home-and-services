@@ -119,6 +119,10 @@ const Notifications = lazy(() => import('./pages/Notifications'));
 // User Profile
 const UserProfile = lazy(() => import('./pages/UserProfile'));
 const SettingsPage = lazy(() => import('./pages/settings'));
+const Rewards = lazy(() => import('./pages/Rewards'));
+const Matchmaker = lazy(() => import('./pages/Matchmaker'));
+const Radar = lazy(() => import('./pages/Radar'));
+const QuickBook = lazy(() => import('./pages/QuickBook'));
 
 // Photography Helper Page
 const PhotographyHelperPage = lazy(() => import('./pages/PhotographyHelperPage'));
@@ -269,6 +273,10 @@ const AnimatedRoutes = () => {
         <Route element={<PrivateRoute />}>
           <Route path="/sale" element={<PageTransition><Sale /></PageTransition>} />
           <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
+          <Route path="/rewards" element={<PageTransition><Rewards /></PageTransition>} />
+          <Route path="/matchmaker" element={<PageTransition><Matchmaker /></PageTransition>} />
+          <Route path="/radar" element={<PageTransition><Radar /></PageTransition>} />
+          <Route path="/quick-book" element={<PageTransition><QuickBook /></PageTransition>} />
           <Route path="/verification" element={<PageTransition><Verification /></PageTransition>} />
           <Route path="/:userId/create-listing" element={<PageTransition><CreateListing /></PageTransition>} />
           <Route path="/update-listing/:listingId" element={<PageTransition><UpdateListing /></PageTransition>} />

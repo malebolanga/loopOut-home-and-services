@@ -690,7 +690,11 @@ export default function Profile() {
         setFileUploadError(false);
       },
       (error) => {
-        setFileUploadError(true);
+        if (error.code === 'storage/quota-exceeded') {
+          setFileUploadError("Storage quota exceeded. Please upgrade your Firebase plan or delete old files.");
+        } else {
+          setFileUploadError(true);
+        }
         console.error("File upload error:", error);
       },
       () => {
@@ -717,7 +721,11 @@ export default function Profile() {
         setCoverFileUploadError(false);
       },
       (error) => {
-        setCoverFileUploadError(true);
+        if (error.code === 'storage/quota-exceeded') {
+          setCoverFileUploadError("Storage quota exceeded. Please upgrade your Firebase plan or delete old files.");
+        } else {
+          setCoverFileUploadError(true);
+        }
         console.error("Cover upload error:", error);
       },
       () => {
@@ -931,6 +939,25 @@ export default function Profile() {
   // WhatsApp connection modal
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
 
+  // Calculate Profile Completion
+  const calculateProfileCompletion = () => {
+    const fields = [
+      'username', 'email', 'phone', 'location', 'occupation', 
+      'interests', 'website', 'socialMedia', 'bio', 'avatar', 'coverPhoto'
+    ];
+    let completed = 0;
+    const data = currentUser || {};
+    fields.forEach(field => {
+      if (data[field] || formData[field]) completed++;
+    });
+    if (isFaceVerified) completed++;
+    if (data.isVerified) completed++;
+    
+    const totalFields = fields.length + 2; // + face + phone verify
+    return Math.round((completed / totalFields) * 100);
+  };
+  const profileCompletion = calculateProfileCompletion();
+
   return (
     <div className="min-h-screen pb-32 bg-slate-50">
       {/* Masterpiece Elite Account Header */}
@@ -957,6 +984,11 @@ export default function Profile() {
                 </button>
               </div>
               <input type="file" hidden ref={fileRef} accept="image/*" onChange={(e) => setFile(e.target.files[0])} />
+              {fileUploadError && (
+                <p className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-48 text-center text-[10px] text-rose-500 font-bold bg-rose-50 px-2 py-1 rounded">
+                  {typeof fileUploadError === 'string' ? fileUploadError : 'Error uploading image'}
+                </p>
+              )}
             </div>
 
             {/* Profile Info */}
@@ -977,6 +1009,7 @@ export default function Profile() {
 
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-6">
                  {[
+                   { label: "Elite Points", value: currentUser?.points || 1250, color: "text-purple-400" },
                    { label: "Trust Score", value: "99.8%", color: "text-emerald-400" },
                    { label: "Deployments", value: postCount || "0", color: "text-blue-400" },
                    { label: "Active Connections", value: "124", color: "text-indigo-400" }
@@ -1064,6 +1097,13 @@ export default function Profile() {
                       onClick={() => setActiveSection("my-listings")}
                       badge={userListings?.length || 0}
                     />
+                    <MenuItem
+                      icon={TrophyIcon}
+                      label="Elite Rewards"
+                      active={false}
+                      onClick={() => navigate('/rewards')}
+                      badge="NEW"
+                    />
                   </div>
                 </div>
 
@@ -1095,6 +1135,25 @@ export default function Profile() {
               <>
                 <SectionCard title="Personal info" icon={UserIcon}>
                   <div className="max-w-2xl">
+                    {/* Profile Completion Progress */}
+                    <div className="mb-8 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="font-bold text-gray-800 text-sm">Profile Completion</h4>
+                        <span className="text-sm font-black text-rose-600">{profileCompletion}%</span>
+                      </div>
+                      <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-rose-500 rounded-full transition-all duration-1000 ease-out"
+                          style={{ width: `${profileCompletion}%` }}
+                        ></div>
+                      </div>
+                      {profileCompletion < 100 && (
+                        <p className="text-xs text-gray-500 mt-3 font-medium">
+                          Complete your profile to increase your trust score and visibility.
+                        </p>
+                      )}
+                    </div>
+
                     {/* Cover Photo Upload */}
                     <div className="mb-8 p-1 bg-gray-50 rounded-2xl border border-dashed border-[#DDDDDD] overflow-hidden">
                       <div className="relative h-40 md:h-48 group cursor-pointer" onClick={() => coverFileRef.current.click()}>
@@ -1126,6 +1185,11 @@ export default function Profile() {
                         onChange={(e) => setCoverFile(e.target.files[0])}
                       />
                     </div>
+                    {coverFileUploadError && (
+                      <p className="text-xs text-rose-500 font-bold mt-2 mb-4 bg-rose-50 px-3 py-2 rounded-lg">
+                        {typeof coverFileUploadError === 'string' ? coverFileUploadError : 'Error uploading cover photo'}
+                      </p>
+                    )}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
