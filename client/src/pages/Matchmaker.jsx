@@ -55,6 +55,7 @@ export default function Matchmaker() {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingForm, setBookingForm] = useState({ name: '', phone: '', request: '' });
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [selectedType, setSelectedType] = useState('All');
   
   const navigate = useNavigate();
 
@@ -62,9 +63,9 @@ export default function Matchmaker() {
     setLoading(true);
     try {
       const [listingsRes, servicesRes, helpersRes] = await Promise.all([
-        fetch('/api/listing/get?limit=10'),
-        fetch('/api/service/get?limit=10'),
-        fetch('/api/helper/get?limit=10')
+        fetch('/api/listing/get?limit=50'),
+        fetch('/api/service/get?limit=50'),
+        fetch('/api/helper/get?limit=50')
       ]);
 
       const listings = listingsRes.ok ? await listingsRes.json() : [];
@@ -75,7 +76,9 @@ export default function Matchmaker() {
         ...listings.map(item => ({
           id: item._id,
           title: item.name,
-          type: 'Property',
+          mainType: 'Property',
+          type: item.type || 'Property',
+          category: item.category || '',
           price: item.price ? `R${item.price}` : 'Open Bid',
           image: item.imageUrls?.[0] || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800',
           rating: item.rating || 5.0,
@@ -85,7 +88,9 @@ export default function Matchmaker() {
         ...services.map(item => ({
           id: item._id,
           title: item.name,
-          type: 'Service',
+          mainType: 'Service',
+          type: item.category || 'Service',
+          category: item.category || '',
           price: item.price ? `R${item.price}` : 'Open Bid',
           image: item.imageUrls?.[0] || 'https://images.pexels.com/photos/4099467/pexels-photo-4099467.jpeg?auto=compress&cs=tinysrgb&w=800',
           rating: item.rating || 5.0,
@@ -95,7 +100,9 @@ export default function Matchmaker() {
         ...helpers.map(item => ({
           id: item._id,
           title: item.name,
-          type: 'Helper',
+          mainType: 'Helper',
+          type: item.type || item.category || 'Helper',
+          category: item.category || '',
           price: item.regularPrice ? `R${item.regularPrice}` : 'Open Bid',
           image: item.imageUrls?.[0] || 'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800',
           rating: item.rating || 5.0,
@@ -120,14 +127,34 @@ export default function Matchmaker() {
     setCards(prev => prev.filter(c => c.id !== id));
   };
 
+  const filteredCards = cards.filter(card => {
+    if (selectedType === 'All') return true;
+    if (selectedType === 'Helpers') return card.mainType === 'Helper';
+    if (selectedType === 'Properties') return card.mainType === 'Property';
+    if (selectedType === 'Services') return card.mainType === 'Service';
+    
+    const searchStr = `${card.type} ${card.category} ${card.title}`.toLowerCase();
+    const sel = selectedType.toLowerCase();
+    
+    if (sel === 'cleaners' || sel === 'cleaner') return searchStr.includes('clean');
+    if (sel === 'barbershops' || sel === 'barber') return searchStr.includes('barber');
+    if (sel === 'beauty') return searchStr.includes('beaut') || searchStr.includes('nail') || searchStr.includes('hair');
+    if (sel === 'guest house' || sel === 'guesthouse') return searchStr.includes('guest') || searchStr.includes('guesthouse');
+    if (sel === 'hotels') return searchStr.includes('hotel');
+    if (sel === 'rooms') return searchStr.includes('room');
+    if (sel === 'for rent' || sel === 'rental') return searchStr.includes('rent');
+    
+    return searchStr.includes(sel);
+  });
+
   const handleManualAction = (direction) => {
-    if (cards.length === 0) return;
-    const currentCard = cards[cards.length - 1];
+    if (filteredCards.length === 0) return;
+    const currentCard = filteredCards[filteredCards.length - 1];
     removeCard(currentCard.id, direction);
   };
 
   const handleOpenBookingModal = () => {
-    if (cards.length === 0) return;
+    if (filteredCards.length === 0) return;
     setShowBookingModal(true);
   };
 
@@ -145,19 +172,19 @@ export default function Matchmaker() {
       setShowSuccessMessage(false);
       setShowBookingModal(false);
       setBookingForm({ name: '', phone: '', request: '' });
-      if (cards.length > 0) {
-        removeCard(cards[cards.length - 1].id, 'right');
+      if (filteredCards.length > 0) {
+        removeCard(filteredCards[filteredCards.length - 1].id, 'right');
       }
     }, 2000);
   };
 
   const handleViewMoreInfo = () => {
-    if (cards.length === 0) return;
-    const currentCard = cards[cards.length - 1];
+    if (filteredCards.length === 0) return;
+    const currentCard = filteredCards[filteredCards.length - 1];
     navigate(currentCard.link);
   };
 
-  const currentCard = cards[cards.length - 1];
+  const currentCard = filteredCards[filteredCards.length - 1];
 
   return (
     <div className="fixed inset-0 bg-gray-950 flex flex-col z-[200]">
@@ -174,9 +201,65 @@ export default function Matchmaker() {
         </button>
         <div className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/10 rounded-full backdrop-blur-md">
           <SparklesIcon className="w-4 h-4 text-rose-400" />
-          <span className="text-xs font-black text-white uppercase tracking-widest">Neural Matchmaker</span>
+          <span className="text-xs font-black text-white uppercase tracking-widest hidden sm:inline">Matchmaker</span>
         </div>
-        <div className="w-11" />
+        <div className="flex items-center">
+          <select
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
+            className="bg-white/10 text-white text-[10px] font-black uppercase tracking-widest border border-white/20 rounded-full px-3 py-2 outline-none appearance-none cursor-pointer backdrop-blur-md"
+          >
+            <option value="All" className="text-gray-900">All Types</option>
+            <optgroup label="General" className="text-gray-900 font-bold">
+              <option value="Helpers" className="text-gray-900 font-normal">Helpers</option>
+              <option value="Properties" className="text-gray-900 font-normal">Properties</option>
+              <option value="Services" className="text-gray-900 font-normal">Services</option>
+            </optgroup>
+            <optgroup label="Helpers" className="text-gray-900 font-bold">
+              <option value="Sneaker" className="text-gray-900 font-normal">Sneaker Cleaning</option>
+              <option value="Washingmat" className="text-gray-900 font-normal">Washingmat</option>
+              <option value="Animals" className="text-gray-900 font-normal">Pet Care</option>
+              <option value="Domestic" className="text-gray-900 font-normal">Domestic</option>
+              <option value="Tutor" className="text-gray-900 font-normal">Tutors</option>
+              <option value="Maid" className="text-gray-900 font-normal">Maids</option>
+              <option value="Beauty" className="text-gray-900 font-normal">Beauty</option>
+              <option value="Cleaner" className="text-gray-900 font-normal">Cleaners</option>
+              <option value="Barber" className="text-gray-900 font-normal">Barbers</option>
+              <option value="Hair" className="text-gray-900 font-normal">Hair</option>
+              <option value="Nails" className="text-gray-900 font-normal">Nails</option>
+              <option value="Massage" className="text-gray-900 font-normal">Massage</option>
+              <option value="Chef" className="text-gray-900 font-normal">Chefs</option>
+              <option value="Tattoo" className="text-gray-900 font-normal">Tattoo Artists</option>
+              <option value="Nanny" className="text-gray-900 font-normal">Nannies</option>
+            </optgroup>
+            <optgroup label="Services" className="text-gray-900 font-bold">
+              <option value="Baker" className="text-gray-900 font-normal">Bakers</option>
+              <option value="Carwash" className="text-gray-900 font-normal">Carwash</option>
+              <option value="Photograph" className="text-gray-900 font-normal">Photography</option>
+              <option value="Transport" className="text-gray-900 font-normal">Transport</option>
+              <option value="Landscaping" className="text-gray-900 font-normal">Landscaping</option>
+              <option value="Electrician" className="text-gray-900 font-normal">Electricians</option>
+              <option value="Handyman" className="text-gray-900 font-normal">Handyman</option>
+              <option value="Catering" className="text-gray-900 font-normal">Catering</option>
+              <option value="SchoolTransport" className="text-gray-900 font-normal">School Transport</option>
+              <option value="Daycare" className="text-gray-900 font-normal">Daycare</option>
+              <option value="Daily" className="text-gray-900 font-normal">Daily Services</option>
+              <option value="Delivery" className="text-gray-900 font-normal">Delivery</option>
+              <option value="Usedbooks" className="text-gray-900 font-normal">Used Books</option>
+            </optgroup>
+            <optgroup label="Properties" className="text-gray-900 font-bold">
+              <option value="Rental" className="text-gray-900 font-normal">Rentals</option>
+              <option value="Guest house" className="text-gray-900 font-normal">Guest Houses</option>
+              <option value="Sale" className="text-gray-900 font-normal">For Sale</option>
+              <option value="Overnight" className="text-gray-900 font-normal">Overnight Stays</option>
+              <option value="Vacation" className="text-gray-900 font-normal">Vacation Rentals</option>
+              <option value="Office" className="text-gray-900 font-normal">Office Space</option>
+              <option value="Land" className="text-gray-900 font-normal">Land</option>
+              <option value="Hotels" className="text-gray-900 font-normal">Hotels</option>
+              <option value="Rooms" className="text-gray-900 font-normal">Rooms</option>
+            </optgroup>
+          </select>
+        </div>
       </div>
 
       {/* Card Stack */}
@@ -189,18 +272,18 @@ export default function Matchmaker() {
             </div>
           ) : (
             <AnimatePresence>
-              {cards.map((card, index) => (
+              {filteredCards.map((card, index) => (
                 <Card 
                   key={card.id} 
                   card={card} 
                   removeCard={removeCard} 
-                  active={index === cards.length - 1}
+                  active={index === filteredCards.length - 1}
                 />
               ))}
             </AnimatePresence>
           )}
 
-          {!loading && cards.length === 0 && (
+          {!loading && filteredCards.length === 0 && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -223,7 +306,7 @@ export default function Matchmaker() {
       </div>
 
       {/* Action Buttons */}
-      {!loading && cards.length > 0 && (
+      {!loading && filteredCards.length > 0 && (
         <div className="absolute bottom-10 left-0 right-0 flex justify-center items-center gap-4 z-20">
           {/* Skip Card */}
           <motion.button 

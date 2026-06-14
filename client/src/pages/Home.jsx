@@ -84,6 +84,7 @@ import {
   ServicesToYourDoor, 
   WeeklySpecialsSection 
 } from '../components/home/HomeSections';
+import DailyLoopHub from '../components/home/DailyLoopHub';
 import { TOP_CATEGORIES } from '../data/categories';
 import { CategoriesSlider } from '../components/home/CategoriesSlider';
 import { HomeHero } from '../components/home/HomeHero';
@@ -511,38 +512,107 @@ const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
   return (
     <div
       onClick={onClick}
-      className="cursor-pointer flex flex-col bg-transparent w-full border-0 shadow-none rounded-none"
+      className="cursor-pointer flex flex-col bg-gray-950 w-full rounded-[2rem] overflow-hidden shadow-2xl relative group border border-white/10 hover:border-rose-500/50 transition-all"
     >
-      <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 mb-2">
-        <ImageGallery
-          imageUrls={item.imageUrls || []}
-          alt={item.name}
-          type={type}
-        />
-        <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/30 z-20">
-          <span className="text-[10px] font-bold text-white uppercase tracking-wider">New Listing</span>
+      <div className="relative aspect-[4/5] overflow-hidden">
+        <img loading="lazy" src={item.imageUrls?.[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.name} />
+        
+        {/* Dark Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/50 to-transparent" />
+        
+        {/* Live Signal Badge */}
+        <div className="absolute top-4 left-4 bg-gray-950/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-rose-500/30 z-20 flex items-center gap-2 shadow-[0_0_15px_rgba(244,63,94,0.3)]">
+          <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-ping" />
+          <span className="text-[9px] font-black text-rose-400 uppercase tracking-widest">Live Signal</span>
         </div>
-        <div className="absolute bottom-3 left-3 bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/30 z-20">
-          <span className="text-[8px] font-black text-white uppercase tracking-widest">{type.charAt(0).toUpperCase() + type.slice(1)}</span>
+        
+        {/* Type Badge */}
+        <div className="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-2 py-1 rounded-md border border-white/20 z-20">
+          <span className="text-[8px] font-black text-white uppercase tracking-widest">{type}</span>
         </div>
-      </div>
 
-      <div className="flex flex-col">
-        <div className="flex justify-between items-start gap-2">
-          <h3 className="font-semibold text-gray-900 truncate text-[15px]">
-            {item.address || "South Africa"}
-          </h3>
-          <div className="flex items-center gap-1 shrink-0 mt-0.5">
-            <StarIconSolid className="w-3.5 h-3.5 text-black" />
-            <span className="text-[14px] font-medium text-gray-900">
-              {(item.rating || 0).toFixed(1)}
-            </span>
+        {/* Content at bottom */}
+        <div className="absolute bottom-0 inset-x-0 p-5 flex flex-col justify-end z-20">
+          <div className="flex justify-between items-start gap-2 mb-1">
+            <h3 className="font-black text-white text-lg truncate">
+              {item.address || "South Africa"}
+            </h3>
+            <div className="flex items-center gap-1 shrink-0 bg-white/10 px-2 py-0.5 rounded-md backdrop-blur-md">
+              <StarIconSolid className="w-3 h-3 text-amber-400" />
+              <span className="text-[11px] font-black text-white">
+                {(item.rating || 0).toFixed(1)}
+              </span>
+            </div>
+          </div>
+          <p className="text-[12px] text-gray-400 font-medium truncate mb-2">{item.name}</p>
+          <div className="flex items-baseline gap-1 mt-1 bg-white/5 w-fit px-3 py-1.5 rounded-xl border border-white/10">
+            <span className="text-lg font-black text-white">{formatPrice()}</span>
+            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{getPriceSuffix()}</span>
           </div>
         </div>
-        <p className="text-[14px] text-gray-500 truncate leading-tight mt-0.5">{item.name}</p>
-        <div className="mt-1 flex items-baseline gap-1">
-          <span className="text-[15px] font-semibold text-gray-900">{formatPrice()}</span>
-          <span className="text-[14px] text-gray-500 font-normal">{getPriceSuffix()}</span>
+      </div>
+    </div>
+  );
+};
+
+// --- ELITE CARD FOR EXPLORE UNIVERSE ---
+const EliteCard = ({ item, onClick, type = 'property', reducedSize = false }) => {
+  const formatPrice = () => {
+    const price = item.price || item.regularPrice;
+    if (type === 'property' && (item.type === 'sale' || item.type === 'land')) {
+      return `R${price?.toLocaleString()}`;
+    }
+    return `R${price}`;
+  };
+
+  const getPriceSuffix = () => {
+    if (type !== 'property') return '';
+    switch (item.type) {
+      case 'rent': return '/ month';
+      case 'over': return '/ night';
+      case 'sale': return '';
+      case 'office': return '/ hour';
+      case 'land': return '';
+      default: return item.type?.includes('rent') ? '/ month' : '';
+    }
+  };
+
+  return (
+    <div
+      onClick={() => onClick(item._id ? `/${type}/${item._id}` : '#')}
+      className={`cursor-pointer flex flex-col bg-gray-950 w-full rounded-[2rem] overflow-hidden shadow-2xl relative group border border-white/5 hover:border-rose-500/50 transition-all ${reducedSize ? 'aspect-[4/5]' : 'aspect-square md:aspect-[4/5]'}`}
+    >
+      <img loading="lazy" src={item.imageUrls?.[0]} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out opacity-80 group-hover:opacity-100" alt={item.name} />
+      
+      {/* Immersive Dark Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
+      
+      {/* Top Badges */}
+      <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-20">
+        <div className="bg-white/10 backdrop-blur-md px-2 py-1 rounded-md border border-white/20">
+          <span className="text-[8px] font-black text-white uppercase tracking-widest">{type}</span>
+        </div>
+        <button className="p-2 bg-gray-950/40 backdrop-blur-md rounded-full border border-white/10 hover:bg-rose-500 hover:border-rose-500 transition-colors">
+          <HeartIcon className="w-4 h-4 text-white" />
+        </button>
+      </div>
+
+      {/* Content Info */}
+      <div className="absolute bottom-0 inset-x-0 p-5 z-20 flex flex-col justify-end">
+        <div className="flex justify-between items-end gap-2 mb-1">
+          <h3 className="font-black text-white text-lg leading-tight line-clamp-1">
+            {item.address || "South Africa"}
+          </h3>
+          <div className="flex items-center gap-1 shrink-0 bg-white/10 px-2 py-1 rounded-lg backdrop-blur-md">
+            <StarIconSolid className="w-3 h-3 text-amber-400" />
+            <span className="text-[11px] font-black text-white">{(item.rating || 0).toFixed(1)}</span>
+          </div>
+        </div>
+        <p className="text-xs text-gray-400 font-medium line-clamp-1 mb-2">{item.name}</p>
+        
+        <div className="flex items-baseline gap-1 mt-1">
+          <span className="text-xl font-black text-white">{formatPrice()}</span>
+          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{getPriceSuffix()}</span>
         </div>
       </div>
     </div>
@@ -579,9 +649,9 @@ const AirbnbDiscoverSection = ({ title, items, type, navigate, actionText, onAct
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, amount: 0.1 }}
             transition={{ delay: idx * 0.1, duration: 0.8, ease: "easeOut" }}
-            className="snap-start shrink-0 w-[200px] md:w-[240px]"
+            className="snap-start shrink-0 w-[160px] md:w-[200px]"
           >
-            <AirbnbCard
+            <EliteCard
               item={item}
               type={type}
               onClick={(id) => navigate(id)}
@@ -964,6 +1034,7 @@ const MobileAppHomepage = ({
       `}</style>
 
       <main className="px-4 pt-2 pb-4 lg:max-w-7xl lg:mx-auto w-full">
+        <DailyLoopHub />
         {/* Mobile Elite Slider Banner */}
         <div className="relative h-[550px] -mx-4 lg:mx-0 lg:rounded-[2rem] overflow-hidden mb-12 shadow-2xl">
           <Swiper
@@ -1113,90 +1184,59 @@ const MobileAppHomepage = ({
           </Swiper>
         </div>
 
-        {/* Mobile Top Categories - Horizontal Scroll (Now under the banner) */}
-        <section className="mb-8 -mx-4 lg:mx-0 px-4 lg:px-0">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-bold text-gray-900 text-lg">Top categories</h2>
-            <button onClick={() => navigate('/categories')} className="text-sm text-rose-500 font-medium">See all</button>
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x">
-            {TOP_CATEGORIES.map((category, index) => (
-              <motion.div
-                key={category.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-                onClick={() => {
-                  const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner', 'barber', 'hair', 'nails', 'massage', 'chef', 'tattoo', 'nanny'];
-                  const services = ['baker', 'carwash', 'photograph', 'transport', 'landscaping', 'electrician', 'handyman', 'catering', 'schoolTransport', 'daycare', 'daily', 'delivery', 'usedbooks'];
-                  const properties = ['rental', 'guesthouse', 'sale', 'overnight', 'vacation', 'office', 'land'];
 
-                  if (helpers.includes(category.id)) {
-                    navigate(`/search?category=${category.id}&type=helper`);
-                  } else if (services.includes(category.id)) {
-                    navigate(`/search?category=${category.id}&type=services`);
-                  } else if (properties.includes(category.id)) {
-                    navigate(`/search?category=${category.id}&type=properties`);
-                  } else {
-                    navigate(`/search?category=${category.id}`);
-                  }
-                }}
-                className="snap-start shrink-0 w-[120px] cursor-pointer"
-              >
-                <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-2">
-                  <ImageGallery
-                    imageUrls={[category.image]}
-                    alt={category.name}
-                    type="category"
-                  />
-                  <div className={`absolute inset-0 bg-gradient-to-t ${category.color} opacity-40 mix-blend-multiply`} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-2">
-                    <p className="text-white font-semibold text-sm leading-tight">{category.name}</p>
-                    <p className="text-white/80 text-xs">{category.count}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
 
-        {/* Discovery Protocols Hub */}
+        {/* Discovery Protocols Hub - Bento Box Redesign */}
         <section className="mb-12 mt-6">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="w-4 h-4 text-rose-500" />
-            <span className="text-gray-400 text-[10px] font-black tracking-[0.3em] uppercase">Discovery Hub</span>
+            <span className="text-gray-900 text-[10px] font-black tracking-[0.3em] uppercase">Discovery Hub</span>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <button 
               onClick={() => navigate('/matchmaker')}
-              className="p-4 rounded-3xl bg-gradient-to-br from-rose-500/10 via-rose-500/5 to-transparent border border-rose-500/20 text-center flex flex-col items-center justify-center gap-2 hover:scale-105 transition-transform"
+              className="col-span-2 p-6 rounded-[2rem] bg-gray-950 border border-white/10 text-left flex items-center justify-between gap-4 hover:border-rose-500/50 transition-colors group relative overflow-hidden shadow-2xl"
             >
-              <span className="text-3xl">🔥</span>
-              <span className="text-[10px] font-black tracking-wider text-rose-500 uppercase">Matchmaker</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-rose-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10">
+                <span className="text-xs font-black tracking-widest text-rose-500 uppercase block mb-1 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
+                  Neural Matchmaker
+                </span>
+                <span className="text-white font-black text-xl tracking-tight">Swipe your perfect match.</span>
+              </div>
+              <div className="relative z-10 w-16 h-16 shrink-0 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.3)]">
+                <span className="text-3xl">🔥</span>
+              </div>
             </button>
             
             <button 
               onClick={() => navigate('/radar')}
-              className="p-4 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 text-center flex flex-col items-center justify-center gap-2 hover:scale-105 transition-transform"
+              className="p-5 rounded-[2rem] bg-gray-950 border border-white/10 text-left flex flex-col justify-between gap-4 hover:border-emerald-500/50 transition-colors group relative overflow-hidden shadow-2xl min-h-[140px]"
             >
-              <span className="text-3xl">🛰️</span>
-              <span className="text-[10px] font-black tracking-wider text-emerald-500 uppercase">Live Radar</span>
+              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10 flex justify-between items-start">
+                <span className="text-[10px] font-black tracking-wider text-emerald-500 uppercase">Live Radar</span>
+                <span className="text-2xl">🛰️</span>
+              </div>
+              <span className="relative z-10 text-white text-sm font-bold leading-tight">Explore the map.</span>
             </button>
 
             <button 
               onClick={() => navigate('/quick-book')}
-              className="p-4 rounded-3xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 text-center flex flex-col items-center justify-center gap-2 hover:scale-105 transition-transform"
+              className="p-5 rounded-[2rem] bg-gray-950 border border-white/10 text-left flex flex-col justify-between gap-4 hover:border-amber-500/50 transition-colors group relative overflow-hidden shadow-2xl min-h-[140px]"
             >
-              <span className="text-3xl">⚡</span>
-              <span className="text-[10px] font-black tracking-wider text-amber-500 uppercase">Quick Book</span>
+              <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10 flex justify-between items-start">
+                <span className="text-[10px] font-black tracking-wider text-amber-500 uppercase">Quick Book</span>
+                <span className="text-2xl">⚡</span>
+              </div>
+              <span className="relative z-10 text-white text-sm font-bold leading-tight">Deploy instantly.</span>
             </button>
           </div>
         </section>
 
-        <div className="mb-10">
-          <WeeklySpecialsSection navigate={navigate} isMobile={true} />
-        </div>
+
 
         {/* LoopOut Brand Campaign Banner */}
         <div className="relative h-20 mb-10">
@@ -1230,8 +1270,8 @@ const MobileAppHomepage = ({
               activeFeaturedTab === 'Services' ? featuredServices : 
               activeFeaturedTab === 'Helper' ? featuredHelpers : featuredEvents)
               .slice(0, 6).map((item, idx) => (
-              <div key={`mobile-featured-${activeFeaturedTab}-${item._id || idx}`} className="snap-start shrink-0 w-[220px] md:w-[240px]">
-                <AirbnbCard
+              <div key={`mobile-featured-${activeFeaturedTab}-${item._id || idx}`} className="snap-start shrink-0 w-[160px] md:w-[200px]">
+                <EliteCard
                   item={item}
                   type={activeFeaturedTab === 'Properties' ? 'property' : activeFeaturedTab.toLowerCase()}
                   onClick={(path) => navigate(path)}
@@ -1262,9 +1302,9 @@ const MobileAppHomepage = ({
         {recentlyAddedItems.length > 0 && (
           <section className="mb-8">
             <h2 className="font-semibold text-gray-900 mb-4">Recently added</h2>
-            <div className="flex overflow-x-auto gap-10 pb-4 -mx-4 px-6 lg:mx-0 lg:px-0 scrollbar-hide snap-x">
+            <div className="flex overflow-x-auto gap-6 pb-4 -mx-4 px-6 lg:mx-0 lg:px-0 scrollbar-hide snap-x">
               {recentlyAddedItems.slice(0, 5).map((item) => (
-                <div key={item._id} className="flex-shrink-0 w-56 snap-start">
+                <div key={item._id} className="flex-shrink-0 w-44 md:w-52 snap-start">
                   <RecentlyAddedCard
                     item={item}
                     type={item.itemType === 'listing' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property') : item.itemType}
@@ -1281,29 +1321,29 @@ const MobileAppHomepage = ({
         {/* MOBILE CONSOLIDATED FEED */}
         <section className="mt-10 mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-black text-gray-900 tracking-tight">Explore {activeTab}</h2>
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-100 rounded-full">
+            <h2 className="text-3xl font-black text-gray-950 tracking-tighter uppercase">Explore <br/><span className="text-rose-500">{activeTab}</span></h2>
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-950 rounded-full shadow-[0_0_15px_rgba(0,0,0,0.1)]">
               <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Live Pulse</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-white">Live Data</span>
             </div>
           </div>
-          <div className="sticky top-0 z-40 bg-white pt-2 flex overflow-x-auto gap-4 pb-4 mb-10 scrollbar-hide -mx-4 px-6 lg:mx-0 lg:px-0">
+          <div className="sticky top-0 z-40 bg-[#FDFDFD]/90 backdrop-blur-xl pt-2 flex overflow-x-auto gap-4 pb-4 mb-10 scrollbar-hide -mx-4 px-6 lg:mx-0 lg:px-0 border-b border-gray-100">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <motion.button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-3 px-6 py-4 rounded-3xl transition-all duration-500 shrink-0 ${
+                  className={`flex items-center gap-3 px-6 py-4 rounded-full transition-all duration-500 shrink-0 border ${
                     isActive 
-                      ? 'bg-white shadow-xl scale-105' 
-                      : 'bg-gray-50/50 opacity-60'
+                      ? 'bg-gray-950 border-gray-950 shadow-2xl scale-105' 
+                      : 'bg-white border-gray-100 opacity-70 hover:opacity-100'
                   }`}
                 >
-                  <div className="flex-shrink-0">
-                    <CategoryIcon type={tab.iconType} size={isActive ? "w-11 h-11" : "w-8 h-8"} />
+                  <div className="flex-shrink-0 filter drop-shadow-md">
+                    <CategoryIcon type={tab.iconType} size={isActive ? "w-8 h-8" : "w-6 h-6"} />
                   </div>
-                  <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-gray-950' : 'text-gray-400'}`}>
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-white' : 'text-gray-500'}`}>
                     {tab.id}
                   </span>
                 </motion.button>
@@ -1319,7 +1359,7 @@ const MobileAppHomepage = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
               >
-                <AirbnbCard
+                <EliteCard
                   item={item}
                   type={activeTab === 'Universe' ? (item.itemType || 'property') : activeTab === 'Helper' ? 'helper' : activeTab === 'Properties' ? 'property' : activeTab.slice(0, -1).toLowerCase()}
                   onClick={(path) => navigate(path)}
@@ -1461,8 +1501,8 @@ const DesktopHomepage = ({
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* Sticky Airbnb-style Categories Bar */}
-      <div className="sticky top-0 z-40 bg-white py-3 shadow-sm">
+      {/* Sticky Elite Categories Bar */}
+      <div className="sticky top-0 z-40 bg-gray-950/80 backdrop-blur-xl py-3 border-b border-white/10 shadow-2xl">
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
           <div className="flex items-center gap-12 overflow-x-auto scrollbar-hide py-1">
             {tabs.map((tab) => {
@@ -1471,15 +1511,17 @@ const DesktopHomepage = ({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className="flex flex-col items-center gap-2  relative pb-3 pt-1 cursor-pointer transition-all focus:outline-none"
+                  className="group flex flex-col items-center gap-2 relative pb-3 pt-1 cursor-pointer transition-all focus:outline-none"
                 >
-                  <CategoryIcon type={tab.iconType} size="w-6 h-6" />
-                  <span className={`text-xs font-semibold tracking-wide transition-colors duration-200 ${isActive ? 'text-gray-900 font-bold' : 'text-gray-500 group-hover:text-gray-900'}`}>
+                  <div className={`transition-transform duration-300 ${isActive ? 'scale-110 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'group-hover:scale-110 opacity-70 group-hover:opacity-100'}`}>
+                    <CategoryIcon type={tab.iconType} size="w-6 h-6" />
+                  </div>
+                  <span className={`text-[10px] font-black tracking-widest uppercase transition-colors duration-200 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-200'}`}>
                     {tab.id}
                   </span>
-                  {isActive ? (
-                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-rose-500" />
-                  ) : null}
+                  {isActive && (
+                    <motion.div layoutId="desktopTabIndicator" className="absolute bottom-0 left-0 right-0 h-[2px] bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)]" />
+                  )}
                 </button>
               );
             })}
@@ -1488,16 +1530,17 @@ const DesktopHomepage = ({
           {/* Premium Filter Button */}
           <button 
             onClick={() => navigate('/search')}
-            className="flex items-center gap-2 px-4 py-3 border border-gray-200 rounded-xl hover:border-gray-900 transition-all font-medium text-xs tracking-wider text-gray-700 bg-white shadow-sm hover:shadow-md"
+            className="flex items-center gap-2 px-6 py-2.5 border border-gray-200 rounded-full hover:border-gray-900 transition-all font-black uppercase text-[10px] tracking-widest text-gray-700 bg-white shadow-sm hover:shadow-md"
           >
             <FunnelIcon className="w-4 h-4 text-gray-500" />
-            <span>Filters</span>
+            <span>Refine Search</span>
           </button>
         </div>
       </div>
 
       {/* Main Clean Feed Grid */}
       <main className="max-w-7xl mx-auto px-8 py-10">
+        <DailyLoopHub />
         {/* AI Insights & Recommendations (Subtle & elegant, not busy) */}
         {showAIInsights && aiInsights && aiInsights.length > 0 && (
           <div className="mb-10 bg-gradient-to-r from-rose-50 to-amber-50 p-5 rounded-2xl border border-rose-100 flex items-center justify-between shadow-sm relative overflow-hidden">
@@ -1522,56 +1565,69 @@ const DesktopHomepage = ({
           </div>
         )}
 
-        {/* Discovery Protocols Hub (Desktop) */}
+        {/* Discovery Protocols Hub (Desktop) - Bento Box Redesign */}
         <section className="mb-12">
           <div className="flex items-center gap-2 mb-6">
             <Sparkles className="w-5 h-5 text-rose-500" />
             <h2 className="text-sm font-black text-gray-900 uppercase tracking-[0.2em]">Discovery Hub</h2>
           </div>
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-4 gap-6">
             <button 
               onClick={() => navigate('/matchmaker')}
-              className="group p-8 rounded-[2.5rem] bg-gradient-to-br from-rose-500/10 via-rose-500/5 to-transparent border border-rose-500/20 text-left flex flex-col justify-between h-48 hover:shadow-[0_20px_40px_rgba(244,63,94,0.1)] transition-all duration-300 hover:-translate-y-1"
+              className="col-span-2  p-8 rounded-[2.5rem] bg-gray-950 border border-white/10 text-left flex items-center justify-between gap-6 hover:shadow-[0_20px_50px_rgba(244,63,94,0.3)] hover:border-rose-500/50 transition-all duration-300 relative overflow-hidden h-48"
             >
-              <span className="text-4xl">🔥</span>
-              <div>
-                <span className="text-xs font-black tracking-widest text-rose-500 uppercase block mb-1">Neural Matchmaker</span>
-                <span className="text-[11px] text-gray-500 font-medium">Swipe cards to instantly build your custom wishlist vault.</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-rose-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10">
+                <span className="text-xs font-black tracking-widest text-rose-500 uppercase block mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+                  Neural Matchmaker
+                </span>
+                <span className="text-white font-black text-3xl tracking-tight leading-none mb-2 block">Swipe your match.</span>
+                <span className="text-gray-400 text-sm font-medium">Instantly build your custom wishlist vault.</span>
+              </div>
+              <div className="relative z-10 w-24 h-24 shrink-0 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/30 shadow-[0_0_25px_rgba(244,63,94,0.4)]">
+                <span className="text-5xl">🔥</span>
               </div>
             </button>
             
             <button 
               onClick={() => navigate('/radar')}
-              className="group p-8 rounded-[2.5rem] bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 text-left flex flex-col justify-between h-48 hover:shadow-[0_20px_40px_rgba(16,185,129,0.1)] transition-all duration-300 hover:-translate-y-1"
+              className="col-span-1  p-6 rounded-[2.5rem] bg-gray-950 border border-white/10 text-left flex flex-col justify-between h-48 hover:shadow-[0_20px_40px_rgba(16,185,129,0.2)] hover:border-emerald-500/50 transition-all duration-300 relative overflow-hidden"
             >
-              <span className="text-4xl">🛰️</span>
-              <div>
-                <span className="text-xs font-black tracking-widest text-emerald-500 uppercase block mb-1">Live Radar</span>
-                <span className="text-[11px] text-gray-500 font-medium">Explore properties, events and services geographically in real time.</span>
+              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10 flex justify-between items-start">
+                <span className="text-[10px] font-black tracking-widest text-emerald-500 uppercase">Live Radar</span>
+                <span className="text-3xl">🛰️</span>
               </div>
+              <span className="relative z-10 text-white text-lg font-bold leading-tight">Explore the map geographically.</span>
             </button>
 
             <button 
               onClick={() => navigate('/quick-book')}
-              className="group p-8 rounded-[2.5rem] bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 text-left flex flex-col justify-between h-48 hover:shadow-[0_20px_40px_rgba(245,158,11,0.1)] transition-all duration-300 hover:-translate-y-1"
+              className="col-span-1 p-6 rounded-[2.5rem] bg-gray-950 border border-white/10 text-left flex flex-col justify-between h-48 hover:shadow-[0_20px_40px_rgba(245,158,11,0.2)] hover:border-amber-500/50 transition-all duration-300 relative overflow-hidden"
             >
-              <span className="text-4xl">⚡</span>
-              <div>
-                <span className="text-xs font-black tracking-widest text-amber-500 uppercase block mb-1">One-Tap Quick Book</span>
-                <span className="text-[11px] text-gray-500 font-medium">Instantly deploy the nearest top-tier professional to your location.</span>
+              <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10 flex justify-between items-start">
+                <span className="text-[10px] font-black tracking-widest text-amber-500 uppercase">Quick Book</span>
+                <span className="text-3xl">⚡</span>
               </div>
+              <span className="relative z-10 text-white text-lg font-bold leading-tight">Deploy the nearest pro instantly.</span>
             </button>
           </div>
         </section>
 
         {/* Simple Grid Header */}
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-            {activeTab === 'Universe' ? 'Top Discoveries' : `Exclusive ${activeTab}`}
+          <h1 className="text-3xl font-black uppercase tracking-tighter">
+            <span className="text-gray-950">Explore </span>
+            <span className="text-rose-500">{activeTab === 'Universe' ? 'Top Discoveries' : activeTab}</span>
           </h1>
-          <span className="text-xs text-gray-500 font-medium">
-            Showing {getFilteredItems().length} options in Polokwane
-          </span>
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-100 rounded-full">
+            <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
+            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+              Live: {getFilteredItems().length} hits
+            </span>
+          </div>
         </div>
 
         {/* Listings Grid */}
@@ -1583,7 +1639,7 @@ const DesktopHomepage = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: idx * 0.03 }}
             >
-              <AirbnbCard
+              <EliteCard
                 item={item}
                 type={activeTab === 'Universe' ? (item.itemType || 'property') : activeTab === 'Helper' ? 'helper' : activeTab === 'Properties' ? 'property' : activeTab.slice(0, -1).toLowerCase()}
                 onClick={(path) => navigate(path)}

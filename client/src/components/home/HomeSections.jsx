@@ -150,54 +150,66 @@ export const SellItemsSection = ({ navigate }) => {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <TagIcon className="w-4 h-4 text-rose-500" />
-            <span className="text-rose-500 text-[10px] font-black tracking-[0.3em] uppercase">Community Marketplace</span>
+            <span className="text-rose-500 text-[10px] font-black tracking-[0.3em] uppercase">P2P Exchange</span>
           </div>
-          <h2 className="text-3xl font-black text-gray-900 tracking-tighter">ITEMS FOR SALE</h2>
-          <p className="text-gray-400 text-[11px] font-black uppercase tracking-[0.2em] mt-1">Preloved items from your community</p>
+          <h2 className="text-2xl font-black text-gray-950 tracking-tighter uppercase">Community <br/><span className="text-rose-500">Vault</span></h2>
+          <p className="text-gray-400 text-[11px] font-black uppercase tracking-[0.2em] mt-1">Preloved items from the network</p>
         </div>
         <button
           onClick={() => navigate('/sell')}
-          className="text-[10px] font-black text-rose-500 uppercase tracking-widest border-b-2 border-rose-500/10 hover:border-rose-500 transition-all pb-1 flex items-center gap-2"
+          className="text-[10px] font-black text-rose-500 uppercase tracking-widest border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500 hover:text-white px-4 py-2 rounded-full transition-all flex items-center gap-2"
         >
-          <span>View All</span>
+          <span>Access Vault</span>
           <ArrowRightIcon className="w-3 h-3" />
         </button>
       </div>
 
-      <div className="flex overflow-x-auto gap-5 pb-4 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
-        {items.map((item, idx) => (
+      <div className="flex overflow-x-auto gap-5 pb-4 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide snap-x">
+        {items.map((item, idx) => {
+          const catColor = CATEGORY_COLORS[item.category] || 'from-gray-500 to-gray-600';
+          return (
           <div
             key={item._id}
             onClick={() => navigate(`/sell-item/${item._id}`)}
-            className="flex-shrink-0 w-[220px] cursor-pointer "
+            className="flex-shrink-0 w-[180px] md:w-[220px] cursor-pointer snap-start"
           >
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gray-100 mb-2">
+            <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden bg-gray-950 border border-white/10 group-hover:border-rose-500/50 shadow-2xl transition-all">
               <img loading="lazy"
                 src={item.imageUrls?.[0] || 'https://via.placeholder.com/300'}
                 alt={item.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out opacity-90 group-hover:opacity-100"
               />
-              <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-xl bg-gradient-to-r ${CATEGORY_COLORS[item.category] || 'from-gray-700 to-gray-900'} shadow-md`}>
-                <span className="text-[10px] font-black text-white uppercase tracking-widest">
+              
+              {/* Immersive Dark Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
+              
+              <div className={`absolute top-4 left-4 bg-gray-950/80 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.1)] flex items-center gap-1.5 z-20`}>
+                <span className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${catColor} animate-pulse`} />
+                <span className="text-[8px] font-black text-white uppercase tracking-widest">
                   {CATEGORY_EMOJIS[item.category] || '🏷️'} {item.category}
                 </span>
               </div>
-              <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-xl shadow-md">
-                <span className="text-[13px] font-black text-gray-900">R {item.price}</span>
-              </div>
-            </div>
+              
+              {/* Content info at bottom */}
+              <div className="absolute bottom-0 inset-x-0 p-5 z-20 flex flex-col justify-end">
+                <h3 className="font-black text-[15px] text-white leading-tight line-clamp-2 mb-2 group-hover:text-rose-400 transition-colors">{item.title}</h3>
+                
+                <div className="flex items-center gap-2 mb-3">
+                  {item.creator?.avatar && (
+                    <img loading="lazy" src={item.creator.avatar} alt={item.creator.username} className="w-5 h-5 rounded-full object-cover border border-white/20 shadow-sm" />
+                  )}
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider truncate">{item.creator?.username || 'Anonymous'}</p>
+                </div>
 
-            <div className="px-1">
-              <h3 className="font-bold text-[15px] text-gray-900 truncate mb-1">{item.title}</h3>
-              <div className="flex items-center gap-2">
-                {item.creator?.avatar && (
-                  <img loading="lazy" src={item.creator.avatar} alt={item.creator.username} className="w-5 h-5 rounded-full object-cover border border-gray-200" />
-                )}
-                <p className="text-[12px] text-gray-500 truncate">{item.creator?.username || 'Anonymous'}</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-xl font-black text-white tracking-tight drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+                    R {item.price?.toLocaleString() || item.price}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        ))}
+        )})}
       </div>
     </motion.section>
   );

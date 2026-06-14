@@ -20,7 +20,8 @@ import {
   HandThumbUpIcon,
   HandThumbDownIcon,
   ChevronRightIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  FireIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -211,12 +212,21 @@ const UserProfile = () => {
                     </button>
                   </>
                 ) : (
-                  <Link
-                    to="/profile"
-                    className="flex-1 px-8 py-3.5 bg-gray-100 text-gray-700 rounded-2xl font-bold hover:bg-gray-200 transition-all text-center flex items-center justify-center gap-2"
-                  >
-                    Edit My Profile
-                  </Link>
+                  <div className="flex w-full space-x-3">
+                    <Link
+                      to="/profile"
+                      className="flex-1 px-4 py-3.5 bg-gray-100 text-gray-700 rounded-2xl font-bold hover:bg-gray-200 transition-all text-center flex items-center justify-center gap-2"
+                    >
+                      Edit Profile
+                    </Link>
+                    <Link
+                      to="/pro"
+                      className="flex-1 px-4 py-3.5 bg-gradient-to-r from-rose-500 to-orange-500 text-white rounded-2xl font-bold hover:shadow-xl transition-all text-center flex items-center justify-center gap-2 shadow-rose-500/30"
+                    >
+                      <FireIcon className="w-5 h-5" />
+                      Pro Mode
+                    </Link>
+                  </div>
                 )}
               </div>
             </div>

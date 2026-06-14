@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiHome, FiMail, FiUser, FiUsers, FiMessageSquare, FiX } from 'react-icons/fi';
+import { FiHome, FiMail, FiUser, FiUsers, FiMessageSquare, FiX, FiCpu, FiFileText } from 'react-icons/fi';
 import { FaSpinner } from 'react-icons/fa';
 
 export default function Users() {
@@ -65,14 +65,32 @@ export default function Users() {
     setActiveChat(null);
   };
 
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (!message.trim()) return;
+  const handleSendMessage = (e, customText = null) => {
+    if (e) e.preventDefault();
+    const textToSend = customText || message;
+    if (!textToSend.trim()) return;
+
+    // Simulate AI Sentiment
+    let sentiment = 'neutral';
+    let badge = '';
+    const lowerText = textToSend.toLowerCase();
+    if (lowerText.includes('urgent') || lowerText.includes('asap') || lowerText.includes('emergency')) {
+      sentiment = 'urgent';
+      badge = 'URGENT';
+    } else if (lowerText.includes('quote') || lowerText.includes('price') || lowerText.includes('cost')) {
+      sentiment = 'negotiation';
+      badge = 'NEGOTIATION';
+    } else if (lowerText.includes('yes') || lowerText.includes('agree') || lowerText.includes('deal')) {
+      sentiment = 'positive';
+      badge = 'DEAL IMMINENT';
+    }
 
     const newMessage = {
       sender: 'you',
-      text: message,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      text: textToSend,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      badge,
+      sentiment
     };
 
     setChatMessages(prev => ({
@@ -80,23 +98,26 @@ export default function Users() {
       [activeChat]: [...(prev[activeChat] || []), newMessage]
     }));
 
-    setMessage('');
+    if (!customText) setMessage('');
 
     // Simulate reply after 1-3 seconds
     const replyTime = 1000 + Math.random() * 2000;
     setTimeout(() => {
       const replies = [
-        `Thanks for your message!`,
-        `I'll get back to you soon.`,
-        `Can we schedule a call to discuss this?`,
-        `Let me check my calendar and get back to you.`,
-        `Great question! Let me find out for you.`
+        { text: `I can handle that. What's your budget?`, badge: 'ANALYZING', sentiment: 'neutral' },
+        { text: `Yes, I'm available. Let's lock it in.`, badge: 'POSITIVE', sentiment: 'positive' },
+        { text: `I might need more details before providing a final number.`, badge: 'HESITANT', sentiment: 'negotiation' },
+        { text: `Can we do this tomorrow instead?`, badge: 'RESCHEDULE', sentiment: 'urgent' }
       ];
+
+      const reply = replies[Math.floor(Math.random() * replies.length)];
 
       const replyMessage = {
         sender: activeChat,
-        text: replies[Math.floor(Math.random() * replies.length)],
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        text: reply.text,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        badge: reply.badge,
+        sentiment: reply.sentiment
       };
 
       setChatMessages(prev => ({
@@ -104,6 +125,11 @@ export default function Users() {
         [activeChat]: [...(prev[activeChat] || []), replyMessage]
       }));
     }, replyTime);
+  };
+
+  const handleSmartQuote = () => {
+    const quote = `SMART QUOTE PROPOSAL:\nService: Standard Request\nEst. Time: 2 Hours\nTotal Rate: R450\nValid for: 24h\n\nDo you accept?`;
+    handleSendMessage(null, quote);
   };
 
   if (loading) {
@@ -243,73 +269,110 @@ export default function Users() {
         </div>
       </div>
 
-      {/* Chat Modal */}
+      {/* Chat Modal - Live Negotiation Terminal */}
       {activeChat && (
-        <div className="fixed bottom-6 right-6 w-full max-w-sm bg-white rounded-xl shadow-2xl border border-gray-200 z-50 transform transition-all duration-300 ease-in-out scale-100 opacity-100">
-          <div className={`flex items-center justify-between p-4 rounded-t-xl bg-blue-50 border-b border-blue-200`}>
-            <div className="flex items-center gap-3">
-              <img
-                src={users.find(u => u._id === activeChat)?.avatar}
-                alt="User Avatar"
-                className="w-12 h-12 rounded-full border-2 border-white shadow-sm"
-              />
-              <div>
-                <h3 className="font-semibold text-lg text-gray-800">
-                  {users.find(u => u._id === activeChat)?.username}
-                </h3>
-                <p className={`text-xs text-green-600`}>
-                  Online
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={closeChat}
-              className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
-            >
-              <FiX className="text-xl" />
-            </button>
-          </div>
+        <div className="fixed inset-0 bg-gray-950/90 backdrop-blur-xl z-[200] flex items-center justify-center p-4 sm:p-8 font-mono">
+          <div className="w-full max-w-4xl h-[90vh] bg-gray-900 border border-green-500/30 rounded-2xl shadow-[0_0_50px_rgba(34,197,94,0.15)] flex flex-col overflow-hidden relative">
+            
+            {/* Terminal Grid Background */}
+            <div className="absolute inset-0 z-0 opacity-10 pointer-events-none" style={{
+              backgroundImage: 'linear-gradient(rgba(34, 197, 94, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 197, 94, 0.3) 1px, transparent 1px)',
+              backgroundSize: '20px 20px'
+            }}></div>
 
-          <div className="h-80 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-            {(chatMessages[activeChat] || []).map((msg, index) => (
-              <div
-                key={index}
-                className={`flex ${msg.sender === 'you' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[75%] p-3 rounded-xl shadow-sm ${
-                    msg.sender === 'you'
-                      ? 'bg-blue-600 text-white rounded-br-none'
-                      : 'bg-blue-50 text-blue-700 rounded-bl-none border border-blue-200'
-                  }`}
-                >
-                  <p className="text-sm">{msg.text}</p>
-                  <p className={`text-xs mt-1 ${msg.sender === 'you' ? 'text-blue-100' : 'text-gray-500'}`}>
-                    {msg.time}
-                  </p>
+            {/* Header */}
+            <div className="relative z-10 flex items-center justify-between p-4 bg-gray-950 border-b border-green-500/30">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <img
+                    src={users.find(u => u._id === activeChat)?.avatar}
+                    alt="Avatar"
+                    className="w-12 h-12 rounded-sm border border-green-500/50 opacity-80"
+                    style={{ filter: 'grayscale(100%) sepia(100%) hue-rotate(80deg) saturate(300%) contrast(150%)' }}
+                  />
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]"></div>
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-green-400 tracking-wider flex items-center gap-2">
+                    <FiCpu className="text-green-500" />
+                    TARGET: {users.find(u => u._id === activeChat)?.username.toUpperCase()}
+                  </h3>
+                  <div className="flex gap-3 text-xs text-green-500/70">
+                    <span>STATUS: ACTIVE_LINK</span>
+                    <span>ENCRYPTION: AES-256</span>
+                  </div>
                 </div>
               </div>
-            ))}
-            <div ref={chatMessagesEndRef} />
-          </div>
-
-          <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-gray-700"
-              />
               <button
-                type="submit"
-                className="bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition-colors shadow-md flex items-center justify-center"
+                onClick={closeChat}
+                className="text-green-500 hover:text-green-400 hover:bg-green-500/10 p-2 rounded transition-colors border border-transparent hover:border-green-500/50"
               >
-                Send
+                <FiX className="text-2xl" />
               </button>
             </div>
-          </form>
+
+            {/* Chat Area */}
+            <div className="relative z-10 flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+              {(chatMessages[activeChat] || []).map((msg, index) => {
+                let badgeColor = 'text-green-400 border-green-500/30 bg-green-500/10';
+                if (msg.sentiment === 'urgent') badgeColor = 'text-red-400 border-red-500/30 bg-red-500/10';
+                if (msg.sentiment === 'negotiation') badgeColor = 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10';
+                if (msg.sentiment === 'positive') badgeColor = 'text-blue-400 border-blue-500/30 bg-blue-500/10';
+
+                return (
+                  <div key={index} className={`flex flex-col ${msg.sender === 'you' ? 'items-end' : 'items-start'}`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] text-gray-500 uppercase">[{msg.time}]</span>
+                      {msg.badge && (
+                        <span className={`text-[9px] px-2 py-0.5 border rounded uppercase font-bold tracking-widest ${badgeColor} animate-pulse`}>
+                          AI: {msg.badge}
+                        </span>
+                      )}
+                    </div>
+                    <div
+                      className={`max-w-[80%] p-4 border rounded-sm backdrop-blur-md ${
+                        msg.sender === 'you'
+                          ? 'bg-green-900/20 border-green-500/50 text-green-100 shadow-[0_0_15px_rgba(34,197,94,0.1)]'
+                          : 'bg-gray-800/50 border-gray-600 text-gray-300'
+                      }`}
+                      style={{ whiteSpace: 'pre-wrap' }}
+                    >
+                      {msg.text}
+                    </div>
+                  </div>
+                );
+              })}
+              <div ref={chatMessagesEndRef} />
+            </div>
+
+            {/* AI Tools & Input */}
+            <div className="relative z-10 bg-gray-950 border-t border-green-500/30 p-4">
+              <div className="flex gap-2 mb-3">
+                <button 
+                  onClick={handleSmartQuote}
+                  className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider px-3 py-1.5 bg-yellow-500/10 text-yellow-500 border border-yellow-500/30 rounded hover:bg-yellow-500/20 transition-colors"
+                >
+                  <FiFileText /> Generate Smart Quote
+                </button>
+              </div>
+              <form onSubmit={handleSendMessage} className="flex gap-3">
+                <span className="text-green-500 text-xl font-bold self-center">{">"}</span>
+                <input
+                  type="text"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="TRANSMIT MESSAGE..."
+                  className="flex-1 bg-transparent border-b border-green-500/50 focus:border-green-400 px-2 py-2 outline-none text-green-100 placeholder:text-green-500/30 font-mono transition-colors"
+                />
+                <button
+                  type="submit"
+                  className="bg-green-500/20 text-green-400 border border-green-500/50 px-6 py-2 rounded-sm hover:bg-green-500 hover:text-gray-950 transition-all shadow-[0_0_10px_rgba(34,197,94,0.2)] hover:shadow-[0_0_20px_rgba(34,197,94,0.6)] font-bold tracking-widest uppercase"
+                >
+                  Execute
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       )}
     </div>

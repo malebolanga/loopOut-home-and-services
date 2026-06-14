@@ -26,6 +26,7 @@ const Message = lazy(() => import("./pages/Message"));
 
 // Dashboard Page
 const DashBoard = lazy(() => import("./pages/DashBoard"));
+const ProDashboard = lazy(() => import("./pages/ProDashboard"));
 const HostDashboard = lazy(() => import("./pages/HostDashboard"));
 const HostEarnings = lazy(() => import("./pages/HostEarnings"));
 const HostTools = lazy(() => import("./pages/HostTools"));
@@ -162,6 +163,7 @@ const AnimatedRoutes = () => {
         <Route path="/smart-search" element={<PageTransition><SmartSearchPage /></PageTransition>} />
 
         <Route path="/dashboard" element={<PageTransition><DashBoard /></PageTransition>} />
+        <Route path="/pro" element={<PageTransition><ProDashboard /></PageTransition>} />
         <Route path="/host-dashboard" element={<PageTransition><HostDashboard /></PageTransition>} />
         <Route path="/host-earnings" element={<PageTransition><HostEarnings /></PageTransition>} />
         <Route path="/host-tools" element={<PageTransition><HostTools /></PageTransition>} />
@@ -318,6 +320,7 @@ function AppContent() {
   const location = useLocation();
   const hideFooterPaths = [
     '/host-dashboard',
+    '/pro',
     '/host-earnings',
     '/host-tools',
     '/for-business',
@@ -332,6 +335,7 @@ function AppContent() {
   ];
     const hideHeaderPaths = [
     '/host-dashboard',
+    '/pro',
     '/host-earnings',
     '/host-tools',
     '/for-business',
