@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Tag as TagIcon } from 'lucide-react';
-import { ArrowRightIcon } from '@heroicons/react/24/outline';
+import { ArrowRightIcon, CalendarDaysIcon, ClockIcon, HomeIcon, UserIcon, TicketIcon, WrenchScrewdriverIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { useSelector } from 'react-redux';
 import useSearchIntelligence from '../../hooks/useSearchIntelligence';
 import HelperItem from '../../components/HelperItem';
 import ImageGallery from '../../components/ImageGallery';
@@ -9,6 +10,233 @@ import ImageGallery from '../../components/ImageGallery';
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+};
+
+// ─── Countdown hook ───────────────────────────────────────────────────────────
+const useCountdown = (targetDate) => {
+  const calc = () => {
+    const diff = new Date(targetDate) - new Date();
+    if (diff <= 0) return { days: 0, hours: 0, mins: 0, past: true };
+    const days  = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const mins  = Math.floor((diff % 3600000)  / 60000);
+    return { days, hours, mins, past: false };
+  };
+  const [time, setTime] = useState(calc);
+  useEffect(() => {
+    const id = setInterval(() => setTime(calc()), 30000);
+    return () => clearInterval(id);
+  }, [targetDate]);
+  return time;
+};
+
+// ─── Individual booking card ──────────────────────────────────────────────────
+const BookingCard = ({ booking, navigate }) => {
+  const item    = booking.helper || booking.service || booking.listing || booking.event;
+  const isHelper  = !!booking.helper;
+  const isService = !!booking.service && !booking.helper;
+  const isEvent   = !!booking.event;
+  const isListing = !!booking.listing && !booking.helper && !booking.service && !booking.event;
+
+  const date = new Date(booking.startDate);
+  const countdown = useCountdown(booking.startDate);
+
+  const typeConfig = isHelper  ? { label: 'Helper Service', icon: <UserIcon className="w-4 h-4" />,             color: 'from-violet-600 to-indigo-700', accent: 'violet', route: `/helper/${item?._id}` } :
+                    isService  ? { label: 'Service',        icon: <WrenchScrewdriverIcon className="w-4 h-4" />,color: 'from-amber-500 to-orange-600',   accent: 'amber',  route: `/service/${item?._id}` } :
+                    isEvent    ? { label: 'Event',          icon: <TicketIcon className="w-4 h-4" />,            color: 'from-rose-500 to-pink-600',      accent: 'rose',   route: `/event/${item?._id}` } :
+                                 { label: 'Listing',        icon: <HomeIcon className="w-4 h-4" />,              color: 'from-emerald-500 to-teal-600',   accent: 'emerald',route: `/listing/${item?._id}` };
+
+  const statusColor = booking.status === 'confirmed' || booking.status === 'approved'
+    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+    : booking.status === 'pending'
+    ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+    : 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+
+  const thumb = item?.imageUrls?.[0] || item?.avatar || null;
+
+  return (
+    <motion.div
+      whileTap={{ scale: 0.97 }}
+      whileHover={{ y: -4 }}
+      onClick={() => navigate(typeConfig.route)}
+      className="snap-start shrink-0 w-[230px] cursor-pointer relative overflow-hidden rounded-[1.75rem] shadow-2xl"
+    >
+      {/* Card background: image or gradient */}
+      {thumb ? (
+        <>
+          <img loading="lazy" src={thumb} alt={item?.name || item?.title} className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/70 to-gray-950/10" />
+        </>
+      ) : (
+        <div className={`absolute inset-0 bg-gradient-to-br ${typeConfig.color}`} />
+      )}
+
+      {/* Shimmer glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Content */}
+      <div className="relative z-10 p-5 flex flex-col h-[200px] justify-between">
+        {/* Top row: type badge + status */}
+        <div className="flex items-start justify-between gap-2">
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20`}>
+            <span className="text-white">{typeConfig.icon}</span>
+            <span className="text-[8px] font-black text-white uppercase tracking-[0.15em]">{typeConfig.label}</span>
+          </div>
+          <span className={`px-2 py-1 text-[8px] font-black uppercase tracking-wider rounded-lg border ${statusColor}`}>
+            {booking.status}
+          </span>
+        </div>
+
+        {/* Name */}
+        <div>
+          <h3 className="text-white font-black text-[15px] leading-tight line-clamp-2 mb-1 drop-shadow-sm">
+            {item?.name || item?.title || 'Booking'}
+          </h3>
+          {item?.address && (
+            <p className="text-white/50 text-[10px] font-bold uppercase tracking-wider truncate">{item.address}</p>
+          )}
+        </div>
+
+        {/* Bottom: date + countdown */}
+        <div className="flex items-end justify-between">
+          <div>
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <CalendarDaysIcon className="w-3 h-3 text-white/70" />
+              <span className="text-white text-[10px] font-bold">
+                {date.toLocaleDateString('en-ZA', { weekday: 'short', month: 'short', day: 'numeric' })}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <ClockIcon className="w-3 h-3 text-white/70" />
+              <span className="text-white/70 text-[10px] font-bold">
+                {date.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+          </div>
+
+          {/* Countdown pill */}
+          {!countdown.past && (
+            <div className="flex flex-col items-end gap-0.5">
+              <span className="text-[8px] font-black text-white/50 uppercase tracking-widest">In</span>
+              <div className="flex items-center gap-1">
+                {countdown.days > 0 && (
+                  <span className="px-1.5 py-0.5 bg-white/20 backdrop-blur rounded-md text-white text-[9px] font-black">
+                    {countdown.days}d
+                  </span>
+                )}
+                <span className="px-1.5 py-0.5 bg-white/20 backdrop-blur rounded-md text-white text-[9px] font-black">
+                  {countdown.hours}h
+                </span>
+                <span className="px-1.5 py-0.5 bg-white/20 backdrop-blur rounded-md text-white text-[9px] font-black">
+                  {countdown.mins}m
+                </span>
+              </div>
+            </div>
+          )}
+          {countdown.past && (
+            <span className="text-[8px] font-black text-rose-400 uppercase tracking-widest">Past due</span>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// ─── Upcoming Bookings Section ────────────────────────────────────────────────
+export const UpcomingBookingsSection = ({ navigate }) => {
+  const { currentUser } = useSelector((state) => state.user);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!currentUser?._id) { setLoading(false); return; }
+    const load = async () => {
+      try {
+        const [userRes, hostRes] = await Promise.all([
+          fetch(`/api/bookings/user/${currentUser._id}`),
+          fetch(`/api/bookings/host/${currentUser._id}`)
+        ]);
+        let all = [];
+        if (userRes.ok)  all = [...all, ...(await userRes.json())];
+        if (hostRes.ok)  all = [...all, ...(await hostRes.json())];
+
+        // Deduplicate
+        const map = new Map();
+        all.forEach(b => map.set(b._id, b));
+
+        const now = new Date();
+        const upcoming = Array.from(map.values())
+          .filter(b => new Date(b.startDate) >= now &&
+            ['confirmed','pending','approved','assigned','enroute','ongoing'].includes(b.status))
+          .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+          .slice(0, 6);
+
+        setBookings(upcoming);
+      } catch (e) {
+        console.error('UpcomingBookingsSection:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [currentUser]);
+
+  if (!currentUser || loading || bookings.length === 0) return null;
+
+  return (
+    <motion.section
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={fadeInUp}
+      className="mb-8"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 px-1">
+        <div className="flex items-center gap-2">
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+            className="w-2 h-2 rounded-full bg-blue-500"
+          />
+          <h2 className="text-[11px] font-black tracking-[0.2em] uppercase text-gray-900">
+            Upcoming Bookings
+          </h2>
+          <span className="ml-1 px-2 py-0.5 bg-blue-500/10 text-blue-600 text-[9px] font-black rounded-full border border-blue-500/20 uppercase tracking-wider">
+            {bookings.length}
+          </span>
+        </div>
+        <button
+          onClick={() => navigate('/my-bookings')}
+          className="flex items-center gap-1 text-[9px] font-black text-gray-400 uppercase tracking-widest hover:text-gray-900 transition-colors"
+        >
+          View all <ArrowRightIcon className="w-3 h-3" />
+        </button>
+      </div>
+
+      {/* Scroll row */}
+      <div className="flex gap-4 overflow-x-auto pb-3 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide snap-x">
+        {bookings.map((booking) => (
+          <BookingCard key={booking._id} booking={booking} navigate={navigate} />
+        ))}
+
+        {/* "Browse more" end-cap */}
+        <motion.div
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => navigate('/search')}
+          className="snap-start shrink-0 w-[160px] h-[200px] rounded-[1.75rem] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all group"
+        >
+          <div className="w-10 h-10 rounded-full bg-gray-100 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
+            <ArrowPathIcon className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+          </div>
+          <span className="text-[9px] font-black text-gray-400 group-hover:text-blue-500 uppercase tracking-widest text-center transition-colors">
+            Book More
+          </span>
+        </motion.div>
+      </div>
+    </motion.section>
+  );
 };
 
 export const NeuralPicksSection = ({ navigate }) => {
