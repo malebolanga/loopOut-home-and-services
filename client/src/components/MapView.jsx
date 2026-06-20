@@ -73,35 +73,26 @@ const MapView = ({
         attributionControl: false
       }).setView(startCenter, 13);
 
-      // Elite Silver Theme Tiles
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      // Light, clean Airbnb-style theme
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         maxZoom: 20
       }).addTo(map);
 
       // Helper to create custom price icons
       const createPriceIcon = (item, isSelected) => {
-        const type = (item.itemType || item.type || 'listing').toLowerCase();
         const price = item.regularPrice || item.price || 0;
         
-        let bgColor = 'bg-gray-950'; // Default
-        if (type.includes('service')) bgColor = 'bg-orange-500';
-        else if (type.includes('listing')) bgColor = 'bg-rose-600';
-        else if (type.includes('helper') || type.includes('maid') || type.includes('cleaning')) bgColor = 'bg-emerald-500';
-        else if (type.includes('event')) bgColor = 'bg-gray-950';
-
         return L.divIcon({
           className: 'custom-price-marker',
           html: `
-            <div class="relative flex items-center justify-center transition-all duration-300 ${isSelected ? 'scale-125 z-[1000]' : 'z-[100]'}">
-              ${isSelected ? `<div class="absolute w-12 h-12 ${bgColor.replace('bg-', 'bg-')}/20 rounded-full animate-ping"></div>` : ''}
-              <div class="relative px-3 py-1.5 ${bgColor} text-white rounded-full border-2 border-white shadow-2xl flex items-center justify-center whitespace-nowrap">
-                 <span class="text-[10px] font-black tracking-tight">R${price.toLocaleString()}</span>
+            <div class="relative flex items-center justify-center transition-all duration-300 ${isSelected ? 'scale-110 z-[1000]' : 'z-[100]'}">
+              <div class="relative px-3 py-1.5 ${isSelected ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'} rounded-full shadow-md hover:shadow-lg hover:scale-105 transition-all flex items-center justify-center whitespace-nowrap font-bold text-[13px] border border-gray-200">
+                 R${price.toLocaleString()}
               </div>
-              <div class="absolute -bottom-1 w-2 h-2 ${bgColor} rotate-45 border-r-2 border-b-2 border-white"></div>
             </div>
           `,
           iconSize: [60, 30],
-          iconAnchor: [30, 30]
+          iconAnchor: [30, 15]
         });
       };
 
@@ -176,15 +167,15 @@ const MapView = ({
     <div className={`relative w-full h-full overflow-hidden p-0 m-0 ${isFullscreen ? 'fixed inset-0 z-[200] bg-black h-[100dvh]' : ''}`}>
       <style>{`
         .custom-price-marker { background: transparent; border: none; }
-        .leaflet-container { background: #0a0a0a; cursor: crosshair !important; }
+        .leaflet-container { background: #f8f9fa; cursor: grab; }
+        .leaflet-container:active { cursor: grabbing; }
       `}</style>
 
       {/* HUD: Search Summary Overlay */}
-      <div className="absolute top-8 left-1/2 -translate-x-1/2 z-[500] hidden md:block pointer-events-none">
-         <div className="bg-gray-950/90 backdrop-blur-2xl border border-white/10 px-8 py-3 rounded-3xl shadow-2xl flex items-center gap-4">
-            <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">
-              Neural Scan: {items.length} Masterpieces Found
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[500] hidden md:block pointer-events-none">
+         <div className="bg-white/95 backdrop-blur-md px-6 py-2.5 rounded-full shadow-md border border-gray-100 flex items-center gap-2 transition-all">
+            <span className="text-xs font-bold text-gray-900">
+              {items.length} places found
             </span>
          </div>
       </div>
@@ -199,72 +190,47 @@ const MapView = ({
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="absolute bottom-10 left-6 right-6 md:left-10 md:right-auto md:w-96 z-[600]"
+            className="absolute bottom-6 left-4 right-4 md:left-8 md:right-auto md:w-80 z-[600]"
           >
-             <div className="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] p-6 shadow-[0_50px_100px_rgba(0,0,0,0.3)] border border-white/20 relative group overflow-hidden">
+             <div 
+               onClick={() => onItemClick(selectedItem)}
+               className="bg-white rounded-2xl p-4 shadow-xl border border-gray-100 cursor-pointer hover:shadow-2xl transition-all group flex flex-col gap-3"
+             >
                 <button 
-                  onClick={() => setSelectedItem(null)}
-                  className="absolute top-4 right-4 z-10 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
+                  onClick={(e) => { e.stopPropagation(); setSelectedItem(null); }}
+                  className="absolute top-2 right-2 w-7 h-7 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-gray-700 hover:bg-white shadow-sm z-10 transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
-                <div className="flex gap-4">
-                   <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-lg">
-                      <img src={selectedItem.imageUrls?.[0] || selectedItem.image || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?w=400&q=80'} alt={selectedItem.name} className="w-full h-full object-cover" />
+                <div className="w-full aspect-[4/3] rounded-xl overflow-hidden relative">
+                   <img src={selectedItem.imageUrls?.[0] || selectedItem.image || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?w=400&q=80'} alt={selectedItem.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                </div>
+                <div>
+                   <div className="flex items-center justify-between mb-1">
+                     <h4 className="font-bold text-gray-900 truncate">{selectedItem.name || selectedItem.title}</h4>
+                     <div className="flex items-center gap-1">
+                       <Star className="w-3.5 h-3.5 fill-gray-900 text-gray-900" />
+                       <span className="text-sm font-medium">{selectedItem.rating || 4.9}</span>
+                     </div>
                    </div>
-                   <div className="flex-1">
-                      <div className="text-xs font-black text-rose-500 uppercase tracking-widest mb-1">{selectedItem.itemType || 'Listing'}</div>
-                      <h4 className="text-lg font-black text-gray-950 leading-tight mb-1">{selectedItem.name || selectedItem.title}</h4>
-                      <div className="flex items-center gap-2 text-sm font-bold text-gray-500">
-                         <span className="text-gray-950 font-black">R{(selectedItem.regularPrice || selectedItem.price || 0).toLocaleString()}</span>
-                         <span>•</span>
-                         <span>{selectedItem.type || selectedItem.category}</span>
-                      </div>
+                   <p className="text-sm text-gray-500 truncate mb-1">{selectedItem.address || selectedItem.location}</p>
+                   <div className="text-sm font-semibold text-gray-900 mt-1">
+                      R{(selectedItem.regularPrice || selectedItem.price || 0).toLocaleString()} 
+                      <span className="font-normal text-gray-500"> total</span>
                    </div>
                 </div>
-                <button 
-                  onClick={() => onItemClick(selectedItem)}
-                  className="w-full mt-6 py-4 bg-gray-950 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
-                >
-                  Inspect Masterpiece <ChevronRight className="w-4 h-4 text-rose-500" />
-                </button>
              </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Neural Discovery Legend (Color Guidelines) */}
-      <div className="absolute bottom-10 left-6 md:left-8 z-[500]">
-         <div className="bg-white/90 backdrop-blur-xl p-4 md:p-5 rounded-[2rem] shadow-2xl border border-gray-100 space-y-3 md:space-y-4">
-            <div className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 px-1">Guidelines</div>
-            <div className="flex flex-col gap-2 md:gap-3">
-               <div className="flex items-center gap-2 md:gap-3">
-                  <div className="w-2.5 h-2.5 bg-rose-600 rounded-full" />
-                  <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-950">Homes</span>
-               </div>
-               <div className="flex items-center gap-2 md:gap-3">
-                  <div className="w-2.5 h-2.5 bg-orange-500 rounded-full" />
-                  <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-950">Services</span>
-               </div>
-               <div className="flex items-center gap-2 md:gap-3">
-                  <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
-                  <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-950">Helpers</span>
-               </div>
-               <div className="flex items-center gap-2 md:gap-3">
-                  <div className="w-2.5 h-2.5 bg-gray-950 rounded-full" />
-                  <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-950">Events</span>
-               </div>
-            </div>
-         </div>
-      </div>
-
       {/* Floating HUD Controls */}
-      <div className="absolute bottom-10 right-8 flex flex-col gap-4 z-[500]">
-         <button onClick={toggleFullscreen} className="w-16 h-16 bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-2xl flex items-center justify-center text-gray-950 active:scale-90 transition-all border border-gray-100">
-           {isFullscreen ? <Minimize2 className="w-6 h-6" /> : <Maximize2 className="w-6 h-6" />}
+      <div className="absolute top-24 right-4 flex flex-col gap-2 z-[500]">
+         <button onClick={toggleFullscreen} className="w-10 h-10 bg-white rounded-xl shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:text-gray-900 active:scale-95 transition-all border border-gray-200">
+           {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
          </button>
-         <button onClick={handleLocateMe} className="w-16 h-16 bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-2xl flex items-center justify-center text-gray-950 active:scale-90 transition-all border border-gray-100">
-           <Navigation className="w-6 h-6" />
+         <button onClick={handleLocateMe} className="w-10 h-10 bg-white rounded-xl shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:text-gray-900 active:scale-95 transition-all border border-gray-200">
+           <Navigation className="w-5 h-5" />
          </button>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import useSearchIntelligence from '../../hooks/useSearchIntelligence';
 import HelperItem from '../../components/HelperItem';
 import ImageGallery from '../../components/ImageGallery';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -64,8 +65,8 @@ const BookingCard = ({ booking, navigate }) => {
       {/* Card background: image or gradient */}
       {thumb ? (
         <>
-          <img loading="lazy" src={thumb} alt={item?.name || item?.title} className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/70 to-gray-950/10" />
+          <ImageWithFallback src={thumb} alt={item?.name || item?.title} className="absolute inset-0 w-full h-full" type={typeConfig.accent} />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/70 to-gray-950/10 pointer-events-none" />
         </>
       ) : (
         <div className={`absolute inset-0 bg-gradient-to-br ${typeConfig.color}`} />
@@ -181,8 +182,18 @@ export const UpcomingBookingsSection = ({ navigate }) => {
     load();
   }, [currentUser]);
 
-  if (!currentUser || loading || bookings.length === 0) return null;
-
+  if (!currentUser) return null;
+  if (loading && bookings.length === 0) {
+    return (
+      <div className="mb-8 px-4 animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
+        <div className="flex gap-4">
+          <div className="w-[280px] h-[180px] bg-gray-100 rounded-[2rem]"></div>
+          <div className="w-[280px] h-[180px] bg-gray-100 rounded-[2rem]"></div>
+        </div>
+      </div>
+    );
+  }
   return (
     <motion.section
       initial="hidden"
@@ -216,6 +227,16 @@ export const UpcomingBookingsSection = ({ navigate }) => {
 
       {/* Scroll row */}
       <div className="flex gap-4 overflow-x-auto pb-3 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide snap-x">
+        {bookings.length === 0 && (
+          <div className="snap-start shrink-0 w-[280px] p-6 bg-white border border-gray-100 rounded-[2rem] shadow-sm flex flex-col justify-center items-center text-center">
+            <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+              <CalendarDaysIcon className="w-6 h-6 text-gray-300" />
+            </div>
+            <h3 className="text-sm font-black text-gray-900 mb-1">No Upcoming Bookings</h3>
+            <p className="text-[11px] font-medium text-gray-400">You don't have any reservations coming up.</p>
+          </div>
+        )}
+
         {bookings.map((booking) => (
           <BookingCard key={booking._id} booking={booking} navigate={navigate} />
         ))}
@@ -402,10 +423,10 @@ export const SellItemsSection = ({ navigate }) => {
             className="flex-shrink-0 w-[180px] md:w-[220px] cursor-pointer snap-start"
           >
             <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden bg-gray-950 border border-white/10 group-hover:border-rose-500/50 shadow-2xl transition-all">
-              <img loading="lazy"
-                src={item.imageUrls?.[0] || 'https://via.placeholder.com/300'}
+              <ImageWithFallback
+                src={item.imageUrls?.[0]}
                 alt={item.title}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out opacity-90 group-hover:opacity-100"
+                className="absolute inset-0 w-full h-full group-hover:scale-110 transition-transform duration-700 ease-out opacity-90 group-hover:opacity-100"
               />
               
               {/* Immersive Dark Gradient */}
@@ -424,7 +445,7 @@ export const SellItemsSection = ({ navigate }) => {
                 
                 <div className="flex items-center gap-2 mb-3">
                   {item.creator?.avatar && (
-                    <img loading="lazy" src={item.creator.avatar} alt={item.creator.username} className="w-5 h-5 rounded-full object-cover border border-white/20 shadow-sm" />
+                    <ImageWithFallback src={item.creator.avatar} alt={item.creator.username} type="avatar" className="w-5 h-5 rounded-full border border-white/20 shadow-sm" />
                   )}
                   <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider truncate">{item.creator?.username || 'Anonymous'}</p>
                 </div>
@@ -610,10 +631,10 @@ export const WeeklySpecialsSection = ({ navigate, isMobile = false }) => {
           <motion.div
             key={promo.id}
             whileHover={{ scale: 1.02 }}
-            className="relative h-64 rounded-[2.5rem] overflow-hidden  cursor-pointer shadow-xl"
+            className="relative h-64 rounded-[2.5rem] overflow-hidden  cursor-pointer shadow-xl group"
             onClick={() => navigate('/search?filter=special')}
           >
-            <img loading="lazy" src={promo.image} className="absolute inset-0 w-full h-full object-cover hover:scale-110 transition-transform duration-[5s]" alt={promo.title} />
+            <ImageWithFallback src={promo.image} alt={promo.title} className="absolute inset-0 w-full h-full group-hover:scale-110 transition-transform duration-[5s]" />
             <div className="absolute inset-0 bg-black/40 hover:bg-black/20 transition-colors" />
             <div className="absolute inset-x-0 bottom-0 p-8">
               <div className={`${promo.color} text-white text-[10px] font-black px-3 py-1 rounded-full w-fit mb-3 tracking-widest`}>

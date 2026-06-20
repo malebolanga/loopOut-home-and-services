@@ -34,9 +34,6 @@ const DailyLoopHub = () => {
 
   return (
     <div className="mb-8 mt-2">
-      {/* Upcoming Bookings Section (self-contained, handles its own fetch) */}
-      <UpcomingBookingsSection navigate={navigate} />
-
       {/* Daily Loop Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">

@@ -64,7 +64,7 @@ const ImageGallery = ({ imageUrls, alt, type, className = "" }) => {
         alt={alt}
         onError={handleError}
         onLoad={() => setImageLoaded(true)}
-        className={`w-full h-full object-cover transition-transform duration-500 z-10 relative ${imageLoaded ? 'scale-100 group-hover:scale-105' : 'scale-105 opacity-0'}`}
+        className={`w-full h-full object-cover transition-all duration-500 z-10 relative ${imageLoaded ? 'scale-100 opacity-100 group-hover:scale-105' : 'scale-105 opacity-0'}`}
         loading="lazy"
       />
       

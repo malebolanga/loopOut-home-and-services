@@ -150,8 +150,7 @@ const Footer = () => {
             { id: '/', label: 'Explore', icon: HomeIcon },
             { id: '/wishlist', label: 'Saved', icon: HeartIcon },
             { id: '/host-dashboard', label: 'Dashboard', icon: CpuChipIcon },
-            { id: '/planner', label: 'Planner', icon: MapIcon },
-            { id: '/profile', label: 'Profile', icon: UserIcon }
+            { id: '/planner', label: 'Planner', icon: MapIcon }
           ].map((item) => {
             const isActive = location.pathname === item.id;
             const Icon = item.icon;

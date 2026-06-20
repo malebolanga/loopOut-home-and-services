@@ -75,11 +75,23 @@ import {
   Check
 } from 'lucide-react';
 import NeighborhoodInsights from '../components/NeighborhoodInsights';
+import { AirbnbCard, AirbnbCardSkeleton } from '../components/home/AirbnbCard';
 
 
 const RECENT_SEARCHES_KEY = 'recentPropertySearches';
 const MAX_RECENT_SEARCHES = 5;
 const DEFAULT_LISTING_LIMIT = 12;
+
+const CITY_COORDS = {
+  'polokwane': { lat: -23.9058, lng: 29.4505 },
+  'sandton': { lat: -26.1076, lng: 28.0567 },
+  'johannesburg': { lat: -26.2041, lng: 28.0473 },
+  'cape town': { lat: -33.9249, lng: 18.4241 },
+  'durban': { lat: -29.8587, lng: 31.0218 },
+  'pretoria': { lat: -25.7479, lng: 28.2293 },
+  'tembisa': { lat: -25.9964, lng: 28.2268 },
+  'soweto': { lat: -26.2678, lng: 27.8585 }
+};
 
 // Enhanced Categories Configuration with all user requested categories
 const ALL_CATEGORIES = [
@@ -394,8 +406,6 @@ const CategoryDropdown = ({
 };
 
 const ResultCard = ({ item, index, viewMode, onClick }) => {
-  const [isLiked, setIsLiked] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
 
   const getItemType = () => {
@@ -404,23 +414,6 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
     if (type === 'service') return 'services';
     if (type === 'helper') return 'helper';
     if (type === 'event') return 'events';
-    return type;
-  };
-
-  const getSubCategoryLabel = () => {
-    if (type === 'properties') {
-      const config = PROPERTY_TYPE_CONFIG[item.type];
-      return config ? config.label : 'Property';
-    }
-    if (type === 'services') {
-      const config = SERVICES_CATEGORY_CONFIG[item.category || item.type];
-      return config ? config.label : (item.category || item.type || 'Service');
-    }
-    if (type === 'helper') {
-      const config = HELPER_CATEGORY_CONFIG[item.category || item.type];
-      return config ? config.label : (item.category || item.type || 'Helper');
-    }
-    if (type === 'events') return 'Event';
     return type;
   };
 
@@ -436,15 +429,6 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
     return formatted;
   };
 
-  const getRating = () => item.rating || 4.9;
-
-  const getImage = () => {
-    if (item.imageUrls && item.imageUrls.length > 0) return item.imageUrls[0];
-    if (item.images && item.images.length > 0) return item.images[0];
-    return 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800';
-  };
-
-  const getTitle = () => item.name || item.title || item.eventName || 'Untitled Masterpiece';
   const getLocation = () => item.address || item.location || item.city || 'Private Location';
 
   const cardVariants = {
@@ -499,175 +483,22 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
     );
   }
 
-  const getItemPath = (item) => {
-    if (item.itemType === 'listing' || item.type === 'listing') return `/listing/${item._id}`;
-    if (item.itemType === 'event' || item.type === 'event') return `/event/${item._id}`;
-    
-    // Helper specific routes
-    if (item.itemType === 'helper') {
-      const specializedTypes = ['beauty', 'photography', 'carwash', 'barber', 'tattoo', 'chef'];
-      if (specializedTypes.includes(item.type)) return `/${item.type}/${item._id}`;
-      if (item.type === 'tutor') return `/privatetutor/${item._id}`;
-      return `/helper/${item._id}`;
-    }
-    
-    // Service specific routes
-    if (item.itemType === 'service') {
-      if (item.type === 'carwash') return `/carwash/${item._id}`;
-      return `/service/${item._id}`;
-    }
-    
-    return `/${item.type || 'helper'}/${item._id}`;
-  };
-
-  if (viewMode === 'list') {
-    return (
-      <motion.div
-         variants={cardVariants}
-         className="relative bg-white rounded-3xl border border-gray-100 overflow-hidden flex items-center p-4 gap-6 hover:shadow-xl transition-all duration-500 cursor-pointer"
-         onClick={() => navigate(getItemPath(item))}
-      >
-        <div className="w-40 h-40 rounded-2xl overflow-hidden flex-shrink-0">
-           <ImageWithFallback src={getImage()} alt={getTitle()} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" />
-        </div>
-        <div className="flex-1 min-w-0">
-           <div className="flex items-center gap-2 mb-2">
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">{getSubCategoryLabel()}</span>
-              <div className="flex items-center gap-1">
-                 <Star className="w-3 h-3 text-rose-500 fill-rose-500" />
-                 <span className="text-xs font-black">{getRating()}</span>
-              </div>
-           </div>
-           <h3 className="text-lg font-black text-gray-900 truncate mb-1 hover:text-rose-500 transition-colors">{getTitle()}</h3>
-           <p className="text-gray-400 text-xs flex items-center gap-1.5 mb-4">
-              <MapPin className="w-3.5 h-3.5 text-rose-400" />
-              {getLocation()}
-           </p>
-           {/* Neighborhood Intelligence HUD - User requested area context */}
-          <AnimatePresence>
-            {detectedLocation && !loading && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="mb-12"
-              >
-                <NeighborhoodInsights location={detectedLocation} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <div className="flex items-center justify-between mb-8">
-              <span className="text-xl font-black text-gray-900">{getPrice()}</span>
-              <div className="flex items-center gap-3">
-                 <button 
-                   onClick={(e) => { e.stopPropagation(); navigate(getItemPath(item)); }}
-                   className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 transition-all active:scale-95 shadow-lg shadow-gray-100"
-                 >
-                   Inspect
-                 </button>
-                 <button 
-                   onClick={(e) => {
-                     e.stopPropagation();
-                     setIsLiked(!isLiked);
-                   }}
-                   className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 transition-all border border-gray-100"
-                 >
-                   <Heart className={`w-4 h-4 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}`} strokeWidth={isLiked ? 0 : 2} />
-                 </button>
-              </div>
-           </div>
-        </div>
-      </motion.div>
-    );
-  }
+  // Convert types to what AirbnbCard expects
+  const airbnbCardType = (() => {
+    if (type === 'properties') return 'property';
+    if (type === 'services') return 'service';
+    if (type === 'helper') return 'helper';
+    if (type === 'events') return 'event';
+    return type;
+  })();
 
   return (
-    <motion.div
-      variants={cardVariants}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      className=" relative aspect-square bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-700 cursor-pointer h-full"
-      onClick={() => navigate(getItemPath(item))}
-    >
-      <div className="absolute inset-0 z-0">
-        <ImageWithFallback
-          src={getImage()}
-          alt={getTitle()}
-          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-        />
-      </div>
-
-      {/* Top Overlays */}
-      <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
-        <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
-          <Sparkles className="w-3 h-3 text-rose-500" />
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{getSubCategoryLabel()}</span>
-        </div>
-
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsLiked(!isLiked);
-          }}
-          className="w-10 h-10 bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg flex items-center justify-center text-gray-900 hover:bg-rose-500 hover:text-white transition-all active:scale-75 hover:animate-pulse-slow pointer-events-auto"
-        >
-          <Heart className={`w-4 h-4 ${isLiked ? 'fill-rose-500 text-rose-500 animate-bounce' : ''}`} strokeWidth={isLiked ? 0 : 2} />
-        </button>
-      </div>
-
-      {/* Permanent Information Overlay (On Image) */}
-      <div className="absolute inset-x-0 bottom-0 z-10 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none">
-        <div className="flex justify-between items-end gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 mb-1 text-white">
-              <Star className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
-              <span className="text-xs font-black">{getRating()}</span>
-            </div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <h3 className="text-base font-black text-white leading-tight truncate">
-                {getTitle()}
-              </h3>
-            </div>
-            <p className="text-xs text-white/70 font-medium truncate mb-3">
-              {getLocation()}
-            </p>
-
-            {/* Minimal Provider Name Only */}
-            {(type === 'helper' || type === 'services') && (
-              <div className="mt-2">
-                <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">
-                  {item.userRef?.username}
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="text-right flex flex-col items-end pointer-events-auto">
-            <div className="text-xl font-black text-white tracking-tighter leading-none">
-              {getPrice()}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Hover Action Overlay */}
-      <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-8 bg-gray-900/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none group-hover:pointer-events-auto">
-        <div className="w-full space-y-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
-          <div className="flex gap-2">
-            <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-green-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm">
-              <ThumbsUp className="w-4 h-4" />
-              {item.votes?.up || 0}
-            </div>
-            <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-rose-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm">
-              <ThumbsDown className="w-4 h-4" />
-              {item.votes?.down || 0}
-            </div>
-          </div>
-          <div className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl" onClick={(e) => { e.stopPropagation(); navigate(getItemPath(item)); }}>
-             Inspect Masterpiece
-          </div>
-        </div>
-      </div>
+    <motion.div variants={cardVariants}>
+      <AirbnbCard
+        item={item}
+        type={airbnbCardType}
+        onClick={(path) => navigate(path)}
+      />
     </motion.div>
   );
 };
@@ -696,19 +527,7 @@ const EmptyState = ({ onClear }) => (
 );
 
 const SkeletonCard = () => (
-  <div className="relative aspect-square glass rounded-[3rem] border border-white/20 overflow-hidden shadow-sm animate-pulse-slow">
-    <div className="absolute inset-0 bg-gray-100/50 animate-shimmer" />
-    <div className="absolute inset-x-0 bottom-0 p-6 space-y-3">
-      <div className="flex justify-between items-end">
-        <div className="space-y-2 flex-1">
-          <div className="h-2 bg-gray-200/60 rounded w-1/4" />
-          <div className="h-4 bg-gray-200/60 rounded w-3/4" />
-          <div className="h-2 bg-gray-200/60 rounded w-1/2" />
-        </div>
-        <div className="h-8 bg-gray-200/60 rounded-xl w-16" />
-      </div>
-    </div>
-  </div>
+  <AirbnbCardSkeleton />
 );
 
 const generateMockData = (urlParams) => {
@@ -1053,6 +872,24 @@ const SearchPage = () => {
     fetchData();
   }, [fetchData]);
 
+  // Geocode and update map center whenever the location filter changes
+  useEffect(() => {
+    if (!filters.location) return;
+    
+    const lowerLoc = filters.location.toLowerCase();
+    const matchedCity = Object.keys(CITY_COORDS).find(city => lowerLoc.includes(city));
+
+    if (matchedCity) {
+      setMapCenter(CITY_COORDS[matchedCity]);
+    } else {
+      import('../utils/geocoding').then(({ geocodeAddress }) => {
+        geocodeAddress(filters.location).then(coords => {
+          if (coords) setMapCenter(coords);
+        });
+      });
+    }
+  }, [filters.location]);
+
   const handleSearch = useCallback(() => {
     const urlParams = new URLSearchParams();
     if (searchTerm) urlParams.set('searchTerm', searchTerm);
@@ -1069,20 +906,11 @@ const SearchPage = () => {
 
     // Geocode location if searching for a specific place
     if (filters.location) {
-      const cityCoords = {
-        'polokwane': { lat: -23.9058, lng: 29.4505 },
-        'sandton': { lat: -26.1076, lng: 28.0567 },
-        'johannesburg': { lat: -26.2041, lng: 28.0473 },
-        'cape town': { lat: -33.9249, lng: 18.4241 },
-        'durban': { lat: -29.8587, lng: 31.0218 },
-        'pretoria': { lat: -25.7479, lng: 28.2293 }
-      };
-
       const lowerLoc = filters.location.toLowerCase();
-      const matchedCity = Object.keys(cityCoords).find(city => lowerLoc.includes(city));
+      const matchedCity = Object.keys(CITY_COORDS).find(city => lowerLoc.includes(city));
 
       if (matchedCity) {
-        setMapCenter(cityCoords[matchedCity]);
+        setMapCenter(CITY_COORDS[matchedCity]);
       } else {
         import('../utils/geocoding').then(({ geocodeAddress }) => {
           geocodeAddress(filters.location).then(coords => {
@@ -1151,412 +979,366 @@ const SearchPage = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col relative overflow-x-hidden no-scrollbar">
       <style>{`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
-      {/* Fresha-style Split Header */}
-      <div className={`sticky top-0 z-[60] bg-white border-b border-gray-100 px-6 py-4 transition-transform duration-500 ${viewMode === 'map' ? 'max-md:-translate-y-full' : 'translate-y-0'}`}>
-        <div className="max-w-[2520px] mx-auto flex items-center gap-4">
-          
-          {/* Brand Logo - Quick return */}
-          <div 
-            onClick={() => navigate('/')}
-            className="hidden md:flex items-center gap-2 cursor-pointer "
-          >
-             <div className="w-10 h-10 bg-gray-950 rounded-xl flex items-center justify-center group-hover:bg-rose-600 transition-colors">
-                <Sparkles className="w-6 h-6 text-white" />
-             </div>
-             <span className="text-xl font-black tracking-tighter">loopOut</span>
+
+      {/* Clean Airbnb-style Header */}
+      <div className="sticky top-0 z-[60] bg-white border-b border-gray-100">
+        <div className="max-w-[2520px] mx-auto px-6 py-3 flex items-center gap-4">
+
+          {/* Logo */}
+          <div onClick={() => navigate('/')} className="hidden md:flex items-center gap-2 cursor-pointer flex-shrink-0">
+            <div className="w-9 h-9 bg-gray-950 rounded-xl flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-lg font-black tracking-tighter">loopOut</span>
           </div>
 
-          {/* Segmented Search Bar - Fresha Style */}
-          <div className="flex-1 max-w-4xl mx-auto flex items-center bg-white border border-gray-200 rounded-full shadow-[0_4px_15px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-all duration-500 overflow-hidden">
-            
-            {/* Segment: WHAT */}
-            <div className="flex-1 relative group/seg border-r border-gray-100">
-               <button 
-                 onClick={() => setShowFilters(true)}
-                 className="w-full px-6 py-3 flex flex-col items-start hover:bg-gray-50 transition-colors"
-               >
-                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-rose-500">Service or Venue</span>
-                 <span className="text-sm font-bold text-gray-900 truncate w-full text-left">
-                   {searchTerm || 'What are you looking for?'}
-                 </span>
-               </button>
-            </div>
-
-            {/* Segment: WHERE */}
-            <div className="flex-1 relative group/seg border-r border-gray-100">
-               <button 
-                 onClick={() => setShowFilters(true)}
-                 className="w-full px-6 py-3 flex flex-col items-start hover:bg-gray-50 transition-colors"
-               >
-                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-rose-500">Where?</span>
-                 <span className="text-sm font-bold text-gray-900 truncate w-full text-left">
-                   {filters.location || 'Anywhere'}
-                 </span>
-               </button>
-            </div>
-
-            {/* Segment: WHEN */}
-            <div className="flex-1 relative group/seg border-r border-gray-100">
-               <button 
-                 onClick={() => setShowDatePicker(!showDatePicker)}
-                 className="w-full px-6 py-3 flex flex-col items-start hover:bg-gray-50 transition-colors"
-               >
-                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-rose-500">When?</span>
-                 <span className="text-sm font-bold text-gray-900 truncate w-full text-left">
-                   {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                 </span>
-               </button>
-               
-               <AnimatePresence>
-                 {showDatePicker && (
-                   <motion.div 
-                     initial={{ opacity: 0, y: 10 }}
-                     animate={{ opacity: 1, y: 0 }}
-                     exit={{ opacity: 0, y: 10 }}
-                     className="absolute top-full left-0 mt-4 bg-white rounded-[2rem] shadow-2xl border border-gray-100 p-6 z-[70] min-w-[350px]"
-                   >
-                     <Calendar 
-                       onChange={(date) => { setSelectedDate(date); setShowDatePicker(false); }} 
-                       value={selectedDate}
-                       className="border-0 font-sans"
-                     />
-                   </motion.div>
-                 )}
-               </AnimatePresence>
-            </div>
-
-            {/* Search Trigger */}
-            <button 
-              onClick={handleSearch}
-              className="m-2 p-3.5 bg-gray-950 text-white rounded-full hover:bg-rose-500 transition-all active:scale-90 shadow-lg shadow-gray-200"
+          {/* Compact Search Bar */}
+          <div className="flex-1 max-w-2xl mx-auto">
+            <div
+              onClick={() => setShowFilters(true)}
+              className="flex items-center gap-3 bg-white border border-gray-300 rounded-full px-5 py-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
             >
-              <SearchIconLucide className="w-5 h-5" />
-            </button>
+              <SearchIconLucide className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="text-sm font-semibold text-gray-800 truncate block">
+                  {searchTerm || filters.location
+                    ? `${searchTerm || 'Anywhere'} · ${filters.location || 'Anywhere'}`
+                    : 'Search services, venues...'}
+                </span>
+              </div>
+              <div className="flex-shrink-0 w-7 h-7 bg-rose-500 rounded-full flex items-center justify-center">
+                <AdjustmentsHorizontalIcon className="w-4 h-4 text-white" />
+              </div>
+            </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="hidden lg:flex items-center gap-3">
-             <button
-               onClick={() => setShowFilters(true)}
-               aria-label="Filter results"
-               className="w-12 h-12 flex items-center justify-center rounded-full border border-gray-200 bg-white hover:bg-gray-50 transition-all hover:scale-110 active:scale-95"
-             >
-               <AdjustmentsHorizontalIcon className="w-5 h-5 text-gray-600" />
-             </button>
-             <button
-               onClick={() => setViewMode(viewMode === 'map' ? 'grid' : 'map')}
-               aria-label={viewMode === 'map' ? "Show list view" : "Show map view"}
-               className={`w-12 h-12 flex items-center justify-center rounded-full border border-gray-200 transition-all hover:scale-110 active:scale-95 ${viewMode === 'map' ? 'bg-gray-950 text-white' : 'bg-white hover:bg-gray-50'}`}
-             >
-               {viewMode === 'map' ? <Bars3Icon className="w-5 h-5" /> : <MapIcon className="w-5 h-5" />}
-             </button>
+          {/* Map Toggle - Desktop */}
+          <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => setViewMode(viewMode === 'map' ? 'grid' : 'map')}
+              aria-label={viewMode === 'map' ? 'Hide map' : 'Show map'}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-300 text-sm font-semibold text-gray-700 hover:border-gray-900 hover:bg-gray-50 transition-all"
+            >
+              <MapIcon className="w-4 h-4" />
+              {viewMode === 'map' ? 'Hide map' : 'Show map'}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Main Split View Content */}
-      <main className="flex-1 flex overflow-hidden relative">
-        
-        {/* Left Column: Results (Hidden or Squeezed in Map Mode) */}
-        <div className={`flex-1 overflow-y-auto no-scrollbar pt-6 pb-24 px-6 md:px-12 lg:px-16 transition-all duration-700 ${viewMode === 'map' ? 'lg:max-w-0 lg:px-0 lg:opacity-0' : 'max-w-none opacity-100'}`}>
-          
-          {/* Breadcrumbs / Summary */}
-          <div className="mb-8 flex items-end justify-between">
-            <div>
-               <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em] mb-2">Discovery Portal</p>
-               <h1 className="text-3xl font-black text-gray-900 tracking-tighter uppercase italic">
-                 {listings.length} {searchType !== 'all' ? searchType : 'Matches'} in {filters.location || 'The Matrix'}
-               </h1>
-            </div>
-            
-            {/* View Mode Toggles (Compact) */}
-            <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl lg:hidden">
-                <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-white shadow-sm text-rose-600' : 'text-gray-400'}`}>
-                  <Squares2X2Icon className="w-4 h-4" />
-                </button>
-                <button onClick={() => setViewMode('map')} className={`p-2 rounded-lg ${viewMode === 'map' ? 'bg-white shadow-sm text-rose-600' : 'text-gray-400'}`}>
-                  <MapIcon className="w-4 h-4" />
-                </button>
-            </div>
-          </div>
-
-          {/* Cinematic Categories Bar */}
-          <div className="mb-12 overflow-x-auto no-scrollbar py-4 border-y border-gray-50">
-            <div className="flex gap-8 items-center">
+      {/* Airbnb-style Category Bar */}
+      <div className="sticky top-[61px] z-[50] bg-white border-b border-gray-100">
+        <div className="max-w-[2520px] mx-auto">
+          <div className="overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-1 px-6 py-3">
+              {/* All / Universe */}
               <button
                 onClick={() => { setSelectedCategory('all'); fetchData(); }}
-                className={` flex items-center gap-3 px-5 py-2.5 rounded-2xl transition-all whitespace-nowrap ${!selectedCategory || selectedCategory === 'all' ? 'bg-gray-950 text-white shadow-xl shadow-gray-200' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
+                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all flex-shrink-0 min-w-[60px] ${
+                  !selectedCategory || selectedCategory === 'all'
+                    ? 'text-gray-900 border-b-2 border-gray-900'
+                    : 'text-gray-400 hover:text-gray-700 border-b-2 border-transparent'
+                }`}
               >
-                <Sparkles className="w-4 h-4" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Universe</span>
+                <Sparkles className="w-5 h-5" />
+                <span className="text-[10px] font-semibold whitespace-nowrap">All</span>
               </button>
 
               {ALL_CATEGORIES.map(cat => (
                 <button
                   key={cat.id}
                   onClick={() => handleCategorySelect(cat)}
-                  className={` flex items-center gap-3 px-5 py-2.5 rounded-2xl transition-all whitespace-nowrap ${selectedCategory === cat.id ? 'bg-rose-500 text-white shadow-xl shadow-rose-100' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
+                  className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all flex-shrink-0 min-w-[60px] ${
+                    selectedCategory === cat.id
+                      ? 'text-gray-900 border-b-2 border-gray-900'
+                      : 'text-gray-400 hover:text-gray-700 border-b-2 border-transparent'
+                  }`}
                 >
-                  <cat.icon className="w-4 h-4" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">{cat.label}</span>
+                  <cat.icon className="w-5 h-5" />
+                  <span className="text-[10px] font-semibold whitespace-nowrap">{cat.label}</span>
                 </button>
               ))}
             </div>
           </div>
-
-          {/* Results Grid */}
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-               {[1,2,3,4,5,6].map(i => <SkeletonCard key={i} />)}
-            </div>
-          ) : listings.length > 0 ? (
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className={`grid gap-8 ${viewMode === 'map' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'}`}
-            >
-              {listings.map((item, idx) => (
-                <ResultCard
-                  key={item._id || item.id || idx}
-                  item={item}
-                  viewMode="grid"
-                  onClick={() => addToRecentlyViewed(item, item.itemType)}
-                />
-              ))}
-            </motion.div>
-          ) : (
-            <EmptyState onClear={clearFilters} />
-          )}
-
-          {/* Recently Viewed Footer Area */}
-          {recentlyViewedItems.length > 0 && (
-            <section className="mt-24 pt-12 border-t border-gray-100">
-              <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight italic mb-8">Pulse History</h2>
-              <div className="flex overflow-x-auto gap-6 pb-4 no-scrollbar">
-                {recentlyViewedItems.map((item) => (
-                  <div key={item._id || Math.random().toString()} onClick={() => navigate(`/${item.itemType || item.type || 'listing'}/${item._id || item.id}`)} className="flex-shrink-0 w-64 cursor-pointer group">
-                    <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden mb-4 bg-gray-50 shadow-sm group-hover:shadow-xl transition-all duration-500">
-                      <ImageWithFallback
-                        src={item.imageUrls?.[0] || item.images?.[0] || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'}
-                        alt={item.name || item.title || 'Item'}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                      <div className="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-md rounded-full text-[8px] font-black uppercase tracking-widest text-gray-900 shadow-sm">
-                        {item.itemType || item.type || 'property'}
-                      </div>
-                    </div>
-                    <h3 className="font-black text-sm text-gray-900 truncate group-hover:text-rose-600 transition-colors px-2">
-                      {item.name || item.title || 'Untitled Masterpiece'}
-                    </h3>
-                    <p className="text-xs text-gray-400 mt-1 font-bold uppercase tracking-widest px-2">
-                      {typeof (item.regularPrice || item.price) === 'number' ? `R${(item.regularPrice || item.price).toLocaleString()}` : (item.regularPrice || item.price || 'Contact')}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
         </div>
+      </div>
 
-        {/* Right Column: Map (Desktop Full Screen or Split) */}
-        <div className={`transition-all duration-700 overflow-hidden relative ${viewMode === 'map' ? 'w-full fixed inset-0 z-[150] h-[100dvh] md:z-[110]' : 'w-0 hidden lg:block border-l border-gray-100'}`}>
-           {/* Mobile & Desktop Back Button Overlay - Elite Redesign */}
-           {viewMode === 'map' && (
-             <motion.button 
-               initial={{ opacity: 0, x: -20 }}
-               animate={{ opacity: 1, x: 0 }}
-               onClick={() => setViewMode('grid')}
-               className="absolute top-8 left-8 z-[160] w-14 h-14 bg-gray-950/90 backdrop-blur-xl text-white rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex items-center justify-center active:scale-90 transition-all border border-white/10"
-             >
-               <ArrowLeftIcon className="w-6 h-6 text-rose-500" />
-             </motion.button>
-           )}
+      {/* Main Content: True Split-Screen on Desktop */}
+      <main className="flex-1 flex overflow-hidden relative">
 
-           <div className="absolute inset-0">
-              <MapView 
-                items={listings} 
-                searchType={searchType} 
-                location={filters.location || 'South Africa'} 
-                center={mapCenter}
-                onItemClick={(item) => navigate(`/${item.itemType || item.type || 'listing'}/${item._id || item.id}`)}
-              />
-           </div>
-
-           {/* Results Carousel Overlay - Desktop Only (Hidden on Mobile as per request) */}
-           <AnimatePresence>
-             {viewMode === 'map' && listings.length > 0 && (
-               <motion.div 
-                 initial={{ opacity: 0 }}
-                 animate={{ opacity: 1 }}
-                 exit={{ opacity: 0 }}
-                 className="hidden md:flex absolute bottom-10 left-0 right-0 z-[115] px-6 justify-center"
-               >
-                 <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 max-w-full lg:max-w-6xl">
-                    {listings.map((item, idx) => (
-                      <div key={item._id || idx} className="flex-shrink-0 w-80">
-                         <ResultCard
-                           item={item}
-                           viewMode="grid"
-                           onClick={() => addToRecentlyViewed(item, item.itemType)}
-                         />
-                      </div>
-                    ))}
-                 </div>
-               </motion.div>
-             )}
-           </AnimatePresence>
-        </div>
-
-        {/* Floating Map Button (Mobile/Tablet) */}
-        <button
-          onClick={() => setViewMode(viewMode === 'map' ? 'grid' : 'map')}
-          className="lg:hidden fixed bottom-10 left-1/2 -translate-x-1/2 z-[50] flex items-center gap-3 bg-gray-950 text-white px-8 py-5 rounded-full text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl transition-all hover:scale-110 active:scale-95 border border-white/20"
+        {/* Left Column: Results List */}
+        <div
+          className={`overflow-y-auto no-scrollbar transition-all duration-500 ${
+            viewMode === 'map'
+              ? 'hidden lg:block lg:w-[45%] xl:w-[40%] flex-shrink-0'
+              : 'w-full'
+          }`}
         >
-          {viewMode === 'map' ? (
-            <><Bars3Icon className="w-5 h-5 text-rose-500" /> Show Listings</>
-          ) : (
-            <><MapIcon className="w-5 h-5 text-rose-500" /> Explore Map</>
+          <div className="px-6 md:px-10 pt-6 pb-28">
+
+            {/* Results Summary */}
+            <div className="mb-6 flex items-center justify-between">
+              <p className="text-sm font-semibold text-gray-500">
+                {loading ? 'Searching...' : `${listings.length} ${searchType !== 'all' ? searchType : 'places'} ${filters.location ? `near ${filters.location}` : 'found'}`}
+              </p>
+              {/* Mobile View Toggle */}
+              <div className="flex items-center gap-1 lg:hidden">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-lg transition-colors ${ viewMode === 'grid' ? 'text-gray-900' : 'text-gray-400'}`}
+                >
+                  <Squares2X2Icon className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('map')}
+                  className={`p-2 rounded-lg transition-colors ${ viewMode === 'map' ? 'text-gray-900' : 'text-gray-400'}`}
+                >
+                  <MapIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Results Grid */}
+            {loading ? (
+              <div className={`grid gap-5 ${ viewMode === 'map' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'}`}>
+                {[1,2,3,4,5,6,7,8].map(i => <SkeletonCard key={i} />)}
+              </div>
+            ) : listings.length > 0 ? (
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className={`grid gap-5 ${ viewMode === 'map' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'}`}
+              >
+                {listings.map((item, idx) => (
+                  <ResultCard
+                    key={item._id || item.id || idx}
+                    item={item}
+                    viewMode="grid"
+                    onClick={() => addToRecentlyViewed(item, item.itemType)}
+                  />
+                ))}
+              </motion.div>
+            ) : (
+              <EmptyState onClear={clearFilters} />
+            )}
+
+            {/* Recently Viewed */}
+            {recentlyViewedItems.length > 0 && (
+              <section className="mt-16 pt-10 border-t border-gray-100">
+                <h2 className="text-base font-bold text-gray-900 mb-5">Recently viewed</h2>
+                <div className="flex overflow-x-auto gap-4 pb-4 no-scrollbar">
+                  {recentlyViewedItems.map((item) => (
+                    <div
+                      key={item._id || Math.random().toString()}
+                      onClick={() => navigate(`/${item.itemType || item.type || 'listing'}/${item._id || item.id}`)}
+                      className="flex-shrink-0 w-48 cursor-pointer group"
+                    >
+                      <div className="aspect-square rounded-xl overflow-hidden mb-2 bg-gray-100">
+                        <ImageWithFallback
+                          src={item.imageUrls?.[0] || item.images?.[0] || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'}
+                          alt={item.name || item.title || 'Item'}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                      <h3 className="font-semibold text-sm text-gray-900 truncate">{item.name || item.title || 'Untitled'}</h3>
+                      <p className="text-sm text-gray-500">
+                        {typeof (item.regularPrice || item.price) === 'number'
+                          ? `R${(item.regularPrice || item.price).toLocaleString()}`
+                          : (item.regularPrice || item.price || 'Contact')}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Map */}
+        <div
+          className={`transition-all duration-500 overflow-hidden relative ${
+            viewMode === 'map'
+              ? 'w-full lg:flex-1 fixed inset-0 lg:relative lg:inset-auto z-[150] lg:z-auto h-[100dvh] lg:h-auto'
+              : 'hidden lg:block lg:flex-1 sticky top-[120px] h-[calc(100vh-120px)]'
+          }`}
+        >
+          {/* Back Button for Mobile full-screen map */}
+          {viewMode === 'map' && (
+            <motion.button
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              onClick={() => setViewMode('grid')}
+              className="lg:hidden absolute top-6 left-6 z-[160] flex items-center gap-2 px-4 py-3 bg-white rounded-full shadow-lg text-sm font-semibold text-gray-900 active:scale-95 transition-all border border-gray-100"
+            >
+              <ArrowLeftIcon className="w-4 h-4" />
+              Show list
+            </motion.button>
           )}
-        </button>
+
+          <div className="absolute inset-0">
+            <MapView
+              items={listings}
+              searchType={searchType}
+              location={filters.location || 'South Africa'}
+              center={mapCenter}
+              onItemClick={(item) => navigate(`/${item.itemType || item.type || 'listing'}/${item._id || item.id}`)}
+            />
+          </div>
+        </div>
+
+        {/* Floating Show Map Button (Mobile/Tablet) */}
+        {viewMode !== 'map' && (
+          <button
+            onClick={() => setViewMode('map')}
+            className="lg:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-[50] flex items-center gap-2 bg-gray-900 text-white px-6 py-3.5 rounded-full text-sm font-semibold shadow-xl transition-all hover:bg-gray-800 active:scale-95"
+          >
+            <MapIcon className="w-4 h-4" />
+            Show map
+          </button>
+        )}
       </main>
 
-      {/* Filter Modal (Enhanced) */}
+      {/* Filter / Search Slide-over Panel */}
       <AnimatePresence>
         {showFilters && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              animate={{ opacity: 0.5 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowFilters(false)}
-              className="fixed inset-0 bg-gray-950/40 backdrop-blur-md z-[100]"
+              className="fixed inset-0 bg-black z-[100]"
             />
             <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed inset-y-0 right-0 w-full max-w-md bg-white z-[101] flex flex-col shadow-2xl overflow-hidden"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 35, stiffness: 400 }}
+              className="fixed bottom-0 inset-x-0 h-[85vh] md:h-full md:inset-y-0 md:right-0 md:left-auto md:w-[480px] bg-white z-[101] flex flex-col shadow-2xl md:rounded-none rounded-t-3xl overflow-hidden"
             >
-              <div className="flex-shrink-0 px-8 pt-12 pb-6 border-b border-gray-100 flex items-center justify-between">
-                <div>
-                   <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em] mb-1">Matrix Overrides</p>
-                   <h2 className="text-3xl font-black text-gray-900 tracking-tighter italic uppercase">Deep Scan</h2>
-                </div>
+              {/* Header */}
+              <div className="flex-shrink-0 flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
+                <h2 className="text-lg font-bold text-gray-900">Filters</h2>
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                  className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
                 >
-                  <XMarkIcon className="w-6 h-6 text-gray-950" />
+                  <XMarkIcon className="w-5 h-5 text-gray-700" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-8 space-y-10 no-scrollbar">
-                
-                {/* Search Term */}
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">What?</label>
-                  <div className="relative">
-                    <SearchIconLucide className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-rose-500" />
-                    <input
-                      type="text"
-                      placeholder="Neural signal (e.g. Nails, Hair, Spa)"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-gray-50 border border-transparent focus:border-rose-500 rounded-3xl py-5 pl-14 pr-6 focus:ring-0 transition-all outline-none font-bold text-sm"
-                    />
-                  </div>
-                </div>
+              <div className="flex-1 overflow-y-auto no-scrollbar">
+                <div className="p-6 space-y-8">
 
-                {/* Location */}
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Where?</label>
-                  <div className="relative">
-                    <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-rose-500" />
-                    <input
-                      type="text"
-                      placeholder="Location in the loop..."
-                      value={filters.location}
-                      onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
-                      className="w-full bg-gray-50 border border-transparent focus:border-rose-500 rounded-3xl py-5 pl-14 pr-6 focus:ring-0 transition-all outline-none font-bold text-sm"
-                    />
+                  {/* What */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Service or Venue</label>
+                    <div className="relative">
+                      <SearchIconLucide className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="e.g. Nails, Hair, Guest house"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full bg-gray-50 border border-gray-200 focus:border-gray-900 rounded-xl py-3.5 pl-11 pr-4 focus:ring-0 transition-all outline-none text-sm"
+                      />
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2 pt-2">
-                     {['Sandton', 'Cape Town', 'Durban', 'Polokwane'].map(loc => (
-                       <button 
-                        key={loc}
-                        onClick={() => setFilters(prev => ({ ...prev, location: loc }))}
-                        className="px-4 py-2 bg-gray-50 hover:bg-rose-50 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-rose-600 transition-all"
-                       >
-                         {loc}
-                       </button>
-                     ))}
-                  </div>
-                </div>
 
-                {/* Category Selection */}
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Category Loop</label>
-                  <div className="grid grid-cols-2 gap-4">
-                    {ALL_CATEGORIES.slice(0, 8).map(cat => (
-                      <button
-                        key={cat.id}
-                        onClick={() => handleCategorySelect(cat)}
-                        className={`flex items-center gap-3 p-4 rounded-3xl border transition-all ${selectedCategory === cat.id ? 'bg-gray-950 text-white border-gray-950 shadow-xl' : 'bg-white border-gray-100 hover:border-rose-200'}`}
-                      >
-                        <cat.icon className={`w-5 h-5 ${selectedCategory === cat.id ? 'text-rose-500' : 'text-gray-400'}`} />
-                        <span className="text-[10px] font-black uppercase tracking-widest truncate">{cat.label}</span>
-                      </button>
-                    ))}
+                  {/* Where */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Location</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="City or neighbourhood"
+                        value={filters.location}
+                        onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
+                        className="w-full bg-gray-50 border border-gray-200 focus:border-gray-900 rounded-xl py-3.5 pl-11 pr-4 focus:ring-0 transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {['Sandton', 'Cape Town', 'Durban', 'Polokwane', 'Pretoria', 'Johannesburg'].map(loc => (
+                        <button
+                          key={loc}
+                          onClick={() => setFilters(prev => ({ ...prev, location: loc }))}
+                          className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                            filters.location === loc
+                              ? 'bg-gray-900 text-white border-gray-900'
+                              : 'bg-white text-gray-700 border-gray-200 hover:border-gray-900'
+                          }`}
+                        >
+                          {loc}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                {/* Price Range */}
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Price Spectrum (R)</label>
-                  <div className="flex gap-4">
-                    <input
-                      type="number"
-                      placeholder="Min"
-                      value={filters.minPrice}
-                      onChange={(e) => setFilters(prev => ({ ...prev, minPrice: e.target.value }))}
-                      className="flex-1 bg-gray-50 border border-transparent rounded-2xl py-4 px-6 focus:ring-0 outline-none text-sm font-bold"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Max"
-                      value={filters.maxPrice}
-                      onChange={(e) => setFilters(prev => ({ ...prev, maxPrice: e.target.value }))}
-                      className="flex-1 bg-gray-50 border border-transparent rounded-2xl py-4 px-6 focus:ring-0 outline-none text-sm font-bold"
-                    />
+                  {/* Category */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {ALL_CATEGORIES.slice(0, 10).map(cat => (
+                        <button
+                          key={cat.id}
+                          onClick={() => handleCategorySelect(cat)}
+                          className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all text-left ${
+                            selectedCategory === cat.id
+                              ? 'bg-gray-900 text-white border-gray-900'
+                              : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
+                          }`}
+                        >
+                          <cat.icon className={`w-4 h-4 flex-shrink-0 ${ selectedCategory === cat.id ? 'text-white' : 'text-gray-400'}`} />
+                          <span className="text-xs font-semibold truncate">{cat.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
 
+                  {/* Price Range */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Price range (R)</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        placeholder="Min"
+                        value={filters.minPrice}
+                        onChange={(e) => setFilters(prev => ({ ...prev, minPrice: e.target.value }))}
+                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-0 outline-none text-sm"
+                      />
+                      <span className="text-gray-400 font-medium">–</span>
+                      <input
+                        type="number"
+                        placeholder="Max"
+                        value={filters.maxPrice}
+                        onChange={(e) => setFilters(prev => ({ ...prev, maxPrice: e.target.value }))}
+                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-0 outline-none text-sm"
+                      />
+                    </div>
+                  </div>
+
+                </div>
               </div>
 
-              {/* Modal Footer */}
-              <div className="flex-shrink-0 p-8 border-t border-gray-100 bg-white flex items-center justify-between gap-4">
+              {/* Footer */}
+              <div className="flex-shrink-0 px-6 py-5 border-t border-gray-100 bg-white flex items-center justify-between gap-4">
                 <button
                   onClick={clearFilters}
-                  className="text-[10px] font-black text-gray-400 uppercase tracking-widest underline underline-offset-8 hover:text-rose-600 transition-colors"
+                  className="text-sm font-semibold text-gray-700 underline underline-offset-4 hover:text-gray-900 transition-colors"
                 >
-                  Reset Loop
+                  Clear all
                 </button>
                 <button
                   onClick={() => { handleSearch(); setShowFilters(false); }}
-                  className="flex-1 bg-gray-950 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl hover:bg-rose-500 transition-all active:scale-95 flex items-center justify-center gap-3"
+                  className="flex-1 bg-gray-900 text-white py-3.5 rounded-xl font-bold text-sm shadow-md hover:bg-gray-800 transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
-                  <Navigation className="w-4 h-4 text-rose-500" />
-                  Execute Scan
+                  <SearchIconLucide className="w-4 h-4" />
+                  Search
                 </button>
               </div>
             </motion.div>

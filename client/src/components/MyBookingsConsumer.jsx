@@ -265,25 +265,37 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
         const res = await fetch(`/api/bookings/user/${currentUser?._id}`);
         if (res.ok) {
           const data = await res.json();
-          const formatted = data.map(b => ({
-            id: b._id,
-            title: b.listing?.name || b.helper?.name || b.service?.name || 'Service Request',
-            status: b.status || 'pending',
-            date: new Date(b.startDate).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }),
-            time: new Date(b.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            proName: b.listing ? (b.listing.userRef?.username || 'Host') : (b.helper?.name || b.service?.name || 'Pro'),
-            proAvatar: b.listing?.imageUrls?.[0] || b.helper?.imageUrls?.[0] || b.service?.imageUrls?.[0] || 'https://i.pravatar.cc/150?u=pro',
-            proWhatsapp: b.phone || 'N/A',
-            icon: b.listing ? <FaHome /> : (b.service?.type === 'carwash' ? <FaCar /> : <FaHandsWash />),
-            color: b.listing ? 'bg-rose-500' : 'bg-blue-500',
-            subtype: b.subtype || '',
-            selectedPerformer: b.selectedPerformer,
-            performerExperience: b.performerExperience,
-            performerImage: b.performerImage,
-            type: b.listing ? 'listing' : (b.helper ? 'helper' : 'service'),
-            itemId: b.listing?._id || b.helper?._id || b.service?._id
-          }));
-          setActiveBookings(formatted.sort((a, b) => new Date(b.startDate) - new Date(a.startDate)));
+          const now = new Date();
+          now.setHours(0, 0, 0, 0);
+
+          const formatted = data
+            .filter(b => {
+              const bookingDate = new Date(b.startDate);
+              bookingDate.setHours(0, 0, 0, 0);
+              const isPast = bookingDate < now;
+              const isEnded = ['cancelled', 'completed', 'declined'].includes(b.status);
+              return !isPast && !isEnded;
+            })
+            .map(b => ({
+              id: b._id,
+              rawDate: b.startDate,
+              title: b.listing?.name || b.helper?.name || b.service?.name || 'Service Request',
+              status: b.status || 'pending',
+              date: new Date(b.startDate).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }),
+              time: new Date(b.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              proName: b.listing ? (b.listing.userRef?.username || 'Host') : (b.helper?.name || b.service?.name || 'Pro'),
+              proAvatar: b.listing?.imageUrls?.[0] || b.helper?.imageUrls?.[0] || b.service?.imageUrls?.[0] || 'https://i.pravatar.cc/150?u=pro',
+              proWhatsapp: b.phone || 'N/A',
+              icon: b.listing ? <FaHome /> : (b.service?.type === 'carwash' ? <FaCar /> : <FaHandsWash />),
+              color: b.listing ? 'bg-rose-500' : 'bg-blue-500',
+              subtype: b.subtype || '',
+              selectedPerformer: b.selectedPerformer,
+              performerExperience: b.performerExperience,
+              performerImage: b.performerImage,
+              type: b.listing ? 'listing' : (b.helper ? 'helper' : 'service'),
+              itemId: b.listing?._id || b.helper?._id || b.service?._id
+            }));
+          setActiveBookings(formatted.sort((a, b) => new Date(a.rawDate) - new Date(b.rawDate)));
         }
       } catch (error) {
         console.error('Error fetching consumer bookings:', error);
@@ -296,6 +308,9 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
 
   const handleCancel = async (id) => {
     try {
+      // Optimistically remove from UI
+      setActiveBookings(prev => prev.filter(b => b.id !== id));
+
       const res = await fetch(`/api/bookings/update/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -304,8 +319,8 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
           cancelledBy: 'user'
         })
       });
-      if (res.ok) {
-        setActiveBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b));
+      if (!res.ok) {
+        console.error('Failed to cancel booking on server');
       }
     } catch (error) {
       console.error('Failed to cancel booking:', error);

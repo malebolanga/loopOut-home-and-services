@@ -65,16 +65,34 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
   };
 
   const handleClick = () => {
-    if (type === 'property' || type === 'listing') {
-      onClick(`/listing/${item._id}`);
-    } else if (type === 'service') {
-      onClick(`/service/${item._id}`);
-    } else if (type === 'helper') {
-      onClick(`/helper/${item._id}`);
-    } else if (type === 'event') {
-      onClick(`/event/${item._id}`);
-    } else {
-      onClick(item._id);
+    const itemType = type === 'property' ? 'listing' : type;
+    const resolvedType = item.itemType || item.type || itemType;
+
+    let path = `/${resolvedType}/${item._id}`;
+
+    if (resolvedType === 'listing' || resolvedType === 'property') {
+      path = `/listing/${item._id}`;
+    } else if (resolvedType === 'event') {
+      path = `/event/${item._id}`;
+    } else if (resolvedType === 'helper') {
+      const specializedTypes = ['beauty', 'photography', 'carwash', 'barber', 'tattoo', 'chef'];
+      if (specializedTypes.includes(item.type)) {
+        path = `/${item.type}/${item._id}`;
+      } else if (item.type === 'tutor') {
+        path = `/privatetutor/${item._id}`;
+      } else {
+        path = `/helper/${item._id}`;
+      }
+    } else if (resolvedType === 'service') {
+      if (item.type === 'carwash') {
+        path = `/carwash/${item._id}`;
+      } else {
+        path = `/service/${item._id}`;
+      }
+    }
+
+    if (onClick) {
+      onClick(path);
     }
   };
 

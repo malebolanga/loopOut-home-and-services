@@ -82,7 +82,8 @@ import {
   SellItemsSection, 
   SmartRecommendations, 
   ServicesToYourDoor, 
-  WeeklySpecialsSection 
+  WeeklySpecialsSection,
+  UpcomingBookingsSection
 } from '../components/home/HomeSections';
 import DailyLoopHub from '../components/home/DailyLoopHub';
 import { TOP_CATEGORIES } from '../data/categories';
@@ -1249,38 +1250,8 @@ const MobileAppHomepage = ({
         </div>
 
 
-        {/* MOBILE FEATURED DISCOVERY - Tabbed Slider */}
-        <section className="mb-12">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase">Featured</h2>
-            <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
-              {['Properties', 'Services', 'Helper', 'Events'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveFeaturedTab(tab)}
-                  className={`whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${activeFeaturedTab === tab ? 'bg-rose-500 text-white shadow-lg shadow-rose-100' : 'bg-gray-100 text-gray-400'}`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex overflow-x-auto gap-10 pb-6 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide snap-x">
-            {(activeFeaturedTab === 'Properties' ? featuredProperties : 
-              activeFeaturedTab === 'Services' ? featuredServices : 
-              activeFeaturedTab === 'Helper' ? featuredHelpers : featuredEvents)
-              .slice(0, 6).map((item, idx) => (
-              <div key={`mobile-featured-${activeFeaturedTab}-${item._id || idx}`} className="snap-start shrink-0 w-[160px] md:w-[200px]">
-                <EliteCard
-                  item={item}
-                  type={activeFeaturedTab === 'Properties' ? 'property' : activeFeaturedTab.toLowerCase()}
-                  onClick={(path) => navigate(path)}
-                  reducedSize={true}
-                />
-              </div>
-            ))}
-          </div>
-        </section>
+        {/* UPCOMING BOOKINGS */}
+        <UpcomingBookingsSection navigate={navigate} />
 
         {/* Mobile Location Status Indicator */}
         {locationStatus && (

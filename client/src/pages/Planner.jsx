@@ -279,8 +279,10 @@ export default function Planner() {
                 Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="h-36 bg-white/5 border border-white/5 rounded-[2rem] animate-pulse" />
                 ))
-              ) : bookings.length > 0 ? (
-                bookings.map((booking, idx) => {
+              ) : bookings.filter(b => Math.round((new Date(b.startDate) - new Date()) / 86400000) >= 0).length > 0 ? (
+                bookings
+                  .filter(b => Math.round((new Date(b.startDate) - new Date()) / 86400000) >= 0)
+                  .map((booking, idx) => {
                   const meta = getBookingMeta(booking);
                   const status = STATUS_MAP[booking.status] || { label: booking.status, dot: 'bg-gray-400', badge: 'bg-white/5 border-white/10 text-white/40' };
                   const Icon = meta.icon;
@@ -298,7 +300,31 @@ export default function Planner() {
                     <motion.div key={booking._id}
                       initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}
                       onClick={() => navigate(`/${meta.label.toLowerCase()}/${meta.item._id}`)}
-                      className="group bg-white/3 border border-white/5 hover:border-white/15 hover:bg-white/[0.06] rounded-[2rem] cursor-pointer transition-all duration-300 overflow-hidden">
+                      className="group relative bg-white/3 border border-white/5 hover:border-white/15 hover:bg-white/[0.06] rounded-[2rem] cursor-pointer transition-all duration-300 overflow-hidden">
+
+                      {/* X Button to hide/cancel booking */}
+                      <button 
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (window.confirm('Are you sure you want to remove this booking from your schedule?')) {
+                            try {
+                              const res = await fetch(`/api/bookings/update/${booking._id}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ status: 'cancelled', cancelledBy: 'user' })
+                              });
+                              if (res.ok) {
+                                setBookings(prev => prev.filter(b => b._id !== booking._id));
+                              }
+                            } catch (err) {
+                              console.error('Failed to cancel booking:', err);
+                            }
+                          }
+                        }}
+                        className="absolute top-4 right-4 w-8 h-8 bg-black/20 hover:bg-rose-500/80 text-white/40 hover:text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20 backdrop-blur-sm"
+                      >
+                        <XMarkIcon className="w-4 h-4" />
+                      </button>
 
                       <div className={`h-1.5 w-full ${meta.color} opacity-70`} />
 
