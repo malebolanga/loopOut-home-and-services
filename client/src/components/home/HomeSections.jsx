@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Tag as TagIcon } from 'lucide-react';
 import { ArrowRightIcon, CalendarDaysIcon, ClockIcon, HomeIcon, UserIcon, TicketIcon, WrenchScrewdriverIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { FaWhatsapp, FaPhone, FaMapMarkerAlt, FaEnvelope, FaClock, FaCalendarAlt, FaTimes, FaUser } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import useSearchIntelligence from '../../hooks/useSearchIntelligence';
 import HelperItem from '../../components/HelperItem';
@@ -32,7 +33,7 @@ const useCountdown = (targetDate) => {
 };
 
 // ─── Individual booking card ──────────────────────────────────────────────────
-const BookingCard = ({ booking, navigate }) => {
+const BookingCard = ({ booking, onClick }) => {
   const item    = booking.helper || booking.service || booking.listing || booking.event;
   const isHelper  = !!booking.helper;
   const isService = !!booking.service && !booking.helper;
@@ -42,10 +43,10 @@ const BookingCard = ({ booking, navigate }) => {
   const date = new Date(booking.startDate);
   const countdown = useCountdown(booking.startDate);
 
-  const typeConfig = isHelper  ? { label: 'Helper Service', icon: <UserIcon className="w-4 h-4" />,             color: 'from-violet-600 to-indigo-700', accent: 'violet', route: `/helper/${item?._id}` } :
-                    isService  ? { label: 'Service',        icon: <WrenchScrewdriverIcon className="w-4 h-4" />,color: 'from-amber-500 to-orange-600',   accent: 'amber',  route: `/service/${item?._id}` } :
-                    isEvent    ? { label: 'Event',          icon: <TicketIcon className="w-4 h-4" />,            color: 'from-rose-500 to-pink-600',      accent: 'rose',   route: `/event/${item?._id}` } :
-                                 { label: 'Listing',        icon: <HomeIcon className="w-4 h-4" />,              color: 'from-emerald-500 to-teal-600',   accent: 'emerald',route: `/listing/${item?._id}` };
+  const typeConfig = isHelper  ? { label: 'Helper',         icon: <UserIcon className="w-3 h-3" />,             color: 'from-violet-600 to-indigo-700', accent: 'violet' } :
+                    isService  ? { label: 'Service',        icon: <WrenchScrewdriverIcon className="w-3 h-3" />,color: 'from-amber-500 to-orange-600',   accent: 'amber'  } :
+                    isEvent    ? { label: 'Event',          icon: <TicketIcon className="w-3 h-3" />,            color: 'from-rose-500 to-pink-600',      accent: 'rose'   } :
+                                 { label: 'Listing',        icon: <HomeIcon className="w-3 h-3" />,              color: 'from-emerald-500 to-teal-600',   accent: 'emerald' };
 
   const statusColor = booking.status === 'confirmed' || booking.status === 'approved'
     ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
@@ -59,8 +60,8 @@ const BookingCard = ({ booking, navigate }) => {
     <motion.div
       whileTap={{ scale: 0.97 }}
       whileHover={{ y: -4 }}
-      onClick={() => navigate(typeConfig.route)}
-      className="snap-start shrink-0 w-[230px] cursor-pointer relative overflow-hidden rounded-[1.75rem] shadow-2xl"
+      onClick={onClick}
+      className="snap-start shrink-0 w-[160px] h-[150px] cursor-pointer relative overflow-hidden rounded-[1.75rem] shadow-2xl"
     >
       {/* Card background: image or gradient */}
       {thumb ? (
@@ -76,40 +77,40 @@ const BookingCard = ({ booking, navigate }) => {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-white/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Content */}
-      <div className="relative z-10 p-5 flex flex-col h-[200px] justify-between">
+      <div className="relative z-10 p-3 flex flex-col h-full justify-between">
         {/* Top row: type badge + status */}
-        <div className="flex items-start justify-between gap-2">
-          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20`}>
+        <div className="flex items-start justify-between gap-1">
+          <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-white/15 backdrop-blur-md border border-white/20`}>
             <span className="text-white">{typeConfig.icon}</span>
-            <span className="text-[8px] font-black text-white uppercase tracking-[0.15em]">{typeConfig.label}</span>
+            <span className="text-[6.5px] font-black text-white uppercase tracking-[0.1em]">{typeConfig.label}</span>
           </div>
-          <span className={`px-2 py-1 text-[8px] font-black uppercase tracking-wider rounded-lg border ${statusColor}`}>
+          <span className={`px-1.5 py-0.5 text-[6.5px] font-black uppercase tracking-wider rounded-md border ${statusColor} truncate max-w-[55px]`}>
             {booking.status}
           </span>
         </div>
 
         {/* Name */}
         <div>
-          <h3 className="text-white font-black text-[15px] leading-tight line-clamp-2 mb-1 drop-shadow-sm">
+          <h3 className="text-white font-black text-[12px] leading-tight line-clamp-2 mb-0.5 drop-shadow-sm">
             {item?.name || item?.title || 'Booking'}
           </h3>
           {item?.address && (
-            <p className="text-white/50 text-[10px] font-bold uppercase tracking-wider truncate">{item.address}</p>
+            <p className="text-white/50 text-[8px] font-bold uppercase tracking-wider truncate">{item.address}</p>
           )}
         </div>
 
         {/* Bottom: date + countdown */}
-        <div className="flex items-end justify-between">
+        <div className="flex items-end justify-between gap-1">
           <div>
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <CalendarDaysIcon className="w-3 h-3 text-white/70" />
-              <span className="text-white text-[10px] font-bold">
+            <div className="flex items-center gap-1 mb-0.5">
+              <CalendarDaysIcon className="w-2.5 h-2.5 text-white/70" />
+              <span className="text-white text-[8px] font-bold">
                 {date.toLocaleDateString('en-ZA', { weekday: 'short', month: 'short', day: 'numeric' })}
               </span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <ClockIcon className="w-3 h-3 text-white/70" />
-              <span className="text-white/70 text-[10px] font-bold">
+            <div className="flex items-center gap-1">
+              <ClockIcon className="w-2.5 h-2.5 text-white/70" />
+              <span className="text-white/70 text-[8px] font-bold">
                 {date.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
@@ -118,28 +119,439 @@ const BookingCard = ({ booking, navigate }) => {
           {/* Countdown pill */}
           {!countdown.past && (
             <div className="flex flex-col items-end gap-0.5">
-              <span className="text-[8px] font-black text-white/50 uppercase tracking-widest">In</span>
-              <div className="flex items-center gap-1">
+              <span className="text-[6.5px] font-black text-white/50 uppercase tracking-widest">In</span>
+              <div className="flex items-center gap-0.5">
                 {countdown.days > 0 && (
-                  <span className="px-1.5 py-0.5 bg-white/20 backdrop-blur rounded-md text-white text-[9px] font-black">
+                  <span className="px-1 py-0.5 bg-white/20 backdrop-blur rounded text-white text-[7.5px] font-black">
                     {countdown.days}d
                   </span>
                 )}
-                <span className="px-1.5 py-0.5 bg-white/20 backdrop-blur rounded-md text-white text-[9px] font-black">
+                <span className="px-1 py-0.5 bg-white/20 backdrop-blur rounded text-white text-[7.5px] font-black">
                   {countdown.hours}h
-                </span>
-                <span className="px-1.5 py-0.5 bg-white/20 backdrop-blur rounded-md text-white text-[9px] font-black">
-                  {countdown.mins}m
                 </span>
               </div>
             </div>
           )}
           {countdown.past && (
-            <span className="text-[8px] font-black text-rose-400 uppercase tracking-widest">Past due</span>
+            <span className="text-[6.5px] font-black text-rose-400 uppercase tracking-widest">Past</span>
           )}
         </div>
       </div>
     </motion.div>
+  );
+};
+
+// ─── Helper to parse details from formatted WhatsApp messages ───────────────
+const parseSpecialDetails = (msg) => {
+  if (!msg) return null;
+  if (!msg.includes('*') && !msg.includes('━')) {
+    return null; // Not structured template
+  }
+
+  const details = {};
+  const lines = msg.split('\n');
+
+  lines.forEach(line => {
+    const cleanLine = line.replace(/\*/g, '').trim();
+    
+    if (cleanLine.includes('Haircut Style:')) {
+      details.haircutStyle = cleanLine.split('Haircut Style:')[1].trim();
+    }
+    if (cleanLine.includes('Beard Style:')) {
+      details.beardStyle = cleanLine.split('Beard Style:')[1].trim();
+    }
+    if (cleanLine.includes('Meal Type:')) {
+      details.mealType = cleanLine.split('Meal Type:')[1].trim();
+    }
+    if (cleanLine.includes('Cuisine:')) {
+      details.cuisine = cleanLine.split('Cuisine:')[1].trim();
+    }
+    if (cleanLine.includes('Food provided by client:')) {
+      details.foodProvided = cleanLine.split('Food provided by client:')[1].trim();
+    }
+    if (cleanLine.includes('Electricity available:')) {
+      details.electricity = cleanLine.split('Electricity available:')[1].trim();
+    }
+    if (cleanLine.startsWith('📜')) {
+      if (!details.selectedServices) details.selectedServices = [];
+      details.selectedServices.push(cleanLine.replace('📜', '').trim());
+    }
+    if (cleanLine.startsWith('📝')) {
+      details.notes = cleanLine.replace('📝', '').trim();
+    }
+  });
+
+  return Object.keys(details).length > 0 ? details : null;
+};
+
+// ─── Booking Details Modal ────────────────────────────────────────────────────
+const BookingDetailsModal = ({ booking, onClose, currentUser }) => {
+  const item = booking.helper || booking.service || booking.listing || booking.event;
+  const isHelper = !!booking.helper;
+  const isService = !!booking.service && !booking.helper;
+  const isEvent = !!booking.event;
+  const isListing = !!booking.listing && !booking.helper && !booking.service && !booking.event;
+
+  const dateStart = new Date(booking.startDate);
+  const dateEnd = new Date(booking.endDate);
+
+  const isUserBooking = currentUser?._id === (booking.user?._id || booking.user);
+
+  let contactPhone = '';
+  let contactName = '';
+  let whatsappMsg = '';
+
+  if (isUserBooking) {
+    contactPhone = item?.contact || item?.userRef?.phone || item?.userRef?.contact || '';
+    contactName = item?.name || item?.title || 'Host';
+    whatsappMsg = `Hi, I am contacting you regarding my booking for "${item?.name || item?.title || 'your service'}" scheduled on ${dateStart.toLocaleDateString('en-ZA', { dateStyle: 'medium' })}.`;
+  } else {
+    contactPhone = booking.phone || booking.user?.phone || '';
+    contactName = booking.user?.username || 'Client';
+    whatsappMsg = `Hi ${contactName}, I am contacting you regarding your booking for "${item?.name || item?.title || 'our service'}" scheduled on ${dateStart.toLocaleDateString('en-ZA', { dateStyle: 'medium' })}.`;
+  }
+
+  const cleanPhone = (ph) => {
+    if (!ph) return '';
+    let cleaned = ph.toString().replace(/\D/g, "");
+    if (cleaned.startsWith("0") && cleaned.length === 10) {
+      cleaned = "27" + cleaned.substring(1);
+    }
+    return cleaned;
+  };
+
+  const formattedCleanPhone = cleanPhone(contactPhone);
+  const thumb = item?.imageUrls?.[0] || item?.avatar || null;
+
+  const typeLabel = isHelper ? 'Helper Service' :
+                    isService ? 'Service' :
+                    isEvent ? 'Event' : 'Listing';
+
+  const statusColors = {
+    confirmed: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+    approved: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+    pending: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+    cancelled: 'bg-red-500/10 text-red-600 border-red-500/20',
+    declined: 'bg-red-500/10 text-red-600 border-red-500/20',
+  };
+
+  const statusColor = statusColors[booking.status] || 'bg-gray-500/10 text-gray-600 border-gray-500/20';
+
+  const details = parseSpecialDetails(booking.message);
+  
+  const displayMessage = details?.notes || 
+    (booking.message && !booking.message.includes('━') && !booking.message.includes('★') ? booking.message : '');
+
+  return (
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-gray-950/70 backdrop-blur-md">
+      {/* Backdrop Close Click */}
+      <div className="absolute inset-0 cursor-default" onClick={onClose} />
+
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0, y: 30 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 30 }}
+        transition={{ type: "spring", damping: 25, stiffness: 350 }}
+        className="relative bg-white rounded-[2.5rem] overflow-hidden max-w-lg w-full shadow-2xl flex flex-col max-h-[92vh] border border-gray-100"
+      >
+        {/* Decorative Header with Image */}
+        <div className="relative h-44 bg-slate-900 overflow-hidden shrink-0">
+          {thumb ? (
+            <>
+              <ImageWithFallback src={thumb} alt={item?.name || item?.title} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/50 to-transparent" />
+            </>
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 to-slate-900" />
+          )}
+
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-all z-20 border border-white/10"
+          >
+            ✕
+          </button>
+
+          <div className="absolute bottom-5 inset-x-5 flex flex-col justify-end z-10">
+            <span className="text-[9px] font-black text-rose-400 uppercase tracking-[0.2em] mb-1">{typeLabel}</span>
+            <h2 className="text-xl sm:text-2xl font-black text-white leading-tight drop-shadow-sm line-clamp-1">
+              {item?.name || item?.title || 'Booking Details'}
+            </h2>
+          </div>
+        </div>
+
+        {/* Content Section (Scrollable) */}
+        <div className="p-6 overflow-y-auto scrollbar-hide flex-1 space-y-6">
+          {/* Status and Price Banner */}
+          <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-2xl">
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Booking Status</span>
+              <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border w-fit ${statusColor}`}>
+                {booking.status}
+              </span>
+            </div>
+            <div className="flex flex-col items-end gap-1">
+              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Total Price</span>
+              <span className="text-lg font-black text-gray-900 tracking-tight">
+                R {booking.totalPrice?.toLocaleString() || booking.totalPrice || '0'}
+              </span>
+            </div>
+          </div>
+
+          {/* Date & Time */}
+          <div className="space-y-3">
+            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Date & Time</h3>
+            <div className="grid grid-cols-2 gap-4 bg-gray-50 border border-gray-100 p-4 rounded-2xl">
+              <div>
+                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Start / Check-In</p>
+                <p className="text-xs font-black text-gray-800 leading-tight">
+                  {dateStart.toLocaleDateString('en-ZA', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                </p>
+                <p className="text-[10px] font-bold text-gray-500 mt-1">
+                  {dateStart.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+              <div className="border-l border-gray-200/60 pl-4">
+                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">End / Check-Out</p>
+                <p className="text-xs font-black text-gray-800 leading-tight">
+                  {dateEnd.toLocaleDateString('en-ZA', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                </p>
+                <p className="text-[10px] font-bold text-gray-500 mt-1">
+                  {dateEnd.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Service Configuration details */}
+          <div className="space-y-3">
+            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Service Configuration</h3>
+            <div className="bg-gray-50 border border-gray-100 p-4 rounded-2xl space-y-3 text-xs">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Request Type</span>
+                <span className="font-black text-gray-800 uppercase tracking-wider">{typeLabel}</span>
+              </div>
+              
+              {booking.subtype && (
+                <div className="flex justify-between items-start gap-4">
+                  <span className="text-gray-400 flex-shrink-0">Requested Service</span>
+                  <span className="font-bold text-gray-800 text-right">{booking.subtype}</span>
+                </div>
+              )}
+
+              {/* Parsed Custom Selections */}
+              {details && (
+                <>
+                  <div className="h-px bg-gray-200/60 my-2" />
+                  
+                  {details.selectedServices && details.selectedServices.length > 0 && (
+                    <div className="space-y-1.5">
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Items / Selections</p>
+                      {details.selectedServices.map((srv, idx) => (
+                        <div key={idx} className="flex justify-between pl-2 border-l-2 border-rose-500/30 text-[11px] font-medium text-gray-700">
+                          {srv}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {details.haircutStyle && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">✂️ Haircut Style</span>
+                      <span className="font-bold text-gray-800">{details.haircutStyle}</span>
+                    </div>
+                  )}
+
+                  {details.beardStyle && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">🧔 Beard Style</span>
+                      <span className="font-bold text-gray-800">{details.beardStyle}</span>
+                    </div>
+                  )}
+
+                  {details.mealType && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">🍽️ Meal Type</span>
+                      <span className="font-bold text-gray-800">{details.mealType}</span>
+                    </div>
+                  )}
+
+                  {details.cuisine && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">🌍 Cuisine Preference</span>
+                      <span className="font-bold text-gray-800">{details.cuisine}</span>
+                    </div>
+                  )}
+
+                  {details.foodProvided && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">🍽️ Client Provides Food</span>
+                      <span className="font-bold text-gray-800">{details.foodProvided}</span>
+                    </div>
+                  )}
+
+                  {details.electricity && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">⚡ Electricity Available</span>
+                      <span className="font-bold text-gray-800">{details.electricity}</span>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Location / Where */}
+          {(item?.address || booking.requestLocation) && (
+            <div className="space-y-3">
+              <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Location Details</h3>
+              <div className="bg-gray-50 border border-gray-100 p-4 rounded-2xl flex items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Address</p>
+                  <p className="text-xs font-bold text-gray-800 leading-normal">
+                    {item?.address || booking.requestLocation}
+                  </p>
+                </div>
+                {item?.address && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-shrink-0 text-[9px] font-black text-rose-500 uppercase tracking-widest bg-rose-50 hover:bg-rose-100 px-3 py-2 rounded-xl transition-all self-center border border-rose-100"
+                  >
+                    View Map 🗺️
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Who Booked (Customer details) / Provider details */}
+          <div className="space-y-3">
+            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Party Details</h3>
+            <div className="space-y-3">
+              {/* Customer */}
+              <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border border-gray-100">
+                    <img
+                      src={booking.user?.avatar || 'https://i.pravatar.cc/150?u=user'}
+                      alt={booking.user?.username}
+                      className="w-full h-full object-cover"
+                      onError={(e) => e.target.src = 'https://i.pravatar.cc/150?u=user'}
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[8px] font-black text-indigo-500 uppercase tracking-widest block mb-0.5">Who Booked / Customer</span>
+                    <h4 className="text-xs font-black text-gray-800 leading-none">{booking.user?.username || 'Client'}</h4>
+                    <p className="text-[9px] font-medium text-gray-400 mt-1">{booking.user?.email || 'No email provided'}</p>
+                  </div>
+                </div>
+                {booking.phone && (
+                  <span className="text-[9px] font-black text-gray-400 bg-white border border-gray-100 px-2.5 py-1.5 rounded-xl">
+                    📞 {booking.phone}
+                  </span>
+                )}
+              </div>
+
+              {/* Host/Provider (Only show when current user is client or if item creator info exists) */}
+              {isUserBooking && (item?.userRef || item?.name) && (
+                <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border border-gray-100">
+                      <img
+                        src={item?.userRef?.avatar || thumb || 'https://i.pravatar.cc/150?u=pro'}
+                        alt={item?.userRef?.username || item?.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => e.target.src = 'https://i.pravatar.cc/150?u=pro'}
+                      />
+                    </div>
+                    <div>
+                      <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest block mb-0.5">Professional / Host</span>
+                      <h4 className="text-xs font-black text-gray-800 leading-none">{item?.userRef?.username || item?.name || 'Professional'}</h4>
+                      <p className="text-[9px] font-medium text-gray-400 mt-1">{item?.userRef?.email || 'loopOut Partner'}</p>
+                    </div>
+                  </div>
+                  {contactPhone && (
+                    <span className="text-[9px] font-black text-gray-400 bg-white border border-gray-100 px-2.5 py-1.5 rounded-xl">
+                      📞 {contactPhone}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Assigned Performer */}
+              {booking.selectedPerformer && (
+                <div className="p-4 bg-rose-50/50 border border-rose-100/60 rounded-2xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-rose-100 overflow-hidden border border-rose-200/50 flex items-center justify-center">
+                      {booking.performerImage ? (
+                        <img src={booking.performerImage} alt={booking.selectedPerformer} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-rose-500 font-bold text-sm">👤</span>
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-[8px] font-black text-rose-500 uppercase tracking-widest block mb-0.5">Assigned Performer</span>
+                      <h4 className="text-xs font-black text-rose-600 leading-none">{booking.selectedPerformer}</h4>
+                      {booking.performerExperience && (
+                        <p className="text-[9px] font-bold text-rose-400 mt-1">{booking.performerExperience} Experience</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Notes / Special Message */}
+          {displayMessage && (
+            <div className="space-y-3">
+              <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Special Notes</h3>
+              <div className="bg-gray-50 border border-gray-100 p-4 rounded-2xl">
+                <p className="text-xs font-medium text-gray-600 leading-relaxed italic">
+                  "{displayMessage}"
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="p-6 bg-slate-50 border-t border-gray-100 flex items-center gap-3 shrink-0">
+          {contactPhone && (
+            <>
+              {/* Call */}
+              <a
+                href={`tel:${contactPhone}`}
+                className="w-12 h-12 flex items-center justify-center bg-white text-gray-500 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all border border-gray-200/80 hover:border-rose-100 shadow-sm shrink-0"
+                title={`Call ${contactName}`}
+              >
+                <FaPhone className="text-sm" />
+              </a>
+              {/* WhatsApp */}
+              {formattedCleanPhone && (
+                <a
+                  href={`https://wa.me/${formattedCleanPhone}?text=${encodeURIComponent(whatsappMsg)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-3.5 px-6 flex items-center justify-center gap-2 bg-emerald-500 text-white rounded-2xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 font-black text-xs uppercase tracking-widest text-center"
+                >
+                  <FaWhatsapp className="text-base" /> Message 💬
+                </a>
+              )}
+            </>
+          )}
+          <button
+            onClick={onClose}
+            className="flex-1 py-3.5 bg-gray-900 hover:bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all text-center"
+          >
+            Close
+          </button>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 
@@ -148,6 +560,7 @@ export const UpcomingBookingsSection = ({ navigate }) => {
   const { currentUser } = useSelector((state) => state.user);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedBooking, setSelectedBooking] = useState(null);
 
   useEffect(() => {
     if (!currentUser?._id) { setLoading(false); return; }
@@ -168,7 +581,7 @@ export const UpcomingBookingsSection = ({ navigate }) => {
         const now = new Date();
         const upcoming = Array.from(map.values())
           .filter(b => new Date(b.startDate) >= now &&
-            ['confirmed','pending','approved','assigned','enroute','ongoing'].includes(b.status))
+            ['confirmed','approved','assigned','enroute','ongoing'].includes(b.status))
           .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
           .slice(0, 6);
 
@@ -188,8 +601,8 @@ export const UpcomingBookingsSection = ({ navigate }) => {
       <div className="mb-8 px-4 animate-pulse">
         <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
         <div className="flex gap-4">
-          <div className="w-[280px] h-[180px] bg-gray-100 rounded-[2rem]"></div>
-          <div className="w-[280px] h-[180px] bg-gray-100 rounded-[2rem]"></div>
+          <div className="w-[160px] h-[150px] bg-gray-100 rounded-[2rem]"></div>
+          <div className="w-[160px] h-[150px] bg-gray-100 rounded-[2rem]"></div>
         </div>
       </div>
     );
@@ -228,17 +641,20 @@ export const UpcomingBookingsSection = ({ navigate }) => {
       {/* Scroll row */}
       <div className="flex gap-4 overflow-x-auto pb-3 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide snap-x">
         {bookings.length === 0 && (
-          <div className="snap-start shrink-0 w-[280px] p-6 bg-white border border-gray-100 rounded-[2rem] shadow-sm flex flex-col justify-center items-center text-center">
-            <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3">
-              <CalendarDaysIcon className="w-6 h-6 text-gray-300" />
+          <div className="snap-start shrink-0 w-[160px] h-[150px] p-4 bg-white border border-gray-100 rounded-[2rem] shadow-sm flex flex-col justify-center items-center text-center">
+            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center mb-2">
+              <CalendarDaysIcon className="w-5 h-5 text-gray-300" />
             </div>
-            <h3 className="text-sm font-black text-gray-900 mb-1">No Upcoming Bookings</h3>
-            <p className="text-[11px] font-medium text-gray-400">You don't have any reservations coming up.</p>
+            <h3 className="text-xs font-black text-gray-900">No Bookings</h3>
           </div>
         )}
 
         {bookings.map((booking) => (
-          <BookingCard key={booking._id} booking={booking} navigate={navigate} />
+          <BookingCard 
+            key={booking._id} 
+            booking={booking} 
+            onClick={() => setSelectedBooking(booking)} 
+          />
         ))}
 
         {/* "Browse more" end-cap */}
@@ -246,16 +662,27 @@ export const UpcomingBookingsSection = ({ navigate }) => {
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => navigate('/search')}
-          className="snap-start shrink-0 w-[160px] h-[200px] rounded-[1.75rem] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all group"
+          className="snap-start shrink-0 w-[160px] h-[150px] rounded-[1.75rem] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all group"
         >
-          <div className="w-10 h-10 rounded-full bg-gray-100 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
-            <ArrowPathIcon className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+          <div className="w-8 h-8 rounded-full bg-gray-100 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
+            <ArrowPathIcon className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
           </div>
           <span className="text-[9px] font-black text-gray-400 group-hover:text-blue-500 uppercase tracking-widest text-center transition-colors">
             Book More
           </span>
         </motion.div>
       </div>
+
+      {/* Booking Details Modal */}
+      <AnimatePresence>
+        {selectedBooking && (
+          <BookingDetailsModal
+            booking={selectedBooking}
+            onClose={() => setSelectedBooking(null)}
+            currentUser={currentUser}
+          />
+        )}
+      </AnimatePresence>
     </motion.section>
   );
 };

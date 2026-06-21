@@ -230,9 +230,9 @@ export const getHostBookings = async (req, res) => {
         { service: { $in: serviceIds } }
       ]
     })
-    .populate('listing')
-    .populate('helper')
-    .populate('service')
+    .populate({ path: 'listing', populate: { path: 'userRef' } })
+    .populate({ path: 'helper', populate: { path: 'userRef' } })
+    .populate({ path: 'service', populate: { path: 'userRef' } })
     .populate('user')
     .sort({ createdAt: -1 });
     
@@ -252,10 +252,10 @@ export const getUserBookings = async (req, res) => {
     }
 
     const bookings = await Booking.find({ user: userId })
-      .populate('listing')
-      .populate('helper')
-      .populate('service')
-      .populate('event')
+      .populate({ path: 'listing', populate: { path: 'userRef' } })
+      .populate({ path: 'helper', populate: { path: 'userRef' } })
+      .populate({ path: 'service', populate: { path: 'userRef' } })
+      .populate({ path: 'event', populate: { path: 'userRef' } })
       .populate('user')
       .sort({ createdAt: -1 });
     
@@ -272,11 +272,11 @@ export const getBookingById = async (req, res) => {
   try {
     const { id } = req.params;
     const booking = await Booking.findById(id)
-      .populate('listing')
-      .populate('helper')
-      .populate('service')
+      .populate({ path: 'listing', populate: { path: 'userRef' } })
+      .populate({ path: 'helper', populate: { path: 'userRef' } })
+      .populate({ path: 'service', populate: { path: 'userRef' } })
       .populate('user', 'username email avatar phone')
-      .populate('event');
+      .populate({ path: 'event', populate: { path: 'userRef' } });
       
     if (!booking) {
       return res.status(404).json({ error: 'Booking not found' });
@@ -296,9 +296,9 @@ export const updateBookingStatus = async (req, res) => {
     
     // Find the booking and populate necessary fields
     const booking = await Booking.findById(bookingId)
-      .populate('listing')
-      .populate('helper')
-      .populate('service')
+      .populate({ path: 'listing', populate: { path: 'userRef' } })
+      .populate({ path: 'helper', populate: { path: 'userRef' } })
+      .populate({ path: 'service', populate: { path: 'userRef' } })
       .populate('user');
 
     if (!booking) {
