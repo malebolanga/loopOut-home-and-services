@@ -77,7 +77,7 @@ export default function SettingsPage() {
       dispatch(updateUserStart());
       setIsUpdating(true);
       const res = await fetch(`/api/user/update/${currentUser._id}`, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -97,6 +97,33 @@ export default function SettingsPage() {
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       setIsUpdating(false);
+      dispatch(updateUserFailure(error.message));
+    }
+  };
+
+  const handleToggleAccessContacts = async () => {
+    const updatedAccess = !accessContacts;
+    setAccessContacts(updatedAccess);
+    try {
+      dispatch(updateUserStart());
+      const res = await fetch(`/api/user/update/${currentUser._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accessContacts: updatedAccess,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        dispatch(updateUserSuccess(data));
+        setSuccessMessage('Mutual contacts syncing status updated!');
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        dispatch(updateUserFailure(data.message));
+      }
+    } catch (error) {
       dispatch(updateUserFailure(error.message));
     }
   };
@@ -637,10 +664,10 @@ export default function SettingsPage() {
                         <p className="text-xs text-gray-400">Share your contacts to see which friends share mutual bookings on properties.</p>
                       </div>
                       <button 
-                        onClick={() => togglePrivacy('shareContacts')}
-                        className={`w-12 h-6 rounded-full transition-all relative ${privacy.shareContacts ? 'bg-rose-500' : 'bg-gray-300 dark:bg-gray-700'}`}
+                        onClick={handleToggleAccessContacts}
+                        className={`w-12 h-6 rounded-full transition-all relative ${accessContacts ? 'bg-rose-500' : 'bg-gray-300 dark:bg-gray-700'}`}
                       >
-                        <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${privacy.shareContacts ? 'right-1' : 'left-1'}`} />
+                        <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${accessContacts ? 'right-1' : 'left-1'}`} />
                       </button>
                     </div>
 

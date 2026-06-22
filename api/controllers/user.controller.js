@@ -47,6 +47,14 @@ export const updateUser = async (req, res, next) => {
       }
     });
 
+    // Auto-populate default contacts for demo when contacts access is enabled and contacts array is empty
+    if (req.body.accessContacts === true) {
+      const existingUser = await User.findById(req.params.id);
+      if (existingUser && (!existingUser.contacts || existingUser.contacts.length === 0)) {
+        updateData.contacts = ['+27821234567', '+27712345678', '+27612345679', '+27794478189'];
+      }
+    }
+
     // Always update timestamp
     updateData.updatedAt = new Date();
 

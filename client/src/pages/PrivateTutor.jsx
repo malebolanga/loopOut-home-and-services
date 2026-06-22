@@ -86,6 +86,7 @@ import GoogleMapComponent from '../components/GoogleMapComponent';
 import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperItem from '../components/HelperItem';
+import BookingHistory from '../components/BookingHistory';
 
 export default function PrivateTutor() {
   const { currentUser } = useSelector((state) => state.user);
@@ -2610,42 +2611,7 @@ export default function PrivateTutor() {
           </div>
 
         {/* Recent Bookers Section */}
-        {bookingSummary.recentBookers && bookingSummary.recentBookers.length > 0 && (
-          <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
-            <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter italic uppercase">
-              <CheckCircleIcon className="text-emerald-500 w-6 h-6" />
-              Intelligence Report: Recent Transmissions
-            </h2>
-            <div className="py-4 px-[2px] overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8 rounded-none">
-              <Swiper
-                spaceBetween={16}
-                slidesPerView="auto"
-                className="recent-bookers-swiper flex"
-                breakpoints={{
-                  320: { slidesPerView: 2.5, spaceBetween: 12 },
-                  640: { slidesPerView: 3.5, spaceBetween: 16 },
-                  768: { slidesPerView: 4.5, spaceBetween: 20 },
-                  1024: { slidesPerView: 5.5, spaceBetween: 24 }
-                }}
-              >
-                {bookingSummary.recentBookers.map((booker) => (
-                  <SwiperSlide key={booker._id} className="!w-auto px-[2px]">
-                    <Link to={`/user-profile/${booker._id}`} className="flex flex-col items-center gap-3">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-rose-500 rounded-full blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
-                        <img
-                          src={booker.avatar || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'}
-                          alt={booker.username}
-                          className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-2 border-white shadow-lg relative z-10 transition-transform duration-500 group-hover:scale-105"
-                        />
-                      </div>
-                    </Link>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </div>
-          </div>
-        )}
+        <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type} />
         </div>
 
 

@@ -67,7 +67,7 @@ export default function SignUp() {
 
       // We'll pass some mock contacts if they agreed
       const mockContacts = formData.accessContacts 
-        ? ['+27821234567', '+27712345678', '+27612345679'] 
+        ? ['+27821234567', '+27712345678', '+27612345679', '+27794478189'] 
         : [];
 
       const payload = {

@@ -4,6 +4,8 @@ import Helper from '../models/helper.model.js';
 import Service from '../models/service.model.js';
 import Event from '../models/event.model.js';
 import Notification from '../models/notification.model.js';
+import User from '../models/user.model.js';
+import jwt from 'jsonwebtoken';
 import { hasProfanity, logProfanityEvent } from '../utils/profanityFilter.js';
 
 // Calculate price and validate dates
@@ -364,13 +366,62 @@ export const updateBookingStatus = async (req, res) => {
   }
 };
 
+// Helper for populating user locations and checking for mutual friends
+const getRecentBookersWithMutual = async (bookings, req) => {
+  const recentBookers = [];
+  const seenUsers = new Set();
+  
+  for (const booking of bookings) {
+    if (booking.user && !seenUsers.has(booking.user._id.toString())) {
+      recentBookers.push(booking.user);
+      seenUsers.add(booking.user._id.toString());
+    }
+    if (recentBookers.length >= 5) break;
+  }
+
+  // Parse token optionally
+  const token = req.cookies?.access_token || req.headers?.authorization?.split(' ')[1];
+  let userContactsSet = new Set();
+  let hasContactsEnabled = false;
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const currentUser = await User.findById(decoded.id).select('contacts accessContacts');
+      if (currentUser && currentUser.accessContacts && currentUser.contacts && currentUser.contacts.length > 0) {
+        hasContactsEnabled = true;
+        const normalize = (p) => p.replace(/\D/g, '').slice(-9);
+        userContactsSet = new Set(currentUser.contacts.map(normalize));
+      }
+    } catch (err) {
+      // Ignore token decode errors
+    }
+  }
+
+  return recentBookers.map(u => {
+    let isMutual = false;
+    if (hasContactsEnabled && u.phone) {
+      const normalize = (p) => p.replace(/\D/g, '').slice(-9);
+      const normPhone = normalize(u.phone);
+      isMutual = normPhone.length >= 9 && userContactsSet.has(normPhone);
+    }
+    return {
+      _id: u._id,
+      username: u.username,
+      avatar: u.avatar,
+      location: u.location || '',
+      isMutual
+    };
+  });
+};
+
 // Get booking summary for a specific helper
 export const getHelperBookingSummary = async (req, res) => {
   try {
     const { helperId } = req.params;
     
     const bookings = await Booking.find({ helper: helperId })
-      .populate('user', 'username avatar')
+      .populate('user', 'username avatar phone location')
       .sort({ createdAt: -1 });
       
     const count = bookings.length;
@@ -388,17 +439,7 @@ export const getHelperBookingSummary = async (req, res) => {
       }
     });
     
-    // Get unique users who booked
-    const recentBookers = [];
-    const seenUsers = new Set();
-    
-    for (const booking of bookings) {
-      if (booking.user && !seenUsers.has(booking.user._id.toString())) {
-        recentBookers.push(booking.user);
-        seenUsers.add(booking.user._id.toString());
-      }
-      if (recentBookers.length >= 5) break;
-    }
+    const recentBookers = await getRecentBookersWithMutual(bookings, req);
 
     res.json({
       count,
@@ -416,7 +457,7 @@ export const getServiceBookingSummary = async (req, res) => {
     const { serviceId } = req.params;
     
     const bookings = await Booking.find({ service: serviceId })
-      .populate('user', 'username avatar')
+      .populate('user', 'username avatar phone location')
       .sort({ createdAt: -1 });
       
     const count = bookings.length;
@@ -434,16 +475,7 @@ export const getServiceBookingSummary = async (req, res) => {
       }
     });
     
-    const recentBookers = [];
-    const seenUsers = new Set();
-    
-    for (const booking of bookings) {
-      if (booking.user && !seenUsers.has(booking.user._id.toString())) {
-        recentBookers.push(booking.user);
-        seenUsers.add(booking.user._id.toString());
-      }
-      if (recentBookers.length >= 5) break;
-    }
+    const recentBookers = await getRecentBookersWithMutual(bookings, req);
 
     res.json({
       count,
@@ -461,7 +493,7 @@ export const getListingBookingSummary = async (req, res) => {
     const { listingId } = req.params;
     
     const bookings = await Booking.find({ listing: listingId })
-      .populate('user', 'username avatar')
+      .populate('user', 'username avatar phone location')
       .sort({ createdAt: -1 });
       
     const count = bookings.length;
@@ -479,16 +511,7 @@ export const getListingBookingSummary = async (req, res) => {
       }
     });
     
-    const recentBookers = [];
-    const seenUsers = new Set();
-    
-    for (const booking of bookings) {
-      if (booking.user && !seenUsers.has(booking.user._id.toString())) {
-        recentBookers.push(booking.user);
-        seenUsers.add(booking.user._id.toString());
-      }
-      if (recentBookers.length >= 5) break;
-    }
+    const recentBookers = await getRecentBookersWithMutual(bookings, req);
 
     res.json({
       count,
@@ -499,13 +522,14 @@ export const getListingBookingSummary = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
 // Get booking summary for a specific event
 export const getEventBookingSummary = async (req, res) => {
   try {
     const { eventId } = req.params;
     
     const bookings = await Booking.find({ event: eventId })
-      .populate('user', 'username avatar')
+      .populate('user', 'username avatar phone location')
       .sort({ createdAt: -1 });
       
     const count = bookings.length;
@@ -523,16 +547,7 @@ export const getEventBookingSummary = async (req, res) => {
       }
     });
     
-    const recentBookers = [];
-    const seenUsers = new Set();
-    
-    for (const booking of bookings) {
-      if (booking.user && !seenUsers.has(booking.user._id.toString())) {
-        recentBookers.push(booking.user);
-        seenUsers.add(booking.user._id.toString());
-      }
-      if (recentBookers.length >= 5) break;
-    }
+    const recentBookers = await getRecentBookersWithMutual(bookings, req);
 
     res.json({
       count,
