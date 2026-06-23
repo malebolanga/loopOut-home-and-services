@@ -45,6 +45,7 @@
     "fuse.js": "^7.1.0",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
+    "leaflet": "^1.9.4",
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8",
     "loopout-home": "file:..",
