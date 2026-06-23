@@ -1,1 +1,31 @@
-node_modules
+# Dependencies
+node_modules/
+client/node_modules/
+
+# Build output
+dist/
+client/dist/
+client/dist */
+
+# Environment variables (contain secrets)
+.env
+client/.env
+*.env.local
+*.env.production
+
+# Firebase cache
+.firebase/
+.firebaserc.cache
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
