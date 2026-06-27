@@ -93,6 +93,15 @@ const apiLimiter = rateLimit({
     legacyHeaders: false, 
 });
 
+// More permissive limiter for real-time messaging routes
+const messagesLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    limit: 500,
+    message: { success: false, message: 'Too many message requests, please slow down.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 const authLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
     limit: 30, 
@@ -101,6 +110,7 @@ const authLimiter = rateLimit({
     legacyHeaders: false,
 });
 
+app.use('/api/messages', messagesLimiter); // Must be before the global limiter
 app.use('/api/', apiLimiter);
 app.use('/api/auth/', authLimiter);
 

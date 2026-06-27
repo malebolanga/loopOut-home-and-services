@@ -78,6 +78,7 @@ function HelperItem({ helper, className = "" }) {
     average: helper.rating || 4.8, 
     count: helper.comments?.length || 0 
   });
+  const owner = typeof helper.userRef === 'object' ? helper.userRef : null;
 
   useEffect(() => {
     if (helper?.createdAt) {
@@ -145,24 +146,39 @@ function HelperItem({ helper, className = "" }) {
       </div>
 
       {/* Info Section below the image */}
-      <div className="flex flex-col">
+      <div className="flex flex-col mt-1">
         <div className="flex justify-between items-start gap-2">
-          <p className="font-semibold text-gray-900 truncate text-[15px]">
-            {helper.address || 'Polokwane'}
-          </p>
-          <div className="flex items-center gap-1 shrink-0 mt-0.5">
-            <Star className="w-3.5 h-3.5 text-black fill-black" />
-            <span className="text-[14px] font-medium text-gray-900">{ratingData.average.toFixed(1)}</span>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-gray-900 truncate text-[15px]">
+              {helper.address || 'Polokwane'}
+            </p>
+            
+            <p className="text-gray-500 text-[13px] truncate leading-tight mt-0.5">
+              {helper.name}
+            </p>
+            
+            <p className="text-gray-500 text-[13px] truncate leading-tight">
+              {helper.type ? helper.type.charAt(0).toUpperCase() + helper.type.slice(1) : 'Professional'}
+            </p>
+          </div>
+
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <div className="flex items-center gap-1 mt-0.5">
+              <Star className="w-3.5 h-3.5 text-black fill-black" />
+              <span className="text-[14px] font-medium text-gray-900">{ratingData.average.toFixed(1)}</span>
+            </div>
+            {owner && owner.avatar && (
+              <Link
+                to={`/user/${owner._id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="w-8 h-8 rounded-full border border-gray-150 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0"
+                title={`Posted by ${owner.username}`}
+              >
+                <img src={owner.avatar} alt={owner.username} className="w-full h-full object-cover" />
+              </Link>
+            )}
           </div>
         </div>
-        
-        <p className="text-gray-500 text-[14px] truncate leading-tight mt-0.5">
-          {helper.name}
-        </p>
-        
-        <p className="text-gray-500 text-[14px] truncate leading-tight">
-          {helper.type ? helper.type.charAt(0).toUpperCase() + helper.type.slice(1) : 'Professional'}
-        </p>
 
         <div className="flex items-baseline gap-1 mt-1">
           <span className="font-semibold text-gray-900 text-[15px]">R {formatPriceValue(helper.regularPrice)}</span>

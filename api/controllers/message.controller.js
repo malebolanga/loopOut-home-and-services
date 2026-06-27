@@ -1,4 +1,4 @@
-import Message from '../models/Message.model.js';
+﻿import Message from '../models/Message.model.js';
 import Conversation from '../models/Conversation.model.js';
 import User from '../models/user.model.js';
 import { errorHandler } from '../utils/error.js';
@@ -11,11 +11,6 @@ export const sendMessage = async (req, res, next) => {
     const receiver = await User.findById(receiverId);
     if (!receiver) return next(errorHandler(404, 'User not found!'));
 
-    // Check if sender is a follower of the receiver
-    const isFollower = receiver.followers.includes(senderId);
-    if (!isFollower) {
-        return next(errorHandler(403, 'You can only message users who follow you! Please follow this user first.'));
-    }
 
     // Find or create conversation
     let conversation = await Conversation.findOne({
@@ -125,11 +120,6 @@ export const getOrCreateConversation = async (req, res, next) => {
     const receiver = await User.findById(receiverId);
     if (!receiver) return next(errorHandler(404, 'User not found!'));
 
-    // Check if sender is a follower of the receiver
-    const isFollower = receiver.followers.includes(senderId);
-    if (!isFollower) {
-        return next(errorHandler(403, 'You can only message users who follow you! Please follow this user first.'));
-    }
 
     let conversation = await Conversation.findOne({
       participants: { $all: [senderId, receiverId] },

@@ -71,6 +71,7 @@ router.get('/properties', async (req, res) => {
         const items = await Listing.find(query)
             .skip(skip)
             .limit(parseInt(limit))
+            .populate('userRef', 'username avatar')
             .lean();
             
         const total = await Listing.countDocuments(query);
@@ -113,6 +114,7 @@ router.get('/services', async (req, res) => {
         const items = await Service.find(query)
             .skip(skip)
             .limit(parseInt(limit))
+            .populate('userRef', 'username avatar')
             .lean();
             
         const total = await Service.countDocuments(query);
@@ -154,6 +156,7 @@ router.get('/helpers', async (req, res) => {
         const items = await Helper.find(query)
             .skip(skip)
             .limit(parseInt(limit))
+            .populate('userRef', 'username avatar')
             .lean();
             
         const total = await Helper.countDocuments(query);
@@ -195,6 +198,7 @@ router.get('/events', async (req, res) => {
         const items = await Event.find(query)
             .skip(skip)
             .limit(parseInt(limit))
+            .populate('userRef', 'username avatar')
             .lean();
             
         const total = await Event.countDocuments(query);
@@ -237,28 +241,28 @@ router.get('/universal', async (req, res) => {
                     { name: { $regex: q, $options: 'i' } },
                     { description: { $regex: q, $options: 'i' } }
                 ]
-            }).limit(2).lean(),
+            }).limit(2).populate('userRef', 'username avatar').lean(),
             
             Service.find({ 
                 $or: [
                     { name: { $regex: q, $options: 'i' } },
                     { description: { $regex: q, $options: 'i' } }
                 ]
-            }).limit(2).lean(),
+            }).limit(2).populate('userRef', 'username avatar').lean(),
             
             Helper.find({ 
                 $or: [
                     { name: { $regex: q, $options: 'i' } },
                     { description: { $regex: q, $options: 'i' } }
                 ]
-            }).limit(2).lean(),
+            }).limit(2).populate('userRef', 'username avatar').lean(),
             
             Event.find({ 
                 $or: [
                     { name: { $regex: q, $options: 'i' } },
                     { description: { $regex: q, $options: 'i' } }
                 ]
-            }).limit(2).lean()
+            }).limit(2).populate('userRef', 'username avatar').lean()
         ]);
         
         // Combine results

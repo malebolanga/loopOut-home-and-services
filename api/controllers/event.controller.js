@@ -42,7 +42,8 @@ export const getEvents = async (req, res, next) => {
     const events = await Event.find(query)
       .sort({ createdAt: -1 })
       .limit(limit)
-      .skip(startIndex);
+      .skip(startIndex)
+      .populate('userRef', 'username avatar');
 
     res.status(200).json(events);
   } catch (error) {
@@ -98,7 +99,8 @@ export const getSimilarEvents = async (req, res, next) => {
       type: event.type,
     })
       .limit(4)
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .populate('userRef', 'username avatar');
 
     res.status(200).json(similarEvents);
   } catch (error) {

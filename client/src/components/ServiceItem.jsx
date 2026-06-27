@@ -78,6 +78,7 @@ function ServiceItem({ service, className = "" }) {
   const [isNewService, setIsNewService] = useState(false);
   const [clickCount, setClickCount] = useState(0);
   const [ratingData, setRatingData] = useState({ average: 0, count: 0 });
+  const owner = typeof (service.userRef || service.creator) === 'object' ? (service.userRef || service.creator) : null;
 
   useEffect(() => {
     if (service?.createdAt) {
@@ -200,7 +201,17 @@ function ServiceItem({ service, className = "" }) {
             </div>
           </div>
 
-          <div className="text-right flex flex-col items-end pointer-events-auto">
+          <div className="text-right flex flex-col items-end gap-2 pointer-events-auto shrink-0">
+            {owner && owner.avatar && (
+              <Link
+                to={`/user/${owner._id}`}
+                onClick={(e) => { e.stopPropagation(); }}
+                className="w-8 h-8 rounded-full border border-white/20 overflow-hidden shadow-md hover:scale-110 transition-transform mb-1 shrink-0"
+                title={`Posted by ${owner.username}`}
+              >
+                <img src={owner.avatar} alt={owner.username} className="w-full h-full object-cover" />
+              </Link>
+            )}
             <div className="text-xl font-black text-white tracking-tighter leading-none">
               R{service.regularPrice?.toLocaleString()}
             </div>

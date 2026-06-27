@@ -42,24 +42,19 @@ export default function Inbox() {
   }, []);
 
   useEffect(() => {
-    if (conversationIdParam) {
+    if (!conversationIdParam) return;
+    // Only run when the URL param changes, not on every conversations update
+    fetchMessages(conversationIdParam);
+    setShowMobileChat(true);
+  }, [conversationIdParam]);
+
+  // Separate effect: auto-select conversation when list loads
+  useEffect(() => {
+    if (conversationIdParam && conversations.length > 0) {
       const conv = conversations.find(c => c._id === conversationIdParam);
-      if (conv) {
-        setSelectedConversation(conv);
-        fetchMessages(conversationIdParam);
-        setShowMobileChat(true);
-      } else if (conversations.length > 0) {
-        // If not found in list but we have the list, it might be a new conversation
-        // Just fetch messages anyway and fetchConversations will update the list
-        fetchMessages(conversationIdParam);
-        setShowMobileChat(true);
-      } else if (!loading) {
-        // Initial load case where we have the ID but conversations haven't loaded
-        fetchMessages(conversationIdParam);
-        setShowMobileChat(true);
-      }
+      if (conv) setSelectedConversation(conv);
     }
-  }, [conversationIdParam, conversations, loading]);
+  }, [conversationIdParam, conversations]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -91,8 +86,8 @@ export default function Inbox() {
       const data = await res.json();
       if (res.ok) {
         setMessages(data);
-        // Refresh conversations to update unread counts and last message
-        fetchConversations();
+        // Do NOT call fetchConversations() here — it creates an infinite loop
+        // via the useEffect that depends on `conversations` state
       }
       setMessagesLoading(false);
     } catch (error) {

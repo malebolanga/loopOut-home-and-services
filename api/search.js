@@ -42,6 +42,7 @@ export const searchHandler = async (req, res) => {
       .sort(getSortCriteria(sort))
       .skip(skip)
       .limit(parseInt(limit))
+      .populate('userRef', 'username avatar')
       .lean();
     
     const total = await model.countDocuments(query);

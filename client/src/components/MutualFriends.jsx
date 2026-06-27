@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { FaUsers } from 'react-icons/fa';
 
 export default function MutualFriends({ targetUserId, dark = false, detailed = false }) {
@@ -32,7 +33,7 @@ export default function MutualFriends({ targetUserId, dark = false, detailed = f
         return (
             <div className="flex flex-col gap-4 mt-2 animate-fade-in">
                 {mutuals.map((friend) => (
-                    <div key={friend._id} className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100 group">
+                    <Link key={friend._id} to={`/user/${friend._id}`} className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100 group no-underline">
                         <div className="relative">
                             <img
                                 className={`h-12 w-12 rounded-full object-cover ring-4 ${dark ? 'ring-slate-900 border-white/10' : 'ring-white border-gray-100'} border shadow-sm group-hover:scale-105 transition-transform`}
@@ -48,7 +49,7 @@ export default function MutualFriends({ targetUserId, dark = false, detailed = f
                         <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
                             <span className="text-[10px] font-black uppercase tracking-widest text-rose-500 bg-rose-50 px-2 py-1 rounded-lg">Verified Mutual</span>
                         </div>
-                    </div>
+                    </Link>
                 ))}
             </div>
         );
@@ -66,13 +67,13 @@ export default function MutualFriends({ targetUserId, dark = false, detailed = f
             <div className="flex flex-col gap-3">
                 <div className="flex -space-x-2 overflow-hidden">
                     {mutuals.slice(0, 3).map((friend) => (
-                        <img
-                            key={friend._id}
-                            className={`inline-block h-8 w-8 rounded-full ring-2 ${dark ? 'ring-slate-900' : 'ring-white'}`}
-                            src={friend.avatar}
-                            alt={friend.username}
-                            title={friend.username}
-                        />
+                        <Link key={friend._id} to={`/user/${friend._id}`} title={friend.username}>
+                            <img
+                                className={`inline-block h-8 w-8 rounded-full ring-2 ${dark ? 'ring-slate-900' : 'ring-white'} hover:scale-110 transition-transform`}
+                                src={friend.avatar}
+                                alt={friend.username}
+                            />
+                        </Link>
                     ))}
                     {mutuals.length > 3 && (
                         <div className={`flex items-center justify-center h-8 w-8 rounded-full ${dark ? 'bg-white/10 text-white' : 'bg-gray-200 text-gray-600'} border-2 ${dark ? 'border-slate-900' : 'border-white'} text-[10px] font-bold`}>
@@ -82,9 +83,9 @@ export default function MutualFriends({ targetUserId, dark = false, detailed = f
                 </div>
 
                 <p className={`text-xs ${dark ? 'text-slate-400' : 'text-gray-500'} leading-relaxed`}>
-                    <span className={`font-semibold ${dark ? 'text-white' : 'text-gray-700'}`}>
+                    <Link to={`/user/${mutuals[0]._id}`} className={`font-semibold hover:underline ${dark ? 'text-white' : 'text-gray-700'}`}>
                         {mutuals[0].username}
-                    </span>
+                    </Link>
                     {mutuals.length > 1 ? ` and ${mutuals.length - 1} other${mutuals.length > 2 ? 's' : ''} you know ${mutuals.length > 2 ? 'are' : 'is'} connected to this host.` : " is connected to this host."}
                 </p>
             </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import ImageGallery from '../ImageGallery';
 import { BookOpen } from 'lucide-react';
 import { HeartIcon as HeartIconSolid, StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
@@ -10,6 +11,7 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
   const isGuestFavorite = item.rating >= 4.8;
   const wishlistType = type === 'property' ? 'listing' : type;
   const { isFavorite, toggleFavorite } = useWishlist(item, wishlistType);
+  const owner = typeof (item.userRef || item.creator) === 'object' ? (item.userRef || item.creator) : null;
 
   const getPriceSuffix = () => {
     if (type !== 'property') return '';
@@ -136,26 +138,41 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
       </div>
       
       {/* Info section - Placed exactly like Airbnb, borderless, clean */}
-      <div className="flex flex-col">
+      <div className="flex flex-col mt-1">
         <div className="flex justify-between items-start gap-2">
-          <p className={`font-semibold text-gray-900 truncate ${reducedSize ? 'text-[14px]' : 'text-[15px]'}`}>
-            {item.address?.split(',')[0] || item.name || 'South Africa'}
-          </p>
-          <div className="flex items-center gap-1 shrink-0 mt-0.5">
-            <StarIconSolid className="w-3.5 h-3.5 text-black" />
-            <span className={`font-medium text-gray-900 ${reducedSize ? 'text-[12px]' : 'text-[14px]'}`}>
-              <span>{(item.rating || 0).toFixed(1)}</span>
-            </span>
+          <div className="flex-1 min-w-0">
+            <p className={`font-semibold text-gray-900 truncate ${reducedSize ? 'text-[14px]' : 'text-[15px]'}`}>
+              {item.address?.split(',')[0] || item.name || 'South Africa'}
+            </p>
+            
+            <p className="text-gray-500 text-[13px] truncate leading-tight mt-0.5">
+              {item.name}
+            </p>
+            
+            <p className="text-gray-500 text-[13px] truncate leading-tight">
+              {getCategoryLabel()}
+            </p>
+          </div>
+
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <div className="flex items-center gap-1 mt-0.5">
+              <StarIconSolid className="w-3.5 h-3.5 text-black" />
+              <span className={`font-medium text-gray-900 ${reducedSize ? 'text-[12px]' : 'text-[14px]'}`}>
+                <span>{(item.rating || 0).toFixed(1)}</span>
+              </span>
+            </div>
+            {owner && owner.avatar && (
+              <Link
+                to={`/user/${owner._id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="w-8 h-8 rounded-full border border-gray-150 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0"
+                title={`Posted by ${owner.username}`}
+              >
+                <img src={owner.avatar} alt={owner.username} className="w-full h-full object-cover" />
+              </Link>
+            )}
           </div>
         </div>
-        
-        <p className="text-gray-500 text-[14px] truncate leading-tight mt-0.5">
-          {item.name}
-        </p>
-        
-        <p className="text-gray-500 text-[14px] truncate leading-tight">
-          {getCategoryLabel()}
-        </p>
         
         {item._distance && item._distance !== Infinity && !hideDistance && (
           <p className="text-gray-500 text-[14px] leading-tight">

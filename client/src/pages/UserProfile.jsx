@@ -102,7 +102,31 @@ const UserProfile = () => {
   };
 
   const handleMessage = async () => {
-    // ... (existing code remains SAME)
+    if (!currentUser) {
+      navigate('/sign-in');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/messages/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          receiverId: id,
+          content: `Hi ${userData?.username || 'there'}! 👋`,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        navigate(`/messages/${data.conversationId || data._id}`);
+      } else {
+        alert(data.message || 'Failed to start conversation');
+      }
+    } catch (error) {
+      console.error('Message error:', error);
+      alert('An error occurred. Please try again.');
+    }
   };
 
   const openFollowList = async (type) => {

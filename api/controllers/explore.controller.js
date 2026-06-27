@@ -33,15 +33,15 @@ export const getFeaturedItems = async (req, res, next) => {
       const models = { listings: Listing, services: Service, helpers: Helper, events: Event };
       const Model = models[category];
       if (Model) {
-        const items = await Model.find().sort({ createdAt: -1 }).limit(parseInt(limit));
+        const items = await Model.find().sort({ createdAt: -1 }).limit(parseInt(limit)).populate('userRef', 'username avatar');
         featured = items.map(item => formatItem(item, category));
       }
     } else {
       const [listings, services, helpers, events] = await Promise.all([
-        Listing.find().sort({ createdAt: -1 }).limit(perCategoryLimit),
-        Service.find().sort({ createdAt: -1 }).limit(perCategoryLimit),
-        Helper.find().sort({ createdAt: -1 }).limit(perCategoryLimit),
-        Event.find().sort({ createdAt: -1 }).limit(perCategoryLimit),
+        Listing.find().sort({ createdAt: -1 }).limit(perCategoryLimit).populate('userRef', 'username avatar'),
+        Service.find().sort({ createdAt: -1 }).limit(perCategoryLimit).populate('userRef', 'username avatar'),
+        Helper.find().sort({ createdAt: -1 }).limit(perCategoryLimit).populate('userRef', 'username avatar'),
+        Event.find().sort({ createdAt: -1 }).limit(perCategoryLimit).populate('userRef', 'username avatar'),
       ]);
 
       featured = [
@@ -71,15 +71,15 @@ export const getTrendingItems = async (req, res, next) => {
         const models = { listings: Listing, services: Service, helpers: Helper, events: Event };
         const Model = models[category];
         if (Model) {
-          const items = await Model.find().sort({ rating: -1, createdAt: -1 }).limit(parseInt(limit));
+          const items = await Model.find().sort({ rating: -1, createdAt: -1 }).limit(parseInt(limit)).populate('userRef', 'username avatar');
           trending = items.map(item => formatItem(item, category));
         }
     } else {
         const [listings, services, helpers, events] = await Promise.all([
-            Listing.find().sort({ rating: -1, createdAt: -1 }).limit(perCategoryLimit),
-            Service.find().sort({ rating: -1, createdAt: -1 }).limit(perCategoryLimit),
-            Helper.find().sort({ createdAt: -1 }).limit(perCategoryLimit),
-            Event.find().sort({ createdAt: -1 }).limit(perCategoryLimit),
+            Listing.find().sort({ rating: -1, createdAt: -1 }).limit(perCategoryLimit).populate('userRef', 'username avatar'),
+            Service.find().sort({ rating: -1, createdAt: -1 }).limit(perCategoryLimit).populate('userRef', 'username avatar'),
+            Helper.find().sort({ createdAt: -1 }).limit(perCategoryLimit).populate('userRef', 'username avatar'),
+            Event.find().sort({ createdAt: -1 }).limit(perCategoryLimit).populate('userRef', 'username avatar'),
         ]);
 
         trending = [
@@ -116,15 +116,15 @@ export const getNearbyItems = async (req, res, next) => {
         const models = { listings: Listing, services: Service, helpers: Helper, events: Event };
         const Model = models[category];
         if (Model) {
-          const items = await Model.find(query).limit(parseInt(limit));
+          const items = await Model.find(query).limit(parseInt(limit)).populate('userRef', 'username avatar');
           nearby = items.map(item => formatItem(item, category));
         }
     } else {
         const [listings, services, helpers, events] = await Promise.all([
-            Listing.find(query).limit(perCategoryLimit),
-            Service.find(query).limit(perCategoryLimit),
-            Helper.find(query).limit(perCategoryLimit),
-            Event.find(query).limit(perCategoryLimit),
+            Listing.find(query).limit(perCategoryLimit).populate('userRef', 'username avatar'),
+            Service.find(query).limit(perCategoryLimit).populate('userRef', 'username avatar'),
+            Helper.find(query).limit(perCategoryLimit).populate('userRef', 'username avatar'),
+            Event.find(query).limit(perCategoryLimit).populate('userRef', 'username avatar'),
         ]);
 
         nearby = [

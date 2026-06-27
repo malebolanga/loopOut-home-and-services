@@ -63,7 +63,8 @@ export const getHelpers = async (req, res, next) => {
     })
       .sort({ [sort]: order })
       .limit(limit)
-      .skip(startIndex);
+      .skip(startIndex)
+      .populate('userRef', 'username avatar');
 
     return res.status(200).json(helpers);
   } catch (error) {

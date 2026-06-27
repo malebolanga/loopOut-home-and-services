@@ -204,7 +204,8 @@ export const getServices = async (req, res, next) => {
     const services = await Service.find(query)
       .sort({ [sort]: order })
       .limit(limit)
-      .skip(startIndex);
+      .skip(startIndex)
+      .populate('userRef', 'username avatar');
 
     return res.status(200).json(fuzzItemsLocation(services));
   } catch (error) {
@@ -225,7 +226,8 @@ export const getSimilarServices = async (req, res, next) => {
       type: service.type,
     })
       .limit(4)
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .populate('userRef', 'username avatar');
 
     res.status(200).json(fuzzItemsLocation(similarServices));
   } catch (error) {

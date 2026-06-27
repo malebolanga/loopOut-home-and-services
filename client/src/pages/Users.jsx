@@ -198,19 +198,21 @@ export default function Users() {
                 className={`relative border-2 ${colors.border} ${colors.bg} rounded-2xl p-6 flex flex-col items-center gap-4 
                             transition-all duration-300 hover:shadow-xl ${colors.hoverBg} transform hover:-translate-y-1`}
               >
-                <div className="relative">
+                <Link to={`/user/${user._id}`} className="relative flex-shrink-0 no-underline group/avatar">
                   <img
                     src={user.avatar}
                     alt={user.username}
-                    className={`w-28 h-28 rounded-full object-cover border-4 ${colors.border} shadow-md`}
+                    className={`w-28 h-28 rounded-full object-cover border-4 ${colors.border} shadow-md group-hover/avatar:scale-105 transition-transform`}
                   />
                   <div className={`absolute bottom-0 right-0 w-5 h-5 rounded-full bg-green-500 border-2 border-white`} title="Online"></div>
-                </div>
+                </Link>
 
                 <div className="text-center">
-                  <h2 className="font-bold text-xl text-gray-800">
-                    {user.username}
-                  </h2>
+                  <Link to={`/user/${user._id}`} className="no-underline">
+                    <h2 className={`font-bold text-xl text-gray-800 hover:text-blue-600 transition-colors`}>
+                      {user.username}
+                    </h2>
+                  </Link>
                   <span className={`text-xs px-2 py-1 rounded-full ${colors.badge} font-medium`}>
                     {user.type || 'Member'}
                   </span>
