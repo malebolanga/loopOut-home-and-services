@@ -50,6 +50,8 @@ const listingSchema = new mongoose.Schema(
     bookYear: { type: String, required: false },
     bookUsageHistory: { type: String, required: false },
     numberOfUsed: { type: Number, required: false },
+    checkInTime: { type: String, required: false, default: '14:00' },
+    checkOutTime: { type: String, required: false, default: '11:00' },
     operatingHours: {
       monday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },
       tuesday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },

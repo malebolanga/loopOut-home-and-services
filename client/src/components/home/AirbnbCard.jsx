@@ -70,9 +70,12 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
     const itemType = type === 'property' ? 'listing' : type;
     const resolvedType = item.itemType || item.type || itemType;
 
-    let path = `/${resolvedType}/${item._id}`;
+    let path = `/listing/${item._id}`; // safe default
 
-    if (resolvedType === 'listing' || resolvedType === 'property') {
+    if (resolvedType === 'listing' || resolvedType === 'property'
+        || resolvedType === 'rent' || resolvedType === 'over'
+        || resolvedType === 'sale' || resolvedType === 'land'
+        || resolvedType === 'resort') {
       path = `/listing/${item._id}`;
     } else if (resolvedType === 'event') {
       path = `/event/${item._id}`;

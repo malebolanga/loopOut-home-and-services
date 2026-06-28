@@ -289,7 +289,7 @@ const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFi
   </div>
 );
 
-const getVisibleSteps = (category) => {
+const getVisibleSteps = (category, type) => {
   const allSteps = [
     { id: 1, label: "Category", icon: MapIcon },
     { id: 2, label: "Type", icon: TagIcon },
@@ -314,14 +314,19 @@ const getVisibleSteps = (category) => {
       return step.id === 1 || step.id === 2 || step.id === 3 || step.id === 5 || step.id === 8 || step.id === 9;
     }
     if (category === 'property') {
+      // rent & self-catering: no schedule step at all
+      if (type === 'rent' || type === 'land') {
+        return step.id !== 4 && step.id !== 6 && step.id !== 7;
+      }
+      // guest house / hotel / resort: keep schedule step (shows check-in/out UI)
       return step.id !== 6 && step.id !== 7;
     }
     return true;
   });
 };
 
-const StepProgress = ({ currentStep, category }) => {
-  const visibleSteps = getVisibleSteps(category);
+const StepProgress = ({ currentStep, category, type }) => {
+  const visibleSteps = getVisibleSteps(category, type);
 
   return (
     <div className="mb-16 md:mb-20 overflow-x-auto scrollbar-hide">
@@ -503,6 +508,10 @@ export default function CreateListing() {
     time: "",
     foodAvailable: false,
     familyFriendly: false,
+
+    // Check-in / Check-out (guest house, hotel, resort)
+    checkInTime: '14:00',
+    checkOutTime: '11:00',
 
     // Operating Schedule
     operatingHours: {
@@ -848,7 +857,7 @@ export default function CreateListing() {
     }
     
     setError(null);
-    const visible = getVisibleSteps(selectedCategory);
+    const visible = getVisibleSteps(selectedCategory, selectedType);
     const currIdx = visible.findIndex(s => s.id === currentStep);
     if (currIdx !== -1 && currIdx < visible.length - 1) {
       setCurrentStep(visible[currIdx + 1].id);
@@ -887,7 +896,7 @@ export default function CreateListing() {
   const handlePrevStep = () => {
     setDirection('prev');
     setError(null);
-    const visible = getVisibleSteps(selectedCategory);
+    const visible = getVisibleSteps(selectedCategory, selectedType);
     const currIdx = visible.findIndex(s => s.id === currentStep);
     if (currIdx > 0) {
       setCurrentStep(visible[currIdx - 1].id);
@@ -1299,6 +1308,8 @@ export default function CreateListing() {
         bookYear: listingForm.bookYear || "",
         bookUsageHistory: listingForm.bookUsageHistory || "",
         numberOfUsed: listingForm.numberOfUsed || 0,
+        checkInTime: listingForm.checkInTime || '14:00',
+        checkOutTime: listingForm.checkOutTime || '11:00',
         serviceList: (selectedCategory === 'experiences' || selectedCategory === 'online') ? listingForm.serviceList : [],
         performers: (selectedCategory === 'experiences' || selectedCategory === 'online') ? listingForm.performers : [],
       };
@@ -1617,7 +1628,7 @@ export default function CreateListing() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-32 pb-12 md:pb-20">
         {/* Step Progress */}
         <div className="mt-10">
-          <StepProgress currentStep={currentStep} category={selectedCategory} />
+          <StepProgress currentStep={currentStep} category={selectedCategory} type={selectedType} />
         </div>
 
         {/* Main Form Container */}
@@ -2162,8 +2173,82 @@ export default function CreateListing() {
               </div>
             )}
 
-            {/* Step 4: Operating Schedule - Alpha Feature */}
+            {/* Step 4: Schedule — Check-in/out for stays, operating hours for services */}
             {currentStep === 4 && (
+              <>
+              {/* Guest house / Hotel / Resort → Check-in & Check-out */}
+              {selectedCategory === 'property' && (selectedType === 'over' || selectedType === 'sale' || selectedType === 'resort') && (
+                <SectionCard title="Check-in & Check-out">
+                  <p className="text-gray-600 mb-10 leading-relaxed font-medium">Set your standard check-in and check-out times so guests know when they can arrive and depart.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                    <div className="group/form">
+                      <label className="block text-[10px] font-black text-gray-400 group-focus-within/form:text-rose-500 uppercase tracking-[0.25em] mb-4 ml-2 transition-colors">Check-in Time</label>
+                      <div className="relative">
+                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl">🛬</div>
+                        <input
+                          type="time"
+                          value={listingForm.checkInTime}
+                          onChange={(e) => setListingForm({ ...listingForm, checkInTime: e.target.value })}
+                          className="w-full pl-16 pr-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white transition-all duration-700 hover:border-gray-100 font-black text-lg shadow-sm"
+                        />
+                      </div>
+                      <p className="mt-3 text-xs font-bold text-gray-400 ml-4 italic opacity-80">Earliest time guests may check in</p>
+                    </div>
+                    <div className="group/form">
+                      <label className="block text-[10px] font-black text-gray-400 group-focus-within/form:text-rose-500 uppercase tracking-[0.25em] mb-4 ml-2 transition-colors">Check-out Time</label>
+                      <div className="relative">
+                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl">🛫</div>
+                        <input
+                          type="time"
+                          value={listingForm.checkOutTime}
+                          onChange={(e) => setListingForm({ ...listingForm, checkOutTime: e.target.value })}
+                          className="w-full pl-16 pr-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white transition-all duration-700 hover:border-gray-100 font-black text-lg shadow-sm"
+                        />
+                      </div>
+                      <p className="mt-3 text-xs font-bold text-gray-400 ml-4 italic opacity-80">Latest time guests must check out</p>
+                    </div>
+                  </div>
+                  {/* Discount / Adjusted Price for stays */}
+                  <div className="mt-10 pt-8 border-t-4 border-gray-50">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] mb-6 ml-2">Pricing</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                      <FormInput
+                        label="Regular Price (per night)"
+                        type="number"
+                        id="regularPrice"
+                        value={listingForm.regularPrice}
+                        onChange={handleFormChange}
+                        placeholder="Price per night"
+                        required
+                      />
+                      <div className="space-y-4">
+                        <label className="flex items-center gap-4 cursor-pointer p-5 border-4 border-gray-50 rounded-[2rem] hover:border-gray-100 transition-all">
+                          <input
+                            type="checkbox"
+                            id="offer"
+                            checked={listingForm.offer}
+                            onChange={handleFormChange}
+                            className="w-5 h-5 accent-rose-500 rounded"
+                          />
+                          <span className="font-black text-gray-900 text-sm">Offer a discounted / adjusted price</span>
+                        </label>
+                        {listingForm.offer && (
+                          <FormInput
+                            label="Discounted Price (per night)"
+                            type="number"
+                            id="discountPrice"
+                            value={listingForm.discountPrice}
+                            onChange={handleFormChange}
+                            placeholder="Discounted price"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </SectionCard>
+              )}
+              {/* Services / Experiences / Events → full weekly operating schedule */}
+              {selectedCategory !== 'property' && (
               <SectionCard title="Operating Schedule">
                 <p className="text-gray-600 mb-10 leading-relaxed font-medium">Define when you are available for bookings. This helps customers know when they can reach you or visit your location.</p>
                 <div className="space-y-4">
@@ -2237,7 +2322,9 @@ export default function CreateListing() {
                     </motion.div>
                   ))}
                 </div>
-              </SectionCard>
+                </SectionCard>
+              )}
+              </>
             )}
 
             {/* Step 5: Amenities */}
