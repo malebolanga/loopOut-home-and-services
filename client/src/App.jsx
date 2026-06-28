@@ -354,7 +354,7 @@ function AppContent() {
   ];
 
   const specializedHelperPaths = [
-    '/helper', '/photography', '/beauty', '/barber', '/tattoo', '/chef', '/carwash', '/privatetutor', '/listing', '/listings', '/sneaker', '/washingmat', '/animals', '/sell-item'
+    '/helper', '/photography', '/beauty', '/barber', '/tattoo', '/chef', '/carwash', '/privatetutor', '/listing', '/property', '/rent', '/listings', '/sneaker', '/washingmat', '/animals', '/sell-item'
   ];
 
   const isSpecializedPage = specializedHelperPaths.some(path => location.pathname.startsWith(path));

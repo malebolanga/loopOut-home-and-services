@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { Link, useNavigate } from "react-router-dom";
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { motion } from "framer-motion";
 import { BookOpen } from "lucide-react";
 import { 
@@ -201,20 +202,23 @@ function ServiceItem({ service, className = "" }) {
             </div>
           </div>
 
-          <div className="text-right flex flex-col items-end gap-2 pointer-events-auto shrink-0">
+          <div className="flex flex-col items-end gap-2 shrink-0 pointer-events-auto">
+            <div className="flex items-center gap-1 mt-0.5">
+              <StarIconSolid className="w-3.5 h-3.5 text-white" />
+              <span className="font-medium text-white text-[14px]">
+                <span>{(ratingData.average || 0).toFixed(1)}</span>
+              </span>
+            </div>
             {owner && owner.avatar && (
               <Link
                 to={`/user/${owner._id}`}
                 onClick={(e) => { e.stopPropagation(); }}
-                className="w-8 h-8 rounded-full border border-white/20 overflow-hidden shadow-md hover:scale-110 transition-transform mb-1 shrink-0"
+                className="w-5 h-5 rounded-full border border-gray-150 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0"
                 title={`Posted by ${owner.username}`}
               >
                 <img src={owner.avatar} alt={owner.username} className="w-full h-full object-cover" />
               </Link>
             )}
-            <div className="text-xl font-black text-white tracking-tighter leading-none">
-              R{service.regularPrice?.toLocaleString()}
-            </div>
           </div>
         </div>
       </div>

@@ -14,7 +14,7 @@ const FALLBACK_IMAGES = {
     default: 'https://placehold.co/600x400/E0E0E0/333333?text=No+Image'
 };
 
-const ImageWithFallback = ({ src, alt, className = "", type = 'default', imageUrls, onLoad, ...props }) => {
+const ImageWithFallback = ({ src, alt, className = "", imageClassName = "", type = 'default', imageUrls, onLoad, ...props }) => {
     const [imgSrc, setImgSrc] = useState(src);
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
@@ -45,7 +45,7 @@ const ImageWithFallback = ({ src, alt, className = "", type = 'default', imageUr
             <img loading="lazy"
                 src={imgSrc || FALLBACK_IMAGES[type] || FALLBACK_IMAGES.default}
                 alt={alt}
-                className={`w-full h-full object-cover transition-opacity duration-500 z-10 relative ${isLoading && !hasError ? 'opacity-0' : 'opacity-100'}`}
+                className={`w-full h-full object-cover transition-opacity duration-500 z-10 relative ${imageClassName} ${isLoading && !hasError ? 'opacity-0' : 'opacity-100'}`}
                 onError={handleError}
                 onLoad={handleLoad}
                 {...props}

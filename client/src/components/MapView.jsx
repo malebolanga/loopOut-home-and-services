@@ -44,24 +44,11 @@ const MapView = ({
   };
 
   useEffect(() => {
-    // Load Leaflet from CDN dynamically
-    if (!window.L) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-      document.head.appendChild(link);
-
-      const script = document.createElement('script');
-      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-      script.async = true;
-      script.onload = () => initMap();
-      document.body.appendChild(script);
-    } else {
-      initMap();
-    }
+    // Track mounted state to prevent async callbacks after unmount
+    let mounted = true;
 
     function initMap() {
-      if (!mapContainerRef.current || leafletMapRef.current) return;
+      if (!mounted || !mapContainerRef.current || leafletMapRef.current) return;
 
       const L = window.L;
       if (!L) return;
@@ -70,7 +57,9 @@ const MapView = ({
       
       const map = L.map(mapContainerRef.current, {
         zoomControl: false,
-        attributionControl: false
+        attributionControl: false,
+        // Prevent the ScrollWheelZoom setTimeout from firing after unmount
+        scrollWheelZoom: true,
       }).setView(startCenter, 13);
 
       // Light, clean Airbnb-style theme
@@ -98,6 +87,7 @@ const MapView = ({
 
       // Function to add markers for a given item list
       const addMarkers = (data) => {
+        if (!leafletMapRef.current) return;
         // Clean up existing markers
         markersRef.current.forEach(m => map.removeLayer(m));
         markersRef.current = [];
@@ -130,13 +120,50 @@ const MapView = ({
       leafletMapRef.current.refreshMarkers = addMarkers;
     }
 
+    // Load Leaflet from CDN dynamically if not already loaded
+    if (!window.L) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.async = true;
+      script.onload = () => initMap();
+      document.body.appendChild(script);
+    } else {
+      initMap();
+    }
+
     return () => {
+      mounted = false;
       if (leafletMapRef.current) {
-        leafletMapRef.current.remove();
+        const map = leafletMapRef.current;
+        // Null out the ref FIRST so any concurrent callbacks bail early
         leafletMapRef.current = null;
+        try {
+          // Directly cancel the pending ScrollWheelZoom setTimeout.
+          // .disable() only blocks future events — the already-queued timer
+          // still fires and crashes on _leaflet_pos. clearTimeout prevents that.
+          if (map.scrollWheelZoom && map.scrollWheelZoom._timer != null) {
+            clearTimeout(map.scrollWheelZoom._timer);
+            map.scrollWheelZoom._timer = null;
+          }
+          // Also patch _performZoom to a no-op as a second safety net
+          if (map.scrollWheelZoom) {
+            map.scrollWheelZoom._performZoom = () => {};
+          }
+        } catch (_) { /* ignore */ }
+        try {
+          map.remove();
+        } catch (_) { /* ignore */ }
       }
     };
-  }, [center, items]);
+  // NOTE: `items` intentionally omitted — markers are refreshed by the effect below.
+  // Including `items` here would destroy/recreate the map on every data update.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [center]);
 
   // Whenever the items prop changes, refresh markers on the existing map
   useEffect(() => {

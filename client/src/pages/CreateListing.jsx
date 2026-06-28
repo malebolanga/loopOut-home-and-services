@@ -314,8 +314,8 @@ const getVisibleSteps = (category, type) => {
       return step.id === 1 || step.id === 2 || step.id === 3 || step.id === 5 || step.id === 8 || step.id === 9;
     }
     if (category === 'property') {
-      // rent & self-catering: no schedule step at all
-      if (type === 'rent' || type === 'land') {
+      // rent: no schedule step at all
+      if (type === 'rent') {
         return step.id !== 4 && step.id !== 6 && step.id !== 7;
       }
       // guest house / hotel / resort: keep schedule step (shows check-in/out UI)
@@ -850,7 +850,17 @@ export default function CreateListing() {
         return;
       }
       
-      if (selectedCategory === 'property' && +listingForm.regularPrice < +listingForm.discountPrice) {
+      if (listingForm.regularPrice === undefined || listingForm.regularPrice === null || listingForm.regularPrice === "") {
+        setError("Please enter a regular price");
+        return;
+      }
+      
+      if (+listingForm.regularPrice < 0) {
+        setError("Price cannot be negative");
+        return;
+      }
+      
+      if (listingForm.offer && +listingForm.regularPrice < +listingForm.discountPrice) {
         setError("Discount price must be lower than regular price");
         return;
       }
@@ -1430,6 +1440,28 @@ export default function CreateListing() {
     }
   };
 
+  const getPricingLabel = () => {
+    if (selectedCategory === 'property') {
+      if (['over', 'sale', 'resort'].includes(selectedType)) return "Regular Price (per night)";
+      if (['rent', 'rent-long', 'rent-short'].includes(selectedType)) return "Regular Price (per month)";
+      if (selectedType === 'office') return "Regular Price (per hour)";
+      return "Regular Price";
+    }
+    if (selectedCategory === 'experiences' || selectedCategory === 'online') {
+      if (['tutor', 'cleaner', 'domestic', 'maid', 'beauty', 'barber', 'chef'].includes(selectedType)) {
+        return "Regular Price (per hour)";
+      }
+      return "Regular Price";
+    }
+    if (selectedCategory === 'selling') {
+      return "Item Price";
+    }
+    if (selectedCategory === 'events') {
+      return "Ticket / Entry Price (R0 for Free)";
+    }
+    return "Regular Price";
+  };
+
   const getTypesByCategory = () => {
     switch (selectedCategory) {
       case 'property':
@@ -1761,17 +1793,6 @@ export default function CreateListing() {
                     />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {selectedCategory === 'selling' && (
-                        <FormInput
-                          label="Item Price"
-                          type="number"
-                          id="regularPrice"
-                          value={listingForm.regularPrice}
-                          onChange={handleFormChange}
-                          placeholder="Price"
-                          required
-                        />
-                      )}
                       <FormInput
                         label="Address"
                         icon={MapPinIcon}
@@ -2137,37 +2158,6 @@ export default function CreateListing() {
                       </div>
                     )}
 
-                    {selectedCategory === 'property' && (
-                      <div className="pt-4 border-t border-gray-200">
-                        <label className="flex items-center gap-3 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            id="offer"
-                            checked={listingForm.offer}
-                            onChange={handleFormChange}
-                            className="w-5 h-5 text-black rounded border-gray-300 focus:ring-black"
-                          />
-                          <span className="font-medium text-gray-900">Offer a discounted price</span>
-                        </label>
-                        
-                        {listingForm.offer && (
-                          <div className="mt-4 ml-8">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Discounted price</label>
-                            <div className="relative">
-                              <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-900 font-semibold">R</span>
-                              <input
-                                type="number"
-                                id="discountPrice"
-                                value={listingForm.discountPrice}
-                                onChange={handleFormChange}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                                min="0"
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </SectionCard>
               </div>
@@ -2177,7 +2167,7 @@ export default function CreateListing() {
             {currentStep === 4 && (
               <>
               {/* Guest house / Hotel / Resort → Check-in & Check-out */}
-              {selectedCategory === 'property' && (selectedType === 'over' || selectedType === 'sale' || selectedType === 'resort') && (
+              {selectedCategory === 'property' && (selectedType === 'over' || selectedType === 'sale' || selectedType === 'resort' || selectedType === 'land') && (
                 <SectionCard title="Check-in & Check-out">
                   <p className="text-gray-600 mb-10 leading-relaxed font-medium">Set your standard check-in and check-out times so guests know when they can arrive and depart.</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -2206,43 +2196,6 @@ export default function CreateListing() {
                         />
                       </div>
                       <p className="mt-3 text-xs font-bold text-gray-400 ml-4 italic opacity-80">Latest time guests must check out</p>
-                    </div>
-                  </div>
-                  {/* Discount / Adjusted Price for stays */}
-                  <div className="mt-10 pt-8 border-t-4 border-gray-50">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] mb-6 ml-2">Pricing</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                      <FormInput
-                        label="Regular Price (per night)"
-                        type="number"
-                        id="regularPrice"
-                        value={listingForm.regularPrice}
-                        onChange={handleFormChange}
-                        placeholder="Price per night"
-                        required
-                      />
-                      <div className="space-y-4">
-                        <label className="flex items-center gap-4 cursor-pointer p-5 border-4 border-gray-50 rounded-[2rem] hover:border-gray-100 transition-all">
-                          <input
-                            type="checkbox"
-                            id="offer"
-                            checked={listingForm.offer}
-                            onChange={handleFormChange}
-                            className="w-5 h-5 accent-rose-500 rounded"
-                          />
-                          <span className="font-black text-gray-900 text-sm">Offer a discounted / adjusted price</span>
-                        </label>
-                        {listingForm.offer && (
-                          <FormInput
-                            label="Discounted Price (per night)"
-                            type="number"
-                            id="discountPrice"
-                            value={listingForm.discountPrice}
-                            onChange={handleFormChange}
-                            placeholder="Discounted price"
-                          />
-                        )}
-                      </div>
                     </div>
                   </div>
                 </SectionCard>
@@ -2644,6 +2597,43 @@ export default function CreateListing() {
                     )}
                   </div>
                 </SectionCard>
+
+                <SectionCard title="Pricing">
+                  <p className="text-gray-600 mb-10 leading-relaxed font-medium">Set the price for your listing so customers or guests know what to expect.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                    <FormInput
+                      label={getPricingLabel()}
+                      type="number"
+                      id="regularPrice"
+                      value={listingForm.regularPrice}
+                      onChange={handleFormChange}
+                      placeholder="Enter price"
+                      required
+                    />
+                    <div className="space-y-4">
+                      <label className="flex items-center gap-4 cursor-pointer p-5 border-4 border-gray-50 rounded-[2rem] hover:border-gray-100 transition-all">
+                        <input
+                          type="checkbox"
+                          id="offer"
+                          checked={listingForm.offer}
+                          onChange={handleFormChange}
+                          className="w-5 h-5 accent-rose-500 rounded"
+                        />
+                        <span className="font-black text-gray-900 text-sm">Offer a discounted / adjusted price</span>
+                      </label>
+                      {listingForm.offer && (
+                        <FormInput
+                          label="Discounted Price"
+                          type="number"
+                          id="discountPrice"
+                          value={listingForm.discountPrice}
+                          onChange={handleFormChange}
+                          placeholder="Discounted price"
+                        />
+                      )}
+                    </div>
+                  </div>
+                </SectionCard>
               </div>
             )}
 
@@ -2679,6 +2669,18 @@ export default function CreateListing() {
                           <span className="text-gray-600">Price</span>
                           <span className="font-medium text-gray-900">R{listingForm.regularPrice}</span>
                         </div>
+                        {selectedCategory === 'property' && ['over', 'sale', 'resort', 'land'].includes(selectedType) && (
+                          <>
+                            <div className="flex justify-between py-2 border-t border-gray-100 mt-2">
+                              <span className="text-gray-600">Check-in Time</span>
+                              <span className="font-medium text-gray-900">{listingForm.checkInTime}</span>
+                            </div>
+                            <div className="flex justify-between py-2">
+                              <span className="text-gray-600">Check-out Time</span>
+                              <span className="font-medium text-gray-900">{listingForm.checkOutTime}</span>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -2739,7 +2741,7 @@ export default function CreateListing() {
                       </div>
                     </div>
 
-                    {selectedCategory !== 'selling' && selectedCategory !== 'events' && (
+                    {selectedCategory !== 'selling' && selectedCategory !== 'events' && selectedCategory !== 'property' && (
                       <div className="bg-gray-50 rounded-xl p-6">
                         <h3 className="font-semibold text-lg text-gray-900 mb-4">Operating Schedule</h3>
                         <div className="grid grid-cols-1 gap-2 text-sm">

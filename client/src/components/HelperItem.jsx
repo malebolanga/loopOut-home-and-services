@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { Link, useNavigate } from "react-router-dom";
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { motion } from "framer-motion";
 import { BookOpen } from "lucide-react";
 import { 
@@ -164,14 +165,16 @@ function HelperItem({ helper, className = "" }) {
 
           <div className="flex flex-col items-end gap-2 shrink-0">
             <div className="flex items-center gap-1 mt-0.5">
-              <Star className="w-3.5 h-3.5 text-black fill-black" />
-              <span className="text-[14px] font-medium text-gray-900">{ratingData.average.toFixed(1)}</span>
+              <StarIconSolid className="w-3.5 h-3.5 text-black" />
+              <span className={`font-medium text-gray-900 text-[14px]`}>
+                <span>{(ratingData.average || 0).toFixed(1)}</span>
+              </span>
             </div>
             {owner && owner.avatar && (
               <Link
                 to={`/user/${owner._id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="w-8 h-8 rounded-full border border-gray-150 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0"
+                className="w-5 h-5 rounded-full border border-gray-150 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0"
                 title={`Posted by ${owner.username}`}
               >
                 <img src={owner.avatar} alt={owner.username} className="w-full h-full object-cover" />

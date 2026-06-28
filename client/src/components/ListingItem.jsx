@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { Link } from "react-router-dom";
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { motion } from "framer-motion";
 import { BookOpen } from "lucide-react";
 import {
@@ -290,6 +291,7 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
                 src={img.url}
                 alt={`${listing.name || 'Property'} image ${index + 1}`}
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                imageClassName="object-top"
                 loading="lazy"
               />
             </SwiperSlide>
@@ -347,7 +349,23 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
               {listing.address || 'Private Location'}
             </p>
           </div>
-          <div className="text-right">
+          <div className="flex flex-col items-end gap-2 shrink-0 pointer-events-auto">
+            <div className="flex items-center gap-1 mt-0.5">
+              <StarIconSolid className="w-3.5 h-3.5 text-white" />
+              <span className="font-medium text-white text-[14px]">
+                <span>{(ratingData.average || 0).toFixed(1)}</span>
+              </span>
+            </div>
+            {listing.userRef?.avatar && (
+              <Link
+                to={`/user/${listing.userRef._id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="w-5 h-5 rounded-full border border-gray-150 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0"
+                title={`Posted by ${listing.userRef.username}`}
+              >
+                <img src={listing.userRef.avatar} alt={listing.userRef.username} className="w-full h-full object-cover" />
+              </Link>
+            )}
             <div className="text-xl font-black text-white tracking-tighter leading-none mb-1">
               R{listing.regularPrice?.toLocaleString()}
             </div>

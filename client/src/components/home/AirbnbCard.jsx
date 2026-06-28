@@ -157,24 +157,8 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
             </p>
           </div>
 
-          <div className="flex flex-col items-end gap-2 shrink-0">
-            <div className="flex items-center gap-1 mt-0.5">
-              <StarIconSolid className="w-3.5 h-3.5 text-black" />
-              <span className={`font-medium text-gray-900 ${reducedSize ? 'text-[12px]' : 'text-[14px]'}`}>
-                <span>{(item.rating || 0).toFixed(1)}</span>
-              </span>
-            </div>
-            {owner && owner.avatar && (
-              <Link
-                to={`/user/${owner._id}`}
-                onClick={(e) => e.stopPropagation()}
-                className="w-8 h-8 rounded-full border border-gray-150 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0"
-                title={`Posted by ${owner.username}`}
-              >
-                <img src={owner.avatar} alt={owner.username} className="w-full h-full object-cover" />
-              </Link>
-            )}
-          </div>
+        
+        
         </div>
         
         {item._distance && item._distance !== Infinity && !hideDistance && (

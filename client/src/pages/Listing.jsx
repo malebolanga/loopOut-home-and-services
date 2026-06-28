@@ -2049,12 +2049,12 @@ export default function Listing() {
   const displayEmail = listing?.email || listing?.userRef?.email || '';
 
   // Determine property type for UI
-  const isOvernight = listing.type === 'over';
+  const isOvernight = ['over', 'sale', 'land'].includes(listing.type);
   const isOffice = listing.type === 'office';
-  const isSale = listing.type === 'sale';
+  const isSale = false;
   const isRent = listing.type === 'rent';
   const showCalendar = isOvernight || isOffice;
-  const isSaleOrRent = isSale || isRent;
+  const isSaleOrRent = isRent;
 
   // Calculate prices
   const roomTotal = listing.regularPrice * nights;
@@ -2309,13 +2309,47 @@ export default function Listing() {
               </div>
             )}
 
-            {/* Operating Schedule */}
-            {listing.operatingHours && (
-              <OperatingSchedule 
-                operatingHours={listing.operatingHours} 
-                isClosedToday={operatingStatus.isClosed}
-                reason={operatingStatus.reason}
-              />
+            {/* Check-in & Check-out timings for overnight stays / hotels / resorts / self-catering */}
+            {(isOvernight || isSale || isOffice || listing.type === 'land') && (
+              <div className="py-6 border-b border-gray-200">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2.5 bg-rose-50 rounded-2xl">
+                    <ClockIcon className="w-6 h-6 text-rose-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 tracking-tight">Check-in & Check-out</h3>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Standard timing windows</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between p-5 rounded-3xl border border-gray-150/60 bg-white shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-xl font-bold">
+                        🛬
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Check-in Time</span>
+                        <span className="text-base lg:text-lg font-black text-gray-900 mt-0.5 block">{listing.checkInTime || '14:00'}</span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wide bg-gray-50 px-3 py-1 rounded-full">After</span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-5 rounded-3xl border border-gray-150/60 bg-white shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-xl font-bold">
+                        🛫
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Check-out Time</span>
+                        <span className="text-base lg:text-lg font-black text-gray-900 mt-0.5 block">{listing.checkOutTime || '11:00'}</span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wide bg-gray-50 px-3 py-1 rounded-full">Before</span>
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Calendar - Only for overnight and office */}
