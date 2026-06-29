@@ -424,6 +424,8 @@ export default function CreateListing() {
     address: "",
     contact: "",
     host: "",
+    providerType: "",
+    citizenship: "",
     regularPrice: 100,
     type: "",
     category: "",
@@ -784,6 +786,17 @@ export default function CreateListing() {
         }
         if (!listingForm.serviceDuration) {
           setError("Please enter the service duration");
+          return;
+        }
+      }
+
+      if (selectedCategory === 'experiences' || selectedCategory === 'online') {
+        if (!listingForm.providerType) {
+          setError("Please select whether this is an individual or company listing");
+          return;
+        }
+        if (listingForm.providerType === 'individual' && !listingForm.citizenship.trim()) {
+          setError("Please enter your citizenship");
           return;
         }
       }
@@ -1170,6 +1183,12 @@ export default function CreateListing() {
 
     if (type === "checkbox") {
       setListingForm({ ...listingForm, [id]: checked });
+    } else if (id === "providerType") {
+      setListingForm({
+        ...listingForm,
+        providerType: value,
+        citizenship: value === "individual" ? listingForm.citizenship : "",
+      });
     } else {
       setListingForm({ ...listingForm, [id]: value });
     }
@@ -1226,6 +1245,15 @@ export default function CreateListing() {
       }
       if (!listingForm.serviceDuration) {
         return setError("Please enter the service duration");
+      }
+    }
+
+    if (selectedCategory === 'experiences' || selectedCategory === 'online') {
+      if (!listingForm.providerType) {
+        return setError("Please select whether this is an individual or company listing");
+      }
+      if (listingForm.providerType === 'individual' && !listingForm.citizenship.trim()) {
+        return setError("Please enter your citizenship");
       }
     }
 
@@ -1301,6 +1329,8 @@ export default function CreateListing() {
         address: listingForm.address || "",
         contact: listingForm.contact || "",
         host: listingForm.host || "",
+        providerType: (selectedCategory === 'experiences' || selectedCategory === 'online') ? listingForm.providerType : "",
+        citizenship: (selectedCategory === 'experiences' || selectedCategory === 'online') && listingForm.providerType === 'individual' ? listingForm.citizenship : "",
         regularPrice: listingForm.regularPrice || 50,
         discountPrice: listingForm.discountPrice || 0,
         // New fields for sneaker, washingmat, animals
@@ -1888,6 +1918,35 @@ export default function CreateListing() {
                       }
                       required
                     />
+
+                    {(selectedCategory === 'experiences' || selectedCategory === 'online') && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormInput
+                          label="Provider Type"
+                          type="select"
+                          id="providerType"
+                          value={listingForm.providerType}
+                          onChange={handleFormChange}
+                          placeholder="Select individual or company"
+                          required
+                        >
+                          <option value="individual">Individual</option>
+                          <option value="company">Company</option>
+                        </FormInput>
+
+                        {listingForm.providerType === 'individual' && (
+                          <FormInput
+                            label="Citizenship"
+                            icon={BuildingLibraryIcon}
+                            id="citizenship"
+                            value={listingForm.citizenship}
+                            onChange={handleFormChange}
+                            placeholder="e.g., South African"
+                            required
+                          />
+                        )}
+                      </div>
+                    )}
 
                     <FormInput
                       label={getNearLabel(selectedCategory, selectedType).charAt(0).toUpperCase() + getNearLabel(selectedCategory, selectedType).slice(1)}
@@ -2694,6 +2753,22 @@ export default function CreateListing() {
 
                     {(selectedCategory === 'experiences' || selectedCategory === 'online') && (
                       <>
+                        <div className="bg-gray-50 rounded-xl p-6">
+                          <h3 className="font-semibold text-lg text-gray-900 mb-4">Provider Details</h3>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between py-1 border-b border-gray-100">
+                              <span className="text-gray-600">Type:</span>
+                              <span className="font-medium text-gray-900 capitalize">{listingForm.providerType || "Not selected"}</span>
+                            </div>
+                            {listingForm.providerType === 'individual' && (
+                              <div className="flex justify-between py-1">
+                                <span className="text-gray-600">Citizenship:</span>
+                                <span className="font-medium text-gray-900">{listingForm.citizenship}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
                         <div className="bg-gray-50 rounded-xl p-6">
                           <h3 className="font-semibold text-lg text-gray-900 mb-4">Services</h3>
                           <div className="space-y-2 text-sm">

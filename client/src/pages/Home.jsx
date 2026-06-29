@@ -845,7 +845,7 @@ const CommunityNeedsSection = ({ navigate }) => {
             <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
             <span className="text-[10px] font-black text-rose-500 tracking-[0.3em] uppercase">Intelligence Feed</span>
           </div>
-          <h2 className="text-4xl font-black text-gray-950 tracking-tighter leading-none">
+          <h2 className="text-2xl font-black text-gray-950 tracking-tighter leading-none">
             COMMUNITY <br />
             <span className="text-gray-400">PULSE</span>
           </h2>
@@ -1292,7 +1292,7 @@ const MobileAppHomepage = ({
         {/* MOBILE CONSOLIDATED FEED */}
         <section className="mt-10 mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-black text-gray-950 tracking-tighter uppercase">Explore <br/><span className="text-rose-500">{activeTab}</span></h2>
+            <h2 className="text-1xl font-black text-gray-950 tracking-tighter uppercase">Explore <br/><span className="text-rose-500">{activeTab}</span></h2>
             <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-950 rounded-full shadow-[0_0_15px_rgba(0,0,0,0.1)]">
               <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
               <span className="text-[10px] font-black uppercase tracking-wider text-white">Live Data</span>

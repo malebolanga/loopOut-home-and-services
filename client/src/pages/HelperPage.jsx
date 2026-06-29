@@ -2398,6 +2398,12 @@ export default function HelperPage() {
                   <p className="text-gray-600 mt-1">
                     {helper.userRef?.isSuperhost ? 'Superhost' : 'Verified Host'} · {helper.host || 5}+ years of experience
                   </p>
+                  {helper.providerType === 'company' && (
+                    <p className="text-gray-600 mt-1 text-sm font-medium">Company</p>
+                  )}
+                  {helper.providerType === 'individual' && helper.citizenship && (
+                    <p className="text-gray-600 mt-1 text-sm font-medium">Citizenship: {helper.citizenship}</p>
+                  )}
                 </div>
                 <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 shadow-sm flex-shrink-0 ml-4 bg-gray-50 flex items-center justify-center">
                   {helper.userRef?.avatar ? (

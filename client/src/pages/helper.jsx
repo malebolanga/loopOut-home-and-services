@@ -408,6 +408,12 @@ export default function Helper() {
                       <div className="flex-1">
                         <p className="text-sm text-slate-500">Service Provider</p>
                         <p className="font-semibold text-slate-900">{helper.host}</p>
+                        {helper.providerType === 'company' && (
+                          <p className="text-sm text-slate-600 font-medium mt-1">Company</p>
+                        )}
+                        {helper.providerType === 'individual' && helper.citizenship && (
+                          <p className="text-sm text-slate-600 font-medium mt-1">Citizenship: {helper.citizenship}</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -495,6 +501,12 @@ export default function Helper() {
                         {helper.host}
                       </span>
                     </p>
+                    {helper.providerType === 'company' && (
+                      <p className="text-slate-600 mt-3 text-sm font-semibold">Company</p>
+                    )}
+                    {helper.providerType === 'individual' && helper.citizenship && (
+                      <p className="text-slate-600 mt-3 text-sm font-semibold">Citizenship: {helper.citizenship}</p>
+                    )}
                   </div>
                   
                   <div className="flex flex-wrap gap-3">

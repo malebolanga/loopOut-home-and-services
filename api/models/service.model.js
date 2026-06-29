@@ -34,6 +34,13 @@ const serviceSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    providerType: {
+      type: String,
+      enum: ['individual', 'company'],
+    },
+    citizenship: {
+      type: String,
+    },
     kind: {
       type: String,
       required: true,

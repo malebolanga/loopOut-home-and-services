@@ -25,6 +25,13 @@ const helperSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    providerType: {
+        type: String,
+        enum: ['individual', 'company'],
+    },
+    citizenship: {
+        type: String,
+    },
     type: {
         type: String,
         required: true,

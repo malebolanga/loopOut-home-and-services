@@ -1195,6 +1195,16 @@ const ServicePage = () => {
                   <h2 className="text-lg font-semibold text-gray-900">Provided by {service.userRef?.username || service.name}</h2>
                   <p className="text-gray-600 font-medium">{getProfessionalTitle(service.type)}</p>
                   <div className="flex flex-wrap gap-2 mt-2">
+                    {service.providerType === 'company' && (
+                      <span className="inline-flex items-center gap-1 text-sm text-gray-600">
+                        <FaBriefcase className="text-gray-400" /> Company
+                      </span>
+                    )}
+                    {service.providerType === 'individual' && service.citizenship && (
+                      <span className="inline-flex items-center gap-1 text-sm text-gray-600">
+                        <FaUser className="text-gray-400" /> Citizenship: {service.citizenship}
+                      </span>
+                    )}
                     {service.security && (
                       <span className="inline-flex items-center gap-1 text-sm text-gray-600">
                         <FaCheckCircle className="text-emerald-500" /> Verified
