@@ -2901,25 +2901,53 @@ export default function HelperPage() {
         </div>
 
         {/* Mutual Connections Section */}
-        <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
-          <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter italic uppercase">
-            <UserGroupIcon className="text-rose-500 w-6 h-6" />
-            Mutual Connections
-          </h2>
-          <div className="bg-white rounded-[2rem] p-8 border border-slate-200/60 shadow-sm">
-            <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} detailed={true} />
+        <section className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
+          <div className="overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white shadow-sm">
+            <div className="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr]">
+              <div className="relative bg-slate-950 p-8 text-white md:p-10">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10">
+                  <UserGroupIcon className="h-6 w-6 text-rose-300" />
+                </div>
+                <p className="mt-8 text-xs font-black uppercase tracking-[0.28em] text-rose-300">
+                  Mutual Connections
+                </p>
+                <h2 className="mt-3 text-3xl font-black tracking-tighter md:text-4xl">
+                  Book with a familiar signal.
+                </h2>
+                <p className="mt-4 max-w-sm text-sm leading-6 text-slate-300">
+                  See people in your network who already know this provider, then open a profile before you reach out.
+                </p>
+                <div className="mt-8 grid grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <CheckBadgeIcon className="mb-3 h-5 w-5 text-emerald-300" />
+                    <p className="font-black">Known network</p>
+                    <p className="mt-1 text-xs text-slate-400">Shared profiles</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <ShieldCheckIcon className="mb-3 h-5 w-5 text-blue-300" />
+                    <p className="font-black">Extra context</p>
+                    <p className="mt-1 text-xs text-slate-400">Before contact</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-5 md:p-8">
+                <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} detailed={true} />
+              </div>
+            </div>
           </div>
+        </section>
 
         {/* Recent Bookers Section */}
         <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type} />
-        </div>
 
 
 
         {/* Similar Helpers */}
           {similarHelpers.length > 0 && (
             <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
-              <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter italic uppercase">
+              <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter  uppercase">
                 <MapPinIcon className="text-rose-500 w-6 h-6" />
                 Other professionals in the matrix
               </h2>
