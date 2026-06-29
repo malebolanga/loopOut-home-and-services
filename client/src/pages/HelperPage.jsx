@@ -2448,46 +2448,7 @@ export default function HelperPage() {
               reason={operatingStatus.reason}
             />
 
-            {/* Check-in & Check-out timings (Visitor Time) */}
-            <div className="py-6 border-b border-gray-200">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2.5 bg-rose-50 rounded-2xl">
-                  <ClockIcon className="w-6 h-6 text-rose-500" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 tracking-tight">Check-in & Check-out</h3>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Standard timing windows</p>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex items-center justify-between p-5 rounded-3xl border border-gray-150/60 bg-white shadow-sm">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-xl font-bold">
-                      🛬
-                    </div>
-                    <div>
-                      <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Check-in Time</span>
-                      <span className="text-base lg:text-lg font-black text-gray-900 mt-0.5 block">{helper.checkInTime || '14:00'}</span>
-                    </div>
-                  </div>
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wide bg-gray-50 px-3 py-1 rounded-full">After</span>
-                </div>
-
-                <div className="flex items-center justify-between p-5 rounded-3xl border border-gray-150/60 bg-white shadow-sm">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-xl font-bold">
-                      🛫
-                    </div>
-                    <div>
-                      <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Check-out Time</span>
-                      <span className="text-base lg:text-lg font-black text-gray-900 mt-0.5 block">{helper.checkOutTime || '11:00'}</span>
-                    </div>
-                  </div>
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wide bg-gray-50 px-3 py-1 rounded-full">Before</span>
-                </div>
-              </div>
-            </div>
 
             {/* Response Rate */}
             <div className="pb-6 border-b border-gray-200">
@@ -2500,10 +2461,10 @@ export default function HelperPage() {
               </div>
             </div>
 
-            {/* Service Performers Section */}
+            {/* Service Providers Section */}
             {helper.performers && helper.performers.length > 0 && (
               <div className="py-6 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Service Performers</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">Service Providers</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {helper.performers.map((performer, idx) => {
                     const hasBookedPerformer = userBookings.some(b => b.selectedPerformer === performer.name);
@@ -2554,7 +2515,7 @@ export default function HelperPage() {
                               Rate
                             </button>
                           ) : (
-                            <div className="group relative">
+                            <div className=" relative">
                               <button
                                 onClick={() => {
                                   setRatingInfoMessage(performer.name);
