@@ -70,7 +70,6 @@ import LoopOutPulse from '../components/LoopOutPulse';
 import { useWishlist } from '../hooks/useWishlist';
 import MyBookingsConsumer from '../components/MyBookingsConsumer';
 import LookingForItem from '../components/LookingForItem';
-import BottomNav from '../components/BottomNav';
 import useSearchIntelligence from '../hooks/useSearchIntelligence';
 import HelperItem from '../components/HelperItem';
 import LoopOutBanner from '../components/LoopOutBanner';

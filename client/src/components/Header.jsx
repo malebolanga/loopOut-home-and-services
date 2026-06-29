@@ -97,6 +97,63 @@ const HELPER_SUBTYPES = [
   { id: 'domestic', label: 'Domestic', icon: '🧹' }
 ];
 
+const normalizeSearchType = (type) => {
+  if (type === 'helper') return 'helpers';
+  if (type === 'property') return 'properties';
+  return type || 'all';
+};
+
+const QUICK_DISCOVERY_MAP = {
+  resort: { searchType: 'properties', subType: 'resort' },
+  hotel: { searchType: 'properties', subType: 'sale' },
+  guesthouse: { searchType: 'properties', subType: 'guest_house' },
+  'room-rent': { searchType: 'properties', subType: 'rent' },
+  'house-rent': { searchType: 'properties', subType: 'rent' },
+  'self-catering': { searchType: 'properties', subType: 'land' },
+  photograph: { searchType: 'helpers', subType: 'photography' },
+  carwash: { searchType: 'services', subType: 'carwash' },
+  electrician: { searchType: 'services', subType: 'electrician' },
+  handyman: { searchType: 'services', subType: 'handyman' },
+  catering: { searchType: 'services', subType: 'catering' },
+  transport: { searchType: 'services', subType: 'transport' },
+  maid: { searchType: 'helpers', subType: 'maid' },
+  nanny: { searchType: 'helpers', subType: 'nanny' },
+  barber: { searchType: 'helpers', subType: 'barber' },
+  beauty: { searchType: 'helpers', subType: 'beauty' }
+};
+
+const HEADER_CATEGORY_ICONS = {
+  properties: HomeIcon,
+  services: BriefcaseIcon,
+  helpers: UserGroupIcon,
+  events: BellIcon,
+  rent: HomeIcon,
+  sale: BuildingOfficeIcon,
+  over: Sparkles,
+  resort: Sparkles,
+  office: BuildingOfficeIcon,
+  hotel: BuildingOfficeIcon,
+  guesthouse: HomeModernIcon,
+  'room-rent': HomeIcon,
+  'house-rent': HomeModernIcon,
+  'self-catering': BriefcaseIcon,
+  photography: MagnifyingGlassIcon,
+  photograph: MagnifyingGlassIcon,
+  carwash: MapIcon,
+  landscaping: Sparkles,
+  electrician: BoltIcon,
+  handyman: Cog6ToothIcon,
+  catering: BriefcaseIcon,
+  transport: MapPinIcon,
+  maid: HomeModernIcon,
+  nanny: UserIcon,
+  barber: UserIcon,
+  beauty: Sparkles,
+  chef: BriefcaseIcon,
+  tutor: QuestionMarkCircleIcon,
+  domestic: HomeModernIcon
+};
+
 export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
   const [searchTerm, setSearchTerm] = useState('');
@@ -192,7 +249,7 @@ export default function Header() {
         if (newUnreadCount > prevUnreadCount) {
           if (isSoundEnabled) {
             notificationSound.current.play().catch(e => {
-              console.log('Audio play failed (interaction required):', e);
+              void e;
             });
           }
 
@@ -249,11 +306,13 @@ export default function Header() {
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const term = urlParams.get('searchTerm');
-    const type = urlParams.get('type');
+    const type = normalizeSearchType(urlParams.get('type'));
+    const subType = urlParams.get('subType') || urlParams.get('category');
     const address = urlParams.get('address') || urlParams.get('location');
 
     if (term) setSearchTerm(term);
     if (type) setSearchType(type);
+    setSelectedSubCategory(subType || '');
     if (address) setCurrentLocation(address);
   }, [location.search]);
 
@@ -389,47 +448,47 @@ export default function Header() {
   // Handle search submission
   const { recordSearch } = useSearchIntelligence();
 
-  const handleSearch = (e) => {
-    if (e) e.preventDefault();
-    
+  const handleSearch = (eventOrOptions, maybeOptions) => {
+    const hasEvent = eventOrOptions && typeof eventOrOptions.preventDefault === 'function';
+    if (hasEvent) eventOrOptions.preventDefault();
+
+    const options = hasEvent ? (maybeOptions || {}) : (eventOrOptions || {});
+    const nextSearchTerm = options.searchTerm ?? searchTerm;
+    const nextSearchType = normalizeSearchType(options.searchType ?? searchType);
+    const nextSubCategory = options.subType ?? options.selectedSubCategory ?? selectedSubCategory;
+
     // Only block if absolutely no criteria is provided
-    if (!searchTerm.trim() && !selectedSubCategory && !searchType) return;
+    if (!nextSearchTerm.trim() && !nextSubCategory && !nextSearchType) return;
 
-    if (searchTerm.trim()) {
-      // Record search for intelligence engine
-      recordSearch(searchTerm);
-
-      // Save search history
-      const updatedHistory = saveSearchHistory(searchTerm, 'all');
+    if (nextSearchTerm.trim()) {
+      recordSearch(nextSearchTerm);
+      const updatedHistory = saveSearchHistory(nextSearchTerm, nextSearchType);
       setSearchHistory(updatedHistory);
     }
 
-    // AI-like extraction of filters from query
-    const extractedFilters = searchTerm.trim() ? extractFiltersFromQuery(searchTerm) : {};
-    console.log('Extracted filters:', extractedFilters);
-
-    // Build search parameters
+    const extractedFilters = nextSearchTerm.trim() ? extractFiltersFromQuery(nextSearchTerm) : {};
+    const resolvedType = normalizeSearchType(options.searchType ?? extractedFilters.type ?? nextSearchType ?? 'all');
+    const resolvedSubType = options.subType ?? nextSubCategory ?? extractedFilters.subType ?? '';
+    const resolvedLocation = options.location ?? extractedFilters.location ?? currentLocation;
     const urlParams = new URLSearchParams();
-    
-    // If searchTerm is exactly the same as the extracted location, don't set it as a keyword
-    const isLocationOnly = extractedFilters.location && searchTerm.toLowerCase().trim() === extractedFilters.location.toLowerCase().trim();
-    if (searchTerm.trim() && !isLocationOnly) urlParams.set('searchTerm', searchTerm);
-    
-    urlParams.set('type', selectedSubCategory || extractedFilters.type || searchType || 'all');
-    urlParams.set('location', extractedFilters.location || currentLocation);
+    const isLocationOnly = extractedFilters.location && nextSearchTerm.toLowerCase().trim() === extractedFilters.location.toLowerCase().trim();
 
-    // Join other extracted filters
+    if (nextSearchTerm.trim() && !isLocationOnly) urlParams.set('searchTerm', nextSearchTerm);
+    urlParams.set('type', resolvedType);
+    if (resolvedSubType) urlParams.set('subType', resolvedSubType);
+    if (resolvedLocation) urlParams.set('location', resolvedLocation);
+
     Object.entries(extractedFilters).forEach(([key, value]) => {
-      if (key !== 'type' && key !== 'location') {
+      if (key !== 'type' && key !== 'subType' && key !== 'location') {
         urlParams.set(key, value);
       }
     });
 
-    const url = `/search?${urlParams.toString()}`;
-    console.log('Navigating to:', url);
-    navigate(url);
+    navigate(`/search?${urlParams.toString()}`);
     setShowSearch(false);
-    setSearchTerm('');
+    setSearchTerm(nextSearchTerm);
+    setSearchType(resolvedType);
+    setSelectedSubCategory(resolvedSubType);
     setSuggestions([]);
   };
 
@@ -478,7 +537,6 @@ export default function Header() {
 
   // Handle navigation helper
   const handleNavigate = (path) => {
-    console.log('Navigating to:', path);
     navigate(path);
     setShowProfileDropdown(false);
     setShowMobileMenu(false);
@@ -486,7 +544,6 @@ export default function Header() {
 
   // Handle mobile profile click - navigate to profile page instead of showing dropdown
   const handleMobileProfileClick = () => {
-    console.log('Mobile profile clicked');
     if (currentUser) {
       navigate('/profile');
     } else {
@@ -653,9 +710,9 @@ export default function Header() {
               >
                 <span className="text-[11px] font-bold text-gray-900">Anywhere</span>
                 <div className="w-[1px] h-3 bg-gray-200" />
-                <span className="text-[11px] font-bold text-gray-900">Any week</span>
+                <span className="text-[11px] font-bold text-gray-900">Any category</span>
                 <div className="w-[1px] h-3 bg-gray-200" />
-                <span className="text-[11px] font-medium text-gray-600">Add guests</span>
+                <span className="text-[11px] font-medium text-gray-600">Search LoopOut</span>
                 <div className="w-8 h-8 bg-rose-500 rounded-full flex items-center justify-center text-white ml-2 group-hover:bg-rose-600 transition-colors">
                   <MagnifyingGlassIcon className="w-4 h-4 stroke-[3px]" />
                 </div>
@@ -720,7 +777,6 @@ export default function Header() {
                 {/* Globe Icon */}
                 <button
                   onClick={() => {
-                    console.log('Globe clicked - toggling language dropdown');
                     setShowLanguageDropdown(!showLanguageDropdown);
                     setShowProfileDropdown(false);
                     setShowCurrencyDropdown(false);
@@ -734,7 +790,6 @@ export default function Header() {
                 {/* Currency Selector */}
                 <button
                   onClick={() => {
-                    console.log('Currency clicked - toggling currency dropdown');
                     setShowCurrencyDropdown(!showCurrencyDropdown);
                     setShowLanguageDropdown(false);
                     setShowProfileDropdown(false);
@@ -780,9 +835,8 @@ export default function Header() {
 
                 {/* User Menu Button - Airbnb Style */}
                 <button
-                  onClick={() => {
-                    console.log('User menu clicked - toggling profile dropdown');
-                    setShowProfileDropdown(!showProfileDropdown);
+                 onClick={() => {
+                   setShowProfileDropdown(!showProfileDropdown);
                     setShowLanguageDropdown(false);
                     setShowCurrencyDropdown(false);
                   }}
@@ -1018,7 +1072,7 @@ export default function Header() {
                            {searchHistory.slice(0, 5).map((item, i) => (
                              <button 
                                key={i} 
-                               onClick={() => { setSearchTerm(item.term); handleSearch(); }}
+                               onClick={() => handleSearch({ searchTerm: item.term })}
                                className="px-4 py-2 bg-gray-100 hover:bg-rose-50 hover:text-rose-600 rounded-xl text-xs font-bold text-gray-700 transition-all"
                              >
                                {item.term}
@@ -1031,7 +1085,7 @@ export default function Header() {
                      <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em]">Suggested destinations</p>
                      
                      <button 
-                       onClick={() => { setSearchTerm('Nearby'); handleSearch(); }}
+                       onClick={() => handleSearch({ searchTerm: 'Nearby' })}
                        className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-all active:scale-98"
                      >
                         <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500">
@@ -1044,7 +1098,7 @@ export default function Header() {
                      </button>
 
                      <button 
-                       onClick={() => { setSearchTerm('Cape Town, Western Cape'); handleSearch(); }}
+                       onClick={() => handleSearch({ searchTerm: 'Cape Town, Western Cape', location: 'Cape Town' })}
                        className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-all active:scale-98"
                      >
                         <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-500">
@@ -1057,7 +1111,7 @@ export default function Header() {
                      </button>
 
                      <button 
-                       onClick={() => { setSearchTerm('Durban, KwaZulu-Natal'); handleSearch(); }}
+                       onClick={() => handleSearch({ searchTerm: 'Durban, KwaZulu-Natal', location: 'Durban' })}
                        className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-all active:scale-98"
                      >
                         <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-500">
@@ -1070,7 +1124,7 @@ export default function Header() {
                      </button>
 
                      <button 
-                       onClick={() => { setSearchTerm('Tembisa, Gauteng'); handleSearch(); }}
+                       onClick={() => handleSearch({ searchTerm: 'Tembisa, Gauteng', location: 'Tembisa' })}
                        className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-all active:scale-98"
                      >
                         <div className="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500">
@@ -1110,40 +1164,35 @@ export default function Header() {
                       { id: 'catering', label: 'Catering', icon: '🍽️', color: 'bg-red-50' },
                       { id: 'barber', label: 'Barber', icon: '💈', color: 'bg-blue-100' },
                       { id: 'beauty', label: 'Beauty', icon: '💄', color: 'bg-rose-100' }
-                    ].map((cat) => (
-                      <button 
-                        key={cat.id}
-                        onClick={() => {
-                          const isCore = ['properties', 'services', 'helpers', 'events'].includes(cat.id);
-                          const isHospitality = ['resort', 'hotel', 'guesthouse', 'room-rent', 'house-rent', 'self-catering'].includes(cat.id);
-                          
-                          setSearchType(isCore ? cat.id : (isHospitality ? 'properties' : (['maid', 'nanny', 'barber', 'beauty'].includes(cat.id) ? 'helpers' : 'services')));
-                          
-                          if (!isCore) {
-                            setSelectedSubCategory(cat.id);
-                          }
-                          handleSearch();
-                        }}
-                        className="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 hover:border-rose-200 hover:bg-rose-50/30 transition-all text-left"
-                      >
-                        <div className={`w-10 h-10 ${cat.color} rounded-xl flex items-center justify-center text-lg shadow-sm`}>
-                          {cat.icon}
-                        </div>
-                        <span className="text-xs font-black text-gray-900 uppercase tracking-tighter">{cat.label}</span>
-                      </button>
-                    ))}
+                    ].map((cat) => {
+                      const CategoryIcon = HEADER_CATEGORY_ICONS[cat.id] || Sparkles;
+                      return (
+                        <button 
+                          key={cat.id}
+                          onClick={() => {
+                            const isCore = ['properties', 'services', 'helpers', 'events'].includes(cat.id);
+                            const discovery = QUICK_DISCOVERY_MAP[cat.id] || {
+                              searchType: isCore ? cat.id : 'all',
+                              subType: ''
+                            };
+
+                            setSearchType(discovery.searchType);
+                            setSelectedSubCategory(discovery.subType);
+                            handleSearch({
+                              searchType: discovery.searchType,
+                              subType: discovery.subType
+                            });
+                          }}
+                          className="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 hover:border-rose-200 hover:bg-rose-50/30 transition-all text-left"
+                        >
+                          <div className={`w-10 h-10 ${cat.color} rounded-xl flex items-center justify-center shadow-sm`}>
+                            <CategoryIcon className="w-5 h-5 text-gray-800" />
+                          </div>
+                          <span className="text-xs font-black text-gray-900 uppercase tracking-tighter">{cat.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
-               </div>
-
-               {/* Collapsed Sections: WHEN and WHO */}
-               <div className="bg-white rounded-[1.5rem] shadow-sm p-5 flex items-center justify-between border border-gray-100 opacity-60">
-                  <span className="text-sm font-bold text-gray-900">When</span>
-                  <span className="text-[11px] font-black uppercase text-gray-600 tracking-wider">Add dates</span>
-               </div>
-
-               <div className="bg-white rounded-[1.5rem] shadow-sm p-5 flex items-center justify-between border border-gray-100 opacity-60">
-                  <span className="text-sm font-bold text-gray-900">Who</span>
-                  <span className="text-[11px] font-black uppercase text-gray-600 tracking-wider">Add guests</span>
                </div>
 
                {/* Category Selection Section */}
@@ -1153,24 +1202,29 @@ export default function Header() {
                     <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
                        {(searchType === 'properties' ? PROPERTY_SUBTYPES : 
                          searchType === 'services' ? SERVICE_SUBTYPES : 
-                         HELPER_SUBTYPES).map((sub) => (
-                          <button
-                            key={sub.id}
-                            onClick={() => setSelectedSubCategory(sub.id === selectedSubCategory ? '' : sub.id)}
-                            className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all ${
-                              selectedSubCategory === sub.id 
-                                ? 'border-rose-500 bg-rose-50 shadow-md scale-105' 
-                                : 'border-gray-50 bg-gray-50 hover:border-gray-200'
-                            }`}
-                          >
-                            <span className="text-2xl">{sub.icon}</span>
-                            <span className={`text-[9px] font-black uppercase tracking-widest ${
-                              selectedSubCategory === sub.id ? 'text-rose-600' : 'text-gray-700'
-                            }`}>
-                              {sub.label}
-                            </span>
-                          </button>
-                       ))}
+                         HELPER_SUBTYPES).map((sub) => {
+                          const SubIcon = HEADER_CATEGORY_ICONS[sub.id] || Sparkles;
+                          return (
+                            <button
+                              key={sub.id}
+                              onClick={() => setSelectedSubCategory(sub.id === selectedSubCategory ? '' : sub.id)}
+                              className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all ${
+                                selectedSubCategory === sub.id 
+                                  ? 'border-rose-500 bg-rose-50 shadow-md scale-105' 
+                                  : 'border-gray-50 bg-gray-50 hover:border-gray-200'
+                              }`}
+                            >
+                              <SubIcon className={`w-5 h-5 ${
+                                selectedSubCategory === sub.id ? 'text-rose-600' : 'text-gray-700'
+                              }`} />
+                              <span className={`text-[9px] font-black uppercase tracking-widest ${
+                                selectedSubCategory === sub.id ? 'text-rose-600' : 'text-gray-700'
+                              }`}>
+                                {sub.label}
+                              </span>
+                            </button>
+                          );
+                       })}
                     </div>
                  </div>
                )}
@@ -1179,7 +1233,12 @@ export default function Header() {
             {/* Footer - Search Button */}
             <div className="flex-shrink-0 bg-white border-t border-gray-100 p-6 flex items-center justify-between">
                <button 
-                 onClick={() => { setSearchTerm(''); }}
+                 onClick={() => {
+                   setSearchTerm('');
+                   setSearchType('all');
+                   setSelectedSubCategory('');
+                   setSuggestions([]);
+                 }}
                  className="text-sm font-bold text-gray-900 underline underline-offset-4 hover:text-rose-600 transition-colors"
                >
                  Clear all

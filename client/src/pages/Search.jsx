@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
 import NeuralLoader from '../components/NeuralLoader';
 import ImageWithFallback from '../components/ImageWithFallback';
 import useLocationCoords from '../hooks/useGeolocation';
@@ -69,7 +67,6 @@ import {
   ThumbsDown,
   Share2,
   BookOpen,
-  Calendar as CalendarIconLucide,
   Search as SearchIconLucide,
   Navigation,
   Check
@@ -250,16 +247,11 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: 'spring', stiffness: 100, damping: 15 }
-  }
+const normalizeSearchType = (type) => {
+  if (type === 'helper') return 'helpers';
+  if (type === 'property') return 'properties';
+  return type || 'all';
 };
-
-// No SlideOpenSearch needed - Using normal header input
 
 // Category Dropdown Component (for compact view)
 const CategoryDropdown = ({
@@ -497,7 +489,13 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
       <AirbnbCard
         item={item}
         type={airbnbCardType}
-        onClick={(path) => navigate(path)}
+        onClick={(path) => {
+          if (onClick) {
+            onClick(path);
+            return;
+          }
+          navigate(path);
+        }}
       />
     </motion.div>
   );
@@ -530,89 +528,6 @@ const SkeletonCard = () => (
   <AirbnbCardSkeleton />
 );
 
-const generateMockData = (urlParams) => {
-  const type = urlParams.get('type') || 'all';
-  const subType = urlParams.get('subType') || '';
-  const mockData = [];
-
-  if (type === 'all' || type === 'properties') {
-    const propertyTypes = subType ? [subType] : ['rent', 'sale', 'over', 'land', 'resort', 'guest_house'];
-    propertyTypes.forEach((propType, index) => {
-      if (PROPERTY_TYPE_CONFIG[propType]) {
-        mockData.push({
-          _id: `p${index}`,
-          name: `${PROPERTY_TYPE_CONFIG[propType].label} in Polokwane`,
-          price: 5000 + (index * 2000),
-          itemType: 'properties',
-          subType: propType,
-          imageUrls: ['https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'],
-          rating: 4.5 + (index * 0.1),
-          address: 'Polokwane, Limpopo',
-          bedrooms: 2 + index,
-          bathrooms: 1 + index,
-        });
-      }
-    });
-  }
-
-  if (type === 'all' || type === 'helper') {
-    const helperTypes = subType ? [subType] : ['beauty', 'barber', 'chef', 'tattoo', 'tutor', 'photography', 'domestic', 'hair', 'nail'];
-    helperTypes.forEach((helperType, index) => {
-      if (HELPER_CATEGORY_CONFIG[helperType]) {
-        mockData.push({
-          _id: `h${index}`,
-          name: `Professional ${HELPER_CATEGORY_CONFIG[helperType].label}`,
-          price: 300 + (index * 100),
-          itemType: 'helper',
-          subType: helperType,
-          imageUrls: ['https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'],
-          rating: 4.7 + (index * 0.05),
-          address: 'Johannesburg',
-          skills: [HELPER_CATEGORY_CONFIG[helperType].label],
-        });
-      }
-    });
-  }
-
-  if (type === 'all' || type === 'services') {
-    const serviceTypes = subType ? [subType] : ['car_wash', 'landscaping', 'electrician', 'maintenance', 'catering', 'moving', 'transport'];
-    serviceTypes.forEach((serviceType, index) => {
-      if (SERVICES_CATEGORY_CONFIG[serviceType]) {
-        mockData.push({
-          _id: `s${index}`,
-          name: `${SERVICES_CATEGORY_CONFIG[serviceType].label} Service`,
-          price: 350 + (index * 50),
-          itemType: 'services',
-          subType: serviceType,
-          imageUrls: ['https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'],
-          rating: 4.8,
-          address: 'Cape Town',
-        });
-      }
-    });
-  }
-
-  if (type === 'all' || type === 'events') {
-    const eventTypes = subType ? [subType] : ['music', 'art', 'food', 'tech'];
-    eventTypes.forEach((eventType, index) => {
-      if (EVENTS_CATEGORY_CONFIG[eventType]) {
-        mockData.push({
-          _id: `e${index}`,
-          name: `${EVENTS_CATEGORY_CONFIG[eventType].label} Event`,
-          price: 150 + (index * 50),
-          itemType: 'events',
-          subType: eventType,
-          imageUrls: ['https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'],
-          rating: 4.9,
-          address: 'Durban',
-        });
-      }
-    });
-  }
-
-  return mockData;
-};
-
 const SearchPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -624,7 +539,7 @@ const SearchPage = () => {
   const [viewMode, setViewMode] = useState('map');
   const [loading, setLoading] = useState(false);
   const [listings, setListings] = useState([]);
-  const { city: detectedCity, loading: geoLoading } = useLocationCoords();
+  const { city: detectedCity } = useLocationCoords();
   const [filters, setFilters] = useState({
     minPrice: '',
     maxPrice: '',
@@ -634,17 +549,7 @@ const SearchPage = () => {
     bathroomsMin: ''
   });
 
-  // Slide-open search panel state
-  const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false);
-
-  // Category dropdown state (for compact view)
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [categorySearchQuery, setCategorySearchQuery] = useState('');
-
-  // Date selection state
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Map center state
   const [mapCenter, setMapCenter] = useState({ lat: -26.1076, lng: 28.0567 }); // Default Sandton
@@ -652,7 +557,6 @@ const SearchPage = () => {
   // Recent searches and recently viewed
   const [recentSearches, setRecentSearches] = useState([]);
   const [recentlyViewedItems, setRecentlyViewedItems] = useState([]);
-  const [detectedLocation, setDetectedLocation] = useState(null);
 
   useEffect(() => {
     const loadRecentlyViewed = () => {
@@ -667,32 +571,9 @@ const SearchPage = () => {
     loadRecentlyViewed();
   }, []);
 
-  // Location intelligence detection
-  useEffect(() => {
-    const queryLocation = filters.location || searchTerm;
-    if (queryLocation && queryLocation.length > 3) {
-      const cities = ["Tembisa", "Soweto", "Sandton", "Midrand", "Pretoria", "Johannesburg", "Durban", "Cape Town", "Kempton Park", "Polokwane", "Bloemfontein"];
-      const found = cities.find(c => queryLocation.toLowerCase().includes(c.toLowerCase()));
-      if (found) {
-        setDetectedLocation(found);
-      } else {
-        // Heuristic for other potential locations
-        const words = queryLocation.split(' ');
-        const caps = words.find(w => w.length > 3 && w[0] === w[0].toUpperCase());
-        if (caps) setDetectedLocation(caps);
-        else setDetectedLocation(null);
-      }
-    } else {
-      setDetectedLocation(null);
-    }
-  }, [filters.location, searchTerm]);
-
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    let type = urlParams.get('type') || 'all';
-    // Handle singular/plural mismatch from different entry points
-    if (type === 'helper') type = 'helpers';
-    if (type === 'property') type = 'properties';
+    const type = normalizeSearchType(urlParams.get('type'));
     
     const subType = urlParams.get('subType') || urlParams.get('category') || '';
 
@@ -713,13 +594,12 @@ const SearchPage = () => {
 
     if (urlParams.get('mode') === 'map') setViewMode('map');
 
-    const dateParam = urlParams.get('date');
-    if (dateParam) setSelectedDate(new Date(dateParam));
-
     // Set selected category if subType matches
     if (subType) {
       const category = ALL_CATEGORIES.find(c => c.id === subType);
       if (category) setSelectedCategory(category.id);
+    } else {
+      setSelectedCategory(null);
     }
 
     // Load recent searches from localStorage
@@ -748,9 +628,7 @@ const SearchPage = () => {
     setLoading(true);
 
     try {
-      let type = urlParams.get('type') || 'all';
-      if (type === 'helper') type = 'helpers';
-      if (type === 'property') type = 'properties';
+      const type = normalizeSearchType(urlParams.get('type'));
 
       const subType = urlParams.get('subType') || urlParams.get('category') || '';
       const searchTerm = urlParams.get('searchTerm') || '';
@@ -890,19 +768,32 @@ const SearchPage = () => {
     }
   }, [filters.location]);
 
-  const handleSearch = useCallback(() => {
+  const buildSearchParams = useCallback((overrides = {}) => {
+    const nextSearchTerm = overrides.searchTerm ?? searchTerm;
+    const nextSearchType = normalizeSearchType(overrides.searchType ?? searchType);
+    const nextSearchSubType = overrides.searchSubType ?? searchSubType;
+    const nextFilters = { ...filters, ...(overrides.filters || {}) };
+    const nextViewMode = overrides.viewMode ?? viewMode;
     const urlParams = new URLSearchParams();
-    if (searchTerm) urlParams.set('searchTerm', searchTerm);
-    urlParams.set('type', searchType || 'all');
-    if (searchSubType) urlParams.set('subType', searchSubType);
-    if (filters.minPrice) urlParams.set('minPrice', filters.minPrice);
-    if (filters.maxPrice) urlParams.set('maxPrice', filters.maxPrice);
-    if (filters.minRating) urlParams.set('minRating', filters.minRating);
-    if (filters.center) urlParams.set('center', filters.center);
-    if (filters.distance) urlParams.set('distance', filters.distance);
-    if (viewMode === 'map') urlParams.set('mode', 'map');
-    else urlParams.delete('mode');
-    urlParams.set('date', selectedDate.toISOString().split('T')[0]);
+
+    if (nextSearchTerm) urlParams.set('searchTerm', nextSearchTerm);
+    urlParams.set('type', nextSearchType || 'all');
+    if (nextSearchSubType) urlParams.set('subType', nextSearchSubType);
+    if (nextFilters.location) urlParams.set('location', nextFilters.location);
+    if (nextFilters.minPrice) urlParams.set('minPrice', nextFilters.minPrice);
+    if (nextFilters.maxPrice) urlParams.set('maxPrice', nextFilters.maxPrice);
+    if (nextFilters.minRating) urlParams.set('minRating', nextFilters.minRating);
+    if (nextFilters.bedroomsMin) urlParams.set('bedroomsMin', nextFilters.bedroomsMin);
+    if (nextFilters.bathroomsMin) urlParams.set('bathroomsMin', nextFilters.bathroomsMin);
+    if (nextFilters.center) urlParams.set('center', nextFilters.center);
+    if (nextFilters.distance) urlParams.set('distance', nextFilters.distance);
+    if (nextViewMode === 'map') urlParams.set('mode', 'map');
+
+    return urlParams;
+  }, [filters, searchSubType, searchTerm, searchType, viewMode]);
+
+  const handleSearch = useCallback(() => {
+    const urlParams = buildSearchParams();
 
     // Geocode location if searching for a specific place
     if (filters.location) {
@@ -928,21 +819,28 @@ const SearchPage = () => {
       setRecentSearches(newRecent);
       localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(newRecent));
     }
-  }, [searchTerm, searchType, searchSubType, filters, navigate, recentSearches]);
+  }, [buildSearchParams, filters.location, navigate, recentSearches, searchTerm]);
 
   const clearFilters = () => {
     setSearchTerm('');
     setSearchType('all');
     setSearchSubType('');
     setSelectedCategory(null);
-    setCategorySearchQuery('');
-    setFilters({ minPrice: '', maxPrice: '', minRating: '', location: '' });
+    setFilters({ minPrice: '', maxPrice: '', minRating: '', location: '', bedroomsMin: '', bathroomsMin: '' });
     navigate('/search');
   };
 
-  const addToRecentlyViewed = (item, itemType) => {
+  const addToRecentlyViewed = (item, itemType, path) => {
     const id = item._id || item.id;
-    navigate(`/${itemType}/${id}`);
+    const nextItem = { ...item, itemType };
+    const nextItems = [
+      nextItem,
+      ...recentlyViewedItems.filter((viewed) => (viewed._id || viewed.id) !== id)
+    ].slice(0, 5);
+
+    setRecentlyViewedItems(nextItems);
+    localStorage.setItem('recentlyViewedItems', JSON.stringify(nextItems));
+    navigate(path || `/${itemType}/${id}`);
   };
 
   const handleCategorySelect = (category) => {
@@ -950,30 +848,19 @@ const SearchPage = () => {
       setSelectedCategory(null);
       setSearchType('all');
       setSearchSubType('');
+      navigate(`/search?${buildSearchParams({ searchType: 'all', searchSubType: '' }).toString()}`);
       return;
     }
+    const normalizedType = normalizeSearchType(category.type);
     setSelectedCategory(category.id);
-    setSearchType(category.type);
+    setSearchType(normalizedType);
     setSearchSubType(category.id);
-    setShowCategoryDropdown(false);
-    setCategorySearchQuery('');
 
-    // Trigger search immediately
-    const urlParams = new URLSearchParams();
-    if (searchTerm) urlParams.set('searchTerm', searchTerm);
-    urlParams.set('type', category.type);
-    urlParams.set('subType', category.id);
-    if (filters.location) urlParams.set('location', filters.location);
-
+    const urlParams = buildSearchParams({
+      searchType: normalizedType,
+      searchSubType: category.id
+    });
     navigate(`/search?${urlParams.toString()}`);
-  };
-
-  const getSelectedCategoryLabel = () => {
-    if (selectedCategory) {
-      const category = ALL_CATEGORIES.find(c => c.id === selectedCategory);
-      return category ? category.label : 'Select category';
-    }
-    return 'Select category';
   };
 
   return (
@@ -1005,7 +892,7 @@ const SearchPage = () => {
               <div className="flex-1 min-w-0">
                 <span className="text-sm font-semibold text-gray-800 truncate block">
                   {searchTerm || filters.location
-                    ? `${searchTerm || 'Anywhere'} · ${filters.location || 'Anywhere'}`
+                    ? `${searchTerm || 'Anywhere'} / ${filters.location || 'Anywhere'}`
                     : 'Search services, venues...'}
                 </span>
               </div>
@@ -1036,9 +923,9 @@ const SearchPage = () => {
             <div className="flex items-center gap-1 px-6 py-3">
               {/* All / Universe */}
               <button
-                onClick={() => { setSelectedCategory('all'); fetchData(); }}
+                onClick={() => handleCategorySelect(null)}
                 className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all flex-shrink-0 min-w-[60px] ${
-                  !selectedCategory || selectedCategory === 'all'
+                  !selectedCategory
                     ? 'text-gray-900 border-b-2 border-gray-900'
                     : 'text-gray-400 hover:text-gray-700 border-b-2 border-transparent'
                 }`}
@@ -1118,7 +1005,7 @@ const SearchPage = () => {
                     key={item._id || item.id || idx}
                     item={item}
                     viewMode="grid"
-                    onClick={() => addToRecentlyViewed(item, item.itemType)}
+                    onClick={(path) => addToRecentlyViewed(item, item.itemType, path)}
                   />
                 ))}
               </motion.div>
@@ -1311,7 +1198,7 @@ const SearchPage = () => {
                         onChange={(e) => setFilters(prev => ({ ...prev, minPrice: e.target.value }))}
                         className="flex-1 bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-0 outline-none text-sm"
                       />
-                      <span className="text-gray-400 font-medium">–</span>
+                      <span className="text-gray-400 font-medium">-</span>
                       <input
                         type="number"
                         placeholder="Max"
@@ -1319,6 +1206,39 @@ const SearchPage = () => {
                         onChange={(e) => setFilters(prev => ({ ...prev, maxPrice: e.target.value }))}
                         className="flex-1 bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-0 outline-none text-sm"
                       />
+                    </div>
+                  </div>
+
+                  {/* Property Basics */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Property basics</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <span className="mb-2 block text-xs font-semibold text-gray-500">Bedrooms</span>
+                        <select
+                          value={filters.bedroomsMin}
+                          onChange={(e) => setFilters(prev => ({ ...prev, bedroomsMin: e.target.value }))}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:border-gray-900 focus:ring-0 outline-none text-sm"
+                        >
+                          <option value="">Any</option>
+                          {[1, 2, 3, 4, 5].map(count => (
+                            <option key={count} value={count}>{count}+</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <span className="mb-2 block text-xs font-semibold text-gray-500">Bathrooms</span>
+                        <select
+                          value={filters.bathroomsMin}
+                          onChange={(e) => setFilters(prev => ({ ...prev, bathroomsMin: e.target.value }))}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:border-gray-900 focus:ring-0 outline-none text-sm"
+                        >
+                          <option value="">Any</option>
+                          {[1, 2, 3, 4, 5].map(count => (
+                            <option key={count} value={count}>{count}+</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </div>
 

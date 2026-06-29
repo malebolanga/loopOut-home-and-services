@@ -47,7 +47,6 @@ import {
 import { Sparkles, Users } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import BottomNav from '../components/BottomNav';
 import imageCompression from 'browser-image-compression';
 import MutualFriends from '../components/MutualFriends';
 import { motion, AnimatePresence } from "framer-motion";
