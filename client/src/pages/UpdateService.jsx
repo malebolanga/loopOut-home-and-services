@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaTimes, FaCheckCircle } from 'react-icons/fa';
+import { HiOutlineClock as ClockIcon } from 'react-icons/hi';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
 import { app } from '../firebase';
 
@@ -43,6 +44,8 @@ export default function UpdateService() {
       saturday: { open: '08:00', close: '19:00', closed: false },
       sunday: { open: '08:00', close: '19:00', closed: true }
     },
+    checkInTime: '14:00',
+    checkOutTime: '11:00',
   });
 
   useEffect(() => {
@@ -404,6 +407,36 @@ export default function UpdateService() {
                   value={formData.regularPrice}
                 />
                 <span>per person/service</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Check-in / Check-out Times */}
+          <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50'>
+            <div className='flex items-center gap-2 mb-1'>
+              <ClockIcon className='w-5 h-5 text-rose-500' />
+              <span className='font-semibold text-gray-800'>Check-in & Check-out Times</span>
+            </div>
+            <div className='flex flex-wrap gap-6'>
+              <div className='flex flex-col gap-2'>
+                <label className='text-sm font-medium text-gray-600'>🛬 Check-in Time</label>
+                <input
+                  type='time'
+                  id='checkInTime'
+                  className='border p-3 rounded-lg w-40'
+                  onChange={handleChange}
+                  value={formData.checkInTime || '14:00'}
+                />
+              </div>
+              <div className='flex flex-col gap-2'>
+                <label className='text-sm font-medium text-gray-600'>🛫 Check-out Time</label>
+                <input
+                  type='time'
+                  id='checkOutTime'
+                  className='border p-3 rounded-lg w-40'
+                  onChange={handleChange}
+                  value={formData.checkOutTime || '11:00'}
+                />
               </div>
             </div>
           </div>

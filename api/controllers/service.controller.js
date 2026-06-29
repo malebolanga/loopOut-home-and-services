@@ -234,3 +234,53 @@ export const getSimilarServices = async (req, res, next) => {
     next(errorHandler(500, 'Failed to fetch similar services'));
   }
 };
+
+// Rate a Performer of a Service
+export const rateServicePerformer = async (req, res, next) => {
+  try {
+    const { id } = req.params; // serviceId
+    const { performerName, rating } = req.body;
+
+    if (!performerName || rating === undefined || rating === null) {
+      return next(errorHandler(400, 'Performer name and rating are required!'));
+    }
+
+    const numRating = Number(rating);
+    if (isNaN(numRating) || numRating < 1 || numRating > 5) {
+      return next(errorHandler(400, 'Rating must be a number between 1 and 5!'));
+    }
+
+    const service = await Service.findById(id);
+    if (!service) {
+      return next(errorHandler(404, 'Service not found!'));
+    }
+
+    const performer = service.performers.find(p => p.name === performerName);
+    if (!performer) {
+      return next(errorHandler(404, 'Performer not found!'));
+    }
+
+    // Set defaults if not present
+    if (performer.rating === undefined || performer.rating === null) {
+      performer.rating = 5;
+    }
+    if (performer.ratingsCount === undefined || performer.ratingsCount === null) {
+      performer.ratingsCount = 1;
+    }
+
+    // Compute new running average rating
+    const currentRatingTotal = performer.rating * performer.ratingsCount;
+    performer.ratingsCount += 1;
+    performer.rating = Number(((currentRatingTotal + numRating) / performer.ratingsCount).toFixed(1));
+
+    await service.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Performer rated successfully!',
+      performer
+    });
+  } catch (error) {
+    next(errorHandler(500, error.message));
+  }
+};

@@ -175,9 +175,13 @@ const serviceSchema = new mongoose.Schema(
       {
         name: { type: String, required: true },
         image: { type: String, required: true },
-        experience: { type: String, required: true }
+        experience: { type: String, required: true },
+        rating: { type: Number, default: 5, min: 1, max: 5 },
+        ratingsCount: { type: Number, default: 1 }
       }
     ],
+    checkInTime: { type: String, default: '14:00' },
+    checkOutTime: { type: String, default: '11:00' },
     operatingHours: {
         monday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },
         tuesday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },

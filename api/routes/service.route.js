@@ -5,7 +5,8 @@ import {
   updateService, 
   getService, 
   getServices,
-  getSimilarServices
+  getSimilarServices,
+  rateServicePerformer
 } from '../controllers/service.controller.js';
 import { verifyToken } from '../utils/verifyUser.js';
 
@@ -14,6 +15,7 @@ const router = express.Router();
 router.post('/create', verifyToken, createService);
 router.delete('/delete/:id', verifyToken, deleteService);
 router.put('/update/:id', verifyToken, updateService);
+router.post('/:id/performer/rate', verifyToken, rateServicePerformer);
 router.get('/get/:id', getService);
 router.get('/get', getServices);
 router.get('/similar/:id', getSimilarServices);
