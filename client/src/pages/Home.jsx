@@ -1186,52 +1186,62 @@ const MobileAppHomepage = ({
 
 
 
-        {/* Discovery Protocols Hub - Bento Box Redesign */}
+        {/* Discovery Protocols Hub - Horizontal Slider (Mobile) */}
         <section className="mb-12 mt-6">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-4 px-1">
             <Sparkles className="w-4 h-4 text-rose-500" />
             <span className="text-gray-900 text-[10px] font-black tracking-[0.3em] uppercase">Discovery Hub</span>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex overflow-x-auto gap-3.5 pb-4 -mx-4 px-4 scrollbar-hide snap-x">
+            {/* Matchmaker Card */}
             <button 
               onClick={() => navigate('/matchmaker')}
-              className="col-span-2 p-6 rounded-[2rem] bg-gray-950 border border-white/10 text-left flex items-center justify-between gap-4 hover:border-rose-500/50 transition-colors group relative overflow-hidden shadow-2xl"
+              className="flex-shrink-0 w-60 snap-start p-4 rounded-[1.5rem] bg-gray-950 border border-rose-500/20 text-left flex flex-col justify-between h-28 hover:border-rose-500/50 transition-all relative overflow-hidden shadow-lg group"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-rose-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10">
-                <span className="text-xs font-black tracking-widest text-rose-500 uppercase block mb-1 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
-                  Neural Matchmaker
+              <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10 flex justify-between items-start w-full">
+                <span className="text-[8px] font-black tracking-widest text-rose-500 uppercase flex items-center gap-1">
+                  <div className="w-1 h-1 bg-rose-500 rounded-full animate-pulse" />
+                  Matchmaker
                 </span>
-                <span className="text-white font-black text-xl tracking-tight">Swipe your perfect match.</span>
+                <span className="text-lg">🔥</span>
               </div>
-              <div className="relative z-10 w-16 h-16 shrink-0 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.3)]">
-                <span className="text-3xl">🔥</span>
+              <div className="relative z-10 mt-1">
+                <span className="text-white font-black text-xs block">Neural Matchmaker</span>
+                <span className="text-gray-400 text-[9px] font-bold block mt-0.5 leading-snug">Swipe and match your wishlist.</span>
               </div>
             </button>
             
+            {/* Radar Card */}
             <button 
               onClick={() => navigate('/radar')}
-              className="p-5 rounded-[2rem] bg-gray-950 border border-white/10 text-left flex flex-col justify-between gap-4 hover:border-emerald-500/50 transition-colors group relative overflow-hidden shadow-2xl min-h-[140px]"
+              className="flex-shrink-0 w-60 snap-start p-4 rounded-[1.5rem] bg-gray-950 border border-emerald-500/20 text-left flex flex-col justify-between h-28 hover:border-emerald-500/50 transition-all relative overflow-hidden shadow-lg group"
             >
               <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10 flex justify-between items-start">
-                <span className="text-[10px] font-black tracking-wider text-emerald-500 uppercase">Live Radar</span>
-                <span className="text-2xl">🛰️</span>
+              <div className="relative z-10 flex justify-between items-start w-full">
+                <span className="text-[8px] font-black tracking-widest text-emerald-500 uppercase">Live Radar</span>
+                <span className="text-lg">🛰️</span>
               </div>
-              <span className="relative z-10 text-white text-sm font-bold leading-tight">Explore the map.</span>
+              <div className="relative z-10 mt-1">
+                <span className="text-white font-black text-xs block">Live Radar</span>
+                <span className="text-gray-400 text-[9px] font-bold block mt-0.5 leading-snug">Explore helpers on the map.</span>
+              </div>
             </button>
 
+            {/* Quick Book Card */}
             <button 
               onClick={() => navigate('/quick-book')}
-              className="p-5 rounded-[2rem] bg-gray-950 border border-white/10 text-left flex flex-col justify-between gap-4 hover:border-amber-500/50 transition-colors group relative overflow-hidden shadow-2xl min-h-[140px]"
+              className="flex-shrink-0 w-60 snap-start p-4 rounded-[1.5rem] bg-gray-950 border border-amber-500/20 text-left flex flex-col justify-between h-28 hover:border-amber-500/50 transition-all relative overflow-hidden shadow-lg group"
             >
               <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10 flex justify-between items-start">
-                <span className="text-[10px] font-black tracking-wider text-amber-500 uppercase">Quick Book</span>
-                <span className="text-2xl">⚡</span>
+              <div className="relative z-10 flex justify-between items-start w-full">
+                <span className="text-[8px] font-black tracking-widest text-amber-500 uppercase">Quick Book</span>
+                <span className="text-lg">⚡</span>
               </div>
-              <span className="relative z-10 text-white text-sm font-bold leading-tight">Deploy instantly.</span>
+              <div className="relative z-10 mt-1">
+                <span className="text-white font-black text-xs block">Quick Book</span>
+                <span className="text-gray-400 text-[9px] font-bold block mt-0.5 leading-snug">Deploy helper pros instantly.</span>
+              </div>
             </button>
           </div>
         </section>

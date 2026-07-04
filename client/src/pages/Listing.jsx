@@ -2096,12 +2096,39 @@ export default function Listing() {
       </nav>
 
       {/* Image Gallery Grid - Full Width Airbnb Style */}
-      <div className="max-w-[85rem] mx-auto md:px-4 lg:px-8 md:pt-24 md:pb-6">
-        <div className="relative w-full overflow-hidden bg-slate-900 md:rounded-2xl shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-[400px] md:h-[500px] lg:h-[600px] w-full">
+      <div className="w-full pt-0 pb-0 px-0">
+        <div className="relative w-full overflow-hidden bg-slate-900 shadow-sm h-[400px] md:h-[500px] lg:h-[600px]">
+          {/* Mobile Swiper (hidden on md and up) */}
+          <div className="block md:hidden h-full w-full">
+            <Swiper
+              modules={[Pagination]}
+              pagination={{ clickable: true, bulletActiveClass: 'swiper-pagination-bullet-active !bg-rose-500' }}
+              className="h-full w-full"
+            >
+              {listing.imageUrls.map((url, index) => (
+                <SwiperSlide key={index}>
+                  <div 
+                    onClick={() => { setGalleryIndex(index); setShowFullGallery(true); }}
+                    className="w-full h-full cursor-pointer"
+                  >
+                    <ImageWithFallback
+                      src={url}
+                      imageUrls={listing.imageUrls}
+                      alt={`${listing.name} ${index + 1}`}
+                      type="property"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+
+          {/* Desktop Grid (hidden on mobile) */}
+          <div className="hidden md:grid grid-cols-4 grid-rows-2 gap-2 h-full w-full">
             {/* Main Image - Takes left half (2 cols, 2 rows) */}
             <div
-              className="md:col-span-2 md:row-span-2 relative overflow-hidden cursor-pointer group"
+              className="col-span-2 row-span-2 relative overflow-hidden cursor-pointer group"
               onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
             >
               <ImageWithFallback
@@ -2118,7 +2145,7 @@ export default function Listing() {
             {listing.imageUrls.slice(1, 5).map((url, index) => (
               <div
                 key={index}
-                className="relative overflow-hidden cursor-pointer hidden md:block group"
+                className="relative overflow-hidden cursor-pointer group"
                 onClick={() => { setGalleryIndex(index + 1); setShowFullGallery(true); }}
               >
                 <ImageWithFallback
@@ -2131,16 +2158,16 @@ export default function Listing() {
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
               </div>
             ))}
-
-            {/* Show All Photos Button */}
-            <button
-              onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
-              className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50"
-            >
-              <PhotoIcon className="w-5 h-5" />
-              <span>Show all {listing.imageUrls.length} photos</span>
-            </button>
           </div>
+
+          {/* Show All Photos Button */}
+          <button
+            onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
+            className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50 z-10"
+          >
+            <PhotoIcon className="w-5 h-5" />
+            <span>Show all {listing.imageUrls.length} photos</span>
+          </button>
         </div>
       </div>
 
@@ -2163,6 +2190,12 @@ export default function Listing() {
             {/* Header */}
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 mb-2">{listing.name}</h1>
+              {listing.kind && (
+                <div className="text-sm font-semibold text-rose-500 mb-2.5 capitalize tracking-wide flex items-center gap-1.5">
+                  <HomeModernIcon className="w-4 h-4" />
+                  {listing.kind.replace(/_/g, " ")}
+                </div>
+              )}
               <div className="flex flex-wrap items-center gap-2 text-gray-600 text-sm lg:text-base">
                 <span className="flex items-center gap-1">
                   <StarIconSolid className="text-[#FFB400] w-4 h-4" />
@@ -2578,6 +2611,18 @@ export default function Listing() {
                 </div>
               </div>
             )}
+
+            {/* Cancellation Policy */}
+            {listing.cancel && (
+              <div className="py-6 border-t border-gray-200">
+                <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">Cancellation policy</h2>
+                <div className="text-gray-700 text-xs lg:text-sm space-y-2">
+                  {listing.cancel.split('\n').map((policy, i) => (
+                    <p key={i}>{policy}</p>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Column - Booking Card */}
@@ -2596,14 +2641,29 @@ export default function Listing() {
                 </div>
 
                 {/* Listing Type Info */}
-                <div className="mb-4 p-2 lg:p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs lg:text-sm text-gray-700">
-                    <span className="font-semibold">Listing Type:</span> {listingType.label}
+                <div className="mb-4 p-4 bg-gray-50 rounded-2xl space-y-2 text-xs lg:text-sm">
+                  <p className="text-gray-700 flex justify-between gap-2">
+                    <span className="font-semibold text-gray-600">Listing Type:</span> 
+                    <span>{listingType.label}</span>
                   </p>
-                  {isOvernight && <p className="text-xs text-gray-500 mt-1">Price is per night</p>}
-                  {isOffice && <p className="text-xs text-gray-500 mt-1">Price is per hour</p>}
-                  {isRent && <p className="text-xs text-gray-500 mt-1">Price is per month</p>}
-                  {isSale && <p className="text-xs text-gray-500 mt-1">Fixed sale price</p>}
+                  {listing.kind && (
+                    <p className="text-gray-700 flex justify-between gap-2">
+                      <span className="font-semibold text-gray-600">Property Type:</span> 
+                      <span className="capitalize">{listing.kind.replace(/_/g, " ")}</span>
+                    </p>
+                  )}
+                  {listing.period && (
+                    <p className="text-gray-700 flex justify-between gap-2">
+                      <span className="font-semibold text-gray-600">Available From:</span> 
+                      <span>{listing.period}</span>
+                    </p>
+                  )}
+                  {listing.cancel && (
+                    <p className="text-gray-700 flex flex-col gap-0.5 pt-1 border-t border-gray-200/50">
+                      <span className="font-semibold text-gray-600">Cancellation Policy:</span> 
+                      <span className="text-gray-500 text-[11px] leading-snug">{listing.cancel}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Action Button - Different based on property type */}

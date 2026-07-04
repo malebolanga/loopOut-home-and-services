@@ -130,6 +130,7 @@ app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/listing', listingRouter);
 app.use('/api/comments', commentRouter); // Unified comment route
+app.use('/api/comment', commentRouter);
 app.use('/api/helper', helperRouter);
 app.use('/api/event', eventRouter);
 app.use('/api/carwash', carwashRoutes); // Add this line

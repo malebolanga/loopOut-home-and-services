@@ -432,6 +432,7 @@ export default function Header() {
     { label: 'LIVE RADAR', route: '/radar', icon: <MapPinIcon className="w-5 h-5" />, color: 'bg-emerald-500' },
     { label: 'QUICK BOOK', route: '/quick-book', icon: <BoltIcon className="w-5 h-5" />, color: 'bg-amber-500' },
     { label: 'AI PLANNER', route: '/planner', icon: <MapIcon className="w-5 h-5" />, color: 'bg-pink-500' },
+    { label: 'BILL SPLITTER', route: '/splitter', icon: <ChartPieIcon className="w-5 h-5" />, color: 'bg-emerald-600' },
     { label: 'CREATE LISTING', route: `/${currentUser?._id}/create-listing`, icon: <PlusCircleIcon className="w-5 h-5" />, color: 'bg-emerald-500' },
     { label: 'MY LISTINGS', route: `/${currentUser?._id}/listings`, icon: <QueueListIcon className="w-5 h-5" />, color: 'bg-blue-500' },
     { label: 'HELP CENTER', route: '/help-center', icon: <QuestionMarkCircleIcon className="w-5 h-5" />, color: 'bg-indigo-600' },
