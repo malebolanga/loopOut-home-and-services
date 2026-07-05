@@ -293,7 +293,7 @@ export default function Splitter() {
               <div>
                 <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 block mb-1.5">Total Subtotal Price (ZAR)</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-3 text-slate-500 text-xs font-bold">R</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-bold">R</span>
                   <input
                     type="number"
                     value={itemPrice}
@@ -352,8 +352,8 @@ export default function Splitter() {
                         R{g.amount.toFixed(2)}
                       </span>
                     ) : splitMethod === "exact" ? (
-                      <div className="relative w-28">
-                        <span className="absolute left-2 top-1.5 text-slate-600 text-[10px] font-bold">R</span>
+                      <div className="relative w-28 flex items-center">
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-600 text-[10px] font-bold">R</span>
                         <input
                           type="number"
                           value={g.amount}
@@ -362,14 +362,14 @@ export default function Splitter() {
                         />
                       </div>
                     ) : (
-                      <div className="relative w-24">
+                      <div className="relative w-24 flex items-center">
                         <input
                           type="number"
                           value={g.percent}
                           onChange={(e) => handlePercentChange(index, e.target.value)}
                           className="w-full bg-slate-900 border border-slate-800/80 rounded-lg pl-2 pr-6 py-1 text-xs text-white text-right focus:outline-none focus:border-emerald-500 transition-colors"
                         />
-                        <span className="absolute right-2 top-1.5 text-slate-600 text-[10px] font-bold">%</span>
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 text-[10px] font-bold">%</span>
                       </div>
                     )}
 

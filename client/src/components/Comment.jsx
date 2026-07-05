@@ -57,8 +57,13 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
       const res = await fetch(url);
       
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Failed to fetch comments');
+        const contentType = res.headers.get('content-type') || '';
+        let errorMsg = 'Failed to fetch comments';
+        if (contentType.includes('application/json')) {
+          const errorData = await res.json();
+          errorMsg = errorData.message || errorMsg;
+        }
+        throw new Error(errorMsg);
       }
       
       const data = await res.json();

@@ -3143,31 +3143,30 @@ export default function HelperPage() {
                     </div>
                   </div>
 
-                  {/* Location Option */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Service location</label>
                     <div className="flex gap-4">
-                      <label className="flex items-center">
+                      <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="radio"
                           name="locationOption"
                           value="comeToYou"
                           checked={bookingData.locationOption === 'comeToYou'}
                           onChange={handleBookingChange}
-                          className="mr-2"
+                          className="accent-rose-500"
                         />
-                        Come to me
+                        <span className="text-sm text-gray-700">Come to me</span>
                       </label>
-                      <label className="flex items-center">
+                      <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="radio"
                           name="locationOption"
                           value="goToThem"
                           checked={bookingData.locationOption === 'goToThem'}
                           onChange={handleBookingChange}
-                          className="mr-2"
+                          className="accent-rose-500"
                         />
-                        Go to them
+                        <span className="text-sm text-gray-700">Go to them</span>
                       </label>
                     </div>
                   </div>

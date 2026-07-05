@@ -1196,11 +1196,11 @@ const MobileAppHomepage = ({
             {/* Matchmaker Card */}
             <button 
               onClick={() => navigate('/matchmaker')}
-              className="flex-shrink-0 w-60 snap-start p-4 rounded-[1.5rem] bg-gray-950 border border-rose-500/20 text-left flex flex-col justify-between h-28 hover:border-rose-500/50 transition-all relative overflow-hidden shadow-lg group"
+              className="flex-shrink-0 w-48 snap-start p-4 rounded-[1.5rem] bg-gradient-to-br from-rose-950/40 via-gray-950 to-rose-950/20 border border-rose-500/30 text-left flex flex-col justify-between h-28 hover:border-rose-500/60 transition-all relative overflow-hidden shadow-lg group"
             >
               <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10 flex justify-between items-start w-full">
-                <span className="text-[8px] font-black tracking-widest text-rose-500 uppercase flex items-center gap-1">
+                <span className="text-[8px] font-black tracking-widest text-rose-450 uppercase flex items-center gap-1">
                   <div className="w-1 h-1 bg-rose-500 rounded-full animate-pulse" />
                   Matchmaker
                 </span>
@@ -1208,39 +1208,39 @@ const MobileAppHomepage = ({
               </div>
               <div className="relative z-10 mt-1">
                 <span className="text-white font-black text-xs block">Neural Matchmaker</span>
-                <span className="text-gray-400 text-[9px] font-bold block mt-0.5 leading-snug">Swipe and match your wishlist.</span>
+                <span className="text-gray-400 text-[8px] font-bold block mt-0.5 leading-snug">Swipe and match your wishlist.</span>
               </div>
             </button>
             
             {/* Radar Card */}
             <button 
               onClick={() => navigate('/radar')}
-              className="flex-shrink-0 w-60 snap-start p-4 rounded-[1.5rem] bg-gray-950 border border-emerald-500/20 text-left flex flex-col justify-between h-28 hover:border-emerald-500/50 transition-all relative overflow-hidden shadow-lg group"
+              className="flex-shrink-0 w-48 snap-start p-4 rounded-[1.5rem] bg-gradient-to-br from-emerald-950/40 via-gray-950 to-emerald-950/20 border border-emerald-500/30 text-left flex flex-col justify-between h-28 hover:border-emerald-500/60 transition-all relative overflow-hidden shadow-lg group"
             >
               <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10 flex justify-between items-start w-full">
-                <span className="text-[8px] font-black tracking-widest text-emerald-500 uppercase">Live Radar</span>
+                <span className="text-[8px] font-black tracking-widest text-emerald-450 uppercase">Live Radar</span>
                 <span className="text-lg">🛰️</span>
               </div>
               <div className="relative z-10 mt-1">
                 <span className="text-white font-black text-xs block">Live Radar</span>
-                <span className="text-gray-400 text-[9px] font-bold block mt-0.5 leading-snug">Explore helpers on the map.</span>
+                <span className="text-gray-400 text-[8px] font-bold block mt-0.5 leading-snug">Explore helpers on the map.</span>
               </div>
             </button>
 
             {/* Quick Book Card */}
             <button 
               onClick={() => navigate('/quick-book')}
-              className="flex-shrink-0 w-60 snap-start p-4 rounded-[1.5rem] bg-gray-950 border border-amber-500/20 text-left flex flex-col justify-between h-28 hover:border-amber-500/50 transition-all relative overflow-hidden shadow-lg group"
+              className="flex-shrink-0 w-48 snap-start p-4 rounded-[1.5rem] bg-gradient-to-br from-amber-950/40 via-gray-950 to-amber-950/20 border border-amber-500/30 text-left flex flex-col justify-between h-28 hover:border-amber-500/60 transition-all relative overflow-hidden shadow-lg group"
             >
               <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10 flex justify-between items-start w-full">
-                <span className="text-[8px] font-black tracking-widest text-amber-500 uppercase">Quick Book</span>
+                <span className="text-[8px] font-black tracking-widest text-amber-450 uppercase">Quick Book</span>
                 <span className="text-lg">⚡</span>
               </div>
               <div className="relative z-10 mt-1">
                 <span className="text-white font-black text-xs block">Quick Book</span>
-                <span className="text-gray-400 text-[9px] font-bold block mt-0.5 leading-snug">Deploy helper pros instantly.</span>
+                <span className="text-gray-400 text-[8px] font-bold block mt-0.5 leading-snug">Deploy helper pros instantly.</span>
               </div>
             </button>
           </div>
@@ -1554,29 +1554,29 @@ const DesktopHomepage = ({
           <div className="grid grid-cols-4 gap-6">
             <button 
               onClick={() => navigate('/matchmaker')}
-              className="col-span-2  p-8 rounded-[2.5rem] bg-gray-950 border border-white/10 text-left flex items-center justify-between gap-6 hover:shadow-[0_20px_50px_rgba(244,63,94,0.3)] hover:border-rose-500/50 transition-all duration-300 relative overflow-hidden h-48"
+              className="col-span-2  p-8 rounded-[2.5rem] bg-gradient-to-br from-rose-950/30 via-slate-950 to-rose-950/10 border border-rose-500/20 text-left flex items-center justify-between gap-6 hover:shadow-[0_20px_50px_rgba(244,63,94,0.2)] hover:border-rose-500/50 transition-all duration-300 relative overflow-hidden h-48 group"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-rose-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-r from-rose-500/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10">
-                <span className="text-xs font-black tracking-widest text-rose-500 uppercase block mb-2 flex items-center gap-2">
+                <span className="text-xs font-black tracking-widest text-rose-450 uppercase block mb-2 flex items-center gap-2">
                   <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
                   Neural Matchmaker
                 </span>
                 <span className="text-white font-black text-3xl tracking-tight leading-none mb-2 block">Swipe your match.</span>
                 <span className="text-gray-400 text-sm font-medium">Instantly build your custom wishlist vault.</span>
               </div>
-              <div className="relative z-10 w-24 h-24 shrink-0 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/30 shadow-[0_0_25px_rgba(244,63,94,0.4)]">
+              <div className="relative z-10 w-24 h-24 shrink-0 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/30 shadow-[0_0_25px_rgba(244,63,94,0.3)]">
                 <span className="text-5xl">🔥</span>
               </div>
             </button>
             
             <button 
               onClick={() => navigate('/radar')}
-              className="col-span-1  p-6 rounded-[2.5rem] bg-gray-950 border border-white/10 text-left flex flex-col justify-between h-48 hover:shadow-[0_20px_40px_rgba(16,185,129,0.2)] hover:border-emerald-500/50 transition-all duration-300 relative overflow-hidden"
+              className="col-span-1  p-6 rounded-[2.5rem] bg-gradient-to-br from-emerald-950/30 via-slate-950 to-emerald-950/10 border border-emerald-500/20 text-left flex flex-col justify-between h-48 hover:shadow-[0_20px_40px_rgba(16,185,129,0.15)] hover:border-emerald-500/50 transition-all duration-300 relative overflow-hidden group"
             >
-              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10 flex justify-between items-start">
-                <span className="text-[10px] font-black tracking-widest text-emerald-500 uppercase">Live Radar</span>
+                <span className="text-[10px] font-black tracking-widest text-emerald-450 uppercase">Live Radar</span>
                 <span className="text-3xl">🛰️</span>
               </div>
               <span className="relative z-10 text-white text-lg font-bold leading-tight">Explore the map geographically.</span>
@@ -1584,11 +1584,11 @@ const DesktopHomepage = ({
 
             <button 
               onClick={() => navigate('/quick-book')}
-              className="col-span-1 p-6 rounded-[2.5rem] bg-gray-950 border border-white/10 text-left flex flex-col justify-between h-48 hover:shadow-[0_20px_40px_rgba(245,158,11,0.2)] hover:border-amber-500/50 transition-all duration-300 relative overflow-hidden"
+              className="col-span-1 p-6 rounded-[2.5rem] bg-gradient-to-br from-amber-950/30 via-slate-950 to-amber-950/10 border border-amber-500/20 text-left flex flex-col justify-between h-48 hover:shadow-[0_20px_40px_rgba(245,158,11,0.15)] hover:border-amber-500/50 transition-all duration-300 relative overflow-hidden group"
             >
-              <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10 flex justify-between items-start">
-                <span className="text-[10px] font-black tracking-widest text-amber-500 uppercase">Quick Book</span>
+                <span className="text-[10px] font-black tracking-widest text-amber-450 uppercase">Quick Book</span>
                 <span className="text-3xl">⚡</span>
               </div>
               <span className="relative z-10 text-white text-lg font-bold leading-tight">Deploy the nearest pro instantly.</span>

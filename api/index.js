@@ -163,6 +163,10 @@ app.use(express.static(distPath));
 
 // For any other request, send back index.html
 app.get('*', (req, res) => {
+    // Never serve HTML to API routes — return a proper 404 JSON instead
+    if (req.url.startsWith('/api/')) {
+        return res.status(404).json({ success: false, message: 'API endpoint not found' });
+    }
     // If it's a request for an asset that wasn't found, don't send index.html
     if (req.url.startsWith('/assets/')) {
         return res.status(404).send('Asset not found');
