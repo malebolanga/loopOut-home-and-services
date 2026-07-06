@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback, useMemo, cloneElement 
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Helmet } from 'react-helmet-async';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   HomeIcon,
   MapIcon,
@@ -135,59 +135,56 @@ const itemVariants = {
   }
 };
 
-const CategoryIcon = ({ type, size = "w-10 h-10" }) => {
-  const [emojiIndex, setEmojiIndex] = useState(0);
+const CATEGORY_ICON_DETAILS = {
+  Universe: {
+    main: '🪐',
+    details: ['✨', '🌙', '🚀'],
+    bg: 'from-slate-950 via-indigo-950 to-fuchsia-900'
+  },
+  Homes: {
+    main: '🏡',
+    details: ['🔑', '🪴', '📍'],
+    bg: 'from-emerald-600 via-teal-500 to-sky-500'
+  },
+  Services: {
+    main: '🛠️',
+    details: ['⚡', '🧽', '🔧'],
+    bg: 'from-amber-500 via-orange-500 to-rose-500'
+  },
+  Helper: {
+    main: '🧹',
+    details: ['💅', '💈', '🍳'],
+    bg: 'from-sky-500 via-blue-600 to-violet-600'
+  },
+  Events: {
+    main: '🎟️',
+    details: ['🎪', '🎭', '🎉'],
+    bg: 'from-purple-600 via-fuchsia-600 to-rose-500'
+  }
+};
 
-  const emojis = {
-    Universe: ['🪐', '🌍', '🌌', '🚀'],
-    Homes: ['🏠', '🏢', '🏡', '🏨'],
-    Services: ['🛠️', '⚡', '🧽', '⚙️'],
-    Helper: ['🧹', '💅', '💄', '💈', '👨‍🍳'],
-    Events: ['🎟️', '🎪', '🎭', '🎫']
+const CategoryIcon = ({ type, size = "w-6 h-6" }) => {
+  const icon = CATEGORY_ICON_DETAILS[type] || {
+    main: '✨',
+    details: ['•', '•', '•']
   };
-
-  useEffect(() => {
-    // Add a slight random offset to interval so they don't all flip at the exact same millisecond
-    const randomOffset = Math.random() * 500;
-    const interval = setInterval(() => {
-      setEmojiIndex(prev => {
-        const count = emojis[type] ? emojis[type].length : 1;
-        return (prev + 1) % count;
-      });
-    }, 2500 + randomOffset);
-    return () => clearInterval(interval);
-  }, [type]);
-
-  const currentEmoji = emojis[type] ? emojis[type][emojiIndex] : '✨';
 
   return (
     <div className={`${size} relative flex items-center justify-center`}>
       <motion.div
-        animate={{
-          y: [0, -4, 0],
-          rotateX: [0, 15, -15, 0],
-          rotateY: [0, 15, -15, 0]
-        }}
-        transition={{
-          repeat: Infinity,
-          duration: 5,
-          ease: "easeInOut"
-        }}
-        style={{ perspective: 1000 }}
-        className="relative w-full h-full hover:scale-125 transition-transform duration-300 flex items-center justify-center"
+        animate={{ y: [0, -1, 0] }}
+        transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
+        className="relative w-full h-full flex items-center justify-center"
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentEmoji}
-            initial={{ opacity: 0, scale: 0.8, rotateX: 90 }}
-            animate={{ opacity: 1, scale: 1, rotateX: 0 }}
-            exit={{ opacity: 0, scale: 0.8, rotateX: -90 }}
-            transition={{ duration: 0.4 }}
-            className="absolute text-4xl drop-shadow-[0_15px_15px_rgba(0,0,0,0.4)]"
-          >
-            {currentEmoji}
-          </motion.div>
-        </AnimatePresence>
+        <span className="relative z-10 text-[1.25rem] leading-none select-none">
+          {icon.main}
+        </span>
+        <span className="absolute -top-1.5 -right-1.5 text-[0.45rem] leading-none rounded-full bg-white shadow-sm p-0.5 border border-gray-100 select-none">
+          {icon.details[0]}
+        </span>
+        <span className="absolute -bottom-1.5 -left-1.5 text-[0.45rem] leading-none rounded-full bg-white shadow-sm p-0.5 border border-gray-100 select-none">
+          {icon.details[1]}
+        </span>
       </motion.div>
     </div>
   );
@@ -1247,14 +1244,14 @@ const MobileAppHomepage = ({
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-3 px-6 py-4 rounded-full transition-all duration-500 shrink-0 border ${
                     isActive 
-                      ? 'bg-gray-950 border-gray-950 shadow-2xl scale-105' 
-                      : 'bg-white border-gray-100 opacity-70 hover:opacity-100'
+                      ? 'bg-white border-gray-900 shadow-md scale-105' 
+                      : 'bg-white/50 border-gray-100 opacity-70 hover:opacity-100'
                   }`}
                 >
                   <div className="flex-shrink-0 filter drop-shadow-md">
                     <CategoryIcon type={tab.iconType} size={isActive ? "w-8 h-8" : "w-6 h-6"} />
                   </div>
-                  <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-white' : 'text-gray-500'}`}>
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-gray-950' : 'text-gray-500'}`}>
                     {tab.id}
                   </span>
                 </motion.button>
@@ -1413,26 +1410,27 @@ const DesktopHomepage = ({
       `}</style>
 
       {/* Sticky Elite Categories Bar */}
-      <div className="sticky top-0 z-40 bg-gray-950/80 backdrop-blur-xl py-3 border-b border-white/10 shadow-2xl">
+      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl py-4 border-b border-gray-200/80 shadow-sm">
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
-          <div className="flex items-center gap-12 overflow-x-auto scrollbar-hide py-1">
+          <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide py-1">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className="group flex flex-col items-center gap-2 relative pb-3 pt-1 cursor-pointer transition-all focus:outline-none"
+                  className={`group flex items-center gap-3 px-5 py-3 rounded-full transition-all duration-300 cursor-pointer focus:outline-none border ${
+                    isActive 
+                      ? 'bg-white border-gray-900 shadow-md scale-105' 
+                      : 'bg-white/50 border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50/50'
+                  }`}
                 >
-                  <div className={`transition-transform duration-300 ${isActive ? 'scale-110 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'group-hover:scale-110 opacity-70 group-hover:opacity-100'}`}>
+                  <div className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110 opacity-70 group-hover:opacity-100'}`}>
                     <CategoryIcon type={tab.iconType} size="w-6 h-6" />
                   </div>
-                  <span className={`text-[10px] font-black tracking-widest uppercase transition-colors duration-200 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-200'}`}>
+                  <span className={`text-[10px] font-black tracking-widest uppercase transition-colors duration-200 ${isActive ? 'text-gray-950' : 'text-gray-500'}`}>
                     {tab.id}
                   </span>
-                  {isActive && (
-                    <motion.div layoutId="desktopTabIndicator" className="absolute bottom-0 left-0 right-0 h-[2px] bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)]" />
-                  )}
                 </button>
               );
             })}

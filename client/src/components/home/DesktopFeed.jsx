@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
@@ -173,47 +173,61 @@ export const DesktopFeed = ({
   );
 };
 
+const CATEGORY_ICON_DETAILS = {
+  Universe: {
+    main: '🪐',
+    details: ['✨', '🌙', '🚀'],
+    bg: 'from-slate-950 via-indigo-950 to-fuchsia-900'
+  },
+  Homes: {
+    main: '🏡',
+    details: ['🔑', '🪴', '📍'],
+    bg: 'from-emerald-600 via-teal-500 to-sky-500'
+  },
+  Services: {
+    main: '🛠️',
+    details: ['⚡', '🧽', '🔧'],
+    bg: 'from-amber-500 via-orange-500 to-rose-500'
+  },
+  Helper: {
+    main: '🧹',
+    details: ['💅', '💈', '🍳'],
+    bg: 'from-sky-500 via-blue-600 to-violet-600'
+  },
+  Events: {
+    main: '🎟️',
+    details: ['🎪', '🎭', '🎉'],
+    bg: 'from-purple-600 via-fuchsia-600 to-rose-500'
+  }
+};
+
 // Helper CategoryIcon component (shared)
 const CategoryIcon = ({ type, size = "w-10 h-10" }) => {
-  const [emojiIndex, setEmojiIndex] = useState(0);
-  const emojis = {
-    Universe: ['🪐', '🌍', '🌌', '🚀'],
-    Homes: ['🏠', '🏢', '🏡', '🏨'],
-    Services: ['🛠️', '⚡', '🧽', '⚙️'],
-    Helper: ['🧹', '💅', '💄', '💈', '👨‍🍳'],
-    Events: ['🎟️', '🎪', '🎭', '🎫']
+  const icon = CATEGORY_ICON_DETAILS[type] || {
+    main: '✨',
+    details: ['•', '•', '•'],
+    bg: 'from-gray-900 to-gray-700'
   };
-  useEffect(() => {
-    const randomOffset = Math.random() * 500;
-    const interval = setInterval(() => {
-      setEmojiIndex(prev => {
-        const count = emojis[type] ? emojis[type].length : 1;
-        return (prev + 1) % count;
-      });
-    }, 2500 + randomOffset);
-    return () => clearInterval(interval);
-  }, [type]);
-  const currentEmoji = emojis[type] ? emojis[type][emojiIndex] : '✨';
+
   return (
-    <div className={`${size} relative flex items-center justify-center`}>
+    <div className={`${size} relative flex items-center justify-center overflow-visible`}>
       <motion.div
-        animate={{ y: [0, -4, 0], rotateX: [0, 15, -15, 0], rotateY: [0, 15, -15, 0] }}
-        transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-        style={{ perspective: 1000 }}
-        className="relative w-full h-full hover:scale-125 transition-transform duration-300 flex items-center justify-center"
+        animate={{ y: [0, -2, 0], rotate: [0, -3, 3, 0] }}
+        transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
+        className={`relative w-full h-full rounded-full bg-gradient-to-br ${icon.bg} shadow-[0_8px_20px_rgba(15,23,42,0.25)] ring-1 ring-white/40 hover:scale-110 transition-transform duration-300 flex items-center justify-center`}
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentEmoji}
-            initial={{ opacity: 0, scale: 0.8, rotateX: 90 }}
-            animate={{ opacity: 1, scale: 1, rotateX: 0 }}
-            exit={{ opacity: 0, scale: 0.8, rotateX: -90 }}
-            transition={{ duration: 0.4 }}
-            className="absolute text-4xl drop-shadow-[0_15px_15px_rgba(0,0,0,0.4)]"
-          >
-            {currentEmoji}
-          </motion.div>
-        </AnimatePresence>
+        <span className="relative z-10 text-[1.15rem] leading-none drop-shadow-[0_3px_6px_rgba(0,0,0,0.35)]">
+          {icon.main}
+        </span>
+        <span className="absolute -top-1 -right-1 text-[0.55rem] leading-none rounded-full bg-white shadow-sm p-0.5">
+          {icon.details[0]}
+        </span>
+        <span className="absolute -bottom-1 -left-1 text-[0.55rem] leading-none rounded-full bg-white shadow-sm p-0.5">
+          {icon.details[1]}
+        </span>
+        <span className="absolute -bottom-1 -right-1 text-[0.5rem] leading-none rounded-full bg-white/95 shadow-sm p-0.5">
+          {icon.details[2]}
+        </span>
       </motion.div>
     </div>
   );
