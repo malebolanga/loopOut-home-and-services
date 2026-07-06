@@ -2316,13 +2316,13 @@ export default function HelperPage() {
         {/* Airbnb-style image gallery layout */}
         {helper.imageUrls && helper.imageUrls.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] lg:h-[600px] w-full bg-slate-900 overflow-hidden">
-            <div className="relative h-full cursor-pointer group overflow-hidden" onClick={() => openFullScreenGallery(0)}>
+            <div className="relative h-full cursor-pointer overflow-hidden" onClick={() => openFullScreenGallery(0)}>
               <img src={helper.imageUrls[0]} alt={helper.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
             </div>
             <div className="hidden md:grid grid-cols-2 gap-2 h-full">
               {helper.imageUrls.slice(1, 5).map((url, index) => (
-                <div key={index} className="relative h-full cursor-pointer group overflow-hidden" onClick={() => openFullScreenGallery(index + 1)}>
+                <div key={index} className="relative h-full cursor-pointer overflow-hidden" onClick={() => openFullScreenGallery(index + 1)}>
                   <img src={url} alt={`${helper.name} ${index + 2}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
                 </div>
@@ -2396,7 +2396,7 @@ export default function HelperPage() {
                     {getProfessionalTitle(helper.type)} hosted by {helper.userRef?.username || helper.name}
                   </h2>
                   <p className="text-gray-600 mt-1">
-                    {helper.userRef?.isSuperhost ? 'Superhost' : 'Verified Host'} · {helper.host || 5}+ years of experience
+                    {helper.userRef?.isSuperhost ? 'Superhost' : 'Verified Host'} · {helper.host || 5}
                   </p>
                   {helper.providerType === 'company' && (
                     <p className="text-gray-600 mt-1 text-sm font-medium">Company</p>
@@ -2581,7 +2581,7 @@ export default function HelperPage() {
                     <div 
                       key={index} 
                       onClick={() => openFullScreenGallery(index)}
-                      className="aspect-square rounded-2xl overflow-hidden cursor-pointer group relative shadow-sm hover:shadow-md transition-all active:scale-95"
+                      className="aspect-square rounded-2xl overflow-hidden cursor-pointer  relative shadow-sm hover:shadow-md transition-all active:scale-95"
                     >
                       <img 
                         src={url} 
@@ -2633,6 +2633,36 @@ export default function HelperPage() {
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            )}
+
+            {/* Sneaker Cleaning Details */}
+            {helper.type === 'sneaker' && (helper.shoeTypes || helper.cleaningMethod || helper.turnaroundTime) && (
+              <div className="pb-6 border-b border-gray-200">
+                <div className="flex items-center gap-3 mb-5">
+                  <FaShoePrints className="text-indigo-500 text-xl" />
+                  <h2 className="text-xl font-semibold text-gray-900">Sneaker Cleaning Details</h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {helper.shoeTypes && (
+                    <div className="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-1">Types of Sneakers</p>
+                      <p className="text-sm font-semibold text-gray-800">{helper.shoeTypes}</p>
+                    </div>
+                  )}
+                  {helper.cleaningMethod && (
+                    <div className="bg-purple-50 rounded-2xl p-4 border border-purple-100">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-purple-400 mb-1">Cleaning Method</p>
+                      <p className="text-sm font-semibold text-gray-800">{helper.cleaningMethod}</p>
+                    </div>
+                  )}
+                  {helper.turnaroundTime && (
+                    <div className="bg-blue-50 rounded-2xl p-4 border border-blue-100">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">Turnaround Time</p>
+                      <p className="text-sm font-semibold text-gray-800">{helper.turnaroundTime}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -2696,7 +2726,7 @@ export default function HelperPage() {
                           
                           return (
                           <SwiperSlide key={comment._id} className="h-auto">
-                            <div className="h-full bg-gradient-to-br from-[#F8F9FA] to-white border border-[#EBEBEB] rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+                            <div className="h-full bg-gradient-to-br from-[#F8F9FA] to-white border border-[#EBEBEB] rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden">
                               <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#FFB400]/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                               <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-4">
@@ -3686,7 +3716,7 @@ export default function HelperPage() {
               <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center pointer-events-auto">
                 <button
                   onClick={() => setZoomedImage(null)}
-                  className="absolute -top-12 right-0 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/20 group"
+                  className="absolute -top-12 right-0 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/20 "
                 >
                   <XMarkIcon className="w-6 h-6 group-hover:rotate-90 transition-transform" />
                 </button>
@@ -3726,7 +3756,7 @@ export default function HelperPage() {
 
                 <button
                   onClick={() => setShowPerformerRatingModal(false)}
-                  className="absolute top-4 right-4 p-2 bg-slate-100 hover:bg-slate-200 text-slate-400 rounded-full transition-all group"
+                  className="absolute top-4 right-4 p-2 bg-slate-100 hover:bg-slate-200 text-slate-400 rounded-full transition-all "
                 >
                   <XMarkIcon className="w-5 h-5 group-hover:rotate-90 transition-transform" />
                 </button>
