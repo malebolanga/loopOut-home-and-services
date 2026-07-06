@@ -1184,63 +1184,6 @@ const MobileAppHomepage = ({
           </Swiper>
         </div>
 
-
-
-        {/* Discovery Protocols Hub - Icons Only (Mobile) */}
-        <section className="mb-10 mt-6 px-1">
-          <div className="flex items-center gap-2 mb-5">
-            <Sparkles className="w-4 h-4 text-rose-500 animate-pulse" />
-            <span className="text-gray-950 text-[11px] font-black tracking-[0.25em] uppercase">Discovery Hub</span>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            {/* Matchmaker */}
-            <button 
-              onClick={() => navigate('/matchmaker')}
-              className="flex flex-col items-center text-center cursor-pointer focus:outline-none"
-            >
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-rose-50 to-rose-100/50 border border-rose-100 flex items-center justify-center shadow-[0_4px_12px_rgba(244,63,94,0.08)] group-hover:scale-105 active:scale-95 transition-all duration-300">
-                <span className="text-3xl filter drop-shadow-[0_4px_6px_rgba(244,63,94,0.2)] animate-pulse">🔥</span>
-              </div>
-              <span className="text-[10px] font-extrabold text-gray-900 uppercase tracking-widest mt-2 px-1 leading-tight group-hover:text-rose-600 transition-colors">
-                Matchmaker
-              </span>
-            </button>
-            
-            {/* Radar */}
-            <button 
-              onClick={() => navigate('/radar')}
-              className="flex flex-col items-center text-center  cursor-pointer focus:outline-none"
-            >
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-100 flex items-center justify-center shadow-[0_4px_12px_rgba(16,185,129,0.08)] group-hover:scale-105 active:scale-95 transition-all duration-300">
-                <span className="text-3xl filter drop-shadow-[0_4px_6px_rgba(16,185,129,0.25)]">🛰️</span>
-              </div>
-              <span className="text-[10px] font-extrabold text-gray-900 uppercase tracking-widest mt-2 px-1 leading-tight group-hover:text-emerald-600 transition-colors">
-                Live Radar
-              </span>
-            </button>
-
-            {/* Quick Book */}
-            <button 
-              onClick={() => navigate('/quick-book')}
-              className="flex flex-col items-center text-center  cursor-pointer focus:outline-none"
-            >
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-100 flex items-center justify-center shadow-[0_4px_12px_rgba(245,158,11,0.08)] group-hover:scale-105 active:scale-95 transition-all duration-300">
-                <span className="text-3xl filter drop-shadow-[0_4px_6px_rgba(245,158,11,0.25)]">⚡</span>
-              </div>
-              <span className="text-[10px] font-extrabold text-gray-900 uppercase tracking-widest mt-2 px-1 leading-tight group-hover:text-amber-600 transition-colors">
-                Quick Book
-              </span>
-            </button>
-          </div>
-        </section>
-
-
-
-        {/* LoopOut Brand Campaign Banner */}
-        <div className="relative h-20 mb-10">
-          <LoopOutBanner type="all" className="relative !bottom-0 !left-0 !right-0 !px-0" />
-        </div>
-
         {/* NEURAL PICKS SECTION - Alpha Algorithm (Mobile) */}
         <div className="mb-12">
           <NeuralPicksSection navigate={navigate} />
@@ -1533,53 +1476,7 @@ const DesktopHomepage = ({
           </div>
         )}
 
-        {/* Discovery Protocols Hub (Desktop) - Icons Only Redesign */}
-        <section className="mb-12 max-w-4xl mx-auto">
-          <div className="flex items-center gap-2 mb-6 justify-center">
-            <Sparkles className="w-5 h-5 text-rose-500 animate-pulse" />
-            <h2 className="text-sm font-black text-gray-900 uppercase tracking-[0.2em]">Discovery Hub</h2>
-          </div>
-          <div className="flex justify-center items-center gap-12 sm:gap-20">
-            {/* Matchmaker */}
-            <button 
-              onClick={() => navigate('/matchmaker')}
-              className="flex flex-col items-center text-center group cursor-pointer focus:outline-none"
-            >
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-rose-50 to-rose-100/50 border border-rose-100 flex items-center justify-center shadow-[0_8px_24px_rgba(244,63,94,0.1)] group-hover:scale-110 active:scale-95 transition-all duration-300">
-                <span className="text-5xl filter drop-shadow-[0_8px_12px_rgba(244,63,94,0.2)] animate-pulse">🔥</span>
-              </div>
-              <span className="text-xs font-black text-gray-900 uppercase tracking-widest mt-3 group-hover:text-rose-600 transition-colors">
-                Matchmaker
-              </span>
-            </button>
-            
-            {/* Radar */}
-            <button 
-              onClick={() => navigate('/radar')}
-              className="flex flex-col items-center text-center group cursor-pointer focus:outline-none"
-            >
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-100 flex items-center justify-center shadow-[0_8px_24px_rgba(16,185,129,0.1)] group-hover:scale-110 active:scale-95 transition-all duration-300">
-                <span className="text-5xl filter drop-shadow-[0_8px_12px_rgba(16,185,129,0.25)]">🛰️</span>
-              </div>
-              <span className="text-xs font-black text-gray-900 uppercase tracking-widest mt-3 group-hover:text-emerald-600 transition-colors">
-                Live Radar
-              </span>
-            </button>
-
-            {/* Quick Book */}
-            <button 
-              onClick={() => navigate('/quick-book')}
-              className="flex flex-col items-center text-center group cursor-pointer focus:outline-none"
-            >
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-100 flex items-center justify-center shadow-[0_8px_24px_rgba(245,158,11,0.1)] group-hover:scale-110 active:scale-95 transition-all duration-300">
-                <span className="text-5xl filter drop-shadow-[0_8px_12px_rgba(245,158,11,0.25)]">⚡</span>
-              </div>
-              <span className="text-xs font-black text-gray-900 uppercase tracking-widest mt-3 group-hover:text-amber-600 transition-colors">
-                Quick Book
-              </span>
-            </button>
-          </div>
-        </section>
+        {/* Removed Discovery Hub as per User Request */}
 
         {/* Simple Grid Header */}
         <div className="flex items-center justify-between mb-8">

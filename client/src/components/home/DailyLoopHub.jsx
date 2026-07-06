@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BoltIcon, XMarkIcon, CameraIcon, MicrophoneIcon } from '@heroicons/react/24/outline';
+import { BoltIcon, XMarkIcon, CameraIcon, MicrophoneIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -43,52 +43,84 @@ const DailyLoopHub = () => {
         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x px-1">
-
-        {/* Lightning Broadcast SOS Button */}
-        <motion.div 
-          whileTap={{ scale: 0.95 }}
+      <div className="flex overflow-x-auto gap-6 pb-2 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory">
+        {/* Quick-Cast */}
+        <button 
           onClick={() => setShowBroadcastModal(true)}
-          className="snap-start shrink-0 w-[180px] p-4 bg-gradient-to-br from-rose-500 to-rose-600 rounded-3xl relative overflow-hidden shadow-lg shadow-rose-500/30 flex flex-col justify-center items-center cursor-pointer group"
+          className="snap-start shrink-0 flex flex-col items-center text-center cursor-pointer focus:outline-none "
         >
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-white/20 blur-2xl rounded-full scale-0 group-hover:scale-150 transition-transform duration-700" />
-          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-2 border border-white/30 backdrop-blur-sm relative z-10 group-hover:animate-pulse">
-            <BoltIcon className="w-6 h-6 text-white" />
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-rose-50 to-rose-100/50 border border-rose-100 flex items-center justify-center shadow-[0_4px_12px_rgba(244,63,94,0.08)] md:shadow-[0_8px_24px_rgba(244,63,94,0.1)] group-hover:scale-105 md:group-hover:scale-110 active:scale-95 transition-all duration-300">
+            <BoltIcon className="w-7 h-7 md:w-9 md:h-9 text-rose-500" />
           </div>
-          <h3 className="text-white text-sm font-black tracking-wide relative z-10">QUICK-CAST</h3>
-          <p className="text-rose-100 text-[9px] font-bold uppercase tracking-widest relative z-10 mt-1">Broadcast Need</p>
-        </motion.div>
+          <span className="text-[10px] md:text-xs font-black text-gray-900 uppercase tracking-widest mt-2 px-1 leading-tight group-hover:text-rose-600 transition-colors">
+            Quick-Cast
+          </span>
+        </button>
 
-        {/* LoopOut Vision Scanner Button */}
-        <motion.div 
-          whileTap={{ scale: 0.95 }}
+        {/* Vision Scan */}
+        <button 
           onClick={() => setShowVisionModal(true)}
-          className="snap-start shrink-0 w-[180px] p-4 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-3xl relative overflow-hidden shadow-lg shadow-indigo-500/30 flex flex-col justify-center items-center cursor-pointer group"
+          className="snap-start shrink-0 flex flex-col items-center text-center cursor-pointer focus:outline-none "
         >
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-white/20 blur-2xl rounded-full scale-0 group-hover:scale-150 transition-transform duration-700" />
-          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-2 border border-white/30 backdrop-blur-sm relative z-10 group-hover:animate-pulse">
-            <CameraIcon className="w-6 h-6 text-white" />
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-indigo-50 to-indigo-100/50 border border-indigo-100 flex items-center justify-center shadow-[0_4px_12px_rgba(99,102,241,0.08)] md:shadow-[0_8px_24px_rgba(99,102,241,0.1)] group-hover:scale-105 md:group-hover:scale-110 active:scale-95 transition-all duration-300">
+            <CameraIcon className="w-7 h-7 md:w-9 md:h-9 text-indigo-500" />
           </div>
-          <h3 className="text-white text-sm font-black tracking-wide relative z-10">VISION SCAN</h3>
-          <p className="text-indigo-100 text-[9px] font-bold uppercase tracking-widest relative z-10 mt-1">AI Problem Solver</p>
-        </motion.div>
+          <span className="text-[10px] md:text-xs font-black text-gray-900 uppercase tracking-widest mt-2 px-1 leading-tight group-hover:text-indigo-600 transition-colors">
+            Vision Scan
+          </span>
+        </button>
 
-        {/* LoopOut Whisper Voice Assistant Button */}
-        <motion.div 
-          whileTap={{ scale: 0.95 }}
+        {/* Whisper AI */}
+        <button 
           onClick={() => setShowWhisperModal(true)}
-          className="snap-start shrink-0 w-[180px] p-4 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-3xl relative overflow-hidden shadow-lg shadow-cyan-500/30 flex flex-col justify-center items-center cursor-pointer group"
+          className="snap-start shrink-0 flex flex-col items-center text-center cursor-pointer focus:outline-none"
         >
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10 mix-blend-overlay" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-white/20 blur-2xl rounded-full scale-0 group-hover:scale-150 transition-transform duration-700" />
-          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-2 border border-white/30 backdrop-blur-sm relative z-10 group-hover:animate-pulse">
-            <MicrophoneIcon className="w-6 h-6 text-white" />
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-cyan-50 to-cyan-100/50 border border-cyan-100 flex items-center justify-center shadow-[0_4px_12px_rgba(6,182,212,0.08)] md:shadow-[0_8px_24px_rgba(6,182,212,0.1)] group-hover:scale-105 md:group-hover:scale-110 active:scale-95 transition-all duration-300">
+            <MicrophoneIcon className="w-7 h-7 md:w-9 md:h-9 text-cyan-500" />
           </div>
-          <h3 className="text-white text-sm font-black tracking-wide relative z-10">WHISPER AI</h3>
-          <p className="text-cyan-100 text-[9px] font-bold uppercase tracking-widest relative z-10 mt-1">Voice Concierge</p>
-        </motion.div>
+          <span className="text-[10px] md:text-xs font-black text-gray-900 uppercase tracking-widest mt-2 px-1 leading-tight group-hover:text-cyan-600 transition-colors">
+            Whisper AI
+          </span>
+        </button>
+
+        {/* Matchmaker */}
+        <button 
+          onClick={() => navigate('/matchmaker')}
+          className="snap-start shrink-0 flex flex-col items-center text-center cursor-pointer focus:outline-none"
+        >
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-orange-50 to-orange-100/50 border border-orange-100 flex items-center justify-center shadow-[0_4px_12px_rgba(249,115,22,0.08)] md:shadow-[0_8px_24px_rgba(249,115,22,0.1)] group-hover:scale-105 md:group-hover:scale-110 active:scale-95 transition-all duration-300">
+            <span className="text-3xl md:text-4xl leading-none">🔥</span>
+          </div>
+          <span className="text-[10px] md:text-xs font-black text-gray-900 uppercase tracking-widest mt-2 px-1 leading-tight group-hover:text-orange-500 transition-colors">
+            Matchmaker
+          </span>
+        </button>
+
+        {/* Live Radar */}
+        <button 
+          onClick={() => navigate('/radar')}
+          className="snap-start shrink-0 flex flex-col items-center text-center cursor-pointer focus:outline-none "
+        >
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-100 flex items-center justify-center shadow-[0_4px_12px_rgba(16,185,129,0.08)] md:shadow-[0_8px_24px_rgba(16,185,129,0.1)] group-hover:scale-105 md:group-hover:scale-110 active:scale-95 transition-all duration-300">
+            <MapPinIcon className="w-7 h-7 md:w-9 md:h-9 text-emerald-500" />
+          </div>
+          <span className="text-[10px] md:text-xs font-black text-gray-900 uppercase tracking-widest mt-2 px-1 leading-tight group-hover:text-emerald-600 transition-colors">
+            Live Radar
+          </span>
+        </button>
+
+        {/* Quick Book */}
+        <button 
+          onClick={() => navigate('/quick-book')}
+          className="snap-start shrink-0 flex flex-col items-center text-center cursor-pointer focus:outline-none "
+        >
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-100 flex items-center justify-center shadow-[0_4px_12px_rgba(245,158,11,0.08)] md:shadow-[0_8px_24px_rgba(245,158,11,0.1)] group-hover:scale-105 md:group-hover:scale-110 active:scale-95 transition-all duration-300">
+            <span className="text-3xl md:text-4xl leading-none">⚡</span>
+          </div>
+          <span className="text-[10px] md:text-xs font-black text-gray-900 uppercase tracking-widest mt-2 px-1 leading-tight group-hover:text-amber-500 transition-colors">
+            Quick Book
+          </span>
+        </button>
       </div>
 
       {/* Broadcast Modal */}
