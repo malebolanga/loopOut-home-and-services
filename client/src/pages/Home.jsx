@@ -1186,62 +1186,50 @@ const MobileAppHomepage = ({
 
 
 
-        {/* Discovery Protocols Hub - Horizontal Slider (Mobile) */}
-        <section className="mb-12 mt-6">
-          <div className="flex items-center gap-2 mb-4 px-1">
-            <Sparkles className="w-4 h-4 text-rose-500" />
-            <span className="text-gray-900 text-[10px] font-black tracking-[0.3em] uppercase">Discovery Hub</span>
+        {/* Discovery Protocols Hub - Icons Only (Mobile) */}
+        <section className="mb-10 mt-6 px-1">
+          <div className="flex items-center gap-2 mb-5">
+            <Sparkles className="w-4 h-4 text-rose-500 animate-pulse" />
+            <span className="text-gray-950 text-[11px] font-black tracking-[0.25em] uppercase">Discovery Hub</span>
           </div>
-          <div className="flex overflow-x-auto gap-3.5 pb-4 -mx-4 px-4 scrollbar-hide snap-x">
-            {/* Matchmaker Card */}
+          <div className="grid grid-cols-3 gap-3">
+            {/* Matchmaker */}
             <button 
               onClick={() => navigate('/matchmaker')}
-              className="flex-shrink-0 w-48 snap-start p-4 rounded-[1.5rem] bg-gradient-to-br from-rose-950/40 via-gray-950 to-rose-950/20 border border-rose-500/30 text-left flex flex-col justify-between h-28 hover:border-rose-500/60 transition-all relative overflow-hidden shadow-lg group"
+              className="flex flex-col items-center text-center cursor-pointer focus:outline-none"
             >
-              <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10 flex justify-between items-start w-full">
-                <span className="text-[8px] font-black tracking-widest text-rose-450 uppercase flex items-center gap-1">
-                  <div className="w-1 h-1 bg-rose-500 rounded-full animate-pulse" />
-                  Matchmaker
-                </span>
-                <span className="text-lg">🔥</span>
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-rose-50 to-rose-100/50 border border-rose-100 flex items-center justify-center shadow-[0_4px_12px_rgba(244,63,94,0.08)] group-hover:scale-105 active:scale-95 transition-all duration-300">
+                <span className="text-3xl filter drop-shadow-[0_4px_6px_rgba(244,63,94,0.2)] animate-pulse">🔥</span>
               </div>
-              <div className="relative z-10 mt-1">
-                <span className="text-white font-black text-xs block">Neural Matchmaker</span>
-                <span className="text-gray-400 text-[8px] font-bold block mt-0.5 leading-snug">Swipe and match your wishlist.</span>
-              </div>
+              <span className="text-[10px] font-extrabold text-gray-900 uppercase tracking-widest mt-2 px-1 leading-tight group-hover:text-rose-600 transition-colors">
+                Matchmaker
+              </span>
             </button>
             
-            {/* Radar Card */}
+            {/* Radar */}
             <button 
               onClick={() => navigate('/radar')}
-              className="flex-shrink-0 w-48 snap-start p-4 rounded-[1.5rem] bg-gradient-to-br from-emerald-950/40 via-gray-950 to-emerald-950/20 border border-emerald-500/30 text-left flex flex-col justify-between h-28 hover:border-emerald-500/60 transition-all relative overflow-hidden shadow-lg group"
+              className="flex flex-col items-center text-center  cursor-pointer focus:outline-none"
             >
-              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10 flex justify-between items-start w-full">
-                <span className="text-[8px] font-black tracking-widest text-emerald-450 uppercase">Live Radar</span>
-                <span className="text-lg">🛰️</span>
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-100 flex items-center justify-center shadow-[0_4px_12px_rgba(16,185,129,0.08)] group-hover:scale-105 active:scale-95 transition-all duration-300">
+                <span className="text-3xl filter drop-shadow-[0_4px_6px_rgba(16,185,129,0.25)]">🛰️</span>
               </div>
-              <div className="relative z-10 mt-1">
-                <span className="text-white font-black text-xs block">Live Radar</span>
-                <span className="text-gray-400 text-[8px] font-bold block mt-0.5 leading-snug">Explore helpers on the map.</span>
-              </div>
+              <span className="text-[10px] font-extrabold text-gray-900 uppercase tracking-widest mt-2 px-1 leading-tight group-hover:text-emerald-600 transition-colors">
+                Live Radar
+              </span>
             </button>
 
-            {/* Quick Book Card */}
+            {/* Quick Book */}
             <button 
               onClick={() => navigate('/quick-book')}
-              className="flex-shrink-0 w-48 snap-start p-4 rounded-[1.5rem] bg-gradient-to-br from-amber-950/40 via-gray-950 to-amber-950/20 border border-amber-500/30 text-left flex flex-col justify-between h-28 hover:border-amber-500/60 transition-all relative overflow-hidden shadow-lg group"
+              className="flex flex-col items-center text-center  cursor-pointer focus:outline-none"
             >
-              <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10 flex justify-between items-start w-full">
-                <span className="text-[8px] font-black tracking-widest text-amber-450 uppercase">Quick Book</span>
-                <span className="text-lg">⚡</span>
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-100 flex items-center justify-center shadow-[0_4px_12px_rgba(245,158,11,0.08)] group-hover:scale-105 active:scale-95 transition-all duration-300">
+                <span className="text-3xl filter drop-shadow-[0_4px_6px_rgba(245,158,11,0.25)]">⚡</span>
               </div>
-              <div className="relative z-10 mt-1">
-                <span className="text-white font-black text-xs block">Quick Book</span>
-                <span className="text-gray-400 text-[8px] font-bold block mt-0.5 leading-snug">Deploy helper pros instantly.</span>
-              </div>
+              <span className="text-[10px] font-extrabold text-gray-900 uppercase tracking-widest mt-2 px-1 leading-tight group-hover:text-amber-600 transition-colors">
+                Quick Book
+              </span>
             </button>
           </div>
         </section>
@@ -1545,53 +1533,50 @@ const DesktopHomepage = ({
           </div>
         )}
 
-        {/* Discovery Protocols Hub (Desktop) - Bento Box Redesign */}
-        <section className="mb-12">
-          <div className="flex items-center gap-2 mb-6">
-            <Sparkles className="w-5 h-5 text-rose-500" />
+        {/* Discovery Protocols Hub (Desktop) - Icons Only Redesign */}
+        <section className="mb-12 max-w-4xl mx-auto">
+          <div className="flex items-center gap-2 mb-6 justify-center">
+            <Sparkles className="w-5 h-5 text-rose-500 animate-pulse" />
             <h2 className="text-sm font-black text-gray-900 uppercase tracking-[0.2em]">Discovery Hub</h2>
           </div>
-          <div className="grid grid-cols-4 gap-6">
+          <div className="flex justify-center items-center gap-12 sm:gap-20">
+            {/* Matchmaker */}
             <button 
               onClick={() => navigate('/matchmaker')}
-              className="col-span-2  p-8 rounded-[2.5rem] bg-gradient-to-br from-rose-950/30 via-slate-950 to-rose-950/10 border border-rose-500/20 text-left flex items-center justify-between gap-6 hover:shadow-[0_20px_50px_rgba(244,63,94,0.2)] hover:border-rose-500/50 transition-all duration-300 relative overflow-hidden h-48 group"
+              className="flex flex-col items-center text-center group cursor-pointer focus:outline-none"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-rose-500/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10">
-                <span className="text-xs font-black tracking-widest text-rose-450 uppercase block mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
-                  Neural Matchmaker
-                </span>
-                <span className="text-white font-black text-3xl tracking-tight leading-none mb-2 block">Swipe your match.</span>
-                <span className="text-gray-400 text-sm font-medium">Instantly build your custom wishlist vault.</span>
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-rose-50 to-rose-100/50 border border-rose-100 flex items-center justify-center shadow-[0_8px_24px_rgba(244,63,94,0.1)] group-hover:scale-110 active:scale-95 transition-all duration-300">
+                <span className="text-5xl filter drop-shadow-[0_8px_12px_rgba(244,63,94,0.2)] animate-pulse">🔥</span>
               </div>
-              <div className="relative z-10 w-24 h-24 shrink-0 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/30 shadow-[0_0_25px_rgba(244,63,94,0.3)]">
-                <span className="text-5xl">🔥</span>
-              </div>
+              <span className="text-xs font-black text-gray-900 uppercase tracking-widest mt-3 group-hover:text-rose-600 transition-colors">
+                Matchmaker
+              </span>
             </button>
             
+            {/* Radar */}
             <button 
               onClick={() => navigate('/radar')}
-              className="col-span-1  p-6 rounded-[2.5rem] bg-gradient-to-br from-emerald-950/30 via-slate-950 to-emerald-950/10 border border-emerald-500/20 text-left flex flex-col justify-between h-48 hover:shadow-[0_20px_40px_rgba(16,185,129,0.15)] hover:border-emerald-500/50 transition-all duration-300 relative overflow-hidden group"
+              className="flex flex-col items-center text-center group cursor-pointer focus:outline-none"
             >
-              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10 flex justify-between items-start">
-                <span className="text-[10px] font-black tracking-widest text-emerald-450 uppercase">Live Radar</span>
-                <span className="text-3xl">🛰️</span>
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-100 flex items-center justify-center shadow-[0_8px_24px_rgba(16,185,129,0.1)] group-hover:scale-110 active:scale-95 transition-all duration-300">
+                <span className="text-5xl filter drop-shadow-[0_8px_12px_rgba(16,185,129,0.25)]">🛰️</span>
               </div>
-              <span className="relative z-10 text-white text-lg font-bold leading-tight">Explore the map geographically.</span>
+              <span className="text-xs font-black text-gray-900 uppercase tracking-widest mt-3 group-hover:text-emerald-600 transition-colors">
+                Live Radar
+              </span>
             </button>
 
+            {/* Quick Book */}
             <button 
               onClick={() => navigate('/quick-book')}
-              className="col-span-1 p-6 rounded-[2.5rem] bg-gradient-to-br from-amber-950/30 via-slate-950 to-amber-950/10 border border-amber-500/20 text-left flex flex-col justify-between h-48 hover:shadow-[0_20px_40px_rgba(245,158,11,0.15)] hover:border-amber-500/50 transition-all duration-300 relative overflow-hidden group"
+              className="flex flex-col items-center text-center group cursor-pointer focus:outline-none"
             >
-              <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10 flex justify-between items-start">
-                <span className="text-[10px] font-black tracking-widest text-amber-450 uppercase">Quick Book</span>
-                <span className="text-3xl">⚡</span>
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-100 flex items-center justify-center shadow-[0_8px_24px_rgba(245,158,11,0.1)] group-hover:scale-110 active:scale-95 transition-all duration-300">
+                <span className="text-5xl filter drop-shadow-[0_8px_12px_rgba(245,158,11,0.25)]">⚡</span>
               </div>
-              <span className="relative z-10 text-white text-lg font-bold leading-tight">Deploy the nearest pro instantly.</span>
+              <span className="text-xs font-black text-gray-900 uppercase tracking-widest mt-3 group-hover:text-amber-600 transition-colors">
+                Quick Book
+              </span>
             </button>
           </div>
         </section>

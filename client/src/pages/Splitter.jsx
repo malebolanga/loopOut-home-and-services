@@ -47,10 +47,13 @@ export default function Splitter() {
   const TOURISM_LEVY_PCT = 0.02; // 2%
 
   // Calculations
-  const subtotal = selectedBooking ? selectedBooking.regularPrice : parseFloat(itemPrice) || 0;
-  const serviceFee = subtotal * SERVICE_FEE_PCT;
-  const tourismLevy = subtotal * TOURISM_LEVY_PCT;
-  const grandTotal = subtotal + serviceFee + tourismLevy;
+  // Use whichever price field the booking object contains
+  const subtotal = selectedBooking
+    ? Number(selectedBooking.totalPrice ?? selectedBooking.regularPrice ?? selectedBooking.price ?? selectedBooking.amount ?? 0)
+    : parseFloat(itemPrice) || 0;
+  const serviceFee = Number((subtotal * SERVICE_FEE_PCT).toFixed(2) || 0);
+  const tourismLevy = Number((subtotal * TOURISM_LEVY_PCT).toFixed(2) || 0);
+  const grandTotal = Number((subtotal + serviceFee + tourismLevy).toFixed(2) || 0);
 
   // Fetch bookings on mount if user is logged in
   useEffect(() => {
@@ -256,7 +259,7 @@ export default function Splitter() {
                           Status: <span className="uppercase font-black text-emerald-400">{b.status}</span>
                         </span>
                       </div>
-                      <span className="text-xs font-black text-emerald-400">R{b.regularPrice}</span>
+                      <span className="text-xs font-black text-emerald-400">R{(b.totalPrice ?? b.regularPrice ?? b.price ?? b.amount ?? 0)}</span>
                     </button>
                   ))}
                 </div>
