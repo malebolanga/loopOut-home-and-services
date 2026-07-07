@@ -509,44 +509,34 @@ const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
   return (
     <div
       onClick={onClick}
-      className="cursor-pointer flex flex-col bg-gray-950 w-full rounded-[2rem] overflow-hidden shadow-2xl relative group border border-white/10 hover:border-rose-500/50 transition-all"
+      className="cursor-pointer flex flex-col bg-white w-full rounded-[2rem] overflow-hidden shadow-lg relative group border border-gray-200/80 hover:border-rose-500/50 transition-all"
     >
-      <div className="relative aspect-[4/5] overflow-hidden">
+      <div className="relative aspect-[4/3] overflow-hidden">
         <img loading="lazy" src={item.imageUrls?.[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.name} />
         
-        {/* Dark Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/50 to-transparent" />
-        
-        {/* Live Signal Badge */}
-        <div className="absolute top-4 left-4 bg-gray-950/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-rose-500/30 z-20 flex items-center gap-2 shadow-[0_0_15px_rgba(244,63,94,0.3)]">
-          <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-ping" />
-          <span className="text-[9px] font-black text-rose-400 uppercase tracking-widest">Live Signal</span>
-        </div>
+       
         
         {/* Type Badge */}
-        <div className="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-2 py-1 rounded-md border border-white/20 z-20">
+        <div className="absolute top-3 right-3  backdrop-blur-md px-2.5 py-1 rounded-md border border-white/20 z-20">
           <span className="text-[8px] font-black text-white uppercase tracking-widest">{type}</span>
         </div>
+      </div>
 
-        {/* Content at bottom */}
-        <div className="absolute bottom-0 inset-x-0 p-5 flex flex-col justify-end z-20">
-          <div className="flex justify-between items-start gap-2 mb-1">
-            <h3 className="font-black text-white text-lg truncate">
-              {item.address || "South Africa"}
-            </h3>
-            <div className="flex items-center gap-1 shrink-0 bg-white/10 px-2 py-0.5 rounded-md backdrop-blur-md">
-              <StarIconSolid className="w-3 h-3 text-amber-400" />
-              <span className="text-[11px] font-black text-white">
-                {(item.rating || 0).toFixed(1)}
-              </span>
-            </div>
-          </div>
-          <p className="text-[12px] text-gray-400 font-medium truncate mb-2">{item.name}</p>
-          <div className="flex items-baseline gap-1 mt-1 bg-white/5 w-fit px-3 py-1.5 rounded-xl border border-white/10">
-            <span className="text-lg font-black text-white">{formatPrice()}</span>
-            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{getPriceSuffix()}</span>
+      {/* Content Info below image */}
+      <div className="p-4 flex flex-col justify-end bg-white">
+        <div className="flex justify-between items-start gap-2 mb-1">
+          <h3 className="font-bold text-gray-950 text-sm truncate">
+            {item.address || "South Africa"}
+          </h3>
+          <div className="flex items-center gap-1 shrink-0 bg-gray-100 px-2 py-0.5 rounded-md">
+            <StarIconSolid className="w-3 h-3 text-amber-500" />
+            <span className="text-[10px] font-black text-gray-700">
+              {(item.rating || 0).toFixed(1)}
+            </span>
           </div>
         </div>
+        <p className="text-[11px] text-gray-500 font-medium truncate mb-2">{item.name}</p>
+       
       </div>
     </div>
   );
@@ -577,38 +567,37 @@ const EliteCard = ({ item, onClick, type = 'property', reducedSize = false }) =>
   return (
     <div
       onClick={() => onClick(item._id ? `/${type}/${item._id}` : '#')}
-      className={`cursor-pointer flex flex-col bg-gray-950 w-full rounded-[2rem] overflow-hidden shadow-2xl relative group border border-white/5 hover:border-rose-500/50 transition-all ${reducedSize ? 'aspect-[4/5]' : 'aspect-square md:aspect-[4/5]'}`}
+      className="cursor-pointer flex flex-col bg-white w-full rounded-[2rem] overflow-hidden shadow-lg relative group border border-gray-200/80 hover:border-rose-500/50 transition-all"
     >
-      <img loading="lazy" src={item.imageUrls?.[0]} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out opacity-80 group-hover:opacity-100" alt={item.name} />
-      
-      {/* Immersive Dark Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
-      
-      {/* Top Badges */}
-      <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-20">
-        <div className="bg-white/10 backdrop-blur-md px-2 py-1 rounded-md border border-white/20">
-          <span className="text-[8px] font-black text-white uppercase tracking-widest">{type}</span>
+      <div className="relative aspect-[4/3] overflow-hidden bg-gray-50">
+        <img loading="lazy" src={item.imageUrls?.[0]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" alt={item.name} />
+        
+        {/* Top Badges */}
+        <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-20">
+          <div className="bg-gray-900/80 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10">
+            <span className="text-[8px] font-black text-white uppercase tracking-widest">{type}</span>
+          </div>
+          <button className="p-2 bg-white/80 backdrop-blur-md rounded-full border border-gray-200 hover:bg-rose-500 hover:border-rose-500 transition-colors group/heart shadow-sm">
+            <HeartIcon className="w-4 h-4 text-gray-700 group-hover:text-white" />
+          </button>
         </div>
-        <button className="p-2 bg-gray-950/40 backdrop-blur-md rounded-full border border-white/10 hover:bg-rose-500 hover:border-rose-500 transition-colors">
-          <HeartIcon className="w-4 h-4 text-white" />
-        </button>
       </div>
 
-      {/* Content Info */}
-      <div className="absolute bottom-0 inset-x-0 p-5 z-20 flex flex-col justify-end">
+      {/* Content Info below image */}
+      <div className="p-5 flex flex-col justify-end bg-white border-t border-gray-50">
         <div className="flex justify-between items-end gap-2 mb-1">
-          <h3 className="font-black text-white text-lg leading-tight line-clamp-1">
+          <h3 className="font-black text-gray-950 text-base leading-tight line-clamp-1">
             {item.address || "South Africa"}
           </h3>
-          <div className="flex items-center gap-1 shrink-0 bg-white/10 px-2 py-1 rounded-lg backdrop-blur-md">
-            <StarIconSolid className="w-3 h-3 text-amber-400" />
-            <span className="text-[11px] font-black text-white">{(item.rating || 0).toFixed(1)}</span>
+          <div className="flex items-center gap-1 shrink-0 bg-gray-100 px-2 py-0.5 rounded-md">
+            <StarIconSolid className="w-3 h-3 text-amber-500" />
+            <span className="text-[11px] font-black text-gray-700">{(item.rating || 0).toFixed(1)}</span>
           </div>
         </div>
-        <p className="text-xs text-gray-400 font-medium line-clamp-1 mb-2">{item.name}</p>
+        <p className="text-xs text-gray-500 font-medium line-clamp-1 mb-2">{item.name}</p>
         
-        <div className="flex items-baseline gap-1 mt-1">
-          <span className="text-xl font-black text-white">{formatPrice()}</span>
+        <div className="flex items-baseline gap-1 mt-1 bg-rose-50/50 w-fit px-3 py-1 rounded-lg border border-rose-100/30">
+          <span className="text-base font-black text-rose-600">{formatPrice()}</span>
           <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{getPriceSuffix()}</span>
         </div>
       </div>
@@ -1020,7 +1009,7 @@ const MobileAppHomepage = ({
 
   // Mobile View
   return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-32 relative overflow-x-hidden w-full">
+    <div className="min-h-screen bg-white pb-32 relative overflow-x-hidden w-full">
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -1235,7 +1224,7 @@ const MobileAppHomepage = ({
               <span className="text-[10px] font-black uppercase tracking-wider text-white">Live Data</span>
             </div>
           </div>
-          <div className="sticky top-0 z-40 bg-[#FDFDFD]/90 backdrop-blur-xl pt-2 flex overflow-x-auto gap-4 pb-4 mb-10 scrollbar-hide -mx-4 px-6 lg:mx-0 lg:px-0 border-b border-gray-100">
+          <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl pt-2 flex overflow-x-auto gap-4 pb-4 mb-10 scrollbar-hide -mx-4 px-6 lg:mx-0 lg:px-0 border-b border-gray-100">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -1476,48 +1465,66 @@ const DesktopHomepage = ({
 
         {/* Removed Discovery Hub as per User Request */}
 
-        {/* Simple Grid Header */}
+        {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-black uppercase tracking-tighter">
-            <span className="text-gray-950">Explore </span>
-            <span className="text-rose-500">{activeTab === 'Universe' ? 'Top Discoveries' : activeTab}</span>
-          </h1>
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-100 rounded-full">
+          <div>
+            <h1 className="text-3xl font-black uppercase tracking-tighter">
+              <span className="text-gray-950">Explore </span>
+              <span className="text-rose-500">{activeTab === 'Universe' ? 'Top Discoveries' : activeTab}</span>
+            </h1>
+            <p className="text-xs text-gray-400 font-medium mt-1 uppercase tracking-wider">Curated results &middot; Polokwane &amp; beyond</p>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-full">
             <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
             <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-              Live: {getFilteredItems().length} hits
+              Live &middot; {getFilteredItems().length} results
             </span>
           </div>
         </div>
 
         {/* Listings Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
-          {getFilteredItems().map((item, idx) => (
-            <motion.div
-              key={item._id || idx}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: idx * 0.03 }}
-            >
-              <EliteCard
-                item={item}
-                type={activeTab === 'Universe' ? (item.itemType || 'property') : activeTab === 'Helper' ? 'helper' : activeTab === 'Properties' ? 'property' : activeTab.slice(0, -1).toLowerCase()}
-                onClick={(path) => navigate(path)}
-              />
-            </motion.div>
-          ))}
+        {getFilteredItems().length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
+            {getFilteredItems().map((item, idx) => (
+              <motion.div
+                key={item._id || idx}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: idx * 0.035 }}
+              >
+                <AirbnbCard
+                  item={item}
+                  type={activeTab === 'Universe' ? (item.itemType || 'property') : activeTab === 'Helper' ? 'helper' : activeTab === 'Properties' ? 'property' : activeTab.slice(0, -1).toLowerCase()}
+                  onClick={(path) => navigate(path)}
+                />
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-32 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <Sparkles className="w-7 h-7 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-700 mb-1">Nothing here yet</h3>
+            <p className="text-sm text-gray-400 max-w-xs">Try switching categories or expanding your search.</p>
+            <button onClick={() => navigate('/search')} className="mt-6 px-6 py-3 bg-gray-950 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-rose-600 transition-colors shadow-md">Browse All</button>
+          </div>
+        )}
+
+        {/* Neural Picks */}
+        <div className="mt-20">
+          <NeuralPicksSection navigate={navigate} />
         </div>
 
         {/* Sell Items Section (Desktop) */}
         <SellItemsSection navigate={navigate} />
 
-
-        {/* Clean footer / end of feed */}
+        {/* Footer CTA */}
         <div className="mt-20 pt-10 border-t border-gray-100 text-center">
-          <p className="text-sm text-gray-500 font-medium">You've reached the end of the discoveries.</p>
-          <button 
+          <p className="text-sm text-gray-400 font-medium">You've reached the end of the feed.</p>
+          <button
             onClick={() => navigate('/search')}
-            className="mt-4 px-6 py-3 bg-gray-950 text-white rounded-xl text-xs font-semibold hover:bg-rose-600 transition-colors shadow-md"
+            className="mt-4 px-6 py-3 bg-gray-950 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-rose-600 transition-colors shadow-md"
           >
             Search All Listings
           </button>

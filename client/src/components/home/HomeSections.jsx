@@ -763,9 +763,9 @@ export const NeuralPicksSection = ({ navigate }) => {
             <HelperItem helper={helper} />
             {/* Neural Overlay Tag */}
             <div className="absolute top-4 left-4 z-20 pointer-events-none">
-              <div className="px-3 py-1 bg-gray-950/80 backdrop-blur-md border border-white/20 rounded-full flex items-center gap-2 shadow-2xl">
+              <div className="px-3 py-1 bg-white/90 backdrop-blur-md border border-rose-500/20 rounded-full flex items-center gap-2 shadow-md">
                 <Sparkles className="w-3 h-3 text-rose-500" />
-                <span className="text-[8px] font-black text-white uppercase tracking-widest">Neural Pick</span>
+                <span className="text-[8px] font-black text-rose-600 uppercase tracking-widest">Neural Pick</span>
               </div>
             </div>
           </motion.div>
@@ -847,41 +847,38 @@ export const SellItemsSection = ({ navigate }) => {
           <div
             key={item._id}
             onClick={() => navigate(`/sell-item/${item._id}`)}
-            className="flex-shrink-0 w-[180px] md:w-[220px] cursor-pointer snap-start"
+            className="flex-shrink-0 w-[180px] md:w-[220px] cursor-pointer snap-start flex flex-col"
           >
-            <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden bg-gray-950 border border-white/10 group-hover:border-rose-500/50 shadow-2xl transition-all">
+            <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden bg-gray-50 border border-gray-200 hover:border-rose-500/50 shadow-md transition-all">
               <ImageWithFallback
                 src={item.imageUrls?.[0]}
                 alt={item.title}
-                className="absolute inset-0 w-full h-full group-hover:scale-110 transition-transform duration-700 ease-out opacity-90 group-hover:opacity-100"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
               />
               
-              {/* Immersive Dark Gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
-              
-              <div className={`absolute top-4 left-4 bg-gray-950/80 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.1)] flex items-center gap-1.5 z-20`}>
+              <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2 py-1 rounded-full border border-gray-200 shadow-sm flex items-center gap-1.5 z-20">
                 <span className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${catColor} animate-pulse`} />
-                <span className="text-[8px] font-black text-white uppercase tracking-widest">
+                <span className="text-[8px] font-black text-gray-700 uppercase tracking-widest">
                   {CATEGORY_EMOJIS[item.category] || '🏷️'} {item.category}
                 </span>
               </div>
+            </div>
+            
+            {/* Content info below image */}
+            <div className="p-4 flex flex-col justify-end bg-white border-t border-gray-50 rounded-b-[2rem]">
+              <h3 className="font-bold text-[14px] text-gray-900 leading-tight line-clamp-1 mb-1 group-hover:text-rose-600 transition-colors">{item.title}</h3>
               
-              {/* Content info at bottom */}
-              <div className="absolute bottom-0 inset-x-0 p-5 z-20 flex flex-col justify-end">
-                <h3 className="font-black text-[15px] text-white leading-tight line-clamp-2 mb-2 group-hover:text-rose-400 transition-colors">{item.title}</h3>
-                
-                <div className="flex items-center gap-2 mb-3">
-                  {item.creator?.avatar && (
-                    <ImageWithFallback src={item.creator.avatar} alt={item.creator.username} type="avatar" className="w-5 h-5 rounded-full border border-white/20 shadow-sm" />
-                  )}
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider truncate">{item.creator?.username || 'Anonymous'}</p>
-                </div>
+              <div className="flex items-center gap-1.5 mb-2">
+                {item.creator?.avatar && (
+                  <ImageWithFallback src={item.creator.avatar} alt={item.creator.username} type="avatar" className="w-4 h-4 rounded-full border border-gray-200" />
+                )}
+                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider truncate">{item.creator?.username || 'Anonymous'}</p>
+              </div>
 
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-black text-white tracking-tight drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
-                    R {item.price?.toLocaleString() || item.price}
-                  </span>
-                </div>
+              <div className="flex items-baseline gap-1 mt-1 bg-rose-50/50 w-fit px-2 py-0.5 rounded-md">
+                <span className="text-[14px] font-black text-rose-600 tracking-tight">
+                  R {item.price?.toLocaleString() || item.price}
+                </span>
               </div>
             </div>
           </div>
