@@ -847,15 +847,15 @@ export const SellItemsSection = ({ navigate }) => {
           <div
             key={item._id}
             onClick={() => navigate(`/sell-item/${item._id}`)}
-            className="flex-shrink-0 w-[180px] md:w-[220px] cursor-pointer snap-start flex flex-col"
+            className="flex-shrink-0 w-[180px] md:w-[220px] cursor-pointer snap-start flex flex-col group"
           >
-            <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden bg-gray-50 border border-gray-200 hover:border-rose-500/50 shadow-md transition-all">
+            {/* Image */}
+            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gray-100">
               <ImageWithFallback
                 src={item.imageUrls?.[0]}
                 alt={item.title}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
               />
-              
               <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2 py-1 rounded-full border border-gray-200 shadow-sm flex items-center gap-1.5 z-20">
                 <span className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${catColor} animate-pulse`} />
                 <span className="text-[8px] font-black text-gray-700 uppercase tracking-widest">
@@ -863,23 +863,19 @@ export const SellItemsSection = ({ navigate }) => {
                 </span>
               </div>
             </div>
-            
-            {/* Content info below image */}
-            <div className="p-4 flex flex-col justify-end bg-white border-t border-gray-50 rounded-b-[2rem]">
-              <h3 className="font-bold text-[14px] text-gray-900 leading-tight line-clamp-1 mb-1 group-hover:text-rose-600 transition-colors">{item.title}</h3>
-              
-              <div className="flex items-center gap-1.5 mb-2">
-                {item.creator?.avatar && (
-                  <ImageWithFallback src={item.creator.avatar} alt={item.creator.username} type="avatar" className="w-4 h-4 rounded-full border border-gray-200" />
-                )}
-                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider truncate">{item.creator?.username || 'Anonymous'}</p>
-              </div>
 
-              <div className="flex items-baseline gap-1 mt-1 bg-rose-50/50 w-fit px-2 py-0.5 rounded-md">
-                <span className="text-[14px] font-black text-rose-600 tracking-tight">
-                  R {item.price?.toLocaleString() || item.price}
-                </span>
+            {/* Info — flat, borderless, Airbnb-style */}
+            <div className="flex flex-col mt-2">
+              <p className="font-semibold text-gray-900 text-[14px] truncate">{item.title}</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                {item.creator?.avatar && (
+                  <ImageWithFallback src={item.creator.avatar} alt={item.creator.username} type="avatar" className="w-3.5 h-3.5 rounded-full border border-gray-200" />
+                )}
+                <p className="text-[11px] text-gray-500 truncate">{item.creator?.username || 'Anonymous'}</p>
               </div>
+              <p className="font-semibold text-gray-900 text-[14px] mt-1">
+                R {item.price?.toLocaleString() || item.price}
+              </p>
             </div>
           </div>
         )})}

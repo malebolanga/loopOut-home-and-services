@@ -485,60 +485,15 @@ const EliteHelperCard = ({ helper, onClick }) => {
   );
 };
 
+// RecentlyAddedCard is now a thin wrapper around AirbnbCard for consistency
 const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
-  const formatPrice = () => {
-    const price = item.price || item.regularPrice;
-    if (type === 'property' && (item.type === 'sale' || item.type === 'land')) {
-      return `R${price?.toLocaleString()}`;
-    }
-    return `R${price}`;
-  };
-
-  const getPriceSuffix = () => {
-    if (type !== 'property') return '';
-    switch (item.type) {
-      case 'rent': return '/ month';
-      case 'over': return '/ night';
-      case 'sale': return '';
-      case 'office': return '/ hour';
-      case 'land': return '';
-      default: return item.type?.includes('rent') ? '/ month' : '';
-    }
-  };
-
   return (
-    <div
-      onClick={onClick}
-      className="cursor-pointer flex flex-col bg-white w-full rounded-[2rem] overflow-hidden shadow-lg relative group border border-gray-200/80 hover:border-rose-500/50 transition-all"
-    >
-      <div className="relative aspect-[4/3] overflow-hidden">
-        <img loading="lazy" src={item.imageUrls?.[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.name} />
-        
-       
-        
-        {/* Type Badge */}
-        <div className="absolute top-3 right-3  backdrop-blur-md px-2.5 py-1 rounded-md border border-white/20 z-20">
-          <span className="text-[8px] font-black text-white uppercase tracking-widest">{type}</span>
-        </div>
-      </div>
-
-      {/* Content Info below image */}
-      <div className="p-4 flex flex-col justify-end bg-white">
-        <div className="flex justify-between items-start gap-2 mb-1">
-          <h3 className="font-bold text-gray-950 text-sm truncate">
-            {item.address || "South Africa"}
-          </h3>
-          <div className="flex items-center gap-1 shrink-0 bg-gray-100 px-2 py-0.5 rounded-md">
-            <StarIconSolid className="w-3 h-3 text-amber-500" />
-            <span className="text-[10px] font-black text-gray-700">
-              {(item.rating || 0).toFixed(1)}
-            </span>
-          </div>
-        </div>
-        <p className="text-[11px] text-gray-500 font-medium truncate mb-2">{item.name}</p>
-       
-      </div>
-    </div>
+    <AirbnbCard
+      item={item}
+      type={type}
+      onClick={onClick ? () => onClick() : undefined}
+      reducedSize
+    />
   );
 };
 
@@ -637,12 +592,11 @@ const AirbnbDiscoverSection = ({ title, items, type, navigate, actionText, onAct
             transition={{ delay: idx * 0.1, duration: 0.8, ease: "easeOut" }}
             className="snap-start shrink-0 w-[160px] md:w-[200px]"
           >
-            <EliteCard
+            <AirbnbCard
               item={item}
               type={type}
-              onClick={(id) => navigate(id)}
-              hideDistance={true}
-              reducedSize={true}
+              onClick={(path) => navigate(path)}
+              reducedSize
             />
           </motion.div>
         ))}
@@ -1218,10 +1172,13 @@ const MobileAppHomepage = ({
         {/* MOBILE CONSOLIDATED FEED */}
         <section className="mt-10 mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-1xl font-black text-gray-950 tracking-tighter uppercase">Explore <br/><span className="text-rose-500">{activeTab}</span></h2>
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-950 rounded-full shadow-[0_0_15px_rgba(0,0,0,0.1)]">
+            <div>
+              <h2 className="text-xl font-black text-gray-950 tracking-tighter uppercase">Explore <br/><span className="text-rose-500">{activeTab}</span></h2>
+              <p className="text-[10px] text-gray-400 font-medium mt-0.5 uppercase tracking-wider">Curated results · Polokwane</p>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-full">
               <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-wider text-white">Live Data</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">Live · {getFilteredItems().length}</span>
             </div>
           </div>
           <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl pt-2 flex overflow-x-auto gap-4 pb-4 mb-10 scrollbar-hide -mx-4 px-6 lg:mx-0 lg:px-0 border-b border-gray-100">
@@ -1256,7 +1213,7 @@ const MobileAppHomepage = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
               >
-                <EliteCard
+                <AirbnbCard
                   item={item}
                   type={activeTab === 'Universe' ? (item.itemType || 'property') : activeTab === 'Helper' ? 'helper' : activeTab === 'Properties' ? 'property' : activeTab.slice(0, -1).toLowerCase()}
                   onClick={(path) => navigate(path)}
