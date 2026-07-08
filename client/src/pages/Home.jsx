@@ -522,7 +522,7 @@ const EliteCard = ({ item, onClick, type = 'property', reducedSize = false }) =>
   return (
     <div
       onClick={() => onClick(item._id ? `/${type}/${item._id}` : '#')}
-      className="cursor-pointer flex flex-col bg-white w-full rounded-[2rem] overflow-hidden shadow-lg relative group border border-gray-200/80 hover:border-rose-500/50 transition-all"
+      className="cursor-pointer flex flex-col bg-white w-full rounded-[2rem] overflow-hidden shadow-lg relative border border-gray-200/80 hover:border-rose-500/50 transition-all"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-50">
         <img loading="lazy" src={item.imageUrls?.[0]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" alt={item.name} />
@@ -1100,7 +1100,7 @@ const MobileAppHomepage = ({
                 <img loading="lazy"
                   src="/soweto_bg.png"
                   className="absolute inset-0 w-full h-full object-cover"
-                  alt="LoopOut Soweto Stay"
+                  alt="loopOut Soweto Stay"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
                 <div className="absolute inset-0 p-8 flex flex-col justify-end">
@@ -1365,7 +1365,7 @@ const DesktopHomepage = ({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`group flex items-center gap-3 px-5 py-3 rounded-full transition-all duration-300 cursor-pointer focus:outline-none border ${
+                  className={` flex items-center gap-3 px-5 py-3 rounded-full transition-all duration-300 cursor-pointer focus:outline-none border ${
                     isActive 
                       ? 'bg-white border-gray-900 shadow-md scale-105' 
                       : 'bg-white/50 border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50/50'

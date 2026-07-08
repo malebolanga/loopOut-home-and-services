@@ -828,7 +828,7 @@ export const SellItemsSection = ({ navigate }) => {
             <TagIcon className="w-4 h-4 text-rose-500" />
             <span className="text-rose-500 text-[10px] font-black tracking-[0.3em] uppercase">P2P Exchange</span>
           </div>
-          <h2 className="text-2xl font-black text-gray-950 tracking-tighter uppercase">Community <br/><span className="text-rose-500">Vault</span></h2>
+         
           <p className="text-gray-400 text-[11px] font-black uppercase tracking-[0.2em] mt-1">Preloved items from the network</p>
         </div>
         <button
@@ -847,7 +847,7 @@ export const SellItemsSection = ({ navigate }) => {
           <div
             key={item._id}
             onClick={() => navigate(`/sell-item/${item._id}`)}
-            className="flex-shrink-0 w-[180px] md:w-[220px] cursor-pointer snap-start flex flex-col group"
+            className="flex-shrink-0 w-[180px] md:w-[220px] cursor-pointer snap-start flex flex-col "
           >
             {/* Image */}
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gray-100">
