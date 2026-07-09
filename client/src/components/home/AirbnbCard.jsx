@@ -104,7 +104,7 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
   return (
     <div
       onClick={handleClick}
-      className="cursor-pointer flex flex-col bg-transparent w-full border-0 shadow-none rounded-none group"
+      className="cursor-pointer flex flex-col bg-transparent w-full border-0 shadow-none rounded-none "
     >
       {/* Image section */}
       <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 mb-2">

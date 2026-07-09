@@ -1051,7 +1051,7 @@ export const WeeklySpecialsSection = ({ navigate, isMobile = false }) => {
           <motion.div
             key={promo.id}
             whileHover={{ scale: 1.02 }}
-            className="relative h-64 rounded-[2.5rem] overflow-hidden  cursor-pointer shadow-xl group"
+            className="relative h-64 rounded-[2.5rem] overflow-hidden  cursor-pointer shadow-xl "
             onClick={() => navigate('/search?filter=special')}
           >
             <ImageWithFallback src={promo.image} alt={promo.title} className="absolute inset-0 w-full h-full group-hover:scale-110 transition-transform duration-[5s]" />

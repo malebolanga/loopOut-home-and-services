@@ -1344,7 +1344,7 @@ const DesktopHomepage = ({
     <div className="min-h-screen bg-white">
       <Helmet>
         <title>LoopOut | Premium Marketplace for Properties, Services, and Events</title>
-        <meta name="description" content="Discover verified helpers, book top services, and explore exclusive properties and events in your area with LoopOut." />
+        <meta name="description" content="Discover verified helpers, book top services, and explore exclusive properties and events in your area with loopOut." />
       </Helmet>
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
