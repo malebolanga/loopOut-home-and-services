@@ -333,6 +333,8 @@ export default function HelperPage() {
     ? helper.serviceList.map((s, index) => ({ 
         id: s.name, 
         name: s.name, 
+        type: s.type,
+        description: s.description,
         price: s.price,
         icon: <FaCheckCircle className="text-rose-500" /> 
       }))
@@ -2606,30 +2608,46 @@ export default function HelperPage() {
                       <div 
                         key={service.id} 
                         onClick={() => handleServiceSelection(service.id)}
-                        className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                        className={`flex items-start justify-between gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
                           isSelected 
                             ? 'border-rose-500 bg-rose-50 shadow-sm' 
                             : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-start gap-3 min-w-0">
                           <div className={`text-xl transition-colors ${isSelected ? 'text-rose-500' : 'text-gray-400'}`}>
                             {service.icon}
                           </div>
-                          <span className={`font-medium transition-colors ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>
-                            {service.name}
-                          </span>
-                        </div>
-                        {service.price && (
-                          <span className={`font-semibold ${isSelected ? 'text-rose-600' : 'text-gray-700'}`}>
-                            R{service.price}
-                          </span>
-                        )}
-                        {isSelected && (
-                          <div className="ml-2 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center">
-                            <CheckIcon className="text-white w-3 h-3" />
+                          <div className="min-w-0">
+                            {service.type && (
+                              <span className={`inline-block mb-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                isSelected ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-500'
+                              }`}>
+                                {service.type}
+                              </span>
+                            )}
+                            <p className={`font-medium transition-colors ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>
+                              {service.name}
+                            </p>
+                            {service.description && (
+                              <p className="mt-1 text-xs leading-relaxed text-gray-500 line-clamp-2">
+                                {service.description}
+                              </p>
+                            )}
                           </div>
-                        )}
+                        </div>
+                        <div className="flex flex-col items-end gap-2 shrink-0">
+                          {service.price && (
+                            <span className={`font-semibold ${isSelected ? 'text-rose-600' : 'text-gray-700'}`}>
+                              R{service.price}
+                            </span>
+                          )}
+                          {isSelected && (
+                            <div className="w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center">
+                              <CheckIcon className="text-white w-3 h-3" />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     );
                   })}

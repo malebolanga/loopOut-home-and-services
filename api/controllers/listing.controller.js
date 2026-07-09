@@ -42,6 +42,11 @@ export const createListing = async (req, res, next) => {
       share,    // Added missing fields
       breakfast,
       party,
+      instantConfirmation,
+      kidFriendly,
+      wheelchairAccessible,
+      parkingAvailable,
+      environmentallyFriendly,
     } = req.body;
 
     // Create a new listing with videoUrl
@@ -81,6 +86,11 @@ export const createListing = async (req, res, next) => {
       share,
       breakfast,
       party,
+      instantConfirmation,
+      kidFriendly,
+      wheelchairAccessible,
+      parkingAvailable,
+      environmentallyFriendly,
     });
 
     // Create notifications for users in the area

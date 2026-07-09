@@ -71,7 +71,7 @@ export default function UpdateHelper() {
   }, [helperId]);
 
   const handleChange = (e) => {
-    if (e.target.id === 'domestic' || e.target.id === 'errand' || e.target.id === 'tutor' || e.target.id === 'chef' || e.target.id === 'beauty' || e.target.id === 'tattoo') {
+    if (e.target.id === 'domestic' || e.target.id === 'errand' || e.target.id === 'tutor' || e.target.id === 'chef' || e.target.id === 'beauty' || e.target.id === 'tattoo' || e.target.id === 'barber' || e.target.id === 'photography' || e.target.id === 'baker' || e.target.id === 'sneaker' || e.target.id === 'washingmat' || e.target.id === 'animals') {
       setFormData({ ...formData, type: e.target.id });
       return;
     }
@@ -85,7 +85,7 @@ export default function UpdateHelper() {
   const handleAddService = () => {
     setFormData({
       ...formData,
-      serviceList: [...formData.serviceList, { name: '', price: '' }],
+      serviceList: [...formData.serviceList, { type: '', name: '', description: '', price: '' }],
     });
   };
 
@@ -383,7 +383,7 @@ export default function UpdateHelper() {
             <div className='flex flex-col gap-2'>
               <label className='font-semibold'>Type</label>
               <div className='flex gap-2 flex-wrap'>
-                {['domestic', 'errand', 'tutor', 'chef', 'beauty', 'tattoo'].map((type) => (
+                {['domestic', 'errand', 'tutor', 'chef', 'beauty', 'tattoo', 'barber', 'photography', 'baker', 'sneaker', 'washingmat', 'animals'].map((type) => (
                   <button
                     key={type}
                     type='button'
@@ -513,34 +513,50 @@ export default function UpdateHelper() {
             {formData.serviceList && formData.serviceList.length > 0 ? (
               <div className='flex flex-col gap-3 mt-2'>
                 {formData.serviceList.map((service, index) => (
-                  <div key={index} className='flex items-center gap-2 bg-white p-3 rounded-md shadow-sm border border-gray-100'>
-                    <input
-                      type='text'
-                      placeholder='Service Name (e.g. Wash & Iron)'
-                      className='border p-2 rounded-lg flex-1'
-                      value={service.name}
-                      onChange={(e) => handleServiceChange(index, 'name', e.target.value)}
-                      required
-                    />
-                    <div className='flex items-center gap-1'>
-                      <span className='text-gray-500'>R</span>
+                  <div key={index} className='flex flex-col gap-2 bg-white p-3 rounded-md shadow-sm border border-gray-100'>
+                    <div className='flex items-center gap-2'>
                       <input
-                        type='number'
-                        placeholder='Price'
-                        className='border p-2 rounded-lg w-24'
-                        value={service.price}
-                        onChange={(e) => handleServiceChange(index, 'price', e.target.value)}
-                        required
-                        min='0'
+                        type='text'
+                        placeholder='Category (e.g. Laundry, Grooming, Tutoring)'
+                        className='border p-2 rounded-lg w-44'
+                        value={service.type || ''}
+                        onChange={(e) => handleServiceChange(index, 'type', e.target.value)}
                       />
+                      <input
+                        type='text'
+                        placeholder='Service Name (e.g. Wash & Iron)'
+                        className='border p-2 rounded-lg flex-1'
+                        value={service.name}
+                        onChange={(e) => handleServiceChange(index, 'name', e.target.value)}
+                        required
+                      />
+                      <div className='flex items-center gap-1'>
+                        <span className='text-gray-500'>R</span>
+                        <input
+                          type='number'
+                          placeholder='Price'
+                          className='border p-2 rounded-lg w-24'
+                          value={service.price}
+                          onChange={(e) => handleServiceChange(index, 'price', e.target.value)}
+                          required
+                          min='0'
+                        />
+                      </div>
+                      <button
+                        type='button'
+                        onClick={() => handleRemoveService(index)}
+                        className='text-red-500 hover:text-red-700 p-2'
+                      >
+                        <FaTimes />
+                      </button>
                     </div>
-                    <button
-                      type='button'
-                      onClick={() => handleRemoveService(index)}
-                      className='text-red-500 hover:text-red-700 p-2'
-                    >
-                      <FaTimes />
-                    </button>
+                    <textarea
+                      placeholder='Description / details included in this service'
+                      className='border p-2 rounded-lg w-full'
+                      value={service.description || ''}
+                      onChange={(e) => handleServiceChange(index, 'description', e.target.value)}
+                      rows='2'
+                    />
                   </div>
                 ))}
               </div>

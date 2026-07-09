@@ -1046,7 +1046,7 @@ const ServicePage = () => {
         ...s,
         id: s.name,
         icon: <FaCheckCircle className="text-rose-500" />,
-        description: 'Professional service package',
+        description: s.description || 'Professional service package',
         duration: 'Custom'
       }))
     : getServiceOptions(service.type);
@@ -1332,6 +1332,11 @@ const ServicePage = () => {
                           {option.popular && (
                             <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs font-medium rounded">
                               Popular
+                            </span>
+                          )}
+                          {option.type && (
+                            <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-medium rounded">
+                              {option.type}
                             </span>
                           )}
                         </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
 import { app } from "../firebase";
@@ -503,6 +503,11 @@ export default function CreateListing() {
     // Performers & Services
     performers: [],
     serviceList: [],
+    instantConfirmation: false,
+    kidFriendly: false,
+    wheelchairAccessible: false,
+    parkingAvailable: false,
+    environmentallyFriendly: false,
 
     // Event specific
     date: "",
@@ -1421,6 +1426,12 @@ export default function CreateListing() {
           { id: "storage", label: "Storage", emoji: "📦", checked: listingForm.storage },
           { id: "share", label: "House Share", emoji: "👥", checked: listingForm.share },
           { id: "party", label: "No Parties", emoji: "🔇", checked: listingForm.party },
+        
+          { id: "instantConfirmation", label: "Instant confirmation", emoji: "⚡", checked: listingForm.instantConfirmation },
+          { id: "kidFriendly", label: "Kid-friendly", emoji: "U0001F476", checked: listingForm.kidFriendly },
+          { id: "wheelchairAccessible", label: "Wheelchair accessible", emoji: "♿", checked: listingForm.wheelchairAccessible },
+          { id: "parkingAvailable", label: "Parking available", emoji: "U0001F17F️", checked: listingForm.parkingAvailable },
+          { id: "environmentallyFriendly", label: "Environmentally friendly", emoji: "U0001F331", checked: listingForm.environmentallyFriendly },
         ];
       case 'experiences':
         if (selectedType === 'carwash') {
@@ -1436,6 +1447,11 @@ export default function CreateListing() {
         return [
           { id: "security", label: "Background Check", emoji: "✅", checked: listingForm.security },
           { id: "pets", label: "Pet Friendly", emoji: "🐾", checked: listingForm.pets },
+          { id: "instantConfirmation", label: "Instant confirmation", emoji: "⚡", checked: listingForm.instantConfirmation },
+          { id: "kidFriendly", label: "Kid-friendly", emoji: "U0001F476", checked: listingForm.kidFriendly },
+          { id: "wheelchairAccessible", label: "Wheelchair accessible", emoji: "♿", checked: listingForm.wheelchairAccessible },
+          { id: "parkingAvailable", label: "Parking available", emoji: "U0001F17F️", checked: listingForm.parkingAvailable },
+          { id: "environmentallyFriendly", label: "Environmentally friendly", emoji: "U0001F331", checked: listingForm.environmentallyFriendly },
         ];
       case 'online':
         if (selectedType === 'sneaker') {
@@ -1463,6 +1479,12 @@ export default function CreateListing() {
           { id: "parking", label: "Parking", emoji: "🅿️", checked: listingForm.parking },
           { id: "foodAvailable", label: "Food Available", emoji: "🍔", checked: listingForm.foodAvailable },
           { id: "familyFriendly", label: "Family Friendly", emoji: "👨‍👩‍👧‍👦", checked: listingForm.familyFriendly },
+        
+          { id: "instantConfirmation", label: "Instant confirmation", emoji: "⚡", checked: listingForm.instantConfirmation },
+          { id: "kidFriendly", label: "Kid-friendly", emoji: "U0001F476", checked: listingForm.kidFriendly },
+          { id: "wheelchairAccessible", label: "Wheelchair accessible", emoji: "♿", checked: listingForm.wheelchairAccessible },
+          { id: "parkingAvailable", label: "Parking available", emoji: "U0001F17F️", checked: listingForm.parkingAvailable },
+          { id: "environmentallyFriendly", label: "Environmentally friendly", emoji: "U0001F331", checked: listingForm.environmentallyFriendly },
         ];
       default:
         return [];
@@ -3224,3 +3246,5 @@ export default function CreateListing() {
     </div>
   );
 }
+
+

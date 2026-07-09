@@ -1173,7 +1173,7 @@ const MobileAppHomepage = ({
         <section className="mt-10 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-xl font-black text-gray-950 tracking-tighter uppercase">Explore <br/><span className="text-rose-500">{activeTab}</span></h2>
+              
               <p className="text-[10px] text-gray-400 font-medium mt-0.5 uppercase tracking-wider">Curated results · Polokwane</p>
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-full">

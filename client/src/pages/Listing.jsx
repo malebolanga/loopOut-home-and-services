@@ -73,6 +73,11 @@ const AMENITY_CONFIGS = {
   gym: { icon: FaDumbbell, label: "Gym", field: "gym" },
   fireplace: { icon: FaFire, label: "Indoor fireplace", field: "fireplace" },
   smoking: { icon: FaSmokingBan, label: "Smoking allowed", field: "smoking" },
+  instantConfirmation: { icon: FaBolt, label: "Instant confirmation", field: "instantConfirmation" },
+  kidFriendly: { icon: FaUsers, label: "Kid-friendly", field: "kidFriendly" },
+  wheelchairAccessible: { icon: FaUserFriends, label: "Wheelchair accessible", field: "wheelchairAccessible" },
+  parkingAvailable: { icon: FaParking, label: "Parking available", field: "parkingAvailable" },
+  environmentallyFriendly: { icon: FaTree, label: "Environmentally friendly", field: "environmentallyFriendly" },
 };
 
 const RATING_CATEGORIES = [
