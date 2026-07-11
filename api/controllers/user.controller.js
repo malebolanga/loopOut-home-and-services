@@ -539,7 +539,7 @@ export const getUserByPhone = async (req, res, next) => {
     }).select('username avatar phone _id');
 
     if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+        return res.status(200).json(null);
     }
 
     res.status(200).json(user);

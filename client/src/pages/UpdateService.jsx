@@ -15,6 +15,7 @@ export default function UpdateService() {
   const [loading, setLoading] = useState(false);
   const [imageUploadError, setImageUploadError] = useState(null);
   const [files, setFiles] = useState([]);
+  const [serviceImageUploading, setServiceImageUploading] = useState({});
   
   const [formData, setFormData] = useState({
     imageUrls: [],
@@ -81,7 +82,7 @@ export default function UpdateService() {
   const handleAddService = () => {
     setFormData({
       ...formData,
-      serviceList: [...formData.serviceList, { type: '', name: '', description: '', price: '' }],
+      serviceList: [...formData.serviceList, { type: '', name: '', description: '', price: '', image: '' }],
     });
   };
 
@@ -94,6 +95,21 @@ export default function UpdateService() {
     const newList = [...formData.serviceList];
     newList[index][field] = value;
     setFormData({ ...formData, serviceList: newList });
+  };
+
+  const handleServiceImageUpload = async (index, file) => {
+    if (!file) return;
+    try {
+      setServiceImageUploading(prev => ({ ...prev, [index]: true }));
+      const url = await storeImage(file);
+      const newList = [...formData.serviceList];
+      newList[index]['image'] = url;
+      setFormData({ ...formData, serviceList: newList });
+    } catch (err) {
+      console.error("Service image upload failed:", err);
+    } finally {
+      setServiceImageUploading(prev => ({ ...prev, [index]: false }));
+    }
   };
 
   const handleAddPerformer = () => {
@@ -499,6 +515,23 @@ export default function UpdateService() {
                       onChange={(e) => handleServiceChange(index, 'description', e.target.value)}
                       rows='2'
                     />
+                    <div className='flex items-center gap-4 mt-2'>
+                      <div className='flex-1 flex flex-col gap-1'>
+                        <span className='text-xs font-semibold text-gray-500'>Package Photo</span>
+                        <input
+                          type='file'
+                          accept='image/*'
+                          onChange={(e) => handleServiceImageUpload(index, e.target.files[0])}
+                          className='border p-1 rounded-lg text-sm w-full bg-gray-50'
+                        />
+                      </div>
+                      {serviceImageUploading[index] && (
+                        <span className='text-xs text-rose-500 font-bold animate-pulse'>Uploading...</span>
+                      )}
+                      {service.image && (
+                        <img src={service.image} alt="Service preview" className='w-16 h-16 object-cover rounded-lg border shadow-sm' />
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

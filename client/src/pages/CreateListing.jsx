@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
 import { app } from "../firebase";
@@ -400,6 +400,7 @@ export default function CreateListing() {
   const [loading, setLoading] = useState(false);
   const [performerUploading, setPerformerUploading] = useState(false);
   const [performerFile, setPerformerFile] = useState(null);
+  const [serviceUploading, setServiceUploading] = useState(false);
   const [postLimitReached, setPostLimitReached] = useState(false);
   const [paymentRequired, setPaymentRequired] = useState(false);
   const [newListingId, setNewListingId] = useState(null);
@@ -682,20 +683,25 @@ export default function CreateListing() {
           });
           if (res.ok) {
             const data = await res.json();
-            setFoundHost(data);
-            
-            // If found, also fetch mutual connections for current user with this found host
-            if (currentUser && data._id && currentUser._id !== data._id) {
-               const mutualRes = await fetch(`/api/user/mutual/${data._id}`, {
-                 headers: { 
-                   'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                 },
-                 credentials: 'include'
-               });
-               if (mutualRes.ok) {
-                 const mutualData = await mutualRes.json();
-                 setMutualConnections(mutualData);
-               }
+            if (data && data._id) {
+              setFoundHost(data);
+              
+              // If found, also fetch mutual connections for current user with this found host
+              if (currentUser && currentUser._id !== data._id) {
+                 const mutualRes = await fetch(`/api/user/mutual/${data._id}`, {
+                   headers: { 
+                     'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                   },
+                   credentials: 'include'
+                 });
+                 if (mutualRes.ok) {
+                   const mutualData = await mutualRes.json();
+                   setMutualConnections(mutualData);
+                 }
+              }
+            } else {
+              setFoundHost(null);
+              setMutualConnections([]);
             }
           } else {
             setFoundHost(null);
@@ -1159,6 +1165,28 @@ export default function CreateListing() {
     }
   };
 
+  const handleServiceImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setServiceUploading(true);
+      setError(null);
+      
+      const compressedFile = await compressImage(file);
+      const url = await storeImage(compressedFile);
+      
+      setListingForm(prev => ({
+        ...prev,
+        newServiceImage: url
+      }));
+      setServiceUploading(false);
+    } catch (err) {
+      setServiceUploading(false);
+      setError("Failed to upload service photo: " + err.message);
+    }
+  };
+
   const handleVideoUpload = async () => {
     try {
       if (!videoFile) {
@@ -1530,7 +1558,6 @@ export default function CreateListing() {
           { id: "moving", label: "Moving", emoji: "🚚", description: "Relocation services" },
           { id: "landscaping", label: "Landscaping", emoji: "🌿", description: "Garden & yard work" },
           { id: "catering", label: "Catering", emoji: "🍽️", description: "Food & catering" },
-          { id: "daycare", label: "Day Care", emoji: "👶", description: "Child care services" },
           { id: "schoolTransport", label: "Transport", emoji: "🚌", description: "School transport" },
           { id: "carwash", label: "Car Wash", emoji: "🚗💦", description: "Professional car cleaning" },
           { id: "other", label: "Other", emoji: "✨", description: "Other services" },
@@ -2454,15 +2481,50 @@ export default function CreateListing() {
                         onChange={(e) => setListingForm({...listingForm, newServicePrice: e.target.value})}
                       />
                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-bold text-gray-700">Description</label>
+                        <textarea
+                          placeholder="What is included in this service?"
+                          value={listingForm.newServiceDescription || ""}
+                          onChange={(e) => setListingForm({...listingForm, newServiceDescription: e.target.value})}
+                          className="w-full px-8 py-5 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white transition-all duration-700 hover:border-gray-100 font-medium shadow-sm outline-none resize-none"
+                          rows="3"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2 justify-center">
+                        <label className="text-sm font-bold text-gray-700">Service Photo</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleServiceImageChange}
+                          className="w-full px-8 py-5 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white transition-all duration-700 hover:border-gray-100 font-bold shadow-sm outline-none"
+                        />
+                        {serviceUploading && <span className="text-xs text-rose-500 font-black animate-pulse mt-1">Uploading...</span>}
+                        {listingForm.newServiceImage && (
+                          <div className="mt-2 flex items-center gap-3">
+                            <img src={listingForm.newServiceImage} alt="Service preview" className="w-16 h-16 object-cover rounded-xl shadow-md border" />
+                            <span className="text-xs text-gray-400 font-bold">Image loaded successfully</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     <button
                       type="button"
                       onClick={() => {
                         if (listingForm.newServiceName && listingForm.newServicePrice) {
                           setListingForm({
                             ...listingForm,
-                            serviceList: [...listingForm.serviceList, { name: listingForm.newServiceName, price: listingForm.newServicePrice }],
+                            serviceList: [...listingForm.serviceList, { 
+                              name: listingForm.newServiceName, 
+                              price: listingForm.newServicePrice,
+                              description: listingForm.newServiceDescription || "",
+                              image: listingForm.newServiceImage || "" 
+                            }],
                             newServiceName: "",
-                            newServicePrice: ""
+                            newServicePrice: "",
+                            newServiceDescription: "",
+                            newServiceImage: ""
                           });
                         }
                       }}
@@ -2477,9 +2539,17 @@ export default function CreateListing() {
                         <div className="space-y-3">
                           {listingForm.serviceList.map((service, index) => (
                             <div key={index} className="flex items-center justify-between p-6 bg-gray-50 rounded-[2rem] border-2 border-transparent hover:border-gray-100 transition-all">
-                              <div>
-                                <p className="font-bold text-gray-900">{service.name}</p>
-                                <p className="text-rose-500 font-black">R{service.price}</p>
+                              <div className="flex items-center gap-4">
+                                {service.image && (
+                                  <img src={service.image} alt={service.name} className="w-16 h-16 object-cover rounded-2xl border bg-white shadow-sm" />
+                                )}
+                                <div>
+                                  <p className="font-bold text-gray-900">{service.name}</p>
+                                  {service.description && (
+                                    <p className="text-xs text-gray-500 mt-1 max-w-xs md:max-w-md">{service.description}</p>
+                                  )}
+                                  <p className="text-rose-500 font-black mt-1">R{service.price}</p>
+                                </div>
                               </div>
                               <button
                                 type="button"
@@ -2792,11 +2862,21 @@ export default function CreateListing() {
 
                         <div className="bg-gray-50 rounded-xl p-6">
                           <h3 className="font-semibold text-lg text-gray-900 mb-4">Services</h3>
-                          <div className="space-y-2 text-sm">
+                          <div className="space-y-3 text-sm">
                             {listingForm.serviceList.map((s, i) => (
-                              <div key={i} className="flex justify-between py-1 border-b border-gray-100 last:border-0">
-                                <span className="text-gray-600">{s.name}</span>
-                                <span className="font-medium text-gray-900">R{s.price}</span>
+                              <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 gap-4">
+                                <div className="flex items-center gap-3">
+                                  {s.image && (
+                                    <img src={s.image} alt={s.name} className="w-10 h-10 object-cover rounded-lg border bg-white" />
+                                  )}
+                                  <div>
+                                    <span className="font-bold text-gray-900 block">{s.name}</span>
+                                    {s.description && (
+                                      <span className="text-xs text-gray-500 block max-w-xs">{s.description}</span>
+                                    )}
+                                  </div>
+                                </div>
+                                <span className="font-black text-rose-500">R{s.price}</span>
                               </div>
                             ))}
                             {listingForm.serviceList.length === 0 && <p className="text-gray-500">No services added</p>}

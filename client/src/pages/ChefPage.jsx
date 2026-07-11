@@ -2,6 +2,7 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
+import ServiceDetailsModal from '../components/ServiceDetailsModal';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
@@ -89,6 +90,7 @@ import HelperItem from '../components/HelperItem';
 import BookingHistory from '../components/BookingHistory';
 
 export default function ChefPage() {
+  const [selectedModalService, setSelectedModalService] = useState(null);
   const { currentUser } = useSelector((state) => state.user);
   const [helper, setHelper] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -318,7 +320,10 @@ export default function ChefPage() {
     ? helper.serviceList.map((s, index) => ({ 
         id: s.name, 
         name: s.name, 
+        type: s.type,
+        description: s.description,
         price: s.price,
+        image: s.image,
         icon: <FaCheckCircle className="text-rose-500" /> 
       }))
     : getServiceOptions(helper?.type);
@@ -2319,20 +2324,38 @@ export default function ChefPage() {
                     return (
                       <div 
                         key={service.id} 
-                        onClick={() => handleServiceSelection(service.id)}
-                        className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                        onClick={() => setSelectedModalService(service)}
+                        className={`flex items-start justify-between gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
                           isSelected 
                             ? 'border-rose-500 bg-rose-50 shadow-sm' 
                             : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`text-xl transition-colors ${isSelected ? 'text-rose-500' : 'text-gray-400'}`}>
-                            {service.icon}
+                        <div className="flex items-start gap-3 min-w-0">
+                          {service.image ? (
+                            <img src={service.image} alt={service.name} className="w-12 h-12 object-cover rounded-lg border bg-white shrink-0 mt-0.5" />
+                          ) : (
+                            <div className={`text-xl transition-colors ${isSelected ? 'text-rose-500' : 'text-gray-400'} shrink-0 mt-0.5`}>
+                              {service.icon}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            {service.type && (
+                              <span className={`inline-block mb-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                isSelected ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-500'
+                              }`}>
+                                {service.type}
+                              </span>
+                            )}
+                            <p className={`font-medium transition-colors ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>
+                              {service.name}
+                            </p>
+                            {service.description && (
+                              <p className="mt-1 text-xs leading-relaxed text-gray-500 line-clamp-2">
+                                {service.description}
+                              </p>
+                            )}
                           </div>
-                          <span className={`font-medium transition-colors ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>
-                            {service.name}
-                          </span>
                         </div>
                         {service.price && (
                           <span className={`font-semibold ${isSelected ? 'text-rose-600' : 'text-gray-700'}`}>

@@ -2,6 +2,7 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
+import ServiceDetailsModal from '../components/ServiceDetailsModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -93,6 +94,7 @@ import HelperItem from '../components/HelperItem';
 import BookingHistory from '../components/BookingHistory';
 
 export default function HelperPage() {
+  const [selectedModalService, setSelectedModalService] = useState(null);
   const { currentUser } = useSelector((state) => state.user);
   const [helper, setHelper] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -336,6 +338,7 @@ export default function HelperPage() {
         type: s.type,
         description: s.description,
         price: s.price,
+        image: s.image,
         icon: <FaCheckCircle className="text-rose-500" /> 
       }))
     : getServiceOptions(helper?.type);
@@ -2607,7 +2610,7 @@ export default function HelperPage() {
                     return (
                       <div 
                         key={service.id} 
-                        onClick={() => handleServiceSelection(service.id)}
+                        onClick={() => setSelectedModalService(service)}
                         className={`flex items-start justify-between gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
                           isSelected 
                             ? 'border-rose-500 bg-rose-50 shadow-sm' 
@@ -2615,9 +2618,13 @@ export default function HelperPage() {
                         }`}
                       >
                         <div className="flex items-start gap-3 min-w-0">
-                          <div className={`text-xl transition-colors ${isSelected ? 'text-rose-500' : 'text-gray-400'}`}>
-                            {service.icon}
-                          </div>
+                          {service.image ? (
+                            <img src={service.image} alt={service.name} className="w-12 h-12 object-cover rounded-lg border bg-white shrink-0 mt-0.5" />
+                          ) : (
+                            <div className={`text-xl transition-colors ${isSelected ? 'text-rose-500' : 'text-gray-400'} shrink-0 mt-0.5`}>
+                              {service.icon}
+                            </div>
+                          )}
                           <div className="min-w-0">
                             {service.type && (
                               <span className={`inline-block mb-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
@@ -3858,6 +3865,13 @@ export default function HelperPage() {
             </motion.div>
           </>
         )}
+      
+      <ServiceDetailsModal
+        service={selectedModalService}
+        isSelected={selectedModalService && bookingData.selectedServices.includes(selectedModalService.id)}
+        onClose={() => setSelectedModalService(null)}
+        onSelect={(id) => handleServiceSelection(id)}
+      />
       </AnimatePresence>
     </div>
   );

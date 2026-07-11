@@ -1323,25 +1323,32 @@ const ServicePage = () => {
                           ? 'border-rose-500 bg-rose-50 shadow-sm' 
                           : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                       }`}
-                      onClick={() => setSelectedService(option)}
+                      onClick={() => setSelectedModalService(option)}
                     >
                       <div className="flex-1 pr-4">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`${isSelected ? 'text-rose-500' : 'text-gray-400'}`}>{option.icon}</span>
-                          <h3 className={`font-semibold ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>{option.name}</h3>
-                          {option.popular && (
-                            <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs font-medium rounded">
-                              Popular
-                            </span>
+                        <div className="flex items-start gap-3 mb-1">
+                          {option.image && (
+                            <img src={option.image} alt={option.name} className="w-12 h-12 object-cover rounded-lg border bg-white shrink-0 mt-0.5" />
                           )}
-                          {option.type && (
-                            <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-medium rounded">
-                              {option.type}
-                            </span>
-                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className={`${isSelected ? 'text-rose-500' : 'text-gray-400'}`}>{option.icon}</span>
+                              <h3 className={`font-semibold ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>{option.name}</h3>
+                              {option.popular && (
+                                <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs font-medium rounded">
+                                  Popular
+                                </span>
+                              )}
+                              {option.type && (
+                                <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-medium rounded">
+                                  {option.type}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-gray-600 text-sm mt-1">{option.description}</p>
+                            <p className="text-gray-500 text-xs mt-0.5">{option.duration}</p>
+                          </div>
                         </div>
-                        <p className="text-gray-600 text-sm mb-2">{option.description}</p>
-                        <p className="text-gray-500 text-sm">{option.duration}</p>
                       </div>
                       <div className="text-right flex flex-col items-end">
                         <p className={`font-semibold ${isSelected ? 'text-rose-600' : 'text-gray-900'}`}>{option.price}</p>

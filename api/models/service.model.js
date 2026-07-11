@@ -172,9 +172,10 @@ const serviceSchema = new mongoose.Schema(
         type: { type: String },
         name: { type: String, required: true },
         description: { type: String },
-        price: { type: Number, required: true }
+        price: { type: Number, required: true },
+        image: { type: String }
       }
-    ],
+    ],
     bookingsCount: { type: Number, default: 0 },
     experience: {
       type: String, // e.g., "5 years", "Expert", "Junior"

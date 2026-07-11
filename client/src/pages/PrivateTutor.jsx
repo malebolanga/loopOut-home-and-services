@@ -86,9 +86,11 @@ import GoogleMapComponent from '../components/GoogleMapComponent';
 import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperItem from '../components/HelperItem';
+import ServiceDetailsModal from '../components/ServiceDetailsModal';
 import BookingHistory from '../components/BookingHistory';
 
 export default function PrivateTutor() {
+  const [selectedModalService, setSelectedModalService] = useState(null);
   const { currentUser } = useSelector((state) => state.user);
   const [helper, setHelper] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -318,7 +320,10 @@ export default function PrivateTutor() {
     ? helper.serviceList.map((s, index) => ({ 
         id: s.name, 
         name: s.name, 
+        type: s.type,
+        description: s.description,
         price: s.price,
+        image: s.image,
         icon: <FaCheckCircle className="text-rose-500" /> 
       }))
     : getServiceOptions(helper?.type);
@@ -2319,7 +2324,7 @@ export default function PrivateTutor() {
                     return (
                       <div 
                         key={service.id} 
-                        onClick={() => handleServiceSelection(service.id)}
+                        onClick={() => setSelectedModalService(service)}
                         className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${
                           isSelected 
                             ? 'border-rose-500 bg-rose-50 shadow-sm' 
