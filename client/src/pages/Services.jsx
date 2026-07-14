@@ -1006,10 +1006,33 @@ const ServicePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-rose-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading service...</p>
+      <div className="min-h-screen bg-white">
+        {/* Skeleton Hero */}
+        <div className="h-[420px] md:h-[520px] bg-gradient-to-br from-slate-100 to-slate-200 animate-pulse" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="lg:col-span-2 space-y-6">
+              <div className="space-y-3">
+                <div className="h-8 bg-slate-200 rounded-xl animate-pulse w-3/4" />
+                <div className="h-4 bg-slate-100 rounded-xl animate-pulse w-1/2" />
+              </div>
+              <div className="border-t border-slate-100 pt-6 space-y-3">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-slate-200 animate-pulse" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 bg-slate-200 rounded-xl animate-pulse w-1/3" />
+                    <div className="h-3 bg-slate-100 rounded-xl animate-pulse w-1/4" />
+                  </div>
+                </div>
+              </div>
+              {[1,2,3].map(i => (
+                <div key={i} className="h-24 bg-slate-100 rounded-2xl animate-pulse" />
+              ))}
+            </div>
+            <div>
+              <div className="h-80 bg-slate-100 rounded-3xl animate-pulse" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -1017,10 +1040,19 @@ const ServicePage = () => {
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-          <p className="text-red-700">{error}</p>
-          <button onClick={() => window.location.reload()} className="mt-2 text-red-600 underline">Try Again</button>
+      <div className="min-h-screen bg-gradient-to-br from-rose-50 to-white flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <div className="w-20 h-20 rounded-3xl bg-rose-100 flex items-center justify-center mx-auto mb-6">
+            <XMarkIcon className="w-10 h-10 text-rose-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h2>
+          <p className="text-gray-500 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-rose-200 active:scale-95"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -1028,11 +1060,20 @@ const ServicePage = () => {
 
   if (!service) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8 text-center">
-        <h2 className="text-2xl font-bold text-gray-800">Service not found</h2>
-        <button onClick={() => navigate('/service-home-page')} className="mt-4 px-6 py-2 bg-rose-500 text-white rounded-lg">
-          Browse Services
-        </button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <div className="w-20 h-20 rounded-3xl bg-slate-100 flex items-center justify-center mx-auto mb-6">
+            <InformationCircleIcon className="w-10 h-10 text-slate-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Service not found</h2>
+          <p className="text-gray-500 mb-6">This service may have been removed or doesn't exist.</p>
+          <button
+            onClick={() => navigate('/service-home-page')}
+            className="px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all active:scale-95"
+          >
+            Browse Services
+          </button>
+        </div>
       </div>
     );
   }
@@ -1056,14 +1097,18 @@ const ServicePage = () => {
   const serviceHighlights = currentServiceConfig?.highlights || [];
 
   return (
-    <div className="min-h-screen pb-20 lg:pb-0">
+    <div className="min-h-screen pb-20 lg:pb-0 bg-white">
       {/* Navigation Header - Transparent on top of image */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-50/90 backdrop-blur-md shadow-sm border-b border-slate-200/50' : 'bg-transparent'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-xl shadow-sm border-b border-slate-100' : 'bg-transparent'}`}>
         <div className="max-w-screen-xl mx-auto px-4 md:px-6">
           <div className="flex items-center justify-between h-16 md:h-20">
             <button
               onClick={() => navigate(-1)}
-              className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
+              className={`p-2.5 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 ${
+                isScrolled
+                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-900 shadow-sm'
+                  : 'bg-black/25 hover:bg-black/40 text-white backdrop-blur-md border border-white/20'
+              }`}
             >
               <ArrowLeftIcon className="w-5 h-5" />
             </button>
@@ -1071,16 +1116,24 @@ const ServicePage = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleShare}
-                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
+                className={`p-2.5 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 ${
+                  isScrolled
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-900 shadow-sm'
+                    : 'bg-black/25 hover:bg-black/40 text-white backdrop-blur-md border border-white/20'
+                }`}
               >
                 <FiShare2 className="text-lg" />
               </button>
               <button
                 onClick={toggleFavorite}
-                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 backdrop-blur-sm'}`}
+                className={`p-2.5 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 ${
+                  isScrolled
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-900 shadow-sm'
+                    : 'bg-black/25 hover:bg-black/40 backdrop-blur-md border border-white/20'
+                }`}
               >
                 {isFavorite ? (
-                  <HeartIconSolid className="w-6 h-6 text-rose-500" />
+                  <HeartIconSolid className="w-6 h-6 text-rose-500 drop-shadow-sm" />
                 ) : (
                   <HeartIcon className={`w-6 h-6 ${isScrolled ? 'text-slate-900' : 'text-white'}`} />
                 )}
@@ -1091,53 +1144,57 @@ const ServicePage = () => {
       </nav>
 
       {/* Hero Image Gallery - Full Width */}
-      <div className="relative h-[400px] md:h-[500px] lg:h-[600px] bg-slate-900 overflow-hidden">
+      <div className="relative h-[420px] md:h-[520px] lg:h-[620px] bg-slate-900 overflow-hidden">
         {service.imageUrls?.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-full w-full">
+          <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-1.5 h-full w-full">
+            {/* Main image */}
             <div
-              className="md:col-span-2 md:row-span-2 relative cursor-pointer overflow-hidden"
+              className="md:col-span-2 md:row-span-2 relative cursor-pointer overflow-hidden group"
               onClick={() => openFullScreenGallery(0)}
             >
               <img
                 src={service.imageUrls[0]}
                 alt={service.name}
-                className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 onError={(e) => {
                   e.target.src = 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800';
                 }}
               />
-              <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              {/* Bottom gradient for mobile readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:hidden" />
             </div>
 
             {service.imageUrls.slice(1, 5).map((url, index) => (
               <div
                 key={index}
-                className="relative cursor-pointer hidden md:block overflow-hidden"
+                className="relative cursor-pointer hidden md:block overflow-hidden group"
                 onClick={() => openFullScreenGallery(index + 1)}
               >
                 <img
                   src={url}
                   alt={`${service.name} ${index + 2}`}
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-110"
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                   onError={(e) => {
                     e.target.src = 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800';
                   }}
                 />
-                <div className="absolute inset-0 bg-black/0 hover:bg-black/15 transition-colors duration-500" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
               </div>
             ))}
 
             <button
               onClick={() => openFullScreenGallery(0)}
-              className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50"
+              className="absolute bottom-5 right-5 bg-white/95 backdrop-blur-xl px-5 py-2.5 rounded-2xl font-semibold text-sm text-slate-900 flex items-center gap-2.5 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-2xl border border-slate-200/60"
             >
-              <PhotoIcon className="w-5 h-5" />
+              <Squares2X2Icon className="w-4 h-4" />
               <span>Show all {service.imageUrls.length} photos</span>
             </button>
           </div>
         ) : (
-          <div className="w-full h-full bg-slate-200 flex items-center justify-center">
-            <PhotoIcon className="w-16 h-16 text-slate-400" />
+          <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center gap-3">
+            <PhotoIcon className="w-16 h-16 text-slate-300" />
+            <p className="text-slate-400 text-sm font-medium">No photos available</p>
           </div>
         )}
       </div>
@@ -1148,28 +1205,40 @@ const ServicePage = () => {
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-8">
             {/* Header Info */}
-            <div className="border-b border-gray-200 pb-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
-                <h1 className="text-3xl font-semibold text-gray-900">{service.name}</h1>
-                {operatingStatus.isClosed && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 border border-rose-200 rounded-xl animate-pulse">
-                    <ClockIcon className="w-4 h-4 text-rose-500" />
-                    <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest">The business is closed</span>
+            <div className="border-b border-gray-100 pb-6">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-3">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight leading-tight">{service.name}</h1>
+                {operatingStatus.isClosed ? (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 border border-rose-100 rounded-2xl shrink-0">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                    </span>
+                    <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Closed now</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-2xl shrink-0">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Open now</span>
                   </div>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-4 text-gray-600">
-                <span className="flex items-center gap-1">
-                  <StarIconSolid className="w-4 h-4 text-[#FFB400]" />
+              <div className="flex flex-wrap items-center gap-3 text-gray-500 text-sm">
+                <span className="flex items-center gap-1.5">
+                  <StarIconSolid className="w-4 h-4 text-amber-400" />
                   <span className="font-semibold text-gray-900">{service.rating || '4.5'}</span>
-                  <span>({service.reviewCount || '0'} reviews)</span>
+                  <span className="text-gray-400">({service.reviewCount || commentCount || '0'} reviews)</span>
                 </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <MapPinIcon className="w-4 h-4" />
-                  {service.address || 'Available in your area'}
+                <span className="text-gray-300">·</span>
+                <span className="flex items-center gap-1.5">
+                  <MapPinIcon className="w-3.5 h-3.5" />
+                  <span className="truncate max-w-[200px]">{service.address || 'Available in your area'}</span>
                 </span>
-                <span className="font-medium flex items-center gap-1">
+                <span className="text-gray-300">·</span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-semibold">
                   {currentServiceConfig?.icon}
                   {getProfessionalTitle(service.type)}
                 </span>
@@ -1313,11 +1382,11 @@ const ServicePage = () => {
             <div className="py-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Service options</h2>
               <div className="space-y-4">
-                {displayedServices.map((option) => {
+                {displayedServices.map((option, idx) => {
                   const isSelected = selectedService?.id === option.id;
                   return (
                     <div
-                      key={option.id}
+                      key={`${option.id}-${idx}`}
                       className={`flex items-start justify-between p-4 border-2 rounded-xl transition-all cursor-pointer ${
                         isSelected 
                           ? 'border-rose-500 bg-rose-50 shadow-sm' 
@@ -1351,7 +1420,9 @@ const ServicePage = () => {
                         </div>
                       </div>
                       <div className="text-right flex flex-col items-end">
-                        <p className={`font-semibold ${isSelected ? 'text-rose-600' : 'text-gray-900'}`}>{option.price}</p>
+                        <p className={`font-semibold ${isSelected ? 'text-rose-600' : 'text-gray-900'}`}>
+                          {typeof option.price === 'number' || (option.price && !String(option.price).startsWith('R')) ? `R${option.price}` : option.price}
+                        </p>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1598,7 +1669,7 @@ const ServicePage = () => {
 
               <button
                 onClick={() => setShowCommentsPanel(true)}
-                className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
+                className="px-6 py-3 border-2 border-slate-900 text-slate-900 font-semibold rounded-xl hover:bg-slate-900 hover:text-white transition-all duration-300 w-full sm:w-auto active:scale-95"
               >
                 Show all {commentCount} reviews
               </button>
@@ -1607,34 +1678,60 @@ const ServicePage = () => {
 
           {/* Right Column - Booking Card */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 space-y-6">
-              <div className="border border-slate-200/50 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 lg:p-8 bg-transparent">
-                <div className="flex items-end justify-between mb-6">
-                  <div>
-                    <span className="text-2xl font-semibold text-gray-900">R{service.regularPrice}</span>
-                    <span className="text-gray-600"> / service</span>
+            <div className="sticky top-24 space-y-4">
+              {/* Premium Booking Card */}
+              <div className="rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.10)] border border-slate-100 overflow-hidden bg-white">
+                {/* Card Header */}
+                <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white">
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-1">Starting from</p>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-3xl font-bold">R{service.regularPrice}</span>
+                        <span className="text-slate-400 text-sm">/ service</span>
+                      </div>
+                    </div>
+                    {service.discountPrice && (
+                      <span className="text-slate-500 line-through text-sm">R{service.discountPrice}</span>
+                    )}
                   </div>
-                  {service.discountPrice && (
-                    <span className="text-gray-400 line-through">R{service.discountPrice}</span>
-                  )}
+                  {/* Rating pill */}
+                  <div className="flex items-center gap-2 mt-4">
+                    <div className="flex items-center gap-1 px-2.5 py-1 bg-white/10 rounded-full border border-white/10">
+                      <StarIconSolid className="w-3.5 h-3.5 text-amber-400" />
+                      <span className="text-white text-xs font-bold">{service.rating || '4.5'}</span>
+                    </div>
+                    <span className="text-slate-400 text-xs">·</span>
+                    <span className="text-slate-300 text-xs">{commentCount} reviews</span>
+                    {!operatingStatus.isClosed && (
+                      <>
+                        <span className="text-slate-400 text-xs">·</span>
+                        <span className="flex items-center gap-1 text-emerald-400 text-xs font-semibold">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          Open now
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
 
-                <div className="border border-gray-300 rounded-lg overflow-hidden mb-4">
-                  <div className="grid grid-cols-2 border-b border-gray-300">
-                    <div className="p-3 border-r border-gray-300">
-                      <label className="block text-xs font-bold text-gray-900 uppercase">Date</label>
+                {/* Date/Time Inputs */}
+                <div className="p-5 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100 hover:border-slate-300 transition-colors">
+                      <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Date</label>
                       <input
                         type="date"
-                        className="w-full text-sm text-gray-600 outline-none"
+                        className="w-full text-sm text-slate-800 font-semibold outline-none bg-transparent"
                         min={new Date().toISOString().split('T')[0]}
                         onChange={(e) => setBookingData(prev => ({ ...prev, date: e.target.value }))}
                       />
                     </div>
-                    <div className="p-3">
-                      <label className="block text-xs font-bold text-gray-900 uppercase">Time</label>
+                    <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100 hover:border-slate-300 transition-colors">
+                      <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Time</label>
                       <input
                         type="time"
-                        className="w-full text-sm text-gray-600 outline-none"
+                        className="w-full text-sm text-slate-800 font-semibold outline-none bg-transparent"
                         onChange={(e) => setBookingData(prev => ({ ...prev, time: e.target.value }))}
                       />
                     </div>
@@ -1642,13 +1739,13 @@ const ServicePage = () => {
 
                   {/* Performer Selection in Card */}
                   {service.performers && service.performers.length > 0 && (
-                    <div className="p-3 border-b border-gray-300">
-                      <label className="block text-xs font-bold text-gray-900 uppercase">Select Performer</label>
+                    <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
+                      <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Performer</label>
                       <select
                         name="selectedPerformer"
                         value={bookingData.selectedPerformer}
                         onChange={handleBookingChange}
-                        className="w-full text-sm text-gray-600 outline-none bg-transparent"
+                        className="w-full text-sm text-slate-800 font-semibold outline-none bg-transparent"
                       >
                         <option value="">Any available member</option>
                         {service.performers.map((p, i) => (
@@ -1657,10 +1754,11 @@ const ServicePage = () => {
                       </select>
                     </div>
                   )}
-                  <div className="p-3">
-                    <label className="block text-xs font-bold text-gray-900 uppercase">Guests</label>
+
+                  <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
+                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Guests</label>
                     <select
-                      className="w-full text-sm text-gray-600 outline-none bg-transparent"
+                      className="w-full text-sm text-slate-800 font-semibold outline-none bg-transparent"
                       onChange={(e) => setBookingData(prev => ({ ...prev, numberOfGuests: e.target.value }))}
                     >
                       <option value="1">1 guest</option>
@@ -1669,72 +1767,76 @@ const ServicePage = () => {
                       <option value="4">4+ guests</option>
                     </select>
                   </div>
-                </div>
 
-                                <button
-                  onClick={() => openBookingModal()}
-                  className="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-lg transition-colors mb-2"
-                >
-                  Book via WhatsApp
-                </button>
+                  {/* CTA Buttons */}
+                  <button
+                    onClick={() => openBookingModal()}
+                    className="w-full py-3.5 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
+                  >
+                    <FaWhatsapp className="text-lg" />
+                    Book via WhatsApp
+                  </button>
 
-                <button
-                  onClick={handleEscrowCheckout}
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors mb-4 flex items-center justify-center gap-2"
-                >
-                  <FaShieldAlt className="w-4 h-4" />
-                  Pay with Secure Escrow
-                </button>
+                  <button
+                    onClick={handleEscrowCheckout}
+                    className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0"
+                  >
+                    <FaShieldAlt />
+                    Secure Escrow Payment
+                  </button>
 
-                <div className="text-center text-gray-500 text-sm mb-4">You won't be charged yet</div>
+                  <p className="text-center text-slate-400 text-xs font-medium">You won't be charged yet</p>
 
-                <div className="space-y-3 text-sm">
-                  {selectedService ? (
-                    <div className="flex justify-between">
-                      <span className="underline">{selectedService.name}</span>
-                      <span>{selectedService.price}</span>
+                  {/* Price Breakdown */}
+                  <div className="border-t border-slate-100 pt-4 space-y-2.5 text-sm">
+                    {selectedService ? (
+                      <div className="flex justify-between text-slate-700">
+                        <span className="underline underline-offset-2">{selectedService.name}</span>
+                        <span className="font-semibold">{selectedService.price}</span>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between text-slate-700">
+                        <span className="underline underline-offset-2">Base price</span>
+                        <span className="font-semibold">R{service.regularPrice}</span>
+                      </div>
+                    )}
+                    {service.travelFee > 0 && (
+                      <div className="flex justify-between text-slate-700">
+                        <span className="underline underline-offset-2">Travel fee</span>
+                        <span className="font-semibold">R{service.travelFee}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-slate-500">
+                      <span className="underline underline-offset-2">Service fee (10%)</span>
+                      <span>R{Math.round((totalPrice - (parseInt(service.travelFee) || 0)) / 1.1 * 0.1)}</span>
                     </div>
-                  ) : (
-                    <div className="flex justify-between">
-                      <span className="underline">Base Price</span>
-                      <span>R{service.regularPrice}</span>
+                    <div className="border-t border-slate-100 pt-3 flex justify-between font-bold text-slate-900">
+                      <span>Total estimate</span>
+                      <span>R{totalPrice}</span>
                     </div>
-                  )}
-                  {service.travelFee > 0 && (
-                    <div className="flex justify-between">
-                      <span className="underline">Travel fee</span>
-                      <span>R{service.travelFee}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="underline">Service fee (10%)</span>
-                    <span>R{Math.round((totalPrice - (parseInt(service.travelFee) || 0)) / 1.1 * 0.1)}</span>
-                  </div>
-                  <div className="border-t border-gray-200 pt-3 flex justify-between font-semibold text-gray-900">
-                    <span>Total Est.</span>
-                    <span>R{totalPrice}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="border border-slate-200/50 rounded-3xl p-6 bg-transparent">
-                <h3 className="font-semibold text-gray-900 mb-4">Contact provider</h3>
-                <div className="space-y-3">
+              {/* Contact Provider Card */}
+              <div className="rounded-3xl border border-slate-100 p-5 bg-white shadow-sm">
+                <h3 className="font-bold text-slate-900 mb-4 text-sm uppercase tracking-wide">Contact provider directly</h3>
+                <div className="space-y-2.5">
                   {whatsappNumber && (
                     <a
                       href={`https://wa.me/${whatsappNumber}?text=Hi ${service.name}, I'm interested in your services.`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full py-3 border border-gray-900 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                      className="flex items-center justify-center gap-2.5 w-full py-3 bg-[#25D366] hover:bg-[#22C55E] text-white font-semibold rounded-2xl transition-all hover:shadow-md active:scale-95"
                     >
-                      <FaWhatsapp className="text-green-600 text-xl" />
+                      <FaWhatsapp className="text-xl" />
                       Message on WhatsApp
                     </a>
                   )}
                   {service.contact && (
                     <a
                       href={`tel:${service.contact}`}
-                      className="flex items-center justify-center gap-2 w-full py-3 border border-gray-300 rounded-lg font-medium hover:border-gray-900 transition-colors"
+                      className="flex items-center justify-center gap-2.5 w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded-2xl transition-all active:scale-95"
                     >
                       <FaPhone />
                       Call {service.contact}
@@ -1743,9 +1845,12 @@ const ServicePage = () => {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 text-sm text-gray-600">
-                <FaShieldAlt className="text-2xl flex-shrink-0" />
-                <p>To help protect your payment, always communicate and pay through our platform.</p>
+              {/* Trust badge */}
+              <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="p-2 bg-white rounded-xl shadow-sm">
+                  <FaShieldAlt className="text-slate-500 text-lg" />
+                </div>
+                <p className="text-xs text-slate-500 leading-snug">To protect your payment, always communicate and pay through our platform.</p>
               </div>
             </div>
           </div>
@@ -1754,55 +1859,7 @@ const ServicePage = () => {
         {/* Recent Bookers Section */}
         <BookingHistory bookingSummary={bookingSummary} providerName={service?.name} providerType={service?.type} />
 
-        {/* Operating Schedule */}
-        <div className="mt-12 pt-8 border-t border-gray-200">
-          <OperatingSchedule 
-            operatingHours={service.operatingHours} 
-            isClosedToday={operatingStatus.isClosed}
-            reason={operatingStatus.reason}
-          />
-        </div>
 
-        {/* Check-in & Check-out timings (Visitor Time) */}
-        <div className="mt-12 pt-8 border-t border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2.5 bg-rose-50 rounded-2xl">
-              <ClockIcon className="w-6 h-6 text-rose-500" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 tracking-tight">Check-in & Check-out</h3>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Standard timing windows</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex items-center justify-between p-5 rounded-3xl border border-gray-150/60 bg-white shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-xl font-bold">
-                  🛬
-                </div>
-                <div>
-                  <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Check-in Time</span>
-                  <span className="text-base lg:text-lg font-black text-gray-900 mt-0.5 block">{service.checkInTime || '14:00'}</span>
-                </div>
-              </div>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wide bg-gray-50 px-3 py-1 rounded-full">After</span>
-            </div>
-
-            <div className="flex items-center justify-between p-5 rounded-3xl border border-gray-150/60 bg-white shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-xl font-bold">
-                  🛫
-                </div>
-                <div>
-                  <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Check-out Time</span>
-                  <span className="text-base lg:text-lg font-black text-gray-900 mt-0.5 block">{service.checkOutTime || '11:00'}</span>
-                </div>
-              </div>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wide bg-gray-50 px-3 py-1 rounded-full">Before</span>
-            </div>
-          </div>
-        </div>
 
         {/* Location Map */}
         <div className="mt-12 pt-8 border-t border-gray-200">
@@ -1816,23 +1873,36 @@ const ServicePage = () => {
         </div>
 
         {/* Things to Know */}
-
-        <div className="mt-12 pt-12 border-t border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Things to know</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-3">Guest requirements</h3>
-              <p className="text-gray-600 text-sm">Ages 13 and up can attend. Message for specific requirements.</p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-3">Cancellation policy</h3>
-              <p className="text-gray-600 text-sm">Cancel at least 24 hours before for a full refund.</p>
-              <button className="text-gray-900 font-semibold underline mt-2 text-sm">Learn more</button>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-3">What to bring</h3>
-              <p className="text-gray-600 text-sm">Any specific materials or access requirements will be discussed upon booking.</p>
-            </div>
+        <div className="mt-12 pt-12 border-t border-gray-100">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">Things to know</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: <UserGroupIcon className="w-5 h-5" />,
+                title: 'Guest requirements',
+                body: 'Ages 13 and up can attend. Message for specific requirements.'
+              },
+              {
+                icon: <ArrowPathIcon className="w-5 h-5" />,
+                title: 'Cancellation policy',
+                body: 'Cancel at least 24 hours before your booking for a full refund.'
+              },
+              {
+                icon: <CheckCircleIcon className="w-5 h-5" />,
+                title: 'What to prepare',
+                body: 'Any specific materials or access requirements will be discussed upon booking.'
+              }
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-4 p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors">
+                <div className="p-2.5 rounded-xl bg-white shadow-sm text-slate-600 shrink-0">
+                  {item.icon}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1.5">{item.title}</h3>
+                  <p className="text-gray-500 text-sm leading-relaxed">{item.body}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -1874,12 +1944,15 @@ const ServicePage = () => {
 
       {/* Booking Modal - Full Page Form */}
       {showBookingModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-slate-50 border-b border-gray-100 p-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Complete your booking</h2>
-              <button onClick={closeBookingModal} className="p-2 hover:bg-gray-100 rounded-full">
-                <XMarkIcon className="w-5 h-5" />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-2xl w-full max-h-[92vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-slate-100 px-6 py-4 flex items-center justify-between z-10">
+              <div>
+                <h2 className="text-lg font-black text-slate-900">Complete your booking</h2>
+                <p className="text-xs text-slate-400 font-medium">{service.name}</p>
+              </div>
+              <button onClick={closeBookingModal} className="p-2 hover:bg-slate-100 rounded-full transition-colors group">
+                <XMarkIcon className="w-5 h-5 text-slate-500 group-hover:rotate-90 transition-transform" />
               </button>
             </div>
 
@@ -2341,24 +2414,24 @@ const ServicePage = () => {
       )}
 
       {/* Mobile Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:hidden z-40">
-        <div className="flex items-center justify-between">
-          <div className="flex-1 mr-4">
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-gray-900">R{totalPrice}</span>
-              <span className="text-gray-600 text-xs font-bold">Total</span>
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-slate-100 px-4 py-3 lg:hidden z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+        <div className="flex items-center justify-between gap-4 max-w-xl mx-auto">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xl font-black text-slate-900">R{totalPrice}</span>
+              <span className="text-slate-400 text-xs font-semibold">est. total</span>
             </div>
             {selectedService ? (
-              <div className="text-rose-600 text-xs font-semibold truncate max-w-[150px]">
-                {selectedService.name} ({selectedService.price})
-              </div>
+              <p className="text-rose-600 text-xs font-semibold truncate">
+                {selectedService.name}
+              </p>
             ) : (
-              <div className="text-gray-500 text-xs font-bold">Per service</div>
+              <p className="text-slate-400 text-xs font-medium">Select a service option</p>
             )}
           </div>
           <button
             onClick={() => openBookingModal(selectedService)}
-            className="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-colors"
+            className="px-7 py-3.5 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-rose-200 active:scale-95 shrink-0"
           >
             Book Now
           </button>

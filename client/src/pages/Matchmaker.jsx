@@ -3,6 +3,8 @@ import { motion, useMotionValue, useTransform, AnimatePresence } from 'framer-mo
 import { useNavigate } from 'react-router-dom';
 import { HeartIcon, XMarkIcon, SparklesIcon, ChevronLeftIcon, CalendarDaysIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
+import { useSelector } from 'react-redux';
+import { toggleWishlistBackend } from '../services/wishlist.service';
 
 const Card = ({ card, removeCard, active }) => {
   const x = useMotionValue(0);
@@ -58,6 +60,7 @@ export default function Matchmaker() {
   const [selectedType, setSelectedType] = useState('All');
   
   const navigate = useNavigate();
+  const { currentUser } = useSelector((state) => state.user);
 
   const fetchDatabaseCards = async () => {
     setLoading(true);
@@ -83,7 +86,8 @@ export default function Matchmaker() {
           image: item.imageUrls?.[0] || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800',
           rating: item.rating || 5.0,
           link: `/listing/${item._id}`,
-          contact: item.contact || ''
+          contact: item.contact || '',
+          originalItem: item
         })),
         ...services.map(item => ({
           id: item._id,
@@ -95,7 +99,8 @@ export default function Matchmaker() {
           image: item.imageUrls?.[0] || 'https://images.pexels.com/photos/4099467/pexels-photo-4099467.jpeg?auto=compress&cs=tinysrgb&w=800',
           rating: item.rating || 5.0,
           link: `/service/${item._id}`,
-          contact: item.contact || ''
+          contact: item.contact || '',
+          originalItem: item
         })),
         ...helpers.map(item => ({
           id: item._id,
@@ -107,7 +112,8 @@ export default function Matchmaker() {
           image: item.imageUrls?.[0] || 'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800',
           rating: item.rating || 5.0,
           link: `/helper/${item._id}`,
-          contact: item.contact || ''
+          contact: item.contact || '',
+          originalItem: item
         }))
       ];
 
@@ -123,7 +129,73 @@ export default function Matchmaker() {
     fetchDatabaseCards();
   }, []);
 
-  const removeCard = (id, direction) => {
+  const addToWishlist = async (card) => {
+    const typeMap = {
+      'Property': 'listing',
+      'Service': 'service',
+      'Helper': 'helper'
+    };
+    const type = typeMap[card.mainType] || 'listing';
+    
+    let isAlreadyFavorite = false;
+    try {
+      const wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+      isAlreadyFavorite = wishlist.some(item => (item?._id || item?.itemId) === card.id);
+    } catch (e) {
+      console.error(e);
+    }
+
+    if (isAlreadyFavorite) {
+      return;
+    }
+
+    const wishlistItem = {
+      ...(card.originalItem || {}),
+      _id: card.id,
+      name: card.originalItem?.name || card.title,
+      type: type,
+      addedAt: Date.now()
+    };
+
+    const addToLocalStorage = (key, newItem) => {
+      try {
+        const list = JSON.parse(localStorage.getItem(key)) || [];
+        const exists = list.some(item => (item?._id || item?.itemId) === newItem._id);
+        if (!exists) {
+          const updatedList = [...list, newItem];
+          localStorage.setItem(key, JSON.stringify(updatedList));
+        }
+      } catch (error) {
+        console.error(`Error adding item to localStorage key ${key}:`, error);
+      }
+    };
+
+    addToLocalStorage('wishlist', wishlistItem);
+
+    if (type === 'service') {
+      addToLocalStorage('serviceWishlist', wishlistItem);
+    } else if (type === 'helper') {
+      addToLocalStorage('helperWishlist', wishlistItem);
+    }
+
+    window.dispatchEvent(new Event('storage'));
+
+    if (currentUser) {
+      try {
+        await toggleWishlistBackend(card.id, type);
+      } catch (error) {
+        console.error('Failed to sync wishlist to backend:', error);
+      }
+    }
+  };
+
+  const removeCard = async (id, direction) => {
+    if (direction === 'right') {
+      const cardToAdd = cards.find(c => c.id === id);
+      if (cardToAdd) {
+        await addToWishlist(cardToAdd);
+      }
+    }
     setCards(prev => prev.filter(c => c.id !== id));
   };
 

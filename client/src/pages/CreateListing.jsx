@@ -2464,7 +2464,14 @@ export default function CreateListing() {
                   <p className="text-gray-600 mb-6">List the specific services you offer and their prices.</p>
                   
                   <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <FormInput
+                        label="Category / Type"
+                        placeholder="e.g. Cleaning, Transport"
+                        id="newServiceType"
+                        value={listingForm.newServiceType || ""}
+                        onChange={(e) => setListingForm({...listingForm, newServiceType: e.target.value})}
+                      />
                       <FormInput
                         label="Service Name"
                         placeholder="e.g. Standard Haircut"
@@ -2516,11 +2523,13 @@ export default function CreateListing() {
                           setListingForm({
                             ...listingForm,
                             serviceList: [...listingForm.serviceList, { 
+                              type: listingForm.newServiceType || "",
                               name: listingForm.newServiceName, 
                               price: listingForm.newServicePrice,
                               description: listingForm.newServiceDescription || "",
                               image: listingForm.newServiceImage || "" 
                             }],
+                            newServiceType: "",
                             newServiceName: "",
                             newServicePrice: "",
                             newServiceDescription: "",
@@ -2544,7 +2553,14 @@ export default function CreateListing() {
                                   <img src={service.image} alt={service.name} className="w-16 h-16 object-cover rounded-2xl border bg-white shadow-sm" />
                                 )}
                                 <div>
-                                  <p className="font-bold text-gray-900">{service.name}</p>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <p className="font-bold text-gray-900">{service.name}</p>
+                                    {service.type && (
+                                      <span className="px-2.5 py-1 bg-gray-200 text-gray-700 text-[10px] font-black uppercase tracking-wider rounded-lg">
+                                        {service.type}
+                                      </span>
+                                    )}
+                                  </div>
                                   {service.description && (
                                     <p className="text-xs text-gray-500 mt-1 max-w-xs md:max-w-md">{service.description}</p>
                                   )}

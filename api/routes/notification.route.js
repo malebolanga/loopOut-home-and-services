@@ -23,6 +23,11 @@ router.get('/', verifyToken, async(req, res) => {
 
         const userId = req.user.id;
 
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            console.error('[NOTIF] Error: req.user.id is not a valid ObjectId:', userId);
+            return res.status(400).json({ success: false, message: 'Invalid user ID format' });
+        }
+
         // Use Promise.all to fetch both in parallel
         const [notifications, unreadCount] = await Promise.all([
             Notification.find({ userId }).sort({ createdAt: -1 }).limit(20).lean(),
@@ -56,6 +61,14 @@ router.post('/read', verifyToken, async(req, res) => {
         const { notificationId } = req.body;
         const userId = req.user.id;
 
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ success: false, message: 'Invalid user ID format' });
+        }
+
+        if (notificationId && !mongoose.Types.ObjectId.isValid(notificationId)) {
+            return res.status(400).json({ success: false, message: 'Invalid notification ID format' });
+        }
+
         if (notificationId) {
             await Notification.findOneAndUpdate({ _id: notificationId, userId }, { read: true });
         } else {
@@ -81,6 +94,10 @@ router.put('/read-all', verifyToken, async(req, res) => {
         }
 
         const userId = req.user.id;
+
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ success: false, message: 'Invalid user ID format' });
+        }
         await Notification.updateMany({ userId, read: false }, { read: true });
 
         res.json({ success: true });
@@ -103,6 +120,10 @@ router.put('/:id/read', verifyToken, async(req, res) => {
 
         const userId = req.user.id;
         const notificationId = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(notificationId)) {
+            return res.status(400).json({ success: false, message: 'Invalid ID format' });
+        }
 
         const notification = await Notification.findOneAndUpdate(
             { _id: notificationId, userId },
@@ -133,6 +154,10 @@ router.delete('/clear-all', verifyToken, async(req, res) => {
         }
 
         const userId = req.user.id;
+
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ success: false, message: 'Invalid user ID format' });
+        }
         await Notification.deleteMany({ userId });
 
         res.json({ success: true, message: 'All notifications cleared successfully' });
@@ -155,6 +180,10 @@ router.delete('/:id', verifyToken, async(req, res) => {
 
         const userId = req.user.id;
         const notificationId = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(notificationId)) {
+            return res.status(400).json({ success: false, message: 'Invalid ID format' });
+        }
 
         const notification = await Notification.findOneAndDelete({ _id: notificationId, userId });
 

@@ -97,26 +97,119 @@ const LoopOutWhisper = ({ isOpen, onClose }) => {
     const lowerText = text.toLowerCase();
     let intent = {
       text: text,
-      category: "service",
-      type: "services",
+      category: "",
+      type: "all",
       budget: null,
-      timing: "asap"
+      timing: "asap",
+      location: null
     };
 
-    // Keyword matching
-    if (lowerText.includes("cleaner") || lowerText.includes("cleaning")) {
-      intent.category = "cleaner";
-      intent.type = "helper";
-    } else if (lowerText.includes("barber") || lowerText.includes("hair")) {
+    // Keyword matching for helpers
+    if (lowerText.includes("cleaner") || lowerText.includes("cleaning") || lowerText.includes("domestic") || lowerText.includes("maid")) {
+      intent.category = "domestic";
+      intent.type = "helpers";
+    } else if (lowerText.includes("barber")) {
       intent.category = "barber";
-    } else if (lowerText.includes("plumb") || lowerText.includes("pipe") || lowerText.includes("leak")) {
-      intent.category = "plumber";
-    } else if (lowerText.includes("garden") || lowerText.includes("lawn")) {
-      intent.category = "gardener";
+      intent.type = "helpers";
+    } else if (lowerText.includes("hair") || lowerText.includes("beauty") || lowerText.includes("salon")) {
+      intent.category = "hair";
+      intent.type = "helpers";
+    } else if (lowerText.includes("nail") || lowerText.includes("nails")) {
+      intent.category = "nail";
+      intent.type = "helpers";
+    } else if (lowerText.includes("tutor") || lowerText.includes("maths") || lowerText.includes("lesson") || lowerText.includes("teach") || lowerText.includes("tutors") || lowerText.includes("education")) {
+      intent.category = "tutor";
+      intent.type = "helpers";
+    } else if (lowerText.includes("chef") || lowerText.includes("cook")) {
+      intent.category = "chef";
+      intent.type = "helpers";
+    } else if (lowerText.includes("nanny") || lowerText.includes("childcare") || lowerText.includes("baby")) {
+      intent.category = "nanny";
+      intent.type = "helpers";
+    } else if (lowerText.includes("tattoo")) {
+      intent.category = "tattoo";
+      intent.type = "helpers";
+    } else if (lowerText.includes("sneaker")) {
+      intent.category = "sneaker";
+      intent.type = "helpers";
+    } else if (lowerText.includes("washingmat") || lowerText.includes("mat")) {
+      intent.category = "washingmat";
+      intent.type = "helpers";
+    } else if (lowerText.includes("animal") || lowerText.includes("pet") || lowerText.includes("dog") || lowerText.includes("cat")) {
+      intent.category = "animals";
+      intent.type = "helpers";
+    } else if (lowerText.includes("helper") || lowerText.includes("helpers")) {
+      intent.category = "domestic";
+      intent.type = "helpers";
+    }
+    // Keyword matching for services
+    else if (lowerText.includes("carwash") || lowerText.includes("car wash")) {
+      intent.category = "carwash";
       intent.type = "services";
-    } else if (lowerText.includes("electric")) {
+    } else if (lowerText.includes("garden") || lowerText.includes("lawn") || lowerText.includes("landscaping")) {
+      intent.category = "landscaping";
+      intent.type = "services";
+    } else if (lowerText.includes("electric") || lowerText.includes("electrician")) {
       intent.category = "electrician";
       intent.type = "services";
+    } else if (lowerText.includes("handyman") || lowerText.includes("plumb") || lowerText.includes("pipe") || lowerText.includes("leak") || lowerText.includes("fix")) {
+      intent.category = "handyman";
+      intent.type = "services";
+    } else if (lowerText.includes("catering") || lowerText.includes("food service")) {
+      intent.category = "catering";
+      intent.type = "services";
+    } else if (lowerText.includes("moving") || lowerText.includes("relocation")) {
+      intent.category = "moving";
+      intent.type = "services";
+    } else if (lowerText.includes("transport") || lowerText.includes("ride") || lowerText.includes("taxi")) {
+      intent.category = "transport";
+      intent.type = "services";
+    }
+    // Keyword matching for properties
+    else if (lowerText.includes("rent") || lowerText.includes("rental") || lowerText.includes("apartment")) {
+      intent.category = "rental";
+      intent.type = "properties";
+    } else if (lowerText.includes("hotel") || lowerText.includes("stay") || lowerText.includes("sale") || lowerText.includes("buy")) {
+      intent.category = "for_sale";
+      intent.type = "properties";
+    } else if (lowerText.includes("guesthouse") || lowerText.includes("guest house")) {
+      intent.category = "guesthouse";
+      intent.type = "properties";
+    } else if (lowerText.includes("resort")) {
+      intent.category = "resort";
+      intent.type = "properties";
+    } else if (lowerText.includes("vacation")) {
+      intent.category = "vacation";
+      intent.type = "properties";
+    } else if (lowerText.includes("property") || lowerText.includes("house") || lowerText.includes("accommodation")) {
+      intent.category = "rental";
+      intent.type = "properties";
+    }
+    // Keyword matching for events
+    else if (lowerText.includes("music") || lowerText.includes("concert")) {
+      intent.category = "music";
+      intent.type = "events";
+    } else if (lowerText.includes("art") || lowerText.includes("gallery")) {
+      intent.category = "art";
+      intent.type = "events";
+    } else if (lowerText.includes("wine") || lowerText.includes("food event")) {
+      intent.category = "food";
+      intent.type = "events";
+    } else if (lowerText.includes("tech") || lowerText.includes("conference")) {
+      intent.category = "tech";
+      intent.type = "events";
+    } else if (lowerText.includes("event") || lowerText.includes("events")) {
+      intent.category = "music";
+      intent.type = "events";
+    }
+
+    // Location extraction
+    const cities = ['pretoria', 'johannesburg', 'sandton', 'cape town', 'durban', 'polokwane', 'soweto', 'tembisa', 'centurion', 'midrand', 'randburg'];
+    for (const city of cities) {
+      if (lowerText.includes(city)) {
+        intent.location = city.charAt(0).toUpperCase() + city.slice(1);
+        break;
+      }
     }
 
     // Timing extraction
@@ -144,7 +237,17 @@ const LoopOutWhisper = ({ isOpen, onClose }) => {
     if (searchIntent) {
       onClose();
       // Redirect to search with extracted filters
-      navigate(`/search?category=${searchIntent.category}&type=${searchIntent.type}&ai=true`);
+      let searchUrl = `/search?type=${searchIntent.type}&ai=true`;
+      if (searchIntent.category) {
+        searchUrl += `&category=${searchIntent.category}`;
+      }
+      if (searchIntent.location) {
+        searchUrl += `&location=${encodeURIComponent(searchIntent.location)}`;
+      }
+      if (searchIntent.budget) {
+        searchUrl += `&maxPrice=${searchIntent.budget}`;
+      }
+      navigate(searchUrl);
     }
   };
 
@@ -296,10 +399,24 @@ const LoopOutWhisper = ({ isOpen, onClose }) => {
                   </div>
                   
                   <div className="flex flex-wrap gap-2 mb-6">
-                    <div className="px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center gap-2">
-                      <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Category</span>
-                      <span className="text-xs font-bold text-gray-900 capitalize">{searchIntent.category}</span>
-                    </div>
+                    {searchIntent.type && (
+                      <div className="px-3 py-1.5 bg-purple-50 border border-purple-100 rounded-lg flex items-center gap-2">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-purple-600">Type</span>
+                        <span className="text-xs font-bold text-gray-900 capitalize">{searchIntent.type}</span>
+                      </div>
+                    )}
+                    {searchIntent.category && (
+                      <div className="px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center gap-2">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Category</span>
+                        <span className="text-xs font-bold text-gray-900 capitalize">{searchIntent.category}</span>
+                      </div>
+                    )}
+                    {searchIntent.location && (
+                      <div className="px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-lg flex items-center gap-2">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-amber-600">Location</span>
+                        <span className="text-xs font-bold text-gray-900">{searchIntent.location}</span>
+                      </div>
+                    )}
                     {searchIntent.budget && (
                       <div className="px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-2">
                         <span className="text-[9px] font-black uppercase tracking-widest text-blue-600">Budget</span>
@@ -317,7 +434,7 @@ const LoopOutWhisper = ({ isOpen, onClose }) => {
                     className="w-full py-4 bg-gray-950 text-white rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl active:scale-95 transition-transform flex items-center justify-center gap-2"
                   >
                     <MagnifyingGlassIcon className="w-4 h-4" />
-                    Find {searchIntent.category}s Now
+                    Find {searchIntent.category || searchIntent.type}s Now
                   </button>
                 </motion.div>
               )}
