@@ -612,44 +612,44 @@ export default function Header() {
             ))}
           </div>
 
-          <div className="sticky bottom-0 bg-white pt-2 border-t border-gray-100 mt-2 -mx-4 px-4 pb-2">
-  <button 
+          <div className="sticky bottom-0 bg-white/95 backdrop-blur-md pt-3 border-t border-slate-100 mt-3 -mx-4 px-4 pb-3">
+  <button
     onClick={handleSignOut}
     aria-label="Sign out"
-    className="flex items-center justify-center gap-2 w-full py-3.5 text-xs font-black uppercase text-gray-700 hover:text-rose-600 transition-colors tracking-[0.2em] bg-gray-50 rounded-2xl hover:bg-rose-50 border border-transparent hover:border-rose-100/50"
+    className="flex items-center justify-center gap-2 w-full py-3 text-xs font-black uppercase text-slate-600 hover:text-rose-600 transition-all tracking-[0.2em] bg-slate-50 rounded-2xl hover:bg-rose-50 border border-transparent hover:border-rose-100 active:scale-95"
   >
     <ArrowRightOnRectangleIcon className="w-4 h-4" />
     Sign out
   </button>
 </div>
-<div className="text-center text-xs text-gray-700 mt-2">
-  <a href="/terms" className="hover:underline">Terms</a>
-  <span className="mx-1">|</span>
-  <a href="/privacy" className="hover:underline">Privacy</a>
-  <span className="mx-1">|</span>
-  <a href="/teams" className="hover:underline">Teams</a>
-  <span className="mx-1">|</span>
-  <span>@ 2026</span>
+<div className="text-center text-[9px] text-slate-400 font-bold mt-3 uppercase tracking-[0.15em]">
+  <a href="/terms" className="hover:text-rose-500 transition-colors">Terms</a>
+  <span className="mx-1.5 text-slate-300">&middot;</span>
+  <a href="/privacy" className="hover:text-rose-500 transition-colors">Privacy</a>
+  <span className="mx-1.5 text-slate-300">&middot;</span>
+  <a href="/teams" className="hover:text-rose-500 transition-colors">Teams</a>
+  <span className="mx-1.5 text-slate-300">&middot;</span>
+  <span>&copy; 2026</span>
 </div>
         </>
       ) : (
-        <div className="p-4 space-y-3">
+        <div class="p-4 space-y-3">
           <button
             onClick={() => handleNavigate('/sign-in')}
-            className="w-full py-5 bg-gray-950 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-2xl hover:bg-black transition-all"
+            className="w-full py-4 bg-slate-950 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-black transition-all active:scale-95"
           >Sign In</button>
           <button
             onClick={() => handleNavigate('/sign-up')}
-            className="w-full py-5 border-2 border-gray-100 text-gray-900 rounded-[2rem] font-black uppercase tracking-widest hover:bg-gray-50 transition-all"
+            className="w-full py-4 border-2 border-slate-200 text-slate-900 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
           >Create Account</button>
-          <div className="text-center text-xs text-gray-700 mt-2">
-  <a href="/terms" className="hover:underline">Terms</a>
-  <span className="mx-1">|</span>
-  <a href="/privacy" className="hover:underline">Privacy</a>
-  <span className="mx-1">|</span>
-  <a href="/teams" className="hover:underline">Teams</a>
-  <span className="mx-1">|</span>
-  <span>@ 2026</span>
+          <div className="text-center text-[9px] text-slate-400 font-bold mt-3 uppercase tracking-[0.15em]">
+  <a href="/terms" className="hover:text-rose-500 transition-colors">Terms</a>
+  <span className="mx-1.5 text-slate-300">&middot;</span>
+  <a href="/privacy" className="hover:text-rose-500 transition-colors">Privacy</a>
+  <span className="mx-1.5 text-slate-300">&middot;</span>
+  <a href="/teams" className="hover:text-rose-500 transition-colors">Teams</a>
+  <span className="mx-1.5 text-slate-300">&middot;</span>
+  <span>&copy; 2026</span>
 </div>
         </div>
       )}
@@ -669,7 +669,11 @@ export default function Header() {
           }}
           transition={{ type: 'spring', damping: 25, stiffness: 120 }}
           ref={headerRef}
-          className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-2xl shadow-lg border-b border-gray-100' : 'bg-transparent'}`}
+        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${
+          scrolled
+            ? 'bg-white/90 backdrop-blur-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] border-b border-slate-100/80'
+            : 'bg-transparent'
+        }`}
         >
         <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-[34px]">
           <div className="flex flex-row items-center justify-between h-20">
@@ -703,19 +707,19 @@ export default function Header() {
             </div>
 
             {/* Center: Search Pill (Airbnb Style) */}
-            <div className={`flex-1 hidden md:flex justify-center transition-all duration-500 ${showSearch ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+            <div className={`flex-1 hidden md:flex justify-center transition-all duration-500 ${showSearch ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
               <button
                 onClick={() => setShowSearch(true)}
                 aria-label="Open search"
-                className="flex items-center gap-3 px-6 py-2 border border-gray-200 rounded-full shadow-sm hover:shadow-md transition-all cursor-pointer bg-white group"
+                className="group flex items-center gap-0 border border-slate-200 rounded-full shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer bg-white overflow-hidden"
               >
-                <span className="text-[11px] font-bold text-gray-900">Anywhere</span>
-                <div className="w-[1px] h-3 bg-gray-200" />
-                <span className="text-[11px] font-bold text-gray-900">Any category</span>
-                <div className="w-[1px] h-3 bg-gray-200" />
-                <span className="text-[11px] font-medium text-gray-600">Search LoopOut</span>
-                <div className="w-8 h-8 bg-rose-500 rounded-full flex items-center justify-center text-white ml-2 group-hover:bg-rose-600 transition-colors">
-                  <MagnifyingGlassIcon className="w-4 h-4 stroke-[3px]" />
+                <span className="text-[11px] font-black text-slate-900 px-5 py-2.5 hover:bg-slate-50 transition-colors">Anywhere</span>
+                <div className="w-[1px] h-5 bg-slate-200" />
+                <span className="text-[11px] font-black text-slate-900 px-5 py-2.5 hover:bg-slate-50 transition-colors">Any type</span>
+                <div className="w-[1px] h-5 bg-slate-200" />
+                <span className="text-[11px] font-medium text-slate-400 px-4 py-2.5">Search loopOut</span>
+                <div className="w-9 h-9 bg-gradient-to-br from-rose-500 to-rose-600 rounded-full flex items-center justify-center text-white mr-1.5 group-hover:from-rose-600 group-hover:to-rose-700 transition-all shadow-md shadow-rose-200">
+                  <MagnifyingGlassIcon className="w-4 h-4 stroke-[2.5px]" />
                 </div>
               </button>
             </div>
@@ -783,7 +787,7 @@ export default function Header() {
                     setShowCurrencyDropdown(false);
                   }}
                   aria-label="Select language"
-                  className="language-button p-2 md:py-1 md:px-2 border-[1px] border-[#DDDDDD] flex flex-row items-center gap-3 rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
+                  className="language-button w-9 h-9 border border-slate-200 rounded-full flex items-center justify-center cursor-pointer hover:shadow-md hover:border-slate-400 transition-all hidden md:flex text-slate-700 hover:text-slate-900"
                 >
                   <GlobeAltIcon className="w-4 h-4" />
                 </button>
@@ -796,7 +800,7 @@ export default function Header() {
                     setShowProfileDropdown(false);
                   }}
                   aria-label={`Select currency. Current: ${selectedCurrency}`}
-                  className="currency-button px-3 py-1.5 border-[1px] border-[#DDDDDD] flex flex-row items-center gap-1 rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222] font-black text-[10px] h-9"
+                  className="currency-button px-3 h-9 border border-slate-200 rounded-full flex items-center gap-1 cursor-pointer hover:shadow-md hover:border-slate-400 transition-all hidden md:flex text-slate-700 font-black text-[10px]"
                 >
                   <span>{getCurrencySymbol()}</span>
                   <span>{selectedCurrency}</span>
@@ -806,7 +810,7 @@ export default function Header() {
                 <Link
                   to="/"
                   aria-label="Home"
-                  className="relative p-2 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
+                  className="relative w-9 h-9 border border-slate-200 rounded-full flex items-center justify-center cursor-pointer hover:shadow-md hover:border-slate-400 transition-all hidden md:flex text-slate-700 hover:text-slate-900"
                 >
                   <HomeIcon className="w-4 h-4 stroke-[2px]" />
                 </Link>
@@ -815,7 +819,7 @@ export default function Header() {
                 <button
                   onClick={() => handleNavigate('/wishlist')}
                   aria-label="Wishlist"
-                  className="relative p-2 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition hidden md:flex text-[#222222]"
+                  className="relative w-9 h-9 border border-slate-200 rounded-full flex items-center justify-center cursor-pointer hover:shadow-md hover:border-slate-400 transition-all hidden md:flex text-slate-700 hover:text-slate-900 hover:text-rose-500"
                 >
                   <HeartIcon className="w-4 h-4 stroke-[2px]" />
                 </button>
@@ -824,17 +828,17 @@ export default function Header() {
                 <button
                   onClick={() => handleNavigate('/notifications')}
                   aria-label={`Notifications. ${unreadCount} unread`}
-                  className="relative p-2 border-[1px] border-[#DDDDDD] flex items-center justify-center rounded-full cursor-pointer hover:shadow-md transition flex text-[#222222]"
+                  className="relative w-9 h-9 border border-slate-200 rounded-full flex items-center justify-center cursor-pointer hover:shadow-md hover:border-slate-400 transition-all flex text-slate-700"
                 >
                   <BellIcon className="w-4 h-4 stroke-[2px]" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-[#FF385C] text-white text-[8px] min-w-[14px] h-[14px] px-1 flex items-center justify-center rounded-full border-[1.5px] border-white shadow-sm z-10 font-bold">
+                    <span className="absolute -top-0.5 -right-0.5 bg-rose-500 text-white text-[8px] min-w-[14px] h-[14px] px-1 flex items-center justify-center rounded-full border-[1.5px] border-white shadow-sm z-10 font-bold">
                       {unreadCount}
                     </span>
                   )}
                 </button>
 
-                {/* User Menu Button - Airbnb Style */}
+                {/* User Menu Button */}
                 <button
                  onClick={() => {
                    setShowProfileDropdown(!showProfileDropdown);
@@ -842,35 +846,39 @@ export default function Header() {
                     setShowCurrencyDropdown(false);
                   }}
                   aria-label="User menu"
-                  className="flex flex-row items-center gap-3 px-4 py-2 bg-white rounded-full cursor-pointer shadow-[0_15px_30px_-10px_rgba(225,29,72,0.15)] hover:shadow-[0_20px_40px_-8px_rgba(225,29,72,0.25)] hover:scale-[1.02] transition-all duration-300 border border-rose-100 text-gray-600 hover:bg-rose-50/50 h-14"
+                  className="flex flex-row items-center gap-2.5 pl-3 pr-1.5 py-1.5 bg-white rounded-full cursor-pointer shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 hover:border-slate-300 h-12"
                 >
-                  <Bars3Icon className="w-5 h-5 stroke-[2.5px] text-gray-700" />
+                  <Bars3Icon className="w-4 h-4 stroke-[2.5px] text-slate-700" />
                   {currentUser ? (
-                    <img
-                      src={currentUser.avatar}
-                      alt="profile"
-                      className="w-8 h-8 rounded-full object-cover border border-rose-100 shadow-sm"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
-                      }}
-                    />
+                    <div className="relative">
+                      <img
+                        src={currentUser.avatar}
+                        alt="profile"
+                        className="w-8 h-8 rounded-full object-cover border-2 border-rose-200 shadow-sm"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
+                        }}
+                      />
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
+                    </div>
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-150 flex items-center justify-center text-gray-400">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
                       <UserIcon className="w-4 h-4" />
                     </div>
                   )}
                 </button>
               </div>
 
-              {/* User Profile Dropdown - Refined Masterpiece Command Center */}
+              {/* User Profile Dropdown - Desktop */}
               <AnimatePresence>
                 {showProfileDropdown && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                    initial={{ opacity: 0, scale: 0.95, y: 12 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                    className="hidden md:block absolute rounded-[2.5rem] shadow-[0_45px_100px_-20px_rgba(0,0,0,0.4)] w-[360px] bg-gradient-to-r from-rose-500/80 to-pink-500/80 backdrop-blur-xl right-0 top-16 border border-gray-100 p-4 z-[60] max-h-[85vh] overflow-y-auto scrollbar-hide pb-4"
+                    exit={{ opacity: 0, scale: 0.95, y: 12 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className="hidden md:block absolute rounded-[2rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] w-[360px] bg-white/95 backdrop-blur-2xl right-0 top-[60px] border border-slate-100 p-4 z-[60] max-h-[85vh] overflow-y-auto scrollbar-hide"
                   >
                     {profileMenuContent}
                   </motion.div>
@@ -1029,12 +1037,12 @@ export default function Header() {
                 })}
               </div>
               
-              <button 
+              <button
                 onClick={() => setShowSearch(false)}
                 aria-label="Close search"
-                className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors"
+                className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center hover:bg-slate-200 transition-all active:scale-90"
               >
-                <XMarkIcon className="w-5 h-5 text-gray-900" />
+                <XMarkIcon className="w-5 h-5 text-slate-900" />
               </button>
             </div>
 
@@ -1232,24 +1240,24 @@ export default function Header() {
             </div>
 
             {/* Footer - Search Button */}
-            <div className="flex-shrink-0 bg-white border-t border-gray-100 p-6 flex items-center justify-between">
-               <button 
+            <div className="flex-shrink-0 bg-white border-t border-slate-100 px-6 py-5 flex items-center justify-between">
+               <button
                  onClick={() => {
                    setSearchTerm('');
                    setSearchType('all');
                    setSelectedSubCategory('');
                    setSuggestions([]);
                  }}
-                 className="text-sm font-bold text-gray-900 underline underline-offset-4 hover:text-rose-600 transition-colors"
+                 className="text-sm font-black text-slate-700 underline underline-offset-4 hover:text-rose-600 transition-colors uppercase tracking-wide"
                >
                  Clear all
                </button>
-               
-               <button 
+
+               <button
                   onClick={() => { handleSearch(); setShowSearch(false); }}
-                  className="bg-rose-500 hover:bg-rose-600 text-white px-10 py-5 rounded-[1.2rem] flex items-center gap-3 shadow-xl transition-all active:scale-95"
+                  className="bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white px-8 py-4 rounded-2xl flex items-center gap-3 shadow-xl shadow-rose-200 transition-all active:scale-95 hover:shadow-2xl hover:shadow-rose-300"
                 >
-                 <BrandIcon className="w-6 h-6" color="white" />
+                 <BrandIcon className="w-5 h-5" color="white" />
                  <span className="text-sm font-black uppercase tracking-widest">Search</span>
                </button>
             </div>

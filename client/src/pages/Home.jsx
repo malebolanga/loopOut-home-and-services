@@ -976,11 +976,11 @@ const MobileAppHomepage = ({
       <main className="px-4 pt-2 pb-4 lg:max-w-7xl lg:mx-auto w-full">
         <DailyLoopHub />
         {/* Mobile Elite Slider Banner */}
-        <div className="relative h-[550px] -mx-4 lg:mx-0 lg:rounded-[2rem] overflow-hidden mb-12 shadow-2xl">
+        <div className="relative h-[560px] -mx-4 lg:mx-0 lg:rounded-[2rem] overflow-hidden mb-12 shadow-2xl">
           <Swiper
             modules={[Autoplay, Pagination]}
-            autoplay={{ delay: 6000 }}
-            pagination={{ clickable: true, bulletActiveClass: 'swiper-pagination-bullet-active !bg-rose-500' }}
+            autoplay={{ delay: 6500, disableOnInteraction: false }}
+            pagination={{ clickable: true, bulletActiveClass: 'swiper-pagination-bullet-active !bg-rose-500 !opacity-100', bulletClass: 'swiper-pagination-bullet !bg-white/50 !opacity-100' }}
             className="h-full w-full mobile-hero-swiper"
           >
             {/* Mobile Slide 1: LoopOut for Everyone */}
@@ -988,24 +988,26 @@ const MobileAppHomepage = ({
               <div className="relative h-full w-full" onClick={() => navigate('/explore')}>
                 <img loading="lazy"
                   src="/loopout_for_everyone.png"
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover scale-105"
                   alt="LoopOut for Everyone"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                 <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Sparkles className="w-5 h-5 text-rose-500" />
-                    <span className="text-white text-[10px] font-black tracking-[0.3em] uppercase">Universal Discovery</span>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+                      <Sparkles className="w-3.5 h-3.5 text-rose-400" />
+                      <span className="text-white/90 text-[9px] font-black tracking-[0.25em] uppercase">Universal Discovery</span>
+                    </div>
                   </div>
-                  <h2 className="text-4xl font-black text-white leading-[0.85] mb-6 tracking-tighter">
-                    LOOPOUT FOR <br />
-                    <span className="text-rose-500">EVERYONE.</span>
+                  <h2 className="text-5xl font-black text-white leading-[0.85] mb-4 tracking-tighter drop-shadow-lg">
+                    LOOPOUT <br />
+                    <span className="bg-gradient-to-r from-rose-400 to-rose-500 bg-clip-text text-transparent">FOR EVERYONE.</span>
                   </h2>
-                  <p className="text-white/70 text-[14px] font-medium mb-8 leading-relaxed max-w-[280px]">
-                    Active in <span className="text-white">JHB</span>, <span className="text-white">Pretoria</span>, <span className="text-white">PMB</span>, and <span className="text-white">Rustenburg</span>.
+                  <p className="text-white/60 text-[13px] font-medium mb-7 leading-relaxed max-w-[260px]">
+                    Active in <span className="text-white font-semibold">JHB</span>, <span className="text-white font-semibold">Pretoria</span>, <span className="text-white font-semibold">PMB</span>, and <span className="text-white font-semibold">Rustenburg</span>.
                   </p>
-                  <button className="w-full py-5 bg-rose-500 text-white rounded-2xl text-[12px] font-black shadow-xl uppercase tracking-widest active:scale-95 transition-all">
-                    Start Your Journey
+                  <button className="w-full py-4 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-2xl text-[11px] font-black shadow-2xl shadow-rose-500/40 uppercase tracking-widest active:scale-95 transition-all hover:from-rose-600 hover:to-rose-700">
+                    Start Your Journey →
                   </button>
                 </div>
               </div>
@@ -1016,24 +1018,26 @@ const MobileAppHomepage = ({
               <div className="relative h-full w-full" onClick={() => navigate('/search?category=maid&type=helper')}>
                 <img loading="lazy"
                   src="/loopout_maid_celebration.png"
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover scale-105"
                   alt="LoopOut Maid"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                 <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                  <div className="flex items-center gap-2 mb-4">
-                    <HeartIcon className="w-5 h-5 text-rose-500" />
-                    <span className="text-white text-[10px] font-black tracking-[0.3em] uppercase">Professional Care</span>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+                      <HeartIcon className="w-3.5 h-3.5 text-rose-400" />
+                      <span className="text-white/90 text-[9px] font-black tracking-[0.25em] uppercase">Professional Care</span>
+                    </div>
                   </div>
-                  <h2 className="text-4xl font-black text-white leading-[0.85] mb-6 tracking-tighter">
+                  <h2 className="text-5xl font-black text-white leading-[0.85] mb-4 tracking-tighter drop-shadow-lg">
                     THE PERFECT <br />
-                    <span className="text-rose-500">WORK.</span>
+                    <span className="bg-gradient-to-r from-rose-400 to-pink-400 bg-clip-text text-transparent">WORK.</span>
                   </h2>
-                  <p className="text-white/70 text-[14px] font-medium mb-8 leading-relaxed max-w-[280px]">
-                    Celebrating the bond between <span className="text-white">families</span> and their <span className="text-white">trusted helpers</span>.
+                  <p className="text-white/60 text-[13px] font-medium mb-7 leading-relaxed max-w-[260px]">
+                    Celebrating the bond between <span className="text-white font-semibold">families</span> and their <span className="text-white font-semibold">trusted helpers</span>.
                   </p>
-                  <button className="w-full py-5 bg-white text-gray-950 rounded-2xl text-[12px] font-black shadow-xl uppercase tracking-widest active:scale-95 transition-all">
-                    Find Your Maid
+                  <button className="w-full py-4 bg-white text-slate-950 rounded-2xl text-[11px] font-black shadow-2xl uppercase tracking-widest active:scale-95 transition-all hover:bg-slate-50">
+                    Find Your Maid →
                   </button>
                 </div>
               </div>
@@ -1043,24 +1047,26 @@ const MobileAppHomepage = ({
               <div className="relative h-full w-full" onClick={() => navigate('/search?category=delivery&type=services')}>
                 <img loading="lazy"
                   src="/loopout_removal_delivery.png"
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover scale-105"
                   alt="LoopOut Delivery"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                 <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                  <div className="flex items-center gap-2 mb-4">
-                    <TruckIcon className="w-5 h-5 text-rose-500" />
-                    <span className="text-white text-[10px] font-black tracking-[0.3em] uppercase">Elite Logistics</span>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+                      <TruckIcon className="w-3.5 h-3.5 text-rose-400" />
+                      <span className="text-white/90 text-[9px] font-black tracking-[0.25em] uppercase">Elite Logistics</span>
+                    </div>
                   </div>
-                  <h2 className="text-4xl font-black text-white leading-[0.85] mb-6 tracking-tighter">
+                  <h2 className="text-5xl font-black text-white leading-[0.85] mb-4 tracking-tighter drop-shadow-lg">
                     REMOVAL & <br />
-                    <span className="text-rose-500">DELIVERY.</span>
+                    <span className="bg-gradient-to-r from-rose-400 to-orange-400 bg-clip-text text-transparent">DELIVERY.</span>
                   </h2>
-                  <p className="text-white/70 text-[14px] font-medium mb-8 leading-relaxed max-w-[280px]">
+                  <p className="text-white/60 text-[13px] font-medium mb-7 leading-relaxed max-w-[260px]">
                     Professional removal and delivery services for your home and business.
                   </p>
-                  <button className="w-full py-5 bg-rose-500 text-white rounded-2xl text-[12px] font-black shadow-xl uppercase tracking-widest active:scale-95 transition-all">
-                    Book Delivery
+                  <button className="w-full py-4 bg-gradient-to-r from-rose-500 to-orange-500 text-white rounded-2xl text-[11px] font-black shadow-2xl shadow-rose-500/40 uppercase tracking-widest active:scale-95 transition-all">
+                    Book Delivery →
                   </button>
                 </div>
               </div>
@@ -1071,52 +1077,56 @@ const MobileAppHomepage = ({
               <div className="relative h-full w-full" onClick={() => navigate('/search?category=barber&type=services')}>
                 <img loading="lazy"
                   src="/barber_loopout_campaign.png"
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover scale-105"
                   alt="LoopOut Barber"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                 <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                  <div className="flex items-center gap-2 mb-4">
-                    <ScissorsIcon className="w-5 h-5 text-rose-500" />
-                    <span className="text-white text-[10px] font-black tracking-[0.3em] uppercase">Professional Grooming</span>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+                      <ScissorsIcon className="w-3.5 h-3.5 text-rose-400" />
+                      <span className="text-white/90 text-[9px] font-black tracking-[0.25em] uppercase">Professional Grooming</span>
+                    </div>
                   </div>
-                  <h2 className="text-4xl font-black text-white leading-[0.85] mb-6 tracking-tighter">
+                  <h2 className="text-5xl font-black text-white leading-[0.85] mb-4 tracking-tighter drop-shadow-lg">
                     LOOPOUT <br />
-                    <span className="text-rose-500">BARBER.</span>
+                    <span className="bg-gradient-to-r from-rose-400 to-rose-500 bg-clip-text text-transparent">BARBER.</span>
                   </h2>
-                  <p className="text-white/70 text-[14px] font-medium mb-8 leading-relaxed max-w-[280px]">
-                    Experience luxury from the moment you sit down. <span className="text-white">Draped in excellence.</span>
+                  <p className="text-white/60 text-[13px] font-medium mb-7 leading-relaxed max-w-[260px]">
+                    Experience luxury from the moment you sit down. <span className="text-white font-semibold">Draped in excellence.</span>
                   </p>
-                  <button className="w-full py-5 bg-rose-500 text-white rounded-2xl text-[12px] font-black shadow-xl uppercase tracking-widest active:scale-95 transition-all">
-                    Book a Barber
+                  <button className="w-full py-4 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-2xl text-[11px] font-black shadow-2xl shadow-rose-500/40 uppercase tracking-widest active:scale-95 transition-all">
+                    Book a Barber →
                   </button>
                 </div>
               </div>
             </SwiperSlide>
 
-            {/* Mobile Slide 6: LoopOut Soweto Bedroom Campaign */}
+            {/* Mobile Slide 5: LoopOut Soweto Bedroom Campaign */}
             <SwiperSlide>
               <div className="relative h-full w-full" onClick={() => navigate('/search?category=guesthouse&type=properties')}>
                 <img loading="lazy"
                   src="/soweto_bg.png"
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover scale-105"
                   alt="loopOut Soweto Stay"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                 <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                  <div className="flex items-center gap-2 mb-4">
-                    <HomeModernIcon className="w-5 h-5 text-rose-500" />
-                    <span className="text-white text-[10px] font-black tracking-[0.3em] uppercase">Soweto Bedroom</span>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+                      <HomeModernIcon className="w-3.5 h-3.5 text-rose-400" />
+                      <span className="text-white/90 text-[9px] font-black tracking-[0.25em] uppercase">Soweto Bedroom</span>
+                    </div>
                   </div>
-                  <h2 className="text-4xl font-black text-white leading-[0.85] mb-6 tracking-tighter">
+                  <h2 className="text-5xl font-black text-white leading-[0.85] mb-4 tracking-tighter drop-shadow-lg">
                     loopOut <br />
-                    <span className="text-rose-500">SOWETO.</span>
+                    <span className="bg-gradient-to-r from-rose-400 to-amber-400 bg-clip-text text-transparent">SOWETO.</span>
                   </h2>
-                  <p className="text-white/70 text-[14px] font-medium mb-8 leading-relaxed max-w-[280px]">
-                    Boutique guest houses like Twin Beez. <span className="text-white">Rest in luxury with co-branded pillows.</span>
+                  <p className="text-white/60 text-[13px] font-medium mb-7 leading-relaxed max-w-[260px]">
+                    Boutique guest houses like Twin Beez. <span className="text-white font-semibold">Rest in luxury with co-branded pillows.</span>
                   </p>
-                  <button className="w-full py-5 bg-rose-500 text-white rounded-2xl text-[12px] font-black shadow-xl uppercase tracking-widest active:scale-95 transition-all">
-                    Book Soweto Stay
+                  <button className="w-full py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-2xl text-[11px] font-black shadow-2xl shadow-amber-500/30 uppercase tracking-widest active:scale-95 transition-all">
+                    Book Soweto Stay →
                   </button>
                 </div>
               </div>
@@ -1135,13 +1145,19 @@ const MobileAppHomepage = ({
 
         {/* Mobile Location Status Indicator */}
         {locationStatus && (
-          <div className="mb-6 p-4 bg-rose-50 rounded-2xl border border-rose-100 flex items-center gap-3">
-            <div className="w-10 h-10 bg-rose-500 rounded-full flex items-center justify-center text-white shrink-0">
-              <MapPinIcon className="w-5 h-5" />
+          <div className="mb-6 flex items-center gap-3 px-4 py-3.5 bg-white rounded-2xl border border-slate-100 shadow-sm">
+            <div className="relative shrink-0">
+              <div className="absolute inset-0 bg-rose-500/20 rounded-full blur-md" />
+              <div className="relative w-10 h-10 bg-rose-500 rounded-full flex items-center justify-center text-white">
+                <MapPinIcon className="w-4.5 h-4.5" />
+              </div>
             </div>
-            <div>
-              <h4 className="font-bold text-gray-900 text-sm">{locationStatus.title}</h4>
-              <p className="text-xs text-gray-500">{locationStatus.description}</p>
+            <div className="min-w-0">
+              <h4 className="font-black text-slate-900 text-sm leading-tight truncate">{locationStatus.title}</h4>
+              <p className="text-[11px] text-slate-400 font-medium mt-0.5 leading-tight">{locationStatus.description}</p>
+            </div>
+            <div className="ml-auto shrink-0">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
             </div>
           </div>
         )}
@@ -1151,9 +1167,15 @@ const MobileAppHomepage = ({
 
 
         {recentlyAddedItems.length > 0 && (
-          <section className="mb-8">
-            <h2 className="font-semibold text-gray-900 mb-4">Recently added</h2>
-            <div className="flex overflow-x-auto gap-6 pb-4 -mx-4 px-6 lg:mx-0 lg:px-0 scrollbar-hide snap-x">
+          <section className="mb-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                <h2 className="font-black text-sm text-gray-900 uppercase tracking-widest">Recently Added</h2>
+              </div>
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{recentlyAddedItems.length} new</span>
+            </div>
+            <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-6 lg:mx-0 lg:px-0 scrollbar-hide snap-x">
               {recentlyAddedItems.slice(0, 5).map((item) => (
                 <div key={item._id} className="flex-shrink-0 w-44 md:w-52 snap-start">
                   <RecentlyAddedCard
@@ -1171,33 +1193,34 @@ const MobileAppHomepage = ({
 
         {/* MOBILE CONSOLIDATED FEED */}
         <section className="mt-10 mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              
-              <p className="text-[10px] text-gray-400 font-medium mt-0.5 uppercase tracking-wider">Curated results · Polokwane</p>
+              <h2 className="font-black text-xl text-gray-950 tracking-tighter leading-none">Explore <span className="text-rose-500">{activeTab === 'Universe' ? 'All' : activeTab}</span></h2>
+              <p className="text-[10px] text-gray-400 font-medium mt-0.5 uppercase tracking-wider">Curated · Polokwane & beyond</p>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-full">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-sm">
               <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">Live · {getFilteredItems().length}</span>
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-600">Live · {getFilteredItems().length}</span>
             </div>
           </div>
-          <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl pt-2 flex overflow-x-auto gap-4 pb-4 mb-10 scrollbar-hide -mx-4 px-6 lg:mx-0 lg:px-0 border-b border-gray-100">
+          <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl pt-3 flex overflow-x-auto gap-3 pb-3 mb-8 scrollbar-hide -mx-4 px-6 lg:mx-0 lg:px-0 border-b border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <motion.button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-3 px-6 py-4 rounded-full transition-all duration-500 shrink-0 border ${
+                  whileTap={{ scale: 0.94 }}
+                  className={`flex items-center gap-2.5 px-5 py-3 rounded-full transition-all duration-300 shrink-0 ${
                     isActive 
-                      ? 'bg-white border-gray-900 shadow-md scale-105' 
-                      : 'bg-white/50 border-gray-100 opacity-70 hover:opacity-100'
+                      ? 'bg-slate-950 text-white shadow-lg shadow-slate-900/20' 
+                      : 'bg-slate-50 border border-slate-200 text-slate-500 hover:border-slate-400'
                   }`}
                 >
-                  <div className="flex-shrink-0 filter drop-shadow-md">
-                    <CategoryIcon type={tab.iconType} size={isActive ? "w-8 h-8" : "w-6 h-6"} />
+                  <div className="flex-shrink-0 filter drop-shadow-sm">
+                    <CategoryIcon type={tab.iconType} size={isActive ? "w-5 h-5" : "w-5 h-5"} />
                   </div>
-                  <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-gray-950' : 'text-gray-500'}`}>
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${ isActive ? 'text-white' : 'text-slate-600'}`}>
                     {tab.id}
                   </span>
                 </motion.button>
@@ -1253,44 +1276,52 @@ const MobileAppHomepage = ({
         {/* Sell Items Section - moved to bottom of mobile feed */}
         <SellItemsSection navigate={navigate} />
 
-        {/* Premium End of Feed caught up block to resolve empty gap */}
-        <div className="mt-16 mb-24 px-6 py-10 rounded-[2.5rem] bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-150 text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl" />
-          
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-white rounded-full shadow-sm text-rose-500 border border-rose-50">
-              <CheckCircleIcon className="w-6 h-6" />
+        {/* Premium End of Feed — All Caught Up */}
+        <div className="mt-20 mb-28 relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-rose-50/30 rounded-[3rem] blur-sm" />
+          <div className="relative px-6 py-12 rounded-[3rem] bg-gradient-to-br from-slate-50 to-white border border-slate-100 text-center overflow-hidden shadow-sm">
+            {/* Ambient orbs */}
+            <div className="absolute -top-8 -right-8 w-40 h-40 bg-rose-400/10 rounded-full blur-3xl" />
+            <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-blue-400/10 rounded-full blur-3xl" />
+
+            <div className="flex justify-center mb-5">
+              <div className="relative">
+                <div className="absolute inset-0 bg-rose-500/20 rounded-full blur-xl" />
+                <div className="relative p-4 bg-white rounded-full shadow-md border border-rose-50">
+                  <CheckCircleIcon className="w-7 h-7 text-rose-500" />
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">You're all caught up!</h3>
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1.5">
-            Discovering {stats?.properties || 1234} active listings nearby
-          </p>
-          
-          {/* System Status Tracker */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-150 rounded-full mt-6 shadow-sm">
-            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="text-[9px] font-black uppercase tracking-wider text-gray-600">All Security Nodes Active</span>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-3 mt-8 max-w-sm mx-auto">
-            <button 
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="py-4 bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-sm active:scale-95 flex items-center justify-center"
-            >
-              Back To Top ⬆️
-            </button>
-            <button 
-              onClick={() => navigate('/planner')}
-              className="py-4 bg-gray-950 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-lg active:scale-95 flex items-center justify-center"
-            >
-              AI Planner 🧠
-            </button>
-          </div>
-          
-          <div className="mt-10 text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em]">
-            loopOut v2.4 | Designed with ❤️ in South Africa
+
+            <h3 className="text-base font-black text-slate-900 uppercase tracking-widest mb-1">You're all caught up!</h3>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+              Showing {stats?.properties || 1234}+ active listings nearby
+            </p>
+
+            {/* Status pill */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-full mt-5 shadow-sm">
+              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">loopOut systems live</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-8 max-w-sm mx-auto">
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="py-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 text-[9px] font-black uppercase tracking-[0.15em] rounded-2xl transition-all shadow-sm active:scale-95 hover:shadow-md"
+              >
+                Back to Top ↑
+              </button>
+              <button
+                onClick={() => navigate('/planner')}
+                className="py-4 bg-gradient-to-br from-slate-900 to-slate-800 text-white text-[9px] font-black uppercase tracking-[0.15em] rounded-2xl transition-all shadow-lg active:scale-95 hover:shadow-xl hover:shadow-slate-900/20"
+              >
+                AI Planner 🧠
+              </button>
+            </div>
+
+            <div className="mt-8 text-[8px] font-bold text-slate-300 uppercase tracking-[0.3em]">
+              loopOut v2.4 &middot; Designed with ❤️ in South Africa
+            </div>
           </div>
         </div>
 
@@ -1356,39 +1387,40 @@ const DesktopHomepage = ({
       `}</style>
 
       {/* Sticky Elite Categories Bar */}
-      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl py-4 border-b border-gray-200/80 shadow-sm">
+      <div className="sticky top-0 z-40 bg-white/98 backdrop-blur-2xl py-3 border-b border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
-          <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide py-1">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
-                <button
+                <motion.button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={` flex items-center gap-3 px-5 py-3 rounded-full transition-all duration-300 cursor-pointer focus:outline-none border ${
-                    isActive 
-                      ? 'bg-white border-gray-900 shadow-md scale-105' 
-                      : 'bg-white/50 border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50/50'
+                  whileTap={{ scale: 0.95 }}
+                  className={`flex items-center gap-2.5 px-5 py-2.5 rounded-full transition-all duration-300 cursor-pointer focus:outline-none ${
+                    isActive
+                      ? 'bg-slate-950 text-white shadow-lg shadow-slate-900/15'
+                      : 'bg-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
-                  <div className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110 opacity-70 group-hover:opacity-100'}`}>
-                    <CategoryIcon type={tab.iconType} size="w-6 h-6" />
+                  <div className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'opacity-60'}`}>
+                    <CategoryIcon type={tab.iconType} size="w-5 h-5" />
                   </div>
-                  <span className={`text-[10px] font-black tracking-widest uppercase transition-colors duration-200 ${isActive ? 'text-gray-950' : 'text-gray-500'}`}>
+                  <span className={`text-[10px] font-black tracking-widest uppercase ${isActive ? 'text-white' : 'text-slate-500'}`}>
                     {tab.id}
                   </span>
-                </button>
+                </motion.button>
               );
             })}
           </div>
 
           {/* Premium Filter Button */}
-          <button 
+          <button
             onClick={() => navigate('/search')}
-            className="flex items-center gap-2 px-6 py-2.5 border border-gray-200 rounded-full hover:border-gray-900 transition-all font-black uppercase text-[10px] tracking-widest text-gray-700 bg-white shadow-sm hover:shadow-md"
+            className="flex items-center gap-2 px-5 py-2.5 border border-slate-200 rounded-full hover:border-slate-900 hover:bg-slate-50 transition-all font-black uppercase text-[9px] tracking-widest text-slate-600 bg-white shadow-sm hover:shadow-md active:scale-95"
           >
-            <FunnelIcon className="w-4 h-4 text-gray-500" />
-            <span>Refine Search</span>
+            <FunnelIcon className="w-3.5 h-3.5" />
+            <span>Filters</span>
           </button>
         </div>
       </div>
@@ -1425,29 +1457,29 @@ const DesktopHomepage = ({
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-black uppercase tracking-tighter">
-              <span className="text-gray-950">Explore </span>
-              <span className="text-rose-500">{activeTab === 'Universe' ? 'Top Discoveries' : activeTab}</span>
+            <h1 className="text-3xl font-black tracking-tighter leading-none">
+              <span className="text-slate-900">Explore </span>
+              <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">{activeTab === 'Universe' ? 'Top Discoveries' : activeTab}</span>
             </h1>
-            <p className="text-xs text-gray-400 font-medium mt-1 uppercase tracking-wider">Curated results &middot; Polokwane &amp; beyond</p>
+            <p className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-[0.2em]">Curated &middot; Polokwane &amp; beyond</p>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-full">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-full shadow-sm">
             <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
-            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-              Live &middot; {getFilteredItems().length} results
+            <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">
+              Live &middot; {getFilteredItems().length}
             </span>
           </div>
         </div>
 
         {/* Listings Grid */}
         {getFilteredItems().length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-10">
             {getFilteredItems().map((item, idx) => (
               <motion.div
                 key={item._id || idx}
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: idx * 0.035 }}
+                transition={{ duration: 0.4, delay: idx * 0.03, ease: 'easeOut' }}
               >
                 <AirbnbCard
                   item={item}
@@ -1458,13 +1490,19 @@ const DesktopHomepage = ({
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-32 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <Sparkles className="w-7 h-7 text-gray-400" />
+          <div className="flex flex-col items-center justify-center py-36 text-center">
+            <div className="relative mb-6">
+              <div className="absolute inset-0 bg-rose-100 rounded-full blur-2xl opacity-60" />
+              <div className="relative w-20 h-20 bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl flex items-center justify-center border border-slate-200 shadow-sm">
+                <Sparkles className="w-8 h-8 text-slate-400" />
+              </div>
             </div>
-            <h3 className="text-lg font-bold text-gray-700 mb-1">Nothing here yet</h3>
-            <p className="text-sm text-gray-400 max-w-xs">Try switching categories or expanding your search.</p>
-            <button onClick={() => navigate('/search')} className="mt-6 px-6 py-3 bg-gray-950 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-rose-600 transition-colors shadow-md">Browse All</button>
+            <h3 className="text-xl font-black text-slate-800 mb-2 tracking-tight">Nothing here yet</h3>
+            <p className="text-sm text-slate-400 max-w-xs leading-relaxed">Try switching categories or expanding your search to find what you're looking for.</p>
+            <button
+              onClick={() => navigate('/search')}
+              className="mt-8 px-7 py-3.5 bg-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all duration-300 shadow-lg active:scale-95"
+            >Browse All Listings</button>
           </div>
         )}
 
@@ -1477,37 +1515,48 @@ const DesktopHomepage = ({
         <SellItemsSection navigate={navigate} />
 
         {/* Footer CTA */}
-        <div className="mt-20 pt-10 border-t border-gray-100 text-center">
-          <p className="text-sm text-gray-400 font-medium">You've reached the end of the feed.</p>
+        <div className="mt-20 pt-10 border-t border-slate-100 text-center">
+          <p className="text-sm text-slate-400 font-medium">You've reached the end of the feed.</p>
           <button
             onClick={() => navigate('/search')}
-            className="mt-4 px-6 py-3 bg-gray-950 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-rose-600 transition-colors shadow-md"
+            className="mt-5 px-8 py-3.5 bg-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all duration-300 shadow-lg active:scale-95"
           >
-            Search All Listings
+            Search All Listings →
           </button>
+          <p className="mt-6 text-[9px] text-slate-300 font-bold uppercase tracking-[0.25em]">loopOut v2.4 &middot; Made in South Africa</p>
         </div>
       </main>
-      
-      {/* Floating AI Agent & Bookings Tracker */}
+
+      {/* Floating AI Agent */}
       <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 1, type: 'spring', stiffness: 200 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={() => navigate('/ai-help-center')}
-        className="fixed bottom-6 right-6 z-50 cursor-pointer shadow-xl rounded-full bg-rose-600 hover:bg-rose-500 text-white p-4 flex items-center justify-center border border-rose-500"
+        className="fixed bottom-6 right-6 z-50 cursor-pointer"
       >
-        <Sparkles className="w-6 h-6" />
+        <div className="absolute inset-0 bg-rose-500 rounded-full blur-lg opacity-40 animate-pulse" />
+        <div className="relative bg-gradient-to-br from-rose-500 to-rose-600 text-white p-4 rounded-full shadow-2xl flex items-center justify-center border border-rose-400">
+          <Sparkles className="w-6 h-6" />
+        </div>
       </motion.div>
-      
+
+      {/* Floating Bookings Tracker */}
       <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 1.2, type: 'spring', stiffness: 200 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={() => setIsBookingsOpen(true)}
-        className="fixed bottom-20 right-6 z-50 cursor-pointer shadow-xl rounded-full bg-white hover:bg-gray-50 text-gray-950 p-4 flex items-center justify-center border border-gray-200"
+        className="fixed bottom-20 right-6 z-50 cursor-pointer"
       >
-        <div className="relative">
-          <CalendarDaysIcon className="w-6 h-6 text-gray-700" />
+        <div className="relative bg-white text-slate-950 p-4 rounded-full shadow-xl flex items-center justify-center border border-slate-200 hover:border-slate-400 hover:shadow-2xl transition-all">
+          <CalendarDaysIcon className="w-6 h-6 text-slate-700" />
           {requestCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+            <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[9px] font-bold min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-sm border-2 border-white">
               {requestCount}
             </span>
           )}
