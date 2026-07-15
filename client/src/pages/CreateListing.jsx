@@ -865,6 +865,10 @@ export default function CreateListing() {
         setError(`Please provide ${getNearLabel(selectedCategory, selectedType)}`);
         return;
       }
+      if (detectInsultsClient(listingForm)) {
+        setError("Insulting or offensive language is not allowed. Please use polite language.");
+        return;
+      }
     }
     
     if (currentStep === 8) {
@@ -938,6 +942,108 @@ export default function CreateListing() {
     }
   };
 
+  const checkImageQuality = (file) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        // 1. Check dimensions (resolution must be >= 400x400)
+        if (img.width < 400 || img.height < 400) {
+          resolve({ valid: false, reason: "not_quality" });
+          return;
+        }
+
+        // 2. Check blurriness
+        try {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          // Resize to small size (120x120) for consistent and fast calculation
+          canvas.width = 120;
+          canvas.height = 120;
+          ctx.drawImage(img, 0, 0, 120, 120);
+
+          const imgData = ctx.getImageData(0, 0, 120, 120);
+          const data = imgData.data;
+
+          let diffSum = 0;
+          let pixelCount = 0;
+
+          for (let y = 0; y < 120; y++) {
+            for (let x = 0; x < 119; x++) {
+              const idx = (y * 120 + x) * 4;
+              const nextIdx = idx + 4;
+
+              // Simple grayscale formula: 0.299*R + 0.587*G + 0.114*B
+              const lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+              const nextLum = 0.299 * data[nextIdx] + 0.587 * data[nextIdx + 1] + 0.114 * data[nextIdx + 2];
+
+              diffSum += Math.abs(lum - nextLum);
+              pixelCount++;
+            }
+          }
+
+          const avgDiff = diffSum / pixelCount;
+          
+          // A threshold of 6.8 detects flat, out of focus, or blurry images
+          if (avgDiff < 6.8) {
+            resolve({ valid: false, reason: "blurry" });
+          } else {
+            resolve({ valid: true });
+          }
+        } catch (e) {
+          console.error("Canvas blur analysis failed, skipping:", e);
+          resolve({ valid: true }); // fallback to allow if canvas fails
+        }
+      };
+      
+      img.onerror = () => {
+        resolve({ valid: false, reason: "invalid" });
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const checkAdultContentFilename = (filename) => {
+    const adultKeywords = ['porn', 'adult', 'sexy', 'naked', 'nsfw', 'xxx', 'nudity', 'nud', 'boobs', 'penis', 'cunt', 'vagina', 'anal', 'blowjob', 'erotic', 'breasts'];
+    const lowerFilename = filename.toLowerCase();
+    return adultKeywords.some(keyword => lowerFilename.includes(keyword));
+  };
+
+  const detectInsultsClient = (data) => {
+    const offensiveWords = [
+      'bastard', 'fuck', 'asshole', 'bitch', 'idiot', 'stupid', 'jerk',
+      'cunt', 'dick', 'pussy', 'shit', 'motherfucker', 'whore', 'slut',
+      'nigger', 'faggot', 'retard', 'bastards', 'fucking', 'assholes',
+      'bitches', 'idiots', 'stupids', 'jerks', 'cunts', 'dicks', 'pussies',
+      'shits', 'motherfuckers', 'whores', 'sluts', 'niggers', 'faggots', 'retards'
+    ];
+    const obfuscatedPatterns = [
+      /f[u*x@1k]/i,
+      /a[s*$5]{2}h[o*0]l[e*]/i,
+      /b[i*1]tch/i,
+      /d[i*1]ck/i,
+      /p[u*y]{2}y/i,
+      /sh[i*1]t/i,
+      /c[u*]nt/i,
+      /m[o*]th[e*]rf[u*]ck[e*]r/i
+    ];
+
+    const fields = [data.name, data.description, data.rules, data.near, data.address, data.host];
+    for (const val of fields) {
+      if (val && typeof val === 'string') {
+        const lowerVal = val.toLowerCase();
+        for (const word of offensiveWords) {
+          const regex = new RegExp(`\\b${word}\\b`, 'i');
+          if (regex.test(lowerVal)) return true;
+        }
+        for (const pattern of obfuscatedPatterns) {
+          if (pattern.test(lowerVal)) return true;
+        }
+      }
+    }
+    return false;
+  };
+
   const compressImage = async (file) => {
     const options = {
       maxSizeMB: 1,
@@ -957,12 +1063,37 @@ export default function CreateListing() {
   const handleFileChange = async (e) => {
     try {
       const selectedFiles = Array.from(e.target.files);
-      const compressedFiles = await Promise.all(selectedFiles.map(compressImage));
+      const checkedFiles = [];
+
+      for (const file of selectedFiles) {
+        // Check 1: Filename adult keyword check
+        if (checkAdultContentFilename(file.name)) {
+          setImageUploadError(`Inappropriate or adult image rejected: "${file.name}". Please upload a suitable picture.`);
+          return;
+        }
+
+        // Check 2: Resolution & Blurriness
+        const qualityResult = await checkImageQuality(file);
+        if (!qualityResult.valid) {
+          if (qualityResult.reason === "blurry") {
+            setImageUploadError(`Rejected blurry picture: "${file.name}". Please upload a clear, high-quality picture.`);
+          } else if (qualityResult.reason === "not_quality") {
+            setImageUploadError(`Rejected low quality picture: "${file.name}". Resolution must be at least 400x400.`);
+          } else {
+            setImageUploadError(`Invalid image file: "${file.name}".`);
+          }
+          return;
+        }
+
+        checkedFiles.push(file);
+      }
+
+      const compressedFiles = await Promise.all(checkedFiles.map(compressImage));
       setFiles(compressedFiles);
       setImageUploadError(null);
     } catch (error) {
-      console.error("Image compression error:", error);
-      setImageUploadError("Failed to process images");
+      console.error("Image processing error:", error);
+      setImageUploadError("Failed to process images due to a quality check issue.");
     }
   };
 
@@ -1247,6 +1378,10 @@ export default function CreateListing() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (detectInsultsClient(listingForm)) {
+      return setError("Insulting or offensive language is not allowed in your listing. Please remove any offensive language.");
+    }
     
     if (listingForm.imageUrls.length < 1) {
       return setError("You must upload at least one image");

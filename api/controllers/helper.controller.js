@@ -1,6 +1,7 @@
 import Helper from '../models/helper.model.js';
 import { errorHandler } from '../utils/error.js';
 import { createAreaNotifications } from '../utils/notificationUtils.js';
+import { validateListingText, validateImages } from '../utils/moderationHelper.js';
 
 /**
  * @description Create a new helper profile.
@@ -8,6 +9,16 @@ import { createAreaNotifications } from '../utils/notificationUtils.js';
  */
 export const createHelper = async (req, res, next) => {
   try {
+    const textCheck = validateListingText(req.body);
+    if (!textCheck.valid) {
+      return next(errorHandler(400, textCheck.message));
+    }
+
+    const imageCheck = await validateImages(req.body.imageUrls);
+    if (!imageCheck.valid) {
+      return next(errorHandler(400, imageCheck.message));
+    }
+
     const helper = await Helper.create({
       ...req.body,
       userRef: req.user.id
@@ -85,6 +96,18 @@ export const updateHelper = async (req, res, next) => {
   }
 
   try {
+    const textCheck = validateListingText(req.body);
+    if (!textCheck.valid) {
+      return next(errorHandler(400, textCheck.message));
+    }
+
+    if (req.body.imageUrls) {
+      const imageCheck = await validateImages(req.body.imageUrls);
+      if (!imageCheck.valid) {
+        return next(errorHandler(400, imageCheck.message));
+      }
+    }
+
     const updatedHelper = await Helper.findByIdAndUpdate(
       req.params.id,
       req.body,

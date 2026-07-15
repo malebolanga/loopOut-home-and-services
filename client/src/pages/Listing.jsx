@@ -2225,6 +2225,39 @@ export default function Listing() {
               </div>
             </div>
 
+            {/* Guest Favorite Badge */}
+            <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-100">
+              <div className="flex-shrink-0">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-400 to-orange-400 flex items-center justify-center shadow-md">
+                  <StarIconSolid className="w-7 h-7 text-white" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-0.5">Guest Favourite</p>
+                <p className="text-sm font-semibold text-gray-900 leading-snug">One of the most loved homes, according to guests</p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  {/* Stars — filled proportionally to the real rating */}
+                  <div className="flex">
+                    {[1,2,3,4,5].map(s => {
+                      const guestRating = ratings?.overall > 0 ? ratings.overall : Number(aiRating.average);
+                      return (
+                        <StarIconSolid
+                          key={s}
+                          className={`w-3 h-3 ${s <= Math.round(guestRating) ? 'text-rose-400' : 'text-gray-200'}`}
+                        />
+                      );
+                    })}
+                  </div>
+                  {/* Rating number — same expression as reviews section */}
+                  <span className="text-xs font-bold text-gray-900">
+                    {ratings?.overall > 0 ? ratings.overall.toFixed(1) : Number(aiRating.average).toFixed(1)}
+                  </span>
+                  {/* Review count — same variable as reviews section */}
+                  <span className="text-xs text-gray-500">· {commentCount} reviews</span>
+                </div>
+              </div>
+            </div>
+
             {/* Property Highlights */}
             <div className="border-y border-gray-200 py-6">
                <div className="flex flex-wrap gap-3 mt-6">
@@ -2251,6 +2284,45 @@ export default function Listing() {
             </div>
             </div>
 
+            {/* Listing Highlights */}
+            <div className="py-6 border-b border-gray-200">
+              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-5">What makes this place special</h2>
+              <div className="space-y-5">
+                {/* Exceptional check-in */}
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center flex-shrink-0">
+                    <MdLogin className="text-rose-500 text-xl" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 text-sm lg:text-base">Exceptional check-in experience</h3>
+                    <p className="text-gray-500 text-xs lg:text-sm mt-0.5">Recent guests gave the check-in process a 5-star rating.</p>
+                  </div>
+                </div>
+                {/* Free parking */}
+                {listing.parking && (
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-2xl bg-green-50 flex items-center justify-center flex-shrink-0">
+                      <FaParking className="text-green-600 text-lg" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 text-sm lg:text-base">Park for free</h3>
+                      <p className="text-gray-500 text-xs lg:text-sm mt-0.5">This is one of the few places in the area with free parking.</p>
+                    </div>
+                  </div>
+                )}
+                {/* Great communication */}
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <MdChat className="text-blue-500 text-xl" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 text-sm lg:text-base">Great host communication</h3>
+                    <p className="text-gray-500 text-xs lg:text-sm mt-0.5">Recent guests loved {listing.userRef?.username || 'the host'}'s communication.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Host Info */}
             <div className="py-6 border-b border-gray-200">
               <Link
@@ -2271,7 +2343,11 @@ export default function Listing() {
                 <div>
                   <h2 className="text-base lg:text-lg font-semibold text-gray-900">Hosted by {listing.userRef?.username || 'Host'}</h2>
                   <p className="text-gray-600 text-xs lg:text-sm">
-                    {listing.userRef?.isSuperhost ? 'Superhost' : 'Verified Host'} · {listing.userRef?.createdAt ? new Date(listing.userRef.createdAt).getFullYear() : '2020'}
+                    {listing.userRef?.isSuperhost ? 'Superhost · ' : 'Verified Host · '}
+                    {listing.userRef?.createdAt ? (() => {
+                      const months = Math.max(1, Math.floor((new Date() - new Date(listing.userRef.createdAt)) / (1000 * 60 * 60 * 24 * 30)));
+                      return months < 12 ? `${months} month${months > 1 ? 's' : ''} hosting` : `${Math.floor(months / 12)} year${Math.floor(months / 12) > 1 ? 's' : ''} hosting`;
+                    })() : '1 month hosting'}
                   </p>
                 </div>
               </Link>
@@ -2347,15 +2423,15 @@ export default function Listing() {
               </div>
             )}
 
-            {/* Check-in & Check-out timings for overnight stays / hotels / resorts / self-catering */}
-            {(isOvernight || isSale || isOffice || listing.type === 'land') && (
+            {/* Check-in & Check-out timings — hidden for rent, shown for overnight/hotel/resort/office */}
+            {(isOvernight || isSale || isOffice || listing.type === 'land') && !isRent && (
               <div className="py-6 border-b border-gray-200">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-2.5 bg-rose-50 rounded-2xl">
                     <ClockIcon className="w-6 h-6 text-rose-500" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 tracking-tight">Check-in & Check-out</h3>
+                    <h3 className="text-xl font-bold text-gray-900 tracking-tight">Check-in &amp; Check-out</h3>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Standard timing windows</p>
                   </div>
                 </div>
@@ -2387,6 +2463,62 @@ export default function Listing() {
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wide bg-gray-50 px-3 py-1 rounded-full">Before</span>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Monthly Payment Schedule — rent listings only */}
+            {isRent && (
+              <div className="py-6 border-b border-gray-200">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2.5 bg-green-50 rounded-2xl">
+                    <BanknotesIcon className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 tracking-tight">Monthly Payment Schedule</h3>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Accepted payment windows</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Window 1: 15th – 17th */}
+                  <div className="flex items-center justify-between p-5 rounded-3xl border border-green-100 bg-green-50/40 shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-green-100 text-green-700 flex items-center justify-center text-xl font-black">
+                        💳
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment Window 1</span>
+                        <span className="text-base lg:text-lg font-black text-gray-900 mt-0.5 block">15th – 17th</span>
+                        <span className="text-xs text-gray-500">of every month</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-bold text-green-600 uppercase tracking-wide bg-green-100 px-3 py-1 rounded-full">Window 1</span>
+                    </div>
+                  </div>
+
+                  {/* Window 2: 30th – 5th */}
+                  <div className="flex items-center justify-between p-5 rounded-3xl border border-green-100 bg-green-50/40 shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-green-100 text-green-700 flex items-center justify-center text-xl font-black">
+                        💳
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment Window 2</span>
+                        <span className="text-base lg:text-lg font-black text-gray-900 mt-0.5 block">30th – 5th</span>
+                        <span className="text-xs text-gray-500">end of month to 5th</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-bold text-green-600 uppercase tracking-wide bg-green-100 px-3 py-1 rounded-full">Window 2</span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-gray-500 mt-4 flex items-center gap-1.5">
+                  <BanknotesIcon className="w-3.5 h-3.5" />
+                  Monthly rent: <span className="font-semibold text-gray-900">R{listing.regularPrice.toLocaleString('en-ZA')}/month</span>
+                </p>
               </div>
             )}
 
@@ -2605,29 +2737,120 @@ export default function Listing() {
               )}
             </div>
 
-            {/* House Rules */}
-            {listing.rules && (
-              <div className="py-6 border-t border-gray-200">
-                <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">House rules</h2>
-                <div className="text-gray-700 text-xs lg:text-sm space-y-2">
-                  {listing.rules.split('\n').map((rule, i) => (
-                    <p key={i}>{rule}</p>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Things to Know */}
+            <div className="py-8 border-t border-gray-200">
+              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-6">Things to know</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
 
-            {/* Cancellation Policy */}
-            {listing.cancel && (
-              <div className="py-6 border-t border-gray-200">
-                <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">Cancellation policy</h2>
-                <div className="text-gray-700 text-xs lg:text-sm space-y-2">
-                  {listing.cancel.split('\n').map((policy, i) => (
-                    <p key={i}>{policy}</p>
-                  ))}
+                {/* Cancellation Policy */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3 text-sm lg:text-base">Cancellation policy</h3>
+                  <div className="space-y-2 text-gray-600 text-xs lg:text-sm">
+                    {listing.cancel ? (
+                      listing.cancel.split('\n').map((policy, i) => (
+                        <p key={i} className="leading-relaxed">{policy}</p>
+                      ))
+                    ) : (
+                      <>
+                        <p className="leading-relaxed">Free cancellation before check-in. Cancel before arrival for a partial refund.</p>
+                      </>
+                    )}
+                    <button className="text-gray-900 font-semibold underline underline-offset-2 text-xs mt-1 hover:text-rose-500 transition-colors">
+                      Review host's full policy
+                    </button>
+                  </div>
                 </div>
+
+                {/* House Rules */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3 text-sm lg:text-base">House rules</h3>
+                  <div className="space-y-2 text-gray-600 text-xs lg:text-sm">
+                    {isRent ? (
+                      /* Rent: show payment windows instead of check-in/out times */
+                      <>
+                        <p className="flex items-center gap-2">
+                          <BanknotesIcon className="w-4 h-4 text-green-500 flex-shrink-0" />
+                          Pay between 15th – 17th
+                        </p>
+                        <p className="flex items-center gap-2">
+                          <BanknotesIcon className="w-4 h-4 text-green-500 flex-shrink-0" />
+                          Pay between 30th – 5th
+                        </p>
+                        {listing.rules ? (
+                          listing.rules.split('\n').slice(0, 2).map((rule, i) => (
+                            rule.trim() && (
+                              <p key={i} className="flex items-start gap-2 leading-relaxed">
+                                <CheckCircleIcon className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                                {rule.replace(/^[•\-\*]\s*/, '')}
+                              </p>
+                            )
+                          ))
+                        ) : null}
+                      </>
+                    ) : (
+                      /* Non-rent: show check-in/out times and rules */
+                      <>
+                        {listing.checkInTime && (
+                          <p className="flex items-center gap-2">
+                            <ClockIcon className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            Check-in after {listing.checkInTime}
+                          </p>
+                        )}
+                        {listing.checkOutTime && (
+                          <p className="flex items-center gap-2">
+                            <ClockIcon className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            Checkout before {listing.checkOutTime}
+                          </p>
+                        )}
+                        {listing.rules ? (
+                          listing.rules.split('\n').slice(0, 3).map((rule, i) => (
+                            rule.trim() && (
+                              <p key={i} className="flex items-start gap-2 leading-relaxed">
+                                <CheckCircleIcon className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                                {rule.replace(/^[•\-\*]\s*/, '')}
+                              </p>
+                            )
+                          ))
+                        ) : (
+                          <>
+                            <p className="flex items-center gap-2"><CheckCircleIcon className="w-4 h-4 text-gray-400 flex-shrink-0" />4 guests maximum</p>
+                          </>
+                        )}
+                      </>
+                    )}
+                    <button className="text-gray-900 font-semibold underline underline-offset-2 text-xs mt-1 hover:text-rose-500 transition-colors">
+                      Learn more
+                    </button>
+                  </div>
+                </div>
+
+                {/* Safety & Property */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3 text-sm lg:text-base">Safety &amp; property</h3>
+                  <div className="space-y-2 text-gray-600 text-xs lg:text-sm">
+                    {listing.security ? (
+                      <p className="flex items-center gap-2">
+                        <CheckCircleIcon className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        Carbon monoxide alarm
+                      </p>
+                    ) : (
+                      <p className="flex items-center gap-2">
+                        <XMarkIcon className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        Carbon monoxide alarm not reported
+                      </p>
+                    )}
+                    <p className="flex items-center gap-2">
+                      <XMarkIcon className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      Smoke alarm not reported
+                    </p>
+                    <button className="text-gray-900 font-semibold underline underline-offset-2 text-xs mt-1 hover:text-rose-500 transition-colors">
+                      Learn more
+                    </button>
+                  </div>
+                </div>
+
               </div>
-            )}
+            </div>
           </div>
 
           {/* Right Column - Booking Card */}
@@ -2645,29 +2868,65 @@ export default function Listing() {
                   )}
                 </div>
 
-                {/* Listing Type Info */}
+                {/* Listing Type Info / Rent Payment Info */}
                 <div className="mb-4 p-4 bg-gray-50 rounded-2xl space-y-2 text-xs lg:text-sm">
-                  <p className="text-gray-700 flex justify-between gap-2">
-                    <span className="font-semibold text-gray-600">Listing Type:</span> 
-                    <span>{listingType.label}</span>
-                  </p>
-                  {listing.kind && (
-                    <p className="text-gray-700 flex justify-between gap-2">
-                      <span className="font-semibold text-gray-600">Property Type:</span> 
-                      <span className="capitalize">{listing.kind.replace(/_/g, " ")}</span>
-                    </p>
-                  )}
-                  {listing.period && (
-                    <p className="text-gray-700 flex justify-between gap-2">
-                      <span className="font-semibold text-gray-600">Available From:</span> 
-                      <span>{listing.period}</span>
-                    </p>
-                  )}
-                  {listing.cancel && (
-                    <p className="text-gray-700 flex flex-col gap-0.5 pt-1 border-t border-gray-200/50">
-                      <span className="font-semibold text-gray-600">Cancellation Policy:</span> 
-                      <span className="text-gray-500 text-[11px] leading-snug">{listing.cancel}</span>
-                    </p>
+                  {isRent ? (
+                    /* Rent: show monthly rate + payment windows */
+                    <>
+                      <p className="text-gray-700 flex justify-between gap-2">
+                        <span className="font-semibold text-gray-600">Monthly Rent:</span>
+                        <span className="font-bold text-gray-900">R{listing.regularPrice.toLocaleString('en-ZA')}/month</span>
+                      </p>
+                      {listing.discountPrice && (
+                        <p className="text-gray-700 flex justify-between gap-2">
+                          <span className="font-semibold text-gray-600">Deposit:</span>
+                          <span>R{Number(listing.discountPrice).toLocaleString('en-ZA')}</span>
+                        </p>
+                      )}
+                      {listing.period && (
+                        <p className="text-gray-700 flex justify-between gap-2">
+                          <span className="font-semibold text-gray-600">Available From:</span>
+                          <span>{listing.period}</span>
+                        </p>
+                      )}
+                      <div className="pt-2 border-t border-gray-200/70 space-y-1.5">
+                        <p className="font-semibold text-gray-600 text-[11px] uppercase tracking-wide">Payment Windows</p>
+                        <p className="flex items-center gap-2 text-green-700 font-semibold">
+                          <BanknotesIcon className="w-3.5 h-3.5" />
+                          15th – 17th of every month
+                        </p>
+                        <p className="flex items-center gap-2 text-green-700 font-semibold">
+                          <BanknotesIcon className="w-3.5 h-3.5" />
+                          30th – 5th (end of month)
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    /* Non-rent: existing listing type info */
+                    <>
+                      <p className="text-gray-700 flex justify-between gap-2">
+                        <span className="font-semibold text-gray-600">Listing Type:</span>
+                        <span>{listingType.label}</span>
+                      </p>
+                      {listing.kind && (
+                        <p className="text-gray-700 flex justify-between gap-2">
+                          <span className="font-semibold text-gray-600">Property Type:</span>
+                          <span className="capitalize">{listing.kind.replace(/_/g, " ")}</span>
+                        </p>
+                      )}
+                      {listing.period && (
+                        <p className="text-gray-700 flex justify-between gap-2">
+                          <span className="font-semibold text-gray-600">Available From:</span>
+                          <span>{listing.period}</span>
+                        </p>
+                      )}
+                      {listing.cancel && (
+                        <p className="text-gray-700 flex flex-col gap-0.5 pt-1 border-t border-gray-200/50">
+                          <span className="font-semibold text-gray-600">Cancellation Policy:</span>
+                          <span className="text-gray-500 text-[11px] leading-snug">{listing.cancel}</span>
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
 

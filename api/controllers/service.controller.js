@@ -2,10 +2,20 @@ import Service from '../models/service.model.js';
 import { errorHandler } from '../utils/error.js';
 import { createAreaNotifications } from '../utils/notificationUtils.js';
 import { fuzzItemsLocation, fuzzSingleItemLocation } from '../utils/locationFuzzer.js';
+import { validateListingText, validateImages } from '../utils/moderationHelper.js';
 
 // Create Service
 export const createService = async (req, res, next) => {
   try {
+    const textCheck = validateListingText(req.body);
+    if (!textCheck.valid) {
+      return next(errorHandler(400, textCheck.message));
+    }
+
+    const imageCheck = await validateImages(req.body.imageUrls);
+    if (!imageCheck.valid) {
+      return next(errorHandler(400, imageCheck.message));
+    }
     const serviceData = {
       ...req.body,
       creator: req.user.id,
@@ -72,9 +82,20 @@ export const deleteService = async (req, res, next) => {
   }
 };
 
-// Update Service
 export const updateService = async (req, res, next) => {
   try {
+    const textCheck = validateListingText(req.body);
+    if (!textCheck.valid) {
+      return next(errorHandler(400, textCheck.message));
+    }
+
+    if (req.body.imageUrls) {
+      const imageCheck = await validateImages(req.body.imageUrls);
+      if (!imageCheck.valid) {
+        return next(errorHandler(400, imageCheck.message));
+      }
+    }
+
     const service = await Service.findById(req.params.id);
     if (!service) {
       return next(errorHandler(404, 'Service not found!'));

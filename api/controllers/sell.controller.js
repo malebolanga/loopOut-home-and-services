@@ -1,8 +1,19 @@
 import Sell from '../models/sell.model.js';
 import User from '../models/user.model.js';
+import { validateListingText, validateImages } from '../utils/moderationHelper.js';
 
 export const createSellListing = async (req, res) => {
   try {
+    const textCheck = validateListingText(req.body);
+    if (!textCheck.valid) {
+      return res.status(400).json({ success: false, message: textCheck.message });
+    }
+
+    const imageCheck = await validateImages(req.body.imageUrls);
+    if (!imageCheck.valid) {
+      return res.status(400).json({ success: false, message: imageCheck.message });
+    }
+
     const { name, description, price, category, imageUrls, address, contact, condition, bookAuthor, bookYear, bookUsageHistory } = req.body;
     // Map frontend 'name' and 'regularPrice' to backend 'title' and 'price' if needed
     const title = name;

@@ -1196,7 +1196,7 @@ const MobileAppHomepage = ({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-black text-xl text-gray-950 tracking-tighter leading-none">Explore <span className="text-rose-500">{activeTab === 'Universe' ? 'All' : activeTab}</span></h2>
-              <p className="text-[10px] text-gray-400 font-medium mt-0.5 uppercase tracking-wider">Curated · Polokwane & beyond</p>
+              
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-sm">
               <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
@@ -1461,7 +1461,7 @@ const DesktopHomepage = ({
               <span className="text-slate-900">Explore </span>
               <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">{activeTab === 'Universe' ? 'Top Discoveries' : activeTab}</span>
             </h1>
-            <p className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-[0.2em]">Curated &middot; Polokwane &amp; beyond</p>
+            <p className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-[0.2em]">Curated &middot; South Africa &amp; Beyond</p>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-full shadow-sm">
             <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />

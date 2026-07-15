@@ -198,9 +198,45 @@ export default function UpdateHelper() {
     });
   };
 
+  const detectInsultsClient = (data) => {
+    const offensiveWords = [
+      'bastard', 'fuck', 'asshole', 'bitch', 'idiot', 'stupid', 'jerk',
+      'cunt', 'dick', 'pussy', 'shit', 'motherfucker', 'whore', 'slut',
+      'nigger', 'faggot', 'retard', 'bastards', 'fucking', 'assholes',
+      'bitches', 'idiots', 'stupids', 'jerks', 'cunts', 'dicks', 'pussies',
+      'shits', 'motherfuckers', 'whores', 'sluts', 'niggers', 'faggots', 'retards'
+    ];
+    const obfuscatedPatterns = [
+      /f[u*x@1k]/i,
+      /a[s*$5]{2}h[o*0]l[e*]/i,
+      /b[i*1]tch/i,
+      /d[i*1]ck/i,
+      /p[u*y]{2}y/i,
+      /sh[i*1]t/i,
+      /c[u*]nt/i,
+      /m[o*]th[e*]rf[u*]ck[e*]r/i
+    ];
+    const fields = [data.name, data.description, data.rules, data.near, data.address, data.host];
+    for (const val of fields) {
+      if (val && typeof val === 'string') {
+        const lowerVal = val.toLowerCase();
+        for (const word of offensiveWords) {
+          const regex = new RegExp(`\\b${word}\\b`, 'i');
+          if (regex.test(lowerVal)) return true;
+        }
+        for (const pattern of obfuscatedPatterns) {
+          if (pattern.test(lowerVal)) return true;
+        }
+      }
+    }
+    return false;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      if (detectInsultsClient(formData))
+        return setError('Insulting or offensive language is not allowed in your listing. Please remove any offensive language.');
       setLoading(true);
       const res = await fetch(`/api/helper/update/${helperId}`, {
         method: 'POST',

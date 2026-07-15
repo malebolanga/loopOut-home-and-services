@@ -2,10 +2,20 @@ import Listing from '../models/listing.model.js';
 import { errorHandler } from '../utils/error.js';
 import { createAreaNotifications } from '../utils/notificationUtils.js';
 import { fuzzItemsLocation, fuzzSingleItemLocation } from '../utils/locationFuzzer.js';
+import { validateListingText, validateImages } from '../utils/moderationHelper.js';
 
 // Create Listing
 export const createListing = async (req, res, next) => {
   try {
+    const textCheck = validateListingText(req.body);
+    if (!textCheck.valid) {
+      return next(errorHandler(400, textCheck.message));
+    }
+
+    const imageCheck = await validateImages(req.body.imageUrls);
+    if (!imageCheck.valid) {
+      return next(errorHandler(400, imageCheck.message));
+    }
     const {
       imageUrls,
       videoUrl, // Ensure this is included
@@ -140,6 +150,18 @@ export const updateListing = async (req, res, next) => {
   }
 
   try {
+    const textCheck = validateListingText(req.body);
+    if (!textCheck.valid) {
+      return next(errorHandler(400, textCheck.message));
+    }
+
+    if (req.body.imageUrls) {
+      const imageCheck = await validateImages(req.body.imageUrls);
+      if (!imageCheck.valid) {
+        return next(errorHandler(400, imageCheck.message));
+      }
+    }
+
     const updatedListing = await Listing.findByIdAndUpdate(
       req.params.id,
       {
