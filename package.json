@@ -19,6 +19,7 @@
     "@headlessui/react": "^2.2.9",
     "@mui/icons-material": "^6.1.6",
     "@mui/material": "^6.1.6",
+    "axios": "^1.18.1",
     "bcryptjs": "^2.4.3",
     "bootstrap": "^5.3.3",
     "compression": "^1.8.1",
