@@ -47,6 +47,15 @@ export default function UpdateService() {
     },
     checkInTime: '14:00',
     checkOutTime: '11:00',
+    
+    // Moving specific rates configuration
+    moveCostPerBox: 50,
+    moveCostPerKilo: 10,
+    movePriceVan: 800,
+    movePriceVanTrailer: 1200,
+    movePriceMiniTruck: 1500,
+    movePriceOtherTruck: 2000,
+    movePriceBigTruckTrailer: 3500,
   });
 
   useEffect(() => {
@@ -462,6 +471,94 @@ export default function UpdateService() {
               </div>
             </div>
           </div>
+
+          {formData.type === 'moving' && (
+            <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50'>
+              <div className='flex items-center gap-2 mb-1'>
+                <span className='font-semibold text-gray-800 text-lg'>🚛 Moving Rates Configuration</span>
+              </div>
+              <p className='text-xs text-gray-500 mb-2'>Configure rates for calculations during booking.</p>
+              
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div className='flex flex-col gap-1'>
+                  <label className='text-sm font-semibold'>Rate per Box (R)</label>
+                  <input
+                    type='number'
+                    id='moveCostPerBox'
+                    className='p-3 border border-gray-300 rounded-lg'
+                    onChange={handleChange}
+                    value={formData.moveCostPerBox || 50}
+                  />
+                </div>
+                <div className='flex flex-col gap-1'>
+                  <label className='text-sm font-semibold'>Rate per Kilo (R)</label>
+                  <input
+                    type='number'
+                    id='moveCostPerKilo'
+                    className='p-3 border border-gray-300 rounded-lg'
+                    onChange={handleChange}
+                    value={formData.moveCostPerKilo || 10}
+                  />
+                </div>
+              </div>
+
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-2'>
+                <div className='flex flex-col gap-1'>
+                  <label className='text-sm font-semibold'>Price for Van (R)</label>
+                  <input
+                    type='number'
+                    id='movePriceVan'
+                    className='p-3 border border-gray-300 rounded-lg'
+                    onChange={handleChange}
+                    value={formData.movePriceVan || 800}
+                  />
+                </div>
+                <div className='flex flex-col gap-1'>
+                  <label className='text-sm font-semibold'>Price for Van with Trailer (R)</label>
+                  <input
+                    type='number'
+                    id='movePriceVanTrailer'
+                    className='p-3 border border-gray-300 rounded-lg'
+                    onChange={handleChange}
+                    value={formData.movePriceVanTrailer || 1200}
+                  />
+                </div>
+              </div>
+
+              <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mt-2'>
+                <div className='flex flex-col gap-1'>
+                  <label className='text-sm font-semibold'>Price for Mini Truck (R)</label>
+                  <input
+                    type='number'
+                    id='movePriceMiniTruck'
+                    className='p-3 border border-gray-300 rounded-lg'
+                    onChange={handleChange}
+                    value={formData.movePriceMiniTruck || 1500}
+                  />
+                </div>
+                <div className='flex flex-col gap-1'>
+                  <label className='text-sm font-semibold'>Price for Other Truck (R)</label>
+                  <input
+                    type='number'
+                    id='movePriceOtherTruck'
+                    className='p-3 border border-gray-300 rounded-lg'
+                    onChange={handleChange}
+                    value={formData.movePriceOtherTruck || 2000}
+                  />
+                </div>
+                <div className='flex flex-col gap-1'>
+                  <label className='text-sm font-semibold'>Price for Big Truck with Trailer (R)</label>
+                  <input
+                    type='number'
+                    id='movePriceBigTruckTrailer'
+                    className='p-3 border border-gray-300 rounded-lg'
+                    onChange={handleChange}
+                    value={formData.movePriceBigTruckTrailer || 3500}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Check-in / Check-out Times */}
           <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50'>

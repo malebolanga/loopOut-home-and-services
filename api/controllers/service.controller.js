@@ -24,27 +24,36 @@ export const createService = async (req, res, next) => {
 
     // Handle conditional fields based on service type
     if (req.body.type !== 'daycare') {
-      serviceData.ageGroup = undefined;
-      serviceData.licenseNumber = undefined;
-      serviceData.capacity = undefined;
-      serviceData.meals = undefined;
+      delete serviceData.ageGroup;
+      delete serviceData.licenseNumber;
+      delete serviceData.capacity;
+      delete serviceData.meals;
     }
 
     if (req.body.type !== 'schoolTransport') {
-      serviceData.vehicleType = undefined;
-      serviceData.routeAreas = undefined;
-      serviceData.childSeats = undefined;
+      delete serviceData.vehicleType;
+      delete serviceData.routeAreas;
+      delete serviceData.childSeats;
     }
 
-    // ✅ NEW: Handle car wash conditional fields
     if (req.body.type !== 'carwash') {
-      serviceData.carWashPackages = undefined;
-      serviceData.vehicleTypes = undefined;
-      serviceData.additionalServices = undefined;
-      serviceData.serviceDuration = undefined;
-      serviceData.mobileService = undefined;
-      serviceData.ecoFriendly = undefined;
-      serviceData.additionalPricing = undefined;
+      delete serviceData.carWashPackages;
+      delete serviceData.vehicleTypes;
+      delete serviceData.additionalServices;
+      delete serviceData.serviceDuration;
+      delete serviceData.mobileService;
+      delete serviceData.ecoFriendly;
+      delete serviceData.additionalPricing;
+    }
+
+    if (req.body.type !== 'moving') {
+      delete serviceData.moveCostPerBox;
+      delete serviceData.moveCostPerKilo;
+      delete serviceData.movePriceVan;
+      delete serviceData.movePriceVanTrailer;
+      delete serviceData.movePriceMiniTruck;
+      delete serviceData.movePriceOtherTruck;
+      delete serviceData.movePriceBigTruckTrailer;
     }
 
     const service = await Service.create(serviceData);
@@ -108,33 +117,42 @@ export const updateService = async (req, res, next) => {
     const updateData = { ...req.body };
 
     if (req.body.type !== 'daycare') {
-      updateData.ageGroup = undefined;
-      updateData.licenseNumber = undefined;
-      updateData.capacity = undefined;
-      updateData.meals = undefined;
+      delete updateData.ageGroup;
+      delete updateData.licenseNumber;
+      delete updateData.capacity;
+      delete updateData.meals;
     }
 
     if (req.body.type !== 'schoolTransport') {
-      updateData.vehicleType = undefined;
-      updateData.routeAreas = undefined;
-      updateData.childSeats = undefined;
+      delete updateData.vehicleType;
+      delete updateData.routeAreas;
+      delete updateData.childSeats;
     }
 
-    // ✅ NEW: Handle car wash conditional fields for update
     if (req.body.type !== 'carwash') {
-      updateData.carWashPackages = undefined;
-      updateData.vehicleTypes = undefined;
-      updateData.additionalServices = undefined;
-      updateData.serviceDuration = undefined;
-      updateData.mobileService = undefined;
-      updateData.ecoFriendly = undefined;
-      updateData.additionalPricing = undefined;
+      delete updateData.carWashPackages;
+      delete updateData.vehicleTypes;
+      delete updateData.additionalServices;
+      delete updateData.serviceDuration;
+      delete updateData.mobileService;
+      delete updateData.ecoFriendly;
+      delete updateData.additionalPricing;
+    }
+
+    if (req.body.type !== 'moving') {
+      delete updateData.moveCostPerBox;
+      delete updateData.moveCostPerKilo;
+      delete updateData.movePriceVan;
+      delete updateData.movePriceVanTrailer;
+      delete updateData.movePriceMiniTruck;
+      delete updateData.movePriceOtherTruck;
+      delete updateData.movePriceBigTruckTrailer;
     }
 
     const updatedService = await Service.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { new: true }
+      { new: true, runValidators: false }
     );
 
     res.status(200).json(updatedService);

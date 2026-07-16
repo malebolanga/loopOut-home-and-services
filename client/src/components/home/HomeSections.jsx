@@ -153,32 +153,67 @@ const parseSpecialDetails = (msg) => {
 
   lines.forEach(line => {
     const cleanLine = line.replace(/\*/g, '').trim();
-    
-    if (cleanLine.includes('Haircut Style:')) {
-      details.haircutStyle = cleanLine.split('Haircut Style:')[1].trim();
-    }
-    if (cleanLine.includes('Beard Style:')) {
-      details.beardStyle = cleanLine.split('Beard Style:')[1].trim();
-    }
-    if (cleanLine.includes('Meal Type:')) {
-      details.mealType = cleanLine.split('Meal Type:')[1].trim();
-    }
-    if (cleanLine.includes('Cuisine:')) {
-      details.cuisine = cleanLine.split('Cuisine:')[1].trim();
-    }
-    if (cleanLine.includes('Food provided by client:')) {
-      details.foodProvided = cleanLine.split('Food provided by client:')[1].trim();
-    }
-    if (cleanLine.includes('Electricity available:')) {
-      details.electricity = cleanLine.split('Electricity available:')[1].trim();
-    }
+
+    // ── Barber / Beauty ──
+    if (cleanLine.includes('Haircut Style:')) details.haircutStyle = cleanLine.split('Haircut Style:')[1].trim();
+    if (cleanLine.includes('Beard Style:')) details.beardStyle = cleanLine.split('Beard Style:')[1].trim();
+
+    // ── Food / Chef ──
+    if (cleanLine.includes('Meal Type:')) details.mealType = cleanLine.split('Meal Type:')[1].trim();
+    if (cleanLine.includes('Cuisine:')) details.cuisine = cleanLine.split('Cuisine:')[1].trim();
+
+    // ── Provisions (all service types) ──
+    if (cleanLine.includes('Food provided by client:')) details.foodProvided = cleanLine.split('Food provided by client:')[1].trim();
+    if (cleanLine.includes('Electricity available:')) details.electricity = cleanLine.split('Electricity available:')[1].trim();
+
+    // ── General list items ──
     if (cleanLine.startsWith('📜')) {
       if (!details.selectedServices) details.selectedServices = [];
       details.selectedServices.push(cleanLine.replace('📜', '').trim());
     }
-    if (cleanLine.startsWith('📝')) {
-      details.notes = cleanLine.replace('📝', '').trim();
-    }
+    if (cleanLine.startsWith('📝')) details.notes = cleanLine.replace('📝', '').trim();
+
+    // ── Car Wash ──
+    if (cleanLine.includes('Type:') && cleanLine.startsWith('🚗')) details.vehicleType = cleanLine.split('Type:')[1].trim();
+    if (cleanLine.includes('Make:')) details.vehicleMake = cleanLine.split('Make:')[1].trim();
+    if (cleanLine.includes('Model:')) details.vehicleModel = cleanLine.split('Model:')[1].trim();
+    if (cleanLine.includes('Plate:')) details.licensePlate = cleanLine.split('Plate:')[1].trim();
+    if (cleanLine.includes('Wash:')) details.washType = cleanLine.split('Wash:')[1].trim();
+    if (cleanLine.includes('Deep Clean:')) details.deepClean = cleanLine.split('Deep Clean:')[1].trim();
+    if (cleanLine.includes('Polish:')) details.polish = cleanLine.split('Polish:')[1].trim();
+
+    // ── Moving ──
+    if (cleanLine.includes('From:') && cleanLine.startsWith('📦')) details.moveFrom = cleanLine.split('From:')[1].trim();
+    if (cleanLine.includes('To:') && cleanLine.startsWith('🏁')) details.moveTo = cleanLine.split('To:')[1].trim();
+    if (cleanLine.includes('Rooms/Size:')) details.moveRooms = cleanLine.split('Rooms/Size:')[1].trim();
+    if (cleanLine.includes('Floor (From):')) details.moveFloorFrom = cleanLine.split('Floor (From):')[1].trim();
+    if (cleanLine.includes('Floor (To):')) details.moveFloorTo = cleanLine.split('Floor (To):')[1].trim();
+    if (cleanLine.includes('Lift/Elevator:')) details.moveLift = cleanLine.split('Lift/Elevator:')[1].trim();
+    if (cleanLine.includes('Heavy items:')) details.moveHeavyItems = cleanLine.split('Heavy items:')[1].trim();
+    if (cleanLine.includes('Packing service needed:')) details.movePacking = cleanLine.split('Packing service needed:')[1].trim();
+    if (cleanLine.includes('Boxes:')) details.moveBoxes = cleanLine.split('Boxes:')[1].trim();
+    if (cleanLine.includes('Weight:')) details.moveWeight = cleanLine.split('Weight:')[1].trim();
+    if (cleanLine.includes('Vehicle:') && cleanLine.startsWith('🚛')) details.moveVehicle = cleanLine.split('Vehicle:')[1].trim();
+
+    // ── Handyman / Maintenance ──
+    if (cleanLine.includes('Job Type:')) details.handymanJobType = cleanLine.split('Job Type:')[1].trim();
+    if (cleanLine.includes('Description:')) details.handymanDescription = cleanLine.split('Description:')[1].trim();
+    if (cleanLine.includes('Materials needed:')) details.handymanMaterials = cleanLine.split('Materials needed:')[1].trim();
+    if (cleanLine.includes('Urgency:')) details.handymanUrgency = cleanLine.split('Urgency:')[1].trim();
+
+    // ── Landscaping ──
+    if (cleanLine.includes('Service Type:')) details.landscapingType = cleanLine.split('Service Type:')[1].trim();
+    if (cleanLine.includes('Area Size:')) details.landscapingArea = cleanLine.split('Area Size:')[1].trim();
+    if (cleanLine.includes('Frequency:')) details.landscapingFrequency = cleanLine.split('Frequency:')[1].trim();
+    if (cleanLine.includes('Equipment available:')) details.landscapingEquipment = cleanLine.split('Equipment available:')[1].trim();
+
+    // ── Catering ──
+    if (cleanLine.includes('Event Type:')) details.cateringEvent = cleanLine.split('Event Type:')[1].trim();
+    if (cleanLine.includes('Guest Count:')) details.cateringGuests = cleanLine.split('Guest Count:')[1].trim();
+    if (cleanLine.includes('Menu Preference:')) details.cateringMenu = cleanLine.split('Menu Preference:')[1].trim();
+    if (cleanLine.includes('Dietary Requirements:')) details.cateringDietary = cleanLine.split('Dietary Requirements:')[1].trim();
+    if (cleanLine.includes('Event Duration:')) details.cateringDuration = cleanLine.split('Event Duration:')[1].trim();
+    if (cleanLine.includes('Venue Type:')) details.cateringVenue = cleanLine.split('Venue Type:')[1].trim();
   });
 
   return Object.keys(details).length > 0 ? details : null;
@@ -326,80 +361,341 @@ const BookingDetailsModal = ({ booking, onClose, currentUser }) => {
 
           {/* Service Configuration details */}
           <div className="space-y-3">
-            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Service Configuration</h3>
-            <div className="bg-gray-50 border border-gray-100 p-4 rounded-2xl space-y-3 text-xs">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Request Type</span>
-                <span className="font-black text-gray-800 uppercase tracking-wider">{typeLabel}</span>
-              </div>
-              
-              {booking.subtype && (
-                <div className="flex justify-between items-start gap-4">
-                  <span className="text-gray-400 flex-shrink-0">Requested Service</span>
-                  <span className="font-bold text-gray-800 text-right">{booking.subtype}</span>
+            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">📋 Booking Details</h3>
+
+            {/* ── Request Type + Subtype header pill ── */}
+            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-100 rounded-2xl">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🎯</span>
+                <div>
+                  <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Request Type</p>
+                  <p className="text-xs font-black text-indigo-800 leading-tight">{typeLabel}</p>
                 </div>
-              )}
-
-              {/* Parsed Custom Selections */}
-              {details && (
-                <>
-                  <div className="h-px bg-gray-200/60 my-2" />
-                  
-                  {details.selectedServices && details.selectedServices.length > 0 && (
-                    <div className="space-y-1.5">
-                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Items / Selections</p>
-                      {details.selectedServices.map((srv, idx) => (
-                        <div key={idx} className="flex justify-between pl-2 border-l-2 border-rose-500/30 text-[11px] font-medium text-gray-700">
-                          {srv}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {details.haircutStyle && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">✂️ Haircut Style</span>
-                      <span className="font-bold text-gray-800">{details.haircutStyle}</span>
-                    </div>
-                  )}
-
-                  {details.beardStyle && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">🧔 Beard Style</span>
-                      <span className="font-bold text-gray-800">{details.beardStyle}</span>
-                    </div>
-                  )}
-
-                  {details.mealType && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">🍽️ Meal Type</span>
-                      <span className="font-bold text-gray-800">{details.mealType}</span>
-                    </div>
-                  )}
-
-                  {details.cuisine && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">🌍 Cuisine Preference</span>
-                      <span className="font-bold text-gray-800">{details.cuisine}</span>
-                    </div>
-                  )}
-
-                  {details.foodProvided && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">🍽️ Client Provides Food</span>
-                      <span className="font-bold text-gray-800">{details.foodProvided}</span>
-                    </div>
-                  )}
-
-                  {details.electricity && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">⚡ Electricity Available</span>
-                      <span className="font-bold text-gray-800">{details.electricity}</span>
-                    </div>
-                  )}
-                </>
+              </div>
+              {booking.subtype && (
+                <span className="text-[10px] font-black text-violet-700 bg-violet-100 border border-violet-200 px-2.5 py-1 rounded-xl max-w-[40%] text-right leading-tight">
+                  {booking.subtype}
+                </span>
               )}
             </div>
+
+            {details && (
+              <div className="space-y-3">
+
+                {/* ── Selections list ── */}
+                {details.selectedServices && details.selectedServices.length > 0 && (
+                  <div className="bg-rose-50 border border-rose-100 rounded-2xl p-3 space-y-1.5">
+                    <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest mb-2">📜 Selected Services</p>
+                    {details.selectedServices.map((srv, idx) => (
+                      <div key={idx} className="flex items-center gap-2 pl-2 border-l-2 border-rose-400">
+                        <span className="text-[11px] font-bold text-rose-700">{srv}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* ── ✂️ Barber / Beauty ── */}
+                {(details.haircutStyle || details.beardStyle) && (
+                  <div className="bg-gradient-to-br from-pink-50 to-fuchsia-50 border border-pink-100 rounded-2xl p-3 space-y-2">
+                    <p className="text-[9px] font-black text-pink-500 uppercase tracking-widest flex items-center gap-1">✂️ Barber &amp; Beauty</p>
+                    <div className="grid grid-cols-1 gap-2 text-xs">
+                      {details.haircutStyle && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-pink-400 font-semibold">Haircut Style</span>
+                          <span className="font-black text-pink-800 bg-pink-100 px-2 py-0.5 rounded-lg">{details.haircutStyle}</span>
+                        </div>
+                      )}
+                      {details.beardStyle && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-pink-400 font-semibold">🧔 Beard Style</span>
+                          <span className="font-black text-pink-800 bg-pink-100 px-2 py-0.5 rounded-lg">{details.beardStyle}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── 🍽️ Chef / Food ── */}
+                {(details.mealType || details.cuisine) && (
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 rounded-2xl p-3 space-y-2">
+                    <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest">🍽️ Meal Details</p>
+                    <div className="grid grid-cols-1 gap-2 text-xs">
+                      {details.mealType && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-amber-500 font-semibold">Meal Type</span>
+                          <span className="font-black text-amber-800 bg-amber-100 px-2 py-0.5 rounded-lg">{details.mealType}</span>
+                        </div>
+                      )}
+                      {details.cuisine && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-amber-500 font-semibold">🌍 Cuisine</span>
+                          <span className="font-black text-amber-800 bg-amber-100 px-2 py-0.5 rounded-lg">{details.cuisine}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── 🚗 Car Wash ── */}
+                {(details.vehicleType || details.vehicleMake || details.vehicleModel || details.licensePlate || details.washType || details.deepClean || details.polish) && (
+                  <div className="bg-gradient-to-br from-sky-50 to-cyan-50 border border-sky-100 rounded-2xl p-3 space-y-2">
+                    <p className="text-[9px] font-black text-sky-500 uppercase tracking-widest">🚗 Vehicle &amp; Detailing</p>
+                    <div className="grid grid-cols-1 gap-2 text-xs">
+                      {details.vehicleType && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sky-500 font-semibold">Vehicle Type</span>
+                          <span className="font-black text-sky-800 bg-sky-100 px-2 py-0.5 rounded-lg">{details.vehicleType}</span>
+                        </div>
+                      )}
+                      {details.vehicleMake && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sky-500 font-semibold">🔖 Make</span>
+                          <span className="font-black text-sky-800 bg-sky-100 px-2 py-0.5 rounded-lg">{details.vehicleMake}</span>
+                        </div>
+                      )}
+                      {details.vehicleModel && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sky-500 font-semibold">🚘 Model</span>
+                          <span className="font-black text-sky-800 bg-sky-100 px-2 py-0.5 rounded-lg">{details.vehicleModel}</span>
+                        </div>
+                      )}
+                      {details.licensePlate && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sky-500 font-semibold">🆔 Plate</span>
+                          <span className="font-black text-sky-800 bg-sky-100 px-2 py-0.5 rounded-lg tracking-widest">{details.licensePlate}</span>
+                        </div>
+                      )}
+                      {details.washType && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sky-500 font-semibold">🧼 Wash Type</span>
+                          <span className="font-black text-sky-800 bg-sky-100 px-2 py-0.5 rounded-lg">{details.washType}</span>
+                        </div>
+                      )}
+                      {details.deepClean && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sky-500 font-semibold">🧹 Deep Clean</span>
+                          <span className="font-black text-sky-800 bg-sky-100 px-2 py-0.5 rounded-lg">{details.deepClean}</span>
+                        </div>
+                      )}
+                      {details.polish && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sky-500 font-semibold">✨ Polish</span>
+                          <span className="font-black text-sky-800 bg-sky-100 px-2 py-0.5 rounded-lg">{details.polish}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── 🚛 Moving ── */}
+                {(details.moveFrom || details.moveTo || details.moveRooms || details.moveFloorFrom || details.moveFloorTo || details.moveLift || details.moveHeavyItems || details.movePacking || details.moveBoxes || details.moveWeight || details.moveVehicle) && (
+                  <div className="bg-gradient-to-br from-orange-50 to-rose-50 border border-orange-100 rounded-2xl p-3 space-y-2">
+                    <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest">🚛 Moving Details</p>
+                    <div className="grid grid-cols-1 gap-2 text-xs">
+                      {details.moveFrom && (
+                        <div className="flex justify-between items-start gap-3">
+                          <span className="text-orange-400 font-semibold flex-shrink-0">📦 From</span>
+                          <span className="font-black text-orange-800 text-right bg-orange-100 px-2 py-0.5 rounded-lg max-w-[60%] leading-tight">{details.moveFrom}</span>
+                        </div>
+                      )}
+                      {details.moveTo && (
+                        <div className="flex justify-between items-start gap-3">
+                          <span className="text-orange-400 font-semibold flex-shrink-0">🏁 To</span>
+                          <span className="font-black text-orange-800 text-right bg-orange-100 px-2 py-0.5 rounded-lg max-w-[60%] leading-tight">{details.moveTo}</span>
+                        </div>
+                      )}
+                      {details.moveRooms && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-orange-400 font-semibold">🛏️ Rooms / Size</span>
+                          <span className="font-black text-orange-800 bg-orange-100 px-2 py-0.5 rounded-lg">{details.moveRooms}</span>
+                        </div>
+                      )}
+                      {details.moveFloorFrom && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-orange-400 font-semibold">🏢 Floor (From)</span>
+                          <span className="font-black text-orange-800 bg-orange-100 px-2 py-0.5 rounded-lg">{details.moveFloorFrom}</span>
+                        </div>
+                      )}
+                      {details.moveFloorTo && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-orange-400 font-semibold">🏢 Floor (To)</span>
+                          <span className="font-black text-orange-800 bg-orange-100 px-2 py-0.5 rounded-lg">{details.moveFloorTo}</span>
+                        </div>
+                      )}
+                      {details.moveLift && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-orange-400 font-semibold">🛗 Lift / Elevator</span>
+                          <span className="font-black text-orange-800 bg-orange-100 px-2 py-0.5 rounded-lg">{details.moveLift}</span>
+                        </div>
+                      )}
+                      {details.moveHeavyItems && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-orange-400 font-semibold">🪑 Heavy Items</span>
+                          <span className="font-black text-orange-800 bg-orange-100 px-2 py-0.5 rounded-lg">{details.moveHeavyItems}</span>
+                        </div>
+                      )}
+                      {details.movePacking && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-orange-400 font-semibold">📦 Packing Service</span>
+                          <span className="font-black text-orange-800 bg-orange-100 px-2 py-0.5 rounded-lg">{details.movePacking}</span>
+                        </div>
+                      )}
+                      {details.moveBoxes && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-orange-400 font-semibold">📦 Boxes</span>
+                          <span className="font-black text-orange-800 bg-orange-100 px-2 py-0.5 rounded-lg">{details.moveBoxes}</span>
+                        </div>
+                      )}
+                      {details.moveWeight && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-orange-400 font-semibold">⚖️ Weight</span>
+                          <span className="font-black text-orange-800 bg-orange-100 px-2 py-0.5 rounded-lg">{details.moveWeight}</span>
+                        </div>
+                      )}
+                      {details.moveVehicle && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-orange-400 font-semibold">🚛 Vehicle</span>
+                          <span className="font-black text-orange-800 bg-orange-100 px-2 py-0.5 rounded-lg">{details.moveVehicle}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── 🔧 Handyman / Maintenance ── */}
+                {(details.handymanJobType || details.handymanDescription || details.handymanMaterials || details.handymanUrgency) && (
+                  <div className="bg-gradient-to-br from-slate-50 to-zinc-50 border border-slate-200 rounded-2xl p-3 space-y-2">
+                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">🔧 Job Details</p>
+                    <div className="grid grid-cols-1 gap-2 text-xs">
+                      {details.handymanJobType && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-400 font-semibold">🔨 Job Type</span>
+                          <span className="font-black text-slate-800 bg-slate-200 px-2 py-0.5 rounded-lg">{details.handymanJobType}</span>
+                        </div>
+                      )}
+                      {details.handymanMaterials && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-400 font-semibold">🛒 Materials</span>
+                          <span className="font-black text-slate-800 bg-slate-200 px-2 py-0.5 rounded-lg">{details.handymanMaterials}</span>
+                        </div>
+                      )}
+                      {details.handymanUrgency && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-400 font-semibold">⚡ Urgency</span>
+                          <span className={`font-black px-2 py-0.5 rounded-lg ${details.handymanUrgency.includes('Urgent') ? 'text-red-700 bg-red-100' : details.handymanUrgency.includes('Flexible') ? 'text-green-700 bg-green-100' : 'text-yellow-700 bg-yellow-100'}`}>{details.handymanUrgency}</span>
+                        </div>
+                      )}
+                      {details.handymanDescription && (
+                        <div className="flex flex-col gap-1 pt-1 border-t border-slate-200/60">
+                          <span className="text-slate-400 font-semibold">📋 Description</span>
+                          <p className="text-slate-700 font-bold text-[11px] leading-relaxed bg-slate-100 rounded-xl px-3 py-2">{details.handymanDescription}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── 🌿 Landscaping ── */}
+                {(details.landscapingType || details.landscapingArea || details.landscapingFrequency || details.landscapingEquipment) && (
+                  <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100 rounded-2xl p-3 space-y-2">
+                    <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">🌿 Garden Details</p>
+                    <div className="grid grid-cols-1 gap-2 text-xs">
+                      {details.landscapingType && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-emerald-500 font-semibold">🌱 Service Type</span>
+                          <span className="font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-lg">{details.landscapingType}</span>
+                        </div>
+                      )}
+                      {details.landscapingArea && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-emerald-500 font-semibold">📐 Area Size</span>
+                          <span className="font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-lg">{details.landscapingArea}</span>
+                        </div>
+                      )}
+                      {details.landscapingFrequency && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-emerald-500 font-semibold">🔄 Frequency</span>
+                          <span className="font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-lg">{details.landscapingFrequency}</span>
+                        </div>
+                      )}
+                      {details.landscapingEquipment && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-emerald-500 font-semibold">🪣 Equipment</span>
+                          <span className="font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-lg">{details.landscapingEquipment}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── 🍽️ Catering ── */}
+                {(details.cateringEvent || details.cateringGuests || details.cateringMenu || details.cateringDietary || details.cateringDuration || details.cateringVenue) && (
+                  <div className="bg-gradient-to-br from-yellow-50 to-amber-50 border border-yellow-100 rounded-2xl p-3 space-y-2">
+                    <p className="text-[9px] font-black text-yellow-600 uppercase tracking-widest">🍽️ Catering Details</p>
+                    <div className="grid grid-cols-1 gap-2 text-xs">
+                      {details.cateringEvent && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-yellow-600 font-semibold">🎉 Event Type</span>
+                          <span className="font-black text-yellow-800 bg-yellow-100 px-2 py-0.5 rounded-lg">{details.cateringEvent}</span>
+                        </div>
+                      )}
+                      {details.cateringGuests && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-yellow-600 font-semibold">👥 Guests</span>
+                          <span className="font-black text-yellow-800 bg-yellow-100 px-2 py-0.5 rounded-lg">{details.cateringGuests}</span>
+                        </div>
+                      )}
+                      {details.cateringMenu && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-yellow-600 font-semibold">🍴 Menu</span>
+                          <span className="font-black text-yellow-800 bg-yellow-100 px-2 py-0.5 rounded-lg">{details.cateringMenu}</span>
+                        </div>
+                      )}
+                      {details.cateringDietary && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-yellow-600 font-semibold">🥗 Dietary</span>
+                          <span className="font-black text-yellow-800 bg-yellow-100 px-2 py-0.5 rounded-lg">{details.cateringDietary}</span>
+                        </div>
+                      )}
+                      {details.cateringDuration && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-yellow-600 font-semibold">⏱️ Duration</span>
+                          <span className="font-black text-yellow-800 bg-yellow-100 px-2 py-0.5 rounded-lg">{details.cateringDuration}</span>
+                        </div>
+                      )}
+                      {details.cateringVenue && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-yellow-600 font-semibold">🏛️ Venue</span>
+                          <span className="font-black text-yellow-800 bg-yellow-100 px-2 py-0.5 rounded-lg">{details.cateringVenue}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── ⚡ Provisions ── */}
+                {(details.foodProvided || details.electricity) && (
+                  <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-100 rounded-2xl p-3 space-y-2">
+                    <p className="text-[9px] font-black text-teal-500 uppercase tracking-widest">⚡ Provisions</p>
+                    <div className="grid grid-cols-1 gap-2 text-xs">
+                      {details.foodProvided && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-teal-500 font-semibold">🍽️ Food by Client</span>
+                          <span className={`font-black px-2 py-0.5 rounded-lg ${details.foodProvided.includes('Yes') || details.foodProvided.includes('✅') ? 'text-green-700 bg-green-100' : 'text-red-600 bg-red-50'}`}>{details.foodProvided}</span>
+                        </div>
+                      )}
+                      {details.electricity && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-teal-500 font-semibold">⚡ Electricity</span>
+                          <span className={`font-black px-2 py-0.5 rounded-lg ${details.electricity.includes('Yes') || details.electricity.includes('✅') ? 'text-green-700 bg-green-100' : 'text-red-600 bg-red-50'}`}>{details.electricity}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            )}
           </div>
 
           {/* Location / Where */}

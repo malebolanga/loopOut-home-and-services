@@ -456,6 +456,9 @@ const ServicePage = () => {
     moveHasLift: '',
     moveHeavyItems: '',
     movePackingRequired: '',
+    moveBoxesCount: 0,
+    moveKilosCount: 0,
+    moveVehicleType: 'none',
     // Handyman / Maintenance
     handymanJobType: '',
     handymanJobDescription: '',
@@ -509,11 +512,39 @@ const ServicePage = () => {
         selectedPrice = parseInt(String(selectedService.price).replace(/[^\d]/g, '')) || 0;
       }
 
-      const totalBase = selectedPrice > 0 ? selectedPrice : basePrice;
+      let totalBase = selectedPrice > 0 ? selectedPrice : basePrice;
+
+      if (service.type === 'moving') {
+        const costPerBox = service.moveCostPerBox !== undefined ? Number(service.moveCostPerBox) : 50;
+        const costPerKilo = service.moveCostPerKilo !== undefined ? Number(service.moveCostPerKilo) : 10;
+        const priceVan = service.movePriceVan !== undefined ? Number(service.movePriceVan) : 800;
+        const priceVanTrailer = service.movePriceVanTrailer !== undefined ? Number(service.movePriceVanTrailer) : 1200;
+        const priceMiniTruck = service.movePriceMiniTruck !== undefined ? Number(service.movePriceMiniTruck) : 1500;
+        const priceOtherTruck = service.movePriceOtherTruck !== undefined ? Number(service.movePriceOtherTruck) : 2000;
+        const priceBigTruckTrailer = service.movePriceBigTruckTrailer !== undefined ? Number(service.movePriceBigTruckTrailer) : 3500;
+
+        const boxesCount = Number(bookingData.moveBoxesCount) || 0;
+        const kilosCount = Number(bookingData.moveKilosCount) || 0;
+
+        let vehicleCost = 0;
+        if (bookingData.moveVehicleType === 'van') vehicleCost = priceVan;
+        else if (bookingData.moveVehicleType === 'vanTrailer') vehicleCost = priceVanTrailer;
+        else if (bookingData.moveVehicleType === 'miniTruck') vehicleCost = priceMiniTruck;
+        else if (bookingData.moveVehicleType === 'otherTruck') vehicleCost = priceOtherTruck;
+        else if (bookingData.moveVehicleType === 'bigTruckTrailer') vehicleCost = priceBigTruckTrailer;
+
+        const boxesCost = boxesCount * costPerBox;
+        const kilosCost = kilosCount * costPerKilo;
+
+        if (boxesCount > 0 || kilosCount > 0 || (bookingData.moveVehicleType && bookingData.moveVehicleType !== 'none')) {
+          totalBase = boxesCost + kilosCost + vehicleCost;
+        }
+      }
+
       const serviceFee = Math.round(totalBase * 0.1);
       setTotalPrice(totalBase + travelFee + serviceFee);
     }
-  }, [service, selectedService]);
+  }, [service, selectedService, bookingData.moveBoxesCount, bookingData.moveKilosCount, bookingData.moveVehicleType]);
 
   useEffect(() => {
     const fetchService = async () => {
@@ -631,6 +662,69 @@ const ServicePage = () => {
   const generateMapLink = (address) => {
     if (!address) return null;
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+  };
+
+  const getMovingBreakdown = () => {
+    if (!service || service.type !== 'moving') return null;
+
+    const costPerBox = service.moveCostPerBox !== undefined ? Number(service.moveCostPerBox) : 50;
+    const costPerKilo = service.moveCostPerKilo !== undefined ? Number(service.moveCostPerKilo) : 10;
+    const priceVan = service.movePriceVan !== undefined ? Number(service.movePriceVan) : 800;
+    const priceVanTrailer = service.movePriceVanTrailer !== undefined ? Number(service.movePriceVanTrailer) : 1200;
+    const priceMiniTruck = service.movePriceMiniTruck !== undefined ? Number(service.movePriceMiniTruck) : 1500;
+    const priceOtherTruck = service.movePriceOtherTruck !== undefined ? Number(service.movePriceOtherTruck) : 2000;
+    const priceBigTruckTrailer = service.movePriceBigTruckTrailer !== undefined ? Number(service.movePriceBigTruckTrailer) : 3500;
+
+    const boxesCount = Number(bookingData.moveBoxesCount) || 0;
+    const kilosCount = Number(bookingData.moveKilosCount) || 0;
+
+    let vehicleCost = 0;
+    let vehicleLabel = '';
+    if (bookingData.moveVehicleType === 'van') {
+      vehicleCost = priceVan;
+      vehicleLabel = 'Van';
+    } else if (bookingData.moveVehicleType === 'vanTrailer') {
+      vehicleCost = priceVanTrailer;
+      vehicleLabel = 'Van with Trailer';
+    } else if (bookingData.moveVehicleType === 'miniTruck') {
+      vehicleCost = priceMiniTruck;
+      vehicleLabel = 'Mini Truck';
+    } else if (bookingData.moveVehicleType === 'otherTruck') {
+      vehicleCost = priceOtherTruck;
+      vehicleLabel = 'Other Truck';
+    } else if (bookingData.moveVehicleType === 'bigTruckTrailer') {
+      vehicleCost = priceBigTruckTrailer;
+      vehicleLabel = 'Big Truck with Trailer';
+    }
+
+    const boxesCost = boxesCount * costPerBox;
+    const kilosCost = kilosCount * costPerKilo;
+    const travelFee = parseInt(service.travelFee) || 0;
+
+    const subtotal = boxesCost + kilosCost + vehicleCost;
+    const basePrice = parseInt(service.regularPrice) || 0;
+    let selectedPrice = 0;
+    if (selectedService && selectedService.price) {
+      selectedPrice = parseInt(String(selectedService.price).replace(/[^\d]/g, '')) || 0;
+    }
+    const finalBasePrice = selectedPrice > 0 ? selectedPrice : basePrice;
+
+    const activeBase = (boxesCount > 0 || kilosCount > 0 || (bookingData.moveVehicleType && bookingData.moveVehicleType !== 'none')) ? subtotal : finalBasePrice;
+    const serviceFee = Math.round(activeBase * 0.1);
+
+    return {
+      boxesCount,
+      costPerBox,
+      boxesCost,
+      kilosCount,
+      costPerKilo,
+      kilosCost,
+      vehicleLabel,
+      vehicleCost,
+      travelFee,
+      serviceFee,
+      hasOptions: boxesCount > 0 || kilosCount > 0 || (bookingData.moveVehicleType && bookingData.moveVehicleType !== 'none')
+    };
   };
 
   const handleBookingChange = (e) => {
@@ -785,163 +879,179 @@ const ServicePage = () => {
     const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
 
     let message = isQuick
-      ? `*📅 QUICK SERVICE BOOKING* 📅\n\n`
-      : `*🛎️ NEW SERVICE BOOKING* 🛎️\n\n`;
+      ? `🚀✨ *QUICK BOOKING REQUEST* ✨🚀\n🔖 _via loopOut — Fast Track_\n\n`
+      : `🎯🔔 *NEW SERVICE BOOKING* 🔔🎯\n💼 _Submitted via loopOut Platform_\n\n`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*💼 SERVICE DETAILS*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `⚒️ *Service:* ${service.name}\n`;
-    message += `📋 *Type:* ${getProfessionalTitle(service.type)}\n`;
+    message += `╔══════════════════════╗\n`;
+    message += `   💼 *SERVICE DETAILS*\n`;
+    message += `╚══════════════════════╝\n`;
+    message += `🏢 *Service:*  ${service.name}\n`;
+    message += `🏷️ *Category:* ${getProfessionalTitle(service.type)}\n`;
 
     if (selectedService) {
-      message += `📜 *Option:* ${selectedService.name} (${selectedService.price})\n`;
+      message += `📜 *Option:*   ${selectedService.name} — ${selectedService.price}\n`;
     }
 
-    message += `📅 *Date:* ${bookingData.date || 'Not specified'}\n`;
-    message += `⏰ *Time:* ${bookingData.time || 'Not specified'}\n`;
+    message += `📅 *Date:*     ${bookingData.date || 'Not specified'}\n`;
+    message += `⏰ *Time:*     ${bookingData.time || 'Not specified'}\n`;
 
-    // Multi-select performers
     if (bookingData.selectedPerformers && bookingData.selectedPerformers.length > 0) {
-      message += `👥 *Requested Provider(s):* ${bookingData.selectedPerformers.join(', ')}\n`;
+      message += `\n👷 *Requested Provider(s):*\n`;
+      bookingData.selectedPerformers.forEach(p => {
+        message += `   • ${p}\n`;
+      });
     }
     message += `\n`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*👤 CLIENT INFORMATION*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `👤 *Name:* ${bookingData.name}\n`;
-    message += `📞 *Phone:* ${bookingData.phone}\n\n`;
+    message += `╔══════════════════════╗\n`;
+    message += `   👤 *CLIENT DETAILS*\n`;
+    message += `╚══════════════════════╝\n`;
+    message += `🙋 *Name:*  ${bookingData.name}\n`;
+    message += `📱 *Phone:* ${bookingData.phone}\n\n`;
 
     if (bookingData.address) {
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `*📍 SERVICE LOCATION*\n`;
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `🏠 *Address:* ${bookingData.address}\n`;
+      message += `╔══════════════════════╗\n`;
+      message += `   📍 *SERVICE LOCATION*\n`;
+      message += `╚══════════════════════╝\n`;
+      message += `🏠 *Address:*\n   ${bookingData.address}\n`;
       const mapLink = generateMapLink(bookingData.address);
-      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
+      if (mapLink) message += `\n🗺️ *Google Maps:*\n   ${mapLink}\n`;
       message += `\n`;
     }
 
-    // ── Car Wash ──
+    // ── 🚗 Car Wash ──
     if (requiresVehicleType && bookingData.vehicleType) {
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `*🚗 VEHICLE & DETAILING*\n`;
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `🚗 *Type:* ${VEHICLE_TYPES.find(v => v.id === bookingData.vehicleType)?.name}\n`;
-      if (bookingData.vehicleMake) message += `🔖 *Make:* ${bookingData.vehicleMake}\n`;
-      if (bookingData.vehicleModel) message += `🚘 *Model:* ${bookingData.vehicleModel}\n`;
-      if (bookingData.licensePlate) message += `🆔 *Plate:* ${bookingData.licensePlate}\n`;
+      message += `╔══════════════════════╗\n`;
+      message += `   🚗 *VEHICLE & DETAILING*\n`;
+      message += `╚══════════════════════╝\n`;
+      message += `🚗 *Vehicle Type:* ${VEHICLE_TYPES.find(v => v.id === bookingData.vehicleType)?.name}\n`;
+      if (bookingData.vehicleMake) message += `🔖 *Make:*         ${bookingData.vehicleMake}\n`;
+      if (bookingData.vehicleModel) message += `🚘 *Model:*        ${bookingData.vehicleModel}\n`;
+      if (bookingData.licensePlate) message += `🆔 *Plate No:*     ${bookingData.licensePlate}\n`;
       const washTypes = { full: 'Full Car Wash', hoover: 'Hoover Only', washHoover: 'Wash + Hoover' };
-      message += `🧼 *Wash:* ${washTypes[bookingData.carWashType] || 'Standard'}\n`;
+      message += `🧼 *Wash Type:*    ${washTypes[bookingData.carWashType] || 'Standard'}\n`;
       let cleaningDetails = [];
       if (bookingData.thoroughHoover) cleaningDetails.push('Thorough Hoover');
       if (bookingData.engineCleaning) cleaningDetails.push('Engine Cleaning');
       if (bookingData.matCleaning) cleaningDetails.push('Mat Cleaning');
       if (bookingData.carSeatCleaning) cleaningDetails.push('Car Seat Cleaning');
-      if (cleaningDetails.length > 0) message += `🧹 *Deep Clean:* ${cleaningDetails.join(', ')}\n`;
+      if (cleaningDetails.length > 0) message += `🧹 *Deep Clean:*   ${cleaningDetails.join(' · ')}\n`;
       let polishDetails = [];
       if (bookingData.bodyPolish) polishDetails.push('Body');
       if (bookingData.tirePolish) polishDetails.push('Tire');
       if (bookingData.backPolish) polishDetails.push('Back');
       if (bookingData.interiorPolish) polishDetails.push('Interior');
-      if (polishDetails.length > 0) message += `✨ *Polish:* ${polishDetails.join(', ')}\n`;
+      if (polishDetails.length > 0) message += `✨ *Polish:*       ${polishDetails.join(' · ')}\n`;
       message += `\n`;
     }
 
-    // ── Moving ──
+    // ── 🚛 Moving ──
     if (service.type === 'moving') {
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `*🚛 MOVING DETAILS*\n`;
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      if (bookingData.moveFromAddress) message += `📦 *From:* ${bookingData.moveFromAddress}\n`;
-      if (bookingData.moveToAddress) message += `🏁 *To:* ${bookingData.moveToAddress}\n`;
-      if (bookingData.moveRooms) message += `🛏️ *Rooms/Size:* ${bookingData.moveRooms}\n`;
-      if (bookingData.moveFloorFrom) message += `🏢 *Floor (From):* ${bookingData.moveFloorFrom}\n`;
-      if (bookingData.moveFloorTo) message += `🏢 *Floor (To):* ${bookingData.moveFloorTo}\n`;
-      if (bookingData.moveHasLift) message += `🛗 *Lift/Elevator:* ${bookingData.moveHasLift}\n`;
-      if (bookingData.moveHeavyItems) message += `🪑 *Heavy items:* ${bookingData.moveHeavyItems}\n`;
-      if (bookingData.movePackingRequired) message += `📦 *Packing service needed:* ${bookingData.movePackingRequired}\n`;
+      message += `╔══════════════════════╗\n`;
+      message += `   🚛 *MOVING DETAILS*\n`;
+      message += `╚══════════════════════╝\n`;
+      if (bookingData.moveFromAddress) message += `📦 *From:*\n   ${bookingData.moveFromAddress}\n`;
+      if (bookingData.moveToAddress) message += `🏁 *To:*\n   ${bookingData.moveToAddress}\n`;
+      if (bookingData.moveRooms) message += `🛏️ *Rooms / Size:*         ${bookingData.moveRooms}\n`;
+      if (bookingData.moveFloorFrom) message += `🏢 *Floor (Pickup):*      ${bookingData.moveFloorFrom}\n`;
+      if (bookingData.moveFloorTo) message += `🏢 *Floor (Dropoff):*     ${bookingData.moveFloorTo}\n`;
+      if (bookingData.moveHasLift) message += `🛗 *Lift/Elevator:*       ${bookingData.moveHasLift}\n`;
+      if (bookingData.moveHeavyItems) message += `🪑 *Heavy Items:*\n   ${bookingData.moveHeavyItems}\n`;
+      if (bookingData.movePackingRequired) message += `📦 *Packing Needed:*      ${bookingData.movePackingRequired}\n`;
+      if (bookingData.moveBoxesCount && bookingData.moveBoxesCount > 0) {
+        message += `📦 *Boxes:*               ${bookingData.moveBoxesCount} boxes  ×  R${service.moveCostPerBox || 50}/box\n`;
+      }
+      if (bookingData.moveKilosCount && bookingData.moveKilosCount > 0) {
+        message += `⚖️ *Weight:*              ${bookingData.moveKilosCount} kg  ×  R${service.moveCostPerKilo || 10}/kg\n`;
+      }
+      if (bookingData.moveVehicleType && bookingData.moveVehicleType !== 'none') {
+        let vehicleLabel = '';
+        let vehiclePrice = 0;
+        if (bookingData.moveVehicleType === 'van') { vehicleLabel = 'Van'; vehiclePrice = service.movePriceVan !== undefined ? service.movePriceVan : 800; }
+        else if (bookingData.moveVehicleType === 'vanTrailer') { vehicleLabel = 'Van with Trailer'; vehiclePrice = service.movePriceVanTrailer !== undefined ? service.movePriceVanTrailer : 1200; }
+        else if (bookingData.moveVehicleType === 'miniTruck') { vehicleLabel = 'Mini Truck'; vehiclePrice = service.movePriceMiniTruck !== undefined ? service.movePriceMiniTruck : 1500; }
+        else if (bookingData.moveVehicleType === 'otherTruck') { vehicleLabel = 'Other Truck'; vehiclePrice = service.movePriceOtherTruck !== undefined ? service.movePriceOtherTruck : 2000; }
+        else if (bookingData.moveVehicleType === 'bigTruckTrailer') { vehicleLabel = 'Big Truck + Trailer'; vehiclePrice = service.movePriceBigTruckTrailer !== undefined ? service.movePriceBigTruckTrailer : 3500; }
+        message += `🚛 *Vehicle:*             ${vehicleLabel}  →  R${vehiclePrice}\n`;
+      }
       message += `\n`;
     }
 
-    // ── Handyman / Maintenance ──
+    // ── 🔧 Handyman / Maintenance ──
     if (service.type === 'handyman' || service.type === 'maintenance') {
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `*🔧 JOB DETAILS*\n`;
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      if (bookingData.handymanJobType) message += `🔨 *Job Type:* ${bookingData.handymanJobType}\n`;
-      if (bookingData.handymanJobDescription) message += `📋 *Description:* ${bookingData.handymanJobDescription}\n`;
-      if (bookingData.handymanMaterialsRequired) message += `🛒 *Materials needed:* ${bookingData.handymanMaterialsRequired}\n`;
-      message += `⚡ *Urgency:* ${bookingData.handymanUrgency === 'urgent' ? '🔴 Urgent' : bookingData.handymanUrgency === 'flexible' ? '🟢 Flexible' : '🟡 Normal'}\n`;
+      message += `╔══════════════════════╗\n`;
+      message += `   🔧 *JOB DETAILS*\n`;
+      message += `╚══════════════════════╝\n`;
+      if (bookingData.handymanJobType) message += `🔨 *Job Type:*      ${bookingData.handymanJobType}\n`;
+      if (bookingData.handymanMaterialsRequired) message += `🛒 *Materials:*     ${bookingData.handymanMaterialsRequired}\n`;
+      message += `⚡ *Urgency:*       ${bookingData.handymanUrgency === 'urgent' ? '🔴 URGENT — Needs immediate attention' : bookingData.handymanUrgency === 'flexible' ? '🟢 Flexible — No rush' : '🟡 Normal priority'}\n`;
+      if (bookingData.handymanJobDescription) message += `\n📋 *Job Description:*\n_${bookingData.handymanJobDescription}_\n`;
       message += `\n`;
     }
 
-    // ── Landscaping ──
+    // ── 🌿 Landscaping ──
     if (service.type === 'landscaping') {
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `*🌿 GARDEN DETAILS*\n`;
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      if (bookingData.landscapingServiceType) message += `🌱 *Service Type:* ${bookingData.landscapingServiceType}\n`;
-      if (bookingData.landscapeAreaSize) message += `📐 *Area Size:* ${bookingData.landscapeAreaSize}\n`;
-      if (bookingData.landscapeFrequency) message += `🔄 *Frequency:* ${bookingData.landscapeFrequency}\n`;
-      if (bookingData.landscapeEquipmentAvailable) message += `🪣 *Equipment available:* ${bookingData.landscapeEquipmentAvailable}\n`;
+      message += `╔══════════════════════╗\n`;
+      message += `   🌿 *GARDEN DETAILS*\n`;
+      message += `╚══════════════════════╝\n`;
+      if (bookingData.landscapingServiceType) message += `🌱 *Service:*    ${bookingData.landscapingServiceType}\n`;
+      if (bookingData.landscapeAreaSize) message += `📐 *Area Size:*  ${bookingData.landscapeAreaSize}\n`;
+      if (bookingData.landscapeFrequency) message += `🔄 *Frequency:*  ${bookingData.landscapeFrequency}\n`;
+      if (bookingData.landscapeEquipmentAvailable) message += `🪣 *Equipment:*  ${bookingData.landscapeEquipmentAvailable}\n`;
       message += `\n`;
     }
 
-    // ── Catering ──
+    // ── 🍽️ Catering ──
     if (service.type === 'catering') {
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `*🍽️ CATERING DETAILS*\n`;
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      if (bookingData.cateringEventType) message += `🎉 *Event Type:* ${bookingData.cateringEventType}\n`;
-      if (bookingData.cateringGuestCount) message += `👥 *Guest Count:* ${bookingData.cateringGuestCount}\n`;
-      if (bookingData.cateringMenuPreference) message += `🍴 *Menu Preference:* ${bookingData.cateringMenuPreference}\n`;
-      if (bookingData.cateringDietaryReqs) message += `🥗 *Dietary Requirements:* ${bookingData.cateringDietaryReqs}\n`;
-      if (bookingData.cateringEventDuration) message += `⏱️ *Event Duration:* ${bookingData.cateringEventDuration}\n`;
-      if (bookingData.cateringVenueType) message += `🏛️ *Venue Type:* ${bookingData.cateringVenueType}\n`;
+      message += `╔══════════════════════╗\n`;
+      message += `   🍽️ *CATERING DETAILS*\n`;
+      message += `╚══════════════════════╝\n`;
+      if (bookingData.cateringEventType) message += `🎉 *Event Type:*  ${bookingData.cateringEventType}\n`;
+      if (bookingData.cateringGuestCount) message += `👥 *Guests:*      ${bookingData.cateringGuestCount} people\n`;
+      if (bookingData.cateringMenuPreference) message += `🍴 *Menu:*        ${bookingData.cateringMenuPreference}\n`;
+      if (bookingData.cateringDietaryReqs) message += `🥗 *Dietary:*     ${bookingData.cateringDietaryReqs}\n`;
+      if (bookingData.cateringEventDuration) message += `⏱️ *Duration:*    ${bookingData.cateringEventDuration}\n`;
+      if (bookingData.cateringVenueType) message += `🏛️ *Venue:*       ${bookingData.cateringVenueType}\n`;
       message += `\n`;
     }
 
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*🍴 PROVISIONS*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `🍽️ *Food provided by client:* ${bookingData.foodProvided === 'yes' ? '✅ Yes' : '❌ No'}\n`;
-    message += `⚡ *Electricity available:* ${bookingData.electricityProvided === 'yes' ? '✅ Yes' : '❌ No'}\n\n`;
+    message += `╔══════════════════════╗\n`;
+    message += `   ⚡ *PROVISIONS*\n`;
+    message += `╚══════════════════════╝\n`;
+    message += `🍽️ *Food by client:*    ${bookingData.foodProvided === 'yes' ? '✅ Yes — Client provides food' : '❌ No — Provider must bring food'}\n`;
+    message += `⚡ *Electricity:*       ${bookingData.electricityProvided === 'yes' ? '✅ Available on site' : '❌ Not available — bring generator'}\n\n`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*💬 COMMENTS & NOTES*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `📝 ${bookingData.specialRequirements ? bookingData.specialRequirements : 'No special requirements'}\n`;
-    if (bookingData.numberOfGuests && bookingData.numberOfGuests !== '1') {
-      message += `👥 *Guests:* ${bookingData.numberOfGuests}\n`;
-    }
+    message += `╔══════════════════════╗\n`;
+    message += `   💬 *NOTES & REQUESTS*\n`;
+    message += `╚══════════════════════╝\n`;
+    message += `📝 _${bookingData.specialRequirements ? bookingData.specialRequirements : 'No special requirements'}_\n`;
+
     message += `\n`;
 
-    // Add attachments if they exist
     if (uploadedFiles.length > 0) {
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `*📎 ATTACHMENTS*\n`;
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `╔══════════════════════╗\n`;
+      message += `   📎 *ATTACHMENTS*\n`;
+      message += `╚══════════════════════╝\n`;
       uploadedFiles.forEach((file) => {
-        message += `• ${file.type === 'image' ? '🖼️ Image' : '📄 Document'}: ${file.name}\n`;
-        message += `  ${file.url}\n\n`;
+        message += `${file.type === 'image' ? '🖼️' : '📄'} ${file.name}\n   ${file.url}\n\n`;
       });
     }
 
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*💵 TOTAL AMOUNT*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `💵 *Total Est:* R${totalPrice}\n\n`;
+    message += `┌──────────────────────┐\n`;
+    message += `   💰 *PRICE ESTIMATE*\n`;
+    message += `└──────────────────────┘\n`;
+    message += `💵 *Total:*  *R ${totalPrice}*\n`;
+    message += `_(Estimate — final price confirmed by provider)_\n\n`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*⚡ QUICK ACTIONS*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    if (acceptLink) message += `✅ *ACCEPT:*\n${acceptLink}\n\n`;
-    if (declineLink) message += `❌ *REJECT:*\n${declineLink}\n\n`;
+    message += `┌──────────────────────┐\n`;
+    message += `   ⚡ *QUICK ACTIONS*\n`;
+    message += `└──────────────────────┘\n`;
+    if (acceptLink) message += `✅ *ACCEPT BOOKING:*\n${acceptLink}\n\n`;
+    if (declineLink) message += `❌ *DECLINE BOOKING:*\n${declineLink}\n\n`;
 
-    message += `🔐 *Verification Code:* ${verificationCode}\n`;
-    message += `_Sent via loopOut_`;
+    message += `🔐 *Verification Code:* \`${verificationCode}\`\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `_Powered by *loopOut* 🔁 — Your trusted home & services platform_`;
 
     return { 
       url: `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`,
@@ -1862,18 +1972,6 @@ const ServicePage = () => {
                     </div>
                   )}
 
-                  <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Guests</label>
-                    <select
-                      className="w-full text-sm text-slate-800 font-semibold outline-none bg-transparent"
-                      onChange={(e) => setBookingData(prev => ({ ...prev, numberOfGuests: e.target.value }))}
-                    >
-                      <option value="1">1 guest</option>
-                      <option value="2">2 guests</option>
-                      <option value="3">3 guests</option>
-                      <option value="4">4+ guests</option>
-                    </select>
-                  </div>
 
                   {/* CTA Buttons */}
                   <button
@@ -2445,86 +2543,219 @@ const ServicePage = () => {
                       className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     />
                   </div>
-                </div>
-              )}
 
-              {/* ── HANDYMAN / MAINTENANCE-SPECIFIC FIELDS ── */}
-              {(service.type === 'handyman' || service.type === 'maintenance') && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">🔧 Job Details</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Number of boxes</label>
+                      <input
+                        type="number"
+                        name="moveBoxesCount"
+                        min="0"
+                        value={bookingData.moveBoxesCount || ''}
+                        onChange={handleBookingChange}
+                        placeholder="e.g. 15"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Weight in Kilos (kg)</label>
+                      <input
+                        type="number"
+                        name="moveKilosCount"
+                        min="0"
+                        value={bookingData.moveKilosCount || ''}
+                        onChange={handleBookingChange}
+                        placeholder="e.g. 120"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Job type *</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Transport Vehicle Option</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {[
-                        { id: 'Plumbing', icon: '🚿' },
-                        { id: 'Electrical', icon: '⚡' },
-                        { id: 'Painting', icon: '🖌️' },
-                        { id: 'Tiling', icon: '🧱' },
-                        { id: 'Carpentry', icon: '🪚' },
-                        { id: 'General Repairs', icon: '🔨' },
-                        { id: 'Geyser / Plumbing', icon: '🛁' },
-                        { id: 'Roofing', icon: '🏠' },
-                        { id: 'Other', icon: '🛠️' },
-                      ].map(job => (
-                        <button
-                          key={job.id}
-                          type="button"
-                          onClick={() => setBookingData(prev => ({ ...prev, handymanJobType: job.id }))}
-                          className={`px-3 py-2.5 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 ${
-                            bookingData.handymanJobType === job.id
-                              ? 'bg-rose-500 text-white border-rose-500 shadow-md'
-                              : 'bg-white text-gray-600 border-gray-200 hover:border-rose-300'
-                          }`}
-                        >
-                          <span>{job.icon}</span>{job.id}
-                        </button>
+                        { id: 'none', label: 'No vehicle (packing only)', price: 0 },
+                        { id: 'van', label: `Van (R${service.movePriceVan !== undefined ? service.movePriceVan : 800})`, price: service.movePriceVan || 800 },
+                        { id: 'vanTrailer', label: `Van with Trailer (R${service.movePriceVanTrailer !== undefined ? service.movePriceVanTrailer : 1200})`, price: service.movePriceVanTrailer || 1200 },
+                        { id: 'miniTruck', label: `Mini Truck (R${service.movePriceMiniTruck !== undefined ? service.movePriceMiniTruck : 1500})`, price: service.movePriceMiniTruck || 1500 },
+                        { id: 'otherTruck', label: `Other Truck (R${service.movePriceOtherTruck !== undefined ? service.movePriceOtherTruck : 2000})`, price: service.movePriceOtherTruck || 2000 },
+                        { id: 'bigTruckTrailer', label: `Big Truck with Trailer (R${service.movePriceBigTruckTrailer !== undefined ? service.movePriceBigTruckTrailer : 3500})`, price: service.movePriceBigTruckTrailer || 3500 }
+                      ].map(opt => (
+                        <label key={opt.id} className={`flex items-center gap-2 p-3 rounded-xl cursor-pointer hover:bg-gray-50 border transition-all ${
+                          bookingData.moveVehicleType === opt.id ? 'border-rose-500 bg-rose-50/50 shadow-sm' : 'border-gray-200'
+                        }`}>
+                          <input
+                            type="radio"
+                            name="moveVehicleType"
+                            value={opt.id}
+                            checked={bookingData.moveVehicleType === opt.id}
+                            onChange={handleBookingChange}
+                            className="w-4 h-4 accent-rose-500"
+                          />
+                          <span className="text-xs font-semibold text-gray-700">{opt.label}</span>
+                        </label>
                       ))}
                     </div>
                   </div>
+                </div>
+              )}
+
+
+              {/* ── HANDYMAN / MAINTENANCE-SPECIFIC FIELDS ── */}
+              {(service.type === 'handyman' || service.type === 'maintenance') && (
+                <div className="space-y-5">
+
+                  {/* Section Header */}
+                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-zinc-900 p-5 shadow-xl">
+                    <div className="absolute inset-0 opacity-10" style={{backgroundImage:'repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(255,255,255,0.05) 10px,rgba(255,255,255,0.05) 20px)'}}/>
+                    <div className="relative flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-xl bg-amber-400 flex items-center justify-center text-2xl shadow-lg shadow-amber-400/30">🔧</div>
+                      <div>
+                        <h3 className="text-white font-black text-base tracking-tight">Job Details</h3>
+                        <p className="text-slate-400 text-xs mt-0.5">Tell us what needs fixing</p>
+                      </div>
+                      <div className="ml-auto flex gap-1.5">
+                        <span className="text-lg">🪛</span>
+                        <span className="text-lg">🔨</span>
+                        <span className="text-lg">⚙️</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Trade / Job Type Grid */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Describe the problem / job *</label>
+                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 uppercase tracking-widest mb-3">
+                      <span className="w-5 h-5 rounded-md bg-amber-100 flex items-center justify-center text-amber-600">🏷️</span>
+                      Select Trade / Job Type *
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {[
+                        { id: 'Plumber / Plumbing',        icon: '🚿', color: 'from-blue-500 to-cyan-600' },
+                        { id: 'Electrician / Electrical',  icon: '⚡', color: 'from-yellow-400 to-amber-500' },
+                        { id: 'Builder / Bricklaying',     icon: '🏗️', color: 'from-orange-500 to-red-500' },
+                        { id: 'Gardener / Landscaping',    icon: '🌿', color: 'from-green-500 to-emerald-600' },
+                        { id: 'General Worker',            icon: '🧹', color: 'from-slate-500 to-slate-700' },
+                        { id: 'Painter / Painting',        icon: '🖌️', color: 'from-purple-500 to-violet-600' },
+                        { id: 'Tiler / Tiling',            icon: '🧱', color: 'from-stone-500 to-stone-700' },
+                        { id: 'Carpenter / Carpentry',     icon: '🪚', color: 'from-amber-600 to-orange-700' },
+                        { id: 'Geyser / Plumbing',         icon: '🛁', color: 'from-sky-500 to-blue-600' },
+                        { id: 'Roofing',                   icon: '🏠', color: 'from-red-500 to-rose-600' },
+                        { id: 'General Repairs',           icon: '🔨', color: 'from-zinc-600 to-zinc-800' },
+                        { id: 'Other',                     icon: '🛠️', color: 'from-gray-500 to-gray-700' },
+                      ].map(job => {
+                        const isSelected = bookingData.handymanJobType === job.id;
+                        return (
+                          <button
+                            key={job.id}
+                            type="button"
+                            onClick={() => setBookingData(prev => ({ ...prev, handymanJobType: job.id }))}
+                            className={`relative group flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border-2 transition-all duration-200 text-center overflow-hidden ${
+                              isSelected
+                                ? 'border-transparent shadow-lg scale-[1.03]'
+                                : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5'
+                            }`}
+                            style={isSelected ? { background: `linear-gradient(135deg, var(--tw-gradient-stops))` } : {}}
+                          >
+                            {isSelected && (
+                              <div className={`absolute inset-0 bg-gradient-to-br ${job.color} opacity-90`} />
+                            )}
+                            <span className="relative text-2xl">{job.icon}</span>
+                            <span className={`relative text-[10px] font-black leading-tight uppercase tracking-wide ${isSelected ? 'text-white' : 'text-slate-600'}`}>
+                              {job.id.split(' / ')[0]}
+                            </span>
+                            {isSelected && (
+                              <span className="absolute top-1.5 right-1.5 w-3 h-3 rounded-full bg-white/30 flex items-center justify-center text-white text-[8px]">✓</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {bookingData.handymanJobType && (
+                      <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-xl">
+                        <span className="text-emerald-500 text-sm">✅</span>
+                        <span className="text-xs font-bold text-emerald-700">Selected: {bookingData.handymanJobType}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Job Description */}
+                  <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                    <div className="flex items-center gap-2.5 px-4 py-3 bg-slate-50 border-b border-slate-200">
+                      <span className="text-base">📋</span>
+                      <span className="text-xs font-black text-slate-600 uppercase tracking-widest">Describe the Problem / Job</span>
+                      <span className="ml-auto text-[10px] text-rose-500 font-bold">Required *</span>
+                    </div>
                     <textarea
                       name="handymanJobDescription"
                       value={bookingData.handymanJobDescription}
                       onChange={handleBookingChange}
-                      rows="3"
+                      rows="4"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                      placeholder="Describe what needs to be done in detail..."
+                      className="w-full px-4 py-3 text-sm text-slate-700 placeholder-slate-400 outline-none bg-white resize-none"
+                      placeholder="e.g. My kitchen tap is leaking badly, need it replaced urgently. The pipe under the sink is also dripping..."
                     />
+                    <div className="flex items-center gap-1.5 px-4 py-2 bg-amber-50 border-t border-amber-100">
+                      <span className="text-amber-500 text-xs">💡</span>
+                      <span className="text-[10px] text-amber-700 font-medium">More detail = faster, more accurate quote from the provider</span>
+                    </div>
                   </div>
+
+                  {/* Materials */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Materials/parts required (if known)</label>
+                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 uppercase tracking-widest mb-2">
+                      <span>🛒</span> Materials / Parts Needed
+                      <span className="ml-auto text-[10px] font-medium text-slate-400 normal-case tracking-normal">Optional</span>
+                    </label>
                     <input
                       type="text"
                       name="handymanMaterialsRequired"
                       value={bookingData.handymanMaterialsRequired}
                       onChange={handleBookingChange}
-                      placeholder="e.g. Paint, pipes, tiles (leave blank if unsure)"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      placeholder="e.g. Paint, pipes, tiles, cement (leave blank if unsure)"
+                      className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all"
                     />
+                    <p className="mt-1.5 text-[10px] text-slate-400 flex items-center gap-1">
+                      <span>ℹ️</span> Provider will confirm if materials are included or extra cost
+                    </p>
                   </div>
+
+                  {/* Urgency */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Urgency level</label>
-                    <div className="flex gap-3">
-                      {[{ id: 'urgent', label: '🔴 Urgent', desc: 'ASAP' }, { id: 'normal', label: '🟡 Normal', desc: 'Within days' }, { id: 'flexible', label: '🟢 Flexible', desc: 'No rush' }].map(u => (
-                        <button
-                          key={u.id}
-                          type="button"
-                          onClick={() => setBookingData(prev => ({ ...prev, handymanUrgency: u.id }))}
-                          className={`flex-1 py-2.5 text-xs font-bold rounded-xl border transition-all ${
-                            bookingData.handymanUrgency === u.id
-                              ? 'bg-rose-500 text-white border-rose-500'
-                              : 'bg-white text-gray-600 border-gray-200 hover:border-rose-300'
-                          }`}
-                        >
-                          {u.label}<br/><span className="font-normal opacity-70">{u.desc}</span>
-                        </button>
-                      ))}
+                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 uppercase tracking-widest mb-3">
+                      <span>⚡</span> Urgency Level
+                    </label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { id: 'urgent',   emoji: '🔴', label: 'Urgent',   desc: 'Need ASAP',       bg: 'from-red-500 to-rose-600',    glow: 'shadow-red-200' },
+                        { id: 'normal',   emoji: '🟡', label: 'Normal',   desc: 'Within 2–3 days', bg: 'from-amber-400 to-orange-500', glow: 'shadow-amber-200' },
+                        { id: 'flexible', emoji: '🟢', label: 'Flexible', desc: 'No rush',          bg: 'from-green-500 to-emerald-600',glow: 'shadow-green-200' },
+                      ].map(u => {
+                        const isSelected = bookingData.handymanUrgency === u.id;
+                        return (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => setBookingData(prev => ({ ...prev, handymanUrgency: u.id }))}
+                            className={`relative flex flex-col items-center gap-1 py-4 px-2 rounded-2xl border-2 transition-all duration-200 overflow-hidden ${
+                              isSelected
+                                ? `border-transparent shadow-xl ${u.glow} scale-[1.04]`
+                                : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5'
+                            }`}
+                          >
+                            {isSelected && <div className={`absolute inset-0 bg-gradient-to-br ${u.bg}`} />}
+                            <span className="relative text-xl">{u.emoji}</span>
+                            <span className={`relative text-[11px] font-black uppercase tracking-wide ${isSelected ? 'text-white' : 'text-slate-700'}`}>{u.label}</span>
+                            <span className={`relative text-[9px] font-medium ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>{u.desc}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
+
                 </div>
               )}
+
 
               {/* ── LANDSCAPING-SPECIFIC FIELDS ── */}
               {service.type === 'landscaping' && (
@@ -2715,24 +2946,7 @@ const ServicePage = () => {
                 </div>
               )}
 
-              {/* Number of Guests (non-vehicle, non-specific service types) */}
-              {!requiresVehicleType && service.type !== 'moving' && service.type !== 'handyman' && service.type !== 'maintenance' && service.type !== 'landscaping' && service.type !== 'catering' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Number of guests</label>
-                  <select
-                    name="numberOfGuests"
-                    value={bookingData.numberOfGuests}
-                    onChange={handleBookingChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                  >
-                    <option value="1">1 guest</option>
-                    <option value="2">2 guests</option>
-                    <option value="3">3 guests</option>
-                    <option value="4">4 guests</option>
-                    <option value="5">5+ guests</option>
-                  </select>
-                </div>
-              )}
+
 
               {/* Service Location */}
               <div>
@@ -2888,7 +3102,42 @@ const ServicePage = () => {
               </div>
 
               {/* Price Summary */}
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                {(() => {
+                  const breakdown = getMovingBreakdown();
+                  if (!breakdown || !breakdown.hasOptions) return null;
+                  return (
+                    <div className="text-xs text-gray-600 border-b border-gray-200 pb-2 space-y-1">
+                      <p className="font-semibold text-gray-800 mb-1">Price Breakdown:</p>
+                      {breakdown.boxesCount > 0 && (
+                        <div className="flex justify-between">
+                          <span>📦 Boxes ({breakdown.boxesCount} × R{breakdown.costPerBox})</span>
+                          <span>R{breakdown.boxesCost}</span>
+                        </div>
+                      )}
+                      {breakdown.kilosCount > 0 && (
+                        <div className="flex justify-between">
+                          <span>⚖️ Weight ({breakdown.kilosCount} kg × R{breakdown.costPerKilo})</span>
+                          <span>R{breakdown.kilosCost}</span>
+                        </div>
+                      )}
+                      {breakdown.vehicleLabel && (
+                        <div className="flex justify-between">
+                          <span>🚛 Transport Vehicle ({breakdown.vehicleLabel})</span>
+                          <span>R{breakdown.vehicleCost}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-gray-500">
+                        <span>🗺️ Travel Fee</span>
+                        <span>R{breakdown.travelFee}</span>
+                      </div>
+                      <div className="flex justify-between text-gray-500">
+                        <span>🛎️ Service Fee (10%)</span>
+                        <span>R{breakdown.serviceFee}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600">Total estimate</span>
                   <span className="text-xl font-bold text-gray-900">R{totalPrice}</span>

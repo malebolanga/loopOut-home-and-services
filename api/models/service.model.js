@@ -107,35 +107,65 @@ const serviceSchema = new mongoose.Schema(
     // Daycare fields
     ageGroup: {
       type: String,
-      required: function() { return this.type === 'daycare'; }
+      required: false
     },
     licenseNumber: {
       type: String,
-      required: function() { return this.type === 'daycare'; }
+      required: false
     },
     capacity: {
       type: String,
-      required: function() { return this.type === 'daycare'; }
+      required: false
     },
     meals: {
       type: Boolean,
-      required: function() { return this.type === 'daycare'; }
+      required: false
     },
     
     // School transport fields
     vehicleType: {
       type: String,
-      required: function() { return this.type === 'schoolTransport'; }
+      required: false
     },
     routeAreas: {
       type: String,
-      required: function() { return this.type === 'schoolTransport'; }
+      required: false
     },
     childSeats: {
       type: Boolean,
-      required: function() { return this.type === 'schoolTransport'; }
+      required: false
     },
     
+    // Moving rate configuration fields
+    moveCostPerBox: {
+      type: Number,
+      default: 50
+    },
+    moveCostPerKilo: {
+      type: Number,
+      default: 10
+    },
+    movePriceVan: {
+      type: Number,
+      default: 800
+    },
+    movePriceVanTrailer: {
+      type: Number,
+      default: 1200
+    },
+    movePriceMiniTruck: {
+      type: Number,
+      default: 1500
+    },
+    movePriceOtherTruck: {
+      type: Number,
+      default: 2000
+    },
+    movePriceBigTruckTrailer: {
+      type: Number,
+      default: 3500
+    },
+
     // ✅ NEW: Car Wash specific fields
     carWashPackages: {
       type: String, // Comma-separated: basic,premium,detailing,ceramic
