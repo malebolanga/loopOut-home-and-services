@@ -428,12 +428,14 @@ const ServicePage = () => {
     address: '',
     specialRequirements: '',
     numberOfGuests: '1',
+    // Multi-select performers
+    selectedPerformers: [],
+    // Car Wash Detailing Options
     vehicleType: '',
     vehicleMake: '',
     vehicleModel: '',
     vehicleYear: '',
     licensePlate: '',
-    // Car Wash Detailing Options
     carWashType: 'full', // full, hoover, washHoover
     thoroughHoover: false,
     engineCleaning: false,
@@ -444,7 +446,33 @@ const ServicePage = () => {
     backPolish: false,
     interiorPolish: false,
     electricityProvided: 'no',
-    selectedPerformer: ''
+    foodProvided: 'no',
+    // Moving-specific
+    moveFromAddress: '',
+    moveToAddress: '',
+    moveRooms: '',
+    moveFloorFrom: '',
+    moveFloorTo: '',
+    moveHasLift: '',
+    moveHeavyItems: '',
+    movePackingRequired: '',
+    // Handyman / Maintenance
+    handymanJobType: '',
+    handymanJobDescription: '',
+    handymanMaterialsRequired: '',
+    handymanUrgency: 'normal',
+    // Landscaping
+    landscapingServiceType: '',
+    landscapeAreaSize: '',
+    landscapeFrequency: '',
+    landscapeEquipmentAvailable: '',
+    // Catering
+    cateringEventType: '',
+    cateringGuestCount: '',
+    cateringMenuPreference: '',
+    cateringDietaryReqs: '',
+    cateringEventDuration: '',
+    cateringVenueType: '',
   });
 
   const [enhancedServiceData] = useState({
@@ -721,6 +749,19 @@ const ServicePage = () => {
     }
   };
 
+  // Toggle performer in multi-select list
+  const togglePerformer = (performerName) => {
+    setBookingData(prev => {
+      const already = prev.selectedPerformers.includes(performerName);
+      return {
+        ...prev,
+        selectedPerformers: already
+          ? prev.selectedPerformers.filter(n => n !== performerName)
+          : [...prev.selectedPerformers, performerName]
+      };
+    });
+  };
+
   const buildWhatsAppMessage = async (isQuick = false) => {
     const whatsappNumber = formatContactForWhatsApp(service.contact);
     if (!whatsappNumber) return null;
@@ -759,8 +800,12 @@ const ServicePage = () => {
 
     message += `📅 *Date:* ${bookingData.date || 'Not specified'}\n`;
     message += `⏰ *Time:* ${bookingData.time || 'Not specified'}\n`;
-    if (bookingData.selectedPerformer) message += `👤 *Performer:* ${bookingData.selectedPerformer}\n\n`;
-    else message += `\n`;
+
+    // Multi-select performers
+    if (bookingData.selectedPerformers && bookingData.selectedPerformers.length > 0) {
+      message += `👥 *Requested Provider(s):* ${bookingData.selectedPerformers.join(', ')}\n`;
+    }
+    message += `\n`;
 
     message += `━━━━━━━━━━━━━━━━━━━━\n`;
     message += `*👤 CLIENT INFORMATION*\n`;
@@ -778,30 +823,83 @@ const ServicePage = () => {
       message += `\n`;
     }
 
+    // ── Car Wash ──
     if (requiresVehicleType && bookingData.vehicleType) {
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       message += `*🚗 VEHICLE & DETAILING*\n`;
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       message += `🚗 *Type:* ${VEHICLE_TYPES.find(v => v.id === bookingData.vehicleType)?.name}\n`;
       if (bookingData.vehicleMake) message += `🔖 *Make:* ${bookingData.vehicleMake}\n`;
+      if (bookingData.vehicleModel) message += `🚘 *Model:* ${bookingData.vehicleModel}\n`;
       if (bookingData.licensePlate) message += `🆔 *Plate:* ${bookingData.licensePlate}\n`;
-      
       const washTypes = { full: 'Full Car Wash', hoover: 'Hoover Only', washHoover: 'Wash + Hoover' };
       message += `🧼 *Wash:* ${washTypes[bookingData.carWashType] || 'Standard'}\n`;
-      
       let cleaningDetails = [];
       if (bookingData.thoroughHoover) cleaningDetails.push('Thorough Hoover');
       if (bookingData.engineCleaning) cleaningDetails.push('Engine Cleaning');
       if (bookingData.matCleaning) cleaningDetails.push('Mat Cleaning');
       if (bookingData.carSeatCleaning) cleaningDetails.push('Car Seat Cleaning');
       if (cleaningDetails.length > 0) message += `🧹 *Deep Clean:* ${cleaningDetails.join(', ')}\n`;
-
       let polishDetails = [];
       if (bookingData.bodyPolish) polishDetails.push('Body');
       if (bookingData.tirePolish) polishDetails.push('Tire');
       if (bookingData.backPolish) polishDetails.push('Back');
       if (bookingData.interiorPolish) polishDetails.push('Interior');
       if (polishDetails.length > 0) message += `✨ *Polish:* ${polishDetails.join(', ')}\n`;
+      message += `\n`;
+    }
+
+    // ── Moving ──
+    if (service.type === 'moving') {
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*🚛 MOVING DETAILS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      if (bookingData.moveFromAddress) message += `📦 *From:* ${bookingData.moveFromAddress}\n`;
+      if (bookingData.moveToAddress) message += `🏁 *To:* ${bookingData.moveToAddress}\n`;
+      if (bookingData.moveRooms) message += `🛏️ *Rooms/Size:* ${bookingData.moveRooms}\n`;
+      if (bookingData.moveFloorFrom) message += `🏢 *Floor (From):* ${bookingData.moveFloorFrom}\n`;
+      if (bookingData.moveFloorTo) message += `🏢 *Floor (To):* ${bookingData.moveFloorTo}\n`;
+      if (bookingData.moveHasLift) message += `🛗 *Lift/Elevator:* ${bookingData.moveHasLift}\n`;
+      if (bookingData.moveHeavyItems) message += `🪑 *Heavy items:* ${bookingData.moveHeavyItems}\n`;
+      if (bookingData.movePackingRequired) message += `📦 *Packing service needed:* ${bookingData.movePackingRequired}\n`;
+      message += `\n`;
+    }
+
+    // ── Handyman / Maintenance ──
+    if (service.type === 'handyman' || service.type === 'maintenance') {
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*🔧 JOB DETAILS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      if (bookingData.handymanJobType) message += `🔨 *Job Type:* ${bookingData.handymanJobType}\n`;
+      if (bookingData.handymanJobDescription) message += `📋 *Description:* ${bookingData.handymanJobDescription}\n`;
+      if (bookingData.handymanMaterialsRequired) message += `🛒 *Materials needed:* ${bookingData.handymanMaterialsRequired}\n`;
+      message += `⚡ *Urgency:* ${bookingData.handymanUrgency === 'urgent' ? '🔴 Urgent' : bookingData.handymanUrgency === 'flexible' ? '🟢 Flexible' : '🟡 Normal'}\n`;
+      message += `\n`;
+    }
+
+    // ── Landscaping ──
+    if (service.type === 'landscaping') {
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*🌿 GARDEN DETAILS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      if (bookingData.landscapingServiceType) message += `🌱 *Service Type:* ${bookingData.landscapingServiceType}\n`;
+      if (bookingData.landscapeAreaSize) message += `📐 *Area Size:* ${bookingData.landscapeAreaSize}\n`;
+      if (bookingData.landscapeFrequency) message += `🔄 *Frequency:* ${bookingData.landscapeFrequency}\n`;
+      if (bookingData.landscapeEquipmentAvailable) message += `🪣 *Equipment available:* ${bookingData.landscapeEquipmentAvailable}\n`;
+      message += `\n`;
+    }
+
+    // ── Catering ──
+    if (service.type === 'catering') {
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*🍽️ CATERING DETAILS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      if (bookingData.cateringEventType) message += `🎉 *Event Type:* ${bookingData.cateringEventType}\n`;
+      if (bookingData.cateringGuestCount) message += `👥 *Guest Count:* ${bookingData.cateringGuestCount}\n`;
+      if (bookingData.cateringMenuPreference) message += `🍴 *Menu Preference:* ${bookingData.cateringMenuPreference}\n`;
+      if (bookingData.cateringDietaryReqs) message += `🥗 *Dietary Requirements:* ${bookingData.cateringDietaryReqs}\n`;
+      if (bookingData.cateringEventDuration) message += `⏱️ *Event Duration:* ${bookingData.cateringEventDuration}\n`;
+      if (bookingData.cateringVenueType) message += `🏛️ *Venue Type:* ${bookingData.cateringVenueType}\n`;
       message += `\n`;
     }
 
@@ -965,6 +1063,14 @@ const ServicePage = () => {
           bookingSubtype = 'House Cleaning';
         } else if (service.type === 'schoolTransport') {
           bookingSubtype = 'School Transport';
+        } else if (service.type === 'moving') {
+          bookingSubtype = `Moving - ${bookingData.moveRooms || 'Custom'}`;
+        } else if (service.type === 'handyman' || service.type === 'maintenance') {
+          bookingSubtype = bookingData.handymanJobType || 'Handyman Job';
+        } else if (service.type === 'landscaping') {
+          bookingSubtype = bookingData.landscapingServiceType || 'Landscaping';
+        } else if (service.type === 'catering') {
+          bookingSubtype = `${bookingData.cateringEventType || 'Catering'} - ${bookingData.cateringGuestCount ? bookingData.cateringGuestCount + ' guests' : ''}`;
         }
 
         // Determine device type
@@ -980,9 +1086,10 @@ const ServicePage = () => {
           phone: bookingData.phone,
           message: bookingData.specialRequirements || result.fullMessage,
           subtype: bookingSubtype,
-          selectedPerformer: bookingData.selectedPerformer,
-          performerExperience: service.performers?.find(p => p.name === bookingData.selectedPerformer)?.experience,
-          performerImage: service.performers?.find(p => p.name === bookingData.selectedPerformer)?.image,
+          selectedPerformers: bookingData.selectedPerformers,
+          selectedPerformer: bookingData.selectedPerformers?.[0] || '',
+          performerExperience: service.performers?.find(p => p.name === bookingData.selectedPerformers?.[0])?.experience,
+          performerImage: service.performers?.find(p => p.name === bookingData.selectedPerformers?.[0])?.image,
           deviceType,
           requestLocation,
           status: 'pending'
@@ -2001,36 +2108,68 @@ const ServicePage = () => {
                 </div>
               </div>
 
-              {/* Performer Selection in Overlay */}
+              {/* Performer Multi-Selection in Overlay */}
               {service.performers && service.performers.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">Select professional</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold">Select service provider(s)</h3>
+                    {bookingData.selectedPerformers.length > 0 && (
+                      <span className="text-xs font-black bg-rose-100 text-rose-600 px-3 py-1 rounded-full">
+                        {bookingData.selectedPerformers.length} selected
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400 mb-4">You can select more than one provider. Leave empty for any available.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {service.performers.map((p, i) => {
+                      const isSelected = bookingData.selectedPerformers.includes(p.name);
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => togglePerformer(p.name)}
+                          className={`p-4 rounded-2xl border-2 text-left transition-all flex items-center gap-3 relative ${
+                            isSelected
+                              ? 'border-rose-500 bg-rose-50 shadow-sm shadow-rose-100'
+                              : 'border-gray-100 hover:border-rose-200 hover:bg-rose-50/30'
+                          }`}
+                        >
+                          <div className="relative shrink-0">
+                            <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 border-2 border-white shadow-sm">
+                              {p.image
+                                ? <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                                : <div className="w-full h-full flex items-center justify-center text-slate-400 text-lg font-black">{p.name?.[0]}</div>
+                              }
+                            </div>
+                            {isSelected && (
+                              <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center shadow">
+                                <CheckCircleIcon className="w-3.5 h-3.5 text-white" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold text-gray-900 text-sm truncate">{p.name}</div>
+                            {p.experience && <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wide">{p.experience} exp</p>}
+                            {p.rating > 0 && (
+                              <div className="flex items-center gap-1 mt-0.5">
+                                <StarIconSolid className="w-3 h-3 text-amber-400" />
+                                <span className="text-[10px] font-bold text-slate-500">{p.rating.toFixed(1)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {bookingData.selectedPerformers.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => setBookingData(prev => ({ ...prev, selectedPerformer: '' }))}
-                      className={`p-4 rounded-xl border-2 text-left transition-all ${!bookingData.selectedPerformer ? 'border-rose-500 bg-rose-50' : 'border-gray-100 hover:border-gray-200'}`}
+                      onClick={() => setBookingData(prev => ({ ...prev, selectedPerformers: [] }))}
+                      className="mt-3 text-xs text-slate-400 hover:text-rose-500 underline transition-colors"
                     >
-                      <div className="font-bold text-gray-900">Any Available Member</div>
-                      <p className="text-xs text-gray-500">Best for faster confirmation</p>
+                      Clear selection (any available)
                     </button>
-                    {service.performers.map((p, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setBookingData(prev => ({ ...prev, selectedPerformer: p.name }))}
-                        className={`p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4 ${bookingData.selectedPerformer === p.name ? 'border-rose-500 bg-rose-50' : 'border-gray-100 hover:border-gray-200'}`}
-                      >
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100">
-                          {p.image && <img src={p.image} alt={p.name} className="w-full h-full object-cover" />}
-                        </div>
-                        <div>
-                          <div className="font-bold text-gray-900">{p.name}</div>
-                          <p className="text-[10px] text-gray-500 uppercase font-bold">{p.experience} exp</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                  )}
                 </div>
               )}
 
@@ -2196,8 +2335,388 @@ const ServicePage = () => {
                 </div>
               )}
 
-              {/* Number of Guests (if applicable) */}
-              {!requiresVehicleType && (
+              {/* ── MOVING-SPECIFIC FIELDS ── */}
+              {service.type === 'moving' && (
+                <div className="space-y-5">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">🚛 Move Details</h3>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Moving from (current address) *</label>
+                    <textarea
+                      name="moveFromAddress"
+                      value={bookingData.moveFromAddress}
+                      onChange={handleBookingChange}
+                      rows="2"
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      placeholder="Full current address..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Moving to (new address) *</label>
+                    <textarea
+                      name="moveToAddress"
+                      value={bookingData.moveToAddress}
+                      onChange={handleBookingChange}
+                      rows="2"
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      placeholder="Full destination address..."
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">No. of rooms / property size</label>
+                      <select
+                        name="moveRooms"
+                        value={bookingData.moveRooms}
+                        onChange={handleBookingChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      >
+                        <option value="">Select...</option>
+                        <option value="Studio">Studio / 1-room</option>
+                        <option value="2 rooms">2 rooms</option>
+                        <option value="3 rooms">3 rooms</option>
+                        <option value="4 rooms">4 rooms</option>
+                        <option value="5+ rooms">5+ rooms</option>
+                        <option value="Office / Commercial">Office / Commercial</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Packing service needed?</label>
+                      <select
+                        name="movePackingRequired"
+                        value={bookingData.movePackingRequired}
+                        onChange={handleBookingChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      >
+                        <option value="">Select...</option>
+                        <option value="Yes - full packing">Yes – full packing</option>
+                        <option value="Yes - partial">Yes – partial</option>
+                        <option value="No - already packed">No – already packed</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Floor (from)</label>
+                      <input
+                        type="text"
+                        name="moveFloorFrom"
+                        value={bookingData.moveFloorFrom}
+                        onChange={handleBookingChange}
+                        placeholder="e.g. Ground"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Floor (to)</label>
+                      <input
+                        type="text"
+                        name="moveFloorTo"
+                        value={bookingData.moveFloorTo}
+                        onChange={handleBookingChange}
+                        placeholder="e.g. 3rd"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Lift/Elevator?</label>
+                      <select
+                        name="moveHasLift"
+                        value={bookingData.moveHasLift}
+                        onChange={handleBookingChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      >
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                        <option value="Both locations">Both</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Heavy / special items (piano, safe, appliances…)</label>
+                    <input
+                      type="text"
+                      name="moveHeavyItems"
+                      value={bookingData.moveHeavyItems}
+                      onChange={handleBookingChange}
+                      placeholder="e.g. 1 piano, fridge, washing machine"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* ── HANDYMAN / MAINTENANCE-SPECIFIC FIELDS ── */}
+              {(service.type === 'handyman' || service.type === 'maintenance') && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">🔧 Job Details</h3>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Job type *</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {[
+                        { id: 'Plumbing', icon: '🚿' },
+                        { id: 'Electrical', icon: '⚡' },
+                        { id: 'Painting', icon: '🖌️' },
+                        { id: 'Tiling', icon: '🧱' },
+                        { id: 'Carpentry', icon: '🪚' },
+                        { id: 'General Repairs', icon: '🔨' },
+                        { id: 'Geyser / Plumbing', icon: '🛁' },
+                        { id: 'Roofing', icon: '🏠' },
+                        { id: 'Other', icon: '🛠️' },
+                      ].map(job => (
+                        <button
+                          key={job.id}
+                          type="button"
+                          onClick={() => setBookingData(prev => ({ ...prev, handymanJobType: job.id }))}
+                          className={`px-3 py-2.5 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 ${
+                            bookingData.handymanJobType === job.id
+                              ? 'bg-rose-500 text-white border-rose-500 shadow-md'
+                              : 'bg-white text-gray-600 border-gray-200 hover:border-rose-300'
+                          }`}
+                        >
+                          <span>{job.icon}</span>{job.id}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Describe the problem / job *</label>
+                    <textarea
+                      name="handymanJobDescription"
+                      value={bookingData.handymanJobDescription}
+                      onChange={handleBookingChange}
+                      rows="3"
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      placeholder="Describe what needs to be done in detail..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Materials/parts required (if known)</label>
+                    <input
+                      type="text"
+                      name="handymanMaterialsRequired"
+                      value={bookingData.handymanMaterialsRequired}
+                      onChange={handleBookingChange}
+                      placeholder="e.g. Paint, pipes, tiles (leave blank if unsure)"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Urgency level</label>
+                    <div className="flex gap-3">
+                      {[{ id: 'urgent', label: '🔴 Urgent', desc: 'ASAP' }, { id: 'normal', label: '🟡 Normal', desc: 'Within days' }, { id: 'flexible', label: '🟢 Flexible', desc: 'No rush' }].map(u => (
+                        <button
+                          key={u.id}
+                          type="button"
+                          onClick={() => setBookingData(prev => ({ ...prev, handymanUrgency: u.id }))}
+                          className={`flex-1 py-2.5 text-xs font-bold rounded-xl border transition-all ${
+                            bookingData.handymanUrgency === u.id
+                              ? 'bg-rose-500 text-white border-rose-500'
+                              : 'bg-white text-gray-600 border-gray-200 hover:border-rose-300'
+                          }`}
+                        >
+                          {u.label}<br/><span className="font-normal opacity-70">{u.desc}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── LANDSCAPING-SPECIFIC FIELDS ── */}
+              {service.type === 'landscaping' && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">🌿 Garden & Landscaping Details</h3>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Service type needed *</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {[
+                        { id: 'Lawn Mowing', icon: '🌾' },
+                        { id: 'Garden Design', icon: '🌺' },
+                        { id: 'Tree Trimming', icon: '🌳' },
+                        { id: 'Hedge Cutting', icon: '✂️' },
+                        { id: 'Weeding', icon: '🌱' },
+                        { id: 'Planting', icon: '🌷' },
+                        { id: 'Irrigation', icon: '💧' },
+                        { id: 'Leaf Cleanup', icon: '🍂' },
+                        { id: 'General Maintenance', icon: '🪣' },
+                      ].map(svc => (
+                        <button
+                          key={svc.id}
+                          type="button"
+                          onClick={() => setBookingData(prev => ({ ...prev, landscapingServiceType: svc.id }))}
+                          className={`px-3 py-2.5 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 ${
+                            bookingData.landscapingServiceType === svc.id
+                              ? 'bg-rose-500 text-white border-rose-500 shadow-md'
+                              : 'bg-white text-gray-600 border-gray-200 hover:border-rose-300'
+                          }`}
+                        >
+                          <span>{svc.icon}</span>{svc.id}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Garden/lawn area size</label>
+                      <select
+                        name="landscapeAreaSize"
+                        value={bookingData.landscapeAreaSize}
+                        onChange={handleBookingChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      >
+                        <option value="">Select size...</option>
+                        <option value="Small (under 50m²)">Small (under 50m²)</option>
+                        <option value="Medium (50-150m²)">Medium (50–150m²)</option>
+                        <option value="Large (150-500m²)">Large (150–500m²)</option>
+                        <option value="Extra Large (500m²+)">Extra Large (500m²+)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Service frequency</label>
+                      <select
+                        name="landscapeFrequency"
+                        value={bookingData.landscapeFrequency}
+                        onChange={handleBookingChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      >
+                        <option value="">Select...</option>
+                        <option value="Once-off">Once-off</option>
+                        <option value="Weekly">Weekly</option>
+                        <option value="Bi-weekly">Bi-weekly</option>
+                        <option value="Monthly">Monthly</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Equipment/water available on site?</label>
+                    <select
+                      name="landscapeEquipmentAvailable"
+                      value={bookingData.landscapeEquipmentAvailable}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    >
+                      <option value="">Select...</option>
+                      <option value="Yes - water & equipment available">Yes – water &amp; equipment available</option>
+                      <option value="Yes - water only">Yes – water only</option>
+                      <option value="No - provider must bring all">No – provider must bring everything</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* ── CATERING-SPECIFIC FIELDS ── */}
+              {service.type === 'catering' && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">🍽️ Catering Details</h3>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Event type *</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {[
+                        { id: 'Birthday Party', icon: '🎂' },
+                        { id: 'Wedding', icon: '💍' },
+                        { id: 'Corporate Event', icon: '🏢' },
+                        { id: 'Funeral/Memorial', icon: '🕯️' },
+                        { id: 'Year-End Function', icon: '🎉' },
+                        { id: 'Private Dinner', icon: '🍷' },
+                        { id: 'Braai', icon: '🔥' },
+                        { id: 'Baby Shower', icon: '🍼' },
+                        { id: 'Other', icon: '🍴' },
+                      ].map(ev => (
+                        <button
+                          key={ev.id}
+                          type="button"
+                          onClick={() => setBookingData(prev => ({ ...prev, cateringEventType: ev.id }))}
+                          className={`px-3 py-2.5 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 ${
+                            bookingData.cateringEventType === ev.id
+                              ? 'bg-rose-500 text-white border-rose-500 shadow-md'
+                              : 'bg-white text-gray-600 border-gray-200 hover:border-rose-300'
+                          }`}
+                        >
+                          <span>{ev.icon}</span>{ev.id}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Number of guests *</label>
+                      <input
+                        type="number"
+                        name="cateringGuestCount"
+                        value={bookingData.cateringGuestCount}
+                        onChange={handleBookingChange}
+                        min="1"
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        placeholder="e.g. 50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Event duration</label>
+                      <select
+                        name="cateringEventDuration"
+                        value={bookingData.cateringEventDuration}
+                        onChange={handleBookingChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      >
+                        <option value="">Select...</option>
+                        <option value="2-3 hours">2–3 hours</option>
+                        <option value="Half day (4h)">Half day (4h)</option>
+                        <option value="Full day (8h)">Full day (8h)</option>
+                        <option value="2 days">2 days</option>
+                        <option value="Custom">Custom (specify in notes)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Menu preference / cuisine style *</label>
+                    <input
+                      type="text"
+                      name="cateringMenuPreference"
+                      value={bookingData.cateringMenuPreference}
+                      onChange={handleBookingChange}
+                      required
+                      placeholder="e.g. Traditional South African, Braai, Buffet, Finger foods…"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Dietary requirements / allergies</label>
+                    <input
+                      type="text"
+                      name="cateringDietaryReqs"
+                      value={bookingData.cateringDietaryReqs}
+                      onChange={handleBookingChange}
+                      placeholder="e.g. Halal, vegetarian, nut-free, dairy-free…"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Venue type</label>
+                    <select
+                      name="cateringVenueType"
+                      value={bookingData.cateringVenueType}
+                      onChange={handleBookingChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    >
+                      <option value="">Select...</option>
+                      <option value="Home / Residence">Home / Residence</option>
+                      <option value="Outdoor / Garden">Outdoor / Garden</option>
+                      <option value="Event Venue / Hall">Event Venue / Hall</option>
+                      <option value="Office / Boardroom">Office / Boardroom</option>
+                      <option value="Restaurant (client's)">Restaurant (client's)</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* Number of Guests (non-vehicle, non-specific service types) */}
+              {!requiresVehicleType && service.type !== 'moving' && service.type !== 'handyman' && service.type !== 'maintenance' && service.type !== 'landscaping' && service.type !== 'catering' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Number of guests</label>
                   <select

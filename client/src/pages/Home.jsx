@@ -1242,7 +1242,7 @@ const MobileAppHomepage = ({
                   onClick={(path) => navigate(path)}
                 />
               </motion.div>
-            ))}
+            ))} 
           </div>
 
           {visibleCount < getFilteredItems().length ? (
