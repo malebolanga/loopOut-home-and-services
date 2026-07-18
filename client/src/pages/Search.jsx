@@ -103,7 +103,6 @@ const ALL_CATEGORIES = [
   { id: 'carwash', label: 'Car Wash', type: 'services', icon: BoltIcon, color: 'bg-cyan-100 text-cyan-800', description: 'Vehicle cleaning' },
   { id: 'landscaping', label: 'Landscaping', type: 'services', icon: SunIcon, color: 'bg-green-100 text-green-800', description: 'Garden & lawn care' },
   { id: 'electrician', label: 'Electrician', type: 'services', icon: BoltIcon, color: 'bg-yellow-100 text-yellow-800', description: 'Electrical services' },
-  { id: 'handyman', label: 'Handyman', type: 'services', icon: WrenchIcon, color: 'bg-gray-100 text-gray-800', description: 'Repair & maintenance' },
   { id: 'catering', label: 'Catering', type: 'services', icon: BriefcaseIcon, color: 'bg-orange-100 text-orange-800', description: 'Event catering' },
   { id: 'moving', label: 'Moving & Transport', type: 'services', icon: TruckIcon, color: 'bg-amber-100 text-amber-800', description: 'Relocation services' },
 
@@ -119,6 +118,8 @@ const ALL_CATEGORIES = [
   { id: 'sneaker', label: 'Sneaker Cleaner', type: 'helper', icon: BoltIcon, color: 'bg-indigo-100 text-indigo-800', description: 'Premium shoe cleaning' },
   { id: 'washingmat', label: 'Washing Mat', type: 'helper', icon: HomeModernIcon, color: 'bg-cyan-100 text-cyan-800', description: 'Expert mat cleaning' },
   { id: 'animals', label: 'Animal Care', type: 'helper', icon: Sparkles, color: 'bg-amber-100 text-amber-800', description: 'Pet & animal services' },
+  { id: 'handyman', label: 'Handyman', type: 'helper', icon: WrenchIcon, color: 'bg-gray-100 text-gray-800', description: 'Repair & maintenance' },
+  { id: 'maintenance', label: 'Maintenance', type: 'helper', icon: WrenchIcon, color: 'bg-amber-100 text-amber-800', description: 'Property maintenance' },
 
   // Transport
   { id: 'transport', label: 'Transport', type: 'services', icon: TruckIcon, color: 'bg-blue-100 text-blue-800', description: 'Transportation services' },
@@ -158,7 +159,9 @@ const HELPER_CATEGORY_CONFIG = {
   sneaker: { label: 'Sneaker Cleaner', color: 'bg-indigo-100 text-indigo-800', icon: '👟', endpoint: 'helper' },
   washingmat: { label: 'Washing Mat', color: 'bg-cyan-100 text-cyan-800', icon: '🧼', endpoint: 'helper' },
   animals: { label: 'Animal Care', color: 'bg-amber-100 text-amber-800', icon: '🐾', endpoint: 'helper' },
-  cleaner: { label: 'Cleaning', color: 'bg-cyan-100 text-cyan-800', icon: '🧼', endpoint: 'helper' }
+  cleaner: { label: 'Cleaning', color: 'bg-cyan-100 text-cyan-800', icon: '🧼', endpoint: 'helper' },
+  handyman: { label: 'Handyman', color: 'bg-gray-100 text-gray-800', icon: '🔧', endpoint: 'helper' },
+  maintenance: { label: 'Maintenance', color: 'bg-amber-100 text-amber-800', icon: '🔧', endpoint: 'helper' }
 };
 
 // Services Categories Configuration
@@ -166,7 +169,6 @@ const SERVICES_CATEGORY_CONFIG = {
   carwash: { label: 'Car Wash', color: 'bg-cyan-100 text-cyan-800', icon: '🚗', endpoint: 'service' },
   landscaping: { label: 'Landscaping', color: 'bg-green-100 text-green-800', icon: '🌿', endpoint: 'service' },
   electrician: { label: 'Electrician', color: 'bg-yellow-100 text-yellow-800', icon: '⚡', endpoint: 'service' },
-  handyman: { label: 'Handyman', color: 'bg-gray-100 text-gray-800', icon: '🔧', endpoint: 'service' },
   catering: { label: 'Catering', color: 'bg-orange-100 text-orange-800', icon: '🍽️', endpoint: 'service' },
   moving: { label: 'Moving & Transport', color: 'bg-amber-100 text-amber-800', icon: '🚚', endpoint: 'service' },
   transport: { label: 'Transport', color: 'bg-blue-100 text-blue-800', icon: '🚕', endpoint: 'service' },

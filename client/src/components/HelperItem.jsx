@@ -23,10 +23,12 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
+import React from 'react';
 import "../styles/ListingDetails.scss";
 import ImageGallery from "./ImageGallery";
 import { useWishlist } from "../hooks/useWishlist";
 import { useSearchIntelligence } from "../hooks/useSearchIntelligence";
+import { useCompare } from "../hooks/useCompare";
 import LoopOutBanner from "./LoopOutBanner";
 
 const NEW_HELPER_THRESHOLD_DAYS = 14;
@@ -71,6 +73,7 @@ const formatPriceValue = (price) => {
 function HelperItem({ helper, className = "" }) {
   const navigate = useNavigate();
   const { isFavorite, toggleFavorite } = useWishlist(helper, 'helper');
+  const { isCompared, toggleCompare } = useCompare(helper);
   const { recordView } = useSearchIntelligence();
   const [isNewHelper, setIsNewHelper] = useState(false);
   const [clickCount, setClickCount] = useState(0);
@@ -133,16 +136,30 @@ function HelperItem({ helper, className = "" }) {
         {/* Top Overlays */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10 pointer-events-none">
           <HelperTypePill type={helper.type} />
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              toggleFavorite();
-            }}
-            className="w-8 h-8 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-md flex items-center justify-center text-gray-900 active:scale-90 pointer-events-auto"
-          >
-            <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'text-rose-500 fill-rose-500' : 'text-gray-400'}`} />
-          </button>
+          <div className="flex items-center gap-2 pointer-events-auto">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleCompare();
+              }}
+              title="Compare Provider"
+              className="w-8 h-8 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-md flex items-center justify-center text-gray-900 active:scale-90 transition-transform"
+            >
+              <LayoutGrid className={`w-3.5 h-3.5 ${isCompared ? 'text-indigo-600' : 'text-gray-400'}`} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleFavorite();
+              }}
+              title="Save to Wishlist"
+              className="w-8 h-8 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-md flex items-center justify-center text-gray-900 active:scale-90 transition-transform"
+            >
+              <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'text-rose-500 fill-rose-500' : 'text-gray-400'}`} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -177,7 +194,7 @@ function HelperItem({ helper, className = "" }) {
                 className="w-5 h-5 rounded-full border border-gray-150 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0"
                 title={`Posted by ${owner.username}`}
               >
-                <img src={owner.avatar} alt={owner.username} className="w-full h-full object-cover" />
+                <img src={owner.avatar} alt={owner.username} loading="lazy" className="w-full h-full object-cover" />
               </Link>
             )}
           </div>
@@ -192,4 +209,4 @@ function HelperItem({ helper, className = "" }) {
   );
 }
 
-export default HelperItem;
+export default React.memo(HelperItem);

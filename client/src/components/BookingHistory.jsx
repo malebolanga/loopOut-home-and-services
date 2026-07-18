@@ -51,10 +51,7 @@ export default function BookingHistory({ bookingSummary, providerName, providerT
 
   return (
     <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
-      <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-2 flex items-center gap-3 tracking-tighter  uppercase">
-        <FaCheckCircle className="text-emerald-500 w-6 h-6" />
-        Intelligence Report
-      </h2>
+  
       <p className="text-xs text-gray-500 mb-6 uppercase tracking-wider font-bold">
         Click on a past client below to ask for a direct reference about their experience.
       </p>
@@ -74,7 +71,7 @@ export default function BookingHistory({ bookingSummary, providerName, providerT
             <SwiperSlide key={booker._id} className="!w-[280px] px-[2px]">
               <div 
                 onClick={() => handleAskReference(booker)}
-                className="flex items-center gap-3 p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer group shadow-sm hover:shadow-md h-full w-[260px]"
+                className="flex items-center gap-3 p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-sm hover:shadow-md h-full w-[260px]"
               >
                 <div className="relative flex-shrink-0">
                   <img

@@ -298,7 +298,21 @@ export default function HelperPage() {
       { id: 'intercity', name: 'Inter-city Trip', icon: <FaArrowRight className="text-indigo-500" /> }
     ];
 
+    const handymanOptions = [
+      { id: 'generalRepairs', name: 'General Repairs', icon: <FaWrench className="text-zinc-600" /> },
+      { id: 'plumbing', name: 'Plumbing', icon: <FaTools className="text-blue-500" /> },
+      { id: 'electrical', name: 'Electrical', icon: <FaTools className="text-yellow-500" /> },
+      { id: 'painting', name: 'Painting', icon: <FaPalette className="text-purple-500" /> },
+      { id: 'gardening', name: 'Gardening & Landscaping', icon: <FaTools className="text-green-500" /> },
+      { id: 'carpentry', name: 'Carpentry', icon: <FaTools className="text-amber-600" /> },
+      { id: 'tiling', name: 'Tiling', icon: <FaTools className="text-stone-500" /> },
+      { id: 'roofing', name: 'Roofing', icon: <FaHome className="text-red-500" /> }
+    ];
+
     switch (type) {
+      case 'handyman':
+      case 'maintenance':
+        return handymanOptions;
       case 'beauty':
       case 'spa':
         return beautyOptions;
@@ -368,7 +382,9 @@ export default function HelperPage() {
       sneaker: 'Sneaker Cleaner',
       washingmat: 'Mat Washer',
       animals: 'Animal Care Professional',
-      transport: 'Transport Service'
+      transport: 'Transport Service',
+      handyman: 'Handyman Service',
+      maintenance: 'Handyman Service'
     };
     return titles[type] || 'Professional';
   };
@@ -391,6 +407,8 @@ export default function HelperPage() {
       washingmat: 'cyan',
       animals: 'amber',
       transport: 'orange',
+      handyman: 'amber',
+      maintenance: 'amber',
       default: 'red'
     };
     return themes[type] || themes.default;
@@ -774,7 +792,11 @@ export default function HelperPage() {
     vaccinationStatus: '',
     specialNeeds: '',
     ownSupplies: false,
-    selectedPerformer: ''
+    selectedPerformer: '',
+    handymanJobType: '',
+    handymanJobDescription: '',
+    handymanMaterialsRequired: '',
+    handymanUrgency: 'normal'
   });
   const [totalPrice, setTotalPrice] = useState(0);
 
@@ -1248,7 +1270,7 @@ export default function HelperPage() {
         simulateAiAssessment(data);
 
         // Check if helper is barber, chef, beauty, domestic, maid, sneaker, washingmat, or animals and verify social media
-        if (['barber', 'barbar', 'chef', 'cooking', 'beauty', 'spa', 'domestic', 'maid', 'tattoo', 'tutor', 'photography', 'sneaker', 'washingmat', 'animals'].includes(data.type)) {
+        if (['barber', 'barbar', 'chef', 'cooking', 'beauty', 'spa', 'domestic', 'maid', 'tattoo', 'tutor', 'photography', 'sneaker', 'washingmat', 'animals', 'handyman', 'maintenance'].includes(data.type)) {
           verifySocialMediaPresence(data);
         }
 
@@ -1907,6 +1929,17 @@ export default function HelperPage() {
       return;
     }
 
+    if (helper.type === 'handyman' || helper.type === 'maintenance') {
+      if (!bookingData.handymanJobType) {
+        alert("Please select a trade/job type (e.g. Plumber, Electrician).");
+        return;
+      }
+      if (!bookingData.handymanJobDescription) {
+        alert("Please describe the problem/job.");
+        return;
+      }
+    }
+
     let uploadedFiles = [];
 
     if (attachments.length > 0) {
@@ -1980,6 +2013,11 @@ export default function HelperPage() {
     } else if (helper.type === 'chef' || helper.type === 'cooking') {
       if (bookingData.mealType) message += `🍽️ *Meal Type:* ${mealTypes.find(m => m.id === bookingData.mealType)?.name || bookingData.mealType}\n`;
       if (bookingData.cuisinePreference) message += `🌍 *Cuisine:* ${cuisineTypes.find(c => c.id === bookingData.cuisinePreference)?.name || bookingData.cuisinePreference}\n`;
+    } else if (helper.type === 'handyman' || helper.type === 'maintenance') {
+      if (bookingData.handymanJobType) message += `🔨 *Job Type:*      ${bookingData.handymanJobType}\n`;
+      if (bookingData.handymanMaterialsRequired) message += `🛒 *Materials:*     ${bookingData.handymanMaterialsRequired}\n`;
+      message += `⚡ *Urgency:*       ${bookingData.handymanUrgency === 'urgent' ? '🔴 URGENT — Needs immediate attention' : bookingData.handymanUrgency === 'flexible' ? '🟢 Flexible — No rush' : '🟡 Normal priority'}\n`;
+      if (bookingData.handymanJobDescription) message += `📋 *Job Description:* ${bookingData.handymanJobDescription}\n`;
     }
     message += `\n`;
 
@@ -2032,7 +2070,9 @@ export default function HelperPage() {
     // Save to Database first
     // Create a very descriptive subtype for the dashboard/cart
     let bookingSubtype = helper.type;
-    if (bookingData.selectedServices.length > 0) {
+    if (helper.type === 'handyman' || helper.type === 'maintenance') {
+      bookingSubtype = bookingData.handymanJobType || 'Handyman Job';
+    } else if (bookingData.selectedServices.length > 0) {
       bookingSubtype = bookingData.selectedServices.map(s => {
         // Find the service name from options
         const opt = serviceOptions.find(o => o.id === s);
@@ -2381,8 +2421,7 @@ export default function HelperPage() {
               <MapPinIcon className="text-slate-400 w-4 h-4" />
               <span>{helper.address || 'Johannesburg, South Africa'}</span>
             </div>
-            <span className="text-slate-300">·</span>
-            <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} />
+
           </div>
         </div>
 
@@ -2424,7 +2463,6 @@ export default function HelperPage() {
                 </div>
               </Link>
               
-              {/* Mutual Friends Section */}
               <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} />
             </div>
 
@@ -2601,64 +2639,85 @@ export default function HelperPage() {
             )}
 
             {/* Services Offered - FIXED SECTION */}
-            {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals') && (
+            {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals' || helper.type === 'handyman' || helper.type === 'maintenance') && (
               <div className="pb-6 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Services offered</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <Swiper
+                  spaceBetween={12}
+                  slidesPerView={2.2}
+                  breakpoints={{
+                    480: { slidesPerView: 3.2 },
+                    768: { slidesPerView: 4.5 },
+                    1024: { slidesPerView: 5.5 },
+                  }}
+                  className="w-full !pb-4"
+                >
                   {serviceOptions.map((service) => {
                     const isSelected = bookingData.selectedServices.includes(service.id);
                     return (
-                      <div 
-                        key={service.id} 
-                        onClick={() => setSelectedModalService(service)}
-                        className={`flex items-start justify-between gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
-                          isSelected 
-                            ? 'border-rose-500 bg-rose-50 shadow-sm' 
-                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3 min-w-0">
-                          {service.image ? (
-                            <img src={service.image} alt={service.name} className="w-12 h-12 object-cover rounded-lg border bg-white shrink-0 mt-0.5" />
-                          ) : (
-                            <div className={`text-xl transition-colors ${isSelected ? 'text-rose-500' : 'text-gray-400'} shrink-0 mt-0.5`}>
+                      <SwiperSlide key={service.id} className="h-auto">
+                        <div 
+                          onClick={() => setSelectedModalService(service)}
+                          className={`flex flex-col h-full items-center text-center justify-between gap-1 p-3 rounded-2xl border-2 transition-all cursor-pointer relative ${
+                            isSelected 
+                              ? 'border-rose-500 bg-rose-50 shadow-md scale-[0.98]' 
+                              : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
+                          }`}
+                        >
+                          {isSelected && (
+                            <div className="absolute top-2 right-2 w-6 h-6 bg-rose-500 rounded-full flex items-center justify-center shadow-sm z-10 text-white text-[10px]">
                               {service.icon}
                             </div>
                           )}
-                          <div className="min-w-0">
+                          
+                          {/* Top: Name */}
+                          <div className="w-full mt-1 relative z-10">
                             {service.type && (
-                              <span className={`inline-block mb-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                                isSelected ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-500'
+                              <span className={`inline-block mb-1 rounded-full px-2 py-0.5 text-[8px] font-black tracking-widest uppercase ${
+                                isSelected ? 'bg-rose-200 text-rose-800' : 'bg-gray-100 text-gray-500'
                               }`}>
                                 {service.type}
                               </span>
                             )}
-                            <p className={`font-medium transition-colors ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>
+                            <h3 className={`font-bold text-sm leading-tight transition-colors ${isSelected ? 'text-rose-900' : 'text-gray-900'}`}>
                               {service.name}
-                            </p>
-                            {service.description && (
-                              <p className="mt-1 text-xs leading-relaxed text-gray-500 line-clamp-2">
-                                {service.description}
-                              </p>
+                            </h3>
+                          </div>
+
+                          {/* Center: Emoji/Icon */}
+                          <div className="flex-1 flex items-center justify-center py-2 w-full">
+                            {service.image ? (
+                              <img src={service.image} alt={service.name} className="w-14 h-14 object-cover rounded-xl border-4 border-white shadow-sm" />
+                            ) : (
+                              <div className={`text-5xl drop-shadow-sm transition-transform duration-500 hover:scale-110 hover:rotate-3 ${isSelected ? 'text-rose-500' : 'text-gray-700'}`}>
+                                {service.icon}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Bottom: Price */}
+                          <div className="w-full pt-2 border-t border-gray-100">
+                            {service.price ? (
+                              <div className="flex flex-col items-center">
+                                <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">Price</span>
+                                <span className={`text-lg font-black ${isSelected ? 'text-rose-600' : 'text-gray-900'}`}>
+                                  R{service.price}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center">
+                                <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">Price</span>
+                                <span className={`text-base font-black ${isSelected ? 'text-rose-600' : 'text-gray-900'}`}>
+                                  Quote
+                                </span>
+                              </div>
                             )}
                           </div>
                         </div>
-                        <div className="flex flex-col items-end gap-2 shrink-0">
-                          {service.price && (
-                            <span className={`font-semibold ${isSelected ? 'text-rose-600' : 'text-gray-700'}`}>
-                              R{service.price}
-                            </span>
-                          )}
-                          {isSelected && (
-                            <div className="w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center">
-                              <CheckIcon className="text-white w-3 h-3" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      </SwiperSlide>
                     );
                   })}
-                </div>
+                </Swiper>
               </div>
             )}
 
@@ -2818,6 +2877,7 @@ export default function HelperPage() {
               </div>
             </div>
 
+            <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} detailed={true} />
           </div>
 
           {/* Right Column - Booking Card */}
@@ -2955,44 +3015,7 @@ export default function HelperPage() {
           </div>
         </div>
 
-        {/* Mutual Connections Section */}
-        <section className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
-          <div className="overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white shadow-sm">
-            <div className="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr]">
-              <div className="relative bg-slate-950 p-8 text-white md:p-10">
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400" />
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10">
-                  <UserGroupIcon className="h-6 w-6 text-rose-300" />
-                </div>
-                <p className="mt-8 text-xs font-black uppercase tracking-[0.28em] text-rose-300">
-                  Mutual Connections
-                </p>
-                <h2 className="mt-3 text-3xl font-black tracking-tighter md:text-4xl">
-                  Book with a familiar signal.
-                </h2>
-                <p className="mt-4 max-w-sm text-sm leading-6 text-slate-300">
-                  See people in your network who already know this provider, then open a profile before you reach out.
-                </p>
-                <div className="mt-8 grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <CheckBadgeIcon className="mb-3 h-5 w-5 text-emerald-300" />
-                    <p className="font-black">Known network</p>
-                    <p className="mt-1 text-xs text-slate-400">Shared profiles</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <ShieldCheckIcon className="mb-3 h-5 w-5 text-blue-300" />
-                    <p className="font-black">Extra context</p>
-                    <p className="mt-1 text-xs text-slate-400">Before contact</p>
-                  </div>
-                </div>
-              </div>
 
-              <div className="p-5 md:p-8">
-                <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} detailed={true} />
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* Recent Bookers Section */}
         <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type} />
@@ -3568,6 +3591,75 @@ export default function HelperPage() {
                           className="mr-2"
                         />
                         <label className="text-sm text-gray-700">I will provide my own supplies (food, leash, etc.)</label>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Handyman Specific Fields */}
+                  {(helper.type === 'handyman' || helper.type === 'maintenance') && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Trade / Job Type *</label>
+                        <select
+                          name="handymanJobType"
+                          value={bookingData.handymanJobType || ''}
+                          onChange={handleBookingChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                          required
+                        >
+                          <option value="">Select trade/job type</option>
+                          <option value="Plumbing">Plumbing</option>
+                          <option value="Electrical">Electrical</option>
+                          <option value="Carpentry">Carpentry</option>
+                          <option value="Painting">Painting</option>
+                          <option value="General Handyman">General Handyman</option>
+                          <option value="Appliance Repair">Appliance Repair</option>
+                          <option value="HVAC / Aircon">HVAC / Aircon</option>
+                          <option value="Roofing">Roofing</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Job Description *</label>
+                        <textarea
+                          name="handymanJobDescription"
+                          value={bookingData.handymanJobDescription || ''}
+                          onChange={handleBookingChange}
+                          rows="3"
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                          placeholder="Describe the issue or project in detail..."
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Materials</label>
+                        <select
+                          name="handymanMaterialsRequired"
+                          value={bookingData.handymanMaterialsRequired || ''}
+                          onChange={handleBookingChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        >
+                          <option value="">Select material arrangement</option>
+                          <option value="I have the materials">I have the materials</option>
+                          <option value="Professional must supply materials">Professional must supply materials</option>
+                          <option value="Need consultation first">Need consultation first</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Urgency</label>
+                        <select
+                          name="handymanUrgency"
+                          value={bookingData.handymanUrgency || 'normal'}
+                          onChange={handleBookingChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        >
+                          <option value="normal">Normal priority</option>
+                          <option value="urgent">Urgent (Needs immediate attention)</option>
+                          <option value="flexible">Flexible (No rush)</option>
+                        </select>
                       </div>
                     </>
                   )}

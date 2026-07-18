@@ -13,6 +13,7 @@ import { signOutUserSuccess } from "./redux/user/userSlice";
 import { AnimatePresence } from 'framer-motion';
 import PageTransition from './components/PageTransition';
 import NeuralLoader from "./components/NeuralLoader";
+import CompareWidget from "./components/CompareWidget";
 
 // Core Pages (Statically imported to guarantee instant initial rendering)
 import Home from "./pages/Home";
@@ -206,11 +207,11 @@ const AnimatedRoutes = () => {
 
         {/* Service Routes */}
         <Route path="/carwash/:id" element={<PageTransition><CarWashPage /></PageTransition>} />
-        <Route path="/photography/:id" element={<PageTransition><PhotographyHelperPage /></PageTransition>} />
-        <Route path="/beauty/:id" element={<PageTransition><BeautyPage /></PageTransition>} />
-        <Route path="/barber/:id" element={<PageTransition><BarberPage /></PageTransition>} />
-        <Route path="/tattoo/:id" element={<PageTransition><TattooPage /></PageTransition>} />
-        <Route path="/chef/:id" element={<PageTransition><ChefPage /></PageTransition>} />
+        <Route path="/photography/:id" element={<PageTransition><HelperPage /></PageTransition>} />
+        <Route path="/beauty/:id" element={<PageTransition><HelperPage /></PageTransition>} />
+        <Route path="/barber/:id" element={<PageTransition><HelperPage /></PageTransition>} />
+        <Route path="/tattoo/:id" element={<PageTransition><HelperPage /></PageTransition>} />
+        <Route path="/chef/:id" element={<PageTransition><HelperPage /></PageTransition>} />
         <Route path="/helper/:id" element={<PageTransition><HelperPage /></PageTransition>} />
         <Route path="/event/:id" element={<PageTransition><EventPage /></PageTransition>} />
         <Route path="/privatetutor/:id" element={<PageTransition><PrivateTutor /></PageTransition>} />
@@ -369,6 +370,7 @@ function AppContent() {
       <OnboardingGuide />
       <EmergencySOS />
       <NeuralSplash />
+      <CompareWidget />
 
       <ScrollToTop />
       <AuthSessionManager />
