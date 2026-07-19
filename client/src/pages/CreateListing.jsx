@@ -51,6 +51,7 @@ import imageCompression from 'browser-image-compression';
 import MutualFriends from '../components/MutualFriends';
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
+import AIAutoFillModal from '../components/AIAutoFillModal';
 
 const CustomHeartIcon = () => (
   <svg 
@@ -68,6 +69,32 @@ const CustomHeartIcon = () => (
     />
   </svg>
 );
+
+const PROFANITY_LIST = ['fuck', 'shit', 'bitch', 'asshole', 'cunt', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'faggot', 'nigger', 'retard', 'dumbass', 'motherfucker', 'twat', 'idiot', 'stupid'];
+
+const findProfanity = (text) => {
+  if (!text || typeof text !== 'string') return [];
+  const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+  return Array.from(new Set(words.filter(word => PROFANITY_LIST.includes(word))));
+};
+
+const ProfanityWarning = ({ text }) => {
+  const badWords = findProfanity(text);
+  if (badWords.length === 0) return null;
+  return (
+    <div className="mt-3 text-sm font-medium text-rose-500 flex items-start gap-2 bg-rose-50 p-4 rounded-2xl border border-rose-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+      <ExclamationTriangleIcon className="w-5 h-5 shrink-0 mt-0.5" />
+      <span>
+        Inappropriate language detected. Please replace: 
+        {badWords.map((word, index) => (
+          <span key={index} className="mx-1 px-2 py-1 bg-rose-200 text-rose-900 rounded-lg font-black underline decoration-rose-500 decoration-2">
+            {word}
+          </span>
+        ))}
+      </span>
+    </div>
+  );
+};
 
 // Airbnb-style UI Components
 const SectionCard = ({ title, children, className = "" }) => (
@@ -138,6 +165,7 @@ const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, plac
         </div>
       )}
       {children}
+      <ProfanityWarning text={value} />
     </div>
     {helpText && <p className="mt-4 text-xs font-bold text-gray-400 ml-4 italic opacity-80">{helpText}</p>}
   </div>
@@ -379,6 +407,19 @@ export default function CreateListing() {
   
   // Scroll state
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
+  
+  const handleAIApply = (aiData) => {
+    setListingForm((prev) => ({
+      ...prev,
+      name: aiData.name || prev.name,
+      description: aiData.description || prev.description,
+      address: aiData.address || prev.address,
+      regularPrice: aiData.regularPrice || prev.regularPrice
+    }));
+    // Try to guess a category if possible, or just jump to Step 3 so they can fill details
+    setCurrentStep(3);
+  };
   
   // Multi-step form state
   const [currentStep, setCurrentStep] = useState(1);
@@ -593,7 +634,6 @@ export default function CreateListing() {
         if (type === 'tutor') return "Subjects you teach, teaching methods, qualifications...";
         if (type === 'barber') return "Services you offer, specialties, experience...";
         if (type === 'photography') return "Your photography style, experience, services...";
-        if (type === 'baker') return "Your baking specialties, experience, dietary options...";
         if (type === 'sneaker') return "Your sneaker cleaning experience, methods, products used...";
         if (type === 'washingmat') return "Your mat washing experience, equipment used, drying process...";
         if (type === 'animals') return "Your animal care experience, certifications, types of animals you work with...";
@@ -925,7 +965,6 @@ export default function CreateListing() {
         if (type === 'tutor') return "subjects and teaching approach";
         if (type === 'barber') return "services and specialties";
         if (type === 'photography') return "photography services and style";
-        if (type === 'baker') return "baking specialties and options";
         if (type === 'sneaker') return "your sneaker cleaning experience and methods";
         if (type === 'washingmat') return "your mat washing experience and equipment";
         if (type === 'animals') return "your animal care experience and services";
@@ -1724,7 +1763,6 @@ export default function CreateListing() {
           { id: "tattoo", label: "Tattoo Artist", emoji: "🖌️", description: "Tattoo design" },
           { id: "barber", label: "Barber", emoji: "✂️", description: "Haircuts, grooming" },
           { id: "photography", label: "Photographer", emoji: "📷", description: "Photo sessions" },
-          { id: "baker", label: "Baker", emoji: "🍰", description: "Custom baked goods" },
           { id: "sneaker", label: "Sneaker Cleaner", emoji: "👟", description: "Sneaker cleaning & restoration" },
           { id: "animals", label: "Animal Care", emoji: "🐕", description: "Pet sitting, walking, grooming" },
         ];
@@ -1889,6 +1927,20 @@ export default function CreateListing() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-32 pb-12 md:pb-20">
+        <AIAutoFillModal 
+          isOpen={showAIModal} 
+          onClose={() => setShowAIModal(false)} 
+          onApply={handleAIApply} 
+        />
+        {/* AI Assistant Banner */}
+        <div className="bg-gradient-to-r from-rose-500 to-orange-500 rounded-[2rem] p-6 mb-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+          <div>
+             <h3 className="text-xl font-bold flex items-center gap-2 tracking-tight"><Sparkles className="w-6 h-6"/> AI Auto-Fill</h3>
+             <p className="text-sm font-medium text-white/90">Describe what you're listing and let AI do the rest.</p>
+          </div>
+          <button type="button" onClick={() => setShowAIModal(true)} className="bg-white text-rose-500 px-6 py-3 rounded-2xl font-black hover:bg-gray-100 transition whitespace-nowrap shadow-md">Try AI Assistant</button>
+        </div>
+
         {/* Step Progress */}
         <div className="mt-10">
           <StepProgress currentStep={currentStep} category={selectedCategory} type={selectedType} />
