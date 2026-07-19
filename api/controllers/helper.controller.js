@@ -68,7 +68,8 @@ export const getHelpers = async (req, res, next) => {
         $or: [
           { name: { $regex: req.query.searchTerm, $options: 'i' } },
           { description: { $regex: req.query.searchTerm, $options: 'i' } },
-          { skills: { $regex: req.query.searchTerm, $options: 'i' } }
+          { skills: { $regex: req.query.searchTerm, $options: 'i' } },
+          { address: { $regex: req.query.searchTerm, $options: 'i' } }
         ],
       }),
     })

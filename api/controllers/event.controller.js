@@ -44,7 +44,8 @@ export const getEvents = async (req, res, next) => {
     const query = {
       $or: [
         { title: { $regex: searchTerm, $options: 'i' } },
-        { description: { $regex: searchTerm, $options: 'i' } }
+        { description: { $regex: searchTerm, $options: 'i' } },
+        { location: { $regex: searchTerm, $options: 'i' } }
       ],
       ...(category && { type: category }),
       ...(location && { location: { $regex: location, $options: 'i' } })

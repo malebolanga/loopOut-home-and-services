@@ -326,7 +326,8 @@ export const getListings = async (req, res, next) => {
     const listings = await Listing.find({
       $or: [
         { name: { $regex: searchTerm, $options: 'i' } },
-        { description: { $regex: searchTerm, $options: 'i' } }
+        { description: { $regex: searchTerm, $options: 'i' } },
+        { address: { $regex: searchTerm, $options: 'i' } }
       ],
       address: { $regex: address, $options: 'i' },
       offer,

@@ -208,7 +208,11 @@ export const getServices = async (req, res, next) => {
     }
 
     const query = {
-      name: { $regex: searchTerm, $options: 'i' },
+      $or: [
+        { name: { $regex: searchTerm, $options: 'i' } },
+        { description: { $regex: searchTerm, $options: 'i' } },
+        { address: { $regex: searchTerm, $options: 'i' } }
+      ],
       ...(offer && { offer }),
       ...(type && { type }),
       ...(req.query.security && { security: req.query.security === 'true' }),
