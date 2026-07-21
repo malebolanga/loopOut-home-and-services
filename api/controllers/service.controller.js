@@ -211,6 +211,7 @@ export const getServices = async (req, res, next) => {
     const searchTerm = req.query.searchTerm || '';
     const sort = req.query.sort || 'createdAt';
     const order = req.query.order || 'desc';
+    let type = req.query.type;
 
     if (type === undefined || type === 'all') {
       // ✅ UPDATED: Include carwash and storage in default filter
@@ -251,7 +252,7 @@ export const getServices = async (req, res, next) => {
       ...(req.query.routeAreas && { routeAreas: req.query.routeAreas }),
       ...(req.query.childSeats && { childSeats: req.query.childSeats === 'true' }),
 
-      // ✅ NEW: Car wash filters
+      // Car wash filters
       ...(req.query.carWashPackages && { carWashPackages: { $regex: req.query.carWashPackages, $options: 'i' } }),
       ...(req.query.vehicleTypes && { vehicleTypes: req.query.vehicleTypes }),
       ...(req.query.serviceDuration && { serviceDuration: { $regex: req.query.serviceDuration, $options: 'i' } }),
@@ -259,8 +260,10 @@ export const getServices = async (req, res, next) => {
       ...(req.query.ecoFriendly && { ecoFriendly: req.query.ecoFriendly === 'true' }),
     };
 
+    const sortOrder = order === 'asc' || order === '1' || order === 1 ? 1 : -1;
+
     const services = await Service.find(query)
-      .sort({ [sort]: order })
+      .sort({ [sort]: sortOrder })
       .limit(limit)
       .skip(startIndex)
       .populate('userRef', 'username avatar');

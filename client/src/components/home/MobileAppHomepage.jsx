@@ -126,10 +126,49 @@ const MobileAppHomepage = ({
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Simplified render returning placeholder for now
+  const storageServices = (featuredServices || []).filter(service => service.type === 'storage');
+  const recentItems = (recentlyAddedItems || []).slice().sort((a, b) => {
+    const aIsStorage = a.itemType === 'service' && a.type === 'storage';
+    const bIsStorage = b.itemType === 'service' && b.type === 'storage';
+    return Number(bIsStorage) - Number(aIsStorage);
+  });
+
   return (
-    <div className="mobile-home-placeholder">
-      {/* Mobile Home content would be placed here */}
+    <main className="min-h-screen bg-slate-50 px-4 py-8 md:px-8 lg:px-12">
+      <section className="max-w-7xl mx-auto">
+        <div className="flex items-end justify-between gap-4 mb-5">
+          <div>
+            <p className="text-xs font-bold tracking-widest text-emerald-700 uppercase">Safe space for your belongings</p>
+            <h1 className="text-2xl font-black text-slate-900 mt-1">Storage services</h1>
+          </div>
+          <button onClick={() => navigate('/service-home-page')} className="text-sm font-semibold text-rose-600 hover:text-rose-700">View all services</button>
+        </div>
+        {loadingServices ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">{[0, 1, 2, 3].map(index => <AirbnbCardSkeleton key={index} />)}</div>
+        ) : storageServices.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {storageServices.slice(0, 4).map(service => (
+              <AirbnbCard key={service._id} item={service} type="service" onClick={(path) => { onItemClick?.(service, 'service'); navigate(path); }} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-600">No storage services have been added yet.</div>
+        )}
+      </section>
+
+      {recentItems.length > 0 && (
+        <section className="max-w-7xl mx-auto mt-12">
+          <div className="flex items-center gap-2 mb-5">
+            <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+            <h2 className="text-xl font-black text-slate-900">Recently added</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {recentItems.slice(0, 5).map(item => (
+              <AirbnbCard key={`${item.itemType}-${item._id}`} item={item} type={item.itemType === 'listing' ? 'property' : item.itemType} reducedSize onClick={(path) => { onItemClick?.(item, item.itemType); navigate(path); }} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 };

@@ -319,15 +319,34 @@ class AIRecommendationEngine {
 // --- FRESHA-STYLE CATEGORY CARD COMPONENT ---
 const FreshaCategoryCard = ({ category, onClick, index }) => {
   const [rotate, setRotate] = useState({ x: 0, y: 0 });
+  const cardRectRef = useRef(null);
+  const rafRef = useRef(null);
 
-  const onMouseMove = (e) => {
-    const card = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - card.left) / card.width;
-    const y = (e.clientY - card.top) / card.height;
-    setRotate({ x: (y - 0.5) * 30, y: (x - 0.5) * -30 });
+  const onMouseEnter = (e) => {
+    cardRectRef.current = e.currentTarget.getBoundingClientRect();
   };
 
-  const onMouseLeave = () => setRotate({ x: 0, y: 0 });
+  const onMouseMove = (e) => {
+    if (!cardRectRef.current) {
+      cardRectRef.current = e.currentTarget.getBoundingClientRect();
+    }
+    const card = cardRectRef.current;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      const x = (clientX - card.left) / card.width;
+      const y = (clientY - card.top) / card.height;
+      setRotate({ x: (y - 0.5) * 30, y: (x - 0.5) * -30 });
+    });
+  };
+
+  const onMouseLeave = () => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    cardRectRef.current = null;
+    setRotate({ x: 0, y: 0 });
+  };
 
   return (
     <motion.div
@@ -341,6 +360,7 @@ const FreshaCategoryCard = ({ category, onClick, index }) => {
         transition: { duration: 0.3 }
       }}
       whileTap={{ scale: 0.94 }}
+      onMouseEnter={onMouseEnter}
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
       onClick={() => onClick(category)}

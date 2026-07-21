@@ -91,6 +91,8 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
     } else if (resolvedType === 'service') {
       if (item.type === 'carwash') {
         path = `/carwash/${item._id}`;
+      } else if (item.type === 'storage') {
+        path = `/storage/${item._id}`;
       } else {
         path = `/service/${item._id}`;
       }

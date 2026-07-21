@@ -75,6 +75,19 @@ import 'swiper/css/thumbs';
 import 'swiper/css/autoplay';
 import 'swiper/css/free-mode';
 
+const STORAGE_ITEM_OPTIONS = [
+  { id: 'chairs', label: 'Chairs', emoji: '🪑' },
+  { id: 'bed', label: 'Bed', emoji: '🛏️' },
+  { id: 'fridge', label: 'Fridge', emoji: '🧊' },
+  { id: 'tv', label: 'TV', emoji: '📺' },
+  { id: 'microwave', label: 'Microwave', emoji: '📻' },
+  { id: 'clothes', label: 'Clothes', emoji: '👕' },
+  { id: 'sofa', label: 'Sofa / Couch', emoji: '🛋️' },
+  { id: 'boxes', label: 'Boxes', emoji: '📦' },
+  { id: 'table', label: 'Table / Desk', emoji: '🪑' },
+  { id: 'appliances', label: 'Appliances', emoji: '🧺' },
+];
+
 // ==========================================
 // SERVICE TYPE CONFIGURATION
 // ==========================================
@@ -993,7 +1006,11 @@ const ServicePage = () => {
       if (bookingData.moveFloorFrom) message += `🏢 *Floor (Pickup):*      ${bookingData.moveFloorFrom}\n`;
       if (bookingData.moveFloorTo) message += `🏢 *Floor (Dropoff):*     ${bookingData.moveFloorTo}\n`;
       if (bookingData.moveHasLift) message += `🛗 *Lift/Elevator:*       ${bookingData.moveHasLift}\n`;
-      if (bookingData.moveHeavyItems) message += `🪑 *Heavy Items:*\n   ${bookingData.moveHeavyItems}\n`;
+      const allMoveItems = [
+        ...(bookingData.selectedMoveItems || []),
+        ...(bookingData.moveHeavyItems ? [bookingData.moveHeavyItems] : [])
+      ].filter(Boolean).join(', ');
+      if (allMoveItems) message += `🪑 *Selected / Heavy Items:*\n   ${allMoveItems}\n`;
       if (bookingData.movePackingRequired) message += `📦 *Packing Needed:*      ${bookingData.movePackingRequired}\n`;
       if (bookingData.moveBoxesCount && bookingData.moveBoxesCount > 0) {
         message += `📦 *Boxes:*               ${bookingData.moveBoxesCount} boxes  ×  R${service.moveCostPerBox || 50}/box\n`;
@@ -1061,7 +1078,11 @@ const ServicePage = () => {
       if (service.storagePriceDay) message += `📅 *Rate per Day:*      R${service.storagePriceDay}\n`;
       if (service.storagePriceMonth) message += `🗓️ *Rate per Month:*    R${service.storagePriceMonth}\n`;
       message += `📆 *Duration:*          ${bookingData.storageDuration}\n`;
-      if (bookingData.storageItemsToStore) message += `\n📋 *Items to Store:*\n_${bookingData.storageItemsToStore}_\n`;
+      const allStorageItems = [
+        ...(bookingData.selectedStorageItems || []),
+        ...(bookingData.storageItemsToStore ? [bookingData.storageItemsToStore] : [])
+      ].filter(Boolean).join(', ');
+      if (allStorageItems) message += `\n📋 *Items to Store:*\n_${allStorageItems}_\n`;
       message += `\n`;
     }
 
@@ -2619,13 +2640,40 @@ const ServicePage = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Heavy / special items (piano, safe, appliances…)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select items to move (chairs, bed, fridge, TV, microwave, etc.)</label>
+                    <div className="flex flex-wrap gap-1.5 mb-2.5">
+                      {STORAGE_ITEM_OPTIONS.map((opt) => {
+                        const isSelected = (bookingData.selectedMoveItems || []).includes(opt.label);
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => {
+                              const current = bookingData.selectedMoveItems || [];
+                              const next = current.includes(opt.label)
+                                ? current.filter(i => i !== opt.label)
+                                : [...current, opt.label];
+                              setBookingData(prev => ({ ...prev, selectedMoveItems: next }));
+                            }}
+                            className={`px-2.5 py-1 rounded-full border text-xs font-semibold flex items-center gap-1 transition-all active:scale-95 ${
+                              isSelected
+                                ? 'bg-rose-500 text-white border-rose-500 shadow-sm ring-2 ring-rose-200'
+                                : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-rose-300 hover:bg-rose-50/50'
+                            }`}
+                          >
+                            <span>{opt.emoji}</span>
+                            <span>{opt.label}</span>
+                            {isSelected && <span className="ml-0.5 text-[10px]">✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
                     <input
                       type="text"
                       name="moveHeavyItems"
                       value={bookingData.moveHeavyItems}
                       onChange={handleBookingChange}
-                      placeholder="e.g. 1 piano, fridge, washing machine"
+                      placeholder="Additional items or details (e.g. 1 piano, fridge, washing machine...)"
                       className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     />
                   </div>
@@ -3093,12 +3141,40 @@ const ServicePage = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">What will you be storing?</label>
+                    <p className="text-xs text-gray-500 mb-2">Tap items to select them (chairs, bed, fridge, TV, microwave, clothes, etc.):</p>
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {STORAGE_ITEM_OPTIONS.map((opt) => {
+                        const isSelected = (bookingData.selectedStorageItems || []).includes(opt.label);
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => {
+                              const current = bookingData.selectedStorageItems || [];
+                              const next = current.includes(opt.label)
+                                ? current.filter(i => i !== opt.label)
+                                : [...current, opt.label];
+                              setBookingData(prev => ({ ...prev, selectedStorageItems: next }));
+                            }}
+                            className={`px-2.5 py-1 rounded-full border text-xs font-semibold flex items-center gap-1 transition-all active:scale-95 ${
+                              isSelected
+                                ? 'bg-rose-500 text-white border-rose-500 shadow-sm ring-2 ring-rose-200'
+                                : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-rose-300 hover:bg-rose-50/50'
+                            }`}
+                          >
+                            <span>{opt.emoji}</span>
+                            <span>{opt.label}</span>
+                            {isSelected && <span className="ml-0.5 text-[10px]">✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
                     <textarea
                       name="storageItemsToStore"
                       value={bookingData.storageItemsToStore}
                       onChange={handleBookingChange}
-                      rows="3"
-                      placeholder="e.g. Furniture, boxes, business stock, vehicle, personal belongings…"
+                      rows="2"
+                      placeholder="Additional items or details (e.g. 4x chairs, king bed, fridge...)"
                       className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     />
                   </div>

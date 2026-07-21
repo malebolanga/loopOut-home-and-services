@@ -1,4 +1,4 @@
-﻿/* eslint-disable react/prop-types */
+/* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
@@ -28,6 +28,19 @@ const DURATION_OPTIONS = [
   { value: 'Ongoing', label: 'Ongoing (month-to-month)' },
 ];
 
+const STORAGE_ITEM_OPTIONS = [
+  { id: 'chairs', label: 'Chairs', emoji: '🪑' },
+  { id: 'bed', label: 'Bed', emoji: '🛏️' },
+  { id: 'fridge', label: 'Fridge', emoji: '🧊' },
+  { id: 'tv', label: 'TV', emoji: '📺' },
+  { id: 'microwave', label: 'Microwave', emoji: '📻' },
+  { id: 'clothes', label: 'Clothes', emoji: '👕' },
+  { id: 'sofa', label: 'Sofa / Couch', emoji: '🛋️' },
+  { id: 'boxes', label: 'Boxes', emoji: '📦' },
+  { id: 'table', label: 'Table / Desk', emoji: '🪑' },
+  { id: 'appliances', label: 'Appliances', emoji: '🧺' },
+];
+
 function computeEstimate(service, duration) {
   if (!service) return 0;
   const priceDay   = Number(service.storagePriceDay)   || 0;
@@ -55,6 +68,7 @@ export default function StoragePage() {
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [duration, setDuration]         = useState('1 month');
+  const [selectedStorageItems, setSelectedStorageItems] = useState([]);
   const [items, setItems]               = useState('');
   const [name, setName]                 = useState('');
   const [phone, setPhone]               = useState('');
@@ -62,6 +76,12 @@ export default function StoragePage() {
   const [notes, setNotes]               = useState('');
   const [policyAck, setPolicyAck]       = useState(false);
   const [submitting, setSubmitting]     = useState(false);
+
+  const toggleStorageItem = (itemLabel) => {
+    setSelectedStorageItems((prev) =>
+      prev.includes(itemLabel) ? prev.filter((i) => i !== itemLabel) : [...prev, itemLabel]
+    );
+  };
 
   useEffect(() => {
     if (currentUser) { setName(currentUser.username || ''); setPhone(currentUser.phone || ''); }
@@ -94,6 +114,11 @@ export default function StoragePage() {
     setSubmitting(true);
     const rawPhone = (storage?.contactInfo || storage?.userPhone || '').replace(/\D/g, '');
     const wa = rawPhone ? `27${rawPhone.replace(/^0/, '')}` : '';
+    const finalItems = [
+      ...selectedStorageItems,
+      ...(items ? [items] : [])
+    ].filter(Boolean).join(', ');
+
     let msg = `*STORAGE BOOKING REQUEST*\n\n`;
     msg += `*Facility:* ${storage.name}\n`;
     if (storage.location) msg += `*Location:* ${storage.location}\n\n`;
@@ -101,7 +126,7 @@ export default function StoragePage() {
     if (storage.storageSize) msg += `*Size:* ${storage.storageSize}\n`;
     if (storage.storagePriceMonth) msg += `*Monthly Rate:* R${storage.storagePriceMonth}\n`;
     msg += `*Duration:* ${duration}\n`;
-    if (items) msg += `*Items:* ${items}\n`;
+    if (finalItems) msg += `*Items to Store:* ${finalItems}\n`;
     if (address) msg += `*Address:* ${address}\n`;
     if (notes) msg += `*Notes:* ${notes}\n`;
     msg += `\n*Estimated Total:* R${total}\n_(estimate only)_`;
@@ -222,7 +247,29 @@ export default function StoragePage() {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">What will you store?</label>
-                    <textarea value={items} onChange={(e)=>setItems(e.target.value)} rows={2} placeholder="e.g. furniture, boxes, vehicle..." className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 text-sm resize-none" />
+                    <p className="text-xs text-gray-500 mb-2">Tap items to quickly select them:</p>
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {STORAGE_ITEM_OPTIONS.map((opt) => {
+                        const isSelected = selectedStorageItems.includes(opt.label);
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => toggleStorageItem(opt.label)}
+                            className={`px-2.5 py-1 rounded-full border text-xs font-semibold flex items-center gap-1 transition-all active:scale-95 ${
+                              isSelected
+                                ? 'bg-rose-500 text-white border-rose-500 shadow-sm ring-2 ring-rose-200'
+                                : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-rose-300 hover:bg-rose-50/50'
+                            }`}
+                          >
+                            <span>{opt.emoji}</span>
+                            <span>{opt.label}</span>
+                            {isSelected && <span className="ml-0.5 text-[10px]">✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <textarea value={items} onChange={(e)=>setItems(e.target.value)} rows={2} placeholder="Add additional details or specific quantities (e.g. 2x chairs, king bed...)" className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 text-sm resize-none" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div><label className="block text-xs font-semibold text-gray-600 mb-1">Your Name *</label><input required value={name} onChange={(e)=>setName(e.target.value)} placeholder="Full name" className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 text-sm" /></div>

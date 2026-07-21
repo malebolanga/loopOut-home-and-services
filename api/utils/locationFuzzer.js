@@ -21,22 +21,37 @@ export const fuzzLocation = (lat, lng) => {
 };
 
 /**
+ * Helper to safely convert Mongoose documents or plain objects to plain JS objects.
+ */
+const toPlainObject = (item) => {
+    if (!item) return item;
+    if (typeof item.toObject === 'function') {
+        return item.toObject();
+    }
+    if (item._doc) {
+        return { ...item._doc };
+    }
+    return item;
+};
+
+/**
  * Iterates through an array of items and fuzzes their location.
  */
 export const fuzzItemsLocation = (items) => {
     if (!items || !Array.isArray(items)) return items;
     
     return items.map(item => {
-        if (item.latitude !== undefined && item.longitude !== undefined) {
-            const { latitude, longitude } = fuzzLocation(item.latitude, item.longitude);
+        const itemObj = toPlainObject(item);
+        if (itemObj && itemObj.latitude !== undefined && itemObj.longitude !== undefined && itemObj.latitude !== null && itemObj.longitude !== null) {
+            const { latitude, longitude } = fuzzLocation(itemObj.latitude, itemObj.longitude);
             return {
-                ...item,
+                ...itemObj,
                 latitude,
                 longitude,
                 exactLocationHidden: true
             };
         }
-        return item;
+        return itemObj;
     });
 };
 
@@ -45,13 +60,15 @@ export const fuzzItemsLocation = (items) => {
  */
 export const fuzzSingleItemLocation = (item) => {
     if (!item) return item;
-    if (item.latitude !== undefined && item.longitude !== undefined) {
-        const { latitude, longitude } = fuzzLocation(item.latitude, item.longitude);
-        const data = item._doc ? { ...item._doc } : { ...item };
-        data.latitude = latitude;
-        data.longitude = longitude;
-        data.exactLocationHidden = true;
-        return data;
+    const itemObj = toPlainObject(item);
+    if (itemObj && itemObj.latitude !== undefined && itemObj.longitude !== undefined && itemObj.latitude !== null && itemObj.longitude !== null) {
+        const { latitude, longitude } = fuzzLocation(itemObj.latitude, itemObj.longitude);
+        return {
+            ...itemObj,
+            latitude,
+            longitude,
+            exactLocationHidden: true
+        };
     }
-    return item._doc ? item._doc : item;
+    return itemObj;
 };
