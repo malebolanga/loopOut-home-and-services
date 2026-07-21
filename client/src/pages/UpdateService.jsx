@@ -442,11 +442,12 @@ export default function UpdateService() {
               <select
                 id='type'
                 className='p-3 border rounded-lg'
-                onChange={handleChange}
+                 onChange={handleChange}
                 value={formData.type}
               >
                 <option value='cleaning'>Cleaning</option>
                 <option value='maintenance'>Maintenance</option>
+                <option value='storage'>Booking Storage</option>
                 <option value='moving'>Moving</option>
                 <option value='landscaping'>Landscaping</option>
                 <option value='catering'>Catering</option>
@@ -471,6 +472,145 @@ export default function UpdateService() {
               </div>
             </div>
           </div>
+
+          {formData.type === 'storage' && (
+            <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50'>
+              <div className='flex items-center gap-2 mb-1'>
+                <span className='font-semibold text-gray-800 text-lg'>📦 Storage Space Configuration</span>
+              </div>
+              
+              <div className='flex flex-col gap-1'>
+                <label className='text-sm font-semibold'>Storage Size</label>
+                <input
+                  type='text'
+                  id='storageSize'
+                  placeholder='e.g., 3m x 3m x 2.5m'
+                  className='p-3 border border-gray-300 rounded-lg'
+                  onChange={handleChange}
+                  value={formData.storageSize || ''}
+                />
+              </div>
+
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div className='flex flex-col gap-1'>
+                  <label className='text-sm font-semibold'>Cost per Day (R)</label>
+                  <input
+                    type='number'
+                    id='storagePriceDay'
+                    className='p-3 border border-gray-300 rounded-lg'
+                    onChange={handleChange}
+                    value={formData.storagePriceDay || 0}
+                  />
+                </div>
+                <div className='flex flex-col gap-1'>
+                  <label className='text-sm font-semibold'>Cost per Month (R)</label>
+                  <input
+                    type='number'
+                    id='storagePriceMonth'
+                    className='p-3 border border-gray-300 rounded-lg'
+                    onChange={handleChange}
+                    value={formData.storagePriceMonth || 0}
+                  />
+                </div>
+              </div>
+
+              <div className='flex flex-col gap-1'>
+                <label className='text-sm font-semibold'>Late Payment / Pay Failure Policy</label>
+                <textarea
+                  id='storageFailurePolicy'
+                  rows='3'
+                  placeholder='Explain what happens if payment is missed...'
+                  className='p-3 border border-gray-300 rounded-lg'
+                  onChange={handleChange}
+                  value={formData.storageFailurePolicy || ''}
+                />
+              </div>
+
+              <div className='flex flex-col gap-1'>
+                <label className='text-sm font-semibold'>Terms & Conditions</label>
+                <textarea
+                  id='storageTerms'
+                  rows='3'
+                  placeholder='Specify any storage terms...'
+                  className='p-3 border border-gray-300 rounded-lg'
+                  onChange={handleChange}
+                  value={formData.storageTerms || ''}
+                />
+              </div>
+
+              {/* PDF Policy Document */}
+              <div className='flex flex-col gap-1'>
+                <label className='text-sm font-semibold'>📄 Policy Document (PDF)</label>
+                <p className='text-xs text-gray-500'>Upload a rental agreement or terms PDF that customers must read before booking.</p>
+
+                {!formData.storagePolicyDocUrl ? (
+                  <label className='flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-blue-50 hover:border-blue-400 transition-all group mt-1'>
+                    <div className='flex flex-col items-center gap-1'>
+                      <svg className='w-7 h-7 text-gray-400 group-hover:text-blue-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={1.5} d='M12 16v-8m0 0-3 3m3-3 3 3M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1' />
+                      </svg>
+                      <span className='text-sm text-gray-500 group-hover:text-blue-500'>Click to upload PDF</span>
+                      <span className='text-xs text-gray-400'>Max 10 MB</span>
+                    </div>
+                    <input
+                      type='file'
+                      accept='application/pdf'
+                      className='hidden'
+                      onChange={async (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        if (file.size > 10 * 1024 * 1024) { alert('PDF must be under 10 MB'); return; }
+                        try {
+                          setUploading(true);
+                          const storage = getStorage(app);
+                          const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
+                          const storageRef = ref(storage, `policy-docs/${Date.now()}_${cleanName}`);
+                          const task = uploadBytesResumable(storageRef, file);
+                          task.on('state_changed',
+                            (snap) => setUploadProgress((snap.bytesTransferred / snap.totalBytes) * 100),
+                            (err) => { alert('Upload failed: ' + err.message); setUploading(false); },
+                            async () => {
+                              const url = await getDownloadURL(task.snapshot.ref);
+                              setFormData(prev => ({ ...prev, storagePolicyDocUrl: url }));
+                              setUploadProgress(0);
+                              setUploading(false);
+                            }
+                          );
+                        } catch (err) { alert('Error: ' + err.message); setUploading(false); }
+                      }}
+                    />
+                  </label>
+                ) : (
+                  <div className='flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-xl mt-1'>
+                    <div className='flex items-center gap-2 text-green-700 text-sm font-medium'>
+                      <svg className='w-5 h-5 text-red-500 flex-shrink-0' viewBox='0 0 24 24' fill='currentColor'>
+                        <path d='M6 2a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h5v1.5H8V16z'/>
+                      </svg>
+                      <a href={formData.storagePolicyDocUrl} target='_blank' rel='noreferrer' className='underline truncate max-w-xs'>
+                        View uploaded document ↗
+                      </a>
+                    </div>
+                    <button
+                      type='button'
+                      onClick={() => setFormData(prev => ({ ...prev, storagePolicyDocUrl: '' }))}
+                      className='ml-3 text-xs text-red-500 hover:text-red-700 font-semibold'
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+
+                {uploading && (
+                  <div className='mt-2'>
+                    <div className='h-1.5 w-full bg-gray-200 rounded-full'>
+                      <div className='h-1.5 bg-blue-500 rounded-full transition-all' style={{ width: `${uploadProgress}%` }} />
+                    </div>
+                    <p className='text-xs text-gray-500 mt-1'>Uploading… {Math.round(uploadProgress)}%</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {formData.type === 'moving' && (
             <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50'>

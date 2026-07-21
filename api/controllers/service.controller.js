@@ -56,6 +56,14 @@ export const createService = async (req, res, next) => {
       delete serviceData.movePriceBigTruckTrailer;
     }
 
+    if (req.body.type !== 'storage') {
+      delete serviceData.storageSize;
+      delete serviceData.storagePriceDay;
+      delete serviceData.storagePriceMonth;
+      delete serviceData.storageFailurePolicy;
+      delete serviceData.storageTerms;
+    }
+
     const service = await Service.create(serviceData);
 
     // Create notifications for users in the area
@@ -149,6 +157,14 @@ export const updateService = async (req, res, next) => {
       delete updateData.movePriceBigTruckTrailer;
     }
 
+    if (req.body.type !== 'storage') {
+      delete updateData.storageSize;
+      delete updateData.storagePriceDay;
+      delete updateData.storagePriceMonth;
+      delete updateData.storageFailurePolicy;
+      delete updateData.storageTerms;
+    }
+
     const updatedService = await Service.findByIdAndUpdate(
       req.params.id,
       updateData,
@@ -196,13 +212,12 @@ export const getServices = async (req, res, next) => {
     const sort = req.query.sort || 'createdAt';
     const order = req.query.order || 'desc';
 
-    let type = req.query.type;
     if (type === undefined || type === 'all') {
-      // ✅ UPDATED: Include carwash in default filter
+      // ✅ UPDATED: Include carwash and storage in default filter
       type = {
         $in: [
           'cleaning', 'handyman', 'maintenance', 'moving', 'landscaping',
-          'catering', 'other', 'daycare', 'schoolTransport', 'carwash'
+          'catering', 'other', 'daycare', 'schoolTransport', 'carwash', 'storage'
         ]
       };
     }

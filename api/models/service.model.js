@@ -78,7 +78,8 @@ const serviceSchema = new mongoose.Schema(
         'other',
         'daycare',
         'schoolTransport',
-        'carwash' // ✅ NEW: Car wash service type
+        'carwash', // ✅ NEW: Car wash service type
+        'storage' // ✅ NEW: Storage service type
       ]
     },
     offer: {
@@ -195,6 +196,31 @@ const serviceSchema = new mongoose.Schema(
     },
     additionalPricing: {
       type: String, // Detailed pricing for different packages
+      required: false
+    },
+    // ✅ NEW: Storage specific fields
+    storageSize: {
+      type: String,
+      required: function() { return this.type === 'storage'; }
+    },
+    storagePriceDay: {
+      type: Number,
+      required: function() { return this.type === 'storage'; }
+    },
+    storagePriceMonth: {
+      type: Number,
+      required: function() { return this.type === 'storage'; }
+    },
+    storageFailurePolicy: {
+      type: String,
+      required: false
+    },
+    storageTerms: {
+      type: String,
+      required: false
+    },
+    storagePolicyDocUrl: {
+      type: String,
       required: false
     },
     serviceList: [

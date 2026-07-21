@@ -233,6 +233,23 @@ const SERVICE_CONFIG = {
       { icon: <FaClock />, title: 'Same Day', desc: 'Fast turnaround' },
       { icon: <FaShieldAlt />, title: 'Trusted', desc: 'Verified handlers' }
     ]
+  },
+
+  // Booking Storage Services
+  storage: {
+    title: 'Booking Storage',
+    icon: <FaTools />,
+    description: `Safe and secure storage space for your belongings. Whether short-term or long-term, store household items, business stock, vehicles, or valuables in a monitored storage facility.`,
+    options: [
+      { id: 'short-term', name: 'Short-Term Storage', description: 'Flexible daily/weekly storage', duration: 'Daily / Weekly', price: 'From R50/day', popular: true, icon: <FaTools /> },
+      { id: 'monthly', name: 'Monthly Storage', description: 'Standard monthly rental', duration: '1+ months', price: 'From R500/month', popular: true, icon: <FaTools /> },
+      { id: 'long-term', name: 'Long-Term Storage', description: 'Extended secure storage', duration: '6–12+ months', price: 'Negotiable', popular: false, icon: <FaShieldAlt /> },
+      { id: 'vehicle-storage', name: 'Vehicle Storage', description: 'Cars, bikes, trailers', duration: 'Monthly', price: 'From R800/month', popular: false, icon: <FaTools /> }
+    ],
+    highlights: [
+      { icon: <FaShieldAlt />, title: 'Secure', desc: 'Monitored & locked' },
+      { icon: <FaClock />, title: 'Flexible', desc: 'Daily & monthly rates' }
+    ]
   }
 };
 
@@ -476,6 +493,10 @@ const ServicePage = () => {
     cateringDietaryReqs: '',
     cateringEventDuration: '',
     cateringVenueType: '',
+    // Storage booking
+    storageDuration: '1 month',
+    storageItemsToStore: '',
+    _policyAcknowledged: false,
   });
 
   const [enhancedServiceData] = useState({
@@ -541,10 +562,26 @@ const ServicePage = () => {
         }
       }
 
+      if (service.type === 'storage') {
+        const priceDay = service.storagePriceDay !== undefined ? Number(service.storagePriceDay) : 0;
+        const priceMonth = service.storagePriceMonth !== undefined ? Number(service.storagePriceMonth) : basePrice;
+        const dur = bookingData.storageDuration || '1 month';
+        if (dur.includes('day') || dur.includes('Day')) {
+          const days = parseInt(dur) || 1;
+          totalBase = priceDay * days;
+        } else if (dur === 'Ongoing') {
+          totalBase = priceMonth;
+        } else {
+          const months = parseInt(dur) || 1;
+          totalBase = priceMonth * months;
+        }
+        if (totalBase === 0) totalBase = basePrice;
+      }
+
       const serviceFee = Math.round(totalBase * 0.1);
       setTotalPrice(totalBase + travelFee + serviceFee);
     }
-  }, [service, selectedService, bookingData.moveBoxesCount, bookingData.moveKilosCount, bookingData.moveVehicleType]);
+  }, [service, selectedService, bookingData.moveBoxesCount, bookingData.moveKilosCount, bookingData.moveVehicleType, bookingData.storageDuration]);
 
   useEffect(() => {
     const fetchService = async () => {
@@ -1012,6 +1049,19 @@ const ServicePage = () => {
       if (bookingData.cateringDietaryReqs) message += `🥗 *Dietary:*     ${bookingData.cateringDietaryReqs}\n`;
       if (bookingData.cateringEventDuration) message += `⏱️ *Duration:*    ${bookingData.cateringEventDuration}\n`;
       if (bookingData.cateringVenueType) message += `🏛️ *Venue:*       ${bookingData.cateringVenueType}\n`;
+      message += `\n`;
+    }
+
+    // ── 📦 Storage ──
+    if (service.type === 'storage') {
+      message += `╔══════════════════════╗\n`;
+      message += `   📦 *STORAGE DETAILS*\n`;
+      message += `╚══════════════════════╝\n`;
+      if (service.storageSize) message += `📐 *Size:*              ${service.storageSize}\n`;
+      if (service.storagePriceDay) message += `📅 *Rate per Day:*      R${service.storagePriceDay}\n`;
+      if (service.storagePriceMonth) message += `🗓️ *Rate per Month:*    R${service.storagePriceMonth}\n`;
+      message += `📆 *Duration:*          ${bookingData.storageDuration}\n`;
+      if (bookingData.storageItemsToStore) message += `\n📋 *Items to Store:*\n_${bookingData.storageItemsToStore}_\n`;
       message += `\n`;
     }
 
@@ -1594,6 +1644,42 @@ const ServicePage = () => {
                 </button>
               )}
             </div>
+
+            {/* Storage configuration and policies */}
+            {service.type === 'storage' && (service.storageSize || service.storagePriceDay || service.storagePriceMonth || service.storageFailurePolicy || service.storageTerms || service.storagePolicyDocUrl) && (
+              <section className="py-6 border-b border-gray-200 space-y-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Storage details</h2>
+                  <p className="text-sm text-gray-600 mt-1">Review the unit configuration and provider policies before booking.</p>
+                </div>
+
+                {(service.storageSize || service.storagePriceDay || service.storagePriceMonth) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                    {service.storageSize && <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl"><span className="block text-blue-700 font-medium">Unit size</span><strong className="text-blue-950">{service.storageSize}</strong></div>}
+                    {service.storagePriceDay && <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl"><span className="block text-emerald-700 font-medium">Daily rate</span><strong className="text-emerald-950">R{service.storagePriceDay}</strong></div>}
+                    {service.storagePriceMonth && <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl"><span className="block text-emerald-700 font-medium">Monthly rate</span><strong className="text-emerald-950">R{service.storagePriceMonth}</strong></div>}
+                  </div>
+                )}
+
+                {service.storageFailurePolicy && (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <h3 className="font-semibold text-amber-900 mb-1">Late Payment / Pay Failure Policy</h3>
+                    <p className="text-sm text-amber-800 leading-relaxed whitespace-pre-line">{service.storageFailurePolicy}</p>
+                  </div>
+                )}
+                {service.storageTerms && (
+                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                    <h3 className="font-semibold text-gray-900 mb-1">Terms &amp; Conditions</h3>
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{service.storageTerms}</p>
+                  </div>
+                )}
+                {service.storagePolicyDocUrl && (
+                  <a href={service.storagePolicyDocUrl} target="_blank" rel="noreferrer" className="inline-flex text-sm font-semibold text-blue-700 underline underline-offset-2 hover:text-blue-900">
+                    Read the full storage policy document ↗
+                  </a>
+                )}
+              </section>
+            )}
 
             {/* Service Options */}
             <div className="py-6 border-b border-gray-200">
@@ -2943,6 +3029,114 @@ const ServicePage = () => {
                       <option value="Other">Other</option>
                     </select>
                   </div>
+                </div>
+              )}
+
+              {/* ── STORAGE-SPECIFIC FIELDS ── */}
+              {service.type === 'storage' && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">📦 Storage Details</h3>
+                  {service.storageSize && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-800">
+                      📐 <strong>Unit size:</strong> {service.storageSize}
+                    </div>
+                  )}
+                  {(service.storagePriceDay || service.storagePriceMonth) && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      {service.storagePriceDay && (
+                        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800">
+                          <strong>Daily rate:</strong> R{service.storagePriceDay}
+                        </div>
+                      )}
+                      {service.storagePriceMonth && (
+                        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800">
+                          <strong>Monthly rate:</strong> R{service.storagePriceMonth}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {service.storageFailurePolicy && (
+                    <section className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                      <h4 className="font-semibold text-amber-900 mb-1">Late Payment / Pay Failure Policy</h4>
+                      <p className="text-sm text-amber-800 leading-relaxed whitespace-pre-line">
+                        {service.storageFailurePolicy}
+                      </p>
+                    </section>
+                  )}
+                  {service.storageTerms && (
+                    <section className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                      <h4 className="font-semibold text-gray-900 mb-1">Terms &amp; Conditions</h4>
+                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                        {service.storageTerms}
+                      </p>
+                    </section>
+                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">How long do you need storage? *</label>
+                    <select
+                      name="storageDuration"
+                      value={bookingData.storageDuration}
+                      onChange={handleBookingChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    >
+                      <option value="1 day">1 day</option>
+                      <option value="3 days">3 days</option>
+                      <option value="1 week">1 week</option>
+                      <option value="1 month">1 month</option>
+                      <option value="2 months">2 months</option>
+                      <option value="3 months">3 months</option>
+                      <option value="6 months">6 months</option>
+                      <option value="12 months">12 months</option>
+                      <option value="Ongoing">Ongoing (month-to-month)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">What will you be storing?</label>
+                    <textarea
+                      name="storageItemsToStore"
+                      value={bookingData.storageItemsToStore}
+                      onChange={handleBookingChange}
+                      rows="3"
+                      placeholder="e.g. Furniture, boxes, business stock, vehicle, personal belongings…"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Policy Document Banner */}
+                  {service.storagePolicyDocUrl && (
+                    <div className="p-4 bg-amber-50 border border-amber-300 rounded-xl space-y-3">
+                      <div className="flex items-start gap-3">
+                        <svg className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M6 2a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h5v1.5H8V16z"/>
+                        </svg>
+                        <div>
+                          <p className="text-sm font-semibold text-amber-900">📋 Policy Document Required</p>
+                          <p className="text-xs text-amber-700 mt-0.5">You must read the provider's storage policy before booking.</p>
+                          <a
+                            href={service.storagePolicyDocUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-blue-700 underline hover:text-blue-900"
+                          >
+                            📄 Open & read policy document ↗
+                          </a>
+                        </div>
+                      </div>
+                      <label className="flex items-start gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          required
+                          className="mt-0.5 accent-rose-500 w-4 h-4 flex-shrink-0"
+                          onChange={(e) => setBookingData(prev => ({ ...prev, _policyAcknowledged: e.target.checked }))}
+                          checked={bookingData._policyAcknowledged || false}
+                        />
+                        <span className="text-xs text-amber-800 font-medium leading-snug">
+                          I confirm that I have read and agree to the storage policy document above. *
+                        </span>
+                      </label>
+                    </div>
+                  )}
                 </div>
               )}
 

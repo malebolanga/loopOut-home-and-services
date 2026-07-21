@@ -12,10 +12,11 @@ import {
 const categories = [
   { id: 'all', label: 'All', icon: '🌟' },
   { id: 'cleaning', label: 'Cleaning', icon: '🧹' },
-  { id: 'maintenance', label: 'Handyman', icon: '🔧' },
+  { id: 'handyman', label: 'Handyman', icon: '🔧' },
   { id: 'moving', label: 'Moving', icon: '🚚' },
   { id: 'landscaping', label: 'Garden', icon: '🌿' },
   { id: 'catering', label: 'Catering', icon: '🍽️' },
+  { id: 'storage', label: 'Storage', icon: '📦' },
   { id: 'daycare', label: 'Childcare', icon: '👶' },
   { id: 'schoolTransport', label: 'Transport', icon: '🚌' },
   { id: 'other', label: 'Other', icon: '✨' },

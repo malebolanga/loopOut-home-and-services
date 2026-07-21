@@ -49,7 +49,7 @@ const SEARCH_TYPE_CONFIG = {
     subtypes: [
       { value: 'all', label: 'All Services', icon: Wrench },
       { value: 'cleaning', label: 'Cleaning', emoji: '🧹' },
-      { value: 'maintenance', label: 'Maintenance', emoji: '🔧' },
+      { value: 'storage', label: 'Booking Storage', emoji: '📦' },
       { value: 'moving', label: 'Moving', emoji: '🚚' },
       { value: 'landscaping', label: 'Landscaping', emoji: '🌿' },
       { value: 'catering', label: 'Catering', emoji: '🍳' }

@@ -704,6 +704,15 @@ export default function PrivateTutor() {
   });
   const [verifyingSocialMedia, setVerifyingSocialMedia] = useState(false);
 
+  const tutorModules = {
+    'Mathematics': ['Algebra', 'Calculus', 'Geometry', 'Statistics', 'Trigonometry'],
+    'Science': ['Physics', 'Chemistry', 'Biology', 'Earth Science', 'General Science'],
+    'Languages': ['English', 'Spanish', 'French', 'German', 'Mandarin', 'isiZulu'],
+    'Music': ['Music Theory', 'Piano', 'Guitar', 'Violin', 'Voice/Vocal'],
+    'Art': ['Drawing', 'Painting', 'Sculpture', 'Digital Art', 'Art History'],
+    'Test Prep': ['SAT Prep', 'ACT Prep', 'IELTS Prep', 'GRE Prep', 'Matric Prep']
+  };
+
   const [bookingData, setBookingData] = useState({
     name: '',
     phone: '',
@@ -759,6 +768,22 @@ export default function PrivateTutor() {
     vaccinationStatus: '',
     specialNeeds: '',
     ownSupplies: false,
+    // Tutor-specific fields
+    selectedSubject: '',
+    selectedModule: '',
+    tutorPackage: 'two_sessions', // 'two_sessions', 'three_months', 'four_months', 'few_sessions'
+    sessionsPerWeek: '2', // '1', '2', '3'
+    tutorStartDate: '',
+    tutoringDays: {
+      monday: false,
+      tuesday: false,
+      wednesday: false,
+      thursday: false,
+      friday: false,
+      saturday: false,
+      sunday: false
+    },
+    tutorSelectedDates: [],
   });
 
   // AI Assessment States
@@ -780,25 +805,61 @@ export default function PrivateTutor() {
   // Calculate total price
   useEffect(() => {
     if (helper) {
-      const basePrice = parseInt(helper.regularPrice) || 0;
+      let totalBase = 0;
       const travelFee = parseInt(helper.travelFee) || 0;
-      
-      // Calculate selected services price
-      let selectedServicesPrice = 0;
-      bookingData.selectedServices.forEach(serviceId => {
-        const option = serviceOptions.find(opt => opt.id === serviceId);
-        if (option && option.price) {
-          // Handle "R450" or "450" format
-          const price = parseInt(String(option.price).replace(/[^\d]/g, '')) || 0;
-          selectedServicesPrice += price;
-        }
-      });
 
-      const totalBase = selectedServicesPrice > 0 ? selectedServicesPrice : basePrice;
+      if (helper.type === 'tutor') {
+        const basePrice = parseInt(helper.regularPrice) || 0;
+        const subjectOption = serviceOptions.find(opt => opt.name === bookingData.selectedSubject || opt.id === bookingData.selectedSubject);
+        const hourlyRate = (subjectOption && subjectOption.price)
+          ? (parseInt(String(subjectOption.price).replace(/[^\d]/g, '')) || basePrice)
+          : basePrice;
+
+        let totalHours = 4;
+        if (bookingData.tutorPackage === 'two_sessions') {
+          totalHours = 4;
+        } else if (bookingData.tutorPackage === 'three_months') {
+          const weeksCount = 12;
+          const sessionsPerWeekCount = parseInt(bookingData.sessionsPerWeek) || 2;
+          totalHours = weeksCount * sessionsPerWeekCount * 2;
+        } else if (bookingData.tutorPackage === 'four_months') {
+          const weeksCount = 16;
+          const sessionsPerWeekCount = parseInt(bookingData.sessionsPerWeek) || 2;
+          totalHours = weeksCount * sessionsPerWeekCount * 2;
+        } else if (bookingData.tutorPackage === 'few_sessions') {
+          totalHours = (bookingData.tutorSelectedDates?.length || 0) * 2;
+        }
+
+        totalBase = totalHours * hourlyRate;
+      } else {
+        const basePrice = parseInt(helper.regularPrice) || 0;
+        
+        // Calculate selected services price
+        let selectedServicesPrice = 0;
+        bookingData.selectedServices.forEach(serviceId => {
+          const option = serviceOptions.find(opt => opt.id === serviceId);
+          if (option && option.price) {
+            // Handle "R450" or "450" format
+            const price = parseInt(String(option.price).replace(/[^\d]/g, '')) || 0;
+            selectedServicesPrice += price;
+          }
+        });
+
+        totalBase = selectedServicesPrice > 0 ? selectedServicesPrice : basePrice;
+      }
+
       const serviceFee = Math.round(totalBase * 0.1);
       setTotalPrice(totalBase + travelFee + serviceFee);
     }
-  }, [helper, bookingData.selectedServices, serviceOptions]);
+  }, [
+    helper,
+    bookingData.selectedServices,
+    bookingData.selectedSubject,
+    bookingData.tutorPackage,
+    bookingData.sessionsPerWeek,
+    bookingData.tutorSelectedDates,
+    serviceOptions
+  ]);
 
 
 
@@ -1357,6 +1418,64 @@ export default function PrivateTutor() {
     return digitsOnly;
   };
 
+  const [tempDate, setTempDate] = useState('');
+
+  const tutorHourlyRate = (() => {
+    if (!helper) return 0;
+    const basePrice = parseInt(helper.regularPrice) || 0;
+    const subjectOption = serviceOptions.find(opt => opt.name === bookingData.selectedSubject || opt.id === bookingData.selectedSubject);
+    return (subjectOption && subjectOption.price)
+      ? (parseInt(String(subjectOption.price).replace(/[^\d]/g, '')) || basePrice)
+      : basePrice;
+  })();
+
+  const tutorTotalHours = (() => {
+    if (bookingData.tutorPackage === 'two_sessions') {
+      return 4; // 2 sessions * 2 hours
+    } else if (bookingData.tutorPackage === 'three_months') {
+      const weeksCount = 12;
+      const sessionsPerWeekCount = parseInt(bookingData.sessionsPerWeek) || 2;
+      return weeksCount * sessionsPerWeekCount * 2;
+    } else if (bookingData.tutorPackage === 'four_months') {
+      const weeksCount = 16;
+      const sessionsPerWeekCount = parseInt(bookingData.sessionsPerWeek) || 2;
+      return weeksCount * sessionsPerWeekCount * 2;
+    } else if (bookingData.tutorPackage === 'few_sessions') {
+      return (bookingData.tutorSelectedDates?.length || 0) * 2;
+    }
+    return 4; // default to 2 sessions (4 hours)
+  })();
+
+  const handleTutoringDayChange = (day) => {
+    setBookingData(prev => ({
+      ...prev,
+      tutoringDays: {
+        ...prev.tutoringDays,
+        [day]: !prev.tutoringDays[day]
+      }
+    }));
+  };
+
+  const handleAddTutorDate = () => {
+    if (!tempDate) return;
+    if (bookingData.tutorSelectedDates.includes(tempDate)) {
+      alert("This date is already selected.");
+      return;
+    }
+    setBookingData(prev => ({
+      ...prev,
+      tutorSelectedDates: [...prev.tutorSelectedDates, tempDate].sort()
+    }));
+    setTempDate('');
+  };
+
+  const handleRemoveTutorDate = (dateToRemove) => {
+    setBookingData(prev => ({
+      ...prev,
+      tutorSelectedDates: prev.tutorSelectedDates.filter(d => d !== dateToRemove)
+    }));
+  };
+
   const handleBookingChange = (e) => {
     const { name, value, type, checked } = e.target;
     setBookingData({
@@ -1734,9 +1853,37 @@ export default function PrivateTutor() {
       return;
     }
 
-    // Validate service selection
-    if (
-      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals' || helper.type === 'transport') &&
+    // Tutor specific validation
+    if (helper.type === 'tutor') {
+      if (!bookingData.selectedSubject) {
+        alert("Please select a subject.");
+        return;
+      }
+      if (!bookingData.selectedModule) {
+        alert("Please select a module.");
+        return;
+      }
+      if (bookingData.tutorPackage === 'two_sessions' && bookingData.tutorSelectedDates.length !== 2) {
+        alert("Please select exactly 2 dates for the Two Sessions package.");
+        return;
+      }
+      if (bookingData.tutorPackage === 'few_sessions' && bookingData.tutorSelectedDates.length === 0) {
+        alert("Please select at least 1 date for custom tutoring sessions.");
+        return;
+      }
+      if ((bookingData.tutorPackage === 'three_months' || bookingData.tutorPackage === 'four_months')) {
+        if (!bookingData.tutorStartDate) {
+          alert("Please select a start date for your contract.");
+          return;
+        }
+        const activeDays = Object.keys(bookingData.tutoringDays).filter(d => bookingData.tutoringDays[d]);
+        if (activeDays.length === 0) {
+          alert("Please select at least one day of the week for tutoring.");
+          return;
+        }
+      }
+    } else if (
+      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals' || helper.type === 'transport') &&
       bookingData.selectedServices.length === 0
     ) {
       alert("Please select at least one service you need.");
@@ -1782,8 +1929,33 @@ export default function PrivateTutor() {
     message += `━━━━━━━━━━━━━━━━━━━━\n`;
     message += `👤 *Name:* ${bookingData.name}\n`;
     message += `📞 *Phone:* ${bookingData.phone || 'Not provided'}\n`;
-    message += `📅 *Date:* ${bookingData.date || 'Not specified'}\n`;
-    message += `⏰ *Time:* ${bookingData.time || 'Not specified'}\n\n`;
+    
+    if (helper.type === 'tutor') {
+      message += `📚 *Subject:* ${bookingData.selectedSubject}\n`;
+      message += `🔖 *Module:* ${bookingData.selectedModule}\n`;
+      message += `📦 *Package:* `;
+      if (bookingData.tutorPackage === 'two_sessions') {
+        message += `Two Sessions (compulsory 2 hrs/session)\n`;
+        message += `📅 *Selected Dates:* ${bookingData.tutorSelectedDates.join(', ')}\n`;
+      } else if (bookingData.tutorPackage === 'three_months') {
+        const activeDays = Object.keys(bookingData.tutoringDays).filter(d => bookingData.tutoringDays[d]).map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
+        message += `3 Months Contract (${bookingData.sessionsPerWeek} sessions/week)\n`;
+        message += `🚀 *Start Date:* ${bookingData.tutorStartDate}\n`;
+        message += `📆 *Weekly Days:* ${activeDays}\n`;
+      } else if (bookingData.tutorPackage === 'four_months') {
+        const activeDays = Object.keys(bookingData.tutoringDays).filter(d => bookingData.tutoringDays[d]).map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
+        message += `4 Months Contract (${bookingData.sessionsPerWeek} sessions/week)\n`;
+        message += `🚀 *Start Date:* ${bookingData.tutorStartDate}\n`;
+        message += `📆 *Weekly Days:* ${activeDays}\n`;
+      } else if (bookingData.tutorPackage === 'few_sessions') {
+        message += `Custom Plan (compulsory 2 hrs/session)\n`;
+        message += `📅 *Tutoring Dates:* ${bookingData.tutorSelectedDates.join(', ')}\n`;
+      }
+      message += `⏰ *Start Time:* ${bookingData.time || 'Not specified'}\n\n`;
+    } else {
+      message += `📅 *Date:* ${bookingData.date || 'Not specified'}\n`;
+      message += `⏰ *Time:* ${bookingData.time || 'Not specified'}\n\n`;
+    }
 
     message += `━━━━━━━━━━━━━━━━━━━━\n`;
     message += `*💼 SERVICE SUMMARY*\n`;
@@ -1866,7 +2038,12 @@ export default function PrivateTutor() {
     // Save to Database first
     // Create a very descriptive subtype for the dashboard/cart
     let bookingSubtype = helper.type;
-    if (bookingData.selectedServices.length > 0) {
+    if (helper.type === 'tutor') {
+      const packageLabel = bookingData.tutorPackage === 'two_sessions' ? '2 Sessions' :
+                           bookingData.tutorPackage === 'three_months' ? '3 Months Sub' :
+                           bookingData.tutorPackage === 'four_months' ? '4 Months Sub' : 'Custom Plan';
+      bookingSubtype = `${bookingData.selectedSubject} (${bookingData.selectedModule}) - ${packageLabel}`;
+    } else if (bookingData.selectedServices.length > 0) {
       bookingSubtype = bookingData.selectedServices.map(s => {
         // Find the service name from options
         const opt = serviceOptions.find(o => o.id === s);
@@ -1886,11 +2063,29 @@ export default function PrivateTutor() {
     const deviceType = /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
     const requestLocation = bookingData.locationOption === 'comeToYou' ? bookingData.address : (bookingData.address || '');
 
+    let dbStartDate = (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00");
+    let dbEndDate = (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00");
+
+    if (helper.type === 'tutor') {
+      if (bookingData.tutorPackage === 'two_sessions' || bookingData.tutorPackage === 'few_sessions') {
+        const sortedDates = [...bookingData.tutorSelectedDates].sort();
+        dbStartDate = (sortedDates[0] || bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00");
+        dbEndDate = (sortedDates[sortedDates.length - 1] || bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00");
+      } else {
+        dbStartDate = (bookingData.tutorStartDate || bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00");
+        // End date is start date + 3 or 4 months
+        const endD = new Date(bookingData.tutorStartDate || new Date());
+        const monthsToAdd = bookingData.tutorPackage === 'three_months' ? 3 : 4;
+        endD.setMonth(endD.getMonth() + monthsToAdd);
+        dbEndDate = endD.toISOString().split('T')[0] + "T" + (bookingData.time || "00:00");
+      }
+    }
+
     const bookingToSave = {
       userId: currentUser?._id || "guest",
       helperId: helper._id,
-      startDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
-      endDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
+      startDate: dbStartDate,
+      endDate: dbEndDate,
       totalPrice: totalPrice,
       phone: bookingData.phone,
       message: bookingData.specialRequirements || message,
@@ -2505,40 +2700,51 @@ export default function PrivateTutor() {
 
                 {/* Quick Booking Options */}
                 <div className="space-y-4 mb-8">
-                  <div className="grid grid-cols-2 gap-3">
+                  {helper.type === 'tutor' ? (
                     <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
-                      <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Deployment Date</label>
-                      <input
-                        type="date"
-                        name="date"
-                        value={bookingData.date}
-                        onChange={handleBookingChange}
-                        min={new Date().toISOString().split('T')[0]}
-                        className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none"
-                      />
+                      <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Subject & Module</label>
+                      <div className="text-xs font-bold text-gray-800">
+                        {bookingData.selectedSubject ? `${bookingData.selectedSubject} - ${bookingData.selectedModule || 'Select Module'}` : 'Select Subject in Details Form'}
+                      </div>
                     </div>
-                    <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
-                      <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Time Frame</label>
-                      <input
-                        type="time"
-                        name="time"
-                        value={bookingData.time}
-                        onChange={handleBookingChange}
-                        className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none"
-                      />
-                    </div>
-                  </div>
-                  <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
-                    <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Personnel Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={bookingData.name}
-                      onChange={handleBookingChange}
-                      placeholder="Full Designation"
-                      className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none placeholder-gray-300"
-                    />
-                  </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
+                          <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Deployment Date</label>
+                          <input
+                            type="date"
+                            name="date"
+                            value={bookingData.date}
+                            onChange={handleBookingChange}
+                            min={new Date().toISOString().split('T')[0]}
+                            className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none"
+                          />
+                        </div>
+                        <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
+                          <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Time Frame</label>
+                          <input
+                            type="time"
+                            name="time"
+                            value={bookingData.time}
+                            onChange={handleBookingChange}
+                            className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
+                        <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Personnel Name</label>
+                        <input
+                          type="text"
+                          name="name"
+                          value={bookingData.name}
+                          onChange={handleBookingChange}
+                          placeholder="Full Designation"
+                          className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none placeholder-gray-300"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="space-y-3 mb-8">
@@ -2562,21 +2768,43 @@ export default function PrivateTutor() {
                 </div>
 
                 <div className="space-y-4 pt-6 border-t border-gray-50">
-                  {bookingData.selectedServices.length > 0 ? (
-                    bookingData.selectedServices.map(id => {
-                      const s = serviceOptions.find(opt => opt.id === id);
-                      return s ? (
-                        <div key={id} className="flex justify-between items-center">
-                          <span className="text-xs font-bold text-gray-500">{s.name}</span>
-                          <span className="text-xs font-black text-gray-950">R{s.price}</span>
-                        </div>
-                      ) : null;
-                    })
+                  {helper.type === 'tutor' ? (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold text-gray-500">Subject / Rate</span>
+                        <span className="text-xs font-black text-gray-950">{bookingData.selectedSubject || 'Not selected'} (R{tutorHourlyRate}/hr)</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold text-gray-500">Selected Package</span>
+                        <span className="text-xs font-black text-gray-950">
+                          {bookingData.tutorPackage === 'two_sessions' && 'Two Sessions'}
+                          {bookingData.tutorPackage === 'three_months' && '3 Months Contract'}
+                          {bookingData.tutorPackage === 'four_months' && '4 Months Contract'}
+                          {bookingData.tutorPackage === 'few_sessions' && 'Custom Plan'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold text-gray-500">Total Hours</span>
+                        <span className="text-xs font-black text-gray-950">{tutorTotalHours} hrs</span>
+                      </div>
+                    </>
                   ) : (
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-gray-500 italic">Base Deployment</span>
-                      <span className="text-xs font-black text-gray-950">R{helper.regularPrice}</span>
-                    </div>
+                    bookingData.selectedServices.length > 0 ? (
+                      bookingData.selectedServices.map(id => {
+                        const s = serviceOptions.find(opt => opt.id === id);
+                        return s ? (
+                          <div key={id} className="flex justify-between items-center">
+                            <span className="text-xs font-bold text-gray-500">{s.name}</span>
+                            <span className="text-xs font-black text-gray-950">R{s.price}</span>
+                          </div>
+                        ) : null;
+                      })
+                    ) : (
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold text-gray-500 italic">Base Deployment</span>
+                        <span className="text-xs font-black text-gray-950">R{helper.regularPrice}</span>
+                      </div>
+                    )
                   )}
                   {helper.travelFee > 0 && (
                     <div className="flex justify-between items-center">
@@ -3119,6 +3347,222 @@ export default function PrivateTutor() {
                       </div>
                     </>
                   )}
+
+                  {/* Tutor Specific Fields */}
+                  {helper.type === 'tutor' && (
+                    <div className="space-y-4 p-4 bg-slate-100/50 rounded-2xl border border-slate-200">
+                      <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-2">Tutor Booking Details</h4>
+                      
+                      {/* Subject Selection */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Select Subject</label>
+                        <select
+                          name="selectedSubject"
+                          value={bookingData.selectedSubject}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setBookingData(prev => ({
+                              ...prev,
+                              selectedSubject: val,
+                              selectedModule: '', // Reset module when subject changes
+                              selectedServices: val ? [val] : [] // Sync with selectedServices
+                            }));
+                          }}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent bg-white text-gray-950"
+                        >
+                          <option value="">Choose a subject...</option>
+                          {serviceOptions.map(opt => (
+                            <option key={opt.id} value={opt.name}>{opt.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Module Selection */}
+                      {bookingData.selectedSubject && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Select Module</label>
+                          <select
+                            name="selectedModule"
+                            value={bookingData.selectedModule}
+                            onChange={handleBookingChange}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent bg-white text-gray-950"
+                          >
+                            <option value="">Choose a module...</option>
+                            {(tutorModules[bookingData.selectedSubject] || []).map(mod => (
+                              <option key={mod} value={mod}>{mod}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {/* Package Selection */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Select Tutoring Package</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <label className={`flex items-start p-3 border rounded-xl cursor-pointer hover:bg-white transition-all ${bookingData.tutorPackage === 'two_sessions' ? 'border-rose-500 bg-rose-50/50' : 'border-gray-200'}`}>
+                            <input
+                              type="radio"
+                              name="tutorPackage"
+                              value="two_sessions"
+                              checked={bookingData.tutorPackage === 'two_sessions'}
+                              onChange={handleBookingChange}
+                              className="mt-1 mr-2 accent-rose-500"
+                            />
+                            <div>
+                              <span className="font-semibold text-sm block text-gray-900">Two Sessions</span>
+                              <span className="text-xs text-gray-500">2 days, 2 hours/session (4 hrs total)</span>
+                            </div>
+                          </label>
+
+                          <label className={`flex items-start p-3 border rounded-xl cursor-pointer hover:bg-white transition-all ${bookingData.tutorPackage === 'three_months' ? 'border-rose-500 bg-rose-50/50' : 'border-gray-200'}`}>
+                            <input
+                              type="radio"
+                              name="tutorPackage"
+                              value="three_months"
+                              checked={bookingData.tutorPackage === 'three_months'}
+                              onChange={handleBookingChange}
+                              className="mt-1 mr-2 accent-rose-500"
+                            />
+                            <div>
+                              <span className="font-semibold text-sm block text-gray-900">3 Months Contract</span>
+                              <span className="text-xs text-gray-500">Regular tutoring (compulsory 2 hrs/session)</span>
+                            </div>
+                          </label>
+
+                          <label className={`flex items-start p-3 border rounded-xl cursor-pointer hover:bg-white transition-all ${bookingData.tutorPackage === 'four_months' ? 'border-rose-500 bg-rose-50/50' : 'border-gray-200'}`}>
+                            <input
+                              type="radio"
+                              name="tutorPackage"
+                              value="four_months"
+                              checked={bookingData.tutorPackage === 'four_months'}
+                              onChange={handleBookingChange}
+                              className="mt-1 mr-2 accent-rose-500"
+                            />
+                            <div>
+                              <span className="font-semibold text-sm block text-gray-900">4 Months Contract</span>
+                              <span className="text-xs text-gray-500">Regular tutoring (compulsory 2 hrs/session)</span>
+                            </div>
+                          </label>
+
+                          <label className={`flex items-start p-3 border rounded-xl cursor-pointer hover:bg-white transition-all ${bookingData.tutorPackage === 'few_sessions' ? 'border-rose-500 bg-rose-50/50' : 'border-gray-200'}`}>
+                            <input
+                              type="radio"
+                              name="tutorPackage"
+                              value="few_sessions"
+                              checked={bookingData.tutorPackage === 'few_sessions'}
+                              onChange={handleBookingChange}
+                              className="mt-1 mr-2 accent-rose-500"
+                            />
+                            <div>
+                              <span className="font-semibold text-sm block text-gray-900">Custom / Few Sessions</span>
+                              <span className="text-xs text-gray-500">Select specific dates for custom plan</span>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Package Specific Date & Schedule Selectors */}
+                      {(bookingData.tutorPackage === 'three_months' || bookingData.tutorPackage === 'four_months') ? (
+                        <div className="space-y-3 bg-white p-4 rounded-xl border border-gray-100">
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Start Date</label>
+                            <input
+                              type="date"
+                              name="tutorStartDate"
+                              value={bookingData.tutorStartDate}
+                              onChange={handleBookingChange}
+                              min={new Date().toISOString().split('T')[0]}
+                              className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm text-gray-955"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Sessions Per Week</label>
+                            <select
+                              name="sessionsPerWeek"
+                              value={bookingData.sessionsPerWeek}
+                              onChange={handleBookingChange}
+                              className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm text-gray-955"
+                            >
+                              <option value="1">1 Session per week (2 hours)</option>
+                              <option value="2">2 Sessions per week (4 hours)</option>
+                              <option value="3">3 Sessions per week (6 hours)</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Select Tutoring Days</label>
+                            <div className="flex flex-wrap gap-2">
+                              {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                                <button
+                                  type="button"
+                                  key={day}
+                                  onClick={() => handleTutoringDayChange(day)}
+                                  className={`px-3 py-1.5 rounded-full border text-xs font-semibold uppercase tracking-wider transition-colors ${
+                                    bookingData.tutoringDays[day]
+                                      ? 'bg-rose-500 border-rose-500 text-white shadow-sm'
+                                      : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                                  }`}
+                                >
+                                  {day.slice(0, 3)}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-white p-4 rounded-xl border border-gray-100 space-y-4">
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">
+                              {bookingData.tutorPackage === 'two_sessions' ? 'Select 2 Session Dates' : 'Select Tutoring Dates'}
+                            </label>
+                            <div className="flex gap-2">
+                              <input
+                                type="date"
+                                value={tempDate}
+                                onChange={(e) => setTempDate(e.target.value)}
+                                min={new Date().toISOString().split('T')[0]}
+                                className="flex-1 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm text-gray-955"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleAddTutorDate}
+                                className="px-4 py-2.5 bg-rose-500 text-white rounded-lg font-bold text-sm hover:bg-rose-600 transition-colors"
+                              >
+                                Add Date
+                              </button>
+                            </div>
+                          </div>
+
+                          {bookingData.tutorSelectedDates.length > 0 && (
+                            <div>
+                              <span className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Selected Dates</span>
+                              <div className="flex flex-wrap gap-2">
+                                {bookingData.tutorSelectedDates.map(d => (
+                                  <span key={d} className="inline-flex items-center gap-1 bg-slate-100 border border-slate-200 rounded-lg py-1 px-2.5 text-xs font-bold text-slate-800 shadow-sm">
+                                    {d}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveTutorDate(d)}
+                                      className="text-red-500 hover:text-red-700 font-bold ml-1 text-sm focus:outline-none"
+                                    >
+                                      &times;
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {bookingData.tutorPackage === 'two_sessions' && bookingData.tutorSelectedDates.length !== 2 && (
+                            <p className="text-[11px] text-amber-600 font-semibold">
+                              ⚠️ Please add exactly 2 session dates (currently selected: {bookingData.tutorSelectedDates.length}).
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -3162,27 +3606,48 @@ export default function PrivateTutor() {
               </div>
 
               {/* Total Estimate Summary in Form */}
-              <div className="bg-slate-900 rounded-[2rem] p-6 mb-8 text-white space-y-3">
-                 <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    <span>Base Deployment</span>
-                    <span>R{helper.regularPrice}</span>
-                 </div>
-                 {bookingData.selectedServices.length > 0 && (
-                   <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
-                      <span>Services Selection</span>
-                      <span>+ R{totalPrice - helper.regularPrice - (helper.travelFee || 0) - Math.round((totalPrice - (helper.travelFee || 0)) / 1.1 * 0.1)}</span>
-                   </div>
-                 )}
-                 <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
-                    <span>Service Protocol Fee (10%)</span>
-                    <span>R{Math.round((totalPrice - (helper.travelFee || 0)) / 1.1 * 0.1)}</span>
-                 </div>
-                 <div className="h-px bg-white/10 my-2" />
-                 <div className="flex justify-between items-center">
-                    <span className="text-xs font-black uppercase tracking-[0.2em]">Total Estimation</span>
-                    <span className="text-xl font-black text-rose-500 italic">R{totalPrice}</span>
-                 </div>
-              </div>
+               <div className="bg-slate-900 rounded-[2rem] p-6 mb-8 text-white space-y-3">
+                  {helper.type === 'tutor' ? (
+                    <>
+                      <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
+                         <span>Hourly Rate ({bookingData.selectedSubject || 'Tutor'})</span>
+                         <span>R{tutorHourlyRate}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
+                         <span>Total Hours</span>
+                         <span>{tutorTotalHours} hrs</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
+                         <span>Base Deployment</span>
+                         <span>R{helper.regularPrice}</span>
+                      </div>
+                      {bookingData.selectedServices.length > 0 && (
+                        <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                           <span>Services Selection</span>
+                           <span>+ R{totalPrice - helper.regularPrice - (helper.travelFee || 0) - Math.round((totalPrice - (helper.travelFee || 0)) / 1.1 * 0.1)}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {helper.travelFee > 0 && (
+                    <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                       <span>Travel Fee</span>
+                       <span>R{helper.travelFee}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                     <span>Service Protocol Fee (10%)</span>
+                     <span>R{Math.round((totalPrice - (helper.travelFee || 0)) / 1.1 * 0.1)}</span>
+                  </div>
+                  <div className="h-px bg-white/10 my-2" />
+                  <div className="flex justify-between items-center">
+                     <span className="text-xs font-black uppercase tracking-[0.2em]">Total Estimation</span>
+                     <span className="text-xl font-black text-rose-500 italic">R{totalPrice}</span>
+                  </div>
+               </div>
 
               
              <div className="flex flex-col gap-4">

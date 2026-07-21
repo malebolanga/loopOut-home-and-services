@@ -195,6 +195,11 @@ const parseSpecialDetails = (msg) => {
     if (cleanLine.includes('Weight:')) details.moveWeight = cleanLine.split('Weight:')[1].trim();
     if (cleanLine.includes('Vehicle:') && cleanLine.startsWith('🚛')) details.moveVehicle = cleanLine.split('Vehicle:')[1].trim();
 
+    // ── Storage ──
+    if (cleanLine.includes('Size:') && cleanLine.startsWith('📐')) details.storageSize = cleanLine.split('Size:')[1].trim();
+    if (cleanLine.includes('Duration:') && cleanLine.startsWith('📆')) details.storageDuration = cleanLine.split('Duration:')[1].trim();
+    if (cleanLine.includes('Items to Store:')) details.storageItemsToStore = cleanLine.split('Items to Store:')[1].trim();
+
     // ── Handyman / Maintenance ──
     if (cleanLine.includes('Job Type:')) details.handymanJobType = cleanLine.split('Job Type:')[1].trim();
     if (cleanLine.includes('Description:')) details.handymanDescription = cleanLine.split('Description:')[1].trim();
@@ -561,6 +566,27 @@ const BookingDetailsModal = ({ booking, onClose, currentUser }) => {
                     </div>
                   </div>
                 )}
+
+                 {/* ── 📦 Storage ── */}
+                 {(details.storageDuration || details.storageItemsToStore) && (
+                   <div className="bg-gradient-to-br from-rose-50 to-pink-50/50 border border-rose-100 rounded-2xl p-3 space-y-2">
+                     <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest">📦 Storage Details</p>
+                     <div className="grid grid-cols-1 gap-2 text-xs">
+                       {details.storageDuration && (
+                         <div className="flex justify-between items-center">
+                           <span className="text-rose-400 font-semibold">📆 Duration</span>
+                           <span className="font-black text-rose-800 bg-rose-100 px-2 py-0.5 rounded-lg">{details.storageDuration}</span>
+                         </div>
+                       )}
+                       {details.storageItemsToStore && (
+                         <div className="flex flex-col gap-1 pt-1 border-t border-rose-100/50">
+                           <span className="text-rose-400 font-semibold">📋 Items to Store</span>
+                           <span className="text-rose-800 italic">"{details.storageItemsToStore}"</span>
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                 )}
 
                 {/* ── 🔧 Handyman / Maintenance ── */}
                 {(details.handymanJobType || details.handymanDescription || details.handymanMaterials || details.handymanUrgency) && (

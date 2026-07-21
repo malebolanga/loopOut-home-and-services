@@ -119,7 +119,7 @@ const ALL_CATEGORIES = [
   { id: 'washingmat', label: 'Washing Mat', type: 'helper', icon: HomeModernIcon, color: 'bg-cyan-100 text-cyan-800', description: 'Expert mat cleaning' },
   { id: 'animals', label: 'Animal Care', type: 'helper', icon: Sparkles, color: 'bg-amber-100 text-amber-800', description: 'Pet & animal services' },
   { id: 'handyman', label: 'Handyman', type: 'helper', icon: WrenchIcon, color: 'bg-gray-100 text-gray-800', description: 'Repair & maintenance' },
-  { id: 'maintenance', label: 'Maintenance', type: 'helper', icon: WrenchIcon, color: 'bg-amber-100 text-amber-800', description: 'Property maintenance' },
+  { id: 'storage', label: 'Booking Storage', type: 'services', icon: BuildingOfficeIcon, color: 'bg-slate-100 text-slate-800', description: 'Secure storage units' },
 
   // Transport
   { id: 'transport', label: 'Transport', type: 'services', icon: TruckIcon, color: 'bg-blue-100 text-blue-800', description: 'Transportation services' },
@@ -174,7 +174,8 @@ const SERVICES_CATEGORY_CONFIG = {
   transport: { label: 'Transport', color: 'bg-blue-100 text-blue-800', icon: '🚕', endpoint: 'service' },
   daily: { label: 'Daily Loop', color: 'bg-green-100 text-green-800', icon: '✨', endpoint: 'service' },
   schoolTransport: { label: 'School Transport', color: 'bg-amber-100 text-amber-800', icon: '🚌', endpoint: 'service' },
-  daycare: { label: 'Daycare Centers', color: 'bg-pink-100 text-pink-800', icon: '🧸', endpoint: 'service' }
+  daycare: { label: 'Daycare Centers', color: 'bg-pink-100 text-pink-800', icon: '🧸', endpoint: 'service' },
+  storage: { label: 'Booking Storage', color: 'bg-slate-100 text-slate-800', icon: '📦', endpoint: 'service' }
 };
 
 // Events Categories Configuration

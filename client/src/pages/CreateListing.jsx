@@ -505,6 +505,14 @@ export default function CreateListing() {
     vehicleType: "",
     routeAreas: "",
     
+    // Storage specific fields
+    storageSize: "",
+    storagePriceDay: 0,
+    storagePriceMonth: 0,
+    storageFailurePolicy: "",
+    storageTerms: "",
+    storagePolicyDocUrl: "",
+    
     // CAR WASH SPECIFIC FIELDS
     carWashPackages: "",
     vehicleTypes: "",
@@ -1546,7 +1554,7 @@ export default function CreateListing() {
         host: listingForm.host || "",
         providerType: (selectedCategory === 'experiences' || selectedCategory === 'online') ? listingForm.providerType : "",
         citizenship: (selectedCategory === 'experiences' || selectedCategory === 'online') && listingForm.providerType === 'individual' ? listingForm.citizenship : "",
-        regularPrice: listingForm.regularPrice || 50,
+        regularPrice: selectedType === 'storage' ? (Number(listingForm.storagePriceMonth) || 100) : (listingForm.regularPrice || 50),
         discountPrice: listingForm.discountPrice || 0,
         // New fields for sneaker, washingmat, animals
         shoeTypes: listingForm.shoeTypes || "",
@@ -1576,6 +1584,14 @@ export default function CreateListing() {
         movePriceMiniTruck: selectedType === 'moving' ? (Number(listingForm.movePriceMiniTruck) || 1500) : undefined,
         movePriceOtherTruck: selectedType === 'moving' ? (Number(listingForm.movePriceOtherTruck) || 2000) : undefined,
         movePriceBigTruckTrailer: selectedType === 'moving' ? (Number(listingForm.movePriceBigTruckTrailer) || 3500) : undefined,
+        
+        // Storage specific fields
+        storageSize: selectedType === 'storage' ? listingForm.storageSize : undefined,
+        storagePriceDay: selectedType === 'storage' ? (Number(listingForm.storagePriceDay) || 0) : undefined,
+        storagePriceMonth: selectedType === 'storage' ? (Number(listingForm.storagePriceMonth) || 0) : undefined,
+        storageFailurePolicy: selectedType === 'storage' ? listingForm.storageFailurePolicy : undefined,
+        storageTerms: selectedType === 'storage' ? listingForm.storageTerms : undefined,
+        storagePolicyDocUrl: selectedType === 'storage' ? listingForm.storagePolicyDocUrl : undefined,
       };
 
       console.log("Submitting to:", endpoint);
@@ -1746,7 +1762,7 @@ export default function CreateListing() {
       case 'experiences':
         return [
           { id: "handyman", label: "Handyman", emoji: "🛠️", description: "General home repairs" },
-          { id: "maintenance", label: "Maintenance", emoji: "🔧", description: "Repairs & fixes" },
+          { id: "storage", label: "Booking Storage", emoji: "📦", description: "Safe storage space" },
           { id: "moving", label: "Moving", emoji: "🚚", description: "Relocation services" },
           { id: "landscaping", label: "Landscaping", emoji: "🌿", description: "Garden & yard work" },
           { id: "catering", label: "Catering", emoji: "🍽️", description: "Food & catering" },
@@ -2519,6 +2535,139 @@ export default function CreateListing() {
                             onChange={handleFormChange}
                             required
                           />
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedCategory === 'experiences' && selectedType === 'storage' && (
+                      <div className="space-y-6 pt-4 border-t border-gray-200">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">Storage Configuration</h3>
+                          <p className="text-sm text-gray-500 mb-4">Set up the details of the storage space and pricing options.</p>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <FormInput
+                            label="Storage Size (e.g. 3m x 3m x 2.5m)"
+                            type="text"
+                            id="storageSize"
+                            value={listingForm.storageSize}
+                            onChange={handleFormChange}
+                            required
+                            placeholder="e.g. Garage-sized, 3x3m"
+                          />
+                          <FormInput
+                            label="Cost per Day (R)"
+                            type="number"
+                            id="storagePriceDay"
+                            value={listingForm.storagePriceDay}
+                            onChange={handleFormChange}
+                            required
+                          />
+                          <FormInput
+                            label="Cost per Month (R)"
+                            type="number"
+                            id="storagePriceMonth"
+                            value={listingForm.storagePriceMonth}
+                            onChange={handleFormChange}
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <FormInput
+                            label="Late Payment / Pay Failure Policy"
+                            type="textarea"
+                            id="storageFailurePolicy"
+                            value={listingForm.storageFailurePolicy}
+                            onChange={handleFormChange}
+                            placeholder="Describe what happens if the payment is missed (e.g., locks are changed, items sold after 3 months)..."
+                            rows={3}
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <FormInput
+                            label="Terms & Conditions"
+                            type="textarea"
+                            id="storageTerms"
+                            value={listingForm.storageTerms}
+                            onChange={handleFormChange}
+                            placeholder="Specify general terms and conditions for storing items..."
+                            rows={3}
+                            required
+                          />
+                        </div>
+
+                        {/* PDF Policy Document Upload */}
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-800 mb-1">
+                            📄 Policy Document (PDF)
+                          </label>
+                          <p className="text-xs text-gray-500 mb-3">
+                            Upload a PDF that customers must read before booking (rental agreement, terms sheet, etc.)
+                          </p>
+
+                          {!listingForm.storagePolicyDocUrl ? (
+                            <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-rose-50 hover:border-rose-400 transition-all group">
+                              <div className="flex flex-col items-center gap-1">
+                                <svg className="w-8 h-8 text-gray-400 group-hover:text-rose-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 16v-8m0 0-3 3m3-3 3 3M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1" />
+                                </svg>
+                                <span className="text-sm text-gray-500 group-hover:text-rose-500">Click to upload PDF</span>
+                                <span className="text-xs text-gray-400">Max 10 MB</span>
+                              </div>
+                              <input
+                                type="file"
+                                accept="application/pdf"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files[0];
+                                  if (!file) return;
+                                  if (file.size > 10 * 1024 * 1024) {
+                                    alert('PDF must be under 10 MB');
+                                    return;
+                                  }
+                                  try {
+                                    const storage = getStorage(app);
+                                    const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
+                                    const storageRef = ref(storage, `policy-docs/${Date.now()}_${cleanName}`);
+                                    const uploadTask = uploadBytesResumable(storageRef, file);
+                                    uploadTask.on('state_changed',
+                                      (snap) => setUploadProgress((snap.bytesTransferred / snap.totalBytes) * 100),
+                                      (err) => alert('Upload failed: ' + err.message),
+                                      async () => {
+                                        const url = await getDownloadURL(uploadTask.snapshot.ref);
+                                        setListingForm(prev => ({ ...prev, storagePolicyDocUrl: url }));
+                                        setUploadProgress(0);
+                                      }
+                                    );
+                                  } catch (err) {
+                                    alert('Upload error: ' + err.message);
+                                  }
+                                }}
+                              />
+                            </label>
+                          ) : (
+                            <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-xl">
+                              <div className="flex items-center gap-2 text-green-700 text-sm font-medium">
+                                <svg className="w-5 h-5 text-red-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M6 2a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h5v1.5H8V16z"/>
+                                </svg>
+                                <a href={listingForm.storagePolicyDocUrl} target="_blank" rel="noreferrer" className="underline truncate max-w-xs">
+                                  View uploaded document ↗
+                                </a>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setListingForm(prev => ({ ...prev, storagePolicyDocUrl: '' }))}
+                                className="ml-3 text-xs text-red-500 hover:text-red-700 font-semibold"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}

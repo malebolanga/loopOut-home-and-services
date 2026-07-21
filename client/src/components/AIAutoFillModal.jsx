@@ -35,7 +35,7 @@ const AIAutoFillModal = ({ isOpen, onClose, onApply }) => {
         let type = "Helper";
         let title = "Professional Services";
         
-        if (lowerText.includes('plumb')) { type = 'Maintenance'; title = 'Professional Plumbing Services'; }
+        if (lowerText.includes('storage') || lowerText.includes('garage')) { type = 'Booking Storage'; title = 'Safe & Secure Booking Storage'; }
         else if (lowerText.includes('clean') || lowerText.includes('maid')) { type = 'Domestic Helper'; title = 'Expert Cleaning & Domestic Services'; }
         else if (lowerText.includes('photo') || lowerText.includes('shoot')) { type = 'Photographer'; title = 'Professional Photography Services'; }
         else if (lowerText.includes('tutor') || lowerText.includes('teach')) { type = 'Private Tutor'; title = 'Expert Private Tutoring'; }

@@ -20,7 +20,8 @@ import {
   Camera,
   Truck,
   Users,
-  Check
+  Check,
+  Archive
 } from 'lucide-react';
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
@@ -46,6 +47,7 @@ const SERVICE_ICON_CONFIG = {
   daycare:         { icon: Users,              bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Day Care' },
   schoolTransport: { icon: Truck,              bg: 'bg-teal-100',   text: 'text-teal-700',   label: 'School Transport' },
   other:           { icon: LayoutGrid,         bg: 'bg-gray-100',   text: 'text-gray-700',   label: 'Other' },
+  storage:         { icon: Archive,            bg: 'bg-rose-100',   text: 'text-rose-700',   label: 'Booking Storage' },
 };
 
 function ServiceTypePill({ type }) {
@@ -69,6 +71,7 @@ const getServiceTypeName = (type) => {
     case 'other': return 'Other';
     case 'daycare': return 'DayCare';
     case 'schoolTransport': return 'School Transport';
+    case 'storage': return 'Booking Storage';
     default: return 'Service';
   }
 };
@@ -107,7 +110,12 @@ function ServiceItem({ service, className = "" }) {
       storedClicks[service._id] = (storedClicks[service._id] || 0) + 1;
       localStorage.setItem('serviceClicks', JSON.stringify(storedClicks));
       setClickCount(storedClicks[service._id]);
-      navigate(`/service/${service._id}`);
+      // Storage listings go to their dedicated page; all others use Services
+      if (service.type === 'storage') {
+        navigate(`/storage/${service._id}`);
+      } else {
+        navigate(`/service/${service._id}`);
+      }
     } catch (error) { console.error('Error updating view count:', error); }
   };
 

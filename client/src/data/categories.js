@@ -307,5 +307,13 @@ export const TOP_CATEGORIES = [
     image: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800',
     color: 'from-red-600 to-orange-500',
     emoji: '🚀'
+  },
+  {
+    id: 'storage',
+    name: 'Storage',
+    image: 'https://images.pexels.com/photos/4246120/pexels-photo-4246120.jpeg?auto=compress&cs=tinysrgb&w=800',
+    count: '48',
+    color: 'from-slate-700 to-slate-500',
+    emoji: '📦'
   }
 ];
