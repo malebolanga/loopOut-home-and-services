@@ -83,7 +83,9 @@ export default function Planner() {
       try {
         setLoading(true);
         const res = await fetch(`/api/bookings/user/${currentUser._id}`, { credentials: 'include' });
-        const data = await res.json();
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const text = await res.text();
+        const data = text ? JSON.parse(text) : [];
         if (Array.isArray(data)) setBookings(data);
       } catch (err) {
         console.error("Failed to fetch bookings:", err);

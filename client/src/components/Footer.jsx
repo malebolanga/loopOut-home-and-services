@@ -137,48 +137,7 @@ const Footer = () => {
             </div>
           </div>
         </div>
-      </footer>
-
-      {/* MOBILE BOTTOM DOCK: GLASSMORPHIC ELITE NAV */}
-      <nav 
-        className={`md:hidden fixed bottom-6 left-6 right-6 z-[100] transition-all duration-500 transform ${
-          isNavVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
-        }`}
-      >
-        <div className="bg-white/80 backdrop-blur-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2.5rem] p-2 flex items-center justify-between">
-          {[
-            { id: '/', label: 'Explore', icon: HomeIcon },
-            { id: '/wishlist', label: 'Saved', icon: HeartIcon },
-            { id: '/host-dashboard', label: 'Dashboard', icon: CpuChipIcon },
-            { id: '/planner', label: 'Planner', icon: MapIcon }
-          ].map((item) => {
-            const isActive = location.pathname === item.id;
-            const Icon = item.icon;
-            
-            return (
-              <Link
-                key={item.id}
-                to={item.id}
-                onClick={item.id === '/profile' ? handleProfileClick : undefined}
-                className="flex flex-col items-center justify-center flex-1 py-1 relative"
-              >
-                <div className={`p-2 rounded-xl transition-all duration-300 ${
-                  isActive ? 'bg-gray-950 text-white shadow-lg shadow-gray-200 -translate-y-1' : 'text-gray-400 hover:text-gray-600'
-                }`}>
-                  <Icon className={`w-5 h-5 stroke-[2px] ${isActive ? 'text-rose-500' : ''}`} />
-                </div>
-                {isActive && (
-                  <span className="text-[8px] font-black uppercase tracking-widest text-gray-900 mt-1 animate-in fade-in slide-in-from-bottom-1 duration-500">
-                    {item.label}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-
-
+      </footer>      
     </>
   );
 };

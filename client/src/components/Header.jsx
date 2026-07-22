@@ -554,13 +554,6 @@ export default function Header() {
     hiddenRoutes.includes(location.pathname) || 
     hiddenPrefixes.some(prefix => location.pathname.startsWith(prefix));
 
-  const hiddenBottomNavRoutes = ['/host-dashboard'];
-  const hiddenBottomNavPrefixes = ['/user/', '/user-profile/', '/listing/', '/rent/', '/helper/', '/service/', '/event/', '/carwash/'];
-  
-  const isBottomNavHidden = 
-    hiddenBottomNavRoutes.includes(location.pathname) || 
-    hiddenBottomNavPrefixes.some(prefix => location.pathname.startsWith(prefix));
-
   const profileMenuContent = (
     <div className="flex flex-col">
       {currentUser ? (
@@ -664,10 +657,8 @@ export default function Header() {
           }}
           transition={{ type: 'spring', damping: 25, stiffness: 120 }}
           ref={headerRef}
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${
-          scrolled
-            ? 'bg-white/90 backdrop-blur-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] border-b border-slate-100/80'
-            : 'bg-transparent'
+        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 bg-white border-b border-slate-100 ${
+          scrolled ? 'shadow-[0_4px_24px_rgba(0,0,0,0.08)]' : ''
         }`}
         >
         <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-[34px]">
@@ -706,7 +697,7 @@ export default function Header() {
               <button
                 onClick={() => setShowSearch(true)}
                 aria-label="Open search"
-                className="group flex items-center gap-0 border border-slate-200 rounded-full shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer bg-white overflow-hidden"
+                className="flex items-center gap-0 border border-slate-200 rounded-full shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer bg-white overflow-hidden"
               >
                 <span className="text-[11px] font-black text-slate-900 px-5 py-2.5 hover:bg-slate-50 transition-colors">Anywhere</span>
                 <div className="w-[1px] h-5 bg-slate-200" />
@@ -841,7 +832,7 @@ export default function Header() {
                     setShowCurrencyDropdown(false);
                   }}
                   aria-label="User menu"
-                  className="flex flex-row items-center gap-2.5 pl-3 pr-1.5 py-1.5 bg-white rounded-full cursor-pointer shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 hover:border-slate-300 h-12"
+                  className="hidden md:flex flex-row items-center gap-2.5 pl-3 pr-1.5 py-1.5 bg-white rounded-full cursor-pointer shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 hover:border-slate-300 h-12"
                 >
                   <Bars3Icon className="w-4 h-4 stroke-[2.5px] text-slate-700" />
                   {currentUser ? (
@@ -939,27 +930,7 @@ export default function Header() {
 
     {/* User Profile Dropdown - Mobile Bottom Sheet */}
     <AnimatePresence>
-      {showProfileDropdown && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowProfileDropdown(false)}
-            aria-hidden="true"
-            className="md:hidden fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[1000] top-0 left-0"
-          />
-          <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'tween', duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="md:hidden fixed bottom-0 left-0 right-0 w-full bg-white rounded-t-[2.5rem] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.3)] border-t border-gray-100 p-6 z-[1001] max-h-[85vh] overflow-y-auto scrollbar-hide pb-24"
-          >
-            {profileMenuContent}
-          </motion.div>
-        </>
-      )}
+      {/* Mobile user dropdown bottom sheet is removed */}
     </AnimatePresence>
 
     {/* Full Screen Elite Search Modal - Airbnb Style */}

@@ -14,6 +14,7 @@ import { AnimatePresence } from 'framer-motion';
 import PageTransition from './components/PageTransition';
 import NeuralLoader from "./components/NeuralLoader";
 import CompareWidget from "./components/CompareWidget";
+import BottomNav from "./components/BottomNav";
 
 // Core Pages (Statically imported to guarantee instant initial rendering)
 import Home from "./pages/Home";
@@ -382,6 +383,7 @@ function AppContent() {
       <Suspense fallback={<NeuralLoader fullScreen={true} />}>
         <AnimatedRoutes />
       </Suspense>
+      <BottomNav />
       {!hideFooter && <Footer />}
     </>
   );

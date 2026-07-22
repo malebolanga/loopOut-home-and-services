@@ -1018,10 +1018,15 @@ export const NeuralPicksSection = ({ navigate }) => {
     const fetchHelpers = async () => {
       try {
         const res = await fetch('/api/helper/get?limit=20');
-        const data = await res.json();
-        if (data.success) {
-          // Use the neural algorithm to rank fetched items
-          setHelpers(rankItems(data.helpers));
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const text = await res.text();
+        const data = text ? JSON.parse(text) : null;
+        if (data) {
+          if (Array.isArray(data)) {
+            setHelpers(rankItems(data));
+          } else if (data.success && Array.isArray(data.helpers)) {
+            setHelpers(rankItems(data.helpers));
+          }
         }
         setLoading(false);
       } catch (err) {
@@ -1121,8 +1126,10 @@ export const SellItemsSection = ({ navigate }) => {
     const fetchItems = async () => {
       try {
         const res = await fetch('/api/sell?limit=10');
-        const data = await res.json();
-        if (data.success && data.data?.length > 0) {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const text = await res.text();
+        const data = text ? JSON.parse(text) : null;
+        if (data && data.success && Array.isArray(data.data)) {
           setItems(data.data);
         }
       } catch (err) {
