@@ -2,7 +2,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { motion } from "framer-motion";
-import { BookOpen } from "lucide-react";
 import { 
   Heart, 
   MapPin, 
@@ -125,13 +124,6 @@ function HelperItem({ helper, className = "" }) {
           alt={helper.name}
           className="w-full h-full object-cover"
         />
-        {/* Bookings Counter Overlay */}
-        <div className="absolute top-3 right-3 flex items-center justify-center z-20 pointer-events-auto group/booking transition-transform cursor-pointer">
-          <div className="px-2.5 py-1 bg-black/60 backdrop-blur-md border border-white/20 rounded-lg shadow-md flex items-center justify-center text-white">
-            <BookOpen className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span className="text-[10px] font-black ml-1.5 shrink-0">{helper.bookingsCount || 0}</span>
-          </div>
-        </div>
         
         {/* Top Overlays */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10 pointer-events-none">

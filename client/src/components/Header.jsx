@@ -657,12 +657,12 @@ export default function Header() {
           }}
           transition={{ type: 'spring', damping: 25, stiffness: 120 }}
           ref={headerRef}
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 bg-white border-b border-slate-100 ${
-          scrolled ? 'shadow-[0_4px_24px_rgba(0,0,0,0.08)]' : ''
+        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 bg-white  ${
+          scrolled ? 'shadow-[0_4px_20px_rgba(0,0,0,0.00)]' : ''
         }`}
         >
         <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-[34px]">
-          <div className="flex flex-row items-center justify-between h-20">
+          <div className="flex flex-row items-center justify-between h-16">
             
             {/* Left: Branding & Home Link */}
             <div className={`transition-all duration-500 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
@@ -824,52 +824,7 @@ export default function Header() {
                   )}
                 </button>
 
-                {/* User Menu Button */}
-                <button
-                 onClick={() => {
-                   setShowProfileDropdown(!showProfileDropdown);
-                    setShowLanguageDropdown(false);
-                    setShowCurrencyDropdown(false);
-                  }}
-                  aria-label="User menu"
-                  className="hidden md:flex flex-row items-center gap-2.5 pl-3 pr-1.5 py-1.5 bg-white rounded-full cursor-pointer shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 hover:border-slate-300 h-12"
-                >
-                  <Bars3Icon className="w-4 h-4 stroke-[2.5px] text-slate-700" />
-                  {currentUser ? (
-                    <div className="relative">
-                      <img
-                        src={currentUser.avatar}
-                        alt="profile"
-                        className="w-8 h-8 rounded-full object-cover border-2 border-rose-200 shadow-sm"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
-                        }}
-                      />
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
-                    </div>
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                      <UserIcon className="w-4 h-4" />
-                    </div>
-                  )}
-                </button>
               </div>
-
-              {/* User Profile Dropdown - Desktop */}
-              <AnimatePresence>
-                {showProfileDropdown && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 12 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 12 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
-                    className="hidden md:block absolute rounded-[2rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] w-[360px] bg-white/95 backdrop-blur-2xl right-0 top-[60px] border border-slate-100 p-4 z-[60] max-h-[85vh] overflow-y-auto scrollbar-hide"
-                  >
-                    {profileMenuContent}
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
               {/* Language Dropdown */}
               {showLanguageDropdown && (

@@ -1088,10 +1088,10 @@ export const NeuralPicksSection = ({ navigate }) => {
             className="relative"
           >
             <HelperItem helper={helper} />
-            {/* Neural Overlay Tag */}
-            <div className="absolute top-4 left-4 z-20 pointer-events-none">
-              <div className="px-3 py-1 bg-white/90 backdrop-blur-md border border-rose-500/20 rounded-full flex items-center gap-2 shadow-md">
-                <Sparkles className="w-3 h-3 text-rose-500" />
+            {/* Neural Pick Badge - below image, non-overlapping */}
+            <div className="mt-1 flex items-center gap-1.5">
+              <div className="px-2.5 py-0.5 bg-rose-50 border border-rose-200 rounded-full flex items-center gap-1.5 shadow-sm">
+                <Sparkles className="w-2.5 h-2.5 text-rose-500" />
                 <span className="text-[8px] font-black text-rose-600 uppercase tracking-widest">Neural Pick</span>
               </div>
             </div>
