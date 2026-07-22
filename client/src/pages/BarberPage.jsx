@@ -709,6 +709,7 @@ export default function BarberPage() {
     phone: '',
     selectedServices: [],
     serviceDescription: '',
+    serviceFrequency: '',
     locationOption: 'comeToYou',
     address: '',
     date: '',
@@ -1783,7 +1784,9 @@ export default function BarberPage() {
     message += `👤 *Name:* ${bookingData.name}\n`;
     message += `📞 *Phone:* ${bookingData.phone || 'Not provided'}\n`;
     message += `📅 *Date:* ${bookingData.date || 'Not specified'}\n`;
-    message += `⏰ *Time:* ${bookingData.time || 'Not specified'}\n\n`;
+    message += `⏰ *Time:* ${bookingData.time || 'Not specified'}\n`;
+    if (bookingData.serviceFrequency) message += `🔄 *Frequency:* ${bookingData.serviceFrequency}\n\n`;
+    else message += `\n`;
 
     message += `━━━━━━━━━━━━━━━━━━━━\n`;
     message += `*💼 SERVICE SUMMARY*\n`;
@@ -2761,6 +2764,24 @@ export default function BarberPage() {
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       />
                     </div>
+                  </div>
+
+                  {/* Service Frequency */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">🔄 Project / Service Frequency</label>
+                    <select
+                      name="serviceFrequency"
+                      value={bookingData.serviceFrequency || ''}
+                      onChange={handleBookingChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm text-gray-900 bg-white"
+                    >
+                      <option value="">Select frequency / schedule...</option>
+                      <option value="This is a one-time project">This is a one-time project</option>
+                      <option value="Weekly">Weekly</option>
+                      <option value="Every other week">Every other week</option>
+                      <option value="Monthly">Monthly</option>
+                      <option value="As needed">As needed</option>
+                    </select>
                   </div>
 
                   {/* Location Option */}

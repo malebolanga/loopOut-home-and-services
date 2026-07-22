@@ -718,6 +718,7 @@ export default function PrivateTutor() {
     phone: '',
     selectedServices: [],
     serviceDescription: '',
+    serviceFrequency: '',
     locationOption: 'comeToYou',
     address: '',
     date: '',
@@ -1929,6 +1930,7 @@ export default function PrivateTutor() {
     message += `━━━━━━━━━━━━━━━━━━━━\n`;
     message += `👤 *Name:* ${bookingData.name}\n`;
     message += `📞 *Phone:* ${bookingData.phone || 'Not provided'}\n`;
+    if (bookingData.serviceFrequency) message += `🔄 *Frequency:* ${bookingData.serviceFrequency}\n`;
     
     if (helper.type === 'tutor') {
       message += `📚 *Subject:* ${bookingData.selectedSubject}\n`;
@@ -2971,6 +2973,24 @@ export default function PrivateTutor() {
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       />
                     </div>
+                  </div>
+
+                  {/* Service Frequency */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">🔄 Project / Service Frequency</label>
+                    <select
+                      name="serviceFrequency"
+                      value={bookingData.serviceFrequency || ''}
+                      onChange={handleBookingChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm text-gray-900 bg-white"
+                    >
+                      <option value="">Select frequency / schedule...</option>
+                      <option value="This is a one-time project">This is a one-time project</option>
+                      <option value="Weekly">Weekly</option>
+                      <option value="Every other week">Every other week</option>
+                      <option value="Monthly">Monthly</option>
+                      <option value="As needed">As needed</option>
+                    </select>
                   </div>
 
                   {/* Location Option */}

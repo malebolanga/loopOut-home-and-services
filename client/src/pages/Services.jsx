@@ -452,6 +452,7 @@ const ServicePage = () => {
     name: '',
     phone: '',
     selectedServices: [],
+    serviceFrequency: '',
     date: '',
     time: '',
     locationOption: 'comeToYou',
@@ -944,6 +945,7 @@ const ServicePage = () => {
 
     message += `📅 *Date:*     ${bookingData.date || 'Not specified'}\n`;
     message += `⏰ *Time:*     ${bookingData.time || 'Not specified'}\n`;
+    if (bookingData.serviceFrequency) message += `🔄 *Frequency:* ${bookingData.serviceFrequency}\n`;
 
     if (bookingData.selectedPerformers && bookingData.selectedPerformers.length > 0) {
       message += `\n👷 *Requested Provider(s):*\n`;
@@ -2061,6 +2063,24 @@ const ServicePage = () => {
                     </div>
                   </div>
 
+                  {/* Frequency Selection */}
+                  <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100 hover:border-slate-300 transition-colors">
+                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">🔄 Project / Service Frequency</label>
+                    <select
+                      name="serviceFrequency"
+                      value={bookingData.serviceFrequency || ''}
+                      onChange={handleBookingChange}
+                      className="w-full text-sm text-slate-800 font-semibold outline-none bg-transparent"
+                    >
+                      <option value="">Select frequency / schedule...</option>
+                      <option value="This is a one-time project">This is a one-time project</option>
+                      <option value="Weekly">Weekly</option>
+                      <option value="Every other week">Every other week</option>
+                      <option value="Monthly">Monthly</option>
+                      <option value="As needed">As needed</option>
+                    </select>
+                  </div>
+
                   {/* Performer Selection in Card */}
                   {service.performers && service.performers.length > 0 && (
                     <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
@@ -2949,10 +2969,11 @@ const ServicePage = () => {
                         className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       >
                         <option value="">Select...</option>
-                        <option value="Once-off">Once-off</option>
+                        <option value="This is a one-time project">This is a one-time project</option>
                         <option value="Weekly">Weekly</option>
-                        <option value="Bi-weekly">Bi-weekly</option>
+                        <option value="Every other week">Every other week</option>
                         <option value="Monthly">Monthly</option>
+                        <option value="As needed">As needed</option>
                       </select>
                     </div>
                   </div>
