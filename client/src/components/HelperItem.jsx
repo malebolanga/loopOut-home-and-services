@@ -114,7 +114,7 @@ function HelperItem({ helper, className = "", reducedSize = false }) {
   return (
     <div
       onClick={handleCardClick}
-      className={`${className} cursor-pointer flex flex-col bg-transparent w-full border-0 shadow-none rounded-none group`}
+      className={`${className} cursor-pointer flex flex-col bg-transparent w-full border-0 shadow-none rounded-none `}
     >
       {/* Image section */}
       <div className={`relative ${reducedSize ? 'aspect-[16/10]' : 'aspect-[4/3]'} overflow-hidden rounded-2xl bg-gray-100 mb-2`}>
