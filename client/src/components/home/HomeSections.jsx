@@ -1087,7 +1087,7 @@ export const NeuralPicksSection = ({ navigate }) => {
             transition={{ delay: idx * 0.1 }}
             className="relative"
           >
-            <HelperItem helper={helper} />
+            <HelperItem helper={helper} reducedSize={true} />
             {/* Neural Pick Badge - below image, non-overlapping */}
             <div className="mt-1 flex items-center gap-1.5">
               <div className="px-2.5 py-0.5 bg-rose-50 border border-rose-200 rounded-full flex items-center gap-1.5 shadow-sm">

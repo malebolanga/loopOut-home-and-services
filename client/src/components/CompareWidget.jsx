@@ -23,7 +23,7 @@ export default function CompareWidget() {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-24 right-6 z-50"
+            className="fixed bottom-24 left-6 z-50"
           >
             <button
               onClick={() => setIsOpen(true)}

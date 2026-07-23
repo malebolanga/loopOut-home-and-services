@@ -69,7 +69,7 @@ const formatPriceValue = (price) => {
   return new Intl.NumberFormat("en-ZA").format(price);
 };
 
-function HelperItem({ helper, className = "" }) {
+function HelperItem({ helper, className = "", reducedSize = false }) {
   const navigate = useNavigate();
   const { isFavorite, toggleFavorite } = useWishlist(helper, 'helper');
   const { isCompared, toggleCompare } = useCompare(helper);
@@ -117,7 +117,7 @@ function HelperItem({ helper, className = "" }) {
       className={`${className} cursor-pointer flex flex-col bg-transparent w-full border-0 shadow-none rounded-none group`}
     >
       {/* Image section */}
-      <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 mb-2">
+      <div className={`relative ${reducedSize ? 'aspect-[16/10]' : 'aspect-[4/3]'} overflow-hidden rounded-2xl bg-gray-100 mb-2`}>
         <ImageGallery
           imageUrls={helper.imageUrls || []}
           type="helper"
@@ -159,7 +159,7 @@ function HelperItem({ helper, className = "" }) {
       <div className="flex flex-col mt-1">
         <div className="flex justify-between items-start gap-2">
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-gray-900 truncate text-[15px]">
+            <p className={`font-semibold text-gray-900 truncate ${reducedSize ? 'text-[14px]' : 'text-[15px]'}`}>
               {helper.address || 'Polokwane'}
             </p>
             
@@ -183,7 +183,7 @@ function HelperItem({ helper, className = "" }) {
               <Link
                 to={`/user/${owner._id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="w-5 h-5 rounded-full border border-gray-150 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0"
+                className={`${reducedSize ? 'w-4 h-4' : 'w-4.5 h-4.5'} rounded-full border border-gray-150 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0`}
                 title={`Posted by ${owner.username}`}
               >
                 <img src={owner.avatar} alt={owner.username} loading="lazy" className="w-full h-full object-cover" />
