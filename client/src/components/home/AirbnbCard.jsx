@@ -116,7 +116,7 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
           type={type === 'property' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property') : type}
         />
         {/* Bookings overlay */}
-        <div className="absolute top-3 right-3 flex items-center justify-center z-20 pointer-events-auto group/booking transition-transform cursor-pointer">
+        <div className="absolute top-3 right-3 flex items-center justify-center z-20 pointer-events-auto /booking transition-transform cursor-pointer">
           <div className="px-2.5 py-1 bg-black/60 backdrop-blur-md border border-white/20 rounded-lg shadow-md flex items-center justify-center text-white">
             <BookOpen className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             <span className="text-[10px] font-black ml-1 shrink-0">{item.bookingsCount || 0}</span>

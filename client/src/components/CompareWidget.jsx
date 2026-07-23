@@ -27,7 +27,7 @@ export default function CompareWidget() {
           >
             <button
               onClick={() => setIsOpen(true)}
-              className="flex items-center gap-3 bg-gray-900 text-white px-6 py-4 rounded-full shadow-2xl hover:bg-gray-800 transition-colors border border-white/20 group"
+              className="flex items-center gap-3 bg-gray-900 text-white px-6 py-4 rounded-full shadow-2xl hover:bg-gray-800 transition-colors border border-white/20 "
             >
               <div className="relative">
                 <LayoutGrid className="w-6 h-6" />
