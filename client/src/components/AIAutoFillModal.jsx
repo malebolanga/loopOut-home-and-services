@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import PropTypes from 'prop-types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SparklesIcon, XMarkIcon, BoltIcon, CheckBadgeIcon } from '@heroicons/react/24/outline';
 
@@ -7,65 +8,30 @@ const AIAutoFillModal = ({ isOpen, onClose, onApply }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedData, setGeneratedData] = useState(null);
 
-  // Simulated AI Logic (Fallback without backend API)
-  const simulateAI = async (text) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const lowerText = text.toLowerCase();
-        
-        // Extract Price (e.g. R500 or 500)
-        let priceMatch = text.match(/(?:R|ZAR)?\s?(\d+(?:,\d+)*(?:\.\d+)?)/i);
-        let regularPrice = priceMatch ? parseInt(priceMatch[1].replace(/,/g, ''), 10) : "";
-
-        // Extract Location (Simple matching)
-        const cities = ['Johannesburg', 'Cape Town', 'Durban', 'Pretoria', 'Polokwane', 'Sandton', 'Soweto', 'Midrand'];
-        let address = "";
-        for (const city of cities) {
-          if (lowerText.includes(city.toLowerCase())) {
-            address = city;
-            break;
-          }
-        }
-        if (!address) {
-          let inMatch = text.match(/(?:in|around|at)\s+([A-Z][a-zA-Z\s]+)/);
-          if (inMatch) address = inMatch[1].trim();
-        }
-
-        // Determine basic type based on keywords
-        let type = "Helper";
-        let title = "Professional Services";
-        
-        if (lowerText.includes('storage') || lowerText.includes('garage')) { type = 'Booking Storage'; title = 'Safe & Secure Booking Storage'; }
-        else if (lowerText.includes('clean') || lowerText.includes('maid')) { type = 'Domestic Helper'; title = 'Expert Cleaning & Domestic Services'; }
-        else if (lowerText.includes('photo') || lowerText.includes('shoot')) { type = 'Photographer'; title = 'Professional Photography Services'; }
-        else if (lowerText.includes('tutor') || lowerText.includes('teach')) { type = 'Private Tutor'; title = 'Expert Private Tutoring'; }
-        else if (lowerText.includes('hair') || lowerText.includes('barber')) { type = 'Barber'; title = 'Premium Grooming & Barber Services'; }
-        else if (lowerText.includes('garden') || lowerText.includes('landscape')) { type = 'Landscaping'; title = 'Professional Landscaping & Gardening'; }
-        else if (lowerText.includes('bake') || lowerText.includes('cake')) { type = 'Baker'; title = 'Delicious Custom Baking'; }
-        else if (lowerText.includes('car wash') || lowerText.includes('valet')) { type = 'Car Wash'; title = 'Premium Mobile Car Wash'; }
-
-        // Generate a nice description
-        const enhancedDescription = `Welcome to my professional listing! I specialize in offering top-tier services tailored to meet your needs.\n\nAbout my service:\n${text}\n\nI am committed to providing reliable, high-quality results with excellent customer satisfaction. Please feel free to reach out or book my services directly through the platform!`;
-
-        resolve({
-          name: title,
-          description: enhancedDescription,
-          regularPrice: regularPrice || "",
-          address: address || ""
-        });
-      }, 2000); // Simulate 2-second thinking time
-    });
-  };
-
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
     setIsGenerating(true);
     setGeneratedData(null);
-    
-    const data = await simulateAI(prompt);
-    
-    setIsGenerating(false);
-    setGeneratedData(data);
+
+    try {
+      const response = await fetch('/api/ai/listing-draft', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Unable to generate a listing draft.');
+      }
+
+      setGeneratedData(data.draft);
+    } catch (error) {
+      window.alert(error.message || 'Unable to generate a listing draft. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleApply = () => {
@@ -107,7 +73,7 @@ const AIAutoFillModal = ({ isOpen, onClose, onApply }) => {
               <SparklesIcon className="w-8 h-8 text-white" />
               <div>
                 <h3 className="text-xl font-black tracking-tight">AI Auto-Fill</h3>
-                <p className="text-xs font-medium text-white/80 uppercase tracking-widest">Powered by Smart Logic</p>
+                <p className="text-xs font-medium text-white/80 uppercase tracking-widest">AI-powered draft</p>
               </div>
             </div>
             <button onClick={onClose} className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors">
@@ -192,6 +158,12 @@ const AIAutoFillModal = ({ isOpen, onClose, onApply }) => {
       </div>
     </AnimatePresence>
   );
+};
+
+AIAutoFillModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onApply: PropTypes.func.isRequired,
 };
 
 export default AIAutoFillModal;

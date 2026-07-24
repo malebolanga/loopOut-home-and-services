@@ -1590,51 +1590,52 @@ export default function TattooPage() {
     // Enhanced location handling for quick booking
     const locationInfo = handleLocationInfo(bookingData, helper);
 
-    let message = `*📅 QUICK BOOKING REQUEST*%0A`;
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `*👤 CLIENT DETAILS*%0A`;
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `👤 *Name:* ${bookingData.name}%0A`;
-    message += `📞 *Phone:* ${bookingData.phone || 'Not provided'}%0A`;
-    if (bookingData.date) message += `📅 *Date:* ${bookingData.date}%0A`;
-    if (bookingData.time) message += `⏰ *Time:* ${bookingData.time}%0A%0A`;
+    let message = `🎨 *QUICK TATTOO BOOKING* 🎨\n\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `👤 *CLIENT DETAILS*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `👤 *Name:* ${bookingData.name}\n`;
+    message += `📱 *Phone:* ${bookingData.phone || 'Not provided'}\n`;
+    if (bookingData.date) message += `📅 *Date:* ${bookingData.date}\n`;
+    if (bookingData.time) message += `⏰ *Time:* ${bookingData.time}\n\n`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `*💼 SERVICE SUMMARY*%0A`;
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `⚒️ *Provider:* ${helper.name}%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `💼 *SERVICE SUMMARY*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `🏪 *Provider:* ${helper.name}\n`;
     if (bookingData.selectedServices.length > 0) {
       bookingData.selectedServices.forEach(id => {
         const s = serviceOptions.find(opt => opt.id === id);
         if (s) {
-          message += `📜 *${s.name}:* R${s.price}%0A`;
+          message += `🔹 *${s.name}:* R${s.price}\n`;
         } else {
-          message += `📜 *${id}*%0A`;
+          message += `🔹 *${id}*\n`;
         }
       });
     }
-    message += `💵 *TOTAL: R${totalPrice}*%0A%0A`;
+    message += `💰 *TOTAL PRICE:* *R${totalPrice}*\n\n`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `*📍 LOCATION*%0A`;
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `📌 *Type:* ${locationInfo.displayName}%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `📍 *LOCATION & NAVIGATION*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `🏠 *Type:* ${locationInfo.displayName}\n`;
     if (locationInfo.address) {
-      message += `🏠 *Address:* ${locationInfo.address}%0A`;
+      message += `📍 *Address:* ${locationInfo.address}\n`;
       const mapLink = generateMapLink(locationInfo.address);
-      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
+      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
     }
-    message += `%0A`;
+    message += `\n`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `*⚡ QUICK ACTIONS*%0A`;
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    if (acceptLink) message += `✅ *ACCEPT:*%0A${acceptLink}%0A%0A`;
-    if (declineLink) message += `❌ *REJECT:*%0A${declineLink}%0A%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `⚡ *QUICK ACTIONS*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    if (acceptLink) message += `✅ *ACCEPT:*\n${acceptLink}\n\n`;
+    if (declineLink) message += `❌ *REJECT:*\n${declineLink}\n\n`;
 
-    message += `_Sent via loopOut_`;
+    message += `───────────────\n`;
+    message += `_Sent via loopOut_ 📱`;
 
-    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${message}`;
+    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${encodeURIComponent(message)}`;
     
     // Save to Database first
     // Determine device type
@@ -1776,23 +1777,87 @@ export default function TattooPage() {
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
     // Build the main WhatsApp message with premium structure
-    let message = `*✨ NEW ${getProfessionalTitle(helper.type).toUpperCase()} BOOKING* ✨\n\n`;
+    let message = `✨ *NEW ${getProfessionalTitle(helper.type).toUpperCase()} BOOKING* ✨\n\n`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*👤 CLIENT DETAILS*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `👤 *CLIENT DETAILS*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
     message += `👤 *Name:* ${bookingData.name}\n`;
-    message += `📞 *Phone:* ${bookingData.phone || 'Not provided'}\n`;
+    message += `📱 *Phone:* ${bookingData.phone || 'Not provided'}\n`;
     message += `📅 *Date:* ${bookingData.date || 'Not specified'}\n`;
     message += `⏰ *Time:* ${bookingData.time || 'Not specified'}\n`;
-    if (bookingData.serviceFrequency) message += `🔄 *Frequency:* ${bookingData.serviceFrequency}\n\n`;
-    else message += `\n`;
+    if (bookingData.serviceFrequency) message += `🔄 *Frequency:* ${bookingData.serviceFrequency}\n`;
+    if (bookingData.selectedPerformer || bookingData.performerName) {
+      message += `👑 *Artist:* ${bookingData.selectedPerformer || bookingData.performerName}\n`;
+    }
+    message += `\n`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*💼 SERVICE SUMMARY*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `⚒️ *Service:* ${helper.name}\n`;
-    message += `📋 *Type:* ${getProfessionalTitle(helper.type)}\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `🎨 *SERVICE SUMMARY*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `🏪 *Service:* ${helper.name}\n`;
+    message += `🏷️ *Type:* ${getProfessionalTitle(helper.type)}\n`;
+
+    // Add selected services
+    if (bookingData.selectedServices.length > 0) {
+      bookingData.selectedServices.forEach(id => {
+        const s = serviceOptions.find(opt => opt.id === id);
+        if (s) {
+          message += `🔹 *${s.name}:* R${s.price}\n`;
+        } else {
+          message += `🔹 *${id}*\n`;
+        }
+      });
+      message += `💰 *TOTAL PRICE:* *R${totalPrice}*\n`;
+    } else {
+      message += `💰 *Base Price:* R${helper.regularPrice || 0}\n`;
+      message += `💰 *TOTAL PRICE:* *R${totalPrice}*\n`;
+    }
+    message += `\n`;
+
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `📍 *LOCATION & NAVIGATION*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `🏠 *Type:* ${locationInfo.displayName}\n`;
+    if (locationInfo.address && locationInfo.address !== 'Address not specified') {
+      message += `📍 *Address:* ${locationInfo.address}\n`;
+      const mapLink = generateMapLink(locationInfo.address);
+      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
+    }
+    if (locationInfo.travelFee > 0) message += `🚗 *Travel Fee:* R${locationInfo.travelFee}\n`;
+    message += `\n`;
+
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `⚡ *PROVISIONS*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `🍽️ *Food provided by client:* ${bookingData.foodProvided === 'yes' ? '✅ Yes' : '❌ No'}\n`;
+    message += `🔌 *Electricity available:* ${bookingData.electricityProvided === 'yes' ? '✅ Yes' : '❌ No'}\n\n`;
+
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `💬 *COMMENTS & NOTES*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `📝 ${bookingData.specialRequirements ? bookingData.specialRequirements : '_No special requirements_'}\n\n`;
+
+    // Add attachments if they exist
+    if (uploadedFiles.length > 0) {
+      message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `📎 *ATTACHMENTS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+      uploadedFiles.forEach((file) => {
+        message += `🔹 ${file.name}: ${file.url}\n`;
+      });
+      message += `\n`;
+    }
+
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `⚡ *QUICK ACTIONS*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    if (acceptLink) message += `✅ *ACCEPT:*\n${acceptLink}\n\n`;
+    if (declineLink) message += `❌ *REJECT:*\n${declineLink}\n\n`;
+
+    message += `🔐 *Verification Code:* \`${verificationCode}\`\n`;
+    message += `───────────────\n`;
+    message += `_Sent via loopOut_ 📱`;
 
     // Add selected services
     if (bookingData.selectedServices.length > 0) {

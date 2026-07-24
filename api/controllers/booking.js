@@ -6,6 +6,7 @@ import Event from '../models/event.model.js';
 import Notification from '../models/notification.model.js';
 import User from '../models/user.model.js';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 // Calculate price and validate dates
 export const calculateBookingDetails = async (req, res) => {
@@ -246,6 +247,16 @@ export const getUserBookings = async (req, res) => {
     
     if (!userId || userId === 'undefined' || userId === 'null') {
       return res.status(400).json({ error: 'Valid User ID is required' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: 'Valid User ID is required' });
+    }
+
+    // During a backend restart, avoid allowing Mongoose to buffer the query
+    // until it times out and becomes an opaque 500 response in the client.
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ error: 'Database connecting, please retry' });
     }
 
     const bookings = await Booking.find({ user: userId })

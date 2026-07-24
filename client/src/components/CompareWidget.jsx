@@ -96,8 +96,12 @@ export default function CompareWidget() {
                     Clear All
                   </button>
                   <button
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => {
+                      clearCompare();
+                      setIsOpen(false);
+                    }}
                     className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-full transition-colors"
+                    aria-label="Close and clear comparison"
                   >
                     <XMarkIcon className="w-6 h-6" />
                   </button>

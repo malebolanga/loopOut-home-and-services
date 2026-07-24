@@ -18,6 +18,24 @@ const PhoneNotificationManager = () => {
   );
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(false);
   const audioRef = useRef(null);
+  const hasUserActivatedRef = useRef(false);
+
+  // Browsers only permit haptics after the page has received a user gesture.
+  // Keep this state locally so background notifications never trigger a console
+  // intervention warning before the user has interacted with the app.
+  useEffect(() => {
+    const markUserActivated = () => {
+      hasUserActivatedRef.current = true;
+    };
+
+    window.addEventListener('pointerdown', markUserActivated, { once: true });
+    window.addEventListener('keydown', markUserActivated, { once: true });
+
+    return () => {
+      window.removeEventListener('pointerdown', markUserActivated);
+      window.removeEventListener('keydown', markUserActivated);
+    };
+  }, []);
 
   // Check permission on mount and trigger prompt if default
   useEffect(() => {
@@ -75,7 +93,7 @@ const PhoneNotificationManager = () => {
       setActiveNotification(newNotif);
 
       // Play subtle vibration if supported
-      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      if (hasUserActivatedRef.current && typeof navigator !== 'undefined' && navigator.vibrate) {
         navigator.vibrate([80, 40, 80]);
       }
 
