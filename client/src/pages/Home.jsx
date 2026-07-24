@@ -510,6 +510,7 @@ const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
       type={type}
       onClick={onClick ? () => onClick() : undefined}
       reducedSize
+      showOwner={false}
     />
   );
 };

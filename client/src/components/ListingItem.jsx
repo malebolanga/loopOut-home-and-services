@@ -299,7 +299,6 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
         </Swiper>
       </div>
 
-      
       {/* Bookings Counter Overlay */}
       <div className="absolute top-5 right-5 flex items-center justify-center z-20 pointer-events-auto group/booking hover:-translate-y-1 transition-transform cursor-pointer">
         <div className="px-3 py-1.5 bg-black/60 backdrop-blur-md border border-white/20 rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.2)] flex items-center justify-center text-white transition-all overflow-hidden flex-nowrap whitespace-nowrap">
@@ -308,7 +307,7 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
           <span className="text-[8px] font-bold uppercase tracking-[0.2em] hidden group-hover/booking:inline-block transition-all ml-1.5 text-slate-200">Bookings</span>
         </div>
       </div>
-      
+
       {/* Top Overlays */}
       <div className="absolute top-5 left-5 z-10 pointer-events-none flex flex-col gap-4">
         <button
@@ -363,7 +362,7 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
                 className="w-5 h-5 rounded-full border border-gray-150 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0"
                 title={`Posted by ${listing.userRef.username}`}
               >
-                <img src={listing.userRef.avatar} alt={listing.userRef.username} className="w-full h-full object-cover" />
+                <img src={listing.userRef.avatar} alt={listing.userRef.username} loading="lazy" className="w-full h-full object-cover" />
               </Link>
             )}
             <div className="text-xl font-black text-white tracking-tighter leading-none mb-1">

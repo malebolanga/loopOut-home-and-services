@@ -16,6 +16,8 @@ import NeuralLoader from "./components/NeuralLoader";
 import CompareWidget from "./components/CompareWidget";
 import BottomNav from "./components/BottomNav";
 
+import PhoneNotificationManager from "./components/PhoneNotificationManager";
+
 // Core Pages (Statically imported to guarantee instant initial rendering)
 import Home from "./pages/Home";
 import SignIn from "./pages/SignIn";
@@ -378,6 +380,7 @@ function AppContent() {
       <CompareWidget />
 
       <ScrollToTop />
+      <PhoneNotificationManager />
       <AuthSessionManager />
       {!hideHeader && <Header />}
       <Suspense fallback={<NeuralLoader fullScreen={true} />}>

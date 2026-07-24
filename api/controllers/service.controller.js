@@ -7,10 +7,6 @@ import { validateListingText, validateImages } from '../utils/moderationHelper.j
 // Create Service
 export const createService = async (req, res, next) => {
   try {
-    const textCheck = validateListingText(req.body);
-    if (!textCheck.valid) {
-      return next(errorHandler(400, textCheck.message));
-    }
 
     const imageCheck = await validateImages(req.body.imageUrls);
     if (!imageCheck.valid) {
@@ -101,10 +97,6 @@ export const deleteService = async (req, res, next) => {
 
 export const updateService = async (req, res, next) => {
   try {
-    const textCheck = validateListingText(req.body);
-    if (!textCheck.valid) {
-      return next(errorHandler(400, textCheck.message));
-    }
 
     if (req.body.imageUrls) {
       const imageCheck = await validateImages(req.body.imageUrls);

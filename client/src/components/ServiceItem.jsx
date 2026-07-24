@@ -224,7 +224,7 @@ function ServiceItem({ service, className = "" }) {
                 className="w-5 h-5 rounded-full border border-gray-150 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0"
                 title={`Posted by ${owner.username}`}
               >
-                <img src={owner.avatar} alt={owner.username} className="w-full h-full object-cover" />
+                <img src={owner.avatar} alt={owner.username} loading="lazy" className="w-full h-full object-cover" />
               </Link>
             )}
           </div>

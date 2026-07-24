@@ -922,10 +922,6 @@ export default function CreateListing() {
         setError(`Please provide ${getNearLabel(selectedCategory, selectedType)}`);
         return;
       }
-      if (detectInsultsClient(listingForm)) {
-        setError("Insulting or offensive language is not allowed. Please use polite language.");
-        return;
-      }
     }
     
     if (currentStep === 8) {
@@ -1434,10 +1430,6 @@ export default function CreateListing() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (detectInsultsClient(listingForm)) {
-      return setError("Insulting or offensive language is not allowed in your listing. Please remove any offensive language.");
-    }
     
     if (listingForm.imageUrls.length < 1) {
       return setError("You must upload at least one image");

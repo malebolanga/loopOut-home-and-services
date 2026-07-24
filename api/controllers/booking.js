@@ -6,7 +6,6 @@ import Event from '../models/event.model.js';
 import Notification from '../models/notification.model.js';
 import User from '../models/user.model.js';
 import jwt from 'jsonwebtoken';
-import { hasProfanity, logProfanityEvent } from '../utils/profanityFilter.js';
 
 // Calculate price and validate dates
 export const calculateBookingDetails = async (req, res) => {
@@ -68,14 +67,10 @@ export const createBooking = async (req, res) => {
 
     // Validate input
     const mainId = listingId || helperId || serviceId || eventId;
-    if (!userId || !mainId || !startDate || !endDate || !totalPrice) {
+    if (!userId || !mainId || !startDate || !endDate || totalPrice == null) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    if (hasProfanity(message)) {
-      logProfanityEvent(userId, 'booking_create', message);
-      return res.status(400).json({ error: 'Your booking request contains inappropriate language. Please revise it.' });
-    }
 
     // Check Operating Hours
     let item;

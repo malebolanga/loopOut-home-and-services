@@ -163,7 +163,7 @@ function EventItem({ event, className = "" }) {
                 className="w-8 h-8 rounded-full border border-white/20 overflow-hidden shadow-md hover:scale-110 transition-transform mb-1 shrink-0"
                 title={`Posted by ${owner.username}`}
               >
-                <img src={owner.avatar} alt={owner.username} className="w-full h-full object-cover" />
+                <img src={owner.avatar} alt={owner.username} loading="lazy" className="w-full h-full object-cover" />
               </Link>
             )}
             <div className="text-xl font-black text-white tracking-tighter leading-none mb-1">

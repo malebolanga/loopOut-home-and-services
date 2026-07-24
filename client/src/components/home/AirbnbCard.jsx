@@ -7,7 +7,7 @@ import { HeartIcon as HeartIconSolid, StarIcon as StarIconSolid } from '@heroico
 import { HeartIcon, StarIcon } from '@heroicons/react/24/outline';
 import { useWishlist } from '../../hooks/useWishlist';
 
-export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = false, reducedSize = false }) => {
+export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = false, reducedSize = false, showOwner = true }) => {
   const isGuestFavorite = item.rating >= 4.8;
   const wishlistType = type === 'property' ? 'listing' : type;
   const { isFavorite, toggleFavorite } = useWishlist(item, wishlistType);
@@ -158,35 +158,38 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
               {getCategoryLabel()}
             </p>
           </div>
-
-        
-        
+          <div className="flex flex-col items-end gap-3 shrink-0">
+            {/* Rating on right */}
+            <div className="flex items-center gap-0.5">
+              {item.rating > 0 ? (
+                <>
+                  <StarIconSolid className="w-3 h-3 text-gray-900 shrink-0" />
+                  <span className={`font-semibold text-gray-900 ${reducedSize ? 'text-[12px]' : 'text-[13px]'}`}>
+                    {item.rating.toFixed(1)}
+                  </span>
+                </>
+              ) : (
+                <span className={`text-gray-400 font-normal italic ${reducedSize ? 'text-[10px]' : 'text-[11px]'}`}>New</span>
+              )}
+            </div>
+            {showOwner && owner && owner.avatar && (
+              <Link
+                to={`/user/${owner._id}`}
+                onClick={(e) => e.stopPropagation()}
+                className={`${reducedSize ? 'w-4 h-4' : 'w-5 h-5'} rounded-full border border-gray-200 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0`}
+                title={`Posted by ${owner.username}`}
+              >
+                <img src={owner.avatar} alt={owner.username} loading="lazy" className="w-full h-full object-cover" />
+              </Link>
+            )}
+          </div>
         </div>
-        
+
         {item._distance && item._distance !== Infinity && !hideDistance && (
           <p className="text-gray-500 text-[14px] leading-tight">
             {item._distance < 1 ? 'Near you' : `${Math.round(item._distance)} km away`}
           </p>
         )}
-        
-        {/* Rating row */}
-        <div className="flex items-center gap-1 mt-0.5">
-          {item.rating > 0 ? (
-            <>
-              <StarIconSolid className="w-3 h-3 text-gray-900 shrink-0" />
-              <span className={`font-semibold text-gray-900 ${reducedSize ? 'text-[13px]' : 'text-[14px]'}`}>
-                {item.rating.toFixed(1)}
-              </span>
-              {item.comments?.length > 0 && (
-                <span className={`text-gray-500 font-normal ${reducedSize ? 'text-[11px]' : 'text-[13px]'}`}>
-                  ({item.comments.length})
-                </span>
-              )}
-            </>
-          ) : (
-            <span className={`text-gray-400 font-normal italic ${reducedSize ? 'text-[11px]' : 'text-[12px]'}`}>New</span>
-          )}
-        </div>
 
         <div className="flex items-baseline gap-1 mt-1">
           <span className={`font-semibold text-gray-900 ${reducedSize ? 'text-[14px]' : 'text-[15px]'}`}>{formatPrice()}</span>

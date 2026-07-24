@@ -6,6 +6,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import BrandLogo, { BrandIcon } from './BrandLogo';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { pushPhoneNotification } from './PhoneNotificationManager';
+
 import {
   MagnifyingGlassIcon,
   HeartIcon,
@@ -245,7 +247,7 @@ export default function Header() {
         const data = await res.json();
         const newUnreadCount = data.unreadCount || 0;
 
-        // If we have new unread notifications, ring the bell
+        // If we have new unread notifications, ring the bell and trigger phone push banner
         if (newUnreadCount > prevUnreadCount) {
           if (isSoundEnabled) {
             notificationSound.current.play().catch(e => {
@@ -253,8 +255,19 @@ export default function Header() {
             });
           }
 
-          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted' && document.hidden) {
-            const latest = data.notifications?.[0];
+          const latest = data.notifications?.[0];
+
+          // Trigger iOS/Android style top phone notification banner
+          if (latest) {
+            pushPhoneNotification({
+              title: latest.title || 'loopOut Alert',
+              message: latest.message || 'You have a new update.',
+              type: latest.type || 'info',
+              link: '/notifications'
+            });
+          }
+
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
             new window.Notification(latest?.title || 'loopOut Alert', {
               body: latest?.message || 'You have a new notification',
               icon: '/favicon.ico'

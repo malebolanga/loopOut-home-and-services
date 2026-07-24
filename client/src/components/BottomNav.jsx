@@ -256,14 +256,14 @@ const BottomNav = () => {
                   <img
                     src={currentUser.avatar}
                     alt="profile"
-                    className={`w-5 h-5 rounded-full object-cover border-[1.5px] ${isActive ? 'border-[#FF5A5F]' : 'border-gray-400'} shadow-sm`}
+                    className={`w-7 h-7 rounded-full object-cover border-[1.5px] ${isActive ? 'border-[#FF5A5F]' : 'border-gray-400'} shadow-sm`}
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
                     }}
                   />
                 ) : (
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-[#FF5A5F]' : 'text-gray-600'}`} />
+                  <Icon className={`w-7 h-7 ${isActive ? 'text-[#FF5A5F]' : 'text-gray-600'}`} />
                 )}
               </div>
               <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-[#FF5A5F]' : 'text-gray-600'}`}>
