@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo, cloneElement } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Helmet } from 'react-helmet-async';
@@ -70,10 +70,7 @@ import LoopOutPulse from '../components/LoopOutPulse';
 import { useWishlist } from '../hooks/useWishlist';
 import MyBookingsConsumer from '../components/MyBookingsConsumer';
 import LookingForItem from '../components/LookingForItem';
-import useSearchIntelligence from '../hooks/useSearchIntelligence';
 import HelperItem from '../components/HelperItem';
-import LoopOutBanner from '../components/LoopOutBanner';
-import ForSale from './ForSale';
 
 
 import { 
@@ -876,18 +873,6 @@ const MobileAppHomepage = ({
     "SOWETO", "ALEXANDRA", "GAUTENG", "CAPE TOWN", "PRETORIA", "DURBAN", "KZN", "LIMPOPO", "POLOKWANE"
   ];
 
-  const bannerImages = [
-    "/soweto_bg.png",
-    "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800"
-  ];
-
   useEffect(() => {
     const interval = setInterval(() => {
       setBannerLocationIndex((prev) => (prev + 1) % bannerLocations.length);
@@ -984,6 +969,10 @@ const MobileAppHomepage = ({
   // Mobile View
   return (
     <div className="min-h-screen bg-white pb-32 relative overflow-x-hidden w-full">
+      <Helmet>
+        <title>LoopOut | Find Homes, Services & Events Near You</title>
+        <meta name="description" content="Discover verified helpers, book top services, and explore exclusive properties and events in your area with loopOut." />
+      </Helmet>
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

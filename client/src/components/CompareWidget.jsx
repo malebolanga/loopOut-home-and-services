@@ -4,8 +4,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, CheckBadgeIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { LayoutGrid } from 'lucide-react';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
+import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import ImageGallery from './ImageGallery';
+
+/** Renders 5 stars filled according to the rating value (0-5) from the database */
+function StarRating({ rating }) {
+  const value = typeof rating === 'number' ? rating : 0;
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        star <= Math.round(value)
+          ? <StarIconSolid  key={star} className="w-3.5 h-3.5 text-amber-400" />
+          : <StarIconOutline key={star} className="w-3.5 h-3.5 text-gray-300" />
+      ))}
+    </div>
+  );
+}
 
 export default function CompareWidget() {
   const { compareList, toggleCompare, clearCompare } = useCompare();
@@ -66,7 +81,7 @@ export default function CompareWidget() {
               {/* Header */}
               <div className="flex items-center justify-between p-6 sm:p-8 border-b border-gray-100 bg-white z-10 sticky top-0">
                 <div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">Compare Professionals</h2>
+                  <h2 className="text-xl sm:text-xl font-black text-gray-900 tracking-tight">Compare Professionals</h2>
                   <p className="text-gray-500 text-sm mt-1">Side-by-side comparison of your selected experts.</p>
                 </div>
                 <div className="flex items-center gap-4">
@@ -75,8 +90,9 @@ export default function CompareWidget() {
                       clearCompare();
                       setIsOpen(false);
                     }}
-                    className="text-xs font-bold text-gray-400 hover:text-rose-500 uppercase tracking-widest transition-colors"
+                    className="text-xs font-bold text-gray-400 hover:text-rose-500 uppercase tracking-widest transition-colors flex items-center gap-1.5"
                   >
+                    <XMarkIcon className="w-3.5 h-3.5" />
                     Clear All
                   </button>
                   <button
@@ -127,26 +143,27 @@ export default function CompareWidget() {
                           </div>
                         </div>
 
-                        <div className="flex items-end justify-between py-3 border-y border-gray-50">
+                        <div className="flex items-end justify-between py-0 border-y border-gray-50">
                           <div>
                             <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Rate</span>
                             <span className="text-lg font-black text-gray-900">R{helper.regularPrice} <span className="text-sm font-normal text-gray-500">/hr</span></span>
                           </div>
                           <div className="text-right">
-                            <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Rating</span>
-                            <div className="flex items-center gap-1">
-                              <StarIconSolid className="w-4 h-4 text-black" />
-                              <span className="text-base font-bold text-gray-900">{helper.rating || 4.8}</span>
-                            </div>
-                          </div>
+                             <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Rating</span>
+                             <div className="flex flex-col items-end gap-0.5">
+                               <StarRating rating={helper.rating} />
+                               <span className="text-xs font-bold text-gray-600">
+                                 {helper.rating > 0 ? helper.rating.toFixed(1) : 'New'}
+                               </span>
+                             </div>
+                           </div>
                         </div>
 
-                        <div className="pt-2">
-                          <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Description</span>
-                          <p className="text-sm text-gray-600 line-clamp-3 leading-relaxed">
-                            {helper.description || "No description provided."}
-                          </p>
-                        </div>
+                        {helper.description && (
+                           <p className="text-[12px] text-gray-500 line-clamp-2 leading-relaxed mt-2">
+                             {helper.description}
+                           </p>
+                         )}
                       </div>
 
                       <button
@@ -154,9 +171,9 @@ export default function CompareWidget() {
                           setIsOpen(false);
                           navigate(`/helper/${helper._id}`);
                         }}
-                        className="mt-6 w-full py-3.5 bg-gray-50 hover:bg-gray-100 text-gray-900 font-bold rounded-2xl transition-colors border border-gray-200"
+                        className="mt-6 w-full py-3 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-black text-[11px] uppercase tracking-widest rounded-2xl transition-all shadow-lg shadow-rose-500/25 active:scale-95"
                       >
-                        View Full Profile
+                        View Full Profile →
                       </button>
                     </div>
                   ))}

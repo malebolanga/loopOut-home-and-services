@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import ImageGallery from '../ImageGallery';
 import { BookOpen } from 'lucide-react';
 import { HeartIcon as HeartIconSolid, StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
-import { HeartIcon } from '@heroicons/react/24/outline';
+import { HeartIcon, StarIcon } from '@heroicons/react/24/outline';
 import { useWishlist } from '../../hooks/useWishlist';
 
 export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = false, reducedSize = false }) => {
@@ -169,6 +169,25 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
           </p>
         )}
         
+        {/* Rating row */}
+        <div className="flex items-center gap-1 mt-0.5">
+          {item.rating > 0 ? (
+            <>
+              <StarIconSolid className="w-3 h-3 text-gray-900 shrink-0" />
+              <span className={`font-semibold text-gray-900 ${reducedSize ? 'text-[13px]' : 'text-[14px]'}`}>
+                {item.rating.toFixed(1)}
+              </span>
+              {item.comments?.length > 0 && (
+                <span className={`text-gray-500 font-normal ${reducedSize ? 'text-[11px]' : 'text-[13px]'}`}>
+                  ({item.comments.length})
+                </span>
+              )}
+            </>
+          ) : (
+            <span className={`text-gray-400 font-normal italic ${reducedSize ? 'text-[11px]' : 'text-[12px]'}`}>New</span>
+          )}
+        </div>
+
         <div className="flex items-baseline gap-1 mt-1">
           <span className={`font-semibold text-gray-900 ${reducedSize ? 'text-[14px]' : 'text-[15px]'}`}>{formatPrice()}</span>
           <span className={`text-gray-500 font-normal ${reducedSize ? 'text-[12px]' : 'text-[14px]'}`}>{getPriceSuffix()}</span>
