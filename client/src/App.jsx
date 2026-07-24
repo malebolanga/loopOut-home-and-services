@@ -368,9 +368,10 @@ function AppContent() {
   ];
 
   const isSpecializedPage = specializedHelperPaths.some(path => location.pathname.startsWith(path));
+  const isStoragePage = location.pathname.startsWith('/storage/');
   const isCreateListingPage = location.pathname.endsWith('/create-listing');
-  const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage || isCreateListingPage;
-  const hideFooter = hideFooterPaths.includes(location.pathname) || isSpecializedPage;
+  const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage || isStoragePage || isCreateListingPage;
+  const hideFooter = hideFooterPaths.includes(location.pathname) || isSpecializedPage || isStoragePage;
   
   return (
     <>
@@ -386,7 +387,7 @@ function AppContent() {
       <Suspense fallback={<NeuralLoader fullScreen={true} />}>
         <AnimatedRoutes />
       </Suspense>
-      <BottomNav />
+      {!isStoragePage && <BottomNav />}
       {!hideFooter && <Footer />}
     </>
   );

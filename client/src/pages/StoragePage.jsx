@@ -13,19 +13,15 @@ import {
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import HelperComments from '../components/HelperComments';
+import GoogleMapComponent from '../components/GoogleMapComponent';
 
 const formatPrice = (n) => (n != null ? `R${Number(n).toLocaleString()}` : '-');
 
 const DURATION_OPTIONS = [
-  { value: '1 day', label: '1 Day' },
-  { value: '3 days', label: '3 Days' },
-  { value: '1 week', label: '1 Week' },
-  { value: '1 month', label: '1 Month' },
-  { value: '2 months', label: '2 Months' },
-  { value: '3 months', label: '3 Months' },
-  { value: '6 months', label: '6 Months' },
-  { value: '12 months', label: '12 Months' },
-  { value: 'Ongoing', label: 'Ongoing (month-to-month)' },
+  { value: 'daily', label: 'Daily', detail: 'Flexible short stays' },
+  { value: 'weekly', label: 'Weekly', detail: 'Save for seven days' },
+  { value: 'monthly', label: 'Monthly', detail: 'Best for regular storage' },
+  { value: 'yearly', label: 'Yearly', detail: 'Long-term storage' },
 ];
 
 const STORAGE_ITEM_OPTIONS = [
@@ -45,13 +41,10 @@ function computeEstimate(service, duration) {
   if (!service) return 0;
   const priceDay   = Number(service.storagePriceDay)   || 0;
   const priceMonth = Number(service.storagePriceMonth) || Number(service.price) || 0;
-  if (duration.includes('day') || duration.includes('Day')) {
-    const days = parseInt(duration) || 1;
-    return priceDay * days;
-  }
-  if (duration === 'Ongoing') return priceMonth;
-  const months = parseInt(duration) || 1;
-  return priceMonth * months;
+  if (duration === 'daily') return priceDay || Math.round(priceMonth / 30);
+  if (duration === 'weekly') return priceDay ? priceDay * 7 : Math.round(priceMonth / 4);
+  if (duration === 'yearly') return priceMonth * 12;
+  return priceMonth;
 }
 
 export default function StoragePage() {
@@ -67,7 +60,8 @@ export default function StoragePage() {
   const [isSaved, setIsSaved]           = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
-  const [duration, setDuration]         = useState('1 month');
+  const [duration, setDuration]         = useState('monthly');
+  const [showBooking, setShowBooking]   = useState(false);
   const [selectedStorageItems, setSelectedStorageItems] = useState([]);
   const [items, setItems]               = useState('');
   const [name, setName]                 = useState('');
@@ -101,7 +95,9 @@ export default function StoragePage() {
   }, [id]);
 
   const images   = storage?.imageUrls?.length ? storage.imageUrls : [];
+  const storageAddress = storage?.address || storage?.location || '';
   const estimate = storage ? computeEstimate(storage, duration) : 0;
+  const durationLabel = DURATION_OPTIONS.find((option) => option.value === duration)?.label || 'Monthly';
   const fee      = Math.round(estimate * 0.1);
   const total    = estimate + fee;
 
@@ -125,7 +121,7 @@ export default function StoragePage() {
     msg += `*Name:* ${name}\n*Phone:* ${phone}\n\n`;
     if (storage.storageSize) msg += `*Size:* ${storage.storageSize}\n`;
     if (storage.storagePriceMonth) msg += `*Monthly Rate:* R${storage.storagePriceMonth}\n`;
-    msg += `*Duration:* ${duration}\n`;
+    msg += `*Duration:* ${durationLabel}\n`;
     if (finalItems) msg += `*Items to Store:* ${finalItems}\n`;
     if (address) msg += `*Address:* ${address}\n`;
     if (notes) msg += `*Notes:* ${notes}\n`;
@@ -133,6 +129,7 @@ export default function StoragePage() {
     if (policyAck) msg += `\n\nCustomer has read and agreed to the storage policy.`;
     const url = wa ? `https://wa.me/${wa}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank');
+    setShowBooking(false);
     setSubmitting(false);
   };
 
@@ -160,22 +157,22 @@ export default function StoragePage() {
       <div className="max-w-7xl mx-auto px-4 pt-6 pb-20">
         {/* Gallery */}
         {images.length > 0 ? (
-          <div className="relative mb-8">
-            <div className="relative rounded-2xl overflow-hidden aspect-video bg-gray-100 cursor-pointer" onClick={() => setLightbox(true)}>
-              <img src={images[activeImg]} alt="Storage" className="w-full h-full object-cover" />
-              <button className="absolute top-3 right-3 bg-black/50 text-white p-2 rounded-full"><FaExpand className="w-4 h-4" /></button>
-              <div className="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded-full">{activeImg + 1}/{images.length}</div>
+          <div className="relative -mx-4 mb-8 h-[330px] overflow-hidden bg-slate-900 sm:h-[440px] lg:h-[540px]">
+            <div className="grid h-full grid-cols-1 gap-1.5 md:grid-cols-4 md:grid-rows-2">
+              <button type="button" onClick={() => { setActiveImg(0); setLightbox(true); }} className="group relative h-full overflow-hidden text-left md:col-span-2 md:row-span-2">
+                <img src={images[0]} alt={storage.name} className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+                <span className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent md:hidden" />
+              </button>
+              {images.slice(1, 5).map((image, index) => (
+                <button key={image} type="button" onClick={() => { setActiveImg(index + 1); setLightbox(true); }} className="group relative hidden overflow-hidden text-left md:block">
+                  <img src={image} alt={`${storage.name} ${index + 2}`} className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+                  <span className="absolute inset-0 bg-black/0 transition group-hover:bg-black/15" />
+                </button>
+              ))}
             </div>
-            {images.length > 1 && (
-              <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
-                {images.map((img, i) => (
-                  <button key={i} onClick={() => setActiveImg(i)}
-                    className={`flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${i === activeImg ? 'border-rose-500' : 'border-transparent'}`}>
-                    <img src={img} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
+            <button type="button" onClick={() => setLightbox(true)} className="absolute bottom-5 right-5 flex items-center gap-2 rounded-2xl border border-slate-200/60 bg-white/95 px-4 py-2.5 text-sm font-bold text-slate-900 shadow-xl backdrop-blur transition hover:scale-105">
+              <FaExpand /> Show all {images.length} photos
+            </button>
           </div>
         ) : (
           <div className="mb-8 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 aspect-video flex items-center justify-center">
@@ -188,8 +185,13 @@ export default function StoragePage() {
           <div className="lg:col-span-2 space-y-6">
             <div>
               <div className="flex items-center gap-2 text-sm text-rose-600 font-semibold mb-1"><FaWarehouse /> Booking Storage</div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{storage.name}</h1>
-              {storage.location && <p className="flex items-center gap-1 text-gray-500 text-sm"><FaMapMarkerAlt className="text-rose-400" /> {storage.location}</p>}
+              <div className="flex flex-wrap items-start justify-between gap-4 mb-2">
+                <h1 className="text-3xl font-bold text-gray-900">{storage.name}</h1>
+                <button onClick={() => setShowBooking(true)} className="hidden sm:inline-flex items-center gap-2 rounded-xl bg-rose-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-rose-500/20 transition hover:bg-rose-600">
+                  <FaRegCalendarAlt /> Book storage
+                </button>
+              </div>
+              {storageAddress && <p className="flex items-center gap-1 text-gray-500 text-sm"><FaMapMarkerAlt className="text-rose-400" /> {storageAddress}</p>}
               <div className="flex items-center gap-4 mt-3">
                 {storage.rating && <span className="flex items-center gap-1 text-sm font-medium text-gray-700"><FaStar className="text-amber-400" /> {storage.rating}</span>}
                 <button onClick={() => setShowComments(true)} className="text-sm text-rose-500 underline hover:text-rose-700">
@@ -227,11 +229,26 @@ export default function StoragePage() {
                 <a href={storage.storagePolicyDocUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-800 underline">Open <FaExternalLinkAlt className="w-3 h-3" /></a>
               </div>
             )}
+            {storageAddress && (
+              <section className="overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-sm">
+                <div className="flex items-center justify-between gap-4 p-6">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-rose-500">Storage location</p>
+                    <h2 className="mt-1 text-lg font-black text-gray-900">Find this facility</h2>
+                    <p className="mt-1 text-sm text-gray-500">{storageAddress}</p>
+                  </div>
+                  <FaMapMarkerAlt className="shrink-0 text-3xl text-rose-500" />
+                </div>
+                <div className="h-[320px] border-t border-slate-100 bg-slate-950 sm:h-[400px]">
+                  <GoogleMapComponent address={storageAddress} title={storage.name} />
+                </div>
+              </section>
+            )}
             <HelperComments helperId={id} helperType="service" onCommentCountChange={setCommentCount} />
           </div>
 
-          {/* Booking sidebar */}
-          <div className="lg:col-span-1">
+          {/* Booking form is available from the booking popup below. */}
+          <div className="hidden lg:col-span-1">
             <div className="sticky top-20">
               <form onSubmit={handleBook} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                 <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white px-6 py-5">
@@ -303,6 +320,40 @@ export default function StoragePage() {
           </div>
         </div>
       </div>
+
+      {/* Mobile booking action */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/95 p-3 backdrop-blur sm:hidden">
+        <button onClick={() => setShowBooking(true)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 py-3.5 font-bold text-white shadow-lg shadow-rose-500/25">
+          <FaRegCalendarAlt /> Choose a storage plan
+        </button>
+      </div>
+
+      {/* Booking popup */}
+      <AnimatePresence>
+        {showBooking && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-end bg-slate-950/60 p-0 backdrop-blur-sm sm:items-center sm:justify-center sm:p-6" onClick={() => setShowBooking(false)}>
+            <motion.form initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }} transition={{ type: 'spring', damping: 28, stiffness: 320 }} onSubmit={handleBook} onClick={(event) => event.stopPropagation()} className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-[2rem] bg-white sm:rounded-[2rem]">
+              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-5">
+                <div><p className="text-xs font-black uppercase tracking-[0.18em] text-rose-500">Secure storage</p><h2 className="text-xl font-black text-gray-900">Reserve your space</h2></div>
+                <button type="button" onClick={() => setShowBooking(false)} aria-label="Close booking" className="rounded-full bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"><FaTimes /></button>
+              </div>
+              <div className="space-y-6 p-6">
+                <div><h3 className="font-bold text-gray-900">Choose your plan</h3><p className="mt-1 text-sm text-gray-500">Select the billing period that fits your storage needs.</p>
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    {DURATION_OPTIONS.map((option) => <button key={option.value} type="button" onClick={() => setDuration(option.value)} className={`rounded-2xl border p-4 text-left transition ${duration === option.value ? 'border-rose-500 bg-rose-50 ring-2 ring-rose-100' : 'border-gray-200 bg-white hover:border-rose-200'}`}><span className="block font-bold text-gray-900">{option.label}</span><span className="mt-1 block text-xs text-gray-500">{option.detail}</span></button>)}
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-slate-900 p-5 text-white"><p className="text-xs font-bold uppercase tracking-wider text-white/60">{durationLabel} estimate</p><p className="mt-1 text-3xl font-black">{formatPrice(total)}</p><p className="mt-1 text-xs text-white/65">Includes an estimated 10% service fee. Final cost is confirmed by the provider.</p></div>
+                <div><label className="mb-2 block text-sm font-bold text-gray-700">What are you storing?</label><div className="flex flex-wrap gap-2">{STORAGE_ITEM_OPTIONS.map((option) => <button key={option.id} type="button" onClick={() => toggleStorageItem(option.label)} className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${selectedStorageItems.includes(option.label) ? 'border-rose-500 bg-rose-500 text-white' : 'border-gray-200 text-gray-700 hover:border-rose-300'}`}>{option.emoji} {option.label}</button>)}</div><textarea value={items} onChange={(event) => setItems(event.target.value)} rows={2} placeholder="Add quantities or other items" className="mt-3 w-full rounded-xl border border-gray-200 p-3 text-sm focus:border-rose-500 focus:outline-none" /></div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><input required value={name} onChange={(event) => setName(event.target.value)} placeholder="Your name" className="rounded-xl border border-gray-200 p-3 text-sm focus:border-rose-500 focus:outline-none" /><input required value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="Phone number" className="rounded-xl border border-gray-200 p-3 text-sm focus:border-rose-500 focus:outline-none" /></div>
+                <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={2} placeholder="Notes for the provider (optional)" className="w-full rounded-xl border border-gray-200 p-3 text-sm focus:border-rose-500 focus:outline-none" />
+                {storage.storagePolicyDocUrl && <label className="flex gap-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900"><input required checked={policyAck} onChange={(event) => setPolicyAck(event.target.checked)} type="checkbox" className="mt-1 accent-rose-500" /><span>I have read and agree to the storage policy.</span></label>}
+                <button type="submit" disabled={submitting} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 py-3.5 font-bold text-white shadow-lg shadow-emerald-500/20 transition hover:from-emerald-600 hover:to-green-700 disabled:opacity-60">{submitting ? <FaSpinner className="animate-spin" /> : <FaWhatsapp className="text-xl" />} Continue on WhatsApp</button>
+              </div>
+            </motion.form>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Lightbox */}
       <AnimatePresence>
