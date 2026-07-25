@@ -11,17 +11,17 @@ import { UpcomingBookingsSection } from './HomeSections';
 // Hub items config: emoji, label, description, color accent
 const HUB_ITEMS = [
   {
-    id: 'quick-cast',
-    emoji: '⚡',
-    label: 'Quick-Cast',
-    desc: 'Broadcast a need',
-    accent: 'rose',
-    bg: 'bg-rose-50',
-    border: 'border-rose-100',
+    id: 'lunch',
+    emoji: '🍔',
+    label: 'Lunch',
+    desc: 'Coming soon',
+    accent: 'amber',
+    bg: 'bg-amber-50',
+    border: 'border-amber-100',
     activeBg: 'bg-white',
-    activeBorder: 'border-rose-300',
-    textColor: 'text-rose-500',
-    action: 'modal-broadcast',
+    activeBorder: 'border-amber-300',
+    textColor: 'text-amber-500',
+    action: '/lunch',
   },
   {
     id: 'vision-scan',
@@ -75,32 +75,8 @@ const HUB_ITEMS = [
     textColor: 'text-emerald-500',
     action: '/radar',
   },
-  {
-    id: 'quick-book',
-    emoji: '🗓️',
-    label: 'Quick Book',
-    desc: 'Book instantly',
-    accent: 'amber',
-    bg: 'bg-amber-50',
-    border: 'border-amber-100',
-    activeBg: 'bg-white',
-    activeBorder: 'border-amber-300',
-    textColor: 'text-amber-500',
-    action: '/quick-book',
-  },
-  {
-    id: 'lunch',
-    emoji: '🍔🍟',
-    label: 'Lunch',
-    desc: 'Coming soon',
-    accent: 'amber',
-    bg: 'bg-amber-50',
-    border: 'border-amber-100',
-    activeBg: 'bg-white',
-    activeBorder: 'border-amber-300',
-    textColor: 'text-amber-500',
-    action: '/lunch',
-  },
+
+ 
 ];
 
 const DailyLoopHub = () => {
