@@ -131,6 +131,7 @@ const Rewards = lazy(() => import('./pages/Rewards'));
 const Matchmaker = lazy(() => import('./pages/Matchmaker'));
 const Radar = lazy(() => import('./pages/Radar'));
 const QuickBook = lazy(() => import('./pages/QuickBook'));
+const LunchComingSoon = lazy(() => import('./pages/LunchComingSoon'));
 const Splitter = lazy(() => import('./pages/Splitter'));
 
 // Photography Helper Page
@@ -289,6 +290,7 @@ const AnimatedRoutes = () => {
           <Route path="/matchmaker" element={<PageTransition><Matchmaker /></PageTransition>} />
           <Route path="/radar" element={<PageTransition><Radar /></PageTransition>} />
           <Route path="/quick-book" element={<PageTransition><QuickBook /></PageTransition>} />
+          <Route path="/lunch" element={<PageTransition><LunchComingSoon /></PageTransition>} />
           <Route path="/verification" element={<PageTransition><Verification /></PageTransition>} />
           <Route path="/:userId/create-listing" element={<PageTransition><CreateListing /></PageTransition>} />
           <Route path="/update-listing/:listingId" element={<PageTransition><UpdateListing /></PageTransition>} />

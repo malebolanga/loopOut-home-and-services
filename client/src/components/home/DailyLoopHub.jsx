@@ -88,6 +88,19 @@ const HUB_ITEMS = [
     textColor: 'text-amber-500',
     action: '/quick-book',
   },
+  {
+    id: 'lunch',
+    emoji: '🍔🍟',
+    label: 'Lunch',
+    desc: 'Coming soon',
+    accent: 'amber',
+    bg: 'bg-amber-50',
+    border: 'border-amber-100',
+    activeBg: 'bg-white',
+    activeBorder: 'border-amber-300',
+    textColor: 'text-amber-500',
+    action: '/lunch',
+  },
 ];
 
 const DailyLoopHub = () => {
