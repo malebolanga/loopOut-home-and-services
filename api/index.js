@@ -36,6 +36,7 @@ import aiHelpRouter from './routes/ai-help.route.js';
 import verificationRouter from './routes/verification.route.js';
 import sosRouter from './routes/sos.route.js';
 import aiRouter from './routes/ai.route.js';
+import lunchRouter from './routes/lunch.route.js';
 import { initBookingScheduler } from './utils/bookingScheduler.js';
 
 import path from 'path';
@@ -156,6 +157,7 @@ app.use('/api/verification', verificationRouter);
 app.use('/api/sos', sosRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/sell', sellRouter);
+app.use('/api/lunch', lunchRouter);
 
 // Serve uploads folder statically
 app.use('/uploads', express.static(path.join(__dirname, 'client', 'public', 'uploads')));
