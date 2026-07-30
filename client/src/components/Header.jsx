@@ -177,7 +177,32 @@ export default function Header() {
   const [currentLocation, setCurrentLocation] = useState('Polokwane');
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
-  const notificationSound = useRef(new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3'));
+
+  const playNotificationChime = useCallback(() => {
+    if (!isSoundEnabled) return;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
+
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.25);
+    } catch {
+      // Ignore browser autoplay restrictions
+    }
+  }, [isSoundEnabled]);
 
   // Currency and Language states
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
@@ -249,11 +274,7 @@ export default function Header() {
 
         // If we have new unread notifications, ring the bell and trigger phone push banner
         if (newUnreadCount > prevUnreadCount) {
-          if (isSoundEnabled) {
-            notificationSound.current.play().catch(e => {
-              void e;
-            });
-          }
+          playNotificationChime();
 
           const latest = data.notifications?.[0];
 
@@ -282,7 +303,7 @@ export default function Header() {
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
-  }, [currentUser, prevUnreadCount]);
+  }, [currentUser, prevUnreadCount, playNotificationChime]);
 
   useEffect(() => {
     fetchNotifications();
@@ -292,26 +313,11 @@ export default function Header() {
       window.Notification.requestPermission();
     }
 
-    // Function to unlock audio on first interaction
-    const unlockAudio = () => {
-      notificationSound.current.play().then(() => {
-        notificationSound.current.pause();
-        notificationSound.current.currentTime = 0;
-        document.removeEventListener('click', unlockAudio);
-        document.removeEventListener('touchstart', unlockAudio);
-      }).catch(() => { });
-    };
-
-    document.addEventListener('click', unlockAudio);
-    document.addEventListener('touchstart', unlockAudio);
-
     // Set up polling for real-time alerts
     const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
 
     return () => {
       clearInterval(interval);
-      document.removeEventListener('click', unlockAudio);
-      document.removeEventListener('touchstart', unlockAudio);
     };
   }, [fetchNotifications]);
 

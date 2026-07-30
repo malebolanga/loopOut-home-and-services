@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BoltIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Sparkles } from 'lucide-react';
@@ -79,6 +79,25 @@ const DailyLoopHub = () => {
   const [showVisionModal, setShowVisionModal] = useState(false);
   const [showWhisperModal, setShowWhisperModal] = useState(false);
   const [showSpinModal, setShowSpinModal] = useState(false);
+  const [isStuck, setIsStuck] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        // Container is stuck at or near top of window
+        setIsStuck(rect.top <= 4);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const handleBroadcast = async () => {
     if (!broadcastMessage.trim()) return;
@@ -109,17 +128,31 @@ const DailyLoopHub = () => {
   };
 
   return (
-    <div className="mb-8 mt-2">
-      {/* Daily Loop Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 animate-ping" />
-          <h2 className="text-[12px] font-black tracking-[0.2em] uppercase text-gray-900">Your Daily Loop Hub</h2>
-        </div>
-        
-      </div>
+    <div
+      ref={containerRef}
+      className={`sticky top-0 z-30 bg-white/95 backdrop-blur-md transition-all duration-300 -mx-4 px-4 border-b border-gray-100/80 ${
+        isStuck ? 'py-2 shadow-sm' : 'pt-3 pb-2 mb-6 shadow-xs'
+      }`}
+    >
+      {/* Daily Loop Header - collapses smoothly when stuck at top */}
+      <AnimatePresence initial={false}>
+        {!isStuck && (
+          <motion.div
+            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+            animate={{ opacity: 1, height: 'auto', marginBottom: 12 }}
+            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="overflow-hidden flex items-center justify-between"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 animate-ping" />
+              <h2 className="text-[12px] font-black tracking-[0.2em] uppercase text-gray-900">Your Daily Loop Hub</h2>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <div className="flex overflow-x-auto gap-8 pb-3 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory">
+      <div className="flex overflow-x-auto gap-8 pb-2 scrollbar-hide snap-x snap-mandatory">
         {HUB_ITEMS.map((item) => {
           const isActive = activeId === item.id;
           return (

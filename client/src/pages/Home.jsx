@@ -969,7 +969,7 @@ const MobileAppHomepage = ({
 
   // Mobile View
   return (
-    <div className="min-h-screen bg-white pb-32 relative overflow-x-hidden w-full">
+    <div className="min-h-screen bg-white pb-32 relative overflow-x-clip w-full">
       <Helmet>
         <title>LoopOut | Find Homes, Services & Events Near You</title>
         <meta name="description" content="Discover verified helpers, book top services, and explore exclusive properties and events in your area with loopOut." />
