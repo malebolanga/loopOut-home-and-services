@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Shop from '../models/shop.model.js';
 import FoodOrder from '../models/foodOrder.model.js';
 import TableBooking from '../models/tableBooking.model.js';
+import Notification from '../models/notification.model.js';
 
 const DEFAULT_SHOPS = [
   {
@@ -288,6 +289,8 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Status parameter is required' });
     }
 
+    let updatedOrder = null;
+
     if (mongoose.connection.readyState === 1) {
       const order = await FoodOrder.findByIdAndUpdate(
         id,
@@ -296,22 +299,60 @@ export const updateOrderStatus = async (req, res) => {
       );
 
       if (order) {
-        const formatted = { id: order._id.toString(), ...order.toObject() };
-        inMemoryOrders = inMemoryOrders.map((o) => (o.id === id || o._id === id ? formatted : o));
-        return res.status(200).json(formatted);
+        updatedOrder = { id: order._id.toString(), ...order.toObject() };
+        inMemoryOrders = inMemoryOrders.map((o) => (o.id === id || o._id === id ? updatedOrder : o));
       }
     }
 
-    // Fallback in-memory update
-    inMemoryOrders = inMemoryOrders.map((o) => {
-      if (o.id === id || o._id === id) {
-        return { ...o, status, updatedAt: new Date().toISOString() };
-      }
-      return o;
-    });
+    if (!updatedOrder) {
+      // Fallback in-memory update
+      inMemoryOrders = inMemoryOrders.map((o) => {
+        if (o.id === id || o._id === id) {
+          return { ...o, status, updatedAt: new Date().toISOString() };
+        }
+        return o;
+      });
+      updatedOrder = inMemoryOrders.find((o) => o.id === id || o._id === id) || { id, status };
+    }
 
-    const updated = inMemoryOrders.find((o) => o.id === id || o._id === id) || { id, status };
-    return res.status(200).json(updated);
+    // Create notification for customer if valid customerId exists
+    if (updatedOrder && updatedOrder.customerId && updatedOrder.customerId !== 'guest') {
+      const targetUserId = updatedOrder.customerId;
+      const isReady = status === 'Ready for Collection';
+      const isCompleted = status === 'Completed';
+
+      let notifTitle = `Order Status: ${status}`;
+      let notifMsg = `Your order #${updatedOrder.orderCode || ''} from "${updatedOrder.shopName || 'the shop'}" status is now ${status}.`;
+
+      if (isReady) {
+        notifTitle = '🍱 Food Ready to Collect!';
+        notifMsg = `Your food order #${updatedOrder.orderCode || ''} from "${updatedOrder.shopName || 'the restaurant'}" is ready for collection!`;
+      } else if (isCompleted) {
+        notifTitle = '✅ Food Order Completed';
+        notifMsg = `Thank you! Your order #${updatedOrder.orderCode || ''} from "${updatedOrder.shopName || 'the restaurant'}" has been completed.`;
+      }
+
+      if (mongoose.connection.readyState === 1 && mongoose.Types.ObjectId.isValid(targetUserId)) {
+        try {
+          await Notification.create({
+            userId: targetUserId,
+            type: 'booking',
+            title: notifTitle,
+            message: notifMsg,
+            data: {
+              orderId: updatedOrder.id || updatedOrder._id,
+              orderCode: updatedOrder.orderCode,
+              shopName: updatedOrder.shopName,
+              status: status
+            }
+          });
+        } catch (notifErr) {
+          console.error('[LUNCH API] Error creating status notification:', notifErr?.message || notifErr);
+        }
+      }
+    }
+
+    return res.status(200).json(updatedOrder);
   } catch (error) {
     console.error('[LUNCH API] Error updating order status:', error?.message || error);
     return res.status(500).json({ success: false, message: error.message || 'Error updating order status' });

@@ -197,6 +197,21 @@ export default function LunchComingSoon() {
     return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }, [cart]);
 
+  // Shops that belong to the currently logged-in user
+  const myShops = useMemo(() => {
+    if (!currentUser) return [];
+    const uid = currentUser._id || currentUser.id || 'guest';
+    return shops.filter((s) => s.ownerId === uid || s.ownerId === 'guest');
+  }, [shops, currentUser]);
+
+  // Whether the current user owns at least one shop
+  const isShopOwner = myShops.length > 0;
+
+  // The shop selected on the dashboard (only owner's shops are valid here)
+  const dashboardShop = useMemo(() => {
+    return myShops.find((s) => s.id === selectedShopId) || myShops[0] || null;
+  }, [myShops, selectedShopId]);
+
   // Filter orders relevant to customer or shop owner
   const myCustomerOrders = useMemo(() => {
     if (!currentUser?._id && !currentUser?.id) return orders;
@@ -204,10 +219,12 @@ export default function LunchComingSoon() {
     return orders.filter((o) => o.customerId === uid || o.customerId === 'guest');
   }, [orders, currentUser]);
 
+  // Orders for the current dashboard shop (only owner's shop)
   const activeShopOrders = useMemo(() => {
-    if (!currentShop) return orders;
-    return orders.filter((o) => o.shopId === currentShop.id);
-  }, [orders, currentShop]);
+    if (!dashboardShop) return [];
+    return orders.filter((o) => o.shopId === dashboardShop.id);
+  }, [orders, dashboardShop]);
+
 
   // Cart operations
   const addToCart = (meal) => {
@@ -480,61 +497,109 @@ export default function LunchComingSoon() {
 
         {/* Active Order Status Notification Banner (For Buyers) */}
         {myCustomerOrders.length > 0 && (
-          <div className="mt-4 space-y-2">
-            {myCustomerOrders.slice(0, 2).map((ord) => (
-              <div
-                key={ord.id}
-                onClick={() => setActiveReceiptOrder(ord)}
-                className={`cursor-pointer flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 shadow-sm transition hover:shadow-md ${
-                  ord.status === 'Ready for Collection'
-                    ? 'border-emerald-400 bg-emerald-50/90 ring-2 ring-emerald-300 animate-pulse'
-                    : ord.status === 'Preparing'
-                    ? 'border-amber-400 bg-amber-50/80'
-                    : 'border-slate-200 bg-white'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{ord.shopImage || '🍱'}</span>
-                  <div>
+          <div className="mt-4 space-y-3">
+            {myCustomerOrders.slice(0, 2).map((ord) => {
+              const isReady = ord.status === 'Ready for Collection';
+              const isPreparing = ord.status === 'Preparing';
+              const isCompleted = ord.status === 'Completed';
+
+              return (
+                <div
+                  key={ord.id || ord._id}
+                  onClick={() => setActiveReceiptOrder(ord)}
+                  className={`cursor-pointer rounded-3xl border p-5 shadow-sm transition hover:shadow-md ${
+                    isReady
+                      ? 'border-emerald-400 bg-gradient-to-r from-emerald-50 via-green-50 to-emerald-100 ring-2 ring-emerald-400'
+                      : isPreparing
+                      ? 'border-amber-400 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100'
+                      : 'border-slate-200 bg-white'
+                  }`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-4xl rounded-2xl bg-white p-2 shadow-xs border border-amber-100">{ord.shopImage || '🍱'}</span>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-gray-900 text-base">{ord.shopName}</span>
+                          <span className="rounded-full bg-amber-200/80 px-2.5 py-0.5 text-xs font-black text-amber-950 border border-amber-300">
+                            Code: {ord.orderCode}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1 font-medium">
+                          {ord.items?.length || 0} items · <span className="font-bold text-amber-800">{formatPrice(ord.total)}</span> · {ord.fulfilment === 'pickup' ? 'Store Pickup (Pay at Counter)' : 'Delivery to Door'}
+                        </p>
+                      </div>
+                    </div>
+
                     <div className="flex items-center gap-2">
-                      <span className="font-black text-gray-900 text-sm">{ord.shopName}</span>
-                      <span className="rounded-md bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-900">
-                        Code: {ord.orderCode}
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-black shadow-xs ${
+                        isReady
+                          ? 'bg-emerald-600 text-white animate-bounce'
+                          : isPreparing
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-slate-800 text-white'
+                      }`}>
+                        <Bell className="h-3.5 w-3.5" />
+                        {isReady ? '🎉 FOOD READY TO COLLECT!' : isPreparing ? '👨‍🍳 CHEF IS COOKING' : `Status: ${ord.status}`}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRatingTargetOrder(ord);
+                          setShowRateModal(true);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1.5 text-xs font-black text-white hover:bg-amber-600 transition shadow-xs"
+                      >
+                        <Star className="h-3.5 w-3.5 fill-current" />
+                        {ord.isRated ? 'Rated ⭐' : 'Rate Food'}
+                      </button>
+
+                      <span className="text-xs font-extrabold text-amber-800 bg-amber-100/80 px-3 py-1.5 rounded-full border border-amber-300">
+                        View Code 📋
                       </span>
                     </div>
-                    <p className="text-xs text-gray-600 mt-0.5">
-                      {ord.items?.length || 0} items · {formatPrice(ord.total)} · {ord.fulfilment === 'pickup' ? 'Pickup (Pay on Counter)' : 'Delivery'}
-                    </p>
+                  </div>
+
+                  {/* Visual 3-Step Progress Bar for 5-Year-Old Level Clarity */}
+                  <div className="mt-4 pt-3 border-t border-amber-200/50">
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs font-black">
+                      {/* Step 1 */}
+                      <div className={`rounded-xl p-2 transition flex items-center justify-center gap-1.5 ${
+                        !isPreparing && !isReady && !isCompleted
+                          ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-300'
+                          : 'bg-emerald-100 text-emerald-800'
+                      }`}>
+                        <span>📝</span> <span>1. Order Placed</span>
+                      </div>
+
+                      {/* Step 2 */}
+                      <div className={`rounded-xl p-2 transition flex items-center justify-center gap-1.5 ${
+                        isPreparing
+                          ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-300 animate-pulse'
+                          : isReady || isCompleted
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-gray-100 text-gray-400'
+                      }`}>
+                        <span>👨‍🍳</span> <span>2. Cooking</span>
+                      </div>
+
+                      {/* Step 3 */}
+                      <div className={`rounded-xl p-2 transition flex items-center justify-center gap-1.5 ${
+                        isReady
+                          ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-400 animate-bounce'
+                          : isCompleted
+                          ? 'bg-gray-800 text-white'
+                          : 'bg-gray-100 text-gray-400'
+                      }`}>
+                        <span>🎉</span> <span>3. Ready to Collect!</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-3">
-                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-extrabold ${
-                    ord.status === 'Ready for Collection'
-                      ? 'bg-emerald-600 text-white'
-                      : ord.status === 'Preparing'
-                      ? 'bg-amber-500 text-white'
-                      : 'bg-slate-200 text-slate-800'
-                  }`}>
-                    <Bell className="h-3.5 w-3.5" />
-                    {ord.status === 'Ready for Collection' ? '🎉 FOOD READY TO COLLECT!' : `Status: ${ord.status}`}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setRatingTargetOrder(ord);
-                      setShowRateModal(true);
-                    }}
-                    className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1 text-xs font-black text-white hover:bg-amber-600 transition shadow-xs"
-                  >
-                    <Star className="h-3.5 w-3.5 fill-current" />
-                    {ord.isRated ? 'Rated ⭐' : 'Rate Shop & Food'}
-                  </button>
-                  <span className="text-xs font-bold text-amber-700 underline">View Code & Receipt</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -1019,7 +1084,9 @@ export default function LunchComingSoon() {
                 </span>
                 <h2 className="mt-2 text-2xl font-black text-white">Live Store Orders & Kitchen Queue</h2>
                 <p className="mt-1 text-xs text-amber-200/80">
-                  Manage incoming customer orders, update prep status, and issue verification matching codes.
+                  {isShopOwner
+                    ? `Manage incoming orders for your ${myShops.length} registered shop${myShops.length > 1 ? 's' : ''}.`
+                    : 'Register your food shop to start receiving and managing orders.'}
                 </p>
               </div>
 
@@ -1029,159 +1096,187 @@ export default function LunchComingSoon() {
                   onClick={() => setShowAddShopModal(true)}
                   className="rounded-xl bg-amber-400 px-4 py-2.5 text-xs font-black text-gray-950 shadow transition hover:bg-amber-300"
                 >
-                  + Add New Shop
+                  + {isShopOwner ? 'Add Another Shop' : 'Register My Shop'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddMealModal(true)}
-                  className="rounded-xl bg-white/10 px-4 py-2.5 text-xs font-black text-white border border-white/20 transition hover:bg-white/20"
-                >
-                  + Add Meal
-                </button>
+                {isShopOwner && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddMealModal(true)}
+                    className="rounded-xl bg-white/10 px-4 py-2.5 text-xs font-black text-white border border-white/20 transition hover:bg-white/20"
+                  >
+                    + Add Meal
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* Active Shop Selector for Dashboard */}
-            <div className="flex items-center gap-3 overflow-x-auto pb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-gray-500 shrink-0">Filter Shop:</span>
-              {shops.map((s) => (
+            {/* No shop registered — prompt to register */}
+            {!isShopOwner ? (
+              <div className="rounded-3xl border-2 border-dashed border-amber-300 bg-amber-50/60 p-12 text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
+                  <Store className="h-8 w-8 text-amber-600" />
+                </div>
+                <h3 className="mt-4 text-xl font-black text-gray-900">You haven't registered a food shop yet</h3>
+                <p className="mt-2 text-sm text-gray-600 max-w-sm mx-auto">
+                  Register your restaurant or food shop to appear on the customer ordering page and start managing live kitchen orders.
+                </p>
                 <button
-                  key={s.id}
                   type="button"
-                  onClick={() => setSelectedShopId(s.id)}
-                  className={`rounded-full px-4 py-2 text-xs font-black shrink-0 transition ${
-                    selectedShopId === s.id
-                      ? 'bg-amber-600 text-white shadow'
-                      : 'bg-white text-gray-700 ring-1 ring-gray-200 hover:bg-amber-50'
-                  }`}
+                  onClick={() => setShowAddShopModal(true)}
+                  className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-amber-500 px-6 py-3 text-sm font-black text-white shadow-md hover:bg-amber-600 transition"
                 >
-                  {s.image} {s.name}
+                  <PlusCircle className="h-4 w-4" /> Register My Food Shop
                 </button>
-              ))}
-            </div>
-
-            {/* Incoming Orders Cards */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-black uppercase tracking-wider text-gray-700">
-                Incoming Store Orders ({activeShopOrders.length})
-              </h3>
-
-              {activeShopOrders.length > 0 ? (
-                <div className="grid gap-4 md:grid-cols-2">
-                  {activeShopOrders.map((ord) => (
-                    <div
-                      key={ord.id}
-                      className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+                <p className="mt-3 text-xs text-gray-400">
+                  Your shop will be visible to customers immediately after registration.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Owner's Shop Selector for Dashboard */}
+                <div className="flex items-center gap-3 overflow-x-auto pb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-500 shrink-0">My Shops:</span>
+                  {myShops.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setSelectedShopId(s.id)}
+                      className={`rounded-full px-4 py-2 text-xs font-black shrink-0 transition ${
+                        (dashboardShop?.id === s.id)
+                          ? 'bg-amber-600 text-white shadow'
+                          : 'bg-white text-gray-700 ring-1 ring-gray-200 hover:bg-amber-50'
+                      }`}
                     >
-                      <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="rounded-lg bg-amber-100 p-2 text-xl font-bold">{ord.shopImage || '🍱'}</span>
-                          <div>
-                            <p className="text-sm font-black text-gray-900">{ord.customerName}</p>
-                            <p className="text-xs font-semibold text-gray-500 flex items-center gap-1">
-                              <Phone className="h-3 w-3 text-amber-600" /> {ord.customerPhone || 'No contact provided'}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Order Matching Verification Code */}
-                        <div className="text-right">
-                          <span className="text-[10px] font-bold text-gray-400 block uppercase">Verification Code</span>
-                          <span className="rounded-lg bg-amber-500 px-2.5 py-1 text-xs font-black text-white shadow-xs">
-                            {ord.orderCode}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Items List */}
-                      <div className="my-3 space-y-1 rounded-xl bg-gray-50 p-3 text-xs">
-                        <div className="font-bold text-gray-600 mb-1">Ordered Items:</div>
-                        {ord.items?.map((it, idx) => (
-                          <div key={idx} className="flex justify-between font-medium text-gray-800">
-                            <span>{it.quantity}x {it.name}</span>
-                            <span className="font-bold">{formatPrice(it.price * it.quantity)}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Payment & Delivery Info */}
-                      <div className="flex flex-wrap justify-between gap-2 text-xs font-bold text-gray-600 border-t border-gray-100 pt-3">
-                        <div>
-                          <span className="text-gray-400 block text-[10px] uppercase">Payment</span>
-                          <span className="text-amber-800 font-extrabold">{ord.paymentStatus || ord.paymentMethod}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-400 block text-[10px] uppercase">Fulfillment</span>
-                          <span className="capitalize">{ord.fulfilment}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-400 block text-[10px] uppercase">Total</span>
-                          <span className="text-gray-900 font-black">{formatPrice(ord.total)}</span>
-                        </div>
-                      </div>
-
-                      {ord.fulfilment === 'delivery' && ord.deliveryAddress && (
-                        <div className="mt-2 rounded-lg bg-orange-50 p-2.5 text-xs text-orange-950 border border-orange-200">
-                          <span className="font-bold">Delivery Address:</span> {ord.deliveryAddress}
-                          {ord.deliveryNotes && <p className="text-[11px] text-orange-800 mt-0.5">Notes: {ord.deliveryNotes}</p>}
-                        </div>
-                      )}
-
-                      {/* Order Action Buttons */}
-                      <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
-                        <span className={`rounded-full px-3 py-1 text-xs font-black ${
-                          ord.status === 'Ready for Collection'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : ord.status === 'Preparing'
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          Current Status: {ord.status}
-                        </span>
-
-                        <div className="flex items-center gap-1.5">
-                          {ord.status === 'Pending' && (
-                            <button
-                              type="button"
-                              onClick={() => handleStatusUpdate(ord.id, 'Preparing')}
-                              className="rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-amber-600"
-                            >
-                              👨‍🍳 Start Preparing
-                            </button>
-                          )}
-                          {ord.status === 'Preparing' && (
-                            <button
-                              type="button"
-                              onClick={() => handleStatusUpdate(ord.id, 'Ready for Collection')}
-                              className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-emerald-700 animate-pulse"
-                            >
-                              🎉 Mark Ready / Out for Delivery
-                            </button>
-                          )}
-                          {ord.status === 'Ready for Collection' && (
-                            <button
-                              type="button"
-                              onClick={() => handleStatusUpdate(ord.id, 'Completed')}
-                              className="rounded-xl bg-gray-900 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-gray-800"
-                            >
-                              ✅ Complete Order
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                      {s.image} {s.name}
+                    </button>
                   ))}
                 </div>
-              ) : (
-                <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-12 text-center text-gray-500">
-                  <ChefHat className="mx-auto h-10 w-10 text-gray-300" />
-                  <p className="mt-2 text-sm font-bold text-gray-700">No active orders for this store</p>
-                  <p className="text-xs text-gray-400">Place an order from the customer view to see live kitchen updates here!</p>
+
+                {/* Incoming Orders Cards */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-black uppercase tracking-wider text-gray-700">
+                    Incoming Orders — {dashboardShop?.name || 'My Shop'} ({activeShopOrders.length})
+                  </h3>
+
+                  {activeShopOrders.length > 0 ? (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {activeShopOrders.map((ord) => (
+                        <div
+                          key={ord.id}
+                          className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+                        >
+                          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="rounded-lg bg-amber-100 p-2 text-xl font-bold">{ord.shopImage || '🍱'}</span>
+                              <div>
+                                <p className="text-sm font-black text-gray-900">{ord.customerName}</p>
+                                <p className="text-xs font-semibold text-gray-500 flex items-center gap-1">
+                                  <Phone className="h-3 w-3 text-amber-600" /> {ord.customerPhone || 'No contact provided'}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Order Matching Verification Code */}
+                            <div className="text-right">
+                              <span className="text-[10px] font-bold text-gray-400 block uppercase">Verification Code</span>
+                              <span className="rounded-lg bg-amber-500 px-2.5 py-1 text-xs font-black text-white shadow-xs">
+                                {ord.orderCode}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Items List */}
+                          <div className="my-3 space-y-1 rounded-xl bg-gray-50 p-3 text-xs">
+                            <div className="font-bold text-gray-600 mb-1">Ordered Items:</div>
+                            {ord.items?.map((it, idx) => (
+                              <div key={idx} className="flex justify-between font-medium text-gray-800">
+                                <span>{it.quantity}x {it.name}</span>
+                                <span className="font-bold">{formatPrice(it.price * it.quantity)}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Payment & Delivery Info */}
+                          <div className="flex flex-wrap justify-between gap-2 text-xs font-bold text-gray-600 border-t border-gray-100 pt-3">
+                            <div>
+                              <span className="text-gray-400 block text-[10px] uppercase">Payment</span>
+                              <span className="text-amber-800 font-extrabold">{ord.paymentStatus || ord.paymentMethod}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-400 block text-[10px] uppercase">Fulfillment</span>
+                              <span className="capitalize">{ord.fulfilment}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-400 block text-[10px] uppercase">Total</span>
+                              <span className="text-gray-900 font-black">{formatPrice(ord.total)}</span>
+                            </div>
+                          </div>
+
+                          {ord.fulfilment === 'delivery' && ord.deliveryAddress && (
+                            <div className="mt-2 rounded-lg bg-orange-50 p-2.5 text-xs text-orange-950 border border-orange-200">
+                              <span className="font-bold">Delivery Address:</span> {ord.deliveryAddress}
+                              {ord.deliveryNotes && <p className="text-[11px] text-orange-800 mt-0.5">Notes: {ord.deliveryNotes}</p>}
+                            </div>
+                          )}
+
+                          {/* Order Action Buttons */}
+                          <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
+                            <span className={`rounded-full px-3 py-1 text-xs font-black ${
+                              ord.status === 'Ready for Collection'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : ord.status === 'Preparing'
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              Current Status: {ord.status}
+                            </span>
+
+                            <div className="flex items-center gap-1.5">
+                              {ord.status === 'Pending' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleStatusUpdate(ord.id || ord._id, 'Preparing')}
+                                  className="rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-amber-600"
+                                >
+                                  👨‍🍳 Start Preparing
+                                </button>
+                              )}
+                              {ord.status === 'Preparing' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleStatusUpdate(ord.id || ord._id, 'Ready for Collection')}
+                                  className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-emerald-700 animate-pulse"
+                                >
+                                  🎉 Mark Ready / Out for Delivery
+                                </button>
+                              )}
+                              {ord.status === 'Ready for Collection' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
+                                  className="rounded-xl bg-gray-900 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-gray-800"
+                                >
+                                  ✅ Complete Order
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-12 text-center text-gray-500">
+                      <ChefHat className="mx-auto h-10 w-10 text-gray-300" />
+                      <p className="mt-2 text-sm font-bold text-gray-700">No active orders for {dashboardShop?.name || 'this store'}</p>
+                      <p className="text-xs text-gray-400">Orders placed at your shop will appear here in real time!</p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </div>
         )}
+
 
       </div>
 

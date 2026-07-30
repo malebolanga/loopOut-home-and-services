@@ -55,14 +55,51 @@ export default function Notifications() {
     const fetchNotifications = async () => {
         try {
             setLoading(true);
-            const res = await fetch('/api/notifications', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+            setError(null);
+            let apiNotifs = [];
+            try {
+                const res = await fetch('/api/notifications', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    apiNotifs = data.notifications || [];
+                }
+            } catch (err) {
+                console.warn('[NOTIF CLIENT] API fetch error, using local fallback:', err?.message);
+            }
+
+            // Fetch local storage notifications for current user
+            let localNotifs = [];
+            try {
+                const raw = localStorage.getItem('loopout_local_notifications');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) {
+                        const uid = currentUser?._id || currentUser?.id;
+                        localNotifs = parsed.filter(n => n.userId === uid || n.userId === 'guest' || !uid);
+                    }
+                }
+            } catch (err) {
+                console.error('[NOTIF CLIENT] Error parsing local notifications:', err);
+            }
+
+            // Combine & deduplicate by ID
+            const map = new Map();
+            [...apiNotifs, ...localNotifs].forEach(item => {
+                const key = (item._id || item.id || '').toString();
+                if (key) {
+                    map.set(key, item);
                 }
             });
-            if (!res.ok) throw new Error('Failed to fetch notifications');
-            const data = await res.json();
-            setNotifications(data.notifications || []);
+
+            const combined = Array.from(map.values()).sort(
+                (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+            );
+
+            setNotifications(combined);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -72,73 +109,94 @@ export default function Notifications() {
 
     const markAsRead = async (id) => {
         try {
-            const res = await fetch(`/api/notifications/${id}/read`, {
+            await fetch(`/api/notifications/${id}/read`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
-            });
-            if (res.ok) {
-                setNotifications(notifications.map(n =>
-                    n._id === id ? { ...n, read: true } : n
-                ));
-            }
+            }).catch(() => {});
         } catch (err) {
             console.error('Error marking as read:', err);
         }
+
+        setNotifications(prev => prev.map(n => ((n._id === id || n.id === id) ? { ...n, read: true } : n)));
+        try {
+            const raw = localStorage.getItem('loopout_local_notifications');
+            if (raw) {
+                const list = JSON.parse(raw);
+                const updated = list.map(n => ((n._id === id || n.id === id) ? { ...n, read: true } : n));
+                localStorage.setItem('loopout_local_notifications', JSON.stringify(updated));
+            }
+        } catch (e) {}
     };
 
     const deleteNotification = async (id) => {
         try {
-            const res = await fetch(`/api/notifications/${id}`, {
+            await fetch(`/api/notifications/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
-            });
-            if (res.ok) {
-                setNotifications(notifications.filter(n => n._id !== id));
-            }
+            }).catch(() => {});
         } catch (err) {
             console.error('Error deleting notification:', err);
         }
+
+        setNotifications(prev => prev.filter(n => n._id !== id && n.id !== id));
+        try {
+            const raw = localStorage.getItem('loopout_local_notifications');
+            if (raw) {
+                const list = JSON.parse(raw);
+                const updated = list.filter(n => n._id !== id && n.id !== id);
+                localStorage.setItem('loopout_local_notifications', JSON.stringify(updated));
+            }
+        } catch (e) {}
     };
 
     const markAllAsRead = async () => {
         try {
-            const res = await fetch('/api/notifications/read-all', {
+            await fetch('/api/notifications/read-all', {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
-            });
-            if (res.ok) {
-                setNotifications(notifications.map(n => ({ ...n, read: true })));
-            }
+            }).catch(() => {});
         } catch (err) {
             console.error('Error marking all as read:', err);
         }
+
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        try {
+            const raw = localStorage.getItem('loopout_local_notifications');
+            if (raw) {
+                const list = JSON.parse(raw);
+                const updated = list.map(n => ({ ...n, read: true }));
+                localStorage.setItem('loopout_local_notifications', JSON.stringify(updated));
+            }
+        } catch (e) {}
     };
 
     const clearAllNotifications = async () => {
         try {
-            const res = await fetch('/api/notifications/clear-all', {
+            await fetch('/api/notifications/clear-all', {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
-            });
-            if (res.ok) {
-                setNotifications([]);
-            }
+            }).catch(() => {});
         } catch (err) {
             console.error('Error clearing notifications:', err);
         }
+
+        setNotifications([]);
+        try {
+            localStorage.removeItem('loopout_local_notifications');
+        } catch (e) {}
     };
 
     const getNotificationIcon = (type) => {
         switch (type) {
-            case 'booking': return <span className="text-blue-500 bg-blue-100 p-2 rounded-full">📅</span>;
+            case 'booking': return <span className="text-blue-500 bg-blue-100 p-2 rounded-full">🍱</span>;
             case 'message': return <span className="text-green-500 bg-green-100 p-2 rounded-full">💬</span>;
             case 'comment': return <span className="text-amber-500 bg-amber-100 p-2 rounded-full">📝</span>;
             case 'review': return <span className="text-yellow-500 bg-yellow-100 p-2 rounded-full">⭐</span>;
@@ -151,22 +209,26 @@ export default function Notifications() {
 
     const handleNotificationClick = (notification) => {
         if (!notification.read) {
-            markAsRead(notification._id);
+            markAsRead(notification._id || notification.id);
         }
         setSelectedNotification(notification);
     };
 
     const handleNotificationAction = (notification) => {
         if (notification.data) {
-            const { itemType, itemId, raterId } = notification.data;
+            const { itemType, itemId, orderId, orderCode } = notification.data;
             
-            if (notification.type === 'new_post' || notification.type === 'comment') {
+            if (orderId || orderCode || (notification.title && notification.title.includes('Food'))) {
+                navigate('/lunch');
+            } else if (notification.type === 'new_post' || notification.type === 'comment') {
                 if (itemType && itemId) {
                     navigate(`/${itemType}/${itemId}`);
                 }
             } else if (notification.type === 'review') {
-                navigate(`/user-profile/${currentUser._id}`);
+                navigate(`/user-profile/${currentUser._id || currentUser.id}`);
             }
+        } else if (notification.title && notification.title.includes('Food')) {
+            navigate('/lunch');
         }
         setSelectedNotification(null);
     };

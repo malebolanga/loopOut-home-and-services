@@ -9,13 +9,13 @@ import cors from 'cors';
 import userRouter from './routes/user.route.js';
 import authRouter from './routes/auth.route.js';
 import listingRouter from './routes/listing.route.js';
-import commentRouter from './routes/comment.route.js'; // Add this line
-import serviceRouter from './routes/service.route.js'; // Add this line
-import sellRouter from './routes/sell.route.js'; // Added sell router
+import commentRouter from './routes/comment.route.js';
+import serviceRouter from './routes/service.route.js';
+import sellRouter from './routes/sell.route.js';
 import https from 'https';
 import fs from 'fs';
 
-import carwashRoutes from './routes/carwash.route.js'; // Add this import
+import carwashRoutes from './routes/carwash.route.js';
 import helperRouter from './routes/helper.route.js';
 import serviceCommentRouter from './routes/service-comment.route.js';
 import eventRouter from './routes/event.route.js';
@@ -23,7 +23,7 @@ import cookieParser from 'cookie-parser';
 
 import helperCommentRouter from './routes/helper-comment.route.js';
 import eventCommentRouter from './routes/event-comment.route.js';
-import tripRouter from './routes/trip.js'; // Make sure this is imported
+import tripRouter from './routes/trip.js';
 import notificationRoute from './routes/notification.route.js';
 import messageRouter from './routes/message.route.js';
 import paymentRouter from './routes/payment.route.js';
@@ -66,7 +66,6 @@ const allowedOrigins = [
     process.env.CLIENT_URL,
 ].filter(Boolean);
 
-// In production, you might want to restrict origins, but for now allow all origins for debugging
 app.use(cors({
     origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps or curl)
@@ -82,40 +81,44 @@ app.use(cors({
 
 app.use(helmet({
     contentSecurityPolicy: false,
-    crossOriginResourcePolicy: { policy: "cross-origin" }
+    crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
 app.use(mongoSanitize());
 app.use(compression());
 
+// Global limiter — 200 requests per 5 minutes per IP
 const apiLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000, // 5 minutes
-    limit: 200, 
+    windowMs: 5 * 60 * 1000,
+    limit: 200,
     message: { success: false, message: 'Too many requests from this IP, please try again after 5 minutes.' },
-    standardHeaders: true, 
-    legacyHeaders: false, 
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 
 // More permissive limiter for real-time messaging routes
 const messagesLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000, // 5 minutes
+    windowMs: 5 * 60 * 1000,
     limit: 500,
     message: { success: false, message: 'Too many message requests, please slow down.' },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
+// Auth limiter — skipped outside production to avoid 429s during development
 const authLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    limit: 30, 
-    message: { success: false, message: 'Too many auth attempts from this IP, please try again after an hour.' },
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 100,
+    message: { success: false, message: 'Too many sign-in attempts. Please wait a few minutes and try again.' },
     standardHeaders: true,
     legacyHeaders: false,
+    skip: () => process.env.NODE_ENV !== 'production',
 });
 
-app.use('/api/messages', messagesLimiter); // Must be before the global limiter
-app.use('/api/', apiLimiter);
+// Register auth limiter BEFORE global limiter to avoid double-limiting auth routes
 app.use('/api/auth/', authLimiter);
+app.use('/api/messages', messagesLimiter);
+app.use('/api/', apiLimiter);
 
 // --- End Security & Performance Middleware ---
 
@@ -132,15 +135,13 @@ app.use((req, res, next) => {
 app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/listing', listingRouter);
-app.use('/api/comments', commentRouter); // Unified comment route
+app.use('/api/comments', commentRouter);
 app.use('/api/comment', commentRouter);
 app.use('/api/helper', helperRouter);
 app.use('/api/event', eventRouter);
-app.use('/api/carwash', carwashRoutes); // Add this line
+app.use('/api/carwash', carwashRoutes);
 app.use('/api/service-comments', serviceCommentRouter);
-// Add to your routes:
-
-app.use('/api/trips', tripRouter); // Make sure this is included
+app.use('/api/trips', tripRouter);
 app.use('/api/helper-comments', helperCommentRouter);
 app.use('/api/event-comments', eventCommentRouter);
 app.use('/api/service', serviceRouter);
@@ -176,7 +177,7 @@ app.get('*', (req, res) => {
     if (req.url.startsWith('/assets/')) {
         return res.status(404).send('Asset not found');
     }
-    
+
     const indexFile = path.join(distPath, 'index.html');
     res.sendFile(indexFile, (err) => {
         if (err) {
@@ -190,7 +191,7 @@ app.get('*', (req, res) => {
 app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
-    
+
     // Simplified error logging
     console.error('SERVER ERROR:', err);
     return res.status(statusCode).json({

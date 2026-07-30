@@ -6,34 +6,38 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import LoopOutVision from './LoopOutVision';
 import LoopOutWhisper from './LoopOutWhisper';
+import DailySpinWheelModal from './DailySpinWheelModal';
 import { UpcomingBookingsSection } from './HomeSections';
 
 // Hub items config: emoji, label, description, color accent
 const HUB_ITEMS = [
   {
+    id: 'daily-spin',
+    emoji: '🎁',
+    label: 'Daily Spoil',
+    desc: 'Spin & Win',
+    
+   
+    textColor: 'text-amber-600',
+    action: 'modal-spin',
+  
+  },
+  {
     id: 'lunch',
     emoji: '🍔',
-    label: 'Lunch',
-    desc: 'Coming soon',
-    accent: 'amber',
-    bg: 'bg-amber-50',
-    border: 'border-amber-100',
-    activeBg: 'bg-white',
-    activeBorder: 'border-amber-300',
-    textColor: 'text-amber-500',
+    label: 'Lunch Hub',
+    desc: 'Order food',
+  
+    textColor: 'text-amber-700',
     action: '/lunch',
   },
   {
     id: 'vision-scan',
-    emoji: '📷',
+    emoji: '📸',
     label: 'Vision Scan',
     desc: 'Scan with camera',
-    accent: 'indigo',
-    bg: 'bg-indigo-50',
-    border: 'border-indigo-100',
-    activeBg: 'bg-white',
-    activeBorder: 'border-indigo-300',
-    textColor: 'text-indigo-500',
+  
+    textColor: 'text-purple-700',
     action: 'modal-vision',
   },
   {
@@ -41,12 +45,8 @@ const HUB_ITEMS = [
     emoji: '🎙️',
     label: 'Whisper AI',
     desc: 'Voice assistant',
-    accent: 'cyan',
-    bg: 'bg-cyan-50',
-    border: 'border-cyan-100',
-    activeBg: 'bg-white',
-    activeBorder: 'border-cyan-300',
-    textColor: 'text-cyan-500',
+  
+    textColor: 'text-cyan-700',
     action: 'modal-whisper',
   },
   {
@@ -54,12 +54,8 @@ const HUB_ITEMS = [
     emoji: '🔥',
     label: 'Matchmaker',
     desc: 'Find your match',
-    accent: 'orange',
-    bg: 'bg-orange-50',
-    border: 'border-orange-100',
-    activeBg: 'bg-white',
-    activeBorder: 'border-orange-300',
-    textColor: 'text-orange-500',
+
+    textColor: 'text-rose-600',
     action: '/matchmaker',
   },
   {
@@ -67,16 +63,10 @@ const HUB_ITEMS = [
     emoji: '📍',
     label: 'Live Radar',
     desc: 'Nearby activity',
-    accent: 'emerald',
-    bg: 'bg-emerald-50',
-    border: 'border-emerald-100',
-    activeBg: 'bg-white',
-    activeBorder: 'border-emerald-300',
-    textColor: 'text-emerald-500',
+
+    textColor: 'text-emerald-600',
     action: '/radar',
   },
-
- 
 ];
 
 const DailyLoopHub = () => {
@@ -88,6 +78,7 @@ const DailyLoopHub = () => {
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [showVisionModal, setShowVisionModal] = useState(false);
   const [showWhisperModal, setShowWhisperModal] = useState(false);
+  const [showSpinModal, setShowSpinModal] = useState(false);
 
   const handleBroadcast = async () => {
     if (!broadcastMessage.trim()) return;
@@ -110,6 +101,8 @@ const DailyLoopHub = () => {
       setShowVisionModal(true);
     } else if (item.action === 'modal-whisper') {
       setShowWhisperModal(true);
+    } else if (item.action === 'modal-spin') {
+      setShowSpinModal(true);
     } else if (typeof item.action === 'string' && item.action.startsWith('/')) {
       navigate(item.action);
     }
@@ -120,50 +113,57 @@ const DailyLoopHub = () => {
       {/* Daily Loop Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-          <h2 className="text-[12px] font-black tracking-[0.2em] uppercase text-gray-900">Your Daily Loop</h2>
+          <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 animate-ping" />
+          <h2 className="text-[12px] font-black tracking-[0.2em] uppercase text-gray-900">Your Daily Loop Hub</h2>
         </div>
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-          {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-        </span>
+        
       </div>
 
-      <div className="flex overflow-x-auto gap-8 pb-2 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory">
+      <div className="flex overflow-x-auto gap-8 pb-3 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory">
         {HUB_ITEMS.map((item) => {
           const isActive = activeId === item.id;
           return (
             <motion.button
               key={item.id}
               onClick={() => handleItemClick(item)}
-              whileTap={{ scale: 0.93 }}
-              whileHover={{ y: -2 }}
-              className="snap-start shrink-0 flex flex-col items-center text-center cursor-pointer focus:outline-none"
+              whileTap={{ scale: 0.92 }}
+              whileHover={{ y: -3 }}
+              className="snap-start shrink-0 flex flex-col items-center text-center cursor-pointer focus:outline-none relative "
             >
-              {/* Icon Circle */}
+              {/* Feature Badge */}
+              {item.badge && (
+                <span className="absolute -top-2.5 z-10 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 px-2 py-0.5 text-[8px] font-black text-white shadow-sm border border-white uppercase tracking-wider animate-pulse">
+                  {item.badge}
+                </span>
+              )}
+
+              {/* Colorful Gradient Icon Container */}
               <motion.div
-                animate={isActive ? { scale: [1, 0.92, 1.04, 1] } : { scale: 1 }}
+                animate={isActive ? { scale: [1, 0.92, 1.08, 1] } : { scale: 1 }}
                 transition={{ duration: 0.35, ease: 'easeInOut' }}
-                className="w-16 h-16 md:w-[72px] md:h-[72px] flex items-center justify-center transition-all duration-300"
+                className={`w-14 h-14 md:w-[72px] md:h-[72px] rounded-2xl bg-gradient-to-br ${item.gradient} ${item.shadow} flex items-center justify-center transition-all duration-300 ${item.border}`}
               >
-                <span className="text-3xl md:text-[34px] leading-none select-none">{item.emoji}</span>
+                <span className="text-3xl md:text-[34px] leading-none select-none filter drop-shadow-md">
+                  {item.emoji}
+                </span>
               </motion.div>
 
-              {/* Label */}
-              <span className={`
-                text-[9px] md:text-[10px] font-black uppercase tracking-widest mt-1 leading-tight transition-colors
-                ${isActive ? item.textColor : 'text-gray-800'}
-              `}>
+              {/* Bold Colorful Label */}
+              <span className={`text-[10px] md:text-[11px] font-black uppercase tracking-wider mt-2 leading-tight ${item.textColor}`}>
                 {item.label}
               </span>
 
               {/* Small description */}
-              <span className="text-[8px] text-gray-400 font-medium mt-0.5 leading-tight">
+              <span className="text-[8px] text-gray-500 font-bold mt-0.5 leading-tight">
                 {item.desc}
               </span>
             </motion.button>
           );
         })}
       </div>
+
+      {/* Daily Spin & Win Modal */}
+      <DailySpinWheelModal isOpen={showSpinModal} onClose={() => setShowSpinModal(false)} />
 
       {/* Broadcast Modal */}
       <AnimatePresence>
@@ -245,5 +245,6 @@ const DailyLoopHub = () => {
     </div>
   );
 };
+
 
 export default DailyLoopHub;

@@ -325,6 +325,27 @@ export const createLunchOrder = async (orderData) => {
   return createdOrder;
 };
 
+export const addLocalNotification = (userId, title, message, data = {}) => {
+  try {
+    const raw = localStorage.getItem('loopout_local_notifications');
+    const list = raw ? JSON.parse(raw) : [];
+    const newNotif = {
+      _id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      userId: userId || 'guest',
+      type: 'booking',
+      title,
+      message,
+      data,
+      read: false,
+      createdAt: new Date().toISOString()
+    };
+    list.unshift(newNotif);
+    localStorage.setItem('loopout_local_notifications', JSON.stringify(list.slice(0, 50)));
+  } catch (err) {
+    console.error("Local notification save error:", err);
+  }
+};
+
 export const updateOrderStatus = async (orderId, newStatus) => {
   try {
     await fetch(`/api/lunch/orders/${orderId}/status`, {
@@ -337,15 +358,34 @@ export const updateOrderStatus = async (orderId, newStatus) => {
   }
 
   const orders = getLocalOrders();
+  let updatedOrder = null;
   const updated = orders.map((ord) => {
     if (ord.id === orderId || ord._id === orderId) {
-      return { ...ord, status: newStatus, updatedAt: new Date().toISOString() };
+      updatedOrder = { ...ord, status: newStatus, updatedAt: new Date().toISOString() };
+      return updatedOrder;
     }
     return ord;
   });
   saveLocalOrders(updated);
   notifyOrderListeners(updated);
+
+  if (updatedOrder && updatedOrder.customerId) {
+    const isReady = newStatus === 'Ready for Collection';
+    const isCompleted = newStatus === 'Completed';
+    const title = isReady ? '🍱 Food Ready to Collect!' : isCompleted ? '✅ Food Order Completed' : `Order Status: ${newStatus}`;
+    const message = isReady
+      ? `Your food order #${updatedOrder.orderCode || ''} from "${updatedOrder.shopName || 'the restaurant'}" is ready to collect!`
+      : `Your order #${updatedOrder.orderCode || ''} from "${updatedOrder.shopName || 'the restaurant'}" is now ${newStatus}.`;
+
+    addLocalNotification(updatedOrder.customerId, title, message, {
+      orderId: updatedOrder.id || updatedOrder._id,
+      orderCode: updatedOrder.orderCode,
+      shopName: updatedOrder.shopName,
+      status: newStatus
+    });
+  }
 };
+
 
 export const createTableBooking = async (bookingData) => {
   const payload = {
