@@ -1765,9 +1765,10 @@ export default function LunchComingSoon() {
 
               <button
                 type="submit"
-                className="w-full rounded-2xl bg-amber-500 py-3.5 text-sm font-black text-white shadow-md hover:bg-amber-600 transition"
+                className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 py-3.5 text-sm font-black text-white shadow-md hover:from-amber-600 hover:to-orange-600 transition cursor-pointer active:scale-95 flex items-center justify-center gap-2"
               >
-                Confirm Order & Get Code
+                <span>Confirm Order & Get Code</span>
+                <span>→</span>
               </button>
             </form>
           </motion.div>
@@ -2375,6 +2376,35 @@ export default function LunchComingSoon() {
               </button>
             </form>
           </motion.div>
+        </div>
+      )}
+
+      {/* FIXED FLOATING STICKY ORDER BASKET BAR (AT THE BOTTOM OF SCREEN) */}
+      {cart.length > 0 && viewTab === 'customer' && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 p-3 sm:p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/80 to-transparent backdrop-blur-md">
+          <div className="mx-auto max-w-3xl rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 p-3.5 sm:p-4 text-white shadow-2xl ring-2 ring-amber-300 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="relative rounded-xl bg-white/20 p-2.5 backdrop-blur-md">
+                <ShoppingBag className="h-6 w-6 text-white" />
+                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-slate-950 text-[11px] font-black text-amber-300 shadow">
+                  {cart.reduce((sum, i) => sum + i.quantity, 0)}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-100 block">Your Food Basket</span>
+                <span className="text-lg sm:text-xl font-black text-white">{formatPrice(totalCartPrice)}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowCheckoutModal(true)}
+              className="rounded-xl bg-slate-950 px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-black text-amber-300 hover:bg-slate-900 transition shadow-lg flex items-center gap-2 cursor-pointer active:scale-95"
+            >
+              <span>View Basket & Checkout</span>
+              <span>→</span>
+            </button>
+          </div>
         </div>
       )}
     </main>
