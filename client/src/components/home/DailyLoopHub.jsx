@@ -14,8 +14,7 @@ const HUB_ITEMS = [
   {
     id: 'daily-spin',
     emoji: '🎁',
-    label: 'Daily Spoil',
-    desc: 'Spin & Win',
+ 
     
    
     textColor: 'text-amber-600',
@@ -25,8 +24,7 @@ const HUB_ITEMS = [
   {
     id: 'lunch',
     emoji: '🍔',
-    label: 'Lunch Hub',
-    desc: 'Order food',
+   
   
     textColor: 'text-amber-700',
     action: '/lunch',
@@ -34,8 +32,7 @@ const HUB_ITEMS = [
   {
     id: 'vision-scan',
     emoji: '📸',
-    label: 'Vision Scan',
-    desc: 'Scan with camera',
+   
   
     textColor: 'text-purple-700',
     action: 'modal-vision',
@@ -43,8 +40,7 @@ const HUB_ITEMS = [
   {
     id: 'whisper-ai',
     emoji: '🎙️',
-    label: 'Whisper AI',
-    desc: 'Voice assistant',
+   
   
     textColor: 'text-cyan-700',
     action: 'modal-whisper',
@@ -52,17 +48,14 @@ const HUB_ITEMS = [
   {
     id: 'matchmaker',
     emoji: '🔥',
-    label: 'Matchmaker',
-    desc: 'Find your match',
-
+    
     textColor: 'text-rose-600',
     action: '/matchmaker',
   },
   {
     id: 'live-radar',
     emoji: '📍',
-    label: 'Live Radar',
-    desc: 'Nearby activity',
+   
 
     textColor: 'text-emerald-600',
     action: '/radar',
