@@ -14,48 +14,55 @@ const HUB_ITEMS = [
   {
     id: 'daily-spin',
     emoji: '🎁',
- 
-    
-   
+    label: 'Daily Spoil',
+    desc: 'Spin & Win',
+
+
     textColor: 'text-amber-600',
     action: 'modal-spin',
-  
+
   },
   {
     id: 'lunch',
     emoji: '🍔',
-   
-  
+    label: 'Lunch Hub',
+    desc: 'Order food',
+
     textColor: 'text-amber-700',
     action: '/lunch',
   },
   {
     id: 'vision-scan',
     emoji: '📸',
-   
-  
+    label: 'Vision Scan',
+    desc: 'Scan with camera',
+
     textColor: 'text-purple-700',
     action: 'modal-vision',
   },
   {
     id: 'whisper-ai',
     emoji: '🎙️',
-   
-  
+    label: 'Whisper AI',
+    desc: 'Voice assistant',
+
     textColor: 'text-cyan-700',
     action: 'modal-whisper',
   },
   {
     id: 'matchmaker',
     emoji: '🔥',
-    
+    label: 'Matchmaker',
+    desc: 'Find your match',
+
     textColor: 'text-rose-600',
     action: '/matchmaker',
   },
   {
     id: 'live-radar',
     emoji: '📍',
-   
+    label: 'Live Radar',
+    desc: 'Nearby activity',
 
     textColor: 'text-emerald-600',
     action: '/radar',
@@ -73,6 +80,7 @@ const DailyLoopHub = () => {
   const [showWhisperModal, setShowWhisperModal] = useState(false);
   const [showSpinModal, setShowSpinModal] = useState(false);
   const [isStuck, setIsStuck] = useState(false);
+  const [hideHub, setHideHub] = useState(false);
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -81,6 +89,13 @@ const DailyLoopHub = () => {
         const rect = containerRef.current.getBoundingClientRect();
         // Container is stuck at or near top of window
         setIsStuck(rect.top <= 4);
+      }
+
+      // Hide Daily Loop Hub when Explore section reaches top of screen
+      const exploreEl = document.getElementById('explore-section') || document.getElementById('desktop-categories-bar');
+      if (exploreEl) {
+        const exploreRect = exploreEl.getBoundingClientRect();
+        setHideHub(exploreRect.top <= 90);
       }
     };
 
@@ -121,72 +136,82 @@ const DailyLoopHub = () => {
   };
 
   return (
-    <div
-      ref={containerRef}
-      className={`sticky top-0 z-30 bg-white/95 backdrop-blur-md transition-all duration-300 -mx-4 px-4 border-b border-gray-100/80 ${
-        isStuck ? 'py-2 shadow-sm' : 'pt-3 pb-2 mb-6 shadow-xs'
-      }`}
-    >
-      {/* Daily Loop Header - collapses smoothly when stuck at top */}
-      <AnimatePresence initial={false}>
-        {!isStuck && (
+    <>
+      <AnimatePresence>
+        {!hideHub && (
           <motion.div
-            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-            animate={{ opacity: 1, height: 'auto', marginBottom: 12 }}
-            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-            transition={{ duration: 0.2, ease: 'easeInOut' }}
-            className="overflow-hidden flex items-center justify-between"
+            initial={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            ref={containerRef}
+            className={`sticky top-0 z-30 bg-white/95 backdrop-blur-md transition-all duration-300 -mx-4 px-4 border-b border-gray-100/80 ${
+              isStuck ? 'py-2 shadow-sm' : 'pt-3 pb-2 mb-6 shadow-xs'
+            }`}
           >
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 animate-ping" />
-              <h2 className="text-[12px] font-black tracking-[0.2em] uppercase text-gray-900">Your Daily Loop Hub</h2>
+            {/* Daily Loop Header - collapses smoothly when stuck at top */}
+            <AnimatePresence initial={false}>
+              {!isStuck && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginBottom: 12 }}
+                  exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  className="overflow-hidden flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 animate-ping" />
+                    <h2 className="text-[12px] font-black tracking-[0.2em] uppercase text-gray-900">Your Daily Loop Hub</h2>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="flex overflow-x-auto gap-8 pb-2 scrollbar-hide snap-x snap-mandatory">
+              {HUB_ITEMS.map((item) => {
+                const isActive = activeId === item.id;
+                return (
+                  <motion.button
+                    key={item.id}
+                    onClick={() => handleItemClick(item)}
+                    whileTap={{ scale: 0.92 }}
+                    whileHover={{ y: -3 }}
+                    className="snap-start shrink-0 flex flex-col items-center text-center cursor-pointer focus:outline-none relative "
+                  >
+                    {/* Feature Badge */}
+                    {item.badge && (
+                      <span className="absolute -top-2.5 z-10 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 px-2 py-0.5 text-[8px] font-black text-white shadow-sm border border-white uppercase tracking-wider animate-pulse">
+                        {item.badge}
+                      </span>
+                    )}
+
+                    {/* Colorful Gradient Icon Container */}
+                    <motion.div
+                      animate={isActive ? { scale: [1, 0.92, 1.08, 1] } : { scale: 1 }}
+                      transition={{ duration: 0.35, ease: 'easeInOut' }}
+                      className={`w-14 h-14 md:w-[72px] md:h-[72px] rounded-2xl bg-gradient-to-br ${item.gradient} ${item.shadow} flex items-center justify-center transition-all duration-300 ${item.border}`}
+                    >
+                      <span className="text-3xl md:text-[34px] leading-none select-none filter drop-shadow-md">
+                        {item.emoji}
+                      </span>
+                    </motion.div>
+
+                    {/* Bold Colorful Label */}
+                    <span className={`text-[10px] md:text-[11px] font-black uppercase tracking-wider mt-2 leading-tight ${item.textColor}`}>
+                      {item.label}
+                    </span>
+
+                    {/* Small description */}
+                    <span className="text-[8px] text-gray-500 font-bold mt-0.5 leading-tight">
+                      {item.desc}
+                    </span>
+                  </motion.button>
+                );
+              })}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      <div className="flex overflow-x-auto gap-8 pb-2 scrollbar-hide snap-x snap-mandatory">
-        {HUB_ITEMS.map((item) => {
-          const isActive = activeId === item.id;
-          return (
-            <motion.button
-              key={item.id}
-              onClick={() => handleItemClick(item)}
-              whileTap={{ scale: 0.92 }}
-              whileHover={{ y: -3 }}
-              className="snap-start shrink-0 flex flex-col items-center text-center cursor-pointer focus:outline-none relative "
-            >
-              {/* Feature Badge */}
-              {item.badge && (
-                <span className="absolute -top-2.5 z-10 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 px-2 py-0.5 text-[8px] font-black text-white shadow-sm border border-white uppercase tracking-wider animate-pulse">
-                  {item.badge}
-                </span>
-              )}
-
-              {/* Colorful Gradient Icon Container */}
-              <motion.div
-                animate={isActive ? { scale: [1, 0.92, 1.08, 1] } : { scale: 1 }}
-                transition={{ duration: 0.35, ease: 'easeInOut' }}
-                className={`w-14 h-14 md:w-[72px] md:h-[72px] rounded-2xl bg-gradient-to-br ${item.gradient} ${item.shadow} flex items-center justify-center transition-all duration-300 ${item.border}`}
-              >
-                <span className="text-3xl md:text-[34px] leading-none select-none filter drop-shadow-md">
-                  {item.emoji}
-                </span>
-              </motion.div>
-
-              {/* Bold Colorful Label */}
-              <span className={`text-[10px] md:text-[11px] font-black uppercase tracking-wider mt-2 leading-tight ${item.textColor}`}>
-                {item.label}
-              </span>
-
-              {/* Small description */}
-              <span className="text-[8px] text-gray-500 font-bold mt-0.5 leading-tight">
-                {item.desc}
-              </span>
-            </motion.button>
-          );
-        })}
-      </div>
 
       {/* Daily Spin & Win Modal */}
       <DailySpinWheelModal isOpen={showSpinModal} onClose={() => setShowSpinModal(false)} />
@@ -240,11 +265,10 @@ const DailyLoopHub = () => {
               <button
                 onClick={handleBroadcast}
                 disabled={isBroadcasting || !broadcastMessage.trim()}
-                className={`w-full py-4 rounded-2xl text-[13px] font-black uppercase tracking-widest transition-all flex justify-center items-center gap-2 ${
-                  isBroadcasting || !broadcastMessage.trim()
+                className={`w-full py-4 rounded-2xl text-[13px] font-black uppercase tracking-widest transition-all flex justify-center items-center gap-2 ${isBroadcasting || !broadcastMessage.trim()
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-rose-500 text-white shadow-xl shadow-rose-500/20 hover:bg-rose-600 active:scale-95'
-                }`}
+                  }`}
               >
                 {isBroadcasting ? (
                   <>
@@ -268,7 +292,7 @@ const DailyLoopHub = () => {
 
       {/* LoopOut Whisper Modal */}
       <LoopOutWhisper isOpen={showWhisperModal} onClose={() => setShowWhisperModal(false)} />
-    </div>
+    </>
   );
 };
 

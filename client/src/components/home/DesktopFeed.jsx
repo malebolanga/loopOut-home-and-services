@@ -101,7 +101,7 @@ export const DesktopFeed = ({
       `}</style>
 
       {/* ── Sticky Categories Bar ── */}
-      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl py-4 border-b border-gray-200/80 shadow-sm">
+      <div id="desktop-categories-bar" className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl py-4 border-b border-gray-200/80 shadow-sm">
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
 
           {/* Tabs */}

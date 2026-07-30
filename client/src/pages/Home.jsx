@@ -1202,7 +1202,7 @@ const MobileAppHomepage = ({
 
 
         {/* MOBILE CONSOLIDATED FEED */}
-        <section className="mt-10 mb-8">
+        <section id="explore-section" className="mt-10 mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-black text-xl text-gray-950 tracking-tighter leading-none">Explore <span className="text-rose-500">{activeTab === 'Universe' ? 'All' : activeTab}</span></h2>
