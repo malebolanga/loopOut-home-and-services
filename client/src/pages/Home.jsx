@@ -82,6 +82,7 @@ import {
   UpcomingBookingsSection
 } from '../components/home/HomeSections';
 import DailyLoopHub from '../components/home/DailyLoopHub';
+import CaughtUpHub from '../components/home/CaughtUpHub';
 import { TOP_CATEGORIES } from '../data/categories';
 import { CategoriesSlider } from '../components/home/CategoriesSlider';
 import { HomeHero } from '../components/home/HomeHero';
@@ -1286,54 +1287,8 @@ const MobileAppHomepage = ({
         {/* Sell Items Section - moved to bottom of mobile feed */}
         <SellItemsSection navigate={navigate} />
 
-        {/* Premium End of Feed — All Caught Up */}
-        <div className="mt-20 mb-28 relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-rose-50/30 rounded-[3rem] blur-sm" />
-          <div className="relative px-6 py-12 rounded-[3rem] bg-gradient-to-br from-slate-50 to-white border border-slate-100 text-center overflow-hidden shadow-sm">
-            {/* Ambient orbs */}
-            <div className="absolute -top-8 -right-8 w-40 h-40 bg-rose-400/10 rounded-full blur-3xl" />
-            <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-blue-400/10 rounded-full blur-3xl" />
-
-            <div className="flex justify-center mb-5">
-              <div className="relative">
-                <div className="absolute inset-0 bg-rose-500/20 rounded-full blur-xl" />
-                <div className="relative p-4 bg-white rounded-full shadow-md border border-rose-50">
-                  <CheckCircleIcon className="w-7 h-7 text-rose-500" />
-                </div>
-              </div>
-            </div>
-
-            <h3 className="text-base font-black text-slate-900 uppercase tracking-widest mb-1">You're all caught up!</h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-              Showing {stats?.properties || 1234}+ active listings nearby
-            </p>
-
-            {/* Status pill */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-full mt-5 shadow-sm">
-              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">loopOut systems live</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mt-8 max-w-sm mx-auto">
-              <button
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="py-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 text-[9px] font-black uppercase tracking-[0.15em] rounded-2xl transition-all shadow-sm active:scale-95 hover:shadow-md"
-              >
-                Back to Top ↑
-              </button>
-              <button
-                onClick={() => navigate('/planner')}
-                className="py-4 bg-gradient-to-br from-slate-900 to-slate-800 text-white text-[9px] font-black uppercase tracking-[0.15em] rounded-2xl transition-all shadow-lg active:scale-95 hover:shadow-xl hover:shadow-slate-900/20"
-              >
-                AI Planner 🧠
-              </button>
-            </div>
-
-            <div className="mt-8 text-[8px] font-bold text-slate-300 uppercase tracking-[0.3em]">
-              loopOut v2.4 &middot; Designed with ❤️ in South Africa
-            </div>
-          </div>
-        </div>
+        {/* Catchy & Modern End of Feed — CaughtUpHub */}
+        <CaughtUpHub stats={stats} navigate={navigate} />
 
       </main>
 
@@ -1524,16 +1479,9 @@ const DesktopHomepage = ({
         {/* Sell Items Section (Desktop) */}
         <SellItemsSection navigate={navigate} />
 
-        {/* Footer CTA */}
-        <div className="mt-20 pt-10 border-t border-slate-100 text-center">
-          <p className="text-sm text-slate-400 font-medium">You've reached the end of the feed.</p>
-          <button
-            onClick={() => navigate('/search')}
-            className="mt-5 px-8 py-3.5 bg-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all duration-300 shadow-lg active:scale-95"
-          >
-            Search All Listings →
-          </button>
-          <p className="mt-6 text-[9px] text-slate-300 font-bold uppercase tracking-[0.25em]">loopOut v2.4 &middot; Made in South Africa</p>
+        {/* Caught Up Hub - End of Feed Showcase */}
+        <div className="mt-20">
+          <CaughtUpHub stats={stats} navigate={navigate} />
         </div>
       </main>
 

@@ -42,8 +42,95 @@ import {
   deleteMealFromShop,
   rateShop
 } from '../services/lunchService';
+import { 
+  FOOD_EMOJIS, 
+  PRESET_MOODS, 
+  generateVendorMealAI, 
+  generateUserLunchAIRecommendation 
+} from '../utils/aiLunchAssistant';
 
 const formatPrice = (price) => `R${Number(price || 0).toFixed(2)}`;
+
+const SHOP_THEMES = [
+  {
+    id: 'amber',
+    badge: 'bg-amber-500 text-white',
+    badgeLight: 'bg-amber-100 text-amber-900 border border-amber-300',
+    cardActive: 'border-amber-500 bg-gradient-to-br from-amber-50 via-white to-amber-100/40 ring-2 ring-amber-400 shadow-amber-500/20 shadow-md',
+    cardNormal: 'border-gray-200 bg-white hover:border-amber-300',
+    heroBg: 'from-amber-950 via-amber-900 to-slate-950 border-amber-500/40 text-white',
+    heroGlow: 'bg-amber-500/20',
+    btnPrimary: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-amber-500/30',
+    tabActive: 'bg-amber-500 text-white shadow-md',
+    accentText: 'text-amber-600',
+    priceText: 'text-amber-700 font-black',
+    accentBg: 'bg-amber-500'
+  },
+  {
+    id: 'emerald',
+    badge: 'bg-emerald-600 text-white',
+    badgeLight: 'bg-emerald-100 text-emerald-900 border border-emerald-300',
+    cardActive: 'border-emerald-500 bg-gradient-to-br from-emerald-50 via-white to-emerald-100/40 ring-2 ring-emerald-400 shadow-emerald-500/20 shadow-md',
+    cardNormal: 'border-gray-200 bg-white hover:border-emerald-300',
+    heroBg: 'from-emerald-950 via-teal-900 to-slate-950 border-emerald-500/40 text-white',
+    heroGlow: 'bg-emerald-500/20',
+    btnPrimary: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-emerald-500/30',
+    tabActive: 'bg-emerald-600 text-white shadow-md',
+    accentText: 'text-emerald-600',
+    priceText: 'text-emerald-700 font-black',
+    accentBg: 'bg-emerald-500'
+  },
+  {
+    id: 'rose',
+    badge: 'bg-rose-600 text-white',
+    badgeLight: 'bg-rose-100 text-rose-900 border border-rose-300',
+    cardActive: 'border-rose-500 bg-gradient-to-br from-rose-50 via-white to-rose-100/40 ring-2 ring-rose-400 shadow-rose-500/20 shadow-md',
+    cardNormal: 'border-gray-200 bg-white hover:border-rose-300',
+    heroBg: 'from-rose-950 via-pink-900 to-slate-950 border-rose-500/40 text-white',
+    heroGlow: 'bg-rose-500/20',
+    btnPrimary: 'bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-600 hover:to-pink-600 shadow-rose-500/30',
+    tabActive: 'bg-rose-600 text-white shadow-md',
+    accentText: 'text-rose-600',
+    priceText: 'text-rose-700 font-black',
+    accentBg: 'bg-rose-500'
+  },
+  {
+    id: 'purple',
+    badge: 'bg-purple-600 text-white',
+    badgeLight: 'bg-purple-100 text-purple-900 border border-purple-300',
+    cardActive: 'border-purple-500 bg-gradient-to-br from-purple-50 via-white to-purple-100/40 ring-2 ring-purple-400 shadow-purple-500/20 shadow-md',
+    cardNormal: 'border-gray-200 bg-white hover:border-purple-300',
+    heroBg: 'from-purple-950 via-indigo-900 to-slate-950 border-purple-500/40 text-white',
+    heroGlow: 'bg-purple-500/20',
+    btnPrimary: 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 shadow-purple-500/30',
+    tabActive: 'bg-purple-600 text-white shadow-md',
+    accentText: 'text-purple-600',
+    priceText: 'text-purple-700 font-black',
+    accentBg: 'bg-purple-500'
+  },
+  {
+    id: 'cyan',
+    badge: 'bg-cyan-600 text-white',
+    badgeLight: 'bg-cyan-100 text-cyan-900 border border-cyan-300',
+    cardActive: 'border-cyan-500 bg-gradient-to-br from-cyan-50 via-white to-cyan-100/40 ring-2 ring-cyan-400 shadow-cyan-500/20 shadow-md',
+    cardNormal: 'border-gray-200 bg-white hover:border-cyan-300',
+    heroBg: 'from-cyan-950 via-blue-900 to-slate-950 border-cyan-500/40 text-white',
+    heroGlow: 'bg-cyan-500/20',
+    btnPrimary: 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600 shadow-cyan-500/30',
+    tabActive: 'bg-cyan-600 text-white shadow-md',
+    accentText: 'text-cyan-600',
+    priceText: 'text-cyan-700 font-black',
+    accentBg: 'bg-cyan-500'
+  }
+];
+
+function getShopTheme(shop) {
+  if (!shop) return SHOP_THEMES[0];
+  const str = String(shop.id || shop.name || 'default');
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash += str.charCodeAt(i);
+  return SHOP_THEMES[hash % SHOP_THEMES.length];
+}
 
 export default function LunchComingSoon() {
   const navigate = useNavigate();
@@ -129,6 +216,53 @@ export default function LunchComingSoon() {
   const [ratingComment, setRatingComment] = useState('');
   const [showReviewsTab, setShowReviewsTab] = useState(false);
 
+  // AI Lunch Assistant States
+  const [showAiLunchSection, setShowAiLunchSection] = useState(true);
+  const [selectedMood, setSelectedMood] = useState('comfort');
+  const [customFoodQuery, setCustomFoodQuery] = useState('');
+  const [aiMealMatches, setAiMealMatches] = useState([]);
+  const [aiRecommendationIndex, setAiRecommendationIndex] = useState(0);
+
+  // Auto-run AI matchmaker when shops populate
+  useEffect(() => {
+    if (shops && shops.length > 0 && aiMealMatches.length === 0) {
+      const matches = generateUserLunchAIRecommendation(shops, selectedMood, customFoodQuery);
+      setAiMealMatches(matches);
+      setAiRecommendationIndex(0);
+    }
+  }, [shops]);
+
+  const handleRunAiMatchmaker = (mood = selectedMood, query = customFoodQuery) => {
+    setSelectedMood(mood);
+    const matches = generateUserLunchAIRecommendation(shops, mood, query);
+    setAiMealMatches(matches);
+    setAiRecommendationIndex(0);
+  };
+
+  const handleAiAutoFillMeal = (isEdit = false) => {
+    const targetForm = isEdit ? editMealForm : newMealForm;
+    const aiResult = generateVendorMealAI(targetForm.name);
+    if (isEdit) {
+      setEditMealForm(prev => ({
+        ...prev,
+        name: aiResult.name,
+        description: aiResult.description,
+        price: aiResult.price,
+        tag: aiResult.tag,
+        image: aiResult.image
+      }));
+    } else {
+      setNewMealForm(prev => ({
+        ...prev,
+        name: aiResult.name,
+        description: aiResult.description,
+        price: aiResult.price,
+        tag: aiResult.tag,
+        image: aiResult.image
+      }));
+    }
+  };
+
   // Handle Submit Rating
   const handleRatingSubmit = async (e) => {
     e.preventDefault();
@@ -192,6 +326,11 @@ export default function LunchComingSoon() {
     return shops.find((s) => s.id === selectedShopId) || shops[0] || null;
   }, [shops, selectedShopId]);
 
+  // Unique Color Theme for the active selected shop
+  const activeTheme = useMemo(() => {
+    return getShopTheme(currentShop);
+  }, [currentShop]);
+
   // Total cart calculation
   const totalCartPrice = useMemo(() => {
     return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -212,18 +351,33 @@ export default function LunchComingSoon() {
     return myShops.find((s) => s.id === selectedShopId) || myShops[0] || null;
   }, [myShops, selectedShopId]);
 
-  // Filter orders relevant to customer or shop owner
+  // Filter active (uncompleted) orders for customer view banner
   const myCustomerOrders = useMemo(() => {
-    if (!currentUser?._id && !currentUser?.id) return orders;
-    const uid = currentUser._id || currentUser.id;
-    return orders.filter((o) => o.customerId === uid || o.customerId === 'guest');
+    const uid = currentUser?._id || currentUser?.id || 'guest';
+    return orders.filter((o) => (o.customerId === uid || o.customerId === 'guest') && o.status !== 'Completed');
   }, [orders, currentUser]);
 
-  // Orders for the current dashboard shop (only owner's shop)
+  // Completed orders for customer past history
+  const myCompletedCustomerOrders = useMemo(() => {
+    const uid = currentUser?._id || currentUser?.id || 'guest';
+    return orders.filter((o) => (o.customerId === uid || o.customerId === 'guest') && o.status === 'Completed');
+  }, [orders, currentUser]);
+
+  // All orders for the current dashboard shop (only owner's shop)
   const activeShopOrders = useMemo(() => {
     if (!dashboardShop) return [];
     return orders.filter((o) => o.shopId === dashboardShop.id);
   }, [orders, dashboardShop]);
+
+  // Live kitchen queue for shop owner (uncompleted orders)
+  const liveKitchenQueue = useMemo(() => {
+    return activeShopOrders.filter((o) => o.status !== 'Completed');
+  }, [activeShopOrders]);
+
+  // Completed orders history for shop owner
+  const completedStoreOrders = useMemo(() => {
+    return activeShopOrders.filter((o) => o.status === 'Completed');
+  }, [activeShopOrders]);
 
 
   // Cart operations
@@ -407,8 +561,8 @@ export default function LunchComingSoon() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-amber-50/80 via-orange-50/30 to-slate-50 px-4 py-6 sm:px-8">
-      <div className="mx-auto max-w-6xl">
+    <main className="min-h-screen bg-gradient-to-b from-amber-50/80 via-orange-50/30 to-slate-50 px-3 py-6 sm:px-8 w-full max-w-full overflow-x-hidden">
+      <div className="mx-auto max-w-6xl w-full">
         
         {/* Top Bar Navigation */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-amber-200/60 pb-5">
@@ -633,6 +787,138 @@ export default function LunchComingSoon() {
                 </button>
               </div>
 
+              {/* AI Lunch Assistant Banner & Matchmaker for Customers */}
+              <div className="mt-4 rounded-3xl bg-gradient-to-br from-amber-950 via-slate-900 to-amber-900 p-5 text-white shadow-lg border border-amber-500/30 relative overflow-hidden">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      <Sparkles className="h-5 w-5 animate-pulse" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black uppercase tracking-wider text-amber-200">AI Lunch Matchmaker</h3>
+                      <p className="text-[11px] text-amber-100/70">What are you craving today? Let AI find the best meal</p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowAiLunchSection(prev => !prev)}
+                    className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-amber-200 hover:bg-white/20 transition cursor-pointer"
+                  >
+                    {showAiLunchSection ? 'Hide AI' : 'Show AI'}
+                  </button>
+                </div>
+
+                {showAiLunchSection && (
+                  <div className="mt-4 space-y-4 pt-3 border-t border-white/10">
+                    {/* Preset Mood Pills */}
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 block mb-2">Select Your Mood / Craving:</span>
+                      <div className="flex flex-wrap gap-2">
+                        {PRESET_MOODS.map(m => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => handleRunAiMatchmaker(m.id)}
+                            className={`rounded-full px-3 py-1.5 text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                              selectedMood === m.id
+                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md ring-2 ring-amber-300'
+                                : 'bg-white/10 text-amber-100 hover:bg-white/20'
+                            }`}
+                          >
+                            {m.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Custom Craving Search Input */}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={customFoodQuery}
+                        onChange={(e) => setCustomFoodQuery(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleRunAiMatchmaker(selectedMood, customFoodQuery)}
+                        placeholder="e.g. Spicy chicken under R80 or traditional pap..."
+                        className="flex-1 rounded-xl bg-slate-900/80 border border-white/20 px-3.5 py-2 text-xs text-white placeholder-amber-200/50 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRunAiMatchmaker(selectedMood, customFoodQuery)}
+                        className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-xs font-black text-white hover:from-amber-600 hover:to-orange-600 transition shadow-md flex items-center gap-1 cursor-pointer"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" /> Ask AI
+                      </button>
+                    </div>
+
+                    {/* Single Featured AI Dish Recommendation (Clean & Neat) */}
+                    {aiMealMatches && aiMealMatches.length > 0 && (() => {
+                      const featuredMeal = aiMealMatches[aiRecommendationIndex % aiMealMatches.length];
+                      if (!featuredMeal) return null;
+
+                      return (
+                        <div className="mt-3 rounded-2xl bg-white/10 backdrop-blur-md p-4 border border-white/20 text-left relative overflow-hidden">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <span className="text-4xl rounded-2xl bg-white/10 p-2 border border-white/10 shadow-inner">{featuredMeal.image || '🍱'}</span>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-md border border-amber-400/30">
+                                    ✨ Top AI Pick
+                                  </span>
+                                  <span className="text-[10px] font-extrabold text-slate-300">
+                                    Option { (aiRecommendationIndex % aiMealMatches.length) + 1 } of { aiMealMatches.length }
+                                  </span>
+                                </div>
+                                <h4 className="text-base font-black text-white mt-1 leading-tight">{featuredMeal.name}</h4>
+                                <p className="text-xs text-amber-100/80 font-medium mt-0.5">
+                                  {featuredMeal.shopName} · {featuredMeal.shopTime || '20 min'} · <span className="text-amber-300 font-bold">★ {featuredMeal.shopRating || '4.9'}</span>
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              <span className="text-lg font-black text-amber-300 block">R{Number(featuredMeal.price || 0).toFixed(2)}</span>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-xs font-semibold text-emerald-200 flex items-center gap-2">
+                            <span>💡</span> <span>{featuredMeal.aiReason}</span>
+                          </div>
+
+                          <div className="mt-4 flex items-center justify-between gap-2 border-t border-white/10 pt-3">
+                            <button
+                              type="button"
+                              onClick={() => setAiRecommendationIndex(prev => (prev + 1) % aiMealMatches.length)}
+                              className="rounded-xl bg-white/10 hover:bg-white/20 px-3.5 py-2 text-xs font-bold text-amber-200 transition flex items-center gap-1.5 cursor-pointer"
+                            >
+                              Next Recommendation 🎲
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCart(prev => {
+                                  const existing = prev.find(i => i.id === featuredMeal.id);
+                                  if (existing) {
+                                    return prev.map(i => i.id === featuredMeal.id ? { ...i, quantity: i.quantity + 1 } : i);
+                                  }
+                                  return [...prev, { ...featuredMeal, quantity: 1 }];
+                                });
+                                setNotice({ type: 'success', message: `✨ Added ${featuredMeal.name} to cart!` });
+                              }}
+                              className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 px-4 py-2 text-xs font-black text-white transition shadow-md flex items-center gap-1.5 cursor-pointer"
+                            >
+                              + Add Meal to Cart
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+
               {/* Shop List Cards Selector */}
               <div className="mt-5">
                 <div className="flex items-center justify-between mb-3">
@@ -640,113 +926,139 @@ export default function LunchComingSoon() {
                   <button
                     type="button"
                     onClick={() => setShowAddShopModal(true)}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
                   >
                     <PlusCircle className="h-3.5 w-3.5" /> Register / Upload Shop
                   </button>
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  {shops.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setSelectedShopId(item.id)}
-                      className={`w-full rounded-2xl border p-4 text-left transition ${
-                        selectedShopId === item.id
-                          ? 'border-amber-500 bg-amber-500/10 ring-2 ring-amber-400'
-                          : 'border-gray-200 bg-white hover:border-amber-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-3xl">{item.image || '🏪'}</span>
-                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                          ★ {item.rating || '4.8'}
-                        </span>
-                      </div>
-                      <span className="mt-2 block text-base font-black text-gray-900">{item.name}</span>
-                      <span className="block text-xs font-medium text-gray-500">{item.cuisine} · {item.distance}</span>
-                    </button>
-                  ))}
+                  {shops.map((item) => {
+                    const shopTheme = getShopTheme(item);
+                    const isSelected = selectedShopId === item.id;
+
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setSelectedShopId(item.id)}
+                        className={`w-full rounded-2xl border p-4 text-left transition duration-200 cursor-pointer ${
+                          isSelected
+                            ? shopTheme.cardActive
+                            : shopTheme.cardNormal
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-3xl">{item.image || '🏪'}</span>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            isSelected ? shopTheme.badge : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            ★ {item.rating || '4.8'}
+                          </span>
+                        </div>
+                        <span className="mt-2 block text-base font-black text-gray-900">{item.name}</span>
+                        <span className="block text-xs font-medium text-gray-500">{item.cuisine} · {item.distance}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Restaurant Details & Meals */}
+              {/* Selected Restaurant Hero & Meals Details */}
               {currentShop && (
-                <article className="mt-6 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100 sm:p-6">
-                  <div className="flex flex-wrap items-start justify-between gap-3 border-b border-gray-100 pb-5">
-                    <div className="flex items-center gap-4">
-                      <span className="text-5xl">{currentShop.image || '🏪'}</span>
-                      <div>
-                        <h2 className="text-2xl font-black text-gray-900">{currentShop.name}</h2>
-                        <p className="mt-1 text-sm text-gray-500 flex flex-wrap items-center gap-2">
-                          <span>{currentShop.cuisine}</span> · 
-                          <span className="inline-flex items-center gap-1 font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
-                            {currentShop.rating || '5.0'} ({currentShop.reviews?.length || 0} reviews)
-                          </span> · 
-                          <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{currentShop.address || currentShop.distance}</span>
-                        </p>
-                      </div>
-                    </div>
+                <article className="mt-6 rounded-3xl bg-white p-4 sm:p-6 shadow-md ring-1 ring-gray-100 overflow-hidden">
+                  
+                  {/* Shop Theme Header Banner */}
+                  <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${activeTheme.heroBg} p-6 text-center shadow-lg border`}>
+                    <div className={`absolute -top-16 -right-16 w-64 h-64 ${activeTheme.heroGlow} rounded-full blur-3xl pointer-events-none`} />
+                    <div className={`absolute -bottom-16 -left-16 w-64 h-64 ${activeTheme.heroGlow} rounded-full blur-3xl pointer-events-none`} />
 
-                    <div className="flex items-center gap-2">
-                      {currentShop && currentUser && (currentShop.ownerId === (currentUser._id || currentUser.id) || currentShop.ownerId === 'guest') && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditShopForm({
-                                id: currentShop.id || currentShop._id,
-                                name: currentShop.name,
-                                cuisine: currentShop.cuisine,
-                                distance: currentShop.distance,
-                                time: currentShop.time,
-                                image: currentShop.image,
-                                address: currentShop.address || '',
-                                phone: currentShop.phone || ''
-                              });
-                              setShowEditShopModal(true);
-                            }}
-                            className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3.5 py-1.5 text-xs font-black text-slate-800 transition hover:bg-slate-200"
-                          >
-                            Edit Shop
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setShowAddMealModal(true)}
-                            className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3.5 py-1.5 text-xs font-black text-amber-800 transition hover:bg-amber-200"
-                          >
-                            <Plus className="h-3.5 w-3.5" /> Add Menu Item
-                          </button>
-                        </>
-                      )}
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
-                        <Clock3 className="h-3.5 w-3.5" /> {currentShop.time}
+                    {/* Owner Shop Action Buttons (Top-Right) */}
+                    {currentUser && (currentShop.ownerId === (currentUser._id || currentUser.id) || currentShop.ownerId === 'guest') && (
+                      <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditShopForm({
+                              id: currentShop.id || currentShop._id,
+                              name: currentShop.name,
+                              cuisine: currentShop.cuisine,
+                              distance: currentShop.distance,
+                              time: currentShop.time,
+                              image: currentShop.image,
+                              address: currentShop.address || '',
+                              phone: currentShop.phone || ''
+                            });
+                            setShowEditShopModal(true);
+                          }}
+                          className="rounded-full bg-white/15 backdrop-blur-md px-3 py-1 text-[11px] font-black text-white hover:bg-white/25 transition cursor-pointer border border-white/20"
+                        >
+                          Edit Shop
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddMealModal(true)}
+                          className="rounded-full bg-white px-3 py-1 text-[11px] font-black text-gray-950 hover:bg-amber-100 transition cursor-pointer shadow-sm"
+                        >
+                          + Add Menu Item
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Centered Avatar, Big Bold Title & Cuisine */}
+                    <div className="relative z-0 max-w-xl mx-auto space-y-2">
+                      <span className="text-6xl sm:text-7xl block mx-auto text-center filter drop-shadow-md">
+                        {currentShop.image || '🏪'}
                       </span>
+
+                      <h2 className="text-3xl sm:text-4xl font-black text-center text-white tracking-tight leading-tight">
+                        {currentShop.name}
+                      </h2>
+
+                      <div>
+                        <span className="inline-block rounded-full bg-white/10 backdrop-blur-md px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-amber-200 border border-white/15">
+                          {currentShop.cuisine}
+                        </span>
+                      </div>
+
+                      {/* Centered Rating, Address & Delivery Time */}
+                      <div className="pt-2 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-200 font-medium">
+                        <span className="inline-flex items-center gap-1 font-extrabold text-amber-300 bg-amber-500/20 px-3 py-1 rounded-full border border-amber-400/30">
+                          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                          {currentShop.rating || '5.0'} ({currentShop.reviews?.length || 0} reviews)
+                        </span>
+                        <span className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+                          <MapPin className="h-3.5 w-3.5 text-amber-300" />
+                          {currentShop.address || currentShop.distance}
+                        </span>
+                        <span className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+                          <Clock3 className="h-3.5 w-3.5 text-emerald-300" />
+                          {currentShop.time}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Menu vs Reviews View Switcher */}
-                  <div className="mt-6 flex items-center justify-between border-b border-gray-100 pb-3">
+                  {/* Menu vs Reviews View Switcher Tabs */}
+                  <div className="mt-5 flex items-center justify-between border-b border-gray-100 pb-3">
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setShowReviewsTab(false)}
-                        className={`rounded-full px-4 py-2 text-xs font-black transition ${
+                        className={`rounded-full px-4 py-2 text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
                           !showReviewsTab
-                            ? 'bg-amber-500 text-white shadow-sm'
+                            ? activeTheme.tabActive
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       >
-                        <UtensilsCrossed className="h-3.5 w-3.5 inline mr-1" /> Menu Items
+                        <UtensilsCrossed className="h-3.5 w-3.5" /> Food Menu ({currentShop.meals?.length || 0})
                       </button>
                       <button
                         type="button"
                         onClick={() => setShowReviewsTab(true)}
-                        className={`rounded-full px-4 py-2 text-xs font-black transition flex items-center gap-1.5 ${
+                        className={`rounded-full px-4 py-2 text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
                           showReviewsTab
-                            ? 'bg-amber-500 text-white shadow-sm'
+                            ? activeTheme.tabActive
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       >
@@ -1141,8 +1453,8 @@ export default function LunchComingSoon() {
                       key={s.id}
                       type="button"
                       onClick={() => setSelectedShopId(s.id)}
-                      className={`rounded-full px-4 py-2 text-xs font-black shrink-0 transition ${
-                        (dashboardShop?.id === s.id)
+                      className={`rounded-full px-4 py-2 text-xs font-black shrink-0 transition cursor-pointer ${
+                        dashboardShop?.id === s.id
                           ? 'bg-amber-600 text-white shadow'
                           : 'bg-white text-gray-700 ring-1 ring-gray-200 hover:bg-amber-50'
                       }`}
@@ -1152,17 +1464,19 @@ export default function LunchComingSoon() {
                   ))}
                 </div>
 
-                {/* Incoming Orders Cards */}
+                {/* Incoming Orders Cards (Live Kitchen Queue) */}
                 <div className="space-y-4">
-                  <h3 className="text-sm font-black uppercase tracking-wider text-gray-700">
-                    Incoming Orders — {dashboardShop?.name || 'My Shop'} ({activeShopOrders.length})
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-black uppercase tracking-wider text-gray-700">
+                      Live Kitchen Queue — {dashboardShop?.name || 'My Shop'} ({liveKitchenQueue.length} Active)
+                    </h3>
+                  </div>
 
-                  {activeShopOrders.length > 0 ? (
+                  {liveKitchenQueue.length > 0 ? (
                     <div className="grid gap-4 md:grid-cols-2">
-                      {activeShopOrders.map((ord) => (
+                      {liveKitchenQueue.map((ord) => (
                         <div
-                          key={ord.id}
+                          key={ord.id || ord._id}
                           className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
                         >
                           <div className="flex items-center justify-between border-b border-gray-100 pb-3">
@@ -1236,7 +1550,7 @@ export default function LunchComingSoon() {
                                 <button
                                   type="button"
                                   onClick={() => handleStatusUpdate(ord.id || ord._id, 'Preparing')}
-                                  className="rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-amber-600"
+                                  className="rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-amber-600 cursor-pointer"
                                 >
                                   👨‍🍳 Start Preparing
                                 </button>
@@ -1245,7 +1559,7 @@ export default function LunchComingSoon() {
                                 <button
                                   type="button"
                                   onClick={() => handleStatusUpdate(ord.id || ord._id, 'Ready for Collection')}
-                                  className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-emerald-700 animate-pulse"
+                                  className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-emerald-700 animate-pulse cursor-pointer"
                                 >
                                   🎉 Mark Ready / Out for Delivery
                                 </button>
@@ -1254,7 +1568,7 @@ export default function LunchComingSoon() {
                                 <button
                                   type="button"
                                   onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
-                                  className="rounded-xl bg-gray-900 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-gray-800"
+                                  className="rounded-xl bg-gray-900 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-gray-800 cursor-pointer"
                                 >
                                   ✅ Complete Order
                                 </button>
@@ -1265,10 +1579,57 @@ export default function LunchComingSoon() {
                       ))}
                     </div>
                   ) : (
-                    <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-12 text-center text-gray-500">
-                      <ChefHat className="mx-auto h-10 w-10 text-gray-300" />
-                      <p className="mt-2 text-sm font-bold text-gray-700">No active orders for {dashboardShop?.name || 'this store'}</p>
-                      <p className="text-xs text-gray-400">Orders placed at your shop will appear here in real time!</p>
+                    <div className="rounded-3xl border border-dashed border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
+                      No active orders in the kitchen queue for {dashboardShop?.name || 'this shop'}.
+                    </div>
+                  )}
+                </div>
+
+                {/* Completed Orders History Section on Dashboard */}
+                <div className="mt-8 pt-6 border-t border-gray-200 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-black uppercase tracking-wider text-gray-800 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      Completed & Paid Store Orders ({completedStoreOrders.length})
+                    </h3>
+                    {completedStoreOrders.length > 0 && (
+                      <span className="text-xs font-black text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">
+                        Total Revenue: {formatPrice(completedStoreOrders.reduce((sum, o) => sum + (o.total || 0), 0))}
+                      </span>
+                    )}
+                  </div>
+
+                  {completedStoreOrders.length > 0 ? (
+                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                      {completedStoreOrders.map((ord) => (
+                        <div
+                          key={ord.id || ord._id}
+                          className="rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/40 via-white to-gray-50 p-4 shadow-xs"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-black text-gray-900">{ord.customerName}</span>
+                            <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-800">
+                              ✅ Code: {ord.orderCode}
+                            </span>
+                          </div>
+
+                          <div className="text-[11px] text-gray-600 space-y-1 my-2">
+                            <div><span className="font-bold text-gray-700">Items:</span> {ord.items?.map(i => `${i.quantity}x ${i.name}`).join(', ')}</div>
+                            <div className="flex justify-between font-extrabold text-gray-900 border-t pt-1 mt-1">
+                              <span>Total Paid:</span>
+                              <span className="text-emerald-700">{formatPrice(ord.total)}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="text-[10px] text-emerald-800 font-bold bg-emerald-100/60 p-1.5 rounded-lg text-center">
+                            Order Completed & Customer Collected
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-gray-100 bg-white p-6 text-center text-xs text-gray-400">
+                      No completed orders yet. Completed orders will be archived here automatically.
                     </div>
                   )}
                 </div>
@@ -1602,6 +1963,21 @@ export default function LunchComingSoon() {
             </div>
 
             <form onSubmit={handleAddMealSubmit} className="mt-4 space-y-3">
+              {/* Tuck Shop AI Helper Banner */}
+              <div className="rounded-2xl bg-amber-50 p-3 border border-amber-200 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-amber-600 animate-pulse" />
+                  <span className="text-xs font-black text-amber-900">Tuck Shop AI Assistant</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleAiAutoFillMeal(false)}
+                  className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1.5 text-xs font-black text-white hover:from-amber-600 hover:to-orange-600 transition shadow-xs cursor-pointer flex items-center gap-1"
+                >
+                  ✨ AI Auto-Fill & Emoji
+                </button>
+              </div>
+
               <div>
                 <label className="text-xs font-bold text-gray-700 block mb-1">Meal Name *</label>
                 <input
@@ -1609,7 +1985,7 @@ export default function LunchComingSoon() {
                   value={newMealForm.name}
                   onChange={(e) => setNewMealForm({ ...newMealForm, name: e.target.value })}
                   className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                  placeholder="e.g. Beef Burger Special"
+                  placeholder="e.g. Deluxe Kota or BBQ Chicken"
                 />
               </div>
 
@@ -1650,6 +2026,8 @@ export default function LunchComingSoon() {
                     <option>Vegetarian</option>
                     <option>Fresh</option>
                     <option>Drinks</option>
+                    <option>🔥 Hot Seller</option>
+                    <option>👑 Local Classic</option>
                   </select>
                 </div>
                 <div>
@@ -1660,6 +2038,24 @@ export default function LunchComingSoon() {
                     className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                     placeholder="🍔, 🌯, 🥗"
                   />
+                </div>
+              </div>
+
+              {/* Quick Select Emoji Picker */}
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Quick Tap Food Emoji Icon:</label>
+                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 border border-gray-200 max-h-20 overflow-y-auto">
+                  {FOOD_EMOJIS.map((item, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setNewMealForm(prev => ({ ...prev, image: item.emoji }))}
+                      className={`text-lg p-1 rounded-lg hover:bg-amber-100 transition cursor-pointer ${newMealForm.image === item.emoji ? 'bg-amber-200 ring-2 ring-amber-400' : ''}`}
+                      title={item.name}
+                    >
+                      {item.emoji}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -1787,6 +2183,21 @@ export default function LunchComingSoon() {
             </div>
 
             <form onSubmit={handleEditMealSubmit} className="mt-4 space-y-3">
+              {/* Tuck Shop AI Helper Banner */}
+              <div className="rounded-2xl bg-amber-50 p-3 border border-amber-200 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-amber-600 animate-pulse" />
+                  <span className="text-xs font-black text-amber-900">Tuck Shop AI Assistant</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleAiAutoFillMeal(true)}
+                  className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1.5 text-xs font-black text-white hover:from-amber-600 hover:to-orange-600 transition shadow-xs cursor-pointer flex items-center gap-1"
+                >
+                  ✨ AI Auto-Fill & Emoji
+                </button>
+              </div>
+
               <div>
                 <label className="text-xs font-bold text-gray-700 block mb-1">Meal Name *</label>
                 <input
@@ -1832,6 +2243,8 @@ export default function LunchComingSoon() {
                     <option>Vegetarian</option>
                     <option>Fresh</option>
                     <option>Drinks</option>
+                    <option>🔥 Hot Seller</option>
+                    <option>👑 Local Classic</option>
                   </select>
                 </div>
                 <div>
@@ -1841,6 +2254,24 @@ export default function LunchComingSoon() {
                     onChange={(e) => setEditMealForm({ ...editMealForm, image: e.target.value })}
                     className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                   />
+                </div>
+              </div>
+
+              {/* Quick Select Emoji Picker */}
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Quick Tap Food Emoji Icon:</label>
+                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 border border-gray-200 max-h-20 overflow-y-auto">
+                  {FOOD_EMOJIS.map((item, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setEditMealForm(prev => ({ ...prev, image: item.emoji }))}
+                      className={`text-lg p-1 rounded-lg hover:bg-amber-100 transition cursor-pointer ${editMealForm.image === item.emoji ? 'bg-amber-200 ring-2 ring-amber-400' : ''}`}
+                      title={item.name}
+                    >
+                      {item.emoji}
+                    </button>
+                  ))}
                 </div>
               </div>
 
