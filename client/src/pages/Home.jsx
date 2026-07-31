@@ -964,6 +964,7 @@ const MobileAppHomepage = ({
         isBookingsOpen={isBookingsOpen}
         setIsBookingsOpen={setIsBookingsOpen}
         requestCount={requestCount}
+        stats={stats}
       />
     );
   }
@@ -1334,7 +1335,8 @@ const DesktopHomepage = ({
   navigate,
   isBookingsOpen,
   setIsBookingsOpen,
-  requestCount
+  requestCount,
+  stats
 }) => {
   return (
     <div className="min-h-screen bg-white">

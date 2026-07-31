@@ -932,7 +932,7 @@ export default function LunchComingSoon() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
                   {shops.map((item) => {
                     const shopTheme = getShopTheme(item);
                     const isSelected = selectedShopId === item.id;
@@ -942,22 +942,42 @@ export default function LunchComingSoon() {
                         key={item.id}
                         type="button"
                         onClick={() => setSelectedShopId(item.id)}
-                        className={`w-full rounded-2xl border p-4 text-left transition duration-200 cursor-pointer ${
+                        className={`w-full rounded-2xl border p-4 text-left transition duration-200 cursor-pointer flex flex-col justify-between ${
                           isSelected
                             ? shopTheme.cardActive
                             : shopTheme.cardNormal
                         }`}
                       >
+                        {/* Line 1: Icon at top left, Rate/Rating at top right */}
                         <div className="flex items-center justify-between">
-                          <span className="text-3xl">{item.image || '🏪'}</span>
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                            isSelected ? shopTheme.badge : 'bg-amber-100 text-amber-800'
+                          <span className="text-3xl filter drop-shadow-xs">{item.image || '🏪'}</span>
+                          <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-black flex items-center gap-1 border ${
+                            isSelected ? shopTheme.badge : 'bg-amber-50 text-amber-900 border-amber-200'
                           }`}>
-                            ★ {item.rating || '4.8'}
+                            <Star className="w-3 h-3 fill-amber-400 text-amber-400 inline" />
+                            {item.rating || '4.8'}
                           </span>
                         </div>
-                        <span className="mt-2 block text-base font-black text-gray-900">{item.name}</span>
-                        <span className="block text-xs font-medium text-gray-500">{item.cuisine} · {item.distance}</span>
+
+                        <div className="mt-3 space-y-1">
+                          {/* Line 2: Name of the shop */}
+                          <span className="block text-base font-black text-gray-900 tracking-tight leading-snug">
+                            {item.name}
+                          </span>
+
+                          {/* Line 3: Under name must be Type (Greedy / Local / Local Favorite / Greedy & Flame / Health & Veggie) */}
+                          <div className="pt-0.5">
+                            <span className="inline-block rounded-md bg-amber-100/70 border border-amber-300/60 px-2 py-0.5 text-[11px] font-bold text-amber-900">
+                              {item.cuisine || 'Local Favorite'}
+                            </span>
+                          </div>
+
+                          {/* Line 4: Under Type must be Kilometers (Distance) - Not in one line! */}
+                          <p className="flex items-center gap-1 text-xs font-semibold text-gray-500 pt-0.5">
+                            <MapPin className="h-3 w-3 text-amber-600 shrink-0" />
+                            <span>{item.distance || '1.0 km'}</span>
+                          </p>
+                        </div>
                       </button>
                     );
                   })}
@@ -966,75 +986,74 @@ export default function LunchComingSoon() {
 
               {/* Selected Restaurant Hero & Meals Details */}
               {currentShop && (
-                <article className="mt-6 rounded-3xl bg-white p-4 sm:p-6 shadow-md ring-1 ring-gray-100 overflow-hidden">
+                <article className="mt-6 rounded-3xl bg-white p-3.5 sm:p-6 shadow-md ring-1 ring-gray-100 min-w-0 max-w-full overflow-hidden">
                   
                   {/* Shop Theme Header Banner */}
-                  <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${activeTheme.heroBg} p-6 text-center shadow-lg border`}>
+                  <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${activeTheme.heroBg} p-4 sm:p-6 text-center shadow-lg border min-w-0 max-w-full`}>
                     <div className={`absolute -top-16 -right-16 w-64 h-64 ${activeTheme.heroGlow} rounded-full blur-3xl pointer-events-none`} />
                     <div className={`absolute -bottom-16 -left-16 w-64 h-64 ${activeTheme.heroGlow} rounded-full blur-3xl pointer-events-none`} />
 
-                    {/* Edit Shop — Top Left */}
+                    {/* Action Bar (Edit Shop & Add Menu Item) - Responsive flex bar */}
                     {currentUser && (currentShop.ownerId === (currentUser._id || currentUser.id) || currentShop.ownerId === 'guest') && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditShopForm({
-                            id: currentShop.id || currentShop._id,
-                            name: currentShop.name,
-                            cuisine: currentShop.cuisine,
-                            distance: currentShop.distance,
-                            time: currentShop.time,
-                            image: currentShop.image,
-                            address: currentShop.address || '',
-                            phone: currentShop.phone || ''
-                          });
-                          setShowEditShopModal(true);
-                        }}
-                        className="absolute top-3 left-3 z-10 rounded-full bg-white/15 backdrop-blur-md px-3 py-1 text-[11px] font-black text-white hover:bg-white/25 transition cursor-pointer border border-white/20"
-                      >
-                        Edit Shop
-                      </button>
-                    )}
+                      <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditShopForm({
+                              id: currentShop.id || currentShop._id,
+                              name: currentShop.name,
+                              cuisine: currentShop.cuisine,
+                              distance: currentShop.distance,
+                              time: currentShop.time,
+                              image: currentShop.image,
+                              address: currentShop.address || '',
+                              phone: currentShop.phone || ''
+                            });
+                            setShowEditShopModal(true);
+                          }}
+                          className="rounded-full bg-white/15 backdrop-blur-md px-3 py-1 text-[11px] font-black text-white hover:bg-white/25 transition cursor-pointer border border-white/20 shrink-0"
+                        >
+                          Edit Shop
+                        </button>
 
-                    {/* Add Menu Item — Top Right */}
-                    {currentUser && (currentShop.ownerId === (currentUser._id || currentUser.id) || currentShop.ownerId === 'guest') && (
-                      <button
-                        type="button"
-                        onClick={() => setShowAddMealModal(true)}
-                        className="absolute top-3 right-3 z-10 rounded-full bg-white px-3 py-1 text-[11px] font-black text-gray-950 hover:bg-amber-100 transition cursor-pointer shadow-sm"
-                      >
-                        + Add Menu Item
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddMealModal(true)}
+                          className="rounded-full bg-white px-3 py-1 text-[11px] font-black text-gray-950 hover:bg-amber-100 transition cursor-pointer shadow-sm shrink-0"
+                        >
+                          + Add Menu Item
+                        </button>
+                      </div>
                     )}
 
                     {/* Centered Avatar, Big Bold Title & Cuisine */}
-                    <div className="relative z-0 max-w-xl mx-auto space-y-2">
-                      <span className="text-6xl sm:text-7xl block mx-auto text-center filter drop-shadow-md">
+                    <div className="relative z-0 max-w-xl mx-auto space-y-2 min-w-0">
+                      <span className="text-5xl sm:text-7xl block mx-auto text-center filter drop-shadow-md">
                         {currentShop.image || '🏪'}
                       </span>
 
-                      <h2 className="text-3xl sm:text-4xl font-black text-center text-white tracking-tight leading-tight">
+                      <h2 className="text-2xl sm:text-4xl font-black text-center text-white tracking-tight leading-tight break-words max-w-full">
                         {currentShop.name}
                       </h2>
 
                       <div>
-                        <span className="inline-block rounded-full bg-white/10 backdrop-blur-md px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-amber-200 border border-white/15">
+                        <span className="inline-block rounded-full bg-white/10 backdrop-blur-md px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-amber-200 border border-white/15 max-w-full truncate">
                           {currentShop.cuisine}
                         </span>
                       </div>
 
                       {/* Centered Rating, Address & Delivery Time */}
-                      <div className="pt-2 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-200 font-medium">
-                        <span className="inline-flex items-center gap-1 font-extrabold text-amber-300 bg-amber-500/20 px-3 py-1 rounded-full border border-amber-400/30">
+                      <div className="pt-2 flex flex-wrap items-center justify-center gap-1.5 sm:gap-3 text-xs sm:text-sm text-gray-200 font-medium max-w-full overflow-hidden">
+                        <span className="inline-flex items-center gap-1 font-extrabold text-amber-300 bg-amber-500/20 px-2.5 py-1 rounded-full border border-amber-400/30 shrink-0">
                           <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                          {currentShop.rating || '5.0'} ({currentShop.reviews?.length || 0} reviews)
+                          {currentShop.rating || '5.0'} ({currentShop.reviews?.length || 0})
                         </span>
-                        <span className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
-                          <MapPin className="h-3.5 w-3.5 text-amber-300" />
-                          {currentShop.address || currentShop.distance}
+                        <span className="flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded-full backdrop-blur-sm max-w-full truncate">
+                          <MapPin className="h-3.5 w-3.5 text-amber-300 shrink-0" />
+                          <span className="truncate">{currentShop.address || currentShop.distance}</span>
                         </span>
-                        <span className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
-                          <Clock3 className="h-3.5 w-3.5 text-emerald-300" />
+                        <span className="flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded-full backdrop-blur-sm shrink-0">
+                          <Clock3 className="h-3.5 w-3.5 text-emerald-300 shrink-0" />
                           {currentShop.time}
                         </span>
                       </div>
@@ -1042,12 +1061,12 @@ export default function LunchComingSoon() {
                   </div>
 
                   {/* Menu vs Reviews View Switcher Tabs */}
-                  <div className="mt-5 flex items-center justify-between border-b border-gray-100 pb-3">
-                    <div className="flex items-center gap-2">
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3 min-w-0 max-w-full">
+                    <div className="flex flex-wrap items-center gap-2 max-w-full">
                       <button
                         type="button"
                         onClick={() => setShowReviewsTab(false)}
-                        className={`rounded-full px-4 py-2 text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                        className={`rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-black transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
                           !showReviewsTab
                             ? activeTheme.tabActive
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -1058,7 +1077,7 @@ export default function LunchComingSoon() {
                       <button
                         type="button"
                         onClick={() => setShowReviewsTab(true)}
-                        className={`rounded-full px-4 py-2 text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                        className={`rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-black transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
                           showReviewsTab
                             ? activeTheme.tabActive
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -1073,14 +1092,14 @@ export default function LunchComingSoon() {
                   {!showReviewsTab && orderMode === 'order' ? (
                     <>
                       {/* Fulfillment Method Selector */}
-                      <div className="mt-4 flex items-center gap-2">
-                        <span className="text-xs font-bold uppercase tracking-wider text-gray-500 mr-2">Fulfillment:</span>
+                      <div className="mt-4 flex flex-wrap items-center gap-2 max-w-full overflow-hidden">
+                        <span className="text-xs font-bold uppercase tracking-wider text-gray-500 mr-1 shrink-0">Fulfillment:</span>
                         {['pickup', 'delivery'].map((option) => (
                           <button
                             key={option}
                             type="button"
                             onClick={() => setFulfilment(option)}
-                            className={`rounded-full px-4 py-2 text-xs font-black capitalize transition flex items-center gap-1.5 ${
+                            className={`rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-black capitalize transition flex items-center gap-1.5 shrink-0 ${
                               fulfilment === option
                                 ? 'bg-gray-950 text-white shadow-sm'
                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -1088,11 +1107,11 @@ export default function LunchComingSoon() {
                           >
                             {option === 'pickup' ? (
                               <>
-                                <Store className="h-3.5 w-3.5 text-amber-400" /> Pickup (Pay on Counter)
+                                <Store className="h-3.5 w-3.5 text-amber-400 shrink-0" /> Pickup (Pay on Counter)
                               </>
                             ) : (
                               <>
-                                <Bike className="h-3.5 w-3.5 text-amber-400" /> Delivery to Door
+                                <Bike className="h-3.5 w-3.5 text-amber-400 shrink-0" /> Delivery to Door
                               </>
                             )}
                           </button>
@@ -1100,30 +1119,30 @@ export default function LunchComingSoon() {
                       </div>
 
                       {/* Meals list */}
-                      <div className="mt-5 space-y-3">
+                      <div className="mt-5 space-y-3 min-w-0 max-w-full">
                         {currentShop.meals && currentShop.meals.length > 0 ? (
                           currentShop.meals.map((meal) => (
                             <div
                               key={meal.id}
-                              className="flex items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-gray-50 via-white to-gray-50 p-4 ring-1 ring-gray-100 transition hover:ring-amber-200"
+                              className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 rounded-2xl bg-gradient-to-r from-gray-50 via-white to-gray-50 p-3.5 sm:p-4 ring-1 ring-gray-100 transition hover:ring-amber-200 min-w-0 max-w-full overflow-hidden"
                             >
-                              <div className="flex items-center gap-3">
-                                <span className="text-3xl">{meal.image || '🍱'}</span>
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <h3 className="font-black text-gray-900 text-base">{meal.name}</h3>
+                              <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1 w-full sm:w-auto">
+                                <span className="text-3xl shrink-0 p-1">{meal.image || '🍱'}</span>
+                                <div className="min-w-0 flex-1 break-words">
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    <h3 className="font-black text-gray-900 text-sm sm:text-base break-words min-w-0 max-w-full">{meal.name}</h3>
                                     {meal.tag && (
-                                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase text-amber-800">
+                                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase text-amber-800 shrink-0">
                                         {meal.tag}
                                       </span>
                                     )}
                                   </div>
-                                  <p className="mt-1 text-xs text-gray-500 leading-relaxed">{meal.description}</p>
+                                  <p className="mt-1 text-xs text-gray-500 leading-relaxed break-words">{meal.description}</p>
                                   <p className="mt-1.5 text-sm font-extrabold text-amber-700">{formatPrice(meal.price)}</p>
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-2 shrink-0">
+                              <div className="flex items-center justify-end gap-2 shrink-0 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
                                 {currentShop && currentUser && (currentShop.ownerId === (currentUser._id || currentUser.id) || currentShop.ownerId === 'guest') && (
                                   <>
                                     <button
@@ -1139,7 +1158,7 @@ export default function LunchComingSoon() {
                                         });
                                         setShowEditMealModal(true);
                                       }}
-                                      className="rounded-full bg-slate-100 p-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
+                                      className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
                                       title="Edit Meal"
                                     >
                                       Edit
@@ -1147,7 +1166,7 @@ export default function LunchComingSoon() {
                                     <button
                                       type="button"
                                       onClick={() => handleDeleteMeal(meal.id, meal.name)}
-                                      className="rounded-full bg-rose-50 p-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition"
+                                      className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition"
                                       title="Delete Meal"
                                     >
                                       Delete
@@ -1157,7 +1176,7 @@ export default function LunchComingSoon() {
                                 <button
                                   type="button"
                                   onClick={() => addToCart(meal)}
-                                  className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-400 text-gray-950 shadow transition hover:bg-amber-300 active:scale-95"
+                                  className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-amber-400 text-gray-950 shadow transition hover:bg-amber-300 active:scale-95 shrink-0"
                                   aria-label={`Add ${meal.name}`}
                                 >
                                   <Plus className="h-5 w-5" />
@@ -1885,24 +1904,41 @@ export default function LunchComingSoon() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Cuisine / Category</label>
-                  <input
-                    value={newShopForm.cuisine}
-                    onChange={(e) => setNewShopForm({ ...newShopForm, cuisine: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                    placeholder="Grill, Local, Healthy"
-                  />
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">Shop Type / Category *</label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {['Greedy', 'Local', 'Local Favorite', 'Greedy & Flame', 'Health & Veggie'].map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setNewShopForm({ ...newShopForm, cuisine: cat })}
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition cursor-pointer border ${
+                        newShopForm.cuisine === cat
+                          ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
+                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-amber-50'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Cover Icon (Emoji)</label>
-                  <input
-                    value={newShopForm.image}
-                    onChange={(e) => setNewShopForm({ ...newShopForm, image: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                    placeholder="🥙, 🍕, 🍔, 🍲"
-                  />
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <input
+                      value={newShopForm.cuisine}
+                      onChange={(e) => setNewShopForm({ ...newShopForm, cuisine: e.target.value })}
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                      placeholder="Selected or custom type"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      value={newShopForm.image}
+                      onChange={(e) => setNewShopForm({ ...newShopForm, image: e.target.value })}
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                      placeholder="Cover Emoji 🥙, 🍔, 🥗"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -2101,22 +2137,41 @@ export default function LunchComingSoon() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Cuisine / Category</label>
-                  <input
-                    value={editShopForm.cuisine}
-                    onChange={(e) => setEditShopForm({ ...editShopForm, cuisine: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                  />
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">Shop Type / Category *</label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {['Greedy', 'Local', 'Local Favorite', 'Greedy & Flame', 'Health & Veggie'].map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setEditShopForm({ ...editShopForm, cuisine: cat })}
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition cursor-pointer border ${
+                        editShopForm.cuisine === cat
+                          ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
+                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-amber-50'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Cover Icon (Emoji)</label>
-                  <input
-                    value={editShopForm.image}
-                    onChange={(e) => setEditShopForm({ ...editShopForm, image: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                  />
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <input
+                      value={editShopForm.cuisine}
+                      onChange={(e) => setEditShopForm({ ...editShopForm, cuisine: e.target.value })}
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                      placeholder="Selected or custom type"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      value={editShopForm.image}
+                      onChange={(e) => setEditShopForm({ ...editShopForm, image: e.target.value })}
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                      placeholder="Cover Emoji"
+                    />
+                  </div>
                 </div>
               </div>
 

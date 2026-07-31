@@ -15,7 +15,7 @@ export const DEFAULT_SHOPS = [
   {
     id: 'urban-grill',
     name: 'Urban Grill',
-    cuisine: 'Grill & Flame',
+    cuisine: 'Greedy & Flame',
     distance: '1.2 km',
     time: '20–30 min',
     rating: '4.8',
@@ -31,7 +31,7 @@ export const DEFAULT_SHOPS = [
   {
     id: 'green-table',
     name: 'The Green Table',
-    cuisine: 'Healthy & Vegan',
+    cuisine: 'Health & Veggie',
     distance: '2.1 km',
     time: '25–35 min',
     rating: '4.7',
@@ -47,7 +47,7 @@ export const DEFAULT_SHOPS = [
   {
     id: 'mama-kitchen',
     name: "Mama's Kitchen",
-    cuisine: 'Local Favourites',
+    cuisine: 'Local Favorite',
     distance: '3.4 km',
     time: '30–40 min',
     rating: '4.9',
@@ -58,6 +58,36 @@ export const DEFAULT_SHOPS = [
       { id: 'chicken-pap', name: 'Chicken & pap', description: 'Grilled chicken, chakalaka and creamy pap', price: 99, tag: 'Local favourite', image: '🍗' },
       { id: 'beef-stew', name: 'Beef stew plate', description: 'Slow-cooked beef with rice and steamed veg', price: 115, tag: 'Hearty', image: '🥘' },
       { id: 'mogodu-combo', name: 'Mogodu Special', description: 'Traditional tripe served with warm dumpling', price: 110, tag: 'Traditional', image: '🍲' },
+    ],
+  },
+  {
+    id: 'greedy-burger',
+    name: 'Greedy Burger Co.',
+    cuisine: 'Greedy',
+    distance: '0.8 km',
+    time: '15–25 min',
+    rating: '4.9',
+    image: '🍔',
+    address: '12 Gourmet Avenue, Food Row',
+    phone: '+27 82 555 1234',
+    meals: [
+      { id: 'double-cheese', name: 'Monster Cheese Burger', description: 'Double beef patty, molten cheddar & bacon jam', price: 120, tag: '🔥 Hot Seller', image: '🍔' },
+      { id: 'loaded-fries', name: 'Greedy Loaded Fries', description: 'Crispy fries topped with melted cheese & jalapenos', price: 65, tag: 'Popular', image: '🍟' },
+    ],
+  },
+  {
+    id: 'kasi-local',
+    name: 'Kasi Corner Takeaway',
+    cuisine: 'Local',
+    distance: '1.5 km',
+    time: '15–20 min',
+    rating: '4.6',
+    image: '🥪',
+    address: '54 Community Road, Block B',
+    phone: '+27 76 888 9900',
+    meals: [
+      { id: 'full-kota', name: 'Special Quarter Kota', description: 'Russian, polony, cheese, chips & secret sauce', price: 55, tag: '👑 Local Classic', image: '🍞' },
+      { id: 'vetkoek-mince', name: 'Traditional Vetkoek & Mince', description: 'Golden fried dough filled with savory beef mince', price: 40, tag: 'Local favourite', image: '🥟' },
     ],
   },
 ];
