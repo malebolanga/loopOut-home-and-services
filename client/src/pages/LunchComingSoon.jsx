@@ -973,36 +973,38 @@ export default function LunchComingSoon() {
                     <div className={`absolute -top-16 -right-16 w-64 h-64 ${activeTheme.heroGlow} rounded-full blur-3xl pointer-events-none`} />
                     <div className={`absolute -bottom-16 -left-16 w-64 h-64 ${activeTheme.heroGlow} rounded-full blur-3xl pointer-events-none`} />
 
-                    {/* Owner Shop Action Buttons (Top-Right) */}
+                    {/* Edit Shop — Top Left */}
                     {currentUser && (currentShop.ownerId === (currentUser._id || currentUser.id) || currentShop.ownerId === 'guest') && (
-                      <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditShopForm({
-                              id: currentShop.id || currentShop._id,
-                              name: currentShop.name,
-                              cuisine: currentShop.cuisine,
-                              distance: currentShop.distance,
-                              time: currentShop.time,
-                              image: currentShop.image,
-                              address: currentShop.address || '',
-                              phone: currentShop.phone || ''
-                            });
-                            setShowEditShopModal(true);
-                          }}
-                          className="rounded-full bg-white/15 backdrop-blur-md px-3 py-1 text-[11px] font-black text-white hover:bg-white/25 transition cursor-pointer border border-white/20"
-                        >
-                          Edit Shop
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setShowAddMealModal(true)}
-                          className="rounded-full bg-white px-3 py-1 text-[11px] font-black text-gray-950 hover:bg-amber-100 transition cursor-pointer shadow-sm"
-                        >
-                          + Add Menu Item
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditShopForm({
+                            id: currentShop.id || currentShop._id,
+                            name: currentShop.name,
+                            cuisine: currentShop.cuisine,
+                            distance: currentShop.distance,
+                            time: currentShop.time,
+                            image: currentShop.image,
+                            address: currentShop.address || '',
+                            phone: currentShop.phone || ''
+                          });
+                          setShowEditShopModal(true);
+                        }}
+                        className="absolute top-3 left-3 z-10 rounded-full bg-white/15 backdrop-blur-md px-3 py-1 text-[11px] font-black text-white hover:bg-white/25 transition cursor-pointer border border-white/20"
+                      >
+                        Edit Shop
+                      </button>
+                    )}
+
+                    {/* Add Menu Item — Top Right */}
+                    {currentUser && (currentShop.ownerId === (currentUser._id || currentUser.id) || currentShop.ownerId === 'guest') && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAddMealModal(true)}
+                        className="absolute top-3 right-3 z-10 rounded-full bg-white px-3 py-1 text-[11px] font-black text-gray-950 hover:bg-amber-100 transition cursor-pointer shadow-sm"
+                      >
+                        + Add Menu Item
+                      </button>
                     )}
 
                     {/* Centered Avatar, Big Bold Title & Cuisine */}
