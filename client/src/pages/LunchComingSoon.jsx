@@ -1924,6 +1924,7 @@ export default function LunchComingSoon() {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
+                    <label className="text-xs font-bold text-gray-700 block mb-1">Custom Type</label>
                     <input
                       value={newShopForm.cuisine}
                       onChange={(e) => setNewShopForm({ ...newShopForm, cuisine: e.target.value })}
@@ -1932,13 +1933,32 @@ export default function LunchComingSoon() {
                     />
                   </div>
                   <div>
+                    <label className="text-xs font-bold text-gray-700 block mb-1">Cover Icon (Emoji)</label>
                     <input
                       value={newShopForm.image}
                       onChange={(e) => setNewShopForm({ ...newShopForm, image: e.target.value })}
                       className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                      placeholder="Cover Emoji 🥙, 🍔, 🥗"
+                      placeholder="Cover Emoji 🥙, 🍺, 🍔"
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Quick Tap Cover Emoji Picker for Shop */}
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Quick Tap Shop Cover Emoji Icon:</label>
+                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 border border-gray-200 max-h-24 overflow-y-auto">
+                  {FOOD_EMOJIS.map((item, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setNewShopForm(prev => ({ ...prev, image: item.emoji }))}
+                      className={`text-lg p-1 rounded-lg hover:bg-amber-100 transition cursor-pointer ${newShopForm.image === item.emoji ? 'bg-amber-200 ring-2 ring-amber-400' : ''}`}
+                      title={item.name}
+                    >
+                      {item.emoji}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -2157,6 +2177,7 @@ export default function LunchComingSoon() {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
+                    <label className="text-xs font-bold text-gray-700 block mb-1">Custom Type</label>
                     <input
                       value={editShopForm.cuisine}
                       onChange={(e) => setEditShopForm({ ...editShopForm, cuisine: e.target.value })}
@@ -2165,6 +2186,7 @@ export default function LunchComingSoon() {
                     />
                   </div>
                   <div>
+                    <label className="text-xs font-bold text-gray-700 block mb-1">Cover Icon (Emoji)</label>
                     <input
                       value={editShopForm.image}
                       onChange={(e) => setEditShopForm({ ...editShopForm, image: e.target.value })}
@@ -2172,6 +2194,24 @@ export default function LunchComingSoon() {
                       placeholder="Cover Emoji"
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Quick Tap Cover Emoji Picker for Edit Shop */}
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Quick Tap Shop Cover Emoji Icon:</label>
+                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 border border-gray-200 max-h-24 overflow-y-auto">
+                  {FOOD_EMOJIS.map((item, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setEditShopForm(prev => ({ ...prev, image: item.emoji }))}
+                      className={`text-lg p-1 rounded-lg hover:bg-amber-100 transition cursor-pointer ${editShopForm.image === item.emoji ? 'bg-amber-200 ring-2 ring-amber-400' : ''}`}
+                      title={item.name}
+                    >
+                      {item.emoji}
+                    </button>
+                  ))}
                 </div>
               </div>
 

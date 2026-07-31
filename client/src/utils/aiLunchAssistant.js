@@ -3,24 +3,78 @@
  * Provides intelligent food recommendations for buyers & AI menu item generation for tuck shop vendors.
  */
 
-// Food Emojis Dictionary
+// Food, Drinks, Beers & Tuck Shop Emojis Dictionary
 export const FOOD_EMOJIS = [
+  // Fast Food & Local Favorites
   { emoji: '🍔', name: 'Burger', category: 'fastfood' },
   { emoji: '🍟', name: 'Fries', category: 'fastfood' },
   { emoji: '🍕', name: 'Pizza', category: 'fastfood' },
-  { emoji: '🍗', name: 'Crispy Chicken', category: 'meat' },
-  { emoji: '🥩', name: 'Steak & Braai', category: 'meat' },
-  { emoji: '🍲', name: 'Traditional Stew / Pap', category: 'traditional' },
-  { emoji: '🥘', name: 'Curry / Rice', category: 'traditional' },
-  { emoji: '🍛', name: 'Spicy Rice Bowl', category: 'traditional' },
-  { emoji: '🥪', name: 'Sandwich / Toastie', category: 'fastfood' },
+  { emoji: '🌭', name: 'Hot Dog / Sausage', category: 'fastfood' },
+  { emoji: '🥪', name: 'Sandwich / Kota', category: 'fastfood' },
+  { emoji: '🌮', name: 'Taco', category: 'spicy' },
+  { emoji: '🌯', name: 'Burrito', category: 'fastfood' },
   { emoji: '🥙', name: 'Wrap / Shawarma', category: 'healthy' },
-  { emoji: '🥗', name: 'Fresh Salad', category: 'healthy' },
-  { emoji: '🌮', name: 'Taco / Burrito', category: 'spicy' },
-  { emoji: '🍜', name: 'Noodles / Soup', category: 'warm' },
+  { emoji: '🍿', name: 'Popcorn', category: 'snack' },
+  { emoji: '🥨', name: 'Pretzel', category: 'snack' },
+
+  // Meats, Braai & Flame
+  { emoji: '🍗', name: 'Crispy Chicken', category: 'meat' },
+  { emoji: '🍖', name: 'Flame Ribs', category: 'meat' },
+  { emoji: '🥩', name: 'Steak & Braai', category: 'meat' },
+  { emoji: '🥓', name: 'Bacon', category: 'meat' },
+  { emoji: '🍢', name: 'Skewer / Kebab', category: 'meat' },
+  { emoji: '🍤', name: 'Fried Prawns / Shrimp', category: 'seafood' },
+
+  // Traditional, Stews & Rice
+  { emoji: '🍲', name: 'Traditional Stew / Pap', category: 'traditional' },
+  { emoji: '🥘', name: 'Curry / Potjie', category: 'traditional' },
+  { emoji: '🍛', name: 'Spicy Rice Bowl', category: 'traditional' },
+  { emoji: '🍚', name: 'Steamed Rice', category: 'traditional' },
+  { emoji: '🥣', name: 'Soup Bowl', category: 'traditional' },
+  { emoji: '🧆', name: 'Falafel / Meatballs', category: 'traditional' },
+  { emoji: '🥟', name: 'Dumpling / Vetkoek', category: 'traditional' },
+  { emoji: '🍜', name: 'Noodles / Ramen', category: 'warm' },
+  { emoji: '🍝', name: 'Spaghetti / Pasta', category: 'warm' },
   { emoji: '🍱', name: 'Lunch Box Combo', category: 'combo' },
-  { emoji: '🍰', name: 'Dessert / Treat', category: 'sweet' },
-  { emoji: '🥤', name: 'Cold Drink / Juice', category: 'drink' }
+  { emoji: '🥡', name: 'Takeout Box', category: 'combo' },
+
+  // Beers, Soda Cans & Cold Drinks
+  { emoji: '🍺', name: 'Cold Beer Mug', category: 'drink' },
+  { emoji: '🍻', name: 'Cheering Beer Mugs', category: 'drink' },
+  { emoji: '🥤', name: 'Soda / Cold Can Drink', category: 'drink' },
+  { emoji: '🧃', name: 'Juice Box', category: 'drink' },
+  { emoji: '🧋', name: 'Bubble Tea / Boba', category: 'drink' },
+  { emoji: '🍷', name: 'Wine Glass', category: 'drink' },
+  { emoji: '🥂', name: 'Champagne Cheers', category: 'drink' },
+  { emoji: '🍸', name: 'Cocktail Drink', category: 'drink' },
+  { emoji: '🍹', name: 'Tropical Smoothie / Punch', category: 'drink' },
+  { emoji: '🍾', name: 'Sparkling Champagne', category: 'drink' },
+  { emoji: '☕', name: 'Hot Coffee / Espresso', category: 'drink' },
+  { emoji: '🍵', name: 'Green Tea', category: 'drink' },
+
+  // Desserts, Bakery & Treats
+  { emoji: '🍰', name: 'Cake Slice', category: 'sweet' },
+  { emoji: '🍩', name: 'Donut', category: 'sweet' },
+  { emoji: '🍦', name: 'Soft Serve Ice Cream', category: 'sweet' },
+  { emoji: '🍨', name: 'Ice Cream Sundae', category: 'sweet' },
+  { emoji: '🧁', name: 'Cupcake', category: 'sweet' },
+  { emoji: '🥧', name: 'Fresh Pie', category: 'sweet' },
+  { emoji: '🍪', name: 'Chocolate Chip Cookie', category: 'sweet' },
+  { emoji: '🍫', name: 'Chocolate Bar', category: 'sweet' },
+  { emoji: '🥞', name: 'Pancakes', category: 'breakfast' },
+  { emoji: '🥐', name: 'Croissant', category: 'bakery' },
+  { emoji: '🥖', name: 'French Baguette', category: 'bakery' },
+
+  // Healthy & Fresh Greens
+  { emoji: '🥗', name: 'Fresh Salad', category: 'healthy' },
+  { emoji: '🥑', name: 'Fresh Avocado', category: 'healthy' },
+  { emoji: '🍎', name: 'Red Apple', category: 'healthy' },
+  { emoji: '🍉', name: 'Watermelon Slice', category: 'healthy' },
+
+  // Shop & Kitchen Icons
+  { emoji: '🏪', name: 'Tuck Shop / Store', category: 'shop' },
+  { emoji: '🍽️', name: 'Plate & Cutlery', category: 'shop' },
+  { emoji: '👨‍🍳', name: 'Chef', category: 'shop' }
 ];
 
 export const PRESET_MOODS = [
