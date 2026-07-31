@@ -1093,7 +1093,7 @@ export default function LunchComingSoon() {
                     <>
                       {/* Fulfillment Method Selector */}
                       <div className="mt-4 flex flex-wrap items-center gap-2 max-w-full overflow-hidden">
-                        <span className="text-xs font-bold uppercase tracking-wider text-gray-500 mr-1 shrink-0">Fulfillment:</span>
+                       
                         {['pickup', 'delivery'].map((option) => (
                           <button
                             key={option}
