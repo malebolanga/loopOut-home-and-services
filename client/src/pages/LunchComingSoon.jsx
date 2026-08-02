@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, 
@@ -136,6 +136,22 @@ export default function LunchComingSoon() {
   const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user || {});
 
+  // Ref for the horizontal shop slider
+  const shopSliderRef = useRef(null);
+  const scrollShops = (dir) => {
+    if (shopSliderRef.current) {
+      shopSliderRef.current.scrollBy({ left: dir * 220, behavior: 'smooth' });
+    }
+  };
+
+  // Ref for the horizontal meals/menu slider
+  const menuSliderRef = useRef(null);
+  const scrollMenu = (dir) => {
+    if (menuSliderRef.current) {
+      menuSliderRef.current.scrollBy({ left: dir * 260, behavior: 'smooth' });
+    }
+  };
+
   // Main navigation view: 'customer' or 'dashboard'
   const [viewTab, setViewTab] = useState('customer');
 
@@ -170,7 +186,8 @@ export default function LunchComingSoon() {
     time: '20–30 min',
     image: '🥙',
     address: '',
-    phone: ''
+    phone: '',
+    whatsapp: ''
   });
 
   const [showAddMealModal, setShowAddMealModal] = useState(false);
@@ -192,7 +209,8 @@ export default function LunchComingSoon() {
     time: '',
     image: '',
     address: '',
-    phone: ''
+    phone: '',
+    whatsapp: ''
   });
 
   const [showEditMealModal, setShowEditMealModal] = useState(false);
@@ -207,6 +225,9 @@ export default function LunchComingSoon() {
 
   // Selected Order for Receipt Modal
   const [activeReceiptOrder, setActiveReceiptOrder] = useState(null);
+
+  // Contact Card Modal
+  const [showContactCard, setShowContactCard] = useState(false);
 
   // Rating states
   const [showRateModal, setShowRateModal] = useState(false);
@@ -483,7 +504,7 @@ export default function LunchComingSoon() {
       setShowAddShopModal(false);
       setSelectedShopId(newShopId);
       setNotice({ type: 'success', message: `Shop "${newShopForm.name.trim()}" created successfully!` });
-      setNewShopForm({ name: '', cuisine: '', distance: '1.5 km', time: '20–30 min', image: '🥙', address: '', phone: '' });
+      setNewShopForm({ name: '', cuisine: '', distance: '1.5 km', time: '20–30 min', image: '🥙', address: '', phone: '', whatsapp: '' });
     } catch (err) {
       console.error("Create shop error:", err);
       setNotice({ 
@@ -759,8 +780,8 @@ export default function LunchComingSoon() {
 
         {/* TAB CONTENT: CUSTOMER VIEW */}
         {viewTab === 'customer' && (
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
-            <section>
+          <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px] min-w-0">
+            <section className="min-w-0 overflow-hidden">
               {/* Mode Toggle: Order Lunch vs Book Table */}
               <div className="flex rounded-2xl bg-amber-200/50 p-1.5 ring-1 ring-amber-300/40">
                 <button
@@ -919,20 +940,49 @@ export default function LunchComingSoon() {
                 )}
               </div>
 
-              {/* Shop List Cards Selector */}
+              {/* Shop List Cards Selector — Horizontal Side-Slide */}
               <div className="mt-5">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-black uppercase tracking-wider text-gray-700">Select Restaurant / Shop</h2>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddShopModal(true)}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
-                  >
-                    <PlusCircle className="h-3.5 w-3.5" /> Register / Upload Shop
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {/* Left / Right scroll arrows */}
+                    {shops.length > 2 && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => scrollShops(-1)}
+                          className="h-7 w-7 flex items-center justify-center rounded-full bg-amber-100 border border-amber-300 text-amber-800 hover:bg-amber-200 transition shadow-sm cursor-pointer"
+                          aria-label="Scroll shops left"
+                        >
+                          <ArrowLeft className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => scrollShops(1)}
+                          className="h-7 w-7 flex items-center justify-center rounded-full bg-amber-100 border border-amber-300 text-amber-800 hover:bg-amber-200 transition shadow-sm cursor-pointer"
+                          aria-label="Scroll shops right"
+                        >
+                          <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
+                        </button>
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowAddShopModal(true)}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
+                    >
+                      <PlusCircle className="h-3.5 w-3.5" /> Register / Upload Shop
+                    </button>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+                {/* Horizontal Scrollable Snap Row */}
+                <div className="overflow-hidden">
+                <div
+                  ref={shopSliderRef}
+                  className="flex gap-3 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
                   {shops.map((item) => {
                     const shopTheme = getShopTheme(item);
                     const isSelected = selectedShopId === item.id;
@@ -942,54 +992,79 @@ export default function LunchComingSoon() {
                         key={item.id}
                         type="button"
                         onClick={() => setSelectedShopId(item.id)}
-                        className={`w-full rounded-2xl border p-4 text-left transition duration-200 cursor-pointer flex flex-col justify-between ${
-                          isSelected
-                            ? shopTheme.cardActive
-                            : shopTheme.cardNormal
+                        className={`snap-start shrink-0 w-[46vw] sm:w-[195px] max-w-[195px] rounded-2xl border p-3 sm:p-4 text-left transition-all duration-200 cursor-pointer flex flex-col justify-between relative overflow-hidden ${
+                          isSelected ? shopTheme.cardActive : shopTheme.cardNormal
                         }`}
                       >
-                        {/* Line 1: Icon at top left, Rate/Rating at top right */}
+                        {/* Selected accent bar at top */}
+                        {isSelected && (
+                          <span className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl ${shopTheme.accentBg}`} />
+                        )}
+
+                        {/* Icon & Rating */}
                         <div className="flex items-center justify-between">
-                          <span className="text-3xl filter drop-shadow-xs">{item.image || '🏪'}</span>
-                          <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-black flex items-center gap-1 border ${
+                          <span className="text-3xl filter drop-shadow-sm leading-none">{item.image || '🏪'}</span>
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-black flex items-center gap-1 border ${
                             isSelected ? shopTheme.badge : 'bg-amber-50 text-amber-900 border-amber-200'
                           }`}>
-                            <Star className="w-3 h-3 fill-amber-400 text-amber-400 inline" />
+                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                             {item.rating || '4.8'}
                           </span>
                         </div>
 
                         <div className="mt-3 space-y-1">
-                          {/* Line 2: Name of the shop */}
-                          <span className="block text-base font-black text-gray-900 tracking-tight leading-snug">
+                          <span className="block text-sm font-black text-gray-900 tracking-tight leading-snug line-clamp-2">
                             {item.name}
                           </span>
-
-                          {/* Line 3: Under name must be Type (Greedy / Local / Local Favorite / Greedy & Flame / Health & Veggie) */}
                           <div className="pt-0.5">
-                            <span className="inline-block rounded-md bg-amber-100/70 border border-amber-300/60 px-2 py-0.5 text-[11px] font-bold text-amber-900">
+                            <span className="inline-block rounded-md bg-amber-100/70 border border-amber-300/60 px-2 py-0.5 text-[10px] font-bold text-amber-900 truncate max-w-full">
                               {item.cuisine || 'Local Favorite'}
                             </span>
                           </div>
-
-                          {/* Line 4: Under Type must be Kilometers (Distance) - Not in one line! */}
-                          <p className="flex items-center gap-1 text-xs font-semibold text-gray-500 pt-0.5">
+                          <p className="flex items-center gap-1 text-[11px] font-semibold text-gray-500 pt-0.5">
                             <MapPin className="h-3 w-3 text-amber-600 shrink-0" />
-                            <span>{item.distance || '1.0 km'}</span>
+                            <span className="truncate">{item.distance || '1.0 km'}</span>
                           </p>
                         </div>
                       </button>
                     );
                   })}
+
+                  {/* Empty state */}
+                  {shops.length === 0 && (
+                    <div className="flex items-center justify-center w-full py-10 text-sm text-gray-400 font-medium">
+                      No shops registered yet. Be the first to add one!
+                    </div>
+                  )}
                 </div>
+                </div>
+
+                {/* Dot indicators */}
+                {shops.length > 1 && (
+                  <div className="flex items-center justify-center gap-1.5 mt-2">
+                    {shops.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setSelectedShopId(s.id)}
+                        className={`rounded-full transition-all duration-200 cursor-pointer ${
+                          selectedShopId === s.id
+                            ? 'w-5 h-2 bg-amber-500'
+                            : 'w-2 h-2 bg-amber-200 hover:bg-amber-300'
+                        }`}
+                        aria-label={`Select ${s.name}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Selected Restaurant Hero & Meals Details */}
               {currentShop && (
-                <article className="mt-6 rounded-3xl bg-white p-3.5 sm:p-6 shadow-md ring-1 ring-gray-100 min-w-0 max-w-full overflow-hidden">
+                <article className="mt-6 rounded-3xl bg-white shadow-md ring-1 ring-gray-100 min-w-0 max-w-full overflow-hidden">
                   
                   {/* Shop Theme Header Banner */}
-                  <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${activeTheme.heroBg} p-4 sm:p-6 text-center shadow-lg border min-w-0 max-w-full`}>
+                  <div className={`relative overflow-hidden rounded-none sm:rounded-2xl bg-gradient-to-br ${activeTheme.heroBg} p-4 sm:p-6 text-center shadow-lg border-b sm:border min-w-0 max-w-full`}>
                     <div className={`absolute -top-16 -right-16 w-64 h-64 ${activeTheme.heroGlow} rounded-full blur-3xl pointer-events-none`} />
                     <div className={`absolute -bottom-16 -left-16 w-64 h-64 ${activeTheme.heroGlow} rounded-full blur-3xl pointer-events-none`} />
 
@@ -1007,7 +1082,8 @@ export default function LunchComingSoon() {
                               time: currentShop.time,
                               image: currentShop.image,
                               address: currentShop.address || '',
-                              phone: currentShop.phone || ''
+                              phone: currentShop.phone || '',
+                              whatsapp: currentShop.whatsapp || ''
                             });
                             setShowEditShopModal(true);
                           }}
@@ -1057,11 +1133,37 @@ export default function LunchComingSoon() {
                           {currentShop.time}
                         </span>
                       </div>
+
+                      {/* Contact Person & Phone */}
+                      {(currentShop.ownerName || currentShop.phone) && (
+                        <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+                          {currentShop.ownerName && (
+                            <button
+                              type="button"
+                              onClick={() => setShowContactCard(true)}
+                              className="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-white/90 border border-white/15 transition cursor-pointer"
+                            >
+                              <Users className="h-3.5 w-3.5 text-amber-300 shrink-0" />
+                              {currentShop.ownerName}
+                              <span className="text-white/50 text-[10px] ml-0.5">· tap</span>
+                            </button>
+                          )}
+                          {currentShop.phone && (
+                            <a
+                              href={`tel:${currentShop.phone}`}
+                              className="inline-flex items-center gap-1.5 bg-emerald-500/20 hover:bg-emerald-500/40 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-emerald-200 border border-emerald-400/30 transition cursor-pointer"
+                            >
+                              <Phone className="h-3.5 w-3.5 shrink-0" />
+                              {currentShop.phone}
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Menu vs Reviews View Switcher Tabs */}
-                  <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3 min-w-0 max-w-full">
+                  <div className="mt-5 px-3.5 sm:px-0 flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3 min-w-0 max-w-full">
                     <div className="flex flex-wrap items-center gap-2 max-w-full">
                       <button
                         type="button"
@@ -1092,7 +1194,7 @@ export default function LunchComingSoon() {
                   {!showReviewsTab && orderMode === 'order' ? (
                     <>
                       {/* Fulfillment Method Selector */}
-                      <div className="mt-4 flex flex-wrap items-center gap-2 max-w-full overflow-hidden">
+                      <div className="mt-4 px-3.5 sm:px-0 flex flex-wrap items-center gap-2 max-w-full overflow-hidden">
                        
                         {['pickup', 'delivery'].map((option) => (
                           <button
@@ -1118,77 +1220,111 @@ export default function LunchComingSoon() {
                         ))}
                       </div>
 
-                      {/* Meals list */}
-                      <div className="mt-5 space-y-3 min-w-0 max-w-full">
-                        {currentShop.meals && currentShop.meals.length > 0 ? (
-                          currentShop.meals.map((meal) => (
-                            <div
-                              key={meal.id}
-                              className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 rounded-2xl bg-gradient-to-r from-gray-50 via-white to-gray-50 p-3.5 sm:p-4 ring-1 ring-gray-100 transition hover:ring-amber-200 min-w-0 max-w-full overflow-hidden"
+                      {/* Meals Menu — Horizontal Side-Slide */}
+                      <div className="mt-5">
+                        {/* Arrow controls */}
+                        {currentShop.meals && currentShop.meals.length > 2 && (
+                          <div className="flex items-center justify-end gap-1 mb-2">
+                            <button
+                              type="button"
+                              onClick={() => scrollMenu(-1)}
+                              className="h-7 w-7 flex items-center justify-center rounded-full bg-gray-100 border border-gray-200 text-gray-600 hover:bg-amber-100 hover:border-amber-300 hover:text-amber-800 transition shadow-sm cursor-pointer"
+                              aria-label="Scroll menu left"
                             >
-                              <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1 w-full sm:w-auto">
-                                <span className="text-3xl shrink-0 p-1">{meal.image || '🍱'}</span>
-                                <div className="min-w-0 flex-1 break-words">
-                                  <div className="flex flex-wrap items-center gap-1.5">
-                                    <h3 className="font-black text-gray-900 text-sm sm:text-base break-words min-w-0 max-w-full">{meal.name}</h3>
-                                    {meal.tag && (
-                                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase text-amber-800 shrink-0">
-                                        {meal.tag}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <p className="mt-1 text-xs text-gray-500 leading-relaxed break-words">{meal.description}</p>
-                                  <p className="mt-1.5 text-sm font-extrabold text-amber-700">{formatPrice(meal.price)}</p>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center justify-end gap-2 shrink-0 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
-                                {currentShop && currentUser && (currentShop.ownerId === (currentUser._id || currentUser.id) || currentShop.ownerId === 'guest') && (
-                                  <>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setEditMealForm({
-                                          id: meal.id,
-                                          name: meal.name,
-                                          description: meal.description || '',
-                                          price: meal.price,
-                                          tag: meal.tag || 'Popular',
-                                          image: meal.image || '🍱'
-                                        });
-                                        setShowEditMealModal(true);
-                                      }}
-                                      className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
-                                      title="Edit Meal"
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleDeleteMeal(meal.id, meal.name)}
-                                      className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition"
-                                      title="Delete Meal"
-                                    >
-                                      Delete
-                                    </button>
-                                  </>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() => addToCart(meal)}
-                                  className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-amber-400 text-gray-950 shadow transition hover:bg-amber-300 active:scale-95 shrink-0"
-                                  aria-label={`Add ${meal.name}`}
-                                >
-                                  <Plus className="h-5 w-5" />
-                                </button>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="p-8 text-center text-sm text-gray-500">
-                            No menu items added yet for this store. Click "Add Menu Item" above to create one!
+                              <ArrowLeft className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => scrollMenu(1)}
+                              className="h-7 w-7 flex items-center justify-center rounded-full bg-gray-100 border border-gray-200 text-gray-600 hover:bg-amber-100 hover:border-amber-300 hover:text-amber-800 transition shadow-sm cursor-pointer"
+                              aria-label="Scroll menu right"
+                            >
+                              <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
+                            </button>
                           </div>
                         )}
+
+                        {/* Horizontal snap scroll row — hidden overflow container prevents page bleed */}
+                        <div className="overflow-hidden">
+                          <div
+                            ref={menuSliderRef}
+                            className="flex gap-3 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory"
+                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                          >
+                            {currentShop.meals && currentShop.meals.length > 0 ? (
+                              currentShop.meals.map((meal) => (
+                                <div
+                                  key={meal.id}
+                                  className="snap-start shrink-0 w-[78vw] sm:w-[230px] max-w-[290px] rounded-2xl bg-gradient-to-b from-white to-gray-50 ring-1 ring-gray-100 hover:ring-amber-200 transition-all duration-200 overflow-hidden flex flex-col"
+                                >
+                                  {/* Meal header */}
+                                  <div className="px-4 pt-4 pb-2 flex items-start gap-3">
+                                    <span className="text-4xl leading-none shrink-0 p-1">{meal.image || '🍱'}</span>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex flex-wrap items-center gap-1.5">
+                                        <h3 className="font-black text-gray-900 text-sm leading-snug line-clamp-2">{meal.name}</h3>
+                                      </div>
+                                      {meal.tag && (
+                                        <span className="inline-block mt-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase text-amber-800">
+                                          {meal.tag}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <p className="px-4 text-xs text-gray-500 leading-relaxed line-clamp-2 flex-1">{meal.description}</p>
+
+                                  {/* Price + actions footer */}
+                                  <div className="px-4 pb-4 pt-3 flex items-center justify-between border-t border-gray-100 mt-3">
+                                    <span className="text-sm font-extrabold text-amber-700">{formatPrice(meal.price)}</span>
+                                    <div className="flex items-center gap-1.5">
+                                      {currentShop && currentUser && (currentShop.ownerId === (currentUser._id || currentUser.id) || currentShop.ownerId === 'guest') && (
+                                        <>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setEditMealForm({
+                                                id: meal.id,
+                                                name: meal.name,
+                                                description: meal.description || '',
+                                                price: meal.price,
+                                                tag: meal.tag || 'Popular',
+                                                image: meal.image || '🍱'
+                                              });
+                                              setShowEditMealModal(true);
+                                            }}
+                                            className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-200 transition cursor-pointer"
+                                          >
+                                            Edit
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteMeal(meal.id, meal.name)}
+                                            className="rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-700 hover:bg-rose-100 transition cursor-pointer"
+                                          >
+                                            Del
+                                          </button>
+                                        </>
+                                      )}
+                                      <button
+                                        type="button"
+                                        onClick={() => addToCart(meal)}
+                                        className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-400 text-gray-950 shadow transition hover:bg-amber-300 active:scale-95 shrink-0 cursor-pointer"
+                                        aria-label={`Add ${meal.name}`}
+                                      >
+                                        <Plus className="h-5 w-5" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="p-8 text-center text-sm text-gray-500 w-full">
+                                No menu items added yet. Click "+ Add Menu Item" above to create one!
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </>
                   ) : showReviewsTab ? (
@@ -1875,6 +2011,127 @@ export default function LunchComingSoon() {
         </div>
       )}
 
+      {/* CONTACT CARD MODAL */}
+      <AnimatePresence>
+        {showContactCard && currentShop && (
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4"
+            onClick={() => setShowContactCard(false)}
+          >
+            <motion.div
+              initial={{ y: 80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 80, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+            >
+              {/* Header gradient banner */}
+              <div className={`relative bg-gradient-to-br ${activeTheme.heroBg} p-6 text-center overflow-hidden`}>
+                <div className={`absolute -top-10 -right-10 w-40 h-40 ${activeTheme.heroGlow} rounded-full blur-3xl pointer-events-none`} />
+                {/* Close pill */}
+                <button
+                  type="button"
+                  onClick={() => setShowContactCard(false)}
+                  className="absolute top-3 right-3 rounded-full bg-white/15 p-1.5 hover:bg-white/30 transition cursor-pointer"
+                >
+                  <X className="h-4 w-4 text-white" />
+                </button>
+
+                {/* Avatar */}
+                <div className="relative z-10">
+                  <div className="mx-auto h-16 w-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30 shadow-lg">
+                    <span className="text-3xl">{currentShop.image || '🏪'}</span>
+                  </div>
+                  <h3 className="mt-3 text-lg font-black text-white tracking-tight">
+                    {currentShop.ownerName || 'Shop Contact'}
+                  </h3>
+                  <p className="text-xs text-white/70 font-medium mt-0.5">
+                    {currentShop.name} · Store Manager
+                  </p>
+                  {/* Rating badge */}
+                  <div className="mt-2 inline-flex items-center gap-1.5 bg-amber-500/20 border border-amber-400/30 rounded-full px-3 py-1">
+                    <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                    <span className="text-xs font-black text-amber-300">
+                      {currentShop.rating || '5.0'} rating · {currentShop.reviews?.length || 0} reviews
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Info rows */}
+              <div className="p-5 space-y-3">
+
+                {/* Phone — tap to call */}
+                {currentShop.phone && (
+                  <a
+                    href={`tel:${currentShop.phone}`}
+                    className="flex items-center gap-4 rounded-2xl bg-gray-50 hover:bg-amber-50 border border-gray-100 hover:border-amber-200 px-4 py-3.5 transition group cursor-pointer"
+                  >
+                    <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0 group-hover:bg-amber-200 transition">
+                      <Phone className="h-5 w-5 text-amber-700" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Phone · Tap to Call</p>
+                      <p className="text-sm font-black text-gray-900 truncate">{currentShop.phone}</p>
+                    </div>
+                    <ArrowLeft className="h-4 w-4 text-amber-400 rotate-180 ml-auto shrink-0" />
+                  </a>
+                )}
+
+                {/* WhatsApp */}
+                {(currentShop.whatsapp || currentShop.phone) && (
+                  <a
+                    href={`https://wa.me/${(currentShop.whatsapp || currentShop.phone).replace(/[^\d]/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 hover:border-emerald-300 px-4 py-3.5 transition group cursor-pointer"
+                  >
+                    <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 group-hover:bg-emerald-200 transition">
+                      <span className="text-xl">💬</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">WhatsApp · Tap to Chat</p>
+                      <p className="text-sm font-black text-emerald-900 truncate">
+                        {currentShop.whatsapp || currentShop.phone}
+                      </p>
+                    </div>
+                    <ArrowLeft className="h-4 w-4 text-emerald-400 rotate-180 ml-auto shrink-0" />
+                  </a>
+                )}
+
+                {/* Location */}
+                {(currentShop.address || currentShop.distance) && (
+                  <div className="flex items-center gap-4 rounded-2xl bg-gray-50 border border-gray-100 px-4 py-3.5">
+                    <div className="h-10 w-10 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
+                      <MapPin className="h-5 w-5 text-rose-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Location</p>
+                      <p className="text-sm font-black text-gray-900 truncate">
+                        {currentShop.address || currentShop.distance}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+
+              {/* Bottom safe area for mobile */}
+              <div className="px-5 pb-6">
+                <button
+                  type="button"
+                  onClick={() => setShowContactCard(false)}
+                  className="w-full rounded-2xl bg-gray-950 py-3.5 text-sm font-black text-white hover:bg-gray-800 transition cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* UPLOAD / REGISTER SHOP MODAL */}
       {showAddShopModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
@@ -1991,6 +2248,34 @@ export default function LunchComingSoon() {
                     placeholder="20–30 min"
                   />
                 </div>
+              </div>
+
+              {/* Phone & WhatsApp */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-700 block">Contact Numbers</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-amber-500 pointer-events-none" />
+                    <input
+                      type="tel"
+                      value={newShopForm.phone}
+                      onChange={(e) => setNewShopForm({ ...newShopForm, phone: e.target.value })}
+                      className="w-full rounded-xl border border-gray-200 pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                      placeholder="Call number"
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm pointer-events-none">💬</span>
+                    <input
+                      type="tel"
+                      value={newShopForm.whatsapp}
+                      onChange={(e) => setNewShopForm({ ...newShopForm, whatsapp: e.target.value })}
+                      className="w-full rounded-xl border border-emerald-200 pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                      placeholder="WhatsApp number"
+                    />
+                  </div>
+                </div>
+                <p className="text-[10px] text-gray-400 font-medium">Enter numbers with country code e.g. 27821234567</p>
               </div>
 
               <button
@@ -2243,13 +2528,32 @@ export default function LunchComingSoon() {
                 </div>
               </div>
 
-              <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Contact Phone</label>
-                <input
-                  value={editShopForm.phone}
-                  onChange={(e) => setEditShopForm({ ...editShopForm, phone: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                />
+              {/* Phone & WhatsApp */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-700 block">Contact Numbers</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-amber-500 pointer-events-none" />
+                    <input
+                      type="tel"
+                      value={editShopForm.phone}
+                      onChange={(e) => setEditShopForm({ ...editShopForm, phone: e.target.value })}
+                      className="w-full rounded-xl border border-gray-200 pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                      placeholder="Call number"
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm pointer-events-none">💬</span>
+                    <input
+                      type="tel"
+                      value={editShopForm.whatsapp}
+                      onChange={(e) => setEditShopForm({ ...editShopForm, whatsapp: e.target.value })}
+                      className="w-full rounded-xl border border-emerald-200 pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                      placeholder="WhatsApp number"
+                    />
+                  </div>
+                </div>
+                <p className="text-[10px] text-gray-400 font-medium">Enter numbers with country code e.g. 27821234567</p>
               </div>
 
               <button
