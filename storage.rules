@@ -2,38 +2,20 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // Allow authenticated users to upload avatar/profile images
-    // Files are stored at the root with a timestamp prefix (e.g. 1785705599195filename.jpg)
+    // This app uses custom backend auth (MongoDB/Express), NOT Firebase Auth.
+    // request.auth is always null, so we allow uploads by file type + size only.
+
+    // Root-level files (profile avatars, cover photos — uploaded by Profile.jsx)
     match /{fileName} {
       allow read: if true;
-      allow write: if request.auth != null
-                   && request.resource.size < 10 * 1024 * 1024   // max 10 MB
+      allow write: if request.resource.size < 10 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
     }
 
-    // Profile avatars stored under avatars/ folder
-    match /avatars/{userId}/{fileName} {
+    // Nested paths (shops, avatars, covers, etc.)
+    match /{path=**} {
       allow read: if true;
-      allow write: if request.auth != null
-                   && request.auth.uid == userId
-                   && request.resource.size < 10 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
-    }
-
-    // Cover photos
-    match /covers/{userId}/{fileName} {
-      allow read: if true;
-      allow write: if request.auth != null
-                   && request.auth.uid == userId
-                   && request.resource.size < 10 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
-    }
-
-    // Shop images / meal images
-    match /shops/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null
-                   && request.resource.size < 10 * 1024 * 1024
+      allow write: if request.resource.size < 10 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
     }
 
