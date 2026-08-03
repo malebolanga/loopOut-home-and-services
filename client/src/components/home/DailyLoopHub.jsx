@@ -16,19 +16,17 @@ const HUB_ITEMS = [
     emoji: '🎁',
     label: 'Daily Spoil',
     desc: 'Spin & Win',
-
-
+   
     textColor: 'text-amber-600',
     action: 'modal-spin',
-
   },
   {
     id: 'lunch',
     emoji: '🍔',
     label: 'Lunch Hub',
     desc: 'Order food',
-
-    textColor: 'text-amber-700',
+  
+    textColor: 'text-rose-600',
     action: '/lunch',
   },
   {
@@ -36,7 +34,7 @@ const HUB_ITEMS = [
     emoji: '📸',
     label: 'Vision Scan',
     desc: 'Scan with camera',
-
+  
     textColor: 'text-purple-700',
     action: 'modal-vision',
   },
@@ -45,7 +43,7 @@ const HUB_ITEMS = [
     emoji: '🎙️',
     label: 'Whisper AI',
     desc: 'Voice assistant',
-
+   
     textColor: 'text-cyan-700',
     action: 'modal-whisper',
   },
@@ -54,7 +52,7 @@ const HUB_ITEMS = [
     emoji: '🔥',
     label: 'Matchmaker',
     desc: 'Find your match',
-
+    
     textColor: 'text-rose-600',
     action: '/matchmaker',
   },
@@ -68,6 +66,7 @@ const HUB_ITEMS = [
     action: '/radar',
   },
 ];
+
 
 const DailyLoopHub = () => {
   const navigate = useNavigate();

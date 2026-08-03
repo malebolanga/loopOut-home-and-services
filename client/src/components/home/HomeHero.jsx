@@ -15,7 +15,7 @@ export const HomeHero = ({ navigate }) => {
   const slides = [
     {
       id: 1,
-      image: '/maskable.png',
+      image: '/loopout_for_everyone.png',
       tagIcon: Sparkles,
       tagText: 'Premium Reflections',
       titleLine1: 'LOOPOUT',
@@ -28,7 +28,7 @@ export const HomeHero = ({ navigate }) => {
     },
     {
       id: 2,
-      image: '/maskable.png',
+      image: '/loopout_maid_celebration.png',
       tagIcon: ScissorsIcon,
       tagText: 'Elite Salon Experience',
       titleLine1: 'LOOPOUT',
@@ -54,7 +54,7 @@ export const HomeHero = ({ navigate }) => {
     },
     {
       id: 4,
-      image: '/maskable.png',
+      image: '/student_room_loopout_campaign.png',
       tagIcon: HomeModernIcon,
       tagText: 'Curated Living Spaces',
       titleLine1: 'LOOPOUT',
@@ -67,7 +67,7 @@ export const HomeHero = ({ navigate }) => {
     },
     {
       id: 5,
-      image: '/maskable.png',
+      image: '/soweto_bg.png',
       tagIcon: Sparkles,
       tagText: 'Signature Comfort',
       titleLine1: 'LOOPOUT',
