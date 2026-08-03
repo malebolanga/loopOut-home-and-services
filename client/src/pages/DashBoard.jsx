@@ -221,39 +221,6 @@ const ClientRequestNote = ({ message }) => {
   );
 }
 
-const FooterDock = ({ unreadCount = 0 }) => {
-  const navigate = useNavigate();
-  const location = window.location.pathname;
-  
-  return (
-    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-2 bg-white/5 backdrop-blur-3xl px-4 sm:px-6 py-3 sm:py-4 rounded-full border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] z-[200] max-w-[95vw] sm:max-w-none">
-       {[
-         { icon: HomeIcon, route: '/', label: 'Home' },
-         { icon: MagnifyingGlassIcon, route: '/search', label: 'Explore' },
-         { icon: CpuChipIcon, route: '/host-dashboard', label: 'Dashboard' },
-         { icon: BellIcon, route: '/dashboard', label: 'Alerts', active: location === '/dashboard', badge: unreadCount },
-         { icon: UserIcon, route: '/profile', label: 'Profile' }
-       ].map((item, i) => (
-         <button 
-           key={i} 
-           onClick={() => navigate(item.route)}
-           title={item.label}
-           className={`p-3 sm:p-4 rounded-full transition-all flex flex-col items-center gap-1 group relative ${item.active ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20 scale-110 sm:scale-125 mx-1 sm:mx-2' : 'text-gray-400 hover:text-white hover:bg-white/5 whitespace-nowrap'}`}
-         >
-            <item.icon className={`w-5 h-5 sm:w-6 h-6 ${item.badge > 0 ? 'animate-bounce text-rose-500' : ''}`} />
-            {item.badge > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-rose-500 text-white rounded-full flex items-center justify-center text-[8px] font-black border-2 border-white shadow-lg">
-                {item.badge}
-              </span>
-            )}
-            <span className="text-[6px] sm:text-[8px] font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">
-              {item.label}
-            </span>
-         </button>
-       ))}
-    </div>
-  );
-};;
 
 export default function DashBoard() {
   const { currentUser } = useSelector((state) => state.user);
@@ -635,31 +602,24 @@ export default function DashBoard() {
         </div>
 
         {/* Main View Navigation */}
-        <div className="flex border-b border-gray-200 mb-8 overflow-x-auto scrollbar-hide">
-          <button
-            onClick={() => setViewType('all')}
-            className={`px-6 py-4 text-sm font-bold uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${
-              viewType === 'all' ? 'border-rose-500 text-rose-500' : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            All Activity
-          </button>
-          <button
-            onClick={() => setViewType('stays')}
-            className={`px-6 py-4 text-sm font-bold uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${
-              viewType === 'stays' ? 'border-rose-500 text-rose-500' : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Stay Bookings (Overnight)
-          </button>
-          <button
-            onClick={() => setViewType('services')}
-            className={`px-6 py-4 text-sm font-bold uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${
-              viewType === 'services' ? 'border-rose-500 text-rose-500' : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Service Appointments
-          </button>
+        <div className="flex items-center gap-3 mb-8 overflow-x-auto scrollbar-hide pb-1">
+          {[
+            { id: 'all',      label: 'All Activity' },
+            { id: 'stays',    label: 'Overnight Stays' },
+            { id: 'services', label: 'Service Appointments' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setViewType(tab.id)}
+              className={`flex-shrink-0 px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                viewType === tab.id
+                  ? 'bg-gray-900 text-white shadow-md'
+                  : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-400 hover:text-gray-700'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Schedule Perspective Toggles */}
@@ -781,248 +741,234 @@ export default function DashBoard() {
             </div>
           ) : (
             filteredBookings.map((booking, idx) => (
-              <motion.div 
+              <motion.div
                 key={booking._id}
                 id={`booking-${booking._id}`}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="bg-transparent rounded-[2.5rem] border border-slate-200/50 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden hover:shadow-xl transition-all duration-500 group"
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05, ease: [0.22, 1, 0.36, 1] }}
+                className="group relative bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.10)] transition-all duration-500"
               >
-                <div className="p-8">
-                  {/* Status & ID Row */}
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${statusConfig[booking.status]?.color || 'bg-gray-100 text-gray-800'}`}>
-                        {statusConfig[booking.status]?.label || booking.status}
-                      </span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
-                        Ref: #{booking._id}
-                      </span>
+                {/* Status accent bar */}
+                <div className={`absolute top-0 left-0 right-0 h-1 ${
+                  booking.status === 'confirmed' || booking.status === 'approved' ? 'bg-emerald-400' :
+                  booking.status === 'pending' ? 'bg-amber-400' :
+                  booking.status === 'completed' ? 'bg-blue-400' :
+                  booking.status === 'cancelled' || booking.status === 'declined' ? 'bg-rose-400' :
+                  booking.status === 'enroute' ? 'bg-indigo-400' :
+                  booking.status === 'ongoing' ? 'bg-orange-400' :
+                  'bg-gray-200'
+                }`} />
+
+                <div className="p-6 pt-7 flex flex-col gap-5">
+
+                  {/* ── Row 1: Service icon + name + type pill + price ── */}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="w-14 h-14 flex-shrink-0 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-2xl shadow-sm group-hover:scale-105 transition-transform duration-500">
+                        {getServiceIcon(booking)}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-base font-black text-gray-900 leading-tight truncate mb-1.5">
+                          {booking.type === 'listing'
+                            ? booking.listingDetails?.name
+                            : booking.helperDetails?.name || booking.serviceDetails?.name || 'Booking'}
+                        </h3>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${statusConfig[booking.status]?.color || 'bg-gray-100 text-gray-700 border-gray-100'}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${
+                              booking.status === 'confirmed' || booking.status === 'approved' ? 'bg-emerald-500' :
+                              booking.status === 'pending' ? 'bg-amber-500' :
+                              booking.status === 'completed' ? 'bg-blue-500' :
+                              booking.status === 'cancelled' || booking.status === 'declined' ? 'bg-rose-500' :
+                              'bg-gray-400'
+                            } animate-pulse`} />
+                            {statusConfig[booking.status]?.label || booking.status}
+                          </span>
+                          <span className="px-2.5 py-1 bg-rose-50 text-rose-600 rounded-full text-[9px] font-black uppercase tracking-widest border border-rose-100">
+                            {getServiceType(booking)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-left md:text-right bg-rose-50/50 px-6 py-4 rounded-[1.5rem] border border-rose-100/50 shadow-sm min-w-[160px]">
-                      <p className="text-2xl md:text-3xl font-black text-rose-600 leading-none">R{Number(booking.totalAmount).toLocaleString()}</p>
-                      <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest mt-2">{booking.type === 'listing' ? 'Overnight Booking' : 'Service Appointment'}</p>
+
+                    {/* Price */}
+                    <div className="flex-shrink-0 text-right">
+                      <p className="text-2xl font-black text-gray-900 leading-none">R{Number(booking.totalAmount).toLocaleString()}</p>
+                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-1">
+                        {booking.type === 'listing' ? 'Overnight' : 'Service'}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Main Content Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                    {/* Item Info */}
-                    <div className="lg:col-span-4 lg:border-r border-gray-50 lg:pr-8 min-w-0">
-                      <div className="flex items-start gap-5">
-                        <div className="w-20 h-20 rounded-[1.5rem] bg-gray-50 flex items-center justify-center text-3xl shadow-inner group-hover:scale-110 transition-transform duration-500">
-                           {getServiceIcon(booking)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-black text-gray-900 text-xl leading-tight mb-2 truncate">
-                            {booking.type === 'listing' ? booking.listingDetails?.name : booking.helperDetails?.name}
-                          </h3>
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 rounded-full">
-                            <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                            <p className="text-[10px] font-black text-rose-600 uppercase tracking-tight truncate">
-                              {getServiceType(booking)}
-                            </p>
-                          </div>
-                          {booking.selectedPerformer && (
-                            <div 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/${booking.type}/${booking.itemId}`);
-                              }}
-                              className="mt-4 p-3 bg-slate-50 rounded-2xl border border-slate-100 group-hover:bg-rose-50/30 group-hover:border-rose-100 transition-all duration-500 cursor-pointer hover:scale-[1.02] active:scale-95 shadow-sm"
-                            >
-                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                                <UserGroupIcon className="w-3 h-3" />
-                                Assigned Performer
-                              </p>
-                              <div className="flex items-center gap-3">
-                                {booking.performerImage ? (
-                                  <img 
-                                    src={booking.performerImage} 
-                                    alt={booking.selectedPerformer} 
-                                    className="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-sm"
-                                  />
-                                ) : (
-                                  <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-rose-500 font-bold text-xs shadow-sm">
-                                    {booking.selectedPerformer.charAt(0)}
-                                  </div>
-                                )}
-                                <div className="min-w-0">
-                                  <p className="text-xs font-black text-slate-900 truncate">{booking.selectedPerformer}</p>
-                                  {booking.performerExperience && (
-                                    <p className="text-[9px] font-bold text-rose-500 uppercase tracking-tight">{booking.performerExperience} Experience</p>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          {booking.subtype && (
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-rose-100 shadow-sm truncate max-w-full">
-                                {booking.subtype}
-                              </span>
-                            </div>
-                          )}
-                        </div>
+                  {/* ── Row 2: Date / Location / Ref ── */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="flex items-center gap-3 bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100">
+                      <div className="w-8 h-8 flex-shrink-0 rounded-xl bg-blue-100 flex items-center justify-center">
+                        <CalendarIcon className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Date & Time</p>
+                        <p className="text-xs font-bold text-gray-900 truncate">{formatDate(booking.date)}</p>
+                        <p className="text-[10px] text-gray-500 font-semibold">{booking.time}</p>
                       </div>
                     </div>
 
-                    {/* Booking Details */}
-                    <div className="lg:col-span-4 min-w-0 space-y-6">
-                      <div className="flex items-center gap-4">
-                         <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm">
-                            <CalendarIcon className="w-5 h-5" />
-                         </div>
-                         <div className="min-w-0">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5 whitespace-nowrap">Date & Time</p>
-                            <p className="text-[15px] font-bold text-gray-900 truncate">{formatDate(booking.date)} at {booking.time}</p>
-                         </div>
+                    <div className="flex items-center gap-3 bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100">
+                      <div className="w-8 h-8 flex-shrink-0 rounded-xl bg-rose-100 flex items-center justify-center">
+                        <MapPinIcon className="w-4 h-4 text-rose-600" />
                       </div>
-                      <div className="flex items-center gap-4">
-                         <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600 shadow-sm">
-                            <MapPinIcon className="w-5 h-5" />
-                         </div>
-                         <div className="flex-1 min-w-0">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5 whitespace-nowrap">Location</p>
-                            <a 
-                               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.location)}`}
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               className="text-[15px] font-bold text-rose-600 hover:text-rose-700 hover:underline transition-all block truncate"
-                               title={`${booking.location}`}
-                             >
-                               {booking.location}
-                             </a>
-                         </div>
+                      <div className="min-w-0">
+                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Location</p>
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.location)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-bold text-rose-600 hover:underline truncate block"
+                        >
+                          {booking.location}
+                        </a>
                       </div>
                     </div>
 
-                    {/* Premium WhatsApp Contact Card - Hosting View */}
-                    <div className="lg:col-span-4 relative group/card min-w-0">
-                      <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-green-600 rounded-[2rem] opacity-0 group-hover/card:opacity-10 transition-opacity blur-lg" />
-                      <div className="relative h-full flex flex-col justify-between p-6 bg-white border border-gray-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500">
-                        <div className="flex items-center gap-4 mb-6">
-                           <div className="relative">
-                             <div className="w-14 h-14 rounded-full bg-white border-4 border-emerald-50 shadow-inner overflow-hidden flex items-center justify-center text-gray-400">
-                               <UserIcon className="w-6 h-6" />
-                             </div>
-                             <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center shadow-lg">
-                                <FaWhatsapp className="text-white text-[10px]" />
-                             </div>
-                           </div>
-                           <div className="min-w-0">
-                             <p className="text-[10px] text-emerald-600 font-black uppercase tracking-[0.2em] mb-1">Requested By</p>
-                             <h4 className="text-base font-black text-gray-900 leading-none truncate">{booking.clientName}</h4>
-                             <div className="flex items-center gap-2 mt-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[11px] font-bold text-gray-400">{booking.clientPhone}</span>
-                             </div>
-                             {booking.selectedPerformer && (
-                               <div className="mt-2 py-1 px-2 bg-rose-50 rounded-lg border border-rose-100/50 w-fit">
-                                 <p className="text-[8px] font-black text-rose-500 uppercase tracking-tighter">Requested Performer: {booking.selectedPerformer}</p>
-                               </div>
-                             )}
-                           </div>
-                        </div>
-                        
-                        <div className="flex flex-wrap items-center gap-3">
-                          <button 
-                            onClick={() => window.open(`tel:${booking.clientPhone.replace(/\s/g, '')}`, '_self')}
-                            className="w-12 h-12 flex-shrink-0 flex items-center justify-center bg-gray-50 text-gray-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all border border-transparent hover:border-rose-100 shadow-sm"
-                          >
-                            <PhoneIcon className="w-5 h-5" />
-                          </button>
-                          <button 
-                            onClick={() => window.open(`https://wa.me/${booking.clientPhone.replace(/\s/g, '')}`, '_blank')}
-                            className="flex-1 min-w-[120px] bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest py-4 rounded-2xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-200 flex items-center justify-center gap-2"
-                          >
-                            <FaWhatsapp size={16} />
-                            WhatsApp Message
-                          </button>
-
-                          {dashboardMode === 'hosting' ? (
-                            <>
-                            {booking.status === 'pending' && (
-                              <div className="flex gap-2">
-                                <button 
-                                  onClick={() => handleStatusUpdate(booking._id, 'confirmed')}
-                                  className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm group/btn"
-                                  title="Approve"
-                                >
-                                  <CheckCircleIconSolid className="w-6 h-6 group-hover/btn:scale-125 transition-transform" />
-                                </button>
-                                <button 
-                                  onClick={() => handleStatusUpdate(booking._id, 'declined')}
-                                  className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-rose-600 hover:bg-rose-50 transition-all shadow-sm group/btn"
-                                  title="Decline"
-                                >
-                                  <XCircleIconSolid className="w-6 h-6 group-hover/btn:scale-125 transition-transform" />
-                                </button>
-                              </div>
-                            )}
-                            
-                            {(booking.status === 'confirmed' || booking.status === 'approved') && booking.type !== 'listing' && (
-                              <button 
-                                onClick={() => handleStatusUpdate(booking._id, 'assigned')}
-                                className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-lg"
-                              >
-                                Assign Pro
-                              </button>
-                            )}
-
-                            {booking.status === 'assigned' && (
-                              <button 
-                                onClick={() => handleStatusUpdate(booking._id, 'enroute')}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-lg"
-                              >
-                                En-route
-                              </button>
-                            )}
-
-                            {booking.status === 'enroute' && (
-                              <button 
-                                onClick={() => handleStatusUpdate(booking._id, 'ongoing')}
-                                className="bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-lg"
-                              >
-                                Start Service
-                              </button>
-                            )}
-
-                            {(booking.status === 'confirmed' || booking.status === 'approved' || booking.status === 'ongoing') && (
-                              <button 
-                                onClick={() => handleStatusUpdate(booking._id, 'completed')}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-lg min-w-[120px]"
-                              >
-                                {booking.type === 'listing' ? 'Check Out' : 'Mark Completed'}
-                              </button>
-                            )}
-                          </>
-                        ) : (
-                          /* My Requests Perspective Actions */
-                          <>
-                            {['pending', 'confirmed', 'approved', 'assigned'].includes(booking.status) && (
-                              <button 
-                                onClick={() => handleStatusUpdate(booking._id, 'cancelled')}
-                                className="bg-white border border-gray-100 text-rose-600 hover:bg-rose-50 text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-sm"
-                              >
-                                Cancel Request
-                              </button>
-                            )}
-                          </>
-                        )}
-                        </div>
+                    <div className="flex items-center gap-3 bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100">
+                      <div className="w-8 h-8 flex-shrink-0 rounded-xl bg-gray-200 flex items-center justify-center">
+                        <UserIcon className="w-4 h-4 text-gray-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">
+                          {dashboardMode === 'hosting' ? 'Client' : 'Ref'}
+                        </p>
+                        <p className="text-xs font-bold text-gray-900 truncate">{booking.clientName}</p>
+                        <p className="text-[10px] text-gray-400 font-semibold truncate">{booking.clientPhone}</p>
                       </div>
                     </div>
-
                   </div>
 
-                  {/* Requirements Note */}
+                  {/* ── Performer chip (optional) ── */}
+                  {booking.selectedPerformer && (
+                    <div
+                      onClick={() => navigate(`/${booking.type}/${booking.itemId}`)}
+                      className="flex items-center gap-3 bg-rose-50 border border-rose-100 rounded-2xl px-4 py-3 cursor-pointer hover:bg-rose-100 transition-colors"
+                    >
+                      {booking.performerImage ? (
+                        <img src={booking.performerImage} alt={booking.selectedPerformer} className="w-8 h-8 rounded-full object-cover border border-rose-200" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-rose-200 flex items-center justify-center text-rose-700 font-black text-xs">
+                          {booking.selectedPerformer.charAt(0)}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-[8px] font-black text-rose-400 uppercase tracking-widest">Assigned Performer</p>
+                        <p className="text-xs font-black text-rose-700 truncate">{booking.selectedPerformer}</p>
+                      </div>
+                      {booking.performerExperience && (
+                        <span className="ml-auto flex-shrink-0 text-[8px] font-black text-rose-500 uppercase tracking-widest bg-white border border-rose-100 px-2 py-0.5 rounded-full">
+                          {booking.performerExperience}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ── Special requirements ── */}
                   {booking.specialRequirements && (
                     <ClientRequestNote message={booking.specialRequirements} />
                   )}
+
+                  {/* ── Row 3: Action buttons ── */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-gray-50">
+                    {/* Contact */}
+                    <button
+                      onClick={() => window.open(`tel:${booking.clientPhone.replace(/\s/g, '')}`, '_self')}
+                      className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 transition-all border border-gray-100"
+                    >
+                      <PhoneIcon className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      onClick={() => window.open(`https://wa.me/${booking.clientPhone.replace(/\s/g, '')}`, '_blank')}
+                      className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all shadow-md shadow-emerald-100"
+                    >
+                      <FaWhatsapp size={14} />
+                      WhatsApp
+                    </button>
+
+                    {/* Hosting action buttons */}
+                    {dashboardMode === 'hosting' ? (
+                      <>
+                        {booking.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => handleStatusUpdate(booking._id, 'confirmed')}
+                              className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all border border-emerald-100"
+                              title="Approve"
+                            >
+                              <CheckCircleIconSolid className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => handleStatusUpdate(booking._id, 'declined')}
+                              className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center bg-rose-50 text-rose-500 hover:bg-rose-100 transition-all border border-rose-100"
+                              title="Decline"
+                            >
+                              <XCircleIconSolid className="w-5 h-5" />
+                            </button>
+                          </>
+                        )}
+                        {(booking.status === 'confirmed' || booking.status === 'approved') && booking.type !== 'listing' && (
+                          <button
+                            onClick={() => handleStatusUpdate(booking._id, 'assigned')}
+                            className="px-5 py-2.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-md"
+                          >
+                            Assign Pro
+                          </button>
+                        )}
+                        {booking.status === 'assigned' && (
+                          <button
+                            onClick={() => handleStatusUpdate(booking._id, 'enroute')}
+                            className="px-5 py-2.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-700 transition-all shadow-md"
+                          >
+                            En-Route
+                          </button>
+                        )}
+                        {booking.status === 'enroute' && (
+                          <button
+                            onClick={() => handleStatusUpdate(booking._id, 'ongoing')}
+                            className="px-5 py-2.5 bg-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-orange-600 transition-all shadow-md"
+                          >
+                            Start Service
+                          </button>
+                        )}
+                        {(booking.status === 'confirmed' || booking.status === 'approved' || booking.status === 'ongoing') && (
+                          <button
+                            onClick={() => handleStatusUpdate(booking._id, 'completed')}
+                            className="ml-auto px-5 py-2.5 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-500 transition-all shadow-md"
+                          >
+                            {booking.type === 'listing' ? 'Check Out' : 'Mark Complete'}
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {['pending', 'confirmed', 'approved', 'assigned'].includes(booking.status) && (
+                          <button
+                            onClick={() => handleStatusUpdate(booking._id, 'cancelled')}
+                            className="ml-auto px-5 py-2.5 bg-white border border-rose-200 text-rose-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-50 transition-all"
+                          >
+                            Cancel Request
+                          </button>
+                        )}
+                      </>
+                    )}
+
+                    {/* Ref badge — right side */}
+                    <span className="ml-auto text-[8px] font-black text-gray-300 uppercase tracking-widest hidden lg:block">
+                      #{booking._id.slice(-6)}
+                    </span>
+                  </div>
+
                 </div>
               </motion.div>
+
             ))
           )}
         </div>
@@ -1080,7 +1026,6 @@ export default function DashBoard() {
           </div>
         </div>
       </div>
-      <FooterDock unreadCount={unreadCount} />
     </div>
   );
 }

@@ -48,7 +48,8 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
          variants={cardVariants}
          exit="exit"
          layout
-         className=" relative bg-white rounded-3xl border border-gray-100 overflow-hidden flex items-center p-4 gap-6 hover:shadow-xl transition-all duration-500"
+         onClick={() => onNavigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`)}
+         className="relative bg-white rounded-3xl border border-gray-100 overflow-hidden flex items-center p-4 gap-6 hover:shadow-xl transition-all duration-500 cursor-pointer"
       >
         <div className="w-40 h-40 rounded-2xl overflow-hidden flex-shrink-0">
            <ImageWithFallback src={getImage()} alt={getTitle()} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" />
@@ -68,20 +69,12 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
            </p>
            <div className="flex items-center justify-between">
               <span className="text-xl font-black text-gray-900">{getPrice()}</span>
-              <div className="flex items-center gap-3">
-                 <button 
-                   onClick={() => onNavigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`)}
-                   className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 transition-all active:scale-95 shadow-lg shadow-gray-100"
-                 >
-                   Inspect
-                 </button>
-                 <button 
-                   onClick={() => onRemove(item._id, item.type)}
-                   className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 transition-all border border-gray-100"
-                 >
-                   <Trash2 className="w-4 h-4" />
-                 </button>
-              </div>
+               <button 
+                 onClick={(e) => { e.stopPropagation(); onRemove(item._id, item.type); }}
+                 className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 transition-all border border-gray-100"
+               >
+                 <Trash2 className="w-4 h-4" />
+               </button>
            </div>
         </div>
       </motion.div>
@@ -285,14 +278,14 @@ const WishList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-32">
+    <div className="min-h-screen bg-white pb-6">
        <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
       
       {/* Animated Header Section */}
-      <div className="relative pt-32 pb-16 px-6 overflow-hidden bg-gray-50/50 border-b border-gray-100">
+      <div className="relative pt-8 pb-8 px-6 overflow-hidden bg-gray-50/50 border-b border-gray-100">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-rose-50/20 to-transparent pointer-events-none" />
         <div className="max-w-7xl mx-auto relative">
           <motion.div
@@ -311,16 +304,14 @@ const WishList = () => {
               <h1 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter mb-4">
                 Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500">Wishlist</span>
               </h1>
-              <p className="text-lg text-gray-500 font-medium max-w-xl leading-relaxed">
-                A curated selection of properties, personnel, and experiences you've marked as extraordinary.
-              </p>
+            
             </div>
           </motion.div>
         </div>
       </div>
 
       {/* Categories & View Toggle Bar */}
-      <div className="pt-6 pb-6 px-6 mb-8 max-w-7xl mx-auto">
+      <div className="pt-4 pb-4 px-6 mb-8 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           {/* Categories Bar */}
           <div className="flex items-center gap-8 overflow-x-auto scrollbar-hide pr-4">
