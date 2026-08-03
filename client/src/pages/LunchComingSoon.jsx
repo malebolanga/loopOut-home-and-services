@@ -144,6 +144,9 @@ export default function LunchComingSoon() {
     }
   };
 
+  // Track whether we've auto-set the initial shop selection (prevents stale-closure reset)
+  const hasInitializedShopRef = useRef(false);
+
   // Ref for the horizontal meals/menu slider
   const menuSliderRef = useRef(null);
   const scrollMenu = (dir) => {
@@ -312,7 +315,11 @@ export default function LunchComingSoon() {
   useEffect(() => {
     const unsubscribeShops = subscribeToShops((fetchedShops) => {
       setShops(fetchedShops);
-      if (fetchedShops.length > 0 && !selectedShopId) {
+      // Only auto-select the first shop once on initial load.
+      // Using a ref avoids the stale-closure bug where selectedShopId
+      // would always read '' inside this callback, resetting the user's pick.
+      if (fetchedShops.length > 0 && !hasInitializedShopRef.current) {
+        hasInitializedShopRef.current = true;
         setSelectedShopId(fetchedShops[0].id);
       }
     });

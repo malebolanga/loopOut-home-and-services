@@ -189,6 +189,14 @@ const WishList = () => {
     { id: 'event', label: 'Events', icon: <Calendar className="w-5 h-5" /> },
   ];
 
+  // All localStorage keys used by the useWishlist hook, one per item type
+  const WISHLIST_KEYS = {
+    listing:  'wishlist',
+    service:  'serviceWishlist',
+    helper:   'helperWishlist',
+    event:    'eventWishlist',
+  };
+
   useEffect(() => {
     loadWishlist();
     window.addEventListener('storage', loadWishlist);
@@ -197,10 +205,26 @@ const WishList = () => {
 
   const loadWishlist = () => {
     try {
-      const stored = JSON.parse(localStorage.getItem('wishlist')) || [];
-      // Combine all types if they are separated, but the hook usually stores them together or in pieces
-      // For this implementation, we assume a unified wishlist
-      setWishlist(stored);
+      // Merge favourites from every type-specific key into one list
+      const merged = Object.entries(WISHLIST_KEYS).flatMap(([type, key]) => {
+        try {
+          const items = JSON.parse(localStorage.getItem(key)) || [];
+          // Stamp the type so the WishList card can read it later
+          return items.map(item => ({ ...item, type: item.type || type }));
+        } catch {
+          return [];
+        }
+      });
+
+      // Deduplicate by _id (keep first occurrence)
+      const seen = new Set();
+      const unique = merged.filter(item => {
+        if (!item._id || seen.has(item._id)) return false;
+        seen.add(item._id);
+        return true;
+      });
+
+      setWishlist(unique);
     } catch (error) {
       console.error('Failed to load wishlist:', error);
     } finally {
@@ -210,13 +234,17 @@ const WishList = () => {
 
   const removeFromWishlist = async (id, type) => {
     setRemovingId(id);
-    // Simulate animation delay
     setTimeout(() => {
       try {
-        const stored = JSON.parse(localStorage.getItem('wishlist')) || [];
+        // Determine which storage key this item lives in
+        const storageKey = WISHLIST_KEYS[type] || WISHLIST_KEYS.listing;
+
+        const stored = JSON.parse(localStorage.getItem(storageKey)) || [];
         const filtered = stored.filter(item => item._id !== id);
-        localStorage.setItem('wishlist', JSON.stringify(filtered));
-        setWishlist(filtered);
+        localStorage.setItem(storageKey, JSON.stringify(filtered));
+
+        // Also remove from combined UI state
+        setWishlist(prev => prev.filter(item => item._id !== id));
         window.dispatchEvent(new Event('storage'));
       } catch (error) {
         console.error('Failed to remove item:', error);
@@ -232,7 +260,20 @@ const WishList = () => {
 
   const filteredWishlist = useMemo(() => {
     if (activeCategory === 'all') return wishlist;
-    return wishlist.filter(item => item.type === activeCategory || (activeCategory === 'listing' && item.category === 'properties'));
+    return wishlist.filter(item => {
+      // Each item has a 'type' stamped by loadWishlist — this is the wishlist category key
+      // ('listing', 'service', 'helper', 'event').
+      // For listing items, itemType or the original item.type might be property sub-types
+      // so we check both the stamped type and the itemType field.
+      const wlType = item.type;
+      const itemType = item.itemType;
+
+      if (activeCategory === 'listing') {
+        return wlType === 'listing' || itemType === 'listing' || itemType === 'property'
+          || item.category === 'properties';
+      }
+      return wlType === activeCategory || itemType === activeCategory;
+    });
   }, [wishlist, activeCategory]);
 
   const containerVariants = {
