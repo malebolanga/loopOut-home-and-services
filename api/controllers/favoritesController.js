@@ -4,7 +4,7 @@ import { errorHandler } from '../utils/error.js';
 
 export const toggleFavorite = async (req, res, next) => {
   const { itemId, itemType } = req.body;
-  const userId = req.user.id;
+  const userId = req.user?.id;
 
   if (!itemId || !itemType) {
     return next(errorHandler(400, 'Item ID and Type are required'));
@@ -14,8 +14,15 @@ export const toggleFavorite = async (req, res, next) => {
     const user = await User.findById(userId);
     if (!user) return next(errorHandler(404, 'User not found'));
 
+    // Normalize itemType string
+    let type = (itemType || '').toLowerCase();
+    if (['property', 'properties', 'listings', 'listing'].includes(type)) type = 'listing';
+    if (['services', 'service'].includes(type)) type = 'service';
+    if (['helpers', 'helper'].includes(type)) type = 'helper';
+    if (['events', 'event'].includes(type)) type = 'event';
+
     let favoriteArray;
-    switch (itemType) {
+    switch (type) {
       case 'listing':
         favoriteArray = 'favorites';
         break;
@@ -32,15 +39,18 @@ export const toggleFavorite = async (req, res, next) => {
         return next(errorHandler(400, 'Invalid item type'));
     }
 
+    if (!user[favoriteArray]) {
+      user[favoriteArray] = [];
+    }
+
     // Handle string/ObjectId backward compatibility vs Object compatibility
     const existingIndex = user[favoriteArray].findIndex(fav => {
-      // old format fav is an ObjectId
+      if (!fav) return false;
       if (fav instanceof mongoose.Types.ObjectId || typeof fav === 'string') {
-        return fav.toString() === itemId;
+        return fav.toString() === itemId.toString();
       }
-      // new format fav is { item: ObjectId, addedAt: Date }
       if (fav.itemId) {
-        return fav.itemId.toString() === itemId;
+        return fav.itemId.toString() === itemId.toString();
       }
       return false;
     });
@@ -50,14 +60,21 @@ export const toggleFavorite = async (req, res, next) => {
     if (isFavorite) {
       user[favoriteArray].splice(existingIndex, 1);
     } else {
-      user[favoriteArray].push({ itemId, addedAt: new Date() });
+      user[favoriteArray].push({ itemId: new mongoose.Types.ObjectId(itemId), addedAt: new Date() });
     }
     
     await user.save();
 
+    const totalWishlistCount = 
+      (user.favorites?.length || 0) +
+      (user.favoriteServices?.length || 0) +
+      (user.favoriteHelpers?.length || 0) +
+      (user.favoriteEvents?.length || 0);
+
     res.status(200).json({
       success: true,
       isFavorite: !isFavorite,
+      wishlistCount: totalWishlistCount,
       message: isFavorite ? 'Removed from wishlist' : 'Added to wishlist'
     });
   } catch (error) {
@@ -66,7 +83,7 @@ export const toggleFavorite = async (req, res, next) => {
 };
 
 export const getWishlist = async (req, res, next) => {
-  const userId = req.user.id;
+  const userId = req.user?.id;
   try {
     const user = await User.findById(userId)
       .populate('favorites.itemId')
@@ -78,18 +95,20 @@ export const getWishlist = async (req, res, next) => {
 
     // Map backwards compatibility for old items without addedAt and unpopulated items
     const mapItems = (arr, type) => {
+      if (!arr || !Array.isArray(arr)) return [];
       return arr.map(fav => {
-        // Fallbacks for old format or new format
+        if (!fav) return null;
         const idObj = fav.itemId || fav; 
-        const addedTs = fav.addedAt || new Date(0); // If old, fallback to epoch
-        if (!idObj || typeof idObj === 'string' || idObj instanceof mongoose.Types.ObjectId) return null; // Unpopulated or invalid
+        const addedTs = fav.addedAt || new Date(0);
+        if (!idObj || typeof idObj === 'string' || idObj instanceof mongoose.Types.ObjectId) return null;
 
+        const docData = idObj._doc || idObj;
         return {
-          ...idObj._doc,
+          ...docData,
           type: type,
-          addedAt: new Date(addedTs).getTime() // Send ms timestamp to frontend
+          addedAt: new Date(addedTs).getTime()
         };
-      }).filter(item => item !== null); // Remove nulls
+      }).filter(item => item !== null);
     };
 
     const wishlist = [
@@ -100,6 +119,43 @@ export const getWishlist = async (req, res, next) => {
     ];
 
     res.status(200).json(wishlist);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const clearWishlist = async (req, res, next) => {
+  const userId = req.user?.id;
+  try {
+    const user = await User.findById(userId);
+    if (!user) return next(errorHandler(404, 'User not found'));
+
+    const { category } = req.body || {};
+
+    if (!category || category === 'all') {
+      user.favorites = [];
+      user.favoriteServices = [];
+      user.favoriteHelpers = [];
+      user.favoriteEvents = [];
+    } else {
+      let type = (category || '').toLowerCase();
+      if (['property', 'properties', 'listings', 'listing'].includes(type)) user.favorites = [];
+      if (['services', 'service'].includes(type)) user.favoriteServices = [];
+      if (['helpers', 'helper'].includes(type)) user.favoriteHelpers = [];
+      if (['events', 'event'].includes(type)) user.favoriteEvents = [];
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Wishlist cleared successfully',
+      wishlistCount: 
+        (user.favorites?.length || 0) +
+        (user.favoriteServices?.length || 0) +
+        (user.favoriteHelpers?.length || 0) +
+        (user.favoriteEvents?.length || 0)
+    });
   } catch (error) {
     next(error);
   }

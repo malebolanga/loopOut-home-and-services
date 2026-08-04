@@ -33,6 +33,7 @@ import {
   XCircleIcon as XCircleIconSolid
 } from '@heroicons/react/24/solid';
 import { FaWhatsapp } from 'react-icons/fa';
+import PropTypes from 'prop-types';
 
 // Mock data for demo
 const mockBookings = [
@@ -189,7 +190,7 @@ const ClientRequestNote = ({ message }) => {
        <div className="bg-gray-50/80 px-4 py-3 rounded-2xl rounded-tl-none border border-gray-100 flex-1 shadow-sm max-w-[90%] transition-all overflow-hidden">
           <p className="text-[10px] font-black text-[#075E54] uppercase tracking-widest mb-1 opacity-70">Client Requested</p>
           <div className={`text-xs font-bold text-gray-700 leading-relaxed italic transition-all duration-500 ${!isExpanded ? 'line-clamp-2' : ''}`}>
-             "{message}"
+             &quot;{message}&quot;
           </div>
           
           {(shouldShowReadMore || message.length > 100) && (
@@ -199,7 +200,7 @@ const ClientRequestNote = ({ message }) => {
             >
               {isExpanded ? 'Read Less' : 'Read More'}
             </button>
-          )}
+            )}
 
           {/* Key info badges */}
           {(message.toLowerCase().includes('bbq') || 
@@ -220,6 +221,10 @@ const ClientRequestNote = ({ message }) => {
     </div>
   );
 }
+
+ClientRequestNote.propTypes = {
+  message: PropTypes.string.isRequired
+};
 
 
 export default function DashBoard() {
@@ -266,6 +271,48 @@ export default function DashBoard() {
     if (currentUser?._id) fetchStats();
   }, [currentUser]);
 
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return { date: 'N/A', time: 'N/A' };
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return { date: 'N/A', time: 'N/A' };
+    return {
+      date: d.toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }),
+      time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+  };
+
+  const getDurationLabel = (startStr, endStr, type) => {
+    if (!startStr || !endStr) return '';
+    const start = new Date(startStr);
+    const end = new Date(endStr);
+    const diffMs = Math.max(0, end.getTime() - start.getTime());
+    const hours = Math.round(diffMs / (1000 * 60 * 60));
+    if (type === 'listing' || hours >= 24) {
+      const days = Math.max(1, Math.round(hours / 24));
+      return `${days} ${days === 1 ? 'Night' : 'Nights'}`;
+    }
+    if (hours < 1) {
+      const mins = Math.max(15, Math.round(diffMs / (1000 * 60)));
+      return `${mins} mins`;
+    }
+    return `${hours} ${hours === 1 ? 'Hour' : 'Hours'}`;
+  };
+
+  const getCategoryBadge = (booking) => {
+    if (booking.type === 'listing') {
+      return 'PROPERTY OVERNIGHT STAY';
+    }
+    if (booking.type === 'helper') {
+      const sub = (booking.helperDetails?.type || '').toUpperCase();
+      return `${sub || 'PRO'} HELPER SERVICE`;
+    }
+    if (booking.type === 'event') {
+      return 'EVENT & TICKET';
+    }
+    const sub = (booking.serviceDetails?.type || booking.subtype || '').toUpperCase();
+    return `${sub || 'PRO'} SERVICE APPOINTMENT`;
+  };
+
   useEffect(() => {
     const fetchBookings = async () => {
       if (!currentUser?._id) return;
@@ -279,25 +326,49 @@ export default function DashBoard() {
         if (res.ok) {
           const data = await res.json();
 
-          const formatted = data.map(b => ({
-            ...b,
-            date: new Date(b.startDate).toISOString().split('T')[0],
-            time: new Date(b.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            clientName: dashboardMode === 'hosting' ? (b.user?.username || 'Guest') : (b.listing?.name || b.helper?.name || b.service?.name || 'Item'),
-            clientPhone: b.phone || 'N/A',
-            type: b.listing ? 'listing' : (b.helper ? 'helper' : 'service'),
-            listingDetails: b.listing,
-            helperDetails: b.helper,
-            serviceDetails: b.service,
-            location: b.listing?.address || b.helper?.address || b.service?.address || b.location || 'N/A',
-            totalAmount: b.totalPrice,
-            subtype: b.subtype || '',
-            selectedPerformer: b.selectedPerformer,
-            performerExperience: b.performerExperience,
-            performerImage: b.performerImage,
-            itemId: b.listing?._id || b.helper?._id || b.service?._id || b.itemId,
-            specialRequirements: cleanMessage(b.message || '')
-          }));
+          const formatted = data.map(b => {
+            const startStr = b.startDate || b.date;
+            const endStr = b.endDate || b.date;
+            const itemObj = b.listing || b.helper || b.service || b.event;
+            const hostObj = itemObj?.userRef || b.host;
+            const requesterObj = b.user;
+
+            const itemTitle = itemObj?.name || b.listingDetails?.name || b.helperDetails?.name || b.serviceDetails?.name || b.eventDetails?.name || 'Booking Item';
+            const reqName = requesterObj?.username || b.clientName || 'Guest User';
+            const reqPhone = b.phone || requesterObj?.phone || b.clientPhone || 'N/A';
+            const reqAvatar = requesterObj?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
+
+            const hostName = typeof hostObj === 'object' ? (hostObj.username || hostObj.name) : 'Host Provider';
+            const hostAvatar = typeof hostObj === 'object' ? hostObj.avatar : null;
+            const hostPhone = typeof hostObj === 'object' ? hostObj.phone : null;
+
+            return {
+              ...b,
+              startFormatted: formatDateTime(startStr),
+              endFormatted: formatDateTime(endStr),
+              durationLabel: getDurationLabel(startStr, endStr, b.listing ? 'listing' : 'service'),
+              itemName: itemTitle,
+              requesterName: reqName,
+              requesterPhone: reqPhone,
+              requesterAvatar: reqAvatar,
+              ownerName: hostName,
+              ownerAvatar: hostAvatar,
+              ownerPhone: hostPhone,
+              type: b.listing ? 'listing' : (b.helper ? 'helper' : (b.event ? 'event' : 'service')),
+              listingDetails: b.listing,
+              helperDetails: b.helper,
+              serviceDetails: b.service,
+              eventDetails: b.event,
+              location: itemObj?.address || b.location || b.requestLocation || 'Private Location',
+              totalAmount: b.totalPrice || b.totalAmount || 0,
+              subtype: b.subtype || '',
+              selectedPerformer: b.selectedPerformer,
+              performerExperience: b.performerExperience,
+              performerImage: b.performerImage,
+              itemId: itemObj?._id || b.itemId,
+              specialRequirements: cleanMessage(b.message || b.specialRequirements || '')
+            };
+          });
           setBookings(formatted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
         }
       } catch (error) {
@@ -328,6 +399,8 @@ export default function DashBoard() {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 120000); // Check every 2 minutes
     return () => clearInterval(interval);
+    // fetchNotifications uses the current user from this render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   const markAllAsRead = async () => {
@@ -555,7 +628,7 @@ export default function DashBoard() {
                         </div>
                       ))
                     ) : (
-                      <p className="text-[11px] text-gray-400 font-medium text-center py-6">Your alert center is currently quiet ✨</p>
+                      <p className="text-[11px] text-gray-400 font-medium text-center py-6">Your alert center is currently quiet âœ¨</p>
                     )}
                   </div>
                 </div>
@@ -578,7 +651,7 @@ export default function DashBoard() {
           {[
             { label: 'Total Listings', value: stats.listings, icon: HomeIcon, color: 'text-blue-600', bg: 'bg-blue-50' },
             { label: 'Total Earnings', value: `R${stats.earnings.toLocaleString()}`, icon: BanknotesIcon, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-            { label: 'Host Rating', value: `${stats.rating}★`, icon: StarIcon, color: 'text-amber-600', bg: 'bg-amber-50' },
+            { label: 'Host Rating', value: `${stats.rating}â˜…`, icon: StarIcon, color: 'text-amber-600', bg: 'bg-amber-50' },
             { label: 'Pending Approval', value: stats.pending, icon: ClockIcon, color: 'text-rose-600', bg: 'bg-rose-50' }
           ].map((stat, i) => (
             <motion.div
@@ -739,262 +812,259 @@ export default function DashBoard() {
                 }
               </p>
             </div>
-          ) : (
-            filteredBookings.map((booking, idx) => (
+          ) :            filteredBookings.map((booking, idx) => (
               <motion.div
                 key={booking._id}
                 id={`booking-${booking._id}`}
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05, ease: [0.22, 1, 0.36, 1] }}
-                className="group relative bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.10)] transition-all duration-500"
+                className="group relative bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] transition-all duration-500"
               >
-                {/* Status accent bar */}
-                <div className={`absolute top-0 left-0 right-0 h-1 ${
-                  booking.status === 'confirmed' || booking.status === 'approved' ? 'bg-emerald-400' :
-                  booking.status === 'pending' ? 'bg-amber-400' :
-                  booking.status === 'completed' ? 'bg-blue-400' :
-                  booking.status === 'cancelled' || booking.status === 'declined' ? 'bg-rose-400' :
-                  booking.status === 'enroute' ? 'bg-indigo-400' :
-                  booking.status === 'ongoing' ? 'bg-orange-400' :
-                  'bg-gray-200'
-                }`} />
+                {/* â”€â”€ 1. Top Type Header Banner â”€â”€ */}
+                <div className="px-6 py-3.5 bg-gradient-to-r from-gray-900 via-slate-800 to-gray-900 text-white flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-rose-400 font-black text-sm flex-shrink-0">
+                      {getServiceIcon(booking)}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-rose-400 block leading-none mb-1">
+                        {getCategoryBadge(booking)}
+                      </span>
+                      <h4 className="text-sm font-black text-white truncate leading-tight">
+                        {booking.itemName}
+                      </h4>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${statusConfig[booking.status]?.color || 'bg-gray-100 text-gray-700 border-gray-100'}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                        booking.status === 'confirmed' || booking.status === 'approved' ? 'bg-emerald-500' :
+                        booking.status === 'pending' ? 'bg-amber-500' :
+                        booking.status === 'completed' ? 'bg-blue-500' :
+                        booking.status === 'cancelled' || booking.status === 'declined' ? 'bg-rose-500' :
+                        'bg-gray-400'
+                      } animate-pulse`} />
+                      {statusConfig[booking.status]?.label || booking.status}
+                    </span>
+                  </div>
+                </div>
 
-                <div className="p-6 pt-7 flex flex-col gap-5">
+                <div className="p-6 flex flex-col gap-5">
 
-                  {/* ── Row 1: Service icon + name + type pill + price ── */}
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className="w-14 h-14 flex-shrink-0 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-2xl shadow-sm group-hover:scale-105 transition-transform duration-500">
-                        {getServiceIcon(booking)}
+                  {/* â”€â”€ 2. Requester (Client) & Host (Owner) Row â”€â”€ */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50/80 rounded-2xl border border-slate-100">
+                    
+                    {/* Requester Info */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl overflow-hidden border border-rose-200 shadow-sm flex-shrink-0 bg-white">
+                        <img src={booking.requesterAvatar} alt={booking.requesterName} className="w-full h-full object-cover" />
                       </div>
-                      <div className="min-w-0">
-                        <h3 className="text-base font-black text-gray-900 leading-tight truncate mb-1.5">
-                          {booking.type === 'listing'
-                            ? booking.listingDetails?.name
-                            : booking.helperDetails?.name || booking.serviceDetails?.name || 'Booking'}
-                        </h3>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${statusConfig[booking.status]?.color || 'bg-gray-100 text-gray-700 border-gray-100'}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${
-                              booking.status === 'confirmed' || booking.status === 'approved' ? 'bg-emerald-500' :
-                              booking.status === 'pending' ? 'bg-amber-500' :
-                              booking.status === 'completed' ? 'bg-blue-500' :
-                              booking.status === 'cancelled' || booking.status === 'declined' ? 'bg-rose-500' :
-                              'bg-gray-400'
-                            } animate-pulse`} />
-                            {statusConfig[booking.status]?.label || booking.status}
-                          </span>
-                          <span className="px-2.5 py-1 bg-rose-50 text-rose-600 rounded-full text-[9px] font-black uppercase tracking-widest border border-rose-100">
-                            {getServiceType(booking)}
-                          </span>
-                        </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[8px] font-black uppercase tracking-widest text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100 inline-block mb-1">
+                          Requester / Client
+                        </span>
+                        <h5 className="text-sm font-black text-gray-900 truncate leading-none mb-1">{booking.requesterName}</h5>
+                        <p className="text-[11px] font-bold text-gray-500 truncate">{booking.requesterPhone}</p>
                       </div>
                     </div>
 
-                    {/* Price */}
-                    <div className="flex-shrink-0 text-right">
-                      <p className="text-2xl font-black text-gray-900 leading-none">R{Number(booking.totalAmount).toLocaleString()}</p>
-                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-1">
-                        {booking.type === 'listing' ? 'Overnight' : 'Service'}
-                      </p>
+                    {/* Host / Owner Info */}
+                    <div className="flex items-center gap-3 md:border-l md:border-slate-200 md:pl-4">
+                      <div className="w-11 h-11 rounded-2xl overflow-hidden border border-slate-200 shadow-sm flex-shrink-0 bg-slate-900 text-white flex items-center justify-center font-black text-sm">
+                        {booking.ownerAvatar ? (
+                          <img src={booking.ownerAvatar} alt={booking.ownerName} className="w-full h-full object-cover" />
+                        ) : (
+                          booking.ownerName?.charAt(0)?.toUpperCase() || 'H'
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[8px] font-black uppercase tracking-widest text-slate-600 bg-slate-200/60 px-2 py-0.5 rounded-full border border-slate-300/40 inline-block mb-1">
+                          Host / Owner
+                        </span>
+                        <h5 className="text-sm font-black text-gray-900 truncate leading-none mb-1">{booking.ownerName}</h5>
+                        <p className="text-[11px] font-bold text-gray-400 truncate">Card Owner</p>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* â”€â”€ 3. Start âž” End Schedule Timeline â”€â”€ */}
+                  <div className="bg-gradient-to-r from-blue-50/60 via-slate-50 to-rose-50/60 p-4 rounded-2xl border border-slate-200/60">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <CalendarIcon className="w-4 h-4 text-blue-600" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Booking Timeline</span>
+                      </div>
+                      {booking.durationLabel && (
+                        <span className="px-3 py-1 bg-white text-gray-900 border border-slate-200 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm">
+                          {booking.durationLabel}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Start Box */}
+                      <div className="bg-white p-3 rounded-xl border border-blue-100 shadow-sm">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                          <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Start Date & Time</span>
+                        </div>
+                        <p className="text-xs font-black text-gray-900">{booking.startFormatted.date}</p>
+                        <p className="text-[11px] font-bold text-blue-600 mt-0.5">{booking.startFormatted.time}</p>
+                      </div>
+
+                      {/* End Box */}
+                      <div className="bg-white p-3 rounded-xl border border-rose-100 shadow-sm">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="w-2 h-2 rounded-full bg-rose-500" />
+                          <span className="text-[9px] font-black uppercase tracking-widest text-rose-600">End Date & Time</span>
+                        </div>
+                        <p className="text-xs font-black text-gray-900">{booking.endFormatted.date}</p>
+                        <p className="text-[11px] font-bold text-rose-600 mt-0.5">{booking.endFormatted.time}</p>
+                      </div>
                     </div>
                   </div>
 
-                  {/* ── Row 2: Date / Location / Ref ── */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="flex items-center gap-3 bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100">
-                      <div className="w-8 h-8 flex-shrink-0 rounded-xl bg-blue-100 flex items-center justify-center">
-                        <CalendarIcon className="w-4 h-4 text-blue-600" />
+                  {/* â”€â”€ 4. Location & Price Grid â”€â”€ */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    
+                    {/* Location */}
+                    <div className="md:col-span-2 flex items-center gap-3 bg-gray-50 rounded-2xl p-3.5 border border-gray-100">
+                      <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
+                        <MapPinIcon className="w-5 h-5" />
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Date & Time</p>
-                        <p className="text-xs font-bold text-gray-900 truncate">{formatDate(booking.date)}</p>
-                        <p className="text-[10px] text-gray-500 font-semibold">{booking.time}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100">
-                      <div className="w-8 h-8 flex-shrink-0 rounded-xl bg-rose-100 flex items-center justify-center">
-                        <MapPinIcon className="w-4 h-4 text-rose-600" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Location</p>
-                        <a
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-0.5">Location / Place</span>
+                        <a 
                           href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.location)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs font-bold text-rose-600 hover:underline truncate block"
+                          className="text-xs font-bold text-rose-600 hover:underline block truncate"
                         >
                           {booking.location}
                         </a>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100">
-                      <div className="w-8 h-8 flex-shrink-0 rounded-xl bg-gray-200 flex items-center justify-center">
-                        <UserIcon className="w-4 h-4 text-gray-600" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">
-                          {dashboardMode === 'hosting' ? 'Client' : 'Ref'}
-                        </p>
-                        <p className="text-xs font-bold text-gray-900 truncate">{booking.clientName}</p>
-                        <p className="text-[10px] text-gray-400 font-semibold truncate">{booking.clientPhone}</p>
-                      </div>
+                    {/* Price */}
+                    <div className="bg-gray-900 text-white rounded-2xl p-3.5 border border-gray-800 flex flex-col justify-center items-end">
+                      <span className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-0.5">Total Price</span>
+                      <span className="text-xl font-black text-emerald-400 leading-none">R{Number(booking.totalAmount).toLocaleString()}</span>
                     </div>
                   </div>
 
-                  {/* ── Performer chip (optional) ── */}
+                  {/* â”€â”€ 5. Special Notes / Performer â”€â”€ */}
                   {booking.selectedPerformer && (
-                    <div
-                      onClick={() => navigate(`/${booking.type}/${booking.itemId}`)}
-                      className="flex items-center gap-3 bg-rose-50 border border-rose-100 rounded-2xl px-4 py-3 cursor-pointer hover:bg-rose-100 transition-colors"
-                    >
-                      {booking.performerImage ? (
+                    <div className="flex items-center gap-3 bg-rose-50 border border-rose-100 rounded-xl p-3">
+                      {booking.performerImage && (
                         <img src={booking.performerImage} alt={booking.selectedPerformer} className="w-8 h-8 rounded-full object-cover border border-rose-200" />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-rose-200 flex items-center justify-center text-rose-700 font-black text-xs">
-                          {booking.selectedPerformer.charAt(0)}
-                        </div>
                       )}
-                      <div className="min-w-0">
-                        <p className="text-[8px] font-black text-rose-400 uppercase tracking-widest">Assigned Performer</p>
-                        <p className="text-xs font-black text-rose-700 truncate">{booking.selectedPerformer}</p>
+                      <div>
+                        <span className="text-[8px] font-black uppercase tracking-widest text-rose-400 block">Assigned Pro</span>
+                        <span className="text-xs font-black text-rose-700">{booking.selectedPerformer}</span>
                       </div>
-                      {booking.performerExperience && (
-                        <span className="ml-auto flex-shrink-0 text-[8px] font-black text-rose-500 uppercase tracking-widest bg-white border border-rose-100 px-2 py-0.5 rounded-full">
-                          {booking.performerExperience}
-                        </span>
-                      )}
                     </div>
                   )}
 
-                  {/* ── Special requirements ── */}
                   {booking.specialRequirements && (
                     <ClientRequestNote message={booking.specialRequirements} />
                   )}
 
-                  {/* ── Row 3: Action buttons ── */}
-                  <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-gray-50">
-                    {/* Contact */}
-                    <button
-                      onClick={() => window.open(`tel:${booking.clientPhone.replace(/\s/g, '')}`, '_self')}
-                      className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 transition-all border border-gray-100"
-                    >
-                      <PhoneIcon className="w-4 h-4" />
-                    </button>
+                  {/* â”€â”€ 6. Actions Bar â”€â”€ */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
+                    
+                    {/* Contact buttons */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => window.open(`tel:${booking.requesterPhone.replace(/\s/g, '')}`, '_self')}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 text-gray-500 hover:bg-rose-50 hover:text-rose-500 transition-all border border-gray-100"
+                        title="Call Requester"
+                      >
+                        <PhoneIcon className="w-4 h-4" />
+                      </button>
 
-                    <button
-                      onClick={() => window.open(`https://wa.me/${booking.clientPhone.replace(/\s/g, '')}`, '_blank')}
-                      className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all shadow-md shadow-emerald-100"
-                    >
-                      <FaWhatsapp size={14} />
-                      WhatsApp
-                    </button>
+                      <button
+                        onClick={() => window.open(`https://wa.me/${booking.requesterPhone.replace(/\s/g, '')}`, '_blank')}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-emerald-100"
+                      >
+                        <FaWhatsapp size={14} />
+                        WhatsApp
+                      </button>
+                    </div>
 
-                    {/* Hosting action buttons */}
-                    {dashboardMode === 'hosting' ? (
-                      <>
-                        {booking.status === 'pending' && (
-                          <>
+                    {/* Host / User Action Buttons */}
+                    <div className="flex items-center gap-2">
+                      {dashboardMode === 'hosting' ? (
+                        <>
+                          {booking.status === 'pending' && (
+                            <>
+                              <button
+                                onClick={() => handleStatusUpdate(booking._id, 'confirmed')}
+                                className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md"
+                              >
+                                Approve Request
+                              </button>
+                              <button
+                                onClick={() => handleStatusUpdate(booking._id, 'declined')}
+                                className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border border-rose-100"
+                              >
+                                Decline
+                              </button>
+                            </>
+                          )}
+                          {(booking.status === 'confirmed' || booking.status === 'approved') && booking.type !== 'listing' && (
                             <button
-                              onClick={() => handleStatusUpdate(booking._id, 'confirmed')}
-                              className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all border border-emerald-100"
-                              title="Approve"
+                              onClick={() => handleStatusUpdate(booking._id, 'assigned')}
+                              className="px-4 py-2.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-md"
                             >
-                              <CheckCircleIconSolid className="w-5 h-5" />
+                              Assign Pro
                             </button>
+                          )}
+                          {booking.status === 'assigned' && (
                             <button
-                              onClick={() => handleStatusUpdate(booking._id, 'declined')}
-                              className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center bg-rose-50 text-rose-500 hover:bg-rose-100 transition-all border border-rose-100"
-                              title="Decline"
+                              onClick={() => handleStatusUpdate(booking._id, 'enroute')}
+                              className="px-4 py-2.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-700 transition-all shadow-md"
                             >
-                              <XCircleIconSolid className="w-5 h-5" />
+                              En-Route
                             </button>
-                          </>
-                        )}
-                        {(booking.status === 'confirmed' || booking.status === 'approved') && booking.type !== 'listing' && (
-                          <button
-                            onClick={() => handleStatusUpdate(booking._id, 'assigned')}
-                            className="px-5 py-2.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-md"
-                          >
-                            Assign Pro
-                          </button>
-                        )}
-                        {booking.status === 'assigned' && (
-                          <button
-                            onClick={() => handleStatusUpdate(booking._id, 'enroute')}
-                            className="px-5 py-2.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-700 transition-all shadow-md"
-                          >
-                            En-Route
-                          </button>
-                        )}
-                        {booking.status === 'enroute' && (
-                          <button
-                            onClick={() => handleStatusUpdate(booking._id, 'ongoing')}
-                            className="px-5 py-2.5 bg-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-orange-600 transition-all shadow-md"
-                          >
-                            Start Service
-                          </button>
-                        )}
-                        {(booking.status === 'confirmed' || booking.status === 'approved' || booking.status === 'ongoing') && (
-                          <button
-                            onClick={() => handleStatusUpdate(booking._id, 'completed')}
-                            className="ml-auto px-5 py-2.5 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-500 transition-all shadow-md"
-                          >
-                            {booking.type === 'listing' ? 'Check Out' : 'Mark Complete'}
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        {['pending', 'confirmed', 'approved', 'assigned'].includes(booking.status) && (
-                          <button
-                            onClick={() => handleStatusUpdate(booking._id, 'cancelled')}
-                            className="ml-auto px-5 py-2.5 bg-white border border-rose-200 text-rose-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-50 transition-all"
-                          >
-                            Cancel Request
-                          </button>
-                        )}
-                      </>
-                    )}
-
-                    {/* Ref badge — right side */}
-                    <span className="ml-auto text-[8px] font-black text-gray-300 uppercase tracking-widest hidden lg:block">
-                      #{booking._id.slice(-6)}
-                    </span>
+                          )}
+                          {booking.status === 'enroute' && (
+                            <button
+                              onClick={() => handleStatusUpdate(booking._id, 'ongoing')}
+                              className="px-4 py-2.5 bg-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-orange-600 transition-all shadow-md"
+                            >
+                              Start Service
+                            </button>
+                          )}
+                          {(booking.status === 'confirmed' || booking.status === 'approved' || booking.status === 'ongoing') && (
+                            <button
+                              onClick={() => handleStatusUpdate(booking._id, 'completed')}
+                              className="px-4 py-2.5 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-500 transition-all shadow-md"
+                            >
+                              {booking.type === 'listing' ? 'Check Out' : 'Mark Complete'}
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {['pending', 'confirmed', 'approved', 'assigned'].includes(booking.status) && (
+                            <button
+                              onClick={() => handleStatusUpdate(booking._id, 'cancelled')}
+                              className="px-4 py-2.5 bg-white border border-rose-200 text-rose-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-50 transition-all"
+                            >
+                              Cancel Request
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
 
                 </div>
               </motion.div>
-
             ))
-          )}
-        </div>
-
-        {/* Booking Calendar Section */}
-        <div className="mt-16 mb-12">
-           <div className="flex items-center justify-between mb-8">
-              <div>
-                 <h2 className="text-3xl font-black text-gray-900 tracking-tight">Booking Schedule</h2>
-                 <p className="text-gray-500 font-medium">Visual overview of your confirmed appointments and stays</p>
-              </div>
-              <div className="flex items-center gap-4">
-                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-rose-500" />
-                    <span className="text-xs font-bold text-gray-600 uppercase">Stays</span>
-                 </div>
-                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-blue-500" />
-                    <span className="text-xs font-bold text-gray-600 uppercase">Services</span>
-                 </div>
-              </div>
-           </div>
-           
-           {scheduleView === 'list' && (
-             <BookingCalendar bookings={bookings} />
-           )}
+          }
         </div>
 
         {/* Demo Info */}
@@ -1087,7 +1157,7 @@ const SlidingDatesStrip = ({ bookings, onBookingClick }) => {
                 ))
               ) : (
                 <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center opacity-40">
-                  <span className="text-[10px]">•</span>
+                  <span className="text-[10px]">â€¢</span>
                 </div>
               )}
             </div>
@@ -1096,6 +1166,11 @@ const SlidingDatesStrip = ({ bookings, onBookingClick }) => {
       })}
     </div>
   );
+};
+
+SlidingDatesStrip.propTypes = {
+  bookings: PropTypes.array.isRequired,
+  onBookingClick: PropTypes.func.isRequired
 };
 
 const BookingCalendar = ({ bookings }) => {
@@ -1247,4 +1322,7 @@ const BookingCalendar = ({ bookings }) => {
     </div>
   );
 };
-;
+
+BookingCalendar.propTypes = {
+  bookings: PropTypes.array.isRequired
+};

@@ -23,8 +23,10 @@ import {
   ExternalLink,
   Plus
 } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import ImageWithFallback from '../components/ImageWithFallback';
+import { getWishlistBackend, toggleWishlistBackend, clearWishlistBackend } from '../services/wishlist.service';
+import { setWishlistCount } from '../redux/frontendSlice';
 
 const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onNavigate }, ref) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -167,6 +169,7 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
 
 const WishList = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -190,36 +193,67 @@ const WishList = () => {
     event:    'eventWishlist',
   };
 
+  const handleClearAll = async () => {
+    if (!window.confirm('Are you sure you want to remove all saved items from your wishlist?')) {
+      return;
+    }
+    setWishlist([]);
+    Object.values(WISHLIST_KEYS).forEach(key => localStorage.removeItem(key));
+    window.dispatchEvent(new Event('storage'));
+    dispatch(setWishlistCount(0));
+    if (currentUser) {
+      await clearWishlistBackend('all');
+    }
+  };
+
   useEffect(() => {
     loadWishlist();
-    window.addEventListener('storage', loadWishlist);
-    return () => window.removeEventListener('storage', loadWishlist);
-  }, []);
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [currentUser]);
 
-  const loadWishlist = () => {
+  const handleStorageChange = () => {
+    loadWishlistFromLocal();
+  };
+
+  const loadWishlistFromLocal = () => {
     try {
-      // Merge favourites from every type-specific key into one list
       const merged = Object.entries(WISHLIST_KEYS).flatMap(([type, key]) => {
         try {
           const items = JSON.parse(localStorage.getItem(key)) || [];
-          // Stamp the type so the WishList card can read it later
           return items.map(item => ({ ...item, type: item.type || type }));
         } catch {
           return [];
         }
       });
-
-      // Deduplicate by _id (keep first occurrence)
       const seen = new Set();
       const unique = merged.filter(item => {
         if (!item._id || seen.has(item._id)) return false;
         seen.add(item._id);
         return true;
       });
-
       setWishlist(unique);
+    } catch (err) {
+      console.error('Failed reading local wishlist cache:', err);
+    }
+  };
+
+  const loadWishlist = async () => {
+    setLoading(true);
+    try {
+      if (currentUser) {
+        // Fetch live database favorites for logged in user
+        const dbWishlist = await getWishlistBackend();
+        if (Array.isArray(dbWishlist) && dbWishlist.length >= 0) {
+          setWishlist(dbWishlist);
+          return;
+        }
+      }
+      // Fallback for non-logged in or offline user
+      loadWishlistFromLocal();
     } catch (error) {
-      console.error('Failed to load wishlist:', error);
+      console.error('Failed to load wishlist from database:', error);
+      loadWishlistFromLocal();
     } finally {
       setLoading(false);
     }
@@ -227,24 +261,27 @@ const WishList = () => {
 
   const removeFromWishlist = async (id, type) => {
     setRemovingId(id);
-    setTimeout(() => {
-      try {
-        // Determine which storage key this item lives in
-        const storageKey = WISHLIST_KEYS[type] || WISHLIST_KEYS.listing;
+    try {
+      // 1. Immediate optimistic UI removal
+      setWishlist(prev => prev.filter(item => item._id !== id));
 
-        const stored = JSON.parse(localStorage.getItem(storageKey)) || [];
-        const filtered = stored.filter(item => item._id !== id);
-        localStorage.setItem(storageKey, JSON.stringify(filtered));
+      // 2. Update local storage cache
+      const storageKey = WISHLIST_KEYS[type] || WISHLIST_KEYS.listing;
+      const stored = JSON.parse(localStorage.getItem(storageKey)) || [];
+      const filtered = stored.filter(item => item._id !== id);
+      localStorage.setItem(storageKey, JSON.stringify(filtered));
+      window.dispatchEvent(new Event('storage'));
 
-        // Also remove from combined UI state
-        setWishlist(prev => prev.filter(item => item._id !== id));
-        window.dispatchEvent(new Event('storage'));
-      } catch (error) {
-        console.error('Failed to remove item:', error);
-      } finally {
-        setRemovingId(null);
+      // 3. Update database backend if user is logged in
+      if (currentUser) {
+        await toggleWishlistBackend(id, type);
       }
-    }, 400);
+    } catch (error) {
+      console.error('Failed to remove item:', error);
+      loadWishlist(); // Re-sync on failure
+    } finally {
+      setRemovingId(null);
+    }
   };
 
   const onVote = (id, type, voteType) => {
@@ -291,7 +328,7 @@ const WishList = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col md:items-start justify-between gap-8"
+            className="flex flex-col md:flex-row md:items-center justify-between gap-6"
           >
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -301,11 +338,23 @@ const WishList = () => {
                 <div className="h-px w-12 bg-gray-200" />
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Masterpiece Elite</span>
               </div>
-              <h1 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter mb-4">
+              <h1 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter mb-2">
                 Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500">Wishlist</span>
               </h1>
-            
+              <p className="text-gray-400 font-medium text-sm">
+                {wishlist.length} {wishlist.length === 1 ? 'masterpiece' : 'masterpieces'} saved in your collection
+              </p>
             </div>
+
+            {wishlist.length > 0 && (
+              <button
+                onClick={handleClearAll}
+                className="flex items-center gap-2 px-6 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-2xl font-black uppercase tracking-[0.15em] text-xs transition-all active:scale-95 border border-rose-100 shadow-sm self-start md:self-auto"
+              >
+                <Trash2 className="w-4 h-4" />
+                Clear All Wishlist
+              </button>
+            )}
           </motion.div>
         </div>
       </div>

@@ -10,12 +10,13 @@ import { useEffect, lazy, Suspense } from "react";
 import ScrollToTop from "./components/ScrollToTop";
 import { useSelector, useDispatch } from "react-redux";
 import { signOutUserSuccess } from "./redux/user/userSlice";
+import { setWishlistCount } from "./redux/frontendSlice";
+import { getWishlistBackend } from "./services/wishlist.service";
 import { AnimatePresence } from 'framer-motion';
 import PageTransition from './components/PageTransition';
 import NeuralLoader from "./components/NeuralLoader";
 import CompareWidget from "./components/CompareWidget";
 import BottomNav from "./components/BottomNav";
-
 import PhoneNotificationManager from "./components/PhoneNotificationManager";
 
 // Core Pages (Statically imported to guarantee instant initial rendering)
@@ -31,6 +32,7 @@ const Message = lazy(() => import("./pages/Message"));
 // Dashboard Page
 const DashBoard = lazy(() => import("./pages/DashBoard"));
 const ProDashboard = lazy(() => import("./pages/ProDashboard"));
+
 const HostDashboard = lazy(() => import("./pages/HostDashboard"));
 const HostEarnings = lazy(() => import("./pages/HostEarnings"));
 const HostTools = lazy(() => import("./pages/HostTools"));
@@ -413,6 +415,13 @@ export default function App() {
         const data = await res.json();
         if (data.success === false || !data.valid) {
           dispatch(signOutUserSuccess());
+          return;
+        }
+
+        // Hydrate database wishlist for logged in user
+        const items = await getWishlistBackend();
+        if (Array.isArray(items)) {
+          dispatch(setWishlistCount(items.length));
         }
       } catch (error) {
         console.error('Initial session check failed:', error);

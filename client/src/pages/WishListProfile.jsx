@@ -1,100 +1,108 @@
 import { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import ListingItem from "../components/ListingItem";
 import ServiceItem from "../components/ServiceItem";
-import HelperItem from "../components/HelperItem"; // Add this import
+import HelperItem from "../components/HelperItem";
 import EventItem from "../components/EventItem";
-import { FaHeart, FaSpinner } from 'react-icons/fa';
+import { FaHeart, FaSpinner, FaTrashAlt } from 'react-icons/fa';
+import { getWishlistBackend, toggleWishlistBackend, clearWishlistBackend } from '../services/wishlist.service';
+import { setWishlistCount } from '../redux/frontendSlice';
 import "../styles/breakpoints.scss";
 
 export default function WishList() {
+  const dispatch = useDispatch();
+  const { currentUser } = useSelector((state) => state.user);
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState(null);
 
-  useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => {
-      try {
-        // Load properties, services, helpers, and events from localStorage
-        const storedListings = JSON.parse(localStorage.getItem('wishlist')) || [];
-        const storedServices = JSON.parse(localStorage.getItem('serviceWishlist')) || [];
-        const storedHelpers = JSON.parse(localStorage.getItem('helperWishlist')) || []; // Add this line
-        const storedEvents = JSON.parse(localStorage.getItem('eventWishlist')) || [];
-        
-        // Add type identifiers
-        const listingsWithType = storedListings.map(item => ({ ...item, type: 'listing' }));
-        const servicesWithType = storedServices.map(item => ({ ...item, type: 'service' }));
-        const helpersWithType = storedHelpers.map(item => ({ ...item, type: 'helper' })); // Add this line
-        const eventsWithType = storedEvents.map(item => ({ ...item, type: 'event' }));
-        
-        // Combine all wishlist items
-        setWishlist([...listingsWithType, ...servicesWithType, ...helpersWithType, ...eventsWithType]);
-      } catch (error) {
-        console.error('Error loading wishlist:', error);
-        setWishlist([]);
-      }
-      setLoading(false);
-    }, 800);
+  const handleClearAll = async () => {
+    if (!window.confirm('Are you sure you want to clear your entire wishlist?')) {
+      return;
+    }
+    setWishlist([]);
+    ['wishlist', 'serviceWishlist', 'helperWishlist', 'eventWishlist'].forEach(key => localStorage.removeItem(key));
+    window.dispatchEvent(new Event('storage'));
+    dispatch(setWishlistCount(0));
+    if (currentUser) {
+      await clearWishlistBackend('all');
+    }
+  };
 
-    const handleStorageChange = (e) => {
-      if (e.key === 'wishlist' || 
-          e.key === 'serviceWishlist' || 
-          e.key === 'helperWishlist' || // Add this
-          e.key === 'eventWishlist') {
-        try {
-          const storedListings = JSON.parse(localStorage.getItem('wishlist')) || [];
-          const storedServices = JSON.parse(localStorage.getItem('serviceWishlist')) || [];
-          const storedHelpers = JSON.parse(localStorage.getItem('helperWishlist')) || []; // Add this
-          const storedEvents = JSON.parse(localStorage.getItem('eventWishlist')) || [];
-          
-          const listingsWithType = storedListings.map(item => ({ ...item, type: 'listing' }));
-          const servicesWithType = storedServices.map(item => ({ ...item, type: 'service' }));
-          const helpersWithType = storedHelpers.map(item => ({ ...item, type: 'helper' })); // Add this
-          const eventsWithType = storedEvents.map(item => ({ ...item, type: 'event' }));
-          
-          setWishlist([...listingsWithType, ...servicesWithType, ...helpersWithType, ...eventsWithType]);
-        } catch (error) {
-          console.error('Error loading wishlist:', error);
-          setWishlist([]);
+  const loadFromLocal = () => {
+    try {
+      const storedListings = JSON.parse(localStorage.getItem('wishlist')) || [];
+      const storedServices = JSON.parse(localStorage.getItem('serviceWishlist')) || [];
+      const storedHelpers = JSON.parse(localStorage.getItem('helperWishlist')) || [];
+      const storedEvents = JSON.parse(localStorage.getItem('eventWishlist')) || [];
+      
+      const listingsWithType = storedListings.map(item => ({ ...item, type: 'listing' }));
+      const servicesWithType = storedServices.map(item => ({ ...item, type: 'service' }));
+      const helpersWithType = storedHelpers.map(item => ({ ...item, type: 'helper' }));
+      const eventsWithType = storedEvents.map(item => ({ ...item, type: 'event' }));
+      
+      setWishlist([...listingsWithType, ...servicesWithType, ...helpersWithType, ...eventsWithType]);
+    } catch (error) {
+      console.error('Error loading wishlist from local storage:', error);
+      setWishlist([]);
+    }
+  };
+
+  const fetchWishlist = async () => {
+    setLoading(true);
+    try {
+      if (currentUser) {
+        const dbItems = await getWishlistBackend();
+        if (Array.isArray(dbItems) && dbItems.length >= 0) {
+          setWishlist(dbItems);
+          setLoading(false);
+          return;
         }
       }
+      loadFromLocal();
+    } catch (error) {
+      console.error('Error fetching wishlist from backend:', error);
+      loadFromLocal();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWishlist();
+
+    const handleStorageChange = () => {
+      loadFromLocal();
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => {
-      clearTimeout(timer);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [currentUser]);
 
   const removeFromWishlist = async (itemId, itemType) => {
     try {
       setRemovingId(itemId);
-      await new Promise(resolve => setTimeout(resolve, 300));
       
       // Update state
       setWishlist(prev => prev.filter(item => !(item._id === itemId && item.type === itemType)));
       
       // Update localStorage based on item type
-      if (itemType === 'listing') {
-        const updatedWishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
-        const filtered = updatedWishlist.filter(item => item._id !== itemId);
-        localStorage.setItem('wishlist', JSON.stringify(filtered));
-      } else if (itemType === 'service') {
-        const updatedServiceWishlist = JSON.parse(localStorage.getItem('serviceWishlist')) || [];
-        const filtered = updatedServiceWishlist.filter(item => item._id !== itemId);
-        localStorage.setItem('serviceWishlist', JSON.stringify(filtered));
-      } else if (itemType === 'helper') { // Add this case for helpers
-        const updatedHelperWishlist = JSON.parse(localStorage.getItem('helperWishlist')) || [];
-        const filtered = updatedHelperWishlist.filter(item => item._id !== itemId);
-        localStorage.setItem('helperWishlist', JSON.stringify(filtered));
-      } else if (itemType === 'event') {
-        const updatedEventWishlist = JSON.parse(localStorage.getItem('eventWishlist')) || [];
-        const filtered = updatedEventWishlist.filter(item => item._id !== itemId);
-        localStorage.setItem('eventWishlist', JSON.stringify(filtered));
-      }
+      let key = 'wishlist';
+      if (itemType === 'service') key = 'serviceWishlist';
+      if (itemType === 'helper') key = 'helperWishlist';
+      if (itemType === 'event') key = 'eventWishlist';
+
+      const updatedWishlist = JSON.parse(localStorage.getItem(key)) || [];
+      const filtered = updatedWishlist.filter(item => item._id !== itemId);
+      localStorage.setItem(key, JSON.stringify(filtered));
       
       window.dispatchEvent(new Event('storage'));
+
+      if (currentUser) {
+        await toggleWishlistBackend(itemId, itemType);
+      }
     } catch (error) {
       console.error('Error removing from wishlist:', error);
     } finally {
@@ -138,11 +146,22 @@ export default function WishList() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Your Wishlist</h1>
-        <p className="text-gray-500 mt-1">
-          {wishlist.length} {wishlist.length === 1 ? 'item' : 'items'}
-        </p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Your Wishlist</h1>
+          <p className="text-gray-500 mt-1">
+            {wishlist.length} {wishlist.length === 1 ? 'item' : 'items'}
+          </p>
+        </div>
+        {wishlist.length > 0 && (
+          <button
+            onClick={handleClearAll}
+            className="flex items-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl font-semibold text-sm transition-all border border-rose-100"
+          >
+            <FaTrashAlt className="text-xs" />
+            Clear All
+          </button>
+        )}
       </div>
       
       {wishlist.length === 0 ? (

@@ -5,11 +5,18 @@ import { toggleWishlistBackend } from '../services/wishlist.service';
 /**
  * A reusable hook to manage wishlist (favorites) state for various item types.
  * @param {Object} item - The actual item object (Listing, Service, Helper, Event)
- * @param {string} type - 'listing', 'service', 'helper', or 'event'
+ * @param {string} rawType - 'listing', 'service', 'helper', or 'event' (or aliases like 'property')
  */
-export const useWishlist = (item, type) => {
+export const useWishlist = (item, rawType) => {
   const { currentUser } = useSelector((state) => state.user);
   const [isFavorite, setIsFavorite] = useState(false);
+
+  // Normalize item type
+  let type = (rawType || 'listing').toLowerCase();
+  if (['property', 'properties', 'listings', 'listing'].includes(type)) type = 'listing';
+  if (['services', 'service'].includes(type)) type = 'service';
+  if (['helpers', 'helper'].includes(type)) type = 'helper';
+  if (['events', 'event'].includes(type)) type = 'event';
 
   // Determine the correct storage key based on type
   const storageKey = {
@@ -23,7 +30,6 @@ export const useWishlist = (item, type) => {
     if (item?._id) {
       try {
         const wishlist = JSON.parse(localStorage.getItem(storageKey)) || [];
-        // Support old format (Object without _id but has it raw, or itemId obj)
         const found = wishlist.some(wItem => (wItem?._id || wItem?.itemId) === item._id);
         setIsFavorite(found);
       } catch (error) {
@@ -56,25 +62,35 @@ export const useWishlist = (item, type) => {
     setIsFavorite(newFavoriteStatus); // Optimistic UI update
 
     try {
-      // 1. Update localStorage
+      // 1. Update localStorage cache
       const wishlist = JSON.parse(localStorage.getItem(storageKey)) || [];
       const updatedWishlist = newFavoriteStatus
         ? [...wishlist, { ...item, type, addedAt: Date.now() }] 
-        : wishlist.filter(wItem => (wItem?._id || wItem?.itemId) !== item._id); // Remove item
+        : wishlist.filter(wItem => (wItem?._id || wItem?.itemId) !== item._id);
       
       localStorage.setItem(storageKey, JSON.stringify(updatedWishlist));
       window.dispatchEvent(new Event('storage'));
 
-      // 2. Update backend if logged in
+      // 2. Update database backend if user is logged in
       if (currentUser) {
-        await toggleWishlistBackend(item._id, type);
+        const res = await toggleWishlistBackend(item._id, type);
+        if (res && res.success === false) {
+          throw new Error(res.message || 'Backend update failed');
+        }
       }
     } catch (error) {
       console.error('Error toggling wishlist:', error);
       // Revert optimistic update on error
       setIsFavorite(!newFavoriteStatus);
+      const wishlist = JSON.parse(localStorage.getItem(storageKey)) || [];
+      const reverted = !newFavoriteStatus
+        ? [...wishlist, { ...item, type, addedAt: Date.now() }]
+        : wishlist.filter(wItem => (wItem?._id || wItem?.itemId) !== item._id);
+      localStorage.setItem(storageKey, JSON.stringify(reverted));
+      window.dispatchEvent(new Event('storage'));
     }
   };
 
   return { isFavorite, toggleFavorite };
 };
+
