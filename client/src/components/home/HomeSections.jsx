@@ -1398,3 +1398,294 @@ export const WeeklySpecialsSection = ({ navigate, isMobile = false }) => {
     </section>
   );
 };
+
+// ─── Compare Recommended For You Section ─────────────────────────────────────
+export const CompareRecommendedSection = ({ navigate }) => {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedItems, setSelectedItems] = useState([]);
+
+  useEffect(() => {
+    const fetchRecommended = async () => {
+      try {
+        const [propsRes, servRes, helpRes] = await Promise.allSettled([
+          fetch('/api/listing/get?limit=6').then(r => r.ok ? r.json() : []),
+          fetch('/api/service/get?limit=6').then(r => r.ok ? r.json() : []),
+          fetch('/api/helper/get?limit=6').then(r => r.ok ? r.json() : [])
+        ]);
+
+        const rawProps = propsRes.status === 'fulfilled' && Array.isArray(propsRes.value) ? propsRes.value : [];
+        const rawServices = servRes.status === 'fulfilled' && Array.isArray(servRes.value) ? servRes.value : [];
+        const rawHelpers = helpRes.status === 'fulfilled' && Array.isArray(helpRes.value) ? helpRes.value : [];
+
+        const props = rawProps.slice(0, 2).map(p => ({
+          ...p,
+          itemType: 'property',
+          typeLabel: 'Property',
+          color: 'from-emerald-500 to-teal-600',
+          accentColor: 'text-emerald-600',
+          bgLight: 'bg-emerald-50 border-emerald-100',
+          route: `/listing/${p._id}`
+        }));
+
+        const services = rawServices.slice(0, 2).map(s => ({
+          ...s,
+          itemType: 'service',
+          typeLabel: 'Service',
+          color: 'from-blue-500 to-indigo-600',
+          accentColor: 'text-blue-600',
+          bgLight: 'bg-blue-50 border-blue-100',
+          route: `/service/${s._id}`
+        }));
+
+        const helpers = rawHelpers.slice(0, 2).map(h => ({
+          ...h,
+          itemType: 'helper',
+          typeLabel: 'Helper',
+          color: 'from-purple-500 to-pink-600',
+          accentColor: 'text-purple-600',
+          bgLight: 'bg-purple-50 border-purple-100',
+          route: `/helper/${h._id}`
+        }));
+
+        // Fallbacks if backend items are insufficient to ensure 6 stylish items are always present
+        const MOCK_FALLBACKS = [
+          {
+            _id: 'rec_p1',
+            name: 'Luxury Beachfront Apartment',
+            itemType: 'property',
+            typeLabel: 'Property',
+            color: 'from-emerald-500 to-teal-600',
+            accentColor: 'text-emerald-600',
+            bgLight: 'bg-emerald-50 border-emerald-100',
+            price: 2500,
+            address: 'Cape Town',
+            rating: 4.9,
+            imageUrls: ['https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'],
+            route: '/search?category=rental&type=properties'
+          },
+          {
+            _id: 'rec_s1',
+            name: 'Elite Home Cleaning & Sanitization',
+            itemType: 'service',
+            typeLabel: 'Service',
+            color: 'from-blue-500 to-indigo-600',
+            accentColor: 'text-blue-600',
+            bgLight: 'bg-blue-50 border-blue-100',
+            price: 350,
+            address: 'Johannesburg',
+            rating: 4.8,
+            imageUrls: ['https://images.pexels.com/photos/4099467/pexels-photo-4099467.jpeg?auto=compress&cs=tinysrgb&w=800'],
+            route: '/search?category=cleaning&type=services'
+          },
+          {
+            _id: 'rec_h1',
+            name: 'Sipho Zulu - Executive Barber & Styling',
+            itemType: 'helper',
+            typeLabel: 'Helper',
+            color: 'from-purple-500 to-pink-600',
+            accentColor: 'text-purple-600',
+            bgLight: 'bg-purple-50 border-purple-100',
+            regularPrice: 200,
+            address: 'Polokwane',
+            rating: 4.9,
+            imageUrls: ['https://images.pexels.com/photos/3993311/pexels-photo-3993311.jpeg?auto=compress&cs=tinysrgb&w=800'],
+            route: '/search?category=barber&type=helper'
+          },
+          {
+            _id: 'rec_p2',
+            name: 'Modern Executive Studio Loft',
+            itemType: 'property',
+            typeLabel: 'Property',
+            color: 'from-emerald-500 to-teal-600',
+            accentColor: 'text-emerald-600',
+            bgLight: 'bg-emerald-50 border-emerald-100',
+            price: 1800,
+            address: 'Pretoria',
+            rating: 4.7,
+            imageUrls: ['https://images.pexels.com/photos/439391/pexels-photo-439391.jpeg?auto=compress&cs=tinysrgb&w=800'],
+            route: '/search?category=rental&type=properties'
+          },
+          {
+            _id: 'rec_s2',
+            name: 'Express Furniture Moving & Hauling',
+            itemType: 'service',
+            typeLabel: 'Service',
+            color: 'from-blue-500 to-indigo-600',
+            accentColor: 'text-blue-600',
+            bgLight: 'bg-blue-50 border-blue-100',
+            price: 450,
+            address: 'Durban',
+            rating: 4.8,
+            imageUrls: ['https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800'],
+            route: '/search?category=moving&type=services'
+          },
+          {
+            _id: 'rec_h2',
+            name: 'Nomsa Dlamini - Certified Caregiver & Nanny',
+            itemType: 'helper',
+            typeLabel: 'Helper',
+            color: 'from-purple-500 to-pink-600',
+            accentColor: 'text-purple-600',
+            bgLight: 'bg-purple-50 border-purple-100',
+            regularPrice: 180,
+            address: 'Sandton',
+            rating: 4.9,
+            imageUrls: ['https://images.pexels.com/photos/3768914/pexels-photo-3768914.jpeg?auto=compress&cs=tinysrgb&w=800'],
+            route: '/search?category=nanny&type=helper'
+          }
+        ];
+
+        let combined = [...props, ...services, ...helpers];
+        if (combined.length < 6) {
+          const needed = 6 - combined.length;
+          combined = [...combined, ...MOCK_FALLBACKS.slice(0, needed)];
+        }
+        setItems(combined.slice(0, 6));
+      } catch (err) {
+        console.error('Failed to load compare recommended items:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecommended();
+  }, []);
+
+  const toggleCompare = (id, e) => {
+    e.stopPropagation();
+    setSelectedItems(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  if (loading || items.length === 0) return null;
+
+  return (
+    <motion.section
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={fadeInUp}
+      className="mb-14"
+    >
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-rose-500">
+              Personalized Selections
+            </span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            COMPARE RECOMMENDED FOR YOU
+          </h2>
+          <p className="text-xs font-semibold text-slate-400 mt-1">
+            Top picks across Properties, Services & Helpers
+          </p>
+        </div>
+
+        {selectedItems.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex items-center gap-3 px-4 py-2 bg-slate-950 text-white rounded-2xl shadow-lg border border-slate-800"
+          >
+            <span className="text-xs font-bold">{selectedItems.length} selected</span>
+            <button
+              onClick={() => navigate?.(`/search?compare=${selectedItems.join(',')}`)}
+              className="px-3 py-1 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors"
+            >
+              Compare Now
+            </button>
+          </motion.div>
+        )}
+      </div>
+
+      {/* 6 Stylish Recommended Cards Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {items.map((item, idx) => {
+          const isSelected = selectedItems.includes(item._id);
+          const itemPrice = item.price || item.regularPrice;
+
+          return (
+            <motion.div
+              key={item._id || idx}
+              whileHover={{ y: -4 }}
+              onClick={() => {
+                if (item.route) navigate?.(item.route);
+                else if (item._id) navigate?.(`/${item.itemType}/${item._id}`);
+              }}
+              className={`cursor-pointer rounded-2xl bg-white border transition-all duration-300 overflow-hidden flex flex-col justify-between p-2.5 relative group shadow-sm hover:shadow-md ${
+                isSelected ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-200/80 hover:border-slate-300'
+              }`}
+            >
+              {/* Image & Type Badge */}
+              <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-slate-100 mb-2.5">
+                <img
+                  src={item.imageUrls?.[0] || item.avatar || 'https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'}
+                  alt={item.name || item.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-slate-950/15 group-hover:bg-transparent transition-colors" />
+
+                {/* Badge Type */}
+                <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-lg bg-slate-950/80 backdrop-blur-md border border-white/20">
+                  <span className="text-[7.5px] font-black text-white uppercase tracking-wider">
+                    {item.typeLabel || item.itemType}
+                  </span>
+                </div>
+
+                {/* Compare Checkbox pill */}
+                <button
+                  onClick={(e) => toggleCompare(item._id, e)}
+                  className={`absolute top-1.5 right-1.5 p-1.5 rounded-lg backdrop-blur-md transition-all ${
+                    isSelected
+                      ? 'bg-rose-500 text-white shadow-sm'
+                      : 'bg-white/80 text-slate-700 hover:bg-white'
+                  }`}
+                  title="Select to compare"
+                >
+                  <span className="text-[8px] font-bold block leading-none">
+                    {isSelected ? '✓' : '+'}
+                  </span>
+                </button>
+              </div>
+
+              {/* Title & Info */}
+              <div className="flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider truncate">
+                      {item.address || item.type || 'South Africa'}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-800 shrink-0 flex items-center gap-0.5">
+                      <span className="text-amber-500">★</span> {(item.rating || 4.8).toFixed(1)}
+                    </span>
+                  </div>
+
+                  <h3 className="font-black text-xs text-slate-900 line-clamp-1 leading-snug group-hover:text-rose-600 transition-colors">
+                    {item.name || item.title}
+                  </h3>
+                </div>
+
+                {/* Price & Compare pill */}
+                <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-xs font-black text-slate-900">
+                    R{itemPrice?.toLocaleString()}
+                  </span>
+
+                  <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${item.bgLight} ${item.accentColor}`}>
+                    Compare
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </motion.section>
+  );
+};
+

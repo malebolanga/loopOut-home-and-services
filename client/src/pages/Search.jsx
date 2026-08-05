@@ -615,6 +615,42 @@ const SearchPage = () => {
       }
     }
 
+    // Save dynamic lastUserSearch for ContinueSearchingCard
+    const term = urlParams.get('searchTerm') || '';
+    const loc = urlParams.get('location') || urlParams.get('address') || '';
+    const categoryParam = urlParams.get('category') || urlParams.get('subType') || '';
+    const startDate = urlParams.get('startDate') || urlParams.get('checkIn');
+    const endDate = urlParams.get('endDate') || urlParams.get('checkOut');
+
+    if (term || loc || categoryParam || type !== 'all') {
+      const searchLocation = loc || term || 'Cape Town';
+      let dateRangeStr = '';
+      if (startDate && endDate) {
+        dateRangeStr = `${startDate} – ${endDate}`;
+      } else {
+        const now = new Date();
+        const month = now.toLocaleString('en-US', { month: 'short' });
+        const day = now.getDate();
+        dateRangeStr = `${month} ${day}, ${now.getFullYear()}`;
+      }
+
+      const searchObj = {
+        location: searchLocation,
+        query: term || searchLocation,
+        category: type === 'all' ? (categoryParam || 'homes') : type,
+        dateRange: dateRangeStr,
+        url: `${location.pathname}${location.search}`,
+        timestamp: new Date().toISOString()
+      };
+
+      try {
+        localStorage.setItem('lastUserSearch', JSON.stringify(searchObj));
+        window.dispatchEvent(new Event('storage'));
+      } catch (err) {
+        console.error('Failed to save lastUserSearch:', err);
+      }
+    }
+
     // Set default location if not provided
     if (!urlParams.get('location') && !urlParams.get('address') && detectedCity) {
       setFilters(prev => ({ ...prev, location: detectedCity }));

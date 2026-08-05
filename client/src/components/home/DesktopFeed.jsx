@@ -4,8 +4,9 @@ import { Helmet } from 'react-helmet-async';
 import { FunnelIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { Sparkles } from 'lucide-react';
 import { AirbnbCard } from './AirbnbCard';
-import { NeuralPicksSection, SellItemsSection } from './HomeSections';
+import { NeuralPicksSection, SellItemsSection, CompareRecommendedSection } from './HomeSections';
 import DailyLoopHub from './DailyLoopHub';
+import ContinueSearchingCard from './ContinueSearchingCard';
 import MyBookingsConsumer from '../MyBookingsConsumer';
 
 // ─── Category icon details ────────────────────────────────────────────────────
@@ -151,6 +152,9 @@ export const DesktopFeed = ({
         {/* Daily Loop Hub */}
         <DailyLoopHub />
 
+        {/* Continue Searching Card */}
+        <ContinueSearchingCard navigate={navigate} />
+
         {/* AI Insights Banner */}
         {showAIInsights && aiInsights && aiInsights.length > 0 && (
           <motion.div
@@ -244,8 +248,13 @@ export const DesktopFeed = ({
           </div>
         )}
 
+        {/* Compare Recommended For You */}
+        <div className="mt-14">
+          <CompareRecommendedSection navigate={navigate} />
+        </div>
+
         {/* Neural Picks */}
-        <div className="mt-20">
+        <div className="mt-16">
           <NeuralPicksSection navigate={navigate} />
         </div>
 

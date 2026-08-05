@@ -79,12 +79,14 @@ import {
   SellItemsSection,
   SmartRecommendations,
   ServicesToYourDoor,
-  WeeklySpecialsSection
+  WeeklySpecialsSection,
+  CompareRecommendedSection
 } from '../components/home/HomeSections';
 import { TOP_CATEGORIES } from '../data/categories';
 import { CategoriesSlider } from '../components/home/CategoriesSlider';
 import { HomeHero } from '../components/home/HomeHero';
 import { AirbnbCard, AirbnbCardSkeleton } from '../components/home/AirbnbCard';
+import ContinueSearchingCard from '../components/home/ContinueSearchingCard';
 import {
   calculateDistance,
   POLOKWANE_COORDS,
@@ -135,6 +137,9 @@ const MobileAppHomepage = ({
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 md:px-8 lg:px-12">
+      <section className="max-w-7xl mx-auto mb-8">
+        <ContinueSearchingCard navigate={navigate} />
+      </section>
       <section className="max-w-7xl mx-auto">
         <div className="flex items-end justify-between gap-4 mb-5">
           <div>
@@ -169,7 +174,11 @@ const MobileAppHomepage = ({
           </div>
         </section>
       )}
-    </div>
+
+      <section className="max-w-7xl mx-auto mt-12">
+        <CompareRecommendedSection navigate={navigate} />
+      </section>
+    </main>
   );
 };
 
