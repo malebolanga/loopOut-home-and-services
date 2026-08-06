@@ -150,7 +150,7 @@ export default function CompareWidget() {
                         <div className="flex items-end justify-between py-0 border-y border-gray-50">
                           <div>
                             <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Rate</span>
-                            <span className="text-lg font-black text-gray-900">R{helper.regularPrice} <span className="text-sm font-normal text-gray-500">/hr</span></span>
+                            <span className="text-lg font-black text-gray-900">R{(helper.regularPrice || helper.price || 0).toLocaleString()} <span className="text-sm font-normal text-gray-500">/{helper.unit || 'hr'}</span></span>
                           </div>
                           <div className="text-right">
                              <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Rating</span>

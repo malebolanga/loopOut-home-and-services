@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Tag as TagIcon } from 'lucide-react';
-import { ArrowRightIcon, CalendarDaysIcon, ClockIcon, HomeIcon, UserIcon, TicketIcon, WrenchScrewdriverIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { ArrowRightIcon, CalendarDaysIcon, ClockIcon, HomeIcon, UserIcon, TicketIcon, WrenchScrewdriverIcon, ArrowPathIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { FaWhatsapp, FaPhone, FaMapMarkerAlt, FaEnvelope, FaClock, FaCalendarAlt, FaTimes, FaUser } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import useSearchIntelligence from '../../hooks/useSearchIntelligence';
+import useLocationCoords from '../../hooks/useGeolocation';
+import { calculateDistance } from '../../utils/locationUtils';
 import HelperItem from '../../components/HelperItem';
 import ImageGallery from '../../components/ImageGallery';
 import ImageWithFallback from '../../components/ImageWithFallback';
@@ -1376,11 +1378,11 @@ export const WeeklySpecialsSection = ({ navigate, isMobile = false }) => {
         <h2 className="text-xl font-black text-gray-950 tracking-widest uppercase">DEFINE YOUR DAY</h2>
       </div>
       <div className={`grid grid-cols-1 md:grid-cols-3 ${isMobile ? 'lg:grid-cols-2' : 'lg:grid-cols-6'} gap-6`}>
-        {specials.map((promo, idx) => (
+        {specials.map((promo) => (
           <motion.div
             key={promo.id}
             whileHover={{ scale: 1.02 }}
-            className="relative h-64 rounded-[2.5rem] overflow-hidden  cursor-pointer shadow-xl "
+            className="relative h-64 rounded-[2.5rem] overflow-hidden cursor-pointer shadow-xl"
             onClick={() => navigate('/search?filter=special')}
           >
             <ImageWithFallback src={promo.image} alt={promo.title} className="absolute inset-0 w-full h-full group-hover:scale-110 transition-transform duration-[5s]" />
@@ -1401,165 +1403,757 @@ export const WeeklySpecialsSection = ({ navigate, isMobile = false }) => {
 
 // ─── Compare Recommended For You Section ─────────────────────────────────────
 export const CompareRecommendedSection = ({ navigate }) => {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { coords: userCoords, city: detectedCity } = useLocationCoords();
+  const { currentUser } = useSelector((state) => state.user || {});
+  const [activeCategory, setActiveCategory] = useState('rental_rooms');
   const [selectedItems, setSelectedItems] = useState([]);
+  const [dbItemsByCategory, setDbItemsByCategory] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  // A city is used as the text fallback when GPS coordinates are unavailable.
+  // Do not use a full street address here: listings normally contain a suburb/city,
+  // not the visitor's exact address.
+  const userLocationName = detectedCity || currentUser?.city || currentUser?.location || 'Your Area';
+
+  // Category Tabs explicitly mapping to exact types requested by user
+  const COMPARE_CATEGORIES = [
+    { id: 'rental_rooms', label: 'Rental Rooms', defaultUnit: 'mo' },
+    { id: 'hotels', label: 'Hotels & Stays', defaultUnit: 'night' },
+    { id: 'barbers', label: 'Barber Shops', defaultUnit: 'cut' },
+    { id: 'photographers', label: 'Photographers', defaultUnit: 'hr' },
+    { id: 'chefs', label: 'Chefs & Catering', defaultUnit: 'hr' },
+    { id: 'domestic', label: 'Domestic Cleaners', defaultUnit: 'day' },
+    { id: 'plumbers', label: 'Plumbers', defaultUnit: 'hr' },
+    { id: 'gardeners', label: 'Gardeners', defaultUnit: 'day' },
+    { id: 'transport', label: 'Transportation', defaultUnit: 'trip' },
+    { id: 'logistics', label: 'Logistics & Moving', defaultUnit: 'load' },
+    { id: 'storage', label: 'Storage Units', defaultUnit: 'mo' },
+  ];
+
+  // Fallback database templates if backend has fewer than 4 uploads for a category
+  const FALLBACK_ITEMS = {
+    rental_rooms: [
+      {
+        _id: 'rec_rr1',
+        name: 'Modern Studio Room',
+        itemType: 'property',
+        typeLabel: 'Rental Room',
+        price: 3500,
+        unit: 'mo',
+        address: 'Braamfontein',
+        rating: 4.8,
+        imageUrls: ['https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=rental&type=properties'
+      },
+      {
+        _id: 'rec_rr2',
+        name: 'Furnished En-Suite Room',
+        itemType: 'property',
+        typeLabel: 'Rental Room',
+        price: 4200,
+        unit: 'mo',
+        address: 'Hatfield, PTA',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/439391/pexels-photo-439391.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=rental&type=properties'
+      },
+      {
+        _id: 'rec_rr3',
+        name: 'Executive Loft Apartment',
+        itemType: 'property',
+        typeLabel: 'Rental Room',
+        price: 5800,
+        unit: 'mo',
+        address: 'Sandton, JHB',
+        rating: 4.7,
+        imageUrls: ['https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=rental&type=properties'
+      },
+      {
+        _id: 'rec_rr4',
+        name: 'Student Accommodation Room',
+        itemType: 'property',
+        typeLabel: 'Rental Room',
+        price: 2900,
+        unit: 'mo',
+        address: 'Rondebosch, CPT',
+        rating: 4.6,
+        imageUrls: ['https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=rental&type=properties'
+      }
+    ],
+    hotels: [
+      {
+        _id: 'rec_ht1',
+        name: 'Grand Royal Hotel Suite',
+        itemType: 'property',
+        typeLabel: 'Hotel',
+        price: 1200,
+        unit: 'night',
+        address: 'Rosebank',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/271639/pexels-photo-271639.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=hotel'
+      },
+      {
+        _id: 'rec_ht2',
+        name: 'Sunset Bay Guest House',
+        itemType: 'property',
+        typeLabel: 'Guest House',
+        price: 950,
+        unit: 'night',
+        address: 'Umhlanga, DBN',
+        rating: 4.8,
+        imageUrls: ['https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=guesthouse'
+      },
+      {
+        _id: 'rec_ht3',
+        name: 'Urban Executive Motel',
+        itemType: 'property',
+        typeLabel: 'Motel',
+        price: 750,
+        unit: 'night',
+        address: 'Polokwane',
+        rating: 4.7,
+        imageUrls: ['https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=motel'
+      },
+      {
+        _id: 'rec_ht4',
+        name: 'Luxury Vineyard Lodge',
+        itemType: 'property',
+        typeLabel: 'Hotel',
+        price: 1850,
+        unit: 'night',
+        address: 'Stellenbosch',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=hotel'
+      }
+    ],
+    barbers: [
+      {
+        _id: 'rec_b1',
+        name: 'Sipho Zulu - Barber',
+        itemType: 'helper',
+        typeLabel: 'Barber Shop',
+        regularPrice: 180,
+        unit: 'cut',
+        address: 'Polokwane',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/3993311/pexels-photo-3993311.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=barber'
+      },
+      {
+        _id: 'rec_b2',
+        name: 'Kasi Blade & Trim Studio',
+        itemType: 'helper',
+        typeLabel: 'Barber Shop',
+        regularPrice: 150,
+        unit: 'cut',
+        address: 'Soweto',
+        rating: 4.8,
+        imageUrls: ['https://images.pexels.com/photos/1813272/pexels-photo-1813272.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=barber'
+      },
+      {
+        _id: 'rec_b3',
+        name: "Gentleman's Grooming Lounge",
+        itemType: 'helper',
+        typeLabel: 'Barber Shop',
+        regularPrice: 250,
+        unit: 'cut',
+        address: 'Sandton',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/2068672/pexels-photo-2068672.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=barber'
+      },
+      {
+        _id: 'rec_b4',
+        name: 'Fresh Cut Barber Hub',
+        itemType: 'helper',
+        typeLabel: 'Barber Shop',
+        regularPrice: 130,
+        unit: 'cut',
+        address: 'Pretoria',
+        rating: 4.7,
+        imageUrls: ['https://images.pexels.com/photos/1319460/pexels-photo-1319460.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=barber'
+      }
+    ],
+    photographers: [
+      {
+        _id: 'rec_ph1',
+        name: 'Lindiwe Lens Studio',
+        itemType: 'service',
+        typeLabel: 'Photographer',
+        price: 850,
+        unit: 'hr',
+        address: 'Johannesburg',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/1264210/pexels-photo-1264210.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=photography'
+      },
+      {
+        _id: 'rec_ph2',
+        name: 'Apex Motion Photography',
+        itemType: 'service',
+        typeLabel: 'Photographer',
+        price: 1200,
+        unit: 'hr',
+        address: 'Cape Town',
+        rating: 4.8,
+        imageUrls: ['https://images.pexels.com/photos/598917/pexels-photo-598917.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=photography'
+      },
+      {
+        _id: 'rec_ph3',
+        name: 'Focus Point Event Media',
+        itemType: 'service',
+        typeLabel: 'Photographer',
+        price: 700,
+        unit: 'hr',
+        address: 'Durban',
+        rating: 4.7,
+        imageUrls: ['https://images.pexels.com/photos/2253870/pexels-photo-2253870.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=photography'
+      },
+      {
+        _id: 'rec_ph4',
+        name: 'Vivid Moments Studio',
+        itemType: 'service',
+        typeLabel: 'Photographer',
+        price: 950,
+        unit: 'hr',
+        address: 'Pretoria',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/1484799/pexels-photo-1484799.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=photography'
+      }
+    ],
+    chefs: [
+      {
+        _id: 'rec_cf1',
+        name: 'Chef Thabo Private Dining',
+        itemType: 'helper',
+        typeLabel: 'Private Chef',
+        regularPrice: 450,
+        unit: 'hr',
+        address: 'Sandton',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/4253312/pexels-photo-4253312.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=chef'
+      },
+      {
+        _id: 'rec_cf2',
+        name: "Mama B's Traditional Catering",
+        itemType: 'service',
+        typeLabel: 'Catering Chef',
+        price: 300,
+        unit: 'hr',
+        address: 'Soweto',
+        rating: 4.8,
+        imageUrls: ['https://images.pexels.com/photos/4252137/pexels-photo-4252137.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=chef'
+      },
+      {
+        _id: 'rec_cf3',
+        name: 'Artisan Culinary Chef',
+        itemType: 'helper',
+        typeLabel: 'Private Chef',
+        regularPrice: 550,
+        unit: 'hr',
+        address: 'Cape Town',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/3814446/pexels-photo-3814446.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=chef'
+      },
+      {
+        _id: 'rec_cf4',
+        name: 'Flame & Grill Catering',
+        itemType: 'service',
+        typeLabel: 'Gourmet Chef',
+        price: 380,
+        unit: 'hr',
+        address: 'Pretoria',
+        rating: 4.7,
+        imageUrls: ['https://images.pexels.com/photos/269606/pexels-photo-269606.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=chef'
+      }
+    ],
+    domestic: [
+      {
+        _id: 'rec_dm1',
+        name: 'Nomsa Dlamini Housekeeper',
+        itemType: 'helper',
+        typeLabel: 'Domestic Cleaner',
+        regularPrice: 220,
+        unit: 'day',
+        address: 'Sandton',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/3768914/pexels-photo-3768914.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=domestic'
+      },
+      {
+        _id: 'rec_dm2',
+        name: 'Sparkle Domestic Services',
+        itemType: 'service',
+        typeLabel: 'Domestic Cleaner',
+        price: 180,
+        unit: 'day',
+        address: 'Midrand',
+        rating: 4.8,
+        imageUrls: ['https://images.pexels.com/photos/4099467/pexels-photo-4099467.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=cleaning'
+      },
+      {
+        _id: 'rec_dm3',
+        name: 'Precious Home Helpers',
+        itemType: 'helper',
+        typeLabel: 'Domestic Cleaner',
+        regularPrice: 250,
+        unit: 'day',
+        address: 'Johannesburg',
+        rating: 4.7,
+        imageUrls: ['https://images.pexels.com/photos/4108715/pexels-photo-4108715.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=domestic'
+      },
+      {
+        _id: 'rec_dm4',
+        name: 'Trusty Home Helpers',
+        itemType: 'helper',
+        typeLabel: 'Domestic Cleaner',
+        regularPrice: 200,
+        unit: 'day',
+        address: 'Durban',
+        rating: 4.8,
+        imageUrls: ['https://images.pexels.com/photos/4099468/pexels-photo-4099468.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=domestic'
+      }
+    ],
+    plumbers: [
+      {
+        _id: 'rec_pl1',
+        name: 'FastFlow Emergency Plumber',
+        itemType: 'service',
+        typeLabel: 'Plumber',
+        price: 350,
+        unit: 'hr',
+        address: 'Randburg',
+        rating: 4.8,
+        imageUrls: ['https://images.pexels.com/photos/6419128/pexels-photo-6419128.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=plumber'
+      },
+      {
+        _id: 'rec_pl2',
+        name: 'Master Plumber & Pipe Services',
+        itemType: 'helper',
+        typeLabel: 'Plumber',
+        regularPrice: 400,
+        unit: 'hr',
+        address: 'Pretoria',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/8486972/pexels-photo-8486972.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=plumber'
+      },
+      {
+        _id: 'rec_pl3',
+        name: 'Reliable Leak Repair Specialist',
+        itemType: 'service',
+        typeLabel: 'Plumber',
+        price: 300,
+        unit: 'hr',
+        address: 'Johannesburg',
+        rating: 4.7,
+        imageUrls: ['https://images.pexels.com/photos/6419125/pexels-photo-6419125.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=plumber'
+      },
+      {
+        _id: 'rec_pl4',
+        name: 'Drain & Tap Pro Solutions',
+        itemType: 'helper',
+        typeLabel: 'Plumber',
+        regularPrice: 280,
+        unit: 'hr',
+        address: 'Centurion',
+        rating: 4.8,
+        imageUrls: ['https://images.pexels.com/photos/8486975/pexels-photo-8486975.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=plumber'
+      }
+    ],
+    gardeners: [
+      {
+        _id: 'rec_gd1',
+        name: 'GreenThumb Lawn Care',
+        itemType: 'helper',
+        typeLabel: 'Gardener',
+        regularPrice: 200,
+        unit: 'day',
+        address: 'Roodepoort',
+        rating: 4.8,
+        imageUrls: ['https://images.pexels.com/photos/4505168/pexels-photo-4505168.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=gardener'
+      },
+      {
+        _id: 'rec_gd2',
+        name: 'Verdant Landscaping & Pruning',
+        itemType: 'service',
+        typeLabel: 'Gardener',
+        price: 250,
+        unit: 'day',
+        address: 'Pretoria',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/4505171/pexels-photo-4505171.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=gardener'
+      },
+      {
+        _id: 'rec_gd3',
+        name: 'Eco Garden Maintenance',
+        itemType: 'helper',
+        typeLabel: 'Gardener',
+        regularPrice: 180,
+        unit: 'day',
+        address: 'Germiston',
+        rating: 4.7,
+        imageUrls: ['https://images.pexels.com/photos/4503751/pexels-photo-4503751.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=gardener'
+      },
+      {
+        _id: 'rec_gd4',
+        name: 'Clean Yard Lawn Services',
+        itemType: 'service',
+        typeLabel: 'Gardener',
+        price: 220,
+        unit: 'day',
+        address: 'Durban',
+        rating: 4.8,
+        imageUrls: ['https://images.pexels.com/photos/4505169/pexels-photo-4505169.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=gardener'
+      }
+    ],
+    transport: [
+      {
+        _id: 'rec_tr1',
+        name: 'SafeRide Airport Shuttle',
+        itemType: 'service',
+        typeLabel: 'Transportation',
+        price: 250,
+        unit: 'trip',
+        address: 'Kempton Park',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/386009/pexels-photo-386009.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=transport'
+      },
+      {
+        _id: 'rec_tr2',
+        name: 'QuickDrop City Transport',
+        itemType: 'service',
+        typeLabel: 'Transportation',
+        price: 180,
+        unit: 'trip',
+        address: 'Johannesburg',
+        rating: 4.8,
+        imageUrls: ['https://images.pexels.com/photos/116675/pexels-photo-116675.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=transport'
+      },
+      {
+        _id: 'rec_tr3',
+        name: 'VIP Private Chauffeur',
+        itemType: 'helper',
+        typeLabel: 'Transportation',
+        regularPrice: 450,
+        unit: 'trip',
+        address: 'Sandton',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/3764984/pexels-photo-3764984.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=transport'
+      },
+      {
+        _id: 'rec_tr4',
+        name: 'Township Express Shuttle',
+        itemType: 'service',
+        typeLabel: 'Transportation',
+        price: 120,
+        unit: 'trip',
+        address: 'Soweto',
+        rating: 4.7,
+        imageUrls: ['https://images.pexels.com/photos/163841/pexels-photo-163841.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=transport'
+      }
+    ],
+    logistics: [
+      {
+        _id: 'rec_lg1',
+        name: 'Express Bakkie & Hauling',
+        itemType: 'service',
+        typeLabel: 'Logistics',
+        price: 450,
+        unit: 'load',
+        address: 'Midrand',
+        rating: 4.8,
+        imageUrls: ['https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=moving'
+      },
+      {
+        _id: 'rec_lg2',
+        name: 'SwiftMove Logistics & Freight',
+        itemType: 'service',
+        typeLabel: 'Logistics',
+        price: 650,
+        unit: 'load',
+        address: 'Johannesburg',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/6169052/pexels-photo-6169052.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=moving'
+      },
+      {
+        _id: 'rec_lg3',
+        name: 'Reliable Cargo Haulers',
+        itemType: 'service',
+        typeLabel: 'Logistics',
+        price: 400,
+        unit: 'load',
+        address: 'Pretoria',
+        rating: 4.7,
+        imageUrls: ['https://images.pexels.com/photos/6169046/pexels-photo-6169046.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=moving'
+      },
+      {
+        _id: 'rec_lg4',
+        name: 'Heavy Haul Removal Co.',
+        itemType: 'service',
+        typeLabel: 'Logistics',
+        price: 800,
+        unit: 'load',
+        address: 'Cape Town',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/4483610/pexels-photo-4483610.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=moving'
+      }
+    ],
+    storage: [
+      {
+        _id: 'rec_st1',
+        name: 'Secure Lock & Store 10m²',
+        itemType: 'service',
+        typeLabel: 'Storage',
+        price: 650,
+        unit: 'mo',
+        address: 'Polokwane',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/4483608/pexels-photo-4483608.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=storage'
+      },
+      {
+        _id: 'rec_st2',
+        name: 'Climate Controlled Storage',
+        itemType: 'service',
+        typeLabel: 'Storage',
+        price: 950,
+        unit: 'mo',
+        address: 'Midrand',
+        rating: 4.8,
+        imageUrls: ['https://images.pexels.com/photos/4483609/pexels-photo-4483609.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=storage'
+      },
+      {
+        _id: 'rec_st3',
+        name: 'Self Storage Mini Units',
+        itemType: 'service',
+        typeLabel: 'Storage',
+        price: 500,
+        unit: 'mo',
+        address: 'Pretoria',
+        rating: 4.7,
+        imageUrls: ['https://images.pexels.com/photos/4483610/pexels-photo-4483610.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=storage'
+      },
+      {
+        _id: 'rec_st4',
+        name: 'SafeVault Container Storage',
+        itemType: 'service',
+        typeLabel: 'Storage',
+        price: 750,
+        unit: 'mo',
+        address: 'Cape Town',
+        rating: 4.9,
+        imageUrls: ['https://images.pexels.com/photos/6169052/pexels-photo-6169052.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        route: '/search?category=storage'
+      }
+    ]
+  };
 
   useEffect(() => {
-    const fetchRecommended = async () => {
+    const fetchDatabaseItems = async () => {
       try {
+        setLoading(true);
         const [propsRes, servRes, helpRes] = await Promise.allSettled([
-          fetch('/api/listing/get?limit=6').then(r => r.ok ? r.json() : []),
-          fetch('/api/service/get?limit=6').then(r => r.ok ? r.json() : []),
-          fetch('/api/helper/get?limit=6').then(r => r.ok ? r.json() : [])
+          fetch('/api/listing/get?limit=50').then(r => r.ok ? r.json() : []),
+          fetch('/api/service/get?limit=50').then(r => r.ok ? r.json() : []),
+          fetch('/api/helper/get?limit=50').then(r => r.ok ? r.json() : [])
         ]);
 
         const rawProps = propsRes.status === 'fulfilled' && Array.isArray(propsRes.value) ? propsRes.value : [];
         const rawServices = servRes.status === 'fulfilled' && Array.isArray(servRes.value) ? servRes.value : [];
         const rawHelpers = helpRes.status === 'fulfilled' && Array.isArray(helpRes.value) ? helpRes.value : [];
 
-        const props = rawProps.slice(0, 2).map(p => ({
-          ...p,
-          itemType: 'property',
-          typeLabel: 'Property',
-          color: 'from-emerald-500 to-teal-600',
-          accentColor: 'text-emerald-600',
-          bgLight: 'bg-emerald-50 border-emerald-100',
-          route: `/listing/${p._id}`
-        }));
+        // Helper categorizer function to match DB items to category keys
+        const matchCategory = (item, type) => {
+          const text = `${item.name || ''} ${item.title || ''} ${item.description || ''} ${item.type || ''} ${item.kind || ''} ${item.category || ''} ${item.skills || ''}`.toLowerCase();
 
-        const services = rawServices.slice(0, 2).map(s => ({
-          ...s,
-          itemType: 'service',
-          typeLabel: 'Service',
-          color: 'from-blue-500 to-indigo-600',
-          accentColor: 'text-blue-600',
-          bgLight: 'bg-blue-50 border-blue-100',
-          route: `/service/${s._id}`
-        }));
-
-        const helpers = rawHelpers.slice(0, 2).map(h => ({
-          ...h,
-          itemType: 'helper',
-          typeLabel: 'Helper',
-          color: 'from-purple-500 to-pink-600',
-          accentColor: 'text-purple-600',
-          bgLight: 'bg-purple-50 border-purple-100',
-          route: `/helper/${h._id}`
-        }));
-
-        // Fallbacks if backend items are insufficient to ensure 6 stylish items are always present
-        const MOCK_FALLBACKS = [
-          {
-            _id: 'rec_p1',
-            name: 'Luxury Beachfront Apartment',
-            itemType: 'property',
-            typeLabel: 'Property',
-            color: 'from-emerald-500 to-teal-600',
-            accentColor: 'text-emerald-600',
-            bgLight: 'bg-emerald-50 border-emerald-100',
-            price: 2500,
-            address: 'Cape Town',
-            rating: 4.9,
-            imageUrls: ['https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'],
-            route: '/search?category=rental&type=properties'
-          },
-          {
-            _id: 'rec_s1',
-            name: 'Elite Home Cleaning & Sanitization',
-            itemType: 'service',
-            typeLabel: 'Service',
-            color: 'from-blue-500 to-indigo-600',
-            accentColor: 'text-blue-600',
-            bgLight: 'bg-blue-50 border-blue-100',
-            price: 350,
-            address: 'Johannesburg',
-            rating: 4.8,
-            imageUrls: ['https://images.pexels.com/photos/4099467/pexels-photo-4099467.jpeg?auto=compress&cs=tinysrgb&w=800'],
-            route: '/search?category=cleaning&type=services'
-          },
-          {
-            _id: 'rec_h1',
-            name: 'Sipho Zulu - Executive Barber & Styling',
-            itemType: 'helper',
-            typeLabel: 'Helper',
-            color: 'from-purple-500 to-pink-600',
-            accentColor: 'text-purple-600',
-            bgLight: 'bg-purple-50 border-purple-100',
-            regularPrice: 200,
-            address: 'Polokwane',
-            rating: 4.9,
-            imageUrls: ['https://images.pexels.com/photos/3993311/pexels-photo-3993311.jpeg?auto=compress&cs=tinysrgb&w=800'],
-            route: '/search?category=barber&type=helper'
-          },
-          {
-            _id: 'rec_p2',
-            name: 'Modern Executive Studio Loft',
-            itemType: 'property',
-            typeLabel: 'Property',
-            color: 'from-emerald-500 to-teal-600',
-            accentColor: 'text-emerald-600',
-            bgLight: 'bg-emerald-50 border-emerald-100',
-            price: 1800,
-            address: 'Pretoria',
-            rating: 4.7,
-            imageUrls: ['https://images.pexels.com/photos/439391/pexels-photo-439391.jpeg?auto=compress&cs=tinysrgb&w=800'],
-            route: '/search?category=rental&type=properties'
-          },
-          {
-            _id: 'rec_s2',
-            name: 'Express Furniture Moving & Hauling',
-            itemType: 'service',
-            typeLabel: 'Service',
-            color: 'from-blue-500 to-indigo-600',
-            accentColor: 'text-blue-600',
-            bgLight: 'bg-blue-50 border-blue-100',
-            price: 450,
-            address: 'Durban',
-            rating: 4.8,
-            imageUrls: ['https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800'],
-            route: '/search?category=moving&type=services'
-          },
-          {
-            _id: 'rec_h2',
-            name: 'Nomsa Dlamini - Certified Caregiver & Nanny',
-            itemType: 'helper',
-            typeLabel: 'Helper',
-            color: 'from-purple-500 to-pink-600',
-            accentColor: 'text-purple-600',
-            bgLight: 'bg-purple-50 border-purple-100',
-            regularPrice: 180,
-            address: 'Sandton',
-            rating: 4.9,
-            imageUrls: ['https://images.pexels.com/photos/3768914/pexels-photo-3768914.jpeg?auto=compress&cs=tinysrgb&w=800'],
-            route: '/search?category=nanny&type=helper'
+          if (type === 'property') {
+            if (item.type === 'over' || text.includes('hotel') || text.includes('guesthouse') || text.includes('motel') || text.includes('lodge') || text.includes('resort')) return 'hotels';
+            return 'rental_rooms';
           }
-        ];
+          if (text.includes('barber') || text.includes('haircut') || text.includes('salon') || text.includes('grooming')) return 'barbers';
+          if (text.includes('photo') || text.includes('camera') || text.includes('media') || text.includes('video')) return 'photographers';
+          if (text.includes('chef') || text.includes('catering') || text.includes('cook') || text.includes('food')) return 'chefs';
+          if (text.includes('domestic') || text.includes('clean') || text.includes('housekeep') || text.includes('nanny') || text.includes('maid')) return 'domestic';
+          if (text.includes('plumb') || text.includes('pipe') || text.includes('leak') || text.includes('drain')) return 'plumbers';
+          if (text.includes('garden') || text.includes('lawn') || text.includes('landscap') || text.includes('yard')) return 'gardeners';
+          if (item.type === 'schoolTransport' || text.includes('transport') || text.includes('shuttle') || text.includes('taxi') || text.includes('chauffeur') || text.includes('ride')) return 'transport';
+          if (item.type === 'moving' || text.includes('moving') || text.includes('logistics') || text.includes('hauling') || text.includes('bakkie') || text.includes('freight')) return 'logistics';
+          if (item.type === 'storage' || text.includes('storage') || text.includes('vault') || text.includes('container')) return 'storage';
 
-        let combined = [...props, ...services, ...helpers];
-        if (combined.length < 6) {
-          const needed = 6 - combined.length;
-          combined = [...combined, ...MOCK_FALLBACKS.slice(0, needed)];
-        }
-        setItems(combined.slice(0, 6));
+          return type === 'service' ? 'logistics' : 'barbers';
+        };
+
+        const categorized = {
+          rental_rooms: [],
+          hotels: [],
+          barbers: [],
+          photographers: [],
+          chefs: [],
+          domestic: [],
+          plumbers: [],
+          gardeners: [],
+          transport: [],
+          logistics: [],
+          storage: []
+        };
+
+        // Standardize properties from database
+        rawProps.forEach(p => {
+          const catKey = matchCategory(p, 'property');
+          categorized[catKey].push({
+            _id: p._id,
+            name: p.name || p.title,
+            itemType: 'property',
+            typeLabel: catKey === 'hotels' ? (p.kind || 'Hotel') : 'Rental Room',
+            price: p.regularPrice || p.price || 0,
+            unit: p.period || (catKey === 'hotels' ? 'night' : 'mo'),
+            address: p.address || 'South Africa',
+            latitude: p.latitude,
+            longitude: p.longitude,
+            rating: p.rating || 4.8,
+            imageUrls: p.imageUrls || [],
+            route: `/listing/${p._id}`
+          });
+        });
+
+        // Standardize services from database
+        rawServices.forEach(s => {
+          const catKey = matchCategory(s, 'service');
+          const catMeta = COMPARE_CATEGORIES.find(c => c.id === catKey);
+          categorized[catKey].push({
+            _id: s._id,
+            name: s.name || s.title,
+            itemType: 'service',
+            typeLabel: catMeta?.label || 'Service',
+            price: s.price || s.regularPrice || s.movePriceVan || s.storagePriceMonth || 0,
+            unit: catMeta?.defaultUnit || 'service',
+            address: s.address || 'South Africa',
+            latitude: s.latitude,
+            longitude: s.longitude,
+            rating: s.rating || 4.8,
+            imageUrls: s.imageUrls || [],
+            route: `/service/${s._id}`
+          });
+        });
+
+        // Standardize helpers from database
+        rawHelpers.forEach(h => {
+          const catKey = matchCategory(h, 'helper');
+          const catMeta = COMPARE_CATEGORIES.find(c => c.id === catKey);
+          categorized[catKey].push({
+            _id: h._id,
+            name: h.name || h.title,
+            itemType: 'helper',
+            typeLabel: catMeta?.label || 'Helper',
+            regularPrice: h.regularPrice || h.price || 0,
+            unit: h.period || catMeta?.defaultUnit || 'hr',
+            address: h.address || h.location || 'South Africa',
+            latitude: h.latitude,
+            longitude: h.longitude,
+            rating: h.rating || 4.8,
+            imageUrls: h.imageUrls || (h.avatar ? [h.avatar] : []),
+            route: `/helper/${h._id}`
+          });
+        });
+
+        setDbItemsByCategory(categorized);
       } catch (err) {
-        console.error('Failed to load compare recommended items:', err);
+        console.error('Error fetching database items for comparison:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRecommended();
+    fetchDatabaseItems();
   }, []);
+
+  const activeTabMeta = COMPARE_CATEGORIES.find(c => c.id === activeCategory) || COMPARE_CATEGORIES[0];
+  
+  // Calculate distance for all candidates and sort by proximity (closest to user first).
+  // A listing must be in the visitor's area. This prevents the fallback cards from
+  // showing listings in other cities just because they have a fabricated distance.
+  const calculateProximity = (item, idx) => {
+    let distance = item._distance;
+
+    if (distance === undefined || distance === Infinity) {
+      if (userCoords?.latitude && userCoords?.longitude && item.latitude && item.longitude) {
+        distance = calculateDistance(userCoords.latitude, userCoords.longitude, item.latitude, item.longitude);
+      } else {
+        const targetLoc = userLocationName.toLowerCase();
+        const itemLoc = (item.address || item.location || '').toLowerCase();
+        if (targetLoc && itemLoc.includes(targetLoc)) {
+          distance = 1.2 + (idx * 0.8);
+        } else {
+          distance = Infinity;
+        }
+      }
+    }
+    return distance;
+  };
+
+  const fetchedForCategory = dbItemsByCategory[activeCategory] || [];
+  const fallbacksForCategory = FALLBACK_ITEMS[activeCategory] || FALLBACK_ITEMS.rental_rooms;
+  const rawCandidates = [...fetchedForCategory, ...fallbacksForCategory];
+  const hasGpsLocation = Boolean(userCoords?.latitude && userCoords?.longitude);
+  const normalizedLocation = userLocationName.trim().toLowerCase();
+
+  const itemsToDisplay = rawCandidates
+    .map((item, idx) => ({
+      ...item,
+      _distance: calculateProximity(item, idx)
+    }))
+    .filter((item) => {
+      if (hasGpsLocation) return item._distance <= 50;
+      if (!normalizedLocation || normalizedLocation === 'your area') return false;
+
+      const itemLocation = `${item.address || ''} ${item.location || ''}`.toLowerCase();
+      return itemLocation.includes(normalizedLocation);
+    })
+    .sort((a, b) => a._distance - b._distance)
+    .slice(0, 4);
 
   const toggleCompare = (id, e) => {
     e.stopPropagation();
-    setSelectedItems(prev => 
+    setSelectedItems(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
-
-  if (loading || items.length === 0) return null;
 
   return (
     <motion.section
@@ -1567,21 +2161,22 @@ export const CompareRecommendedSection = ({ navigate }) => {
       whileInView="visible"
       viewport={{ once: true }}
       variants={fadeInUp}
-      className="mb-14"
+      className="mb-12"
     >
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+      {/* Section Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-5">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
+          <div className="flex items-center gap-2 mb-1">
             <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-rose-500">
-              Personalized Selections
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-500 flex items-center gap-1">
+              <MapPinIcon className="w-3 h-3" /> GPS Proximity Comparison
             </span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
             COMPARE RECOMMENDED FOR YOU
           </h2>
-          <p className="text-xs font-semibold text-slate-400 mt-1">
-            Top picks across Properties, Services & Helpers
+          <p className="text-xs font-semibold text-slate-500 mt-0.5 flex items-center gap-1">
+            {itemsToDisplay.length} nearby {itemsToDisplay.length === 1 ? 'listing' : 'listings'} in <span className="text-rose-600 font-bold">{activeTabMeta.label}</span> near <span className="text-slate-900 font-bold underline decoration-rose-500/40">{userLocationName}</span>
           </p>
         </div>
 
@@ -1589,7 +2184,7 @@ export const CompareRecommendedSection = ({ navigate }) => {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center gap-3 px-4 py-2 bg-slate-950 text-white rounded-2xl shadow-lg border border-slate-800"
+            className="flex items-center gap-3 px-4 py-2 bg-slate-950 text-white rounded-2xl shadow-lg border border-slate-800 shrink-0"
           >
             <span className="text-xs font-bold">{selectedItems.length} selected</span>
             <button
@@ -1602,81 +2197,114 @@ export const CompareRecommendedSection = ({ navigate }) => {
         )}
       </div>
 
-      {/* 6 Stylish Recommended Cards Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {items.map((item, idx) => {
+      {/* Category Pills Slider */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 scrollbar-none">
+        {COMPARE_CATEGORIES.map(cat => (
+          <button
+            key={cat.id}
+            onClick={() => {
+              setActiveCategory(cat.id);
+              setSelectedItems([]);
+            }}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-black shrink-0 transition-all duration-200 border ${
+              activeCategory === cat.id
+                ? 'bg-slate-950 text-white border-slate-950 shadow-md scale-105'
+                : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400 hover:text-slate-900'
+            }`}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
+      {/* 4 Minimalist & Clean Recommended Cards Grid (Proximity Ranked) */}
+      {itemsToDisplay.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
+          <MapPinIcon className="mx-auto mb-3 h-6 w-6 text-rose-500" />
+          <p className="font-bold text-slate-800">No {activeTabMeta.label.toLowerCase()} listings found near {userLocationName} yet.</p>
+          <p className="mt-1 text-sm text-slate-500">Enable location access or try another category to see local results.</p>
+        </div>
+      ) : (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+        {itemsToDisplay.map((item, idx) => {
           const isSelected = selectedItems.includes(item._id);
-          const itemPrice = item.price || item.regularPrice;
+          const itemPrice = item.price || item.regularPrice || 0;
+          const unit = item.unit || activeTabMeta.defaultUnit;
 
           return (
             <motion.div
               key={item._id || idx}
-              whileHover={{ y: -4 }}
+              whileHover={{ y: -3 }}
               onClick={() => {
                 if (item.route) navigate?.(item.route);
                 else if (item._id) navigate?.(`/${item.itemType}/${item._id}`);
               }}
-              className={`cursor-pointer rounded-2xl bg-white border transition-all duration-300 overflow-hidden flex flex-col justify-between p-2.5 relative group shadow-sm hover:shadow-md ${
-                isSelected ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-200/80 hover:border-slate-300'
+              className={`cursor-pointer rounded-2xl bg-white border transition-all duration-200 overflow-hidden flex flex-col justify-between p-2.5 relative group shadow-sm hover:shadow-md ${
+                isSelected ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-200/90 hover:border-slate-300'
               }`}
             >
-              {/* Image & Type Badge */}
-              <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-slate-100 mb-2.5">
+              {/* Minimal Image & Badge */}
+              <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-slate-100 mb-2">
                 <img
-                  src={item.imageUrls?.[0] || item.avatar || 'https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'}
-                  alt={item.name || item.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  src={item.imageUrls?.[0] || 'https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'}
+                  alt={item.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-slate-950/15 group-hover:bg-transparent transition-colors" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent" />
 
-                {/* Badge Type */}
-                <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-lg bg-slate-950/80 backdrop-blur-md border border-white/20">
+                {/* Minimal Type Badge */}
+                <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-slate-950/80 backdrop-blur-md">
                   <span className="text-[7.5px] font-black text-white uppercase tracking-wider">
-                    {item.typeLabel || item.itemType}
+                    {item.typeLabel}
                   </span>
                 </div>
 
-                {/* Compare Checkbox pill */}
+                {/* Toggle Compare pill */}
                 <button
                   onClick={(e) => toggleCompare(item._id, e)}
-                  className={`absolute top-1.5 right-1.5 p-1.5 rounded-lg backdrop-blur-md transition-all ${
+                  className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-md backdrop-blur-md flex items-center justify-center transition-all ${
                     isSelected
                       ? 'bg-rose-500 text-white shadow-sm'
                       : 'bg-white/80 text-slate-700 hover:bg-white'
                   }`}
                   title="Select to compare"
                 >
-                  <span className="text-[8px] font-bold block leading-none">
+                  <span className="text-[10px] font-bold block leading-none">
                     {isSelected ? '✓' : '+'}
                   </span>
                 </button>
               </div>
 
-              {/* Title & Info */}
+              {/* Minimalist Info & Proximity Pricing */}
               <div className="flex-1 flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider truncate">
-                      {item.address || item.type || 'South Africa'}
+                  <div className="flex items-center justify-between gap-1 mb-0.5">
+                    <span className="text-[9px] font-bold text-slate-400 truncate flex items-center gap-1">
+                      <MapPinIcon className="w-2.5 h-2.5 text-rose-500 shrink-0" />
+                      <span className="truncate">{item.address}</span>
                     </span>
-                    <span className="text-[10px] font-bold text-slate-800 shrink-0 flex items-center gap-0.5">
-                      <span className="text-amber-500">★</span> {(item.rating || 4.8).toFixed(1)}
+                    <span className="text-[8.5px] font-black text-slate-700 bg-slate-100 px-1 py-0.2 rounded shrink-0">
+                      {item._distance ? `${item._distance.toFixed(1)} km` : 'Near'}
                     </span>
                   </div>
 
-                  <h3 className="font-black text-xs text-slate-900 line-clamp-1 leading-snug group-hover:text-rose-600 transition-colors">
-                    {item.name || item.title}
+                  <h3 className="font-bold text-xs text-slate-900 truncate group-hover:text-rose-600 transition-colors">
+                    {item.name}
                   </h3>
                 </div>
 
-                {/* Price & Compare pill */}
-                <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-xs font-black text-slate-900">
-                    R{itemPrice?.toLocaleString()}
-                  </span>
+                <div className="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between">
+                  <div className="flex items-baseline gap-0.5">
+                    <span className="text-xs font-black text-slate-900">
+                      R{itemPrice?.toLocaleString()}
+                    </span>
+                    {unit && (
+                      <span className="text-[9px] font-semibold text-slate-400">/{unit}</span>
+                    )}
+                  </div>
 
-                  <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${item.bgLight} ${item.accentColor}`}>
+                  <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 group-hover:bg-rose-50 group-hover:text-rose-600 transition-colors">
                     Compare
                   </span>
                 </div>
@@ -1685,7 +2313,7 @@ export const CompareRecommendedSection = ({ navigate }) => {
           );
         })}
       </div>
+      )}
     </motion.section>
   );
 };
-
