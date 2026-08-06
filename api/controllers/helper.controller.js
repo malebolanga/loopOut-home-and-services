@@ -15,6 +15,11 @@ export const createHelper = async (req, res, next) => {
       return next(errorHandler(400, imageCheck.message));
     }
 
+    const textCheck = validateListingText(req.body, req.user?.id);
+    if (!textCheck.valid) {
+      return next(errorHandler(400, textCheck.message));
+    }
+
     const helper = await Helper.create({
       ...req.body,
       userRef: req.user.id

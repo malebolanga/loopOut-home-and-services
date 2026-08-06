@@ -7,11 +7,16 @@ import { validateListingText, validateImages } from '../utils/moderationHelper.j
 // Create Service
 export const createService = async (req, res, next) => {
   try {
-
     const imageCheck = await validateImages(req.body.imageUrls);
     if (!imageCheck.valid) {
       return next(errorHandler(400, imageCheck.message));
     }
+
+    const textCheck = validateListingText(req.body, req.user?.id);
+    if (!textCheck.valid) {
+      return next(errorHandler(400, textCheck.message));
+    }
+
     const serviceData = {
       ...req.body,
       creator: req.user.id,

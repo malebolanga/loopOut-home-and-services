@@ -68,19 +68,29 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl)
+        // Allow requests with no origin (like mobile apps, native Postman, or server-to-server)
         if (!origin) return callback(null, true);
         if (allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
-        // Allow all origins if none match (use with caution)
-        return callback(null, true);
+        return callback(new Error(`Security Alert: Access from origin ${origin} has been blocked by LoopOut CORS policy.`));
     },
     credentials: true,
 }));
 
 app.use(helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://www.gstatic.com", "https://apis.google.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            imgSrc: ["'self'", "data:", "https:", "blob:"],
+            connectSrc: ["'self'", ...allowedOrigins],
+            fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+            frameSrc: ["'none'"],
+            objectSrc: ["'none'"],
+        },
+    },
     crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 

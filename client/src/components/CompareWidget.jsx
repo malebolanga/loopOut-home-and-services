@@ -7,6 +7,7 @@ import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import ImageGallery from './ImageGallery';
+import CompareItemReviews from './CompareItemReviews';
 
 /** Renders 5 stars filled according to the rating value (0-5) from the database */
 function StarRating({ rating }) {
@@ -168,6 +169,8 @@ export default function CompareWidget() {
                              {helper.description}
                            </p>
                          )}
+
+                        <CompareItemReviews item={helper} />
                       </div>
 
                       <button

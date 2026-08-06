@@ -12,6 +12,11 @@ export const createListing = async (req, res, next) => {
     if (!imageCheck.valid) {
       return next(errorHandler(400, imageCheck.message));
     }
+
+    const textCheck = validateListingText(req.body, req.user?.id);
+    if (!textCheck.valid) {
+      return next(errorHandler(400, textCheck.message));
+    }
     const {
       imageUrls,
       videoUrl, // Ensure this is included

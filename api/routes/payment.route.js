@@ -58,7 +58,21 @@ router.post('/escrow', verifyToken, async (req, res) => {
   try {
     const { userId, amount, name, email, serviceId, providerName } = req.body;
 
-    const safeAmount = amount ? Number(amount).toFixed(2) : '35.00';
+    let dbItemPrice = null;
+    if (serviceId && mongoose.Types.ObjectId.isValid(serviceId)) {
+      const dbItem = (await Listing.findById(serviceId)) || 
+                     (await Helper.findById(serviceId)) || 
+                     (await Service.findById(serviceId)) || 
+                     (await Event.findById(serviceId));
+      if (dbItem) {
+        dbItemPrice = dbItem.regularPrice || dbItem.price;
+      }
+    }
+
+    const safeAmount = dbItemPrice 
+      ? Number(dbItemPrice).toFixed(2) 
+      : (amount ? Number(amount).toFixed(2) : '35.00');
+    
     const safeItemName = `Secure Escrow: ${providerName}`.substring(0, 99);
     
     const payfast = generatePayfastData({
