@@ -2751,7 +2751,7 @@ export const CompareRecommendedSection = ({ navigate }) => {
                   </h3>
                 </div>
 
-                <div className="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between">
+                <div className="mt-2 pt-1.5  border-slate-100 flex items-center justify-between">
                   <div className="flex items-baseline gap-0.5">
                     <span className="text-xs font-black text-slate-900">
                       R{itemPrice?.toLocaleString()}
