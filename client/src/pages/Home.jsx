@@ -1568,22 +1568,33 @@ const Home = () => {
   const [requestCount, setRequestCount] = useState(0);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchBookingCount = async () => {
       if (!currentUser?._id) return;
       try {
-        const res = await fetch(`/api/bookings/user/${currentUser._id}`);
+        const res = await fetch(`/api/bookings/user/${currentUser._id}`, {
+          signal: controller.signal
+        });
+        // Silently handle not-ready / bad-request states
+        if (res.status === 503 || res.status === 400) return;
         if (res.ok) {
           const data = await res.json();
           const activeBookings = data.filter(b => b.status !== 'completed' && b.status !== 'cancelled' && b.status !== 'declined');
           setRequestCount(activeBookings.length);
         }
       } catch (error) {
+        if (error.name === 'AbortError') return;
         console.error('Failed to fetch booking count:', error);
       }
     };
+
     fetchBookingCount();
     const interval = setInterval(fetchBookingCount, 60000);
-    return () => clearInterval(interval);
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+    };
   }, [currentUser]);
 
   useEffect(() => {

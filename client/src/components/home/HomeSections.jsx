@@ -1758,7 +1758,7 @@ export const CompareRecommendedSection = ({ navigate }) => {
         unit: 'hr',
         address: 'Durban',
         rating: 4.8,
-        imageUrls: ['https://images.pexels.com/photos/4125633/pexels-photo-4125633.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        imageUrls: ['https://images.pexels.com/photos/2183131/pexels-photo-2183131.jpeg?auto=compress&cs=tinysrgb&w=800'],
         route: '/search?category=tattoo',
         description: 'Intricate dotwork, script, and personalized memorial tattoo commissions.'
       }
@@ -2298,7 +2298,7 @@ export const CompareRecommendedSection = ({ navigate }) => {
         unit: 'trip',
         address: 'Soweto',
         rating: 4.7,
-        imageUrls: ['https://images.pexels.com/photos/163841/pexels-photo-163841.jpeg?auto=compress&cs=tinysrgb&w=800'],
+        imageUrls: ['https://images.pexels.com/photos/116675/pexels-photo-116675.jpeg?auto=compress&cs=tinysrgb&w=800'],
         route: '/search?category=transport',
         description: 'Safe daily commuter transfers and group event trips.'
       }
@@ -2490,7 +2490,7 @@ export const CompareRecommendedSection = ({ navigate }) => {
             latitude: p.latitude,
             longitude: p.longitude,
             rating: p.rating || 4.8,
-            imageUrls: p.imageUrls || [],
+            imageUrls: (p.imageUrls && p.imageUrls.filter(Boolean).length) ? p.imageUrls.filter(Boolean) : (p.image ? [p.image] : []),
             description: p.description || '',
             route: `/listing/${p._id}`
           });
@@ -2511,7 +2511,7 @@ export const CompareRecommendedSection = ({ navigate }) => {
             latitude: s.latitude,
             longitude: s.longitude,
             rating: s.rating || 4.8,
-            imageUrls: s.imageUrls || [],
+            imageUrls: (s.imageUrls && s.imageUrls.filter(Boolean).length) ? s.imageUrls.filter(Boolean) : (s.image ? [s.image] : []),
             description: s.description || '',
             route: `/service/${s._id}`
           });
@@ -2532,7 +2532,7 @@ export const CompareRecommendedSection = ({ navigate }) => {
             latitude: h.latitude,
             longitude: h.longitude,
             rating: h.rating || 4.8,
-            imageUrls: h.imageUrls || (h.avatar ? [h.avatar] : []),
+            imageUrls: (h.imageUrls && h.imageUrls.filter(Boolean).length) ? h.imageUrls.filter(Boolean) : (h.avatar ? [h.avatar] : (h.image ? [h.image] : [])),
             description: h.description || '',
             route: `/helper/${h._id}`
           });
@@ -2591,11 +2591,23 @@ export const CompareRecommendedSection = ({ navigate }) => {
     );
   };
 
+  const clearAllCompare = () => {
+    setSelectedItems([]);
+    try {
+      localStorage.removeItem('loopout_compare_list');
+      window.dispatchEvent(new Event('compare_updated'));
+    } catch (e) {
+      console.error("Error clearing compare storage", e);
+    }
+    setIsCompareModalOpen(false);
+  };
+
   // Launch comparison popup modal directly
   const handleCompareNowClick = () => {
     let itemsToCompare = itemsToDisplay.filter(item => selectedItems.includes(item._id));
     if (itemsToCompare.length === 0) {
       itemsToCompare = itemsToDisplay.slice(0, 3);
+      setSelectedItems(itemsToCompare.map(i => i._id));
     }
     
     try {
@@ -2639,22 +2651,22 @@ export const CompareRecommendedSection = ({ navigate }) => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
-          {selectedItems.length > 0 && (
+        {selectedItems.length > 0 && (
+          <div className="flex items-center gap-3 shrink-0">
             <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
               {selectedItems.length} selected
             </span>
-          )}
-          <button
-            onClick={handleCompareNowClick}
-            className="px-4 py-2 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-rose-500/20 active:scale-95 flex items-center gap-2"
-          >
-            <span>Compare Now</span>
-            <span className="bg-white/20 px-1.5 py-0.5 rounded-full text-[10px]">
-              {selectedItems.length > 0 ? selectedItems.length : Math.min(itemsToDisplay.length, 3)}
-            </span>
-          </button>
-        </div>
+            <button
+              onClick={handleCompareNowClick}
+              className="px-4 py-2 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-rose-500/20 active:scale-95 flex items-center gap-2"
+            >
+              <span>Compare Now</span>
+              <span className="bg-white/20 px-1.5 py-0.5 rounded-full text-[10px]">
+                {selectedItems.length}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Category Pills Slider */}
@@ -2708,6 +2720,10 @@ export const CompareRecommendedSection = ({ navigate }) => {
                 <img
                   src={item.imageUrls?.[0] || 'https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'}
                   alt={item.name}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = 'https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800';
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
                 />
@@ -2817,7 +2833,7 @@ export const CompareRecommendedSection = ({ navigate }) => {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => { setSelectedItems([]); setIsCompareModalOpen(false); }}
+                      onClick={clearAllCompare}
                       className="text-[10px] font-black text-gray-400 hover:text-rose-500 uppercase tracking-widest transition-colors"
                     >
                       Clear
@@ -2862,6 +2878,10 @@ export const CompareRecommendedSection = ({ navigate }) => {
                         <img
                           src={currentItem.imageUrls?.[0] || 'https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'}
                           alt={currentItem.name}
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = 'https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800';
+                          }}
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute top-3 left-3 bg-black/60 backdrop-blur px-3 py-1 rounded-full text-white text-[10px] font-black uppercase tracking-widest">
@@ -2874,7 +2894,21 @@ export const CompareRecommendedSection = ({ navigate }) => {
                           </div>
                         )}
                         <button
-                          onClick={() => toggleCompare(currentItem._id)}
+                          onClick={() => {
+                            const remaining = selectedItems.filter(id => id !== currentItem._id);
+                            if (remaining.length === 0) {
+                              clearAllCompare();
+                            } else {
+                              setSelectedItems(remaining);
+                              try {
+                                const remainingItems = itemsToDisplay.filter(i => remaining.includes(i._id));
+                                localStorage.setItem('loopout_compare_list', JSON.stringify(remainingItems));
+                                window.dispatchEvent(new Event('compare_updated'));
+                              } catch (e) {
+                                console.error("Error updating local compare list:", e);
+                              }
+                            }
+                          }}
                           className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur border border-gray-100 rounded-full flex items-center justify-center text-gray-400 hover:text-rose-500 shadow z-20"
                           title="Remove"
                         >✕</button>

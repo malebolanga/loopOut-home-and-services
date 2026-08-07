@@ -249,7 +249,7 @@ export default function Header() {
   ];
 
   // Fetch notifications
-  const fetchNotifications = useCallback(async () => {
+  const fetchNotifications = useCallback(async (signal) => {
     if (!currentUser) return;
 
     try {
@@ -265,8 +265,12 @@ export default function Header() {
 
       const res = await fetch('/api/notifications', {
         headers,
-        credentials: 'include'
+        credentials: 'include',
+        signal
       });
+
+      // Silently ignore auth errors and server-not-ready states
+      if (res.status === 401 || res.status === 403 || res.status === 503) return;
 
       if (res.ok) {
         const data = await res.json();
@@ -301,12 +305,15 @@ export default function Header() {
         setPrevUnreadCount(newUnreadCount);
       }
     } catch (error) {
+      // Ignore AbortError — this is expected on component unmount
+      if (error.name === 'AbortError') return;
       console.error('Error fetching notifications:', error);
     }
   }, [currentUser, prevUnreadCount, playNotificationChime]);
 
   useEffect(() => {
-    fetchNotifications();
+    const controller = new AbortController();
+    fetchNotifications(controller.signal);
 
     // Request notification permission
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
@@ -314,9 +321,13 @@ export default function Header() {
     }
 
     // Set up polling for real-time alerts
-    const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+    const interval = setInterval(() => {
+      const pollController = new AbortController();
+      fetchNotifications(pollController.signal);
+    }, 30000); // Poll every 30s
 
     return () => {
+      controller.abort();
       clearInterval(interval);
     };
   }, [fetchNotifications]);

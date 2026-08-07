@@ -253,26 +253,33 @@ export const getUserBookings = async (req, res) => {
       return res.status(400).json({ error: 'Valid User ID is required' });
     }
 
-    // During a backend restart, avoid allowing Mongoose to buffer the query
-    // until it times out and becomes an opaque 500 response in the client.
     if (mongoose.connection.readyState !== 1) {
       return res.status(503).json({ error: 'Database connecting, please retry' });
     }
 
-    const bookings = await Booking.find({ user: userId })
-      .populate({ path: 'listing', populate: { path: 'userRef' } })
-      .populate({ path: 'helper', populate: { path: 'userRef' } })
-      .populate({ path: 'service', populate: { path: 'userRef' } })
-      .populate({ path: 'event', populate: { path: 'userRef' } })
-      .populate('user')
-      .sort({ createdAt: -1 });
+    let bookings;
+    try {
+      bookings = await Booking.find({ user: userId })
+        .populate({ path: 'listing', select: 'name title imageUrls address regularPrice userRef', populate: { path: 'userRef', select: 'username avatar' } })
+        .populate({ path: 'helper', select: 'name title imageUrls address regularPrice userRef', populate: { path: 'userRef', select: 'username avatar' } })
+        .populate({ path: 'service', select: 'name title imageUrls address price userRef', populate: { path: 'userRef', select: 'username avatar' } })
+        .populate({ path: 'event', select: 'name title imageUrls address price userRef', populate: { path: 'userRef', select: 'username avatar' } })
+        .populate('user', 'username avatar email phone')
+        .sort({ createdAt: -1 })
+        .lean();
+    } catch (populateErr) {
+      console.error('[BOOKINGS] Populate error, falling back to plain query:', populateErr.message);
+      // Fallback: return bookings without population to avoid complete failure
+      bookings = await Booking.find({ user: userId }).sort({ createdAt: -1 }).lean();
+    }
     
-    res.json(bookings);
+    return res.json(bookings);
   } catch (error) {
-    console.error('[BOOKINGS] getUserBookings error:', error.message, error.stack);
-    res.status(500).json({ error: 'Server error', details: error.message });
+    console.error('[BOOKINGS] getUserBookings error:', error.message, '\nStack:', error.stack);
+    return res.status(500).json({ error: 'Server error', details: error.message });
   }
 };
+
 
 
 // Get single booking by ID

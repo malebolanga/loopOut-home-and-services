@@ -8,48 +8,43 @@ const router = express.Router();
 // Get all notifications for current user
 router.get('/', verifyToken, async(req, res) => {
     try {
-        console.log('[NOTIF] Fetching for user:', req.user?.id);
-        
+        // Check if database is connected first
+        if (mongoose.connection.readyState !== 1) {
+            console.warn('[NOTIF] Database not ready, state:', mongoose.connection.readyState);
+            return res.status(503).json({ success: false, message: 'Database connecting, please retry', notifications: [], unreadCount: 0 });
+        }
+
         if (!req.user || !req.user.id) {
             console.error('[NOTIF] Error: req.user.id is missing');
             return res.status(401).json({ success: false, message: 'Unauthorized: No user ID in token' });
         }
 
-        // Check if database is connected
-        if (mongoose.connection.readyState !== 1) {
-            console.error('[NOTIF] Error: Database not connected. State:', mongoose.connection.readyState);
-            return res.status(503).json({ success: false, message: 'Database connecting, please retry' });
-        }
-
         const userId = req.user.id;
 
         if (!mongoose.Types.ObjectId.isValid(userId)) {
-            console.error('[NOTIF] Error: req.user.id is not a valid ObjectId:', userId);
+            console.error('[NOTIF] Error: Invalid ObjectId:', userId);
             return res.status(400).json({ success: false, message: 'Invalid user ID format' });
         }
 
-        // Use Promise.all to fetch both in parallel
         const [notifications, unreadCount] = await Promise.all([
             Notification.find({ userId }).sort({ createdAt: -1 }).limit(20).lean(),
             Notification.countDocuments({ userId, read: false })
         ]);
 
-        console.log(`[NOTIF] Found ${notifications.length} notifications (${unreadCount} unread)`);
-
-        res.json({
+        return res.json({
             notifications,
             unreadCount
         });
     } catch (error) {
-        console.error('[NOTIF] CRITICAL SERVER ERROR:', error);
-        res.status(500).json({ 
+        console.error('[NOTIF] CRITICAL SERVER ERROR:', error.message);
+        return res.status(500).json({ 
             success: false,
             message: 'Notification service error',
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            error: error.message
         });
     }
 });
+
 
 // Mark notifications as read
 router.post('/read', verifyToken, async(req, res) => {

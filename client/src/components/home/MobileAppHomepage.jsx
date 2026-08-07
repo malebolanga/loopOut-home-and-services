@@ -94,6 +94,7 @@ import {
   filterByDistanceTier
 } from '../utils/locationUtils';
 import { AIRecommendationEngine } from '../utils/AIRecommendationEngine'; // Assume this class is exported separately
+import FoodMenuSection from './FoodMenuSection';
 
 const MobileAppHomepage = ({
   featuredProperties, featuredServices, featuredHelpers, featuredEvents,
@@ -177,6 +178,10 @@ const MobileAppHomepage = ({
 
       <section className="max-w-7xl mx-auto mt-12">
         <CompareRecommendedSection navigate={navigate} />
+      </section>
+
+      <section className="max-w-7xl mx-auto mt-16 mb-4">
+        <FoodMenuSection navigate={navigate} />
       </section>
     </main>
   );

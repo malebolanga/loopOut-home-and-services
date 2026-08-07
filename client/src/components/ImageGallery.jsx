@@ -20,8 +20,8 @@ const ImageGallery = ({ imageUrls, alt, type, className = "" }) => {
   const [failedUrls, setFailedUrls] = useState(new Set());
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  // Filter out failed images
-  const validImages = imageUrls?.filter((url) => !failedUrls.has(url)) || [];
+  // Filter out empty strings or failed URLs
+  const validImages = imageUrls?.filter((url) => Boolean(url) && !failedUrls.has(url)) || [];
   
   // Ensure we don't go out of bounds if validImages shrinks
   useEffect(() => {
@@ -49,20 +49,28 @@ const ImageGallery = ({ imageUrls, alt, type, className = "" }) => {
   const handleError = () => {
     if (validImages[currentIndex]) {
       setFailedUrls(prev => new Set(prev).add(validImages[currentIndex]));
+    } else {
+      setImageLoaded(true);
     }
   };
 
-  const currentImage = validImages[currentIndex] || FALLBACK_IMAGES[type] || FALLBACK_IMAGES.default;
+  const fallbackImage = FALLBACK_IMAGES[type] || FALLBACK_IMAGES.default;
+  const currentImage = validImages[currentIndex] || fallbackImage;
 
   return (
     <div className={`relative w-full h-full group ${className}`}>
-      {!imageLoaded && validImages.length > 0 && (
-          <div className="absolute inset-0 bg-gray-200 animate-pulse z-0 rounded-[inherit]" />
+      {!imageLoaded && (
+        <div className="absolute inset-0 bg-gray-200 animate-pulse z-0 rounded-[inherit]" />
       )}
       <img
         src={currentImage}
-        alt={alt}
-        onError={handleError}
+        alt={alt || "Image"}
+        onError={(e) => {
+          handleError();
+          if (!validImages[currentIndex] && e.currentTarget.src !== FALLBACK_IMAGES.default) {
+            e.currentTarget.src = FALLBACK_IMAGES.default;
+          }
+        }}
         onLoad={() => setImageLoaded(true)}
         className={`w-full h-full object-cover transition-all duration-500 z-10 relative ${imageLoaded ? 'scale-100 opacity-100 group-hover:scale-105' : 'scale-105 opacity-0'}`}
         loading="lazy"

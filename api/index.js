@@ -252,8 +252,11 @@ app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
 
-    // Simplified error logging
-    console.error('SERVER ERROR:', err);
+    // Only log unexpected server errors (5xx), not expected client errors (4xx)
+    if (statusCode >= 500) {
+        console.error(`[SERVER ERROR] ${req.method} ${req.url} → ${statusCode}:`, err.message);
+    }
+
     return res.status(statusCode).json({
         success: false,
         statusCode,
