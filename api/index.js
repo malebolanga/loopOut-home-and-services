@@ -51,7 +51,10 @@ mongoose.connect(process.env.MONGO)
         console.log(err);
     });
 
-const __dirname = path.resolve();
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -63,17 +66,27 @@ app.use(cookieParser());
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:5174',
+    'http://localhost:3000',
     process.env.CLIENT_URL,
+    process.env.RENDER_EXTERNAL_URL,
 ].filter(Boolean);
 
 app.use(cors({
     origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps, native Postman, or server-to-server)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) {
+        
+        // Allow configured origins, subdomains/hosts on render, or same-domain origins
+        if (
+            allowedOrigins.includes(origin) ||
+            allowedOrigins.some(o => origin.startsWith(o)) ||
+            origin.endsWith('.onrender.com')
+        ) {
             return callback(null, true);
         }
-        return callback(new Error(`Security Alert: Access from origin ${origin} has been blocked by LoopOut CORS policy.`));
+        
+        // Safely disallow CORS without throwing an internal server error
+        return callback(null, false);
     },
     credentials: true,
 }));
@@ -82,12 +95,49 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://www.gstatic.com", "https://apis.google.com"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-            imgSrc: ["'self'", "data:", "https:", "blob:"],
-            connectSrc: ["'self'", ...allowedOrigins],
-            fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-            frameSrc: ["'none'"],
+            scriptSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "'unsafe-eval'",
+                "https://www.gstatic.com",
+                "https://apis.google.com",
+                "https://cdnjs.cloudflare.com",
+                "https://unpkg.com",
+                "https://cdn.jsdelivr.net",
+            ],
+            scriptSrcAttr: ["'unsafe-inline'"],
+            styleSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "https://fonts.googleapis.com",
+                "https://unpkg.com",
+                "https://cdnjs.cloudflare.com",
+                "https://cdn.jsdelivr.net",
+            ],
+            imgSrc: [
+                "'self'",
+                "data:",
+                "https:",
+                "blob:",
+                "https://*.tile.openstreetmap.org",
+                "https://unpkg.com",
+                "https://cdnjs.cloudflare.com",
+            ],
+            connectSrc: [
+                "'self'",
+                "https:",
+                "wss:",
+                "ws:",
+                "https://*.tile.openstreetmap.org",
+                ...allowedOrigins,
+            ],
+            fontSrc: [
+                "'self'",
+                "https://fonts.gstatic.com",
+                "https://cdnjs.cloudflare.com",
+                "data:",
+            ],
+            frameSrc: ["'self'", "https://*.google.com"],
             objectSrc: ["'none'"],
         },
     },
@@ -171,10 +221,10 @@ app.use('/api/sell', sellRouter);
 app.use('/api/lunch', lunchRouter);
 
 // Serve uploads folder statically
-app.use('/uploads', express.static(path.join(__dirname, 'client', 'public', 'uploads')));
+app.use('/uploads', express.static(path.resolve(__dirname, '../client/public/uploads')));
 
 // Serve static files from the React app dist folder
-const distPath = path.join(__dirname, 'client', 'dist');
+const distPath = path.resolve(__dirname, '../client/dist');
 app.use(express.static(distPath));
 
 // For any other request, send back index.html
