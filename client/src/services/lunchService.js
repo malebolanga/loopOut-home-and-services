@@ -205,6 +205,9 @@ export const createShop = async (shopData) => {
     phone: shopData.phone || '',
     ownerId: shopData.ownerId || 'guest',
     ownerName: shopData.ownerName || 'Store Manager',
+    isOpen: shopData.isOpen !== false,
+    whatsapp: shopData.whatsapp || '',
+    operatingHours: shopData.operatingHours,
     meals: shopData.meals || []
   };
 

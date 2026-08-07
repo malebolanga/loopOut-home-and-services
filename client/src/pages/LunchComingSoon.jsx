@@ -190,7 +190,13 @@ export default function LunchComingSoon() {
     image: '🥙',
     address: '',
     phone: '',
-    whatsapp: ''
+    whatsapp: '',
+    operatingHours: {
+      openTime: '08:00',
+      closeTime: '20:00',
+      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+    },
+    isOpen: true
   });
 
   const [showAddMealModal, setShowAddMealModal] = useState(false);
@@ -213,7 +219,13 @@ export default function LunchComingSoon() {
     image: '',
     address: '',
     phone: '',
-    whatsapp: ''
+    whatsapp: '',
+    operatingHours: {
+      openTime: '08:00',
+      closeTime: '20:00',
+      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+    },
+    isOpen: true
   });
 
   const [showEditMealModal, setShowEditMealModal] = useState(false);
@@ -410,6 +422,11 @@ export default function LunchComingSoon() {
 
   // Cart operations
   const addToCart = (meal) => {
+    if (currentShop?.isOpen === false) {
+      setNotice({ type: 'error', message: `${currentShop.name} is currently closed and cannot accept orders.` });
+      return;
+    }
+
     setCart((items) => {
       const existing = items.find((item) => item.id === meal.id);
       if (existing) {
@@ -431,6 +448,12 @@ export default function LunchComingSoon() {
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (!cart.length || !currentShop) return;
+
+    if (currentShop.isOpen === false) {
+      setNotice({ type: 'error', message: `${currentShop.name} is currently closed and cannot accept orders.` });
+      setShowCheckoutModal(false);
+      return;
+    }
 
     if (!checkoutData.customerPhone) {
       alert("Please provide a contact phone number so the shop and delivery driver can reach you.");
@@ -572,6 +595,25 @@ export default function LunchComingSoon() {
     } catch (err) {
       console.error("Delete meal error:", err);
       setNotice({ type: 'error', message: err.message || 'Error deleting meal' });
+    }
+  };
+
+  // Toggle shop Open / Closed
+  const handleToggleShopOpen = async (shop) => {
+    if (!shop) return;
+    // Existing shops without an explicit value are treated as open by the UI.
+    const newIsOpen = shop.isOpen === false;
+    try {
+      await updateShop(shop.id, { isOpen: newIsOpen });
+      setNotice({
+        type: 'success',
+        message: newIsOpen
+          ? `✅ ${shop.name} is now OPEN — customers can place orders!`
+          : `🔴 ${shop.name} is now CLOSED — orders paused.`
+      });
+    } catch (err) {
+      console.error('Toggle open error:', err);
+      setNotice({ type: 'error', message: 'Failed to update shop status. Please try again.' });
     }
   };
 
@@ -1032,6 +1074,11 @@ export default function LunchComingSoon() {
                             <MapPin className="h-3 w-3 text-amber-600 shrink-0" />
                             <span className="truncate">{item.distance || '1.0 km'}</span>
                           </p>
+                          {/* Open / Closed status */}
+                          <span className={`inline-flex items-center gap-1 mt-1 rounded-full px-2 py-0.5 text-[10px] font-black ${ item.isOpen !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700' }`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${ item.isOpen !== false ? 'bg-emerald-500 animate-pulse' : 'bg-red-500' }`} />
+                            {item.isOpen !== false ? 'Open' : 'Closed'}
+                          </span>
                         </div>
                       </button>
                     );
@@ -1090,7 +1137,9 @@ export default function LunchComingSoon() {
                               image: currentShop.image,
                               address: currentShop.address || '',
                               phone: currentShop.phone || '',
-                              whatsapp: currentShop.whatsapp || ''
+                              whatsapp: currentShop.whatsapp || '',
+                              operatingHours: currentShop.operatingHours || { openTime: '08:00', closeTime: '20:00', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
+                              isOpen: currentShop.isOpen !== false
                             });
                             setShowEditShopModal(true);
                           }}
@@ -1119,10 +1168,27 @@ export default function LunchComingSoon() {
                         {currentShop.name}
                       </h2>
 
-                      <div>
-                        <span className="inline-block rounded-full bg-white/10 backdrop-blur-md px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-amber-200 border border-white/15 max-w-full truncate">
+                      <div className="flex flex-wrap items-center justify-center gap-2 pt-0.5">
+                        <span className="inline-flex max-w-full items-center rounded-full bg-white/10 backdrop-blur-md px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-amber-200 border border-white/15">
                           {currentShop.cuisine}
                         </span>
+
+                        {/* Open / Closed Status */}
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-black uppercase tracking-wider border ${
+                          currentShop.isOpen !== false
+                            ? 'bg-emerald-500/25 text-emerald-200 border-emerald-400/40'
+                            : 'bg-red-500/25 text-red-200 border-red-400/40'
+                        }`}>
+                          <span className={`h-2 w-2 rounded-full ${currentShop.isOpen !== false ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
+                          {currentShop.isOpen !== false ? 'Open Now' : 'Closed'}
+                        </span>
+
+                        {currentShop.operatingHours?.openTime && currentShop.operatingHours?.closeTime && (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/10 px-3.5 py-1 text-xs font-semibold text-gray-100 backdrop-blur-md">
+                            <Clock3 className="h-3.5 w-3.5 text-amber-300" />
+                            {currentShop.operatingHours.openTime}–{currentShop.operatingHours.closeTime}
+                          </span>
+                        )}
                       </div>
 
                       {/* Centered Rating, Address & Delivery Time */}
@@ -1566,7 +1632,24 @@ export default function LunchComingSoon() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Shop Open / Closed Toggle */}
+                {isShopOwner && dashboardShop && (
+                  <button
+                    type="button"
+                    onClick={() => handleToggleShopOpen(dashboardShop)}
+                    className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black shadow transition cursor-pointer border-2 ${
+                      dashboardShop.isOpen !== false
+                        ? 'bg-emerald-500 border-emerald-400 text-white hover:bg-emerald-600'
+                        : 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700'
+                    }`}
+                    title={dashboardShop.isOpen !== false ? 'Click to CLOSE shop' : 'Click to OPEN shop'}
+                  >
+                    <span className={`h-2 w-2 rounded-full ${ dashboardShop.isOpen !== false ? 'bg-white animate-pulse' : 'bg-gray-500'}`} />
+                    {dashboardShop.isOpen !== false ? '🟢 Shop is OPEN' : '🔴 Shop is CLOSED'}
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => setShowAddShopModal(true)}
@@ -2285,6 +2368,80 @@ export default function LunchComingSoon() {
                 <p className="text-[10px] text-gray-400 font-medium">Enter numbers with country code e.g. 27821234567</p>
               </div>
 
+              {/* Operating Hours */}
+              <div className="space-y-3 rounded-2xl bg-amber-50 border border-amber-200 p-4">
+                <label className="text-xs font-black text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <Clock3 className="h-3.5 w-3.5" /> Operating Hours
+                </label>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-600 block mb-1">Opening Time</label>
+                    <input
+                      type="time"
+                      value={newShopForm.operatingHours?.openTime || '08:00'}
+                      onChange={(e) => setNewShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, openTime: e.target.value } }))}
+                      className="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-600 block mb-1">Closing Time</label>
+                    <input
+                      type="time"
+                      value={newShopForm.operatingHours?.closeTime || '20:00'}
+                      onChange={(e) => setNewShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, closeTime: e.target.value } }))}
+                      className="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-gray-600 block mb-1.5">Open Days</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
+                      const isSelected = (newShopForm.operatingHours?.days || []).includes(day);
+                      return (
+                        <button
+                          key={day}
+                          type="button"
+                          onClick={() => {
+                            const days = newShopForm.operatingHours?.days || [];
+                            const newDays = isSelected ? days.filter(d => d !== day) : [...days, day];
+                            setNewShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, days: newDays } }));
+                          }}
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-black transition cursor-pointer border ${
+                            isSelected ? 'bg-amber-500 text-white border-amber-600' : 'bg-white text-gray-600 border-gray-200 hover:border-amber-300'
+                          }`}
+                        >
+                          {day}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 border-t border-amber-200">
+                  <div>
+                    <span className="text-xs font-black text-gray-800">Shop Status on Launch</span>
+                    <p className="text-[10px] text-gray-500">You can change this anytime in dashboard</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNewShopForm(prev => ({ ...prev, isOpen: !prev.isOpen }))}
+                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 cursor-pointer ${
+                      newShopForm.isOpen ? 'bg-emerald-500' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-300 ${
+                      newShopForm.isOpen ? 'translate-x-8' : 'translate-x-1'
+                    }`} />
+                    <span className={`absolute text-[9px] font-black ${ newShopForm.isOpen ? 'left-1.5 text-white' : 'right-1.5 text-gray-500'}`}>
+                      {newShopForm.isOpen ? 'ON' : 'OFF'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
               <button
                 type="submit"
                 className="w-full rounded-2xl bg-amber-500 py-3 text-sm font-black text-white shadow hover:bg-amber-600 transition"
@@ -2561,6 +2718,59 @@ export default function LunchComingSoon() {
                   </div>
                 </div>
                 <p className="text-[10px] text-gray-400 font-medium">Enter numbers with country code e.g. 27821234567</p>
+              </div>
+
+              {/* Operating Hours – Edit */}
+              <div className="space-y-3 rounded-2xl bg-amber-50 border border-amber-200 p-4">
+                <label className="text-xs font-black text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <Clock3 className="h-3.5 w-3.5" /> Operating Hours
+                </label>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-600 block mb-1">Opening Time</label>
+                    <input
+                      type="time"
+                      value={editShopForm.operatingHours?.openTime || '08:00'}
+                      onChange={(e) => setEditShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, openTime: e.target.value } }))}
+                      className="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-600 block mb-1">Closing Time</label>
+                    <input
+                      type="time"
+                      value={editShopForm.operatingHours?.closeTime || '20:00'}
+                      onChange={(e) => setEditShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, closeTime: e.target.value } }))}
+                      className="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-gray-600 block mb-1.5">Open Days</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
+                      const isSelected = (editShopForm.operatingHours?.days || []).includes(day);
+                      return (
+                        <button
+                          key={day}
+                          type="button"
+                          onClick={() => {
+                            const days = editShopForm.operatingHours?.days || [];
+                            const newDays = isSelected ? days.filter(d => d !== day) : [...days, day];
+                            setEditShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, days: newDays } }));
+                          }}
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-black transition cursor-pointer border ${
+                            isSelected ? 'bg-amber-500 text-white border-amber-600' : 'bg-white text-gray-600 border-gray-200 hover:border-amber-300'
+                          }`}
+                        >
+                          {day}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
               <button

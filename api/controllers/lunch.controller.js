@@ -89,7 +89,10 @@ export const getShops = async (req, res) => {
 // POST /api/lunch/shops
 export const createShop = async (req, res) => {
   try {
-    const { name, cuisine, distance, time, rating, image, address, phone, ownerId, ownerName, meals } = req.body;
+    const {
+      name, cuisine, distance, time, rating, image, address, phone, ownerId,
+      ownerName, meals, isOpen, whatsapp, operatingHours
+    } = req.body;
     if (!name || !name.trim()) {
       return res.status(400).json({ success: false, message: 'Shop name is required' });
     }
@@ -131,6 +134,9 @@ export const createShop = async (req, res) => {
         phone: phone || '',
         ownerId: ownerId || 'guest',
         ownerName: ownerName || 'Store Manager',
+        isOpen: isOpen !== false,
+        whatsapp: whatsapp || '',
+        operatingHours: operatingHours || undefined,
         meals: meals || []
       });
 
@@ -153,6 +159,9 @@ export const createShop = async (req, res) => {
       phone: phone || '',
       ownerId: ownerId || 'guest',
       ownerName: ownerName || 'Store Manager',
+      isOpen: isOpen !== false,
+      whatsapp: whatsapp || '',
+      operatingHours: operatingHours || { openTime: '08:00', closeTime: '20:00', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
       meals: meals || [],
       createdAt: new Date().toISOString()
     };
@@ -262,7 +271,18 @@ export const createOrder = async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
+    const inMemoryShop = inMemoryShops.find((shop) => shop.id === shopId || shop._id === shopId);
+    if (inMemoryShop?.isOpen === false) {
+      return res.status(409).json({ success: false, message: 'This shop is currently closed and cannot accept orders.' });
+    }
+
     if (mongoose.connection.readyState === 1) {
+      const shop = mongoose.Types.ObjectId.isValid(shopId)
+        ? await Shop.findById(shopId).select('isOpen')
+        : null;
+      if (shop?.isOpen === false) {
+        return res.status(409).json({ success: false, message: 'This shop is currently closed and cannot accept orders.' });
+      }
       const newOrder = new FoodOrder(orderData);
       const saved = await newOrder.save();
       const formatted = { id: saved._id.toString(), ...saved.toObject() };
@@ -401,12 +421,16 @@ export const createTableBooking = async (req, res) => {
 export const updateShop = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, cuisine, distance, time, image, address, phone } = req.body;
+    const { name, cuisine, distance, time, image, address, phone, isOpen, whatsapp, operatingHours } = req.body;
+    const updates = {};
+    for (const [key, value] of Object.entries({ name, cuisine, distance, time, image, address, phone, isOpen, whatsapp, operatingHours })) {
+      if (value !== undefined) updates[key] = value;
+    }
 
     if (mongoose.connection.readyState === 1) {
       const updated = await Shop.findByIdAndUpdate(
         id,
-        { name, cuisine, distance, time, image, address, phone },
+        updates,
         { new: true }
       );
       if (updated) {
@@ -418,7 +442,7 @@ export const updateShop = async (req, res, next) => {
 
     inMemoryShops = inMemoryShops.map((s) => {
       if (s.id === id || s._id === id) {
-        return { ...s, name, cuisine, distance, time, image, address, phone, updatedAt: new Date().toISOString() };
+        return { ...s, ...updates, updatedAt: new Date().toISOString() };
       }
       return s;
     });

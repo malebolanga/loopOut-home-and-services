@@ -30,6 +30,14 @@ const shopSchema = new mongoose.Schema({
   phone: { type: String, default: '' },
   ownerId: { type: String, default: 'guest' },
   ownerName: { type: String, default: 'Store Manager' },
+  // Pauses orders while keeping the shop and menu visible to customers.
+  isOpen: { type: Boolean, default: true },
+  whatsapp: { type: String, default: '' },
+  operatingHours: {
+    openTime: { type: String, default: '08:00' },
+    closeTime: { type: String, default: '20:00' },
+    days: { type: [String], default: () => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] }
+  },
   meals: [mealSchema],
   reviews: [reviewSchema]
 }, { timestamps: true });
