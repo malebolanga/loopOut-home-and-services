@@ -337,6 +337,7 @@ export const createLunchOrder = async (orderData) => {
   };
 
   let createdOrder = { id: `order-${Date.now()}`, ...orderPayload, createdAt: new Date().toISOString() };
+  let savedOnServer = false;
 
   try {
     const res = await fetch('/api/lunch/orders', {
@@ -347,6 +348,7 @@ export const createLunchOrder = async (orderData) => {
     if (res.ok) {
       const data = await res.json();
       createdOrder = { ...data, id: data.id || data._id };
+      savedOnServer = true;
     }
   } catch (err) {
     console.warn("API createLunchOrder fallback to local state:", err?.message || err);
@@ -356,6 +358,9 @@ export const createLunchOrder = async (orderData) => {
   const updated = [createdOrder, ...orders];
   saveLocalOrders(updated);
   notifyOrderListeners(updated);
+  if (savedOnServer && typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('loopout:notification-created'));
+  }
   return createdOrder;
 };
 

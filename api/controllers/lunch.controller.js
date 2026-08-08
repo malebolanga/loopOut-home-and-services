@@ -217,17 +217,27 @@ export const addMealToShop = async (req, res) => {
 // GET /api/lunch/orders
 export const getOrders = async (req, res) => {
   try {
-    const { customerId, shopId } = req.query;
+    const { customerId, shopId, ownerId } = req.query;
     if (mongoose.connection.readyState !== 1) {
       let filtered = [...inMemoryOrders];
       if (customerId) filtered = filtered.filter((o) => o.customerId === customerId);
       if (shopId) filtered = filtered.filter((o) => o.shopId === shopId);
+      if (ownerId) {
+        const ownerShopIds = inMemoryShops
+          .filter((shop) => shop.ownerId === ownerId)
+          .map((shop) => shop.id || shop._id);
+        filtered = filtered.filter((order) => ownerShopIds.includes(order.shopId));
+      }
       return res.status(200).json(filtered);
     }
 
     const filter = {};
     if (customerId) filter.customerId = customerId;
     if (shopId) filter.shopId = shopId;
+    if (ownerId) {
+      const ownerShops = await Shop.find({ ownerId }).select('_id');
+      filter.shopId = { $in: ownerShops.map((shop) => shop._id.toString()) };
+    }
 
     const orders = await FoodOrder.find(filter).sort({ createdAt: -1 });
     const formatted = orders.map((o) => ({ id: o._id.toString(), ...o.toObject() }));
@@ -277,17 +287,62 @@ export const createOrder = async (req, res) => {
       return res.status(409).json({ success: false, message: 'This shop is currently closed and cannot accept orders.' });
     }
 
+    let shopOwnerId = inMemoryShop?.ownerId;
+
     if (mongoose.connection.readyState === 1) {
       const shop = mongoose.Types.ObjectId.isValid(shopId)
-        ? await Shop.findById(shopId).select('isOpen')
+        ? await Shop.findById(shopId).select('isOpen ownerId')
         : null;
       if (shop?.isOpen === false) {
         return res.status(409).json({ success: false, message: 'This shop is currently closed and cannot accept orders.' });
       }
+      shopOwnerId = shop?.ownerId || shopOwnerId;
       const newOrder = new FoodOrder(orderData);
       const saved = await newOrder.save();
       const formatted = { id: saved._id.toString(), ...saved.toObject() };
       inMemoryOrders.unshift(formatted);
+
+      // A new food order is an actionable update for the customer, so surface it
+      // in the notification bell and Notifications page immediately.
+      if (customerId && customerId !== 'guest' && mongoose.Types.ObjectId.isValid(customerId)) {
+        try {
+          await Notification.create({
+            userId: customerId,
+            type: 'booking',
+            title: '🍱 Food order received',
+            message: `Your order #${formatted.orderCode} from "${formatted.shopName}" has been received and is pending preparation.`,
+            data: {
+              orderId: formatted.id,
+              orderCode: formatted.orderCode,
+              shopName: formatted.shopName,
+              status: formatted.status
+            }
+          });
+        } catch (notificationError) {
+          // A notification failure must not prevent a successfully paid/placed order.
+          console.error('[LUNCH API] Error creating order notification:', notificationError?.message || notificationError);
+        }
+      }
+
+      if (shopOwnerId && shopOwnerId !== 'guest' && shopOwnerId !== customerId && mongoose.Types.ObjectId.isValid(shopOwnerId)) {
+        try {
+          await Notification.create({
+            userId: shopOwnerId,
+            type: 'booking',
+            title: '🔔 New food order received',
+            message: `New order #${formatted.orderCode} from ${formatted.customerName} is waiting for your confirmation.`,
+            data: {
+              orderId: formatted.id,
+              orderCode: formatted.orderCode,
+              shopName: formatted.shopName,
+              status: formatted.status,
+              incomingOrder: true
+            }
+          });
+        } catch (notificationError) {
+          console.error('[LUNCH API] Error creating incoming-order notification:', notificationError?.message || notificationError);
+        }
+      }
       return res.status(201).json(formatted);
     }
 

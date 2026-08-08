@@ -28,10 +28,19 @@ const FoodCollectionReadyBanner = ({ navigate }) => {
     }
 
     try {
-      const response = await fetch(`/api/lunch/orders?customerId=${encodeURIComponent(customerId)}`);
-      if (!response.ok) return;
-      const data = await response.json();
-      setOrders(Array.isArray(data) ? data.filter((order) => ['Pending', 'Preparing', 'Ready for Collection'].includes(order.status)) : []);
+      const [customerResponse, ownerResponse] = await Promise.all([
+        fetch(`/api/lunch/orders?customerId=${encodeURIComponent(customerId)}`),
+        fetch(`/api/lunch/orders?ownerId=${encodeURIComponent(customerId)}`)
+      ]);
+      const customerOrders = customerResponse.ok ? await customerResponse.json() : [];
+      const incomingOrders = ownerResponse.ok ? await ownerResponse.json() : [];
+      const activeStatuses = ['Pending', 'Preparing', 'Ready for Collection'];
+      const combined = [
+        ...(Array.isArray(customerOrders) ? customerOrders.map((order) => ({ ...order, audience: 'customer' })) : []),
+        ...(Array.isArray(incomingOrders) ? incomingOrders.map((order) => ({ ...order, audience: 'owner' })) : [])
+      ];
+      const uniqueOrders = Array.from(new Map(combined.map((order) => [`${order.id || order._id}:${order.audience}`, order])).values());
+      setOrders(uniqueOrders.filter((order) => activeStatuses.includes(order.status)));
     } catch {
       // The regular lunch page retains its local fallback; the home banner stays hidden until orders are available.
     }
@@ -49,12 +58,12 @@ const FoodCollectionReadyBanner = ({ navigate }) => {
     const statusPriority = { 'Ready for Collection': 0, Preparing: 1, Pending: 2 };
     return [...orders]
       .sort((first, second) => statusPriority[first.status] - statusPriority[second.status])
-      .find((order) => !dismissedIds.includes(`${order.id || order._id}:${order.status}`));
+      .find((order) => !dismissedIds.includes(`${order.id || order._id}:${order.audience}:${order.status}`));
   }, [orders, dismissedIds]);
 
   const dismissBanner = () => {
     if (!activeOrder) return;
-    const notificationId = `${activeOrder.id || activeOrder._id}:${activeOrder.status}`;
+    const notificationId = `${activeOrder.id || activeOrder._id}:${activeOrder.audience}:${activeOrder.status}`;
     const updatedDismissedIds = [...new Set([...dismissedIds, notificationId])];
     setDismissedIds(updatedDismissedIds);
     localStorage.setItem(DISMISSED_BANNERS_KEY, JSON.stringify(updatedDismissedIds));
@@ -63,7 +72,16 @@ const FoodCollectionReadyBanner = ({ navigate }) => {
   if (!currentUser || !activeOrder) return null;
 
   const orderLabel = activeOrder.orderCode ? `Order #${activeOrder.orderCode}` : 'Your food order';
-  const bannerContent = {
+  const bannerContent = activeOrder.audience === 'owner' ? {
+    title: 'New food order received',
+    message: `${orderLabel} from ${activeOrder.customerName || 'a customer'} is waiting for your confirmation.`,
+    iconClass: 'bg-violet-600',
+    borderClass: 'border-violet-200 bg-gradient-to-r from-violet-50 via-fuchsia-50 to-white',
+    textClass: 'text-violet-950',
+    detailClass: 'text-violet-800',
+    buttonClass: 'bg-violet-600 hover:bg-violet-700',
+    dismissClass: 'text-violet-800 hover:bg-violet-100 hover:text-violet-950'
+  } : {
     Pending: {
       title: 'Your food order has been received',
       message: `${orderLabel} has been sent to ${activeOrder.shopName || 'the restaurant'}. We’ll let you know when it’s ready.`,

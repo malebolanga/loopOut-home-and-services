@@ -315,6 +315,9 @@ export default function Header() {
     const controller = new AbortController();
     fetchNotifications(controller.signal);
 
+    const refreshNotifications = () => fetchNotifications();
+    window.addEventListener('loopout:notification-created', refreshNotifications);
+
     // Request notification permission
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
       window.Notification.requestPermission();
@@ -329,6 +332,7 @@ export default function Header() {
     return () => {
       controller.abort();
       clearInterval(interval);
+      window.removeEventListener('loopout:notification-created', refreshNotifications);
     };
   }, [fetchNotifications]);
 
