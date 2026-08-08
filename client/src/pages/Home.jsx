@@ -84,6 +84,7 @@ import {
 } from '../components/home/HomeSections';
 import DailyLoopHub from '../components/home/DailyLoopHub';
 import ContinueSearchingCard from '../components/home/ContinueSearchingCard';
+import FoodCollectionReadyBanner from '../components/home/FoodCollectionReadyBanner';
 import CaughtUpHub from '../components/home/CaughtUpHub';
 import { TOP_CATEGORIES } from '../data/categories';
 import { CategoriesSlider } from '../components/home/CategoriesSlider';
@@ -989,6 +990,7 @@ function MobileAppHomepage({
 
       <main className="px-4 pt-2 pb-4 lg:max-w-7xl lg:mx-auto w-full">
         <DailyLoopHub />
+        <FoodCollectionReadyBanner navigate={navigate} />
         <ContinueSearchingCard navigate={navigate} />
         {/* Mobile Elite Slider Banner */}
         <div className="relative h-[560px] -mx-4 lg:mx-0 lg:rounded-[2rem] overflow-hidden mb-12 shadow-2xl">
@@ -1403,6 +1405,7 @@ function DesktopHomepage({
       {/* Main Clean Feed Grid */}
       <main className="max-w-7xl mx-auto px-8 py-10">
         <DailyLoopHub />
+        <FoodCollectionReadyBanner navigate={navigate} />
         <ContinueSearchingCard navigate={navigate} />
         {/* AI Insights & Recommendations (Subtle & elegant, not busy) */}
         {showAIInsights && aiInsights && aiInsights.length > 0 && (

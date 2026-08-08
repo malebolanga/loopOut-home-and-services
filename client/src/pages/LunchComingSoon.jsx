@@ -174,6 +174,7 @@ export default function LunchComingSoon() {
     customerPhone: currentUser?.phone || '',
     deliveryAddress: currentUser?.address || '',
     deliveryNotes: '',
+    orderComments: '',
     paymentMethod: 'counter' // 'counter' | 'delivery' | 'online'
   });
 
@@ -478,11 +479,13 @@ export default function LunchComingSoon() {
         fulfilment,
         deliveryAddress: checkoutData.deliveryAddress,
         deliveryNotes: checkoutData.deliveryNotes,
+        orderComments: checkoutData.orderComments,
         paymentMethod: checkoutData.paymentMethod
       };
 
       const created = await createLunchOrder(orderPayload);
       setCart([]);
+      setCheckoutData((previous) => ({ ...previous, orderComments: '' }));
       setShowCheckoutModal(false);
       setActiveReceiptOrder(created);
 
@@ -1780,6 +1783,12 @@ export default function LunchComingSoon() {
                             </div>
                           )}
 
+                          {ord.orderComments && (
+                            <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-950">
+                              <span className="font-bold">Order Comments:</span> {ord.orderComments}
+                            </div>
+                          )}
+
                           {/* Order Action Buttons */}
                           <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
                             <span className={`rounded-full px-3 py-1 text-xs font-black ${
@@ -1997,6 +2006,17 @@ export default function LunchComingSoon() {
                   </div>
                 </div>
               )}
+
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">Order Comments</label>
+                <textarea
+                  value={checkoutData.orderComments}
+                  onChange={(e) => setCheckoutData({ ...checkoutData, orderComments: e.target.value })}
+                  rows={3}
+                  className="w-full resize-y rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                  placeholder="Add any special requests, allergies, or extra instructions for your food order..."
+                />
+              </div>
 
               <div className="rounded-2xl bg-amber-50 p-4 border border-amber-200">
                 <div className="flex justify-between text-sm font-black text-amber-950">

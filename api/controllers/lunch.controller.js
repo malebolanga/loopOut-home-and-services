@@ -244,7 +244,7 @@ export const createOrder = async (req, res) => {
   try {
     const { 
       customerId, customerName, customerPhone, shopId, shopName, shopImage,
-      items, total, fulfilment, deliveryAddress, deliveryNotes, paymentMethod
+      items, total, fulfilment, deliveryAddress, deliveryNotes, orderComments, paymentMethod
     } = req.body;
 
     if (!shopId || !items || !items.length) {
@@ -265,6 +265,7 @@ export const createOrder = async (req, res) => {
       fulfilment: fulfilment || 'pickup',
       deliveryAddress: deliveryAddress || '',
       deliveryNotes: deliveryNotes || '',
+      orderComments: orderComments || '',
       paymentMethod: paymentMethod || 'counter',
       paymentStatus: paymentMethod === 'online' ? 'Paid Online' : 'Pay at Counter / Cash',
       status: 'Pending',

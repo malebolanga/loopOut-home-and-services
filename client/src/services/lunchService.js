@@ -330,6 +330,7 @@ export const createLunchOrder = async (orderData) => {
     fulfilment: orderData.fulfilment,
     deliveryAddress: orderData.deliveryAddress || '',
     deliveryNotes: orderData.deliveryNotes || '',
+    orderComments: orderData.orderComments || '',
     paymentMethod: orderData.paymentMethod,
     paymentStatus: orderData.paymentMethod === 'online' ? 'Paid Online' : 'Pay at Counter / Cash',
     status: 'Pending'

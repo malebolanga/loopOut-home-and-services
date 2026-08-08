@@ -20,6 +20,7 @@ const foodOrderSchema = new mongoose.Schema({
   fulfilment: { type: String, enum: ['pickup', 'delivery'], default: 'pickup' },
   deliveryAddress: { type: String, default: '' },
   deliveryNotes: { type: String, default: '' },
+  orderComments: { type: String, default: '' },
   paymentMethod: { type: String, default: 'counter' },
   paymentStatus: { type: String, default: 'Pay at Counter / Cash' },
   status: { 

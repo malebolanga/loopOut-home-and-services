@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { FiBell, FiCheck, FiTrash2, FiClock } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
+import FoodCollectionReadyBanner from '../components/home/FoodCollectionReadyBanner';
 
 export default function Notifications() {
     const { currentUser } = useSelector((state) => state.user);
@@ -322,6 +323,8 @@ export default function Notifications() {
                     </div>
                 )}
             </div>
+
+            <FoodCollectionReadyBanner navigate={navigate} />
 
             {error && (
                 <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 flex items-start gap-3">
