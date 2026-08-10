@@ -160,7 +160,7 @@ const DailyLoopHub = () => {
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 animate-ping" />
-                    <h2 className="text-[12px] font-black tracking-[0.2em] uppercase text-gray-900">Your Daily Loop Hub</h2>
+                   
                   </div>
                 </motion.div>
               )}
