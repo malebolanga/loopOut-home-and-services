@@ -1063,9 +1063,9 @@ export const NeuralPicksSection = ({ navigate }) => {
                 />
               ))}
             </div>
-            <span className="text-rose-500 text-[10px] font-black tracking-[0.3em] uppercase italic">Alpha Neural Discovery</span>
+         
           </div>
-          <h2 className="text-xl font-black text-gray-900 tracking-tighter">PROMOTED FOR YOU</h2>
+         
           <p className="text-gray-500 mt-1 uppercase text-[10px] font-black tracking-[0.2em]">Based on your performance and interest history</p>
         </div>
         <div className="hidden md:flex items-center gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
