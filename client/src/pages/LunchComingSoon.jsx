@@ -28,7 +28,8 @@ import {
   ThumbsUp,
   TrendingUp,
   Lightbulb,
-  ListPlus
+  ListPlus,
+  Search
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -47,9 +48,7 @@ import {
 } from '../services/lunchService';
 import { 
   FOOD_EMOJIS, 
-  PRESET_MOODS, 
-  generateVendorMealAI, 
-  generateUserLunchAIRecommendation 
+  generateVendorMealAI
 } from '../utils/aiLunchAssistant';
 
 const formatPrice = (price) => `R${Number(price || 0).toFixed(2)}`;
@@ -178,6 +177,7 @@ export default function LunchComingSoon() {
     deliveryAddress: currentUser?.address || '',
     deliveryNotes: '',
     orderComments: '',
+    scheduledFor: '',
     paymentMethod: 'counter' // 'counter' | 'delivery' | 'online'
   });
 
@@ -256,28 +256,9 @@ export default function LunchComingSoon() {
   const [ratingComment, setRatingComment] = useState('');
   const [showReviewsTab, setShowReviewsTab] = useState(false);
 
-  // AI Lunch Assistant States
-  const [showAiLunchSection, setShowAiLunchSection] = useState(true);
-  const [selectedMood, setSelectedMood] = useState('comfort');
-  const [customFoodQuery, setCustomFoodQuery] = useState('');
-  const [aiMealMatches, setAiMealMatches] = useState([]);
-  const [aiRecommendationIndex, setAiRecommendationIndex] = useState(0);
-
-  // Auto-run AI matchmaker when shops populate
-  useEffect(() => {
-    if (shops && shops.length > 0 && aiMealMatches.length === 0) {
-      const matches = generateUserLunchAIRecommendation(shops, selectedMood, customFoodQuery);
-      setAiMealMatches(matches);
-      setAiRecommendationIndex(0);
-    }
-  }, [shops]);
-
-  const handleRunAiMatchmaker = (mood = selectedMood, query = customFoodQuery) => {
-    setSelectedMood(mood);
-    const matches = generateUserLunchAIRecommendation(shops, mood, query);
-    setAiMealMatches(matches);
-    setAiRecommendationIndex(0);
-  };
+  // Customer menu discovery controls
+  const [menuSearch, setMenuSearch] = useState('');
+  const [menuTagFilter, setMenuTagFilter] = useState('All');
 
   const handleAiAutoFillMeal = (isEdit = false) => {
     const targetForm = isEdit ? editMealForm : newMealForm;
@@ -372,6 +353,16 @@ export default function LunchComingSoon() {
 
   // A closed shop remains visible, but customers cannot change or submit an order.
   const isCurrentShopClosed = currentShop?.isOpen === false;
+
+  const menuTags = useMemo(() => ['All', ...new Set((currentShop?.meals || []).map((meal) => meal.tag).filter(Boolean))], [currentShop]);
+  const visibleMeals = useMemo(() => {
+    const search = menuSearch.trim().toLowerCase();
+    return (currentShop?.meals || []).filter((meal) => {
+      const matchesTag = menuTagFilter === 'All' || meal.tag === menuTagFilter;
+      const matchesSearch = !search || `${meal.name || ''} ${meal.description || ''} ${meal.tag || ''}`.toLowerCase().includes(search);
+      return matchesTag && matchesSearch;
+    });
+  }, [currentShop, menuSearch, menuTagFilter]);
 
   // Unique Color Theme for the active selected shop
   const activeTheme = useMemo(() => {
@@ -498,6 +489,10 @@ export default function LunchComingSoon() {
       setNotice({ type: 'error', message: `${currentShop.name} is currently closed and cannot accept orders.` });
       return;
     }
+    if (meal.isAvailable === false) {
+      setNotice({ type: 'error', message: `${meal.name} is sold out.` });
+      return;
+    }
 
     setCart((items) => {
       const existing = items.find((item) => item.id === meal.id);
@@ -528,6 +523,14 @@ export default function LunchComingSoon() {
       setShowCheckoutModal(false);
       return;
     }
+    const unavailableItem = cart.find((item) =>
+      currentShop.meals?.find((meal) => meal.id === item.id)?.isAvailable === false
+    );
+    if (unavailableItem) {
+      setNotice({ type: 'error', message: `${unavailableItem.name} is sold out. Remove it from your basket before ordering.` });
+      setShowCheckoutModal(false);
+      return;
+    }
 
     if (!checkoutData.customerPhone) {
       alert("Please provide a contact phone number so the shop and delivery driver can reach you.");
@@ -553,6 +556,7 @@ export default function LunchComingSoon() {
         deliveryAddress: checkoutData.deliveryAddress,
         deliveryNotes: checkoutData.deliveryNotes,
         orderComments: checkoutData.orderComments,
+        scheduledFor: checkoutData.scheduledFor || null,
         paymentMethod: checkoutData.paymentMethod
       };
 
@@ -857,11 +861,11 @@ export default function LunchComingSoon() {
                         className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1.5 text-xs font-black text-white hover:bg-amber-600 transition shadow-xs"
                       >
                         <Star className="h-3.5 w-3.5 fill-current" />
-                        {ord.isRated ? 'Rated ⭐' : 'Rate Food'}
+                        {ord.isRated ? 'Rated order' : 'Rate Food'}
                       </button>
 
                       <span className="text-xs font-extrabold text-amber-800 bg-amber-100/80 px-3 py-1.5 rounded-full border border-amber-300">
-                        View Code 📋
+                        View Code order
                       </span>
                     </div>
                   </div>
@@ -937,7 +941,46 @@ export default function LunchComingSoon() {
                 </button>
               </div>
 
-              {/* AI Lunch Assistant Banner & Matchmaker for Customers */}
+              {/* Menu search and category filters */}
+              <div className="mt-4 rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-4 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-black text-gray-900">Find something you’ll enjoy</h3>
+                    <p className="mt-0.5 text-xs text-gray-600">Search this shop’s menu or choose a category.</p>
+                  </div>
+                  <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-black text-amber-800">
+                    {visibleMeals.length} {visibleMeals.length === 1 ? 'item' : 'items'}
+                  </span>
+                </div>
+                <label className="relative mt-3 block">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="search"
+                    value={menuSearch}
+                    onChange={(event) => setMenuSearch(event.target.value)}
+                    placeholder="Search meals, ingredients or categories"
+                    className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+                  />
+                </label>
+                {menuTags.length > 1 && (
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                    {menuTags.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => setMenuTagFilter(tag)}
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-black transition ${
+                          menuTagFilter === tag ? 'bg-amber-500 text-white' : 'bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-amber-50'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {false && (
               <div className="mt-4 rounded-3xl bg-gradient-to-br from-amber-950 via-slate-900 to-amber-900 p-5 text-white shadow-lg border border-amber-500/30 relative overflow-hidden">
                 <div className="flex items-center justify-between gap-3 mb-3">
                   <div className="flex items-center gap-2">
@@ -1067,7 +1110,10 @@ export default function LunchComingSoon() {
                     })()}
                   </div>
                 )}
-              </div>
+              </div>)}
+
+              {/* Shop List Cards Selector — Horizontal Side-Slide */}
+
 
               {/* Shop List Cards Selector — Horizontal Side-Slide */}
               <div className="mt-5">
@@ -1405,8 +1451,8 @@ export default function LunchComingSoon() {
                             className="flex gap-3 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory"
                             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                           >
-                            {currentShop.meals && currentShop.meals.length > 0 ? (
-                              currentShop.meals.map((meal) => (
+                            {visibleMeals.length > 0 ? (
+                              visibleMeals.map((meal) => (
                                 <div
                                   key={meal.id}
                                   className={`snap-start shrink-0 w-[78vw] sm:w-[230px] max-w-[290px] rounded-2xl bg-gradient-to-b from-white to-gray-50 ring-1 ring-gray-100 transition-all duration-200 overflow-hidden flex flex-col ${
@@ -1423,6 +1469,11 @@ export default function LunchComingSoon() {
                                       {meal.tag && (
                                         <span className="inline-block mt-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase text-amber-800">
                                           {meal.tag}
+                                        </span>
+                                      )}
+                                      {meal.isAvailable === false && (
+                                        <span className="inline-block mt-1 ml-1 rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-black uppercase text-gray-600">
+                                          Sold out
                                         </span>
                                       )}
                                     </div>
@@ -1460,14 +1511,25 @@ export default function LunchComingSoon() {
                                           >
                                             Del
                                           </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => updateMealInShop(currentShop.id, meal.id, { ...meal, isAvailable: meal.isAvailable === false })}
+                                            className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
+                                              meal.isAvailable === false
+                                                ? 'bg-red-600 text-white hover:bg-red-700'
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            }`}
+                                          >
+                                            {meal.isAvailable === false ? 'Restock' : 'Sold out'}
+                                          </button>
                                         </>
                                       )}
                                       <button
                                         type="button"
-                                        disabled={isCurrentShopClosed}
+                                        disabled={isCurrentShopClosed || meal.isAvailable === false}
                                         onClick={() => addToCart(meal)}
                                         className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-400 text-gray-950 shadow transition hover:bg-amber-300 active:scale-95 shrink-0 cursor-pointer disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none"
-                                        aria-label={`Add ${meal.name}`}
+                                        aria-label={meal.isAvailable === false ? `${meal.name} is sold out` : `Add ${meal.name}`}
                                       >
                                         <Plus className="h-5 w-5" />
                                       </button>
@@ -1477,7 +1539,7 @@ export default function LunchComingSoon() {
                               ))
                             ) : (
                               <div className="p-8 text-center text-sm text-gray-500 w-full">
-                                No menu items added yet. Click "+ Add Menu Item" above to create one!
+                                No menu items match your search. Try another word or category.
                               </div>
                             )}
                           </div>
@@ -2173,6 +2235,17 @@ export default function LunchComingSoon() {
                   rows={3}
                   className="w-full resize-y rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                   placeholder="Add any special requests, allergies, or extra instructions for your food order..."
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">Schedule for later (optional)</label>
+                <input
+                  type="datetime-local"
+                  min={new Date().toISOString().slice(0, 16)}
+                  value={checkoutData.scheduledFor}
+                  onChange={(e) => setCheckoutData({ ...checkoutData, scheduledFor: e.target.value })}
+                  className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                 />
               </div>
 

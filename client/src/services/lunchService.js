@@ -251,6 +251,8 @@ export const addMealToShop = async (shopId, meal) => {
     description: meal.description || '',
     price: Number(meal.price) || 0,
     tag: meal.tag || 'Popular',
+    isAvailable: meal.isAvailable !== false,
+    addOns: Array.isArray(meal.addOns) ? meal.addOns : [],
     image: meal.image || '🍱'
   };
 
@@ -331,6 +333,7 @@ export const createLunchOrder = async (orderData) => {
     deliveryAddress: orderData.deliveryAddress || '',
     deliveryNotes: orderData.deliveryNotes || '',
     orderComments: orderData.orderComments || '',
+    scheduledFor: orderData.scheduledFor || null,
     paymentMethod: orderData.paymentMethod,
     paymentStatus: orderData.paymentMethod === 'online' ? 'Paid Online' : 'Pay at Counter / Cash',
     status: 'Pending'

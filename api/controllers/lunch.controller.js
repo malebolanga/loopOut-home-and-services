@@ -177,7 +177,7 @@ export const createShop = async (req, res) => {
 export const addMealToShop = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, price, tag, image } = req.body;
+    const { name, description, price, tag, image, isAvailable, addOns } = req.body;
     if (!name || price === undefined) {
       return res.status(400).json({ success: false, message: 'Meal name and price are required' });
     }
@@ -188,7 +188,9 @@ export const addMealToShop = async (req, res) => {
       description: description || '',
       price: Number(price),
       tag: tag || 'Popular',
-      image: image || '🍱'
+      image: image || '🍱',
+      isAvailable: isAvailable !== false,
+      addOns: Array.isArray(addOns) ? addOns : []
     };
 
     if (mongoose.connection.readyState === 1) {
@@ -254,7 +256,7 @@ export const createOrder = async (req, res) => {
   try {
     const { 
       customerId, customerName, customerPhone, shopId, shopName, shopImage,
-      items, total, fulfilment, deliveryAddress, deliveryNotes, orderComments, paymentMethod
+      items, total, fulfilment, deliveryAddress, deliveryNotes, orderComments, paymentMethod, scheduledFor
     } = req.body;
 
     if (!shopId || !items || !items.length) {
@@ -276,6 +278,7 @@ export const createOrder = async (req, res) => {
       deliveryAddress: deliveryAddress || '',
       deliveryNotes: deliveryNotes || '',
       orderComments: orderComments || '',
+      scheduledFor: scheduledFor || undefined,
       paymentMethod: paymentMethod || 'counter',
       paymentStatus: paymentMethod === 'online' ? 'Paid Online' : 'Pay at Counter / Cash',
       status: 'Pending',
@@ -286,15 +289,27 @@ export const createOrder = async (req, res) => {
     if (inMemoryShop?.isOpen === false) {
       return res.status(409).json({ success: false, message: 'This shop is currently closed and cannot accept orders.' });
     }
+    const unavailableMeal = inMemoryShop?.meals?.find((meal) =>
+      items.some((item) => item.id === meal.id) && meal.isAvailable === false
+    );
+    if (unavailableMeal) {
+      return res.status(409).json({ success: false, message: `${unavailableMeal.name} is sold out and cannot be ordered.` });
+    }
 
     let shopOwnerId = inMemoryShop?.ownerId;
 
     if (mongoose.connection.readyState === 1) {
       const shop = mongoose.Types.ObjectId.isValid(shopId)
-        ? await Shop.findById(shopId).select('isOpen ownerId')
+        ? await Shop.findById(shopId).select('isOpen ownerId meals')
         : null;
       if (shop?.isOpen === false) {
         return res.status(409).json({ success: false, message: 'This shop is currently closed and cannot accept orders.' });
+      }
+      const dbUnavailableMeal = shop?.meals?.find((meal) =>
+        items.some((item) => item.id === meal.id) && meal.isAvailable === false
+      );
+      if (dbUnavailableMeal) {
+        return res.status(409).json({ success: false, message: `${dbUnavailableMeal.name} is sold out and cannot be ordered.` });
       }
       shopOwnerId = shop?.ownerId || shopOwnerId;
       const newOrder = new FoodOrder(orderData);
@@ -517,7 +532,7 @@ export const updateShop = async (req, res, next) => {
 export const updateMealInShop = async (req, res, next) => {
   try {
     const { id, mealId } = req.params;
-    const { name, description, price, tag, image } = req.body;
+    const { name, description, price, tag, image, isAvailable, addOns } = req.body;
 
     if (mongoose.connection.readyState === 1) {
       const shop = await Shop.findById(id);
@@ -529,6 +544,8 @@ export const updateMealInShop = async (req, res, next) => {
           meal.price = price !== undefined ? Number(price) : meal.price;
           meal.tag = tag || meal.tag;
           meal.image = image || meal.image;
+          meal.isAvailable = isAvailable !== undefined ? isAvailable : meal.isAvailable;
+          meal.addOns = Array.isArray(addOns) ? addOns : meal.addOns;
           await shop.save();
         }
       }
@@ -544,7 +561,9 @@ export const updateMealInShop = async (req, res, next) => {
               description: description !== undefined ? description : m.description,
               price: price !== undefined ? Number(price) : m.price,
               tag: tag || m.tag,
-              image: image || m.image
+              image: image || m.image,
+              isAvailable: isAvailable !== undefined ? isAvailable : m.isAvailable,
+              addOns: Array.isArray(addOns) ? addOns : m.addOns
             };
           }
           return m;

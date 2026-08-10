@@ -628,7 +628,7 @@ export default function DashBoard() {
                         </div>
                       ))
                     ) : (
-                      <p className="text-[11px] text-gray-400 font-medium text-center py-6">Your alert center is currently quiet âœ¨</p>
+                      <p className="text-[11px] text-gray-400 font-medium text-center py-6">Your alert center is currently quiet ✨</p>
                     )}
                   </div>
                 </div>
@@ -651,7 +651,7 @@ export default function DashBoard() {
           {[
             { label: 'Total Listings', value: stats.listings, icon: HomeIcon, color: 'text-blue-600', bg: 'bg-blue-50' },
             { label: 'Total Earnings', value: `R${stats.earnings.toLocaleString()}`, icon: BanknotesIcon, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-            { label: 'Host Rating', value: `${stats.rating}â˜…`, icon: StarIcon, color: 'text-amber-600', bg: 'bg-amber-50' },
+            { label: 'Host Rating', value: `${stats.rating}★`, icon: StarIcon, color: 'text-amber-600', bg: 'bg-amber-50' },
             { label: 'Pending Approval', value: stats.pending, icon: ClockIcon, color: 'text-rose-600', bg: 'bg-rose-50' }
           ].map((stat, i) => (
             <motion.div
@@ -821,7 +821,7 @@ export default function DashBoard() {
                 transition={{ delay: idx * 0.05, ease: [0.22, 1, 0.36, 1] }}
                 className="group relative bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] transition-all duration-500"
               >
-                {/* â”€â”€ 1. Top Type Header Banner â”€â”€ */}
+                {/* ── 1. Top Type Header Banner ── */}
                 <div className="px-6 py-3.5 bg-gradient-to-r from-gray-900 via-slate-800 to-gray-900 text-white flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-rose-400 font-black text-sm flex-shrink-0">
@@ -852,7 +852,7 @@ export default function DashBoard() {
 
                 <div className="p-6 flex flex-col gap-5">
 
-                  {/* â”€â”€ 2. Requester (Client) & Host (Owner) Row â”€â”€ */}
+                  {/* ── 2. Requester (Client) & Host (Owner) Row ── */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50/80 rounded-2xl border border-slate-100">
                     
                     {/* Requester Info */}
@@ -889,7 +889,7 @@ export default function DashBoard() {
 
                   </div>
 
-                  {/* â”€â”€ 3. Start âž” End Schedule Timeline â”€â”€ */}
+                  {/* ── 3. Start ➔ End Schedule Timeline ── */}
                   <div className="bg-gradient-to-r from-blue-50/60 via-slate-50 to-rose-50/60 p-4 rounded-2xl border border-slate-200/60">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
@@ -926,7 +926,7 @@ export default function DashBoard() {
                     </div>
                   </div>
 
-                  {/* â”€â”€ 4. Location & Price Grid â”€â”€ */}
+                  {/* ── 4. Location & Price Grid ── */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     
                     {/* Location */}
@@ -954,7 +954,7 @@ export default function DashBoard() {
                     </div>
                   </div>
 
-                  {/* â”€â”€ 5. Special Notes / Performer â”€â”€ */}
+                  {/* ── 5. Special Notes / Performer ── */}
                   {booking.selectedPerformer && (
                     <div className="flex items-center gap-3 bg-rose-50 border border-rose-100 rounded-xl p-3">
                       {booking.performerImage && (
@@ -971,7 +971,7 @@ export default function DashBoard() {
                     <ClientRequestNote message={booking.specialRequirements} />
                   )}
 
-                  {/* â”€â”€ 6. Actions Bar â”€â”€ */}
+                  {/* ── 6. Actions Bar ── */}
                   <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
                     
                     {/* Contact buttons */}
@@ -1157,7 +1157,7 @@ const SlidingDatesStrip = ({ bookings, onBookingClick }) => {
                 ))
               ) : (
                 <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center opacity-40">
-                  <span className="text-[10px]">â€¢</span>
+                  <span className="text-[10px]">•</span>
                 </div>
               )}
             </div>

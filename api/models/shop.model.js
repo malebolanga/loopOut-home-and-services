@@ -6,7 +6,9 @@ const mealSchema = new mongoose.Schema({
   description: { type: String, default: '' },
   price: { type: Number, required: true },
   tag: { type: String, default: 'Popular' },
-  image: { type: String, default: '🍱' }
+  image: { type: String, default: '🍱' },
+  isAvailable: { type: Boolean, default: true },
+  addOns: [{ name: String, price: Number }]
 }, { _id: false });
 
 const reviewSchema = new mongoose.Schema({
