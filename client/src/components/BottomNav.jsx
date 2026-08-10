@@ -114,7 +114,7 @@ const BottomNav = () => {
   ];
 
   return (
-    <div ref={navRef} className="bg-white fixed bottom-0 left-0 right-0 z-[100] md:hidden">
+    <div ref={navRef} className="app-safe-bottom bg-white fixed bottom-0 left-0 right-0 z-[100] md:hidden">
       {/* Profile Dropup Menu */}
       <AnimatePresence>
         {showProfileDropup && (
@@ -248,9 +248,11 @@ const BottomNav = () => {
             <motion.button
               key={item.id}
               whileTap={{ scale: 0.8 }}
+              animate={{ opacity: item.id === 'dashboard' && !isActive ? 0.4 : 1 }}
+              transition={{ duration: 0.25 }}
               onClick={handleClick}
               aria-label={item.label || item.id}
-              className="flex flex-col items-center gap-1 touch-target"
+              className="flex flex-col items-center gap-1 touch-target transition-opacity"
             >
               <div className={`p-1 rounded-xl transition-all duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
                 {item.isProfile && currentUser ? (

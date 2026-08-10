@@ -2066,7 +2066,7 @@ export default function Listing() {
   const breakfastTotal = mealPlan === 'breakfast' ? breakfastPrice * nights : 0;
   const grandTotal = roomTotal + breakfastTotal;
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen overflow-x-hidden p-0">
       {/* Navigation Header */}
       {/* Navigation Header - Transparent on top of image */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-50/90 backdrop-blur-md shadow-sm border-b border-slate-200/50' : 'bg-transparent'}`}>
@@ -2101,7 +2101,7 @@ export default function Listing() {
       </nav>
 
       {/* Image Gallery Grid - Full Width Airbnb Style */}
-      <div className="w-full pt-0 pb-0 px-0">
+      <div className="m-0 w-screen max-w-none p-0">
         <div className="relative w-full overflow-hidden bg-slate-900 shadow-sm h-[400px] md:h-[500px] lg:h-[600px]">
           {/* Mobile Swiper (hidden on md and up) */}
           <div className="block md:hidden h-full w-full">

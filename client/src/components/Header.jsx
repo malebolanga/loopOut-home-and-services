@@ -581,7 +581,7 @@ export default function Header() {
     }
   };
 
-  const hiddenRoutes = ['/profile', '/wishlist', '/search', '/host-dashboard', '/planner', '/lunch'];
+  const hiddenRoutes = ['/profile', '/wishlist', '/search', '/dashboard', '/host-dashboard', '/planner', '/lunch'];
   const hiddenPrefixes = ['/user/', '/user-profile/', '/listing/', '/rent/', '/helper/', '/service/', '/event/', '/carwash/'];
   
   const isHeaderHidden = 
@@ -680,23 +680,24 @@ export default function Header() {
 
   return (
     <>
-      {/* Floating Glass Header - Matches Bottom Dock Aesthetic */}
+      {/* Native-style app bar */}
       {!isHeaderHidden && (
         <motion.header
           initial={{ y: 0 }}
           animate={{ 
             y: isNavVisible ? 0 : -120,
+            opacity: isNavVisible ? 1 : 0,
             paddingTop: scrolled ? '0.5rem' : '0.75rem',
             paddingBottom: scrolled ? '0.5rem' : '0.75rem',
           }}
-          transition={{ type: 'spring', damping: 25, stiffness: 120 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 120, opacity: { duration: 0.2 } }}
           ref={headerRef}
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 bg-white  ${
-          scrolled ? 'shadow-[0_4px_20px_rgba(0,0,0,0.00)]' : ''
+        className={`app-safe-top fixed top-0 left-0 right-0 z-[100] border-b border-slate-100 bg-white/95 backdrop-blur-xl transition-all duration-500 ${
+          scrolled ? 'shadow-[0_4px_20px_rgba(15,23,42,0.08)]' : 'shadow-[0_1px_8px_rgba(15,23,42,0.04)]'
         }`}
         >
-        <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-[34px]">
-          <div className="flex flex-row items-center justify-between h-16">
+        <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-4 sm:px-6">
+          <div className="flex flex-row items-center justify-between h-14 md:h-16">
             
             {/* Left: Branding & Home Link */}
             <div className={`transition-all duration-500 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
@@ -709,17 +710,17 @@ export default function Header() {
                   }
                 }}
                 aria-label="loopOut Home"
-                className="flex items-center gap-2 cursor-pointer "
+                className="flex items-center gap-2 cursor-pointer"
               >
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-tr from-rose-500 to-orange-400 blur-xl opacity-20 hover:opacity-40 transition-opacity duration-500 rounded-full" />
-                  <BrandIcon className="w-12 h-12 md:w-8 md:h-8 relative z-10 transition-transform group-hover:rotate-[15deg] duration-700 ease-out" />
+                  <BrandIcon className="w-9 h-9 md:w-8 md:h-8 relative z-10 transition-transform group-hover:rotate-[15deg] duration-700 ease-out" />
                 </div>
-                <div className="hidden lg:block">
-                  <h1 className="text-xl font-black tracking-tighter text-gray-900 leading-none">loopOut</h1>
+                <div className="block">
+                  <h1 className="text-base md:text-xl font-black tracking-tighter text-gray-900 leading-none">loopOut</h1>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <div className="h-[1px] w-3 bg-rose-500/50" />
-                    <span className="text-[8px] font-black text-rose-600 uppercase tracking-[0.2em] leading-none">Neural Hub</span>
+                    <span className="text-[8px] font-black text-rose-600 uppercase tracking-[0.2em] leading-none hidden sm:inline">Your local hub</span>
                     <div className="w-1 h-1 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
                   </div>
                 </div>
@@ -731,7 +732,7 @@ export default function Header() {
               <button
                 onClick={() => setShowSearch(true)}
                 aria-label="Open search"
-                className="flex items-center gap-0 border border-slate-200 rounded-full shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer bg-white overflow-hidden"
+                className="search-trigger flex items-center gap-0 border border-slate-200 rounded-full shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer bg-white overflow-hidden"
               >
                 <span className="text-[11px] font-black text-slate-900 px-5 py-2.5 hover:bg-slate-50 transition-colors">Anywhere</span>
                 <div className="w-[1px] h-5 bg-slate-200" />
@@ -745,8 +746,8 @@ export default function Header() {
             </div>
 
             {/* Right: User Menu */}
-            <div className="relative translate-x-[20px]" ref={profileDropdownRef}>
-              <div className="flex flex-row items-center gap-3">
+            <div className="relative md:translate-x-[20px]" ref={profileDropdownRef}>
+              <div className="flex flex-row items-center gap-1.5 md:gap-3">
 
                 <div className="relative" ref={createDropdownRef}>
                   <button
@@ -941,7 +942,7 @@ export default function Header() {
             transition={{ type: 'tween', duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             className="search-container fixed inset-0 bg-gray-50 z-[1001] flex flex-col md:max-w-md md:left-auto md:right-0 md:shadow-2xl overflow-hidden"
           >
-            <div className="flex-shrink-0 bg-white px-6 pt-12 pb-4 flex items-center justify-between">
+            <div className="app-safe-top flex-shrink-0 bg-white px-4 sm:px-6 pt-4 pb-4 flex items-center justify-between">
               <div className="flex gap-8 overflow-x-auto scrollbar-hide py-2">
                 {[
                   { id: 'all', label: 'Universe', icon: Sparkles, color: 'rose' },
@@ -1010,6 +1011,7 @@ export default function Header() {
                   <div className="relative mb-8">
                      <BrandIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 grayscale opacity-40" />
                      <input 
+                       ref={searchInputRef}
                        type="text"
                        placeholder="Search destinations"
                        value={searchTerm}

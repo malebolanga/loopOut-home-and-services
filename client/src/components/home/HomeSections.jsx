@@ -2643,9 +2643,7 @@ export const CompareRecommendedSection = ({ navigate }) => {
               <MapPinIcon className="w-3 h-3" /> GPS Proximity Comparison
             </span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            COMPARE RECOMMENDED FOR YOU
-          </h2>
+       
           <p className="text-xs font-semibold text-slate-500 mt-0.5 flex items-center gap-1">
             {itemsToDisplay.length} nearby {itemsToDisplay.length === 1 ? 'option' : 'options'} in <span className="text-rose-600 font-bold">{activeTabMeta.label}</span> near <span className="text-slate-900 font-bold underline decoration-rose-500/40">{userLocationName}</span>
           </p>

@@ -1,7 +1,24 @@
 /* Mobile Native App Enhancements */
 html, body {
+  min-height: 100%;
   overscroll-behavior-y: none; /* Prevents pull-to-refresh glow on Android */
   -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+/* Safe areas let the interface sit correctly below iPhone notches and above
+   Android gesture bars when installed as a Capacitor app. */
+.app-safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.app-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .native-scroll {
@@ -9,7 +26,7 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
-.touch-target, button, a {
+.touch-target {
   min-height: 44px;
   min-width: 44px;
   display: inline-flex;
@@ -56,4 +73,29 @@ html, body {
 
 .active-scale:active {
   transform: scale(0.96);
+}
+
+@media (max-width: 767px) {
+  button, a {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* iOS zooms a page when a form input has a font size below 16px. */
+  input, select, textarea {
+    font-size: max(16px, 1rem);
+  }
+
+  .glass-bottom-nav {
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
