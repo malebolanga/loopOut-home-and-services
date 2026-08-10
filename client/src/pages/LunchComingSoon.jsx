@@ -25,7 +25,10 @@ import {
   AlertCircle,
   Star,
   MessageSquare,
-  ThumbsUp
+  ThumbsUp,
+  TrendingUp,
+  Lightbulb,
+  ListPlus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -367,6 +370,9 @@ export default function LunchComingSoon() {
     return shops.find((s) => s.id === selectedShopId) || shops[0] || null;
   }, [shops, selectedShopId]);
 
+  // A closed shop remains visible, but customers cannot change or submit an order.
+  const isCurrentShopClosed = currentShop?.isOpen === false;
+
   // Unique Color Theme for the active selected shop
   const activeTheme = useMemo(() => {
     return getShopTheme(currentShop);
@@ -420,6 +426,71 @@ export default function LunchComingSoon() {
     return activeShopOrders.filter((o) => o.status === 'Completed');
   }, [activeShopOrders]);
 
+  // Turn the owner's real menu, order and review data into a short, actionable plan.
+  const shopInsights = useMemo(() => {
+    if (!dashboardShop) return [];
+
+    const meals = dashboardShop.meals || [];
+    const completedOrders = activeShopOrders.filter((order) => order.status === 'Completed');
+    const mealSales = completedOrders.flatMap((order) => order.items || []).reduce((totals, item) => {
+      totals[item.name] = (totals[item.name] || 0) + Number(item.quantity || 0);
+      return totals;
+    }, {});
+    const bestSeller = Object.entries(mealSales).sort(([, a], [, b]) => b - a)[0];
+    const reviews = dashboardShop.reviews || [];
+    const averageRating = reviews.length
+      ? reviews.reduce((total, review) => total + Number(review.shopRating || review.rating || 0), 0) / reviews.length
+      : Number(dashboardShop.rating || 0);
+    const insights = [];
+
+    if (dashboardShop.isOpen === false) {
+      insights.push({ title: 'Reopen when you can serve orders', detail: 'Your menu remains visible, but customers cannot buy while the shop is closed.', tone: 'amber' });
+    }
+    if (meals.length < 4) {
+      insights.push({ title: 'Expand your menu to at least 4 choices', detail: 'Add a value meal, a popular main, a vegetarian option and a drink or side so more customers find something suitable.', tone: 'violet' });
+    }
+    if (meals.some((meal) => !meal.description?.trim())) {
+      insights.push({ title: 'Add descriptions to every menu item', detail: 'Briefly name the key ingredients, portion or heat level to make customers more confident before ordering.', tone: 'sky' });
+    }
+    if (bestSeller) {
+      insights.push({ title: `Promote ${bestSeller[0]}`, detail: `It is your top completed-order item (${bestSeller[1]} sold). Feature it as “Popular” and pair it with a drink or side.`, tone: 'emerald' });
+    } else {
+      insights.push({ title: 'Create your first repeatable bestseller', detail: 'Start with one clearly priced signature meal, keep it available daily and ask early customers for feedback.', tone: 'emerald' });
+    }
+    if (!reviews.length) {
+      insights.push({ title: 'Ask customers for a quick review', detail: 'After each completed order, invite feedback. Reviews build trust and show what to improve next.', tone: 'rose' });
+    } else if (averageRating > 0 && averageRating < 4) {
+      insights.push({ title: 'Follow up on customer feedback', detail: `Your average rating is ${averageRating.toFixed(1)}/5. Check recent comments for recurring issues with quality, portions or delivery time.`, tone: 'rose' });
+    }
+
+    return insights.slice(0, 4);
+  }, [dashboardShop, activeShopOrders]);
+
+  // Revenue belongs only to the selected shop and is counted when an order is completed.
+  const revenueSummary = useMemo(() => {
+    const now = new Date();
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+
+    // Weeks run Monday through Sunday.
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7));
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const revenueSince = (startDate) => completedStoreOrders.reduce((total, order) => {
+      const completedAt = new Date(order.completedAt || order.updatedAt || order.createdAt);
+      return !Number.isNaN(completedAt.getTime()) && completedAt >= startDate
+        ? total + Number(order.total || 0)
+        : total;
+    }, 0);
+
+    return {
+      daily: revenueSince(startOfToday),
+      weekly: revenueSince(startOfWeek),
+      monthly: revenueSince(startOfMonth)
+    };
+  }, [completedStoreOrders]);
+
 
   // Cart operations
   const addToCart = (meal) => {
@@ -438,6 +509,8 @@ export default function LunchComingSoon() {
   };
 
   const updateQuantity = (mealId, change) => {
+    if (isCurrentShopClosed) return;
+
     setCart((items) =>
       items
         .map((item) => (item.id === mealId ? { ...item, quantity: item.quantity + change } : item))
@@ -507,6 +580,10 @@ export default function LunchComingSoon() {
   const handleTableBooking = async (e) => {
     e.preventDefault();
     if (!booking.name || !booking.date || !currentShop) return;
+    if (isCurrentShopClosed) {
+      setNotice({ type: 'error', message: `${currentShop.name} is currently closed and cannot accept table requests.` });
+      return;
+    }
     try {
       await createTableBooking({
         ...booking,
@@ -679,9 +756,9 @@ export default function LunchComingSoon() {
               }`}
             >
               <ChefHat className="h-4 w-4" /> Food Manager Dashboard
-              {orders.length > 0 && (
+              {isShopOwner && activeShopOrders.length > 0 && (
                 <span className="ml-1 rounded-full bg-amber-950 px-2 py-0.5 text-[10px] text-amber-300">
-                  {orders.length}
+                  {activeShopOrders.length}
                 </span>
               )}
             </button>
@@ -1276,11 +1353,12 @@ export default function LunchComingSoon() {
                           <button
                             key={option}
                             type="button"
+                            disabled={isCurrentShopClosed}
                             onClick={() => setFulfilment(option)}
-                            className={`rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-black capitalize transition flex items-center gap-1.5 shrink-0 ${
-                              fulfilment === option
+                            className={`rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-black capitalize transition flex items-center gap-1.5 shrink-0 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none disabled:grayscale ${
+                              !isCurrentShopClosed && fulfilment === option
                                 ? 'bg-gray-950 text-white shadow-sm'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                : isCurrentShopClosed ? 'bg-gray-200 text-gray-400' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
                           >
                             {option === 'pickup' ? (
@@ -1331,7 +1409,9 @@ export default function LunchComingSoon() {
                               currentShop.meals.map((meal) => (
                                 <div
                                   key={meal.id}
-                                  className="snap-start shrink-0 w-[78vw] sm:w-[230px] max-w-[290px] rounded-2xl bg-gradient-to-b from-white to-gray-50 ring-1 ring-gray-100 hover:ring-amber-200 transition-all duration-200 overflow-hidden flex flex-col"
+                                  className={`snap-start shrink-0 w-[78vw] sm:w-[230px] max-w-[290px] rounded-2xl bg-gradient-to-b from-white to-gray-50 ring-1 ring-gray-100 transition-all duration-200 overflow-hidden flex flex-col ${
+                                    isCurrentShopClosed ? 'opacity-60 grayscale' : 'hover:ring-amber-200'
+                                  }`}
                                 >
                                   {/* Meal header */}
                                   <div className="px-4 pt-4 pb-2 flex items-start gap-3">
@@ -1384,8 +1464,9 @@ export default function LunchComingSoon() {
                                       )}
                                       <button
                                         type="button"
+                                        disabled={isCurrentShopClosed}
                                         onClick={() => addToCart(meal)}
-                                        className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-400 text-gray-950 shadow transition hover:bg-amber-300 active:scale-95 shrink-0 cursor-pointer"
+                                        className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-400 text-gray-950 shadow transition hover:bg-amber-300 active:scale-95 shrink-0 cursor-pointer disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none"
                                         aria-label={`Add ${meal.name}`}
                                       >
                                         <Plus className="h-5 w-5" />
@@ -1475,6 +1556,12 @@ export default function LunchComingSoon() {
                   ) : (
                     /* Table Booking Form */
                     <form onSubmit={handleTableBooking} className="mt-6 space-y-4">
+                      {isCurrentShopClosed && (
+                        <p className="rounded-2xl bg-gray-100 px-4 py-3 text-center text-sm font-bold text-gray-500">
+                          This shop is closed. Table bookings are unavailable.
+                        </p>
+                      )}
+                      <fieldset disabled={isCurrentShopClosed} className={isCurrentShopClosed ? 'opacity-60 grayscale' : ''}>
                       <div className="rounded-2xl bg-amber-50/60 p-4 border border-amber-200/50">
                         <p className="text-sm font-semibold text-amber-900">
                           Reserve a dining table at <span className="font-extrabold">{currentShop.name}</span>.
@@ -1537,10 +1624,11 @@ export default function LunchComingSoon() {
 
                       <button
                         type="submit"
-                        className="w-full rounded-2xl bg-gray-950 px-5 py-3.5 text-sm font-black text-white transition hover:bg-gray-800 shadow"
+                        className="mt-4 w-full rounded-2xl bg-gray-950 px-5 py-3.5 text-sm font-black text-white transition hover:bg-gray-800 shadow disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
                       >
                         Request Table Booking
                       </button>
+                      </fieldset>
                     </form>
                   )}
                 </article>
@@ -1570,16 +1658,18 @@ export default function LunchComingSoon() {
                         <div className="flex items-center gap-1.5 bg-gray-100 rounded-full p-1">
                           <button
                             type="button"
+                            disabled={isCurrentShopClosed}
                             onClick={() => updateQuantity(item.id, -1)}
-                            className="rounded-full bg-white p-1 hover:bg-gray-200 shadow-xs"
+                            className="rounded-full bg-white p-1 hover:bg-gray-200 shadow-xs disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
                           >
                             <Minus className="h-3 w-3" />
                           </button>
                           <span className="w-5 text-center text-xs font-black">{item.quantity}</span>
                           <button
                             type="button"
+                            disabled={isCurrentShopClosed}
                             onClick={() => updateQuantity(item.id, 1)}
-                            className="rounded-full bg-white p-1 hover:bg-gray-200 shadow-xs"
+                            className="rounded-full bg-white p-1 hover:bg-gray-200 shadow-xs disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
                           >
                             <Plus className="h-3 w-3" />
                           </button>
@@ -1601,10 +1691,11 @@ export default function LunchComingSoon() {
 
                   <button
                     type="button"
+                    disabled={isCurrentShopClosed}
                     onClick={() => setShowCheckoutModal(true)}
-                    className="mt-5 w-full rounded-2xl bg-amber-400 px-4 py-3.5 text-sm font-black text-gray-950 shadow transition hover:bg-amber-300 active:scale-95"
+                    className="mt-5 w-full rounded-2xl bg-amber-400 px-4 py-3.5 text-sm font-black text-gray-950 shadow transition hover:bg-amber-300 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none"
                   >
-                    Proceed to Checkout
+                    {isCurrentShopClosed ? 'Shop is Closed' : 'Proceed to Checkout'}
                   </button>
                 </>
               ) : (
@@ -1713,6 +1804,68 @@ export default function LunchComingSoon() {
                     </button>
                   ))}
                 </div>
+
+                <section aria-label="Revenue summary" className="grid gap-3 sm:grid-cols-3">
+                  {[
+                    { label: 'Today', value: revenueSummary.daily, detail: 'Completed today', tone: 'border-emerald-200 bg-emerald-50 text-emerald-800' },
+                    { label: 'This week', value: revenueSummary.weekly, detail: 'Mon–Sun', tone: 'border-sky-200 bg-sky-50 text-sky-800' },
+                    { label: 'This month', value: revenueSummary.monthly, detail: 'Current calendar month', tone: 'border-violet-200 bg-violet-50 text-violet-800' }
+                  ].map((period) => (
+                    <div key={period.label} className={`rounded-2xl border p-4 shadow-sm ${period.tone}`}>
+                      <p className="text-[10px] font-black uppercase tracking-widest opacity-75">{period.label}'s revenue</p>
+                      <p className="mt-1 text-2xl font-black">{formatPrice(period.value)}</p>
+                      <p className="mt-1 text-xs font-semibold opacity-75">{period.detail}</p>
+                    </div>
+                  ))}
+                </section>
+
+                <section aria-label="Shop improvement advice" className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-emerald-50 p-5 shadow-sm">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-2xl bg-amber-100 p-2.5 text-amber-700">
+                        <Lightbulb className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-black text-gray-900">Growth advice for {dashboardShop?.name}</h3>
+                        <p className="mt-0.5 text-xs text-gray-600">Based on your menu, completed orders and customer feedback.</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddMealModal(true)}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-gray-950 px-3 py-2 text-xs font-black text-white transition hover:bg-gray-800"
+                    >
+                      <ListPlus className="h-3.5 w-3.5" /> Add a menu item
+                    </button>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    {shopInsights.map((insight) => (
+                      <div
+                        key={insight.title}
+                        className={`rounded-2xl border p-4 ${
+                          insight.tone === 'emerald'
+                            ? 'border-emerald-200 bg-emerald-50'
+                            : insight.tone === 'rose'
+                            ? 'border-rose-200 bg-rose-50'
+                            : insight.tone === 'violet'
+                            ? 'border-violet-200 bg-violet-50'
+                            : insight.tone === 'sky'
+                            ? 'border-sky-200 bg-sky-50'
+                            : 'border-amber-200 bg-amber-50'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-gray-700" />
+                          <div>
+                            <p className="text-sm font-black text-gray-900">{insight.title}</p>
+                            <p className="mt-1 text-xs leading-relaxed text-gray-600">{insight.detail}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
 
                 {/* Incoming Orders Cards (Live Kitchen Queue) */}
                 <div className="space-y-4">
@@ -1914,7 +2067,12 @@ export default function LunchComingSoon() {
               </button>
             </div>
 
-            <form onSubmit={handlePlaceOrder} className="mt-4 space-y-4">
+            <form onSubmit={handlePlaceOrder} className={`mt-4 space-y-4 ${isCurrentShopClosed ? 'opacity-60 grayscale' : ''}`}>
+              {isCurrentShopClosed && (
+                <p className="rounded-2xl bg-gray-100 px-4 py-3 text-center text-sm font-bold text-gray-500">
+                  This shop has closed and is not accepting orders.
+                </p>
+              )}
               {/* Payment Option Selection */}
               <div>
                 <label className="text-xs font-black uppercase text-gray-700 block mb-1.5">Select Payment Method</label>
@@ -2032,6 +2190,7 @@ export default function LunchComingSoon() {
 
               <button
                 type="submit"
+                disabled={isCurrentShopClosed}
                 className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 py-3.5 text-sm font-black text-white shadow-md hover:from-amber-600 hover:to-orange-600 transition cursor-pointer active:scale-95 flex items-center justify-center gap-2"
               >
                 <span>Confirm Order & Get Code</span>
@@ -3036,10 +3195,11 @@ export default function LunchComingSoon() {
 
             <button
               type="button"
+              disabled={isCurrentShopClosed}
               onClick={() => setShowCheckoutModal(true)}
-              className="rounded-xl bg-slate-950 px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-black text-amber-300 hover:bg-slate-900 transition shadow-lg flex items-center gap-2 cursor-pointer active:scale-95"
+              className="rounded-xl bg-slate-950 px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-black text-amber-300 hover:bg-slate-900 transition shadow-lg flex items-center gap-2 cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-500 disabled:text-gray-200 disabled:shadow-none"
             >
-              <span>View Basket & Checkout</span>
+              <span>{isCurrentShopClosed ? 'Shop is Closed' : 'View Basket & Checkout'}</span>
               <span>→</span>
             </button>
           </div>

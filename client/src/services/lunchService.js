@@ -400,7 +400,12 @@ export const updateOrderStatus = async (orderId, newStatus) => {
   let updatedOrder = null;
   const updated = orders.map((ord) => {
     if (ord.id === orderId || ord._id === orderId) {
-      updatedOrder = { ...ord, status: newStatus, updatedAt: new Date().toISOString() };
+      updatedOrder = {
+        ...ord,
+        status: newStatus,
+        ...(newStatus === 'Completed' ? { completedAt: new Date().toISOString() } : {}),
+        updatedAt: new Date().toISOString()
+      };
       return updatedOrder;
     }
     return ord;

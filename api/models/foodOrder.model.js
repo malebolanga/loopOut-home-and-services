@@ -28,6 +28,7 @@ const foodOrderSchema = new mongoose.Schema({
     enum: ['Pending', 'Preparing', 'Ready for Collection', 'Completed', 'Cancelled'],
     default: 'Pending'
   },
+  completedAt: { type: Date },
   isRated: { type: Boolean, default: false },
   ratingDetails: {
     shopRating: Number,

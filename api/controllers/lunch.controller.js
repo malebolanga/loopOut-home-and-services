@@ -366,11 +366,13 @@ export const updateOrderStatus = async (req, res) => {
     }
 
     let updatedOrder = null;
+    const statusUpdate = { status };
+    if (status === 'Completed') statusUpdate.completedAt = new Date();
 
     if (mongoose.connection.readyState === 1) {
       const order = await FoodOrder.findByIdAndUpdate(
         id,
-        { status },
+        statusUpdate,
         { new: true }
       );
 
@@ -384,7 +386,8 @@ export const updateOrderStatus = async (req, res) => {
       // Fallback in-memory update
       inMemoryOrders = inMemoryOrders.map((o) => {
         if (o.id === id || o._id === id) {
-          return { ...o, status, updatedAt: new Date().toISOString() };
+          const updatedAt = new Date().toISOString();
+          return { ...o, ...statusUpdate, updatedAt };
         }
         return o;
       });
