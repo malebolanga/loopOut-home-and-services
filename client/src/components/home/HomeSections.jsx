@@ -1437,7 +1437,8 @@ export const CompareRecommendedSection = ({ navigate }) => {
     { id: 'storage', label: 'Storage Units', defaultUnit: 'mo', emoji: '🏬' },
   ];
 
-  // Fallback database templates if backend has fewer than 4 uploads for a category
+  // Legacy templates are retained for development reference only. Marketplace cards
+  // must always be sourced from live listings so visitors never see invented offers.
   const FALLBACK_ITEMS = {
     guesthouses: [
       {
@@ -2571,8 +2572,7 @@ export const CompareRecommendedSection = ({ navigate }) => {
   };
 
   const fetchedForCategory = dbItemsByCategory[activeCategory] || [];
-  const fallbacksForCategory = FALLBACK_ITEMS[activeCategory] || FALLBACK_ITEMS.guesthouses;
-  const rawCandidates = [...fetchedForCategory, ...fallbacksForCategory];
+  const rawCandidates = fetchedForCategory;
   const hasGpsLocation = Boolean(userCoords?.latitude && userCoords?.longitude);
   const normalizedLocation = userLocationName.trim().toLowerCase();
 

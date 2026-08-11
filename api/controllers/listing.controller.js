@@ -19,7 +19,7 @@ export const createListing = async (req, res, next) => {
     }
     const {
       imageUrls,
-      videoUrl, // Ensure this is included
+      videoUrl,
       name,
       description,
       near,
@@ -28,7 +28,7 @@ export const createListing = async (req, res, next) => {
       contact,
       host,
       kind,
-      period, // Fixed typo from 'peroid' to 'period'
+      period,
       cancel,
       type,
       bedrooms,
@@ -45,12 +45,11 @@ export const createListing = async (req, res, next) => {
       security,
       furnished,
       offer,
-      userRef,
-      hot,      // Added missing fields
-      pets,     // Added missing fields
-      prepaid,  // Added missing fields
-      fridge,   // Added missing fields
-      share,    // Added missing fields
+      hot,
+      pets,
+      prepaid,
+      fridge,
+      share,
       breakfast,
       party,
       instantConfirmation,
@@ -60,7 +59,9 @@ export const createListing = async (req, res, next) => {
       environmentallyFriendly,
     } = req.body;
 
-    // Create a new listing with videoUrl
+    // Always assign the authenticated user as the owner — ignore client-supplied userRef
+    const userRef = req.user.id;
+
     const listing = await Listing.create({
       imageUrls,
       videoUrl,
@@ -104,7 +105,6 @@ export const createListing = async (req, res, next) => {
       environmentallyFriendly,
     });
 
-    // Create notifications for users in the area
     createAreaNotifications(listing, 'listing');
 
     return res.status(201).json(listing);
@@ -146,7 +146,10 @@ export const updateListing = async (req, res, next) => {
   if (!listing) {
     return next(errorHandler(404, 'Listing not found!'));
   }
-  if (req.user.id !== listing.userRef) {
+
+  // Fix: compare string to string (listing.userRef is an ObjectId, req.user.id is a string)
+  const ownerId = (listing.userRef?._id || listing.userRef).toString();
+  if (req.user.id !== ownerId) {
     return next(errorHandler(401, 'You can only update your own listings!'));
   }
 
@@ -159,12 +162,32 @@ export const updateListing = async (req, res, next) => {
       }
     }
 
+    // Sanitize: only permit known listing fields; never allow overwriting userRef or _id
+    const {
+      imageUrls, videoUrl, name, description, near, rules, address, contact, host,
+      kind, period, cancel, type, bedrooms, bathrooms, regularPrice, discountPrice,
+      parking, pool, wifi, kitchen, stove, tv, storage, security, furnished, offer,
+      hot, pets, prepaid, fridge, share, breakfast, party,
+      instantConfirmation, kidFriendly, wheelchairAccessible, parkingAvailable, environmentallyFriendly,
+      operatingHours
+    } = req.body;
+
+    const allowedUpdate = {
+      imageUrls, videoUrl, name, description, near, rules, address, contact, host,
+      kind, period, cancel, type, bedrooms, bathrooms, regularPrice, discountPrice,
+      parking, pool, wifi, kitchen, stove, tv, storage, security, furnished, offer,
+      hot, pets, prepaid, fridge, share, breakfast, party,
+      instantConfirmation, kidFriendly, wheelchairAccessible, parkingAvailable, environmentallyFriendly,
+      operatingHours
+    };
+
+    // Strip undefined values to avoid clearing existing fields unintentionally
+    Object.keys(allowedUpdate).forEach(k => allowedUpdate[k] === undefined && delete allowedUpdate[k]);
+
     const updatedListing = await Listing.findByIdAndUpdate(
       req.params.id,
-      {
-        ...req.body, // Include videoUrl if provided in the request
-      },
-      { new: true }
+      allowedUpdate,
+      { new: true, runValidators: true }
     );
     res.status(200).json(updatedListing);
   } catch (error) {

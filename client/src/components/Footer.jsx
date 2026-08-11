@@ -106,7 +106,7 @@ const Footer = () => {
               <ul className="space-y-4">
                 <li><Link to="/about" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">About</Link></li>
                 <li><Link to="/pricing" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Pricing</Link></li>
-                <li><Link to="/careers" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Careers</Link></li>
+                <li><Link to="/become" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">List with loopOut</Link></li>
               </ul>
             </div>
 
@@ -115,7 +115,7 @@ const Footer = () => {
               <ul className="space-y-4">
                 <li><Link to="/help-center" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Help Center</Link></li>
                 <li><Link to="/trust" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Trust & Safety</Link></li>
-                <li><Link to="/message" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Message Us</Link></li>
+                <li><Link to="/contact" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Contact us</Link></li>
               </ul>
             </div>
 
@@ -138,6 +138,16 @@ const Footer = () => {
           </div>
         </div>
       </footer>      
+      <footer className="md:hidden mt-12 border-t border-gray-100 bg-gray-50 px-6 py-8 text-center">
+        <div className="flex flex-wrap justify-center gap-x-5 gap-y-3 text-xs font-bold text-gray-500">
+          <Link to="/help-center">Help</Link>
+          <Link to="/contact">Contact</Link>
+          <Link to="/trust">Trust &amp; Safety</Link>
+          <Link to="/terms">Terms</Link>
+          <Link to="/privacy">Privacy</Link>
+        </div>
+        <p className="mt-5 text-[11px] font-medium text-gray-400">&copy; {new Date().getFullYear()} loopOut. All rights reserved.</p>
+      </footer>
     </>
   );
 };

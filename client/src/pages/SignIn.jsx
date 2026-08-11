@@ -41,6 +41,10 @@ export default function SignIn() {
 
 
       if (!res.ok) {
+        if (data.requiresVerification) {
+          navigate('/sign-up', { state: { email: formData.email, verify: true } });
+          return;
+        }
         throw new Error(data.message || 'Failed to sign in. Please try again.');
       }
 
@@ -126,21 +130,23 @@ export default function SignIn() {
         </h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* Email Input */}
           <div className="relative">
+            <label htmlFor="email" className="sr-only">Email address</label>
             <input
               type="email"
-              placeholder="Email"
+              placeholder="Email address"
               className="w-full px-4 py-3.5 bg-white/10 border border-white/20 rounded-xl text-[16px] text-white placeholder-gray-300 focus:outline-none focus:border-white focus:bg-white/20 focus:ring-1 focus:ring-white transition-all duration-200"
               id="email"
               onChange={handleChange}
               value={formData.email}
+              autoComplete="email"
               required
             />
           </div>
 
           {/* Password Input */}
           <div className="relative">
+            <label htmlFor="password" className="sr-only">Password</label>
             <input
               type="password"
               placeholder="Password"
@@ -148,9 +154,11 @@ export default function SignIn() {
               id="password"
               onChange={handleChange}
               value={formData.password}
+              autoComplete="current-password"
               required
             />
           </div>
+          <p className="text-right text-sm"><Link to="/forgot-password" className="text-white underline">Forgot password?</Link></p>
 
           {/* Sign In Button */}
           <button

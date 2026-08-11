@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
-import { app } from "../firebase";
+import { uploadFiles } from "../services/upload.service";
 import {
   HomeIcon,
   BriefcaseIcon,
@@ -447,13 +446,6 @@ export default function CreateListing() {
   const [newListingId, setNewListingId] = useState(null);
   const [promotionSteps, setPromotionSteps] = useState(0);
   const [promotionPackage, setPromotionPackage] = useState('');
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
-  const [cardDetails, setCardDetails] = useState({
-    number: '',
-    expiry: '',
-    cvv: '',
-    name: ''
-  });
 
   // Combined form state with all required fields
   const [listingForm, setListingForm] = useState({
@@ -1150,105 +1142,17 @@ export default function CreateListing() {
   };
 
   const storeImage = async (file) => {
-    return new Promise((resolve, reject) => {
-      if (!file.type.match('image.*')) {
-        reject(new Error('Only image files are allowed'));
-        return;
-      }
-
-      if (file.size > 2 * 1024 * 1024) {
-        reject(new Error('Image size must be less than 2MB'));
-        return;
-      }
-
-      const storage = getStorage(app);
-      const cleanFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
-      const fileName = `${new Date().getTime()}_${cleanFileName}`;
-      const storageRef = ref(storage, fileName);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(progress);
-        },
-        (error) => {
-          let errorMessage = "Image upload failed";
-          switch (error.code) {
-            case 'storage/unauthorized':
-              errorMessage = "You don't have permission to upload";
-              break;
-            case 'storage/canceled':
-              errorMessage = "Upload was canceled";
-              break;
-            case 'storage/unknown':
-              errorMessage = "Unknown error occurred";
-              break;
-          }
-          reject(new Error(errorMessage));
-        },
-        async () => {
-          try {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            resolve(downloadURL);
-          } catch (error) {
-            reject(new Error("Failed to get image URL"));
-          }
-        }
-      );
-    });
+    if (!file.type.match('image.*')) throw new Error('Only image files are allowed');
+    if (file.size > 2 * 1024 * 1024) throw new Error('Image size must be less than 2MB');
+    const [url] = await uploadFiles([file], setUploadProgress);
+    return url;
   };
 
   const storeVideo = async (file) => {
-    return new Promise((resolve, reject) => {
-      if (!file.type.match('video.*')) {
-        reject(new Error('Only video files are allowed'));
-        return;
-      }
-
-      if (file.size > 50 * 1024 * 1024) {
-        reject(new Error('Video size must be less than 50MB'));
-        return;
-      }
-
-      const storage = getStorage(app);
-      const cleanFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
-      const fileName = `${new Date().getTime()}_${cleanFileName}`;
-      const storageRef = ref(storage, fileName);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(progress);
-        },
-        (error) => {
-          let errorMessage = "Video upload failed";
-          switch (error.code) {
-            case 'storage/unauthorized':
-              errorMessage = "You don't have permission to upload";
-              break;
-            case 'storage/canceled':
-              errorMessage = "Upload was canceled";
-              break;
-            case 'storage/unknown':
-              errorMessage = "Unknown error occurred";
-              break;
-          }
-          reject(new Error(errorMessage));
-        },
-        async () => {
-          try {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            resolve(downloadURL);
-          } catch (error) {
-            reject(new Error("Failed to get video URL"));
-          }
-        }
-      );
-    });
+    if (!file.type.match('video.*')) throw new Error('Only video files are allowed');
+    if (file.size > 10 * 1024 * 1024) throw new Error('Video size must be less than 10MB');
+    const [url] = await uploadFiles([file], setUploadProgress);
+    return url;
   };
 
   const handleRemoveImage = (index) => {
@@ -1623,6 +1527,11 @@ export default function CreateListing() {
         setNewListingId(data._id || data.listing?._id);
         if (selectedCategory === 'selling') {
           navigate('/listing-success', { state: { listingId: data._id || data.listing?._id, type: selectedCategory } });
+        } else if (selectedCategory !== 'property') {
+          const path = selectedCategory === 'experiences' ? `/service/${data._id || data.listing?._id}` :
+                       selectedCategory === 'online' ? `/helper/${data._id || data.listing?._id}` :
+                       `/event/${data._id || data.listing?._id}`;
+          navigate(path);
         } else {
           setShowPromotionPopup(true);
         }
@@ -1796,6 +1705,27 @@ export default function CreateListing() {
     }
   };
 
+  const redirectToPayFast = (payfast) => {
+    if (!payfast?.url || !payfast?.fields) {
+      throw new Error('Secure checkout could not be initialized.');
+    }
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = payfast.url;
+
+    Object.entries(payfast.fields).forEach(([name, value]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+  };
+
   const handlePayment = async () => {
     try {
       const res = await fetch("/api/payment", {
@@ -1805,12 +1735,11 @@ export default function CreateListing() {
           "Authorization": `Bearer ${localStorage.getItem('access_token')}`
         },
         credentials: 'include',
-        body: JSON.stringify({ userId: currentUser._id, amount: 35 }),
+        body: JSON.stringify({}),
       });
       const data = await res.json();
       if (data.success) {
-        setPaymentRequired(false);
-        setPostLimitReached(false);
+        redirectToPayFast(data.payfast);
       } else {
         setError("Payment failed. Please try again.");
       }
@@ -1821,11 +1750,6 @@ export default function CreateListing() {
   };
 
   const handlePromoteListing = async () => {
-    if (selectedPaymentMethod === 'card' && !cardDetailsValid()) {
-      setError("Please enter valid card details");
-      return;
-    }
-
     try {
       const res = await fetch("/api/promotion/payment", {
         method: "POST",
@@ -1835,18 +1759,14 @@ export default function CreateListing() {
         },
         credentials: 'include',
         body: JSON.stringify({
-          userId: currentUser._id,
           listingId: newListingId,
-          package: promotionPackage,
-          paymentMethod: selectedPaymentMethod,
-          cardDetails: selectedPaymentMethod === 'card' ? cardDetails : null,
-          amount: promotionPackage === 'standard' ? 40 : 100
+          package: promotionPackage
         }),
       });
       const data = await res.json();
 
       if (data.success) {
-        navigate(`/listing/${newListingId}`);
+        redirectToPayFast(data.payfast);
       } else {
         setError(data.message || "Payment failed. Please try again.");
       }
@@ -1855,21 +1775,6 @@ export default function CreateListing() {
       console.error("Payment error:", err);
     }
   };
-
-  const cardDetailsValid = () => {
-    const cardNumberValid = /^\d{16}$/.test(cardDetails.number.replace(/\s/g, ''));
-    const expiryValid = /^\d{2}\/\d{2}$/.test(cardDetails.expiry);
-    const cvvValid = /^\d{3,4}$/.test(cardDetails.cvv);
-    const nameValid = cardDetails.name.trim().length > 0;
-
-    return cardNumberValid && expiryValid && cvvValid && nameValid;
-  };
-
-  const handlePaymentSelection = (method) => {
-    setSelectedPaymentMethod(method);
-  };
-
-
 
   if (loading && !showPromotionPopup) {
     return (
@@ -2622,19 +2527,9 @@ export default function CreateListing() {
                                     return;
                                   }
                                   try {
-                                    const storage = getStorage(app);
-                                    const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
-                                    const storageRef = ref(storage, `policy-docs/${Date.now()}_${cleanName}`);
-                                    const uploadTask = uploadBytesResumable(storageRef, file);
-                                    uploadTask.on('state_changed',
-                                      (snap) => setUploadProgress((snap.bytesTransferred / snap.totalBytes) * 100),
-                                      (err) => alert('Upload failed: ' + err.message),
-                                      async () => {
-                                        const url = await getDownloadURL(uploadTask.snapshot.ref);
-                                        setListingForm(prev => ({ ...prev, storagePolicyDocUrl: url }));
-                                        setUploadProgress(0);
-                                      }
-                                    );
+                                    const [url] = await uploadFiles([file], setUploadProgress);
+                                    setListingForm(prev => ({ ...prev, storagePolicyDocUrl: url }));
+                                    setUploadProgress(0);
                                   } catch (err) {
                                     alert('Upload error: ' + err.message);
                                   }
@@ -3665,7 +3560,7 @@ export default function CreateListing() {
             {promotionSteps === 2 && (
               <div className="p-8">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Complete payment</h3>
-                <p className="text-gray-600 mb-6">Choose your payment method</p>
+                <p className="text-gray-600 mb-6">You will complete payment securely on PayFast. loopOut never receives or stores your card details.</p>
 
                 <div className="bg-gray-50 rounded-xl p-4 mb-6">
                   <div className="flex justify-between items-center">
@@ -3674,61 +3569,10 @@ export default function CreateListing() {
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-6">
-                  {['card', 'paypal', 'bank'].map((method) => (
-                    <div
-                      key={method}
-                      onClick={() => handlePaymentSelection(method)}
-                      className={`
-                        p-4 border-2 rounded-xl cursor-pointer transition-all flex items-center gap-4
-                        ${selectedPaymentMethod === method ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-400'}
-                      `}
-                    >
-                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                        {method === 'card' && <CreditCardIcon className="w-5 h-5" />}
-                        {method === 'paypal' && <DevicePhoneMobileIcon className="w-5 h-5" />}
-                        {method === 'bank' && <BuildingLibraryIcon className="w-5 h-5" />}
-                      </div>
-                      <span className="font-medium capitalize flex-1">{method === 'card' ? 'Credit/Debit Card' : method}</span>
-                      {selectedPaymentMethod === method && <CheckCircleIcon className="w-5 h-5 text-black" />}
-                    </div>
-                  ))}
+                <div className="mb-6 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900">
+                  <ShieldCheckIcon className="h-5 w-5 shrink-0" />
+                  Secure hosted checkout by PayFast
                 </div>
-
-                {selectedPaymentMethod === 'card' && (
-                  <div className="space-y-4 mb-6 p-4 border border-gray-200 rounded-xl">
-                    <input
-                      type="text"
-                      placeholder="Card number"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                      value={cardDetails.number}
-                      onChange={(e) => setCardDetails({ ...cardDetails, number: e.target.value })}
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                      <input
-                        type="text"
-                        placeholder="MM/YY"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                        value={cardDetails.expiry}
-                        onChange={(e) => setCardDetails({ ...cardDetails, expiry: e.target.value })}
-                      />
-                      <input
-                        type="text"
-                        placeholder="CVV"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                        value={cardDetails.cvv}
-                        onChange={(e) => setCardDetails({ ...cardDetails, cvv: e.target.value })}
-                      />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Cardholder name"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                      value={cardDetails.name}
-                      onChange={(e) => setCardDetails({ ...cardDetails, name: e.target.value })}
-                    />
-                  </div>
-                )}
 
                 {error && (
                   <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -3745,13 +3589,13 @@ export default function CreateListing() {
                   </button>
                   <button
                     onClick={handlePromoteListing}
-                    disabled={selectedPaymentMethod === 'card' && !cardDetailsValid()}
+                    disabled={!promotionPackage}
                     className={`
                       px-8 py-3 rounded-lg font-semibold transition-all
-                      ${(selectedPaymentMethod !== 'card' || cardDetailsValid()) ? 'bg-black text-white hover:bg-gray-800' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}
+                      ${promotionPackage ? 'bg-black text-white hover:bg-gray-800' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}
                     `}
                   >
-                    Pay now
+                    Continue to secure payment
                   </button>
                 </div>
               </div>

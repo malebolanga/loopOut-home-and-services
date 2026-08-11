@@ -191,35 +191,6 @@ const CategoryIcon = ({ type, size = "w-6 h-6" }) => {
   );
 };
 
-const MOCK_PROPERTIES = [
-  { _id: '663ad8e5f1e249b49f986025', itemType: 'property', name: 'Elite Modern Apartment', price: 2500, regularPrice: 2500, type: 'rent-long', imageUrls: ['https://images.pexels.com/photos/439391/pexels-photo-439391.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.9, comments: [1, 2, 3, 4], bookingsCount: 12, createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986026', itemType: 'property', name: 'Grand Presidential Hotel', price: 3500, regularPrice: 3500, type: 'sale', imageUrls: ['https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.8, comments: [1, 2], bookingsCount: 45, createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986027', itemType: 'property', name: 'Neural Guest House', price: 1200, regularPrice: 1200, type: 'rent-short', imageUrls: ['https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.7, address: 'Polokwane', comments: [1, 2, 3], bookingsCount: 8, createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986028', itemType: 'property', name: 'Roadside Oasis Motel', price: 800, regularPrice: 800, type: 'rent-short', imageUrls: ['https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.3, address: 'Bloemfontein', comments: [1], bookingsCount: 5, createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986029', itemType: 'property', name: 'University Studio Pro', price: 1200, regularPrice: 1200, type: 'rent-short', imageUrls: ['https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.6, address: 'Pretoria', comments: [1, 2, 3, 4, 5], bookingsCount: 15, createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986030', itemType: 'property', name: 'Quantum Office Suite', price: 500, regularPrice: 500, type: 'office', imageUrls: ['https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.6, address: 'Polokwane', comments: [1], bookingsCount: 22, createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986031', itemType: 'property', name: 'Suburban Family Mansion', price: 3500, regularPrice: 3500, type: 'rent-long', imageUrls: ['https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.7, address: 'Durban', comments: [1, 2], bookingsCount: 4, createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986032', itemType: 'property', name: 'Azure Beachfront Villa', price: 1800, regularPrice: 1800, type: 'rent-short', imageUrls: ['https://images.pexels.com/photos/439391/pexels-photo-439391.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.9, address: 'Port Elizabeth', comments: [1, 2, 3, 4, 5, 6], bookingsCount: 31, createdAt: new Date().toISOString() }
-];
-
-const MOCK_SERVICES = [
-  { _id: '663ad8e5f1e249b49f986033', itemType: 'service', name: 'Professional Cleaning Service', price: 200, regularPrice: 200, description: 'Deep cleaning service for your home or office', imageUrls: ['https://images.pexels.com/photos/4099467/pexels-photo-4099467.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.7, comments: [1, 2], createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986034', itemType: 'service', name: 'Moving & Relocation Assistance', price: 350, regularPrice: 350, description: 'Help with packing and moving to your new home', imageUrls: ['https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.8, comments: [1], createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986035', itemType: 'service', name: 'Landscaping & Garden Design', price: 450, regularPrice: 450, description: 'Garden maintenance and landscape design services', imageUrls: ['https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.6, comments: [1, 2, 3], createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986036', itemType: 'service', name: 'Home Repair & Maintenance', price: 300, regularPrice: 300, description: 'Professional home repair and maintenance services', imageUrls: ['https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.9, comments: [1, 2, 3, 4], createdAt: new Date().toISOString() }
-];
-
-const MOCK_HELPERS = [
-  { _id: '69a6a956f0c40835a3119612', itemType: 'helper', name: 'John\'s Sneaker Care', type: 'sneaker', rating: 4.8, regularPrice: 250, imageUrls: ['https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?auto=compress&cs=tinysrgb&w=800'], address: 'Johannesburg', host: 'John Smith', description: 'Professional sneaker cleaning and restoration services using premium products.', travelFee: 50, comments: [1, 2, 3], createdAt: new Date().toISOString() },
-  { _id: '69a6a956f0c40835a3119613', itemType: 'helper', name: 'Jane Smith', type: 'Elderly Caregiver', rating: 4.9, regularPrice: 150, imageUrls: ['https://images.pexels.com/photos/3768914/pexels-photo-3768914.jpeg?auto=compress&cs=tinysrgb&w=800'], address: 'Cape Town', host: 'Jane Smith', description: 'Experienced caregiver providing compassionate care for elderly individuals.', travelFee: 30, comments: [1, 2], createdAt: new Date().toISOString() },
-  { _id: '69a6a956f0c40835a3119614', itemType: 'helper', name: 'Mike Johnson', type: 'barber', rating: 4.7, regularPrice: 200, imageUrls: ['https://images.pexels.com/photos/3993311/pexels-photo-3993311.jpeg?auto=compress&cs=tinysrgb&w=800'], address: 'Durban', host: 'Mike Johnson', description: 'Professional barber with 10+ years of experience in modern and classic cuts.', travelFee: 40, comments: [1], createdAt: new Date().toISOString() }
-];
-
-const MOCK_EVENTS = [
-  { _id: '663ad8e5f1e249b49f986040', itemType: 'event', name: 'Local Music Festival 2024', price: 50, regularPrice: 50, date: '2024-03-15', address: 'City Park, Johannesburg', attendingCount: 120, imageUrls: ['https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.8, comments: [1, 2, 3, 4, 5], createdAt: new Date().toISOString() },
-  { _id: '663ad8e5f1e249b49f986041', itemType: 'event', name: 'Art & Craft Workshop', price: 30, regularPrice: 30, date: '2024-03-20', address: 'Art Center, Cape Town', attendingCount: 45, imageUrls: ['https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800'], rating: 4.6, comments: [1, 2], createdAt: new Date().toISOString() }
-];
-
 // --- AI Recommendation Engine (Preserved) ---
 class AIRecommendationEngine {
   constructor() {
@@ -993,7 +964,7 @@ function MobileAppHomepage({
         <FoodCollectionReadyBanner navigate={navigate} />
         <ContinueSearchingCard navigate={navigate} />
         {/* Mobile Elite Slider Banner */}
-        <div className="relative h-[560px] -mx-4 lg:mx-0 lg:rounded-[2rem] overflow-hidden mb-12 shadow-2xl">
+          <div className="relative h-[520px] -mx-4 lg:mx-0 lg:rounded-[2rem] overflow-hidden mb-12 shadow-2xl">
           <Swiper
             modules={[Autoplay, Pagination]}
             autoplay={{ delay: 6500, disableOnInteraction: false }}
@@ -1009,21 +980,21 @@ function MobileAppHomepage({
                   alt="LoopOut for Everyone"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                <div className="absolute inset-0 p-6 flex flex-col justify-end">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
                       <Sparkles className="w-3.5 h-3.5 text-rose-400" />
-                      <span className="text-white/90 text-[9px] font-black tracking-[0.25em] uppercase">Universal Discovery</span>
+                      <span className="text-white/90 text-[9px] font-black tracking-[0.2em] uppercase">Find local services</span>
                     </div>
                   </div>
-                  <h2 className="text-5xl font-black text-white leading-[0.85] mb-4 tracking-tighter drop-shadow-lg">
-                    LOOPOUT <br />
-                    <span className="bg-gradient-to-r from-rose-400 to-rose-500 bg-clip-text text-transparent">FOR EVERYONE.</span>
+                  <h2 className="text-4xl sm:text-5xl font-black text-white leading-[0.9] mb-4 tracking-tighter drop-shadow-lg">
+                    FIND WHAT <br />
+                    <span className="bg-gradient-to-r from-rose-400 to-rose-500 bg-clip-text text-transparent">YOU NEED.</span>
                   </h2>
-                  <p className="text-white/60 text-[13px] font-medium mb-7 leading-relaxed max-w-[260px]">
-                    Active in <span className="text-white font-semibold">JHB</span>, <span className="text-white font-semibold">Pretoria</span>, <span className="text-white font-semibold">PMB</span>, and <span className="text-white font-semibold">Rustenburg</span>.
+                  <p className="text-white/75 text-[13px] font-medium mb-7 leading-relaxed max-w-[270px]">
+                    Discover places to stay and people who can help, all in one local marketplace.
                   </p>
-                  <button className="w-full py-4 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-2xl text-[11px] font-black shadow-2xl shadow-rose-500/40 uppercase tracking-widest active:scale-95 transition-all hover:from-rose-600 hover:to-rose-700">
+                  <button onClick={(event) => { event.stopPropagation(); navigate('/explore'); }} className="w-full py-4 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-2xl text-[11px] font-black shadow-2xl shadow-rose-500/40 uppercase tracking-widest active:scale-95 transition-all hover:from-rose-600 hover:to-rose-700">
                     Start Your Journey →
                   </button>
                 </div>
@@ -1140,7 +1111,7 @@ function MobileAppHomepage({
                     <span className="bg-gradient-to-r from-rose-400 to-amber-400 bg-clip-text text-transparent">SOWETO.</span>
                   </h2>
                   <p className="text-white/60 text-[13px] font-medium mb-7 leading-relaxed max-w-[260px]">
-                    Boutique guest houses like Twin Beez. <span className="text-white font-semibold">Rest in luxury with co-branded pillows.</span>
+                    Search available guest houses and stays that suit your trip.
                   </p>
                   <button className="w-full py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-2xl text-[11px] font-black shadow-2xl shadow-amber-500/30 uppercase tracking-widest active:scale-95 transition-all">
                     Book Soweto Stay →
@@ -1553,17 +1524,17 @@ const Home = () => {
   const aiEngine = useRef(new AIRecommendationEngine());
   const { currentUser } = useSelector((state) => state.user);
 
-  const [featuredProperties, setFeaturedProperties] = useState(MOCK_PROPERTIES);
-  const [featuredServices, setFeaturedServices] = useState(MOCK_SERVICES);
-  const [featuredHelpers, setFeaturedHelpers] = useState(MOCK_HELPERS);
-  const [featuredEvents, setFeaturedEvents] = useState(MOCK_EVENTS);
+  const [featuredProperties, setFeaturedProperties] = useState([]);
+  const [featuredServices, setFeaturedServices] = useState([]);
+  const [featuredHelpers, setFeaturedHelpers] = useState([]);
+  const [featuredEvents, setFeaturedEvents] = useState([]);
 
   const [loadingProperties, setLoadingProperties] = useState(true);
   const [loadingServices, setLoadingServices] = useState(true);
   const [loadingHelpers, setLoadingHelpers] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
 
-  const [stats, setStats] = useState({ properties: 1234, services: 456, helpers: 789, events: 321 });
+  const [stats] = useState({});
   const [aiRecommendations, setAiRecommendations] = useState([]);
   const [aiInsights, setAiInsights] = useState([]);
   const [recentlyViewedItems, setRecentlyViewedItems] = useState([]);
@@ -1736,8 +1707,7 @@ const Home = () => {
                       description: "No local matches found, showing trending properties nationwide."
                     });
                   } else {
-                    // Fallback to MOCK_PROPERTIES if live data returns empty regional matches
-                    setFeaturedProperties(MOCK_PROPERTIES);
+                    setFeaturedProperties([]);
                   }
                 }
               }
@@ -1754,10 +1724,10 @@ const Home = () => {
               if (sorted.length > 0) {
                 setFeaturedServices(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'service' })));
               } else {
-                setFeaturedServices(MOCK_SERVICES);
+                setFeaturedServices([]);
               }
             } else {
-              setFeaturedServices(MOCK_SERVICES);
+              setFeaturedServices([]);
             }
           })
           .catch(() => { }).finally(() => setLoadingServices(false)),
@@ -1771,10 +1741,10 @@ const Home = () => {
               if (sorted.length > 0) {
                 setFeaturedHelpers(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'helper' })));
               } else {
-                setFeaturedHelpers(MOCK_HELPERS);
+                setFeaturedHelpers([]);
               }
             } else {
-              setFeaturedHelpers(MOCK_HELPERS);
+              setFeaturedHelpers([]);
             }
           })
           .catch(() => { }).finally(() => setLoadingHelpers(false)),
@@ -1788,10 +1758,10 @@ const Home = () => {
               if (sorted.length > 0) {
                 setFeaturedEvents(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'event' })));
               } else {
-                setFeaturedEvents(MOCK_EVENTS);
+                setFeaturedEvents([]);
               }
             } else {
-              setFeaturedEvents(MOCK_EVENTS);
+              setFeaturedEvents([]);
             }
           })
           .catch(() => { }).finally(() => setLoadingEvents(false))
@@ -1800,7 +1770,6 @@ const Home = () => {
       try {
         await Promise.all(fetchPromises);
         clearTimeout(timeoutId);
-        setStats({ properties: 1234, services: 456, helpers: 789, events: 321 });
       } catch (err) {
         // Ignored or logged (aborted fetches will fail)
       }

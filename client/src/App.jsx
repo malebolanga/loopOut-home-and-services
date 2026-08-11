@@ -23,6 +23,7 @@ import PhoneNotificationManager from "./components/PhoneNotificationManager";
 import Home from "./pages/Home";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import ForgotPassword from "./pages/ForgotPassword";
 
 // Dynamic / Code-Splitted Pages (Lazy-loaded on-demand)
 const Profile = lazy(() => import("./pages/Profile"));
@@ -169,6 +170,7 @@ const AnimatedRoutes = () => {
         <Route path="/" element={<PageTransition><Home /></PageTransition>} />
         <Route path="/sign-in" element={<PageTransition><SignIn /></PageTransition>} />
         <Route path="/sign-up" element={<PageTransition><SignUp /></PageTransition>} />
+        <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
         <Route path="/search" element={<PageTransition><Search /></PageTransition>} />
         <Route path="/messages" element={<PageTransition><Inbox /></PageTransition>} />
         <Route path="/smart-search" element={<PageTransition><SmartSearchPage /></PageTransition>} />

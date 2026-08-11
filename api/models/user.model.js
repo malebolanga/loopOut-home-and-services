@@ -178,6 +178,21 @@ const userSchema = new mongoose.Schema({
     otpExpiry: {
         type: Date,
     },
+    otpAttempts: {
+        type: Number,
+        default: 0,
+    },
+    otpPurpose: {
+        type: String,
+        enum: ['verify', 'reset', null],
+        default: null,
+    },
+    termsAcceptedAt: {
+        type: Date,
+    },
+    privacyAcceptedAt: {
+        type: Date,
+    },
     plannerTasks: [{
         task: { type: String, required: true },
         completed: { type: Boolean, default: false },

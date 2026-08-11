@@ -10,7 +10,8 @@ import Booking from '../models/Booking.js';
 import User from '../models/user.model.js';
 import Notification from '../models/notification.model.js';
 import Withdrawal from '../models/withdrawal.model.js';
-import { generatePayfastData } from '../utils/payfast.js';
+import PaymentIntent from '../models/paymentIntent.model.js';
+import { generatePayfastData, isValidPayfastItn } from '../utils/payfast.js';
 
 const router = express.Router();
 
@@ -21,17 +22,18 @@ const router = express.Router();
  */
 router.post('/', verifyToken, async (req, res) => {
   try {
-    const { userId, amount, name, email } = req.body;
+    const { name, email } = req.body;
+    const userId = req.user.id;
 
-    if (!userId) {
-      return res.status(400).json({ success: false, message: 'userId is required' });
+    if (!process.env.PAYFAST_MERCHANT_ID || !process.env.PAYFAST_MERCHANT_KEY || !process.env.APP_URL || !process.env.BACKEND_URL) {
+      return res.status(503).json({ success: false, message: 'Secure checkout is not configured yet' });
     }
 
     // Generate PayFast data
     const payfast = generatePayfastData({
       merchant_id: process.env.PAYFAST_MERCHANT_ID,
       merchant_key: process.env.PAYFAST_MERCHANT_KEY,
-      amount: amount || '35.00',
+      amount: '35.00',
       item_name: 'Standard Listing Upgrade',
       name_first: name || 'LoopOut',
       name_last: 'User',
@@ -56,24 +58,32 @@ router.post('/', verifyToken, async (req, res) => {
  */
 router.post('/escrow', verifyToken, async (req, res) => {
   try {
-    const { userId, amount, name, email, serviceId, providerName } = req.body;
-
-    let dbItemPrice = null;
-    if (serviceId && mongoose.Types.ObjectId.isValid(serviceId)) {
-      const dbItem = (await Listing.findById(serviceId)) || 
-                     (await Helper.findById(serviceId)) || 
-                     (await Service.findById(serviceId)) || 
-                     (await Event.findById(serviceId));
-      if (dbItem) {
-        dbItemPrice = dbItem.regularPrice || dbItem.price;
-      }
+    const { name, email, serviceId } = req.body;
+    const userId = req.user.id;
+    if (!serviceId || !mongoose.Types.ObjectId.isValid(serviceId)) {
+      return res.status(400).json({ success: false, message: 'A valid item is required.' });
     }
 
-    const safeAmount = dbItemPrice 
-      ? Number(dbItemPrice).toFixed(2) 
-      : (amount ? Number(amount).toFixed(2) : '35.00');
-    
-    const safeItemName = `Secure Escrow: ${providerName}`.substring(0, 99);
+    const itemTypes = [['listing', Listing], ['helper', Helper], ['service', Service], ['event', Event]];
+    let item;
+    let itemType;
+    for (const [type, Model] of itemTypes) {
+      item = await Model.findById(serviceId);
+      if (item) { itemType = type; break; }
+    }
+    if (!item) return res.status(404).json({ success: false, message: 'Item not found.' });
+
+    const providerId = item.userRef || item.creator;
+    const itemPrice = Number(item.regularPrice ?? item.price);
+    if (!providerId || !Number.isFinite(itemPrice) || itemPrice < 5) {
+      return res.status(400).json({ success: false, message: 'This item cannot be purchased.' });
+    }
+    const paymentIntent = await PaymentIntent.create({
+      purchaserId: userId, providerId, itemId: item._id, itemType, amount: itemPrice,
+    });
+
+    const safeAmount = itemPrice.toFixed(2);
+    const safeItemName = `Secure Escrow: ${item.name}`.substring(0, 99);
     
     const payfast = generatePayfastData({
       merchant_id: process.env.PAYFAST_MERCHANT_ID,
@@ -83,7 +93,7 @@ router.post('/escrow', verifyToken, async (req, res) => {
       name_first: name || 'LoopOut',
       name_last: 'Client',
       email_address: email || 'user@example.com',
-      m_payment_id: `escrow-${serviceId}-${userId}-${Date.now()}`.substring(0, 99),
+      m_payment_id: `escrow-${paymentIntent._id}`,
     });
 
     return res.status(200).json({
@@ -104,26 +114,28 @@ router.post('/escrow', verifyToken, async (req, res) => {
 router.post('/itn', async (req, res) => {
   try {
     const itnData = req.body;
-    console.log('[PAYMENT ITN] Data received from PayFast:', itnData);
-    
-    // 1. Verify the signature (Production Requirement - Should be implemented for launch)
-    // 2. Check payment status
+    if (!isValidPayfastItn(itnData)) {
+      return res.status(400).send('Invalid payment notification');
+    }
+    if (itnData.merchant_id !== process.env.PAYFAST_MERCHANT_ID) {
+      return res.status(400).send('Unexpected merchant');
+    }
+
     if (itnData.payment_status === 'COMPLETE') {
       const paymentId = itnData.m_payment_id;
       
       if (paymentId.startsWith('escrow-')) {
-        const parts = paymentId.split('-');
-        // escrow-{serviceId}-{userId}-{timestamp}
-        const serviceId = parts[1];
-        const clientId = parts[2];
-        const amount = itnData.amount_gross;
-
-        console.log(`[ESCROW SUCCESS] Funds received for Service: ${serviceId}, Client: ${clientId}, Amount: ${amount}`);
+        const intentId = paymentId.slice('escrow-'.length);
+        const intent = await PaymentIntent.findById(intentId);
+        if (!intent || intent.status === 'paid') return res.status(200).send('OK');
+        if (Number(itnData.amount_gross) !== intent.amount) {
+          return res.status(400).send('Unexpected payment amount');
+        }
 
         // Find existing booking or create one
         let booking = await Booking.findOne({ 
-          $or: [{ listing: serviceId }, { helper: serviceId }, { service: serviceId }],
-          user: clientId,
+          $or: [{ listing: intent.itemId }, { helper: intent.itemId }, { service: intent.itemId }],
+          user: intent.purchaserId,
           status: 'pending'
         }).sort({ createdAt: -1 });
 
@@ -135,21 +147,37 @@ router.post('/itn', async (req, res) => {
         // Record in Escrow model
         const newEscrow = new Escrow({
           bookingId: booking ? booking._id : new mongoose.Types.ObjectId(),
-          clientId,
-          providerId: itnData.custom_str1 || (booking ? (booking.listing?.userRef || booking.helper?.userRef || booking.service?.userRef) : undefined),
-          amount: Number(amount),
+          clientId: intent.purchaserId,
+          providerId: intent.providerId,
+          amount: intent.amount,
           status: 'held',
           paymentId: itnData.pf_payment_id,
           mPaymentId: paymentId
         });
 
         await newEscrow.save();
+        intent.status = 'paid';
+        intent.payfastPaymentId = itnData.pf_payment_id;
+        await intent.save();
         
         // Notify both parties
         // (Implementation for professional notification could go here)
       } else if (paymentId.startsWith('listing-up-')) {
         console.log(`[PAYMENT SUCCESS] Listing upgrade confirmed for payment ID: ${paymentId}`);
         // Handle listing upgrade logic
+      } else if (paymentId.startsWith('promo-')) {
+        const [, promotionPackage, userId, listingId] = paymentId.split('-');
+        const expectedAmount = promotionPackage === 'premium' ? 100 : 40;
+        if (!['standard', 'premium'].includes(promotionPackage) || Number(itnData.amount_gross) !== expectedAmount) {
+          return res.status(400).send('Unexpected promotion payment');
+        }
+
+        const listing = await Listing.findOne({ _id: listingId, userRef: userId });
+        if (!listing) return res.status(404).send('Listing not found');
+
+        listing.isPromoted = true;
+        listing.promotionPackage = promotionPackage;
+        await listing.save();
       }
     }
 
@@ -167,7 +195,8 @@ router.post('/itn', async (req, res) => {
  */
 router.post('/withdrawal', verifyToken, async (req, res) => {
   try {
-    const { userId, amount, accountDetails } = req.body;
+    const { amount, accountDetails } = req.body;
+    const userId = req.user.id;
 
     if (!userId || !amount || !accountDetails) {
       return res.status(400).json({ success: false, message: 'All biological and financial parameters are required.' });

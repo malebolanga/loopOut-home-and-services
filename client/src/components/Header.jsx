@@ -318,11 +318,6 @@ export default function Header() {
     const refreshNotifications = () => fetchNotifications();
     window.addEventListener('loopout:notification-created', refreshNotifications);
 
-    // Request notification permission
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
-      window.Notification.requestPermission();
-    }
-
     // Set up polling for real-time alerts
     const interval = setInterval(() => {
       const pollController = new AbortController();
@@ -531,8 +526,6 @@ export default function Header() {
     // Dispatch currency change to Redux store if you have currency slice
     // dispatch(setCurrency(currencyCode));
 
-    // Refresh page data with new currency
-    window.dispatchEvent(new CustomEvent('currencyChanged', { detail: currencyCode }));
   };
 
   // Handle language change
@@ -544,11 +537,6 @@ export default function Header() {
     // Dispatch language change to Redux store if you have language slice
     // dispatch(setLanguage(languageCode));
 
-    // Refresh page data with new language
-    window.dispatchEvent(new CustomEvent('languageChanged', { detail: languageCode }));
-
-    // Show success message
-    alert(`Language changed to ${languageName}`);
   };
 
   // Get current currency symbol
@@ -570,6 +558,13 @@ export default function Header() {
     navigate(path);
     setShowProfileDropdown(false);
     setShowMobileMenu(false);
+  };
+
+  const handleNotificationsClick = async () => {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      await window.Notification.requestPermission();
+    }
+    handleNavigate('/notifications');
   };
 
   // Handle mobile profile click - navigate to profile page instead of showing dropdown
@@ -649,13 +644,13 @@ export default function Header() {
   <span className="mx-1.5 text-slate-300">&middot;</span>
   <a href="/privacy" className="hover:text-rose-500 transition-colors">Privacy</a>
   <span className="mx-1.5 text-slate-300">&middot;</span>
-  <a href="/teams" className="hover:text-rose-500 transition-colors">Teams</a>
+  <a href="/contact" className="hover:text-rose-500 transition-colors">Contact</a>
   <span className="mx-1.5 text-slate-300">&middot;</span>
   <span>&copy; 2026</span>
 </div>
         </>
       ) : (
-        <div class="p-4 space-y-3">
+        <div className="p-4 space-y-3">
           <button
             onClick={() => handleNavigate('/sign-in')}
             className="w-full py-4 bg-slate-950 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-black transition-all active:scale-95"
@@ -669,7 +664,7 @@ export default function Header() {
   <span className="mx-1.5 text-slate-300">&middot;</span>
   <a href="/privacy" className="hover:text-rose-500 transition-colors">Privacy</a>
   <span className="mx-1.5 text-slate-300">&middot;</span>
-  <a href="/teams" className="hover:text-rose-500 transition-colors">Teams</a>
+  <a href="/contact" className="hover:text-rose-500 transition-colors">Contact</a>
   <span className="mx-1.5 text-slate-300">&middot;</span>
   <span>&copy; 2026</span>
 </div>
@@ -847,7 +842,7 @@ export default function Header() {
 
                 {/* Notification Bell Icon - Desktop and Mobile */}
                 <button
-                  onClick={() => handleNavigate('/notifications')}
+                  onClick={handleNotificationsClick}
                   aria-label={`Notifications. ${unreadCount} unread`}
                   className="relative w-9 h-9 border border-slate-200 rounded-full flex items-center justify-center cursor-pointer hover:shadow-md hover:border-slate-400 transition-all flex text-slate-700"
                 >
@@ -870,7 +865,7 @@ export default function Header() {
                   <div className="p-4 border-b border-[#DDDDDD] font-semibold text-[#222222]">
                     Choose a language
                   </div>
-                  {languages.map((language) => (
+                  {languages.filter((language) => language.code === 'en').map((language) => (
                     <button
                       key={language.code}
                       onClick={() => handleLanguageChange(language.code, language.name)}
@@ -897,7 +892,7 @@ export default function Header() {
                   <div className="p-4 border-b border-[#DDDDDD] font-semibold text-[#222222]">
                     Choose currency
                   </div>
-                  {currencies.map((currency) => (
+                  {currencies.filter((currency) => currency.code === 'ZAR').map((currency) => (
                     <button
                       key={currency.code}
                       onClick={() => handleCurrencyChange(currency.code)}

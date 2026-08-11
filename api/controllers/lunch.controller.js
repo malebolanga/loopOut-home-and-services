@@ -1,677 +1,163 @@
+import crypto from 'crypto';
 import mongoose from 'mongoose';
 import Shop from '../models/shop.model.js';
 import FoodOrder from '../models/foodOrder.model.js';
 import TableBooking from '../models/tableBooking.model.js';
 import Notification from '../models/notification.model.js';
 
-const DEFAULT_SHOPS = [
-  {
-    id: 'urban-grill',
-    name: 'Urban Grill',
-    cuisine: 'Grill & Flame',
-    distance: '1.2 km',
-    time: '20–30 min',
-    rating: '4.8',
-    image: '🥙',
-    address: '124 Main Street, City Centre',
-    phone: '+27 82 123 4567',
-    meals: [
-      { id: 'chicken-wrap', name: 'Chicken wrap', description: 'Grilled chicken, slaw and house sauce', price: 89, tag: 'Popular', image: '🌯' },
-      { id: 'beef-bowl', name: 'Beef rice bowl', description: 'Spiced beef, rice, salsa and greens', price: 109, tag: 'New', image: '🍲' },
-      { id: 'bbq-ribs', name: 'Flame BBQ Ribs', description: '400g pork ribs with crispy chips', price: 145, tag: 'Chef Special', image: '🍖' },
-    ],
-  },
-  {
-    id: 'green-table',
-    name: 'The Green Table',
-    cuisine: 'Healthy & Vegan',
-    distance: '2.1 km',
-    time: '25–35 min',
-    rating: '4.7',
-    image: '🥗',
-    address: '45 Eco Park Avenue, Gardens',
-    phone: '+27 83 987 6543',
-    meals: [
-      { id: 'rainbow-bowl', name: 'Rainbow bowl', description: 'Roasted vegetables, quinoa and avocado', price: 95, tag: 'Vegetarian', image: '🥗' },
-      { id: 'caesar-salad', name: 'Chicken Caesar salad', description: 'Cos lettuce, parmesan and herb croutons', price: 105, tag: 'Fresh', image: '🥗' },
-      { id: 'green-smoothie', name: 'Detox Green Smoothie', description: 'Spinach, green apple, ginger and coconut water', price: 49, tag: 'Drinks', image: '🥤' },
-    ],
-  },
-  {
-    id: 'mama-kitchen',
-    name: "Mama's Kitchen",
-    cuisine: 'Local Favourites',
-    distance: '3.4 km',
-    time: '30–40 min',
-    rating: '4.9',
-    image: '🍛',
-    address: '89 Heritage Lane, Township Hub',
-    phone: '+27 71 456 7890',
-    meals: [
-      { id: 'chicken-pap', name: 'Chicken & pap', description: 'Grilled chicken, chakalaka and creamy pap', price: 99, tag: 'Local favourite', image: '🍗' },
-      { id: 'beef-stew', name: 'Beef stew plate', description: 'Slow-cooked beef with rice and steamed veg', price: 115, tag: 'Hearty', image: '🥘' },
-      { id: 'mogodu-combo', name: 'Mogodu Special', description: 'Traditional tripe served with warm dumpling', price: 110, tag: 'Traditional', image: '🍲' },
-    ],
-  },
-];
-
-// In-memory fallback stores when MongoDB is disconnected
-let inMemoryShops = [...DEFAULT_SHOPS];
-let inMemoryOrders = [];
-let inMemoryBookings = [];
-
-const generateCode = () => {
-  const num = Math.floor(1000 + Math.random() * 9000);
-  return `LNCH-${num}`;
+const ORDER_STATUSES = ['Pending', 'Preparing', 'Ready for Collection', 'Completed', 'Cancelled'];
+const requireDatabase = (res) => {
+  if (mongoose.connection.readyState === 1) return true;
+  res.status(503).json({ success: false, message: 'Lunch ordering is temporarily unavailable. Please try again later.' });
+  return false;
+};
+const format = (document) => ({ id: document._id.toString(), ...document.toObject() });
+const validId = (id) => mongoose.Types.ObjectId.isValid(id);
+const userId = (req) => String(req.user.id);
+const cleanText = (value, limit = 500) => String(value || '').trim().slice(0, limit);
+const isOwner = (shop, req) => String(shop.ownerId) === userId(req);
+const getOwnedShop = async (id, req, res) => {
+  if (!validId(id)) { res.status(404).json({ success: false, message: 'Shop not found.' }); return null; }
+  const shop = await Shop.findById(id);
+  if (!shop) { res.status(404).json({ success: false, message: 'Shop not found.' }); return null; }
+  if (!isOwner(shop, req)) { res.status(403).json({ success: false, message: 'You do not manage this shop.' }); return null; }
+  return shop;
+};
+const createNotification = async (userId, title, message, data) => {
+  if (!validId(userId)) return;
+  await Notification.create({ userId, type: 'booking', title, message, data });
 };
 
-// GET /api/lunch/shops
-export const getShops = async (req, res) => {
+export const getShops = async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
-      console.warn('[LUNCH API] MongoDB not connected. Returning default shops.');
-      return res.status(200).json(inMemoryShops);
-    }
-
-    let shops = await Shop.find().sort({ createdAt: -1 });
-    if (!shops || shops.length === 0) {
-      shops = await Shop.insertMany(DEFAULT_SHOPS);
-    }
-    const formatted = shops.map((s) => ({ id: s._id.toString(), ...s.toObject() }));
-    inMemoryShops = formatted;
-    return res.status(200).json(formatted);
-  } catch (error) {
-    console.error('[LUNCH API] Error fetching shops:', error?.message || error);
-    return res.status(200).json(inMemoryShops);
-  }
+    if (!requireDatabase(res)) return;
+    const shops = await Shop.find({ ownerId: { $ne: 'guest' } }).sort({ createdAt: -1 });
+    return res.json(shops.map(format));
+  } catch (error) { return next(error); }
 };
 
-// POST /api/lunch/shops
-export const createShop = async (req, res) => {
+export const createShop = async (req, res, next) => {
   try {
-    const {
-      name, cuisine, distance, time, rating, image, address, phone, ownerId,
-      ownerName, meals, isOpen, whatsapp, operatingHours
-    } = req.body;
-    if (!name || !name.trim()) {
-      return res.status(400).json({ success: false, message: 'Shop name is required' });
-    }
-
-    const trimmedName = name.trim();
-
-    // Check duplicate in memory or DB
-    const isDupInMemory = inMemoryShops.some(
-      (s) => (s.name || '').trim().toLowerCase() === trimmedName.toLowerCase()
-    );
-
-    if (isDupInMemory) {
-      return res.status(409).json({
-        success: false,
-        message: `A shop named "${trimmedName}" already exists. Please use a unique shop name.`
-      });
-    }
-
-    if (mongoose.connection.readyState === 1) {
-      const existingShop = await Shop.findOne({ 
-        name: { $regex: new RegExp(`^${trimmedName.replace(/[/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') } 
-      });
-
-      if (existingShop) {
-        return res.status(409).json({ 
-          success: false, 
-          message: `A shop named "${trimmedName}" already exists. Please use a unique shop name.` 
-        });
-      }
-
-      const shop = new Shop({
-        name: trimmedName,
-        cuisine: cuisine || 'General',
-        distance: distance || '1.0 km',
-        time: time || '20–30 min',
-        rating: rating || '5.0',
-        image: image || '🏪',
-        address: address || '',
-        phone: phone || '',
-        ownerId: ownerId || 'guest',
-        ownerName: ownerName || 'Store Manager',
-        isOpen: isOpen !== false,
-        whatsapp: whatsapp || '',
-        operatingHours: operatingHours || undefined,
-        meals: meals || []
-      });
-
-      const saved = await shop.save();
-      const formatted = { id: saved._id.toString(), ...saved.toObject() };
-      inMemoryShops.unshift(formatted);
-      return res.status(201).json(formatted);
-    }
-
-    // Fallback memory creation
-    const newShop = {
-      id: `shop-${Date.now()}`,
-      name: trimmedName,
-      cuisine: cuisine || 'General',
-      distance: distance || '1.0 km',
-      time: time || '20–30 min',
-      rating: rating || '5.0',
-      image: image || '🏪',
-      address: address || '',
-      phone: phone || '',
-      ownerId: ownerId || 'guest',
-      ownerName: ownerName || 'Store Manager',
-      isOpen: isOpen !== false,
-      whatsapp: whatsapp || '',
-      operatingHours: operatingHours || { openTime: '08:00', closeTime: '20:00', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
-      meals: meals || [],
-      createdAt: new Date().toISOString()
-    };
-    inMemoryShops.unshift(newShop);
-    return res.status(201).json(newShop);
-  } catch (error) {
-    console.error('[LUNCH API] Error creating shop:', error?.message || error);
-    return res.status(500).json({ success: false, message: error.message || 'Error creating shop' });
-  }
+    if (!requireDatabase(res)) return;
+    const name = cleanText(req.body.name, 80);
+    const address = cleanText(req.body.address, 180);
+    const phone = cleanText(req.body.phone, 30);
+    if (!name || !address || !phone) return res.status(400).json({ success: false, message: 'Shop name, address, and phone are required.' });
+    if (await Shop.exists({ name: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') })) return res.status(409).json({ success: false, message: 'A shop with that name already exists.' });
+    const shop = await Shop.create({ name, address, phone, cuisine: cleanText(req.body.cuisine, 60) || 'General', image: cleanText(req.body.image, 32) || '🏪', whatsapp: cleanText(req.body.whatsapp, 30), ownerId: userId(req), ownerName: cleanText(req.body.ownerName, 80) || 'Shop owner', isOpen: false, meals: [] });
+    return res.status(201).json(format(shop));
+  } catch (error) { return next(error); }
 };
 
-// POST /api/lunch/shops/:id/meals
-export const addMealToShop = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, description, price, tag, image, isAvailable, addOns } = req.body;
-    if (!name || price === undefined) {
-      return res.status(400).json({ success: false, message: 'Meal name and price are required' });
-    }
-
-    const newMeal = {
-      id: `meal-${Date.now()}`,
-      name,
-      description: description || '',
-      price: Number(price),
-      tag: tag || 'Popular',
-      image: image || '🍱',
-      isAvailable: isAvailable !== false,
-      addOns: Array.isArray(addOns) ? addOns : []
-    };
-
-    if (mongoose.connection.readyState === 1) {
-      const shop = await Shop.findById(id);
-      if (shop) {
-        shop.meals.push(newMeal);
-        await shop.save();
-      }
-    }
-
-    // Update in memory as well
-    inMemoryShops = inMemoryShops.map((s) => {
-      if (s.id === id || s._id === id) {
-        return { ...s, meals: [...(s.meals || []), newMeal] };
-      }
-      return s;
-    });
-
-    return res.status(200).json(newMeal);
-  } catch (error) {
-    console.error('[LUNCH API] Error adding meal:', error?.message || error);
-    return res.status(500).json({ success: false, message: error.message || 'Error adding meal' });
-  }
-};
-
-// GET /api/lunch/orders
-export const getOrders = async (req, res) => {
-  try {
-    const { customerId, shopId, ownerId } = req.query;
-    if (mongoose.connection.readyState !== 1) {
-      let filtered = [...inMemoryOrders];
-      if (customerId) filtered = filtered.filter((o) => o.customerId === customerId);
-      if (shopId) filtered = filtered.filter((o) => o.shopId === shopId);
-      if (ownerId) {
-        const ownerShopIds = inMemoryShops
-          .filter((shop) => shop.ownerId === ownerId)
-          .map((shop) => shop.id || shop._id);
-        filtered = filtered.filter((order) => ownerShopIds.includes(order.shopId));
-      }
-      return res.status(200).json(filtered);
-    }
-
-    const filter = {};
-    if (customerId) filter.customerId = customerId;
-    if (shopId) filter.shopId = shopId;
-    if (ownerId) {
-      const ownerShops = await Shop.find({ ownerId }).select('_id');
-      filter.shopId = { $in: ownerShops.map((shop) => shop._id.toString()) };
-    }
-
-    const orders = await FoodOrder.find(filter).sort({ createdAt: -1 });
-    const formatted = orders.map((o) => ({ id: o._id.toString(), ...o.toObject() }));
-    inMemoryOrders = formatted;
-    return res.status(200).json(formatted);
-  } catch (error) {
-    console.error('[LUNCH API] Error fetching orders:', error?.message || error);
-    return res.status(200).json(inMemoryOrders);
-  }
-};
-
-// POST /api/lunch/orders
-export const createOrder = async (req, res) => {
-  try {
-    const { 
-      customerId, customerName, customerPhone, shopId, shopName, shopImage,
-      items, total, fulfilment, deliveryAddress, deliveryNotes, orderComments, paymentMethod, scheduledFor
-    } = req.body;
-
-    if (!shopId || !items || !items.length) {
-      return res.status(400).json({ success: false, message: 'Shop ID and items are required' });
-    }
-
-    const orderCode = generateCode();
-    const orderData = {
-      orderCode,
-      customerId: customerId || 'guest',
-      customerName: customerName || 'Valued Customer',
-      customerPhone: customerPhone || '',
-      shopId,
-      shopName: shopName || 'Restaurant',
-      shopImage: shopImage || '🍱',
-      items: items || [],
-      total: Number(total || 0),
-      fulfilment: fulfilment || 'pickup',
-      deliveryAddress: deliveryAddress || '',
-      deliveryNotes: deliveryNotes || '',
-      orderComments: orderComments || '',
-      scheduledFor: scheduledFor || undefined,
-      paymentMethod: paymentMethod || 'counter',
-      paymentStatus: paymentMethod === 'online' ? 'Paid Online' : 'Pay at Counter / Cash',
-      status: 'Pending',
-      createdAt: new Date().toISOString()
-    };
-
-    const inMemoryShop = inMemoryShops.find((shop) => shop.id === shopId || shop._id === shopId);
-    if (inMemoryShop?.isOpen === false) {
-      return res.status(409).json({ success: false, message: 'This shop is currently closed and cannot accept orders.' });
-    }
-    const unavailableMeal = inMemoryShop?.meals?.find((meal) =>
-      items.some((item) => item.id === meal.id) && meal.isAvailable === false
-    );
-    if (unavailableMeal) {
-      return res.status(409).json({ success: false, message: `${unavailableMeal.name} is sold out and cannot be ordered.` });
-    }
-
-    let shopOwnerId = inMemoryShop?.ownerId;
-
-    if (mongoose.connection.readyState === 1) {
-      const shop = mongoose.Types.ObjectId.isValid(shopId)
-        ? await Shop.findById(shopId).select('isOpen ownerId meals')
-        : null;
-      if (shop?.isOpen === false) {
-        return res.status(409).json({ success: false, message: 'This shop is currently closed and cannot accept orders.' });
-      }
-      const dbUnavailableMeal = shop?.meals?.find((meal) =>
-        items.some((item) => item.id === meal.id) && meal.isAvailable === false
-      );
-      if (dbUnavailableMeal) {
-        return res.status(409).json({ success: false, message: `${dbUnavailableMeal.name} is sold out and cannot be ordered.` });
-      }
-      shopOwnerId = shop?.ownerId || shopOwnerId;
-      const newOrder = new FoodOrder(orderData);
-      const saved = await newOrder.save();
-      const formatted = { id: saved._id.toString(), ...saved.toObject() };
-      inMemoryOrders.unshift(formatted);
-
-      // A new food order is an actionable update for the customer, so surface it
-      // in the notification bell and Notifications page immediately.
-      if (customerId && customerId !== 'guest' && mongoose.Types.ObjectId.isValid(customerId)) {
-        try {
-          await Notification.create({
-            userId: customerId,
-            type: 'booking',
-            title: '🍱 Food order received',
-            message: `Your order #${formatted.orderCode} from "${formatted.shopName}" has been received and is pending preparation.`,
-            data: {
-              orderId: formatted.id,
-              orderCode: formatted.orderCode,
-              shopName: formatted.shopName,
-              status: formatted.status
-            }
-          });
-        } catch (notificationError) {
-          // A notification failure must not prevent a successfully paid/placed order.
-          console.error('[LUNCH API] Error creating order notification:', notificationError?.message || notificationError);
-        }
-      }
-
-      if (shopOwnerId && shopOwnerId !== 'guest' && shopOwnerId !== customerId && mongoose.Types.ObjectId.isValid(shopOwnerId)) {
-        try {
-          await Notification.create({
-            userId: shopOwnerId,
-            type: 'booking',
-            title: '🔔 New food order received',
-            message: `New order #${formatted.orderCode} from ${formatted.customerName} is waiting for your confirmation.`,
-            data: {
-              orderId: formatted.id,
-              orderCode: formatted.orderCode,
-              shopName: formatted.shopName,
-              status: formatted.status,
-              incomingOrder: true
-            }
-          });
-        } catch (notificationError) {
-          console.error('[LUNCH API] Error creating incoming-order notification:', notificationError?.message || notificationError);
-        }
-      }
-      return res.status(201).json(formatted);
-    }
-
-    const fallbackOrder = { id: `order-${Date.now()}`, ...orderData };
-    inMemoryOrders.unshift(fallbackOrder);
-    return res.status(201).json(fallbackOrder);
-  } catch (error) {
-    console.error('[LUNCH API] Error creating order:', error?.message || error);
-    return res.status(500).json({ success: false, message: error.message || 'Error creating order' });
-  }
-};
-
-// PATCH /api/lunch/orders/:id/status
-export const updateOrderStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    if (!status) {
-      return res.status(400).json({ success: false, message: 'Status parameter is required' });
-    }
-
-    let updatedOrder = null;
-    const statusUpdate = { status };
-    if (status === 'Completed') statusUpdate.completedAt = new Date();
-
-    if (mongoose.connection.readyState === 1) {
-      const order = await FoodOrder.findByIdAndUpdate(
-        id,
-        statusUpdate,
-        { new: true }
-      );
-
-      if (order) {
-        updatedOrder = { id: order._id.toString(), ...order.toObject() };
-        inMemoryOrders = inMemoryOrders.map((o) => (o.id === id || o._id === id ? updatedOrder : o));
-      }
-    }
-
-    if (!updatedOrder) {
-      // Fallback in-memory update
-      inMemoryOrders = inMemoryOrders.map((o) => {
-        if (o.id === id || o._id === id) {
-          const updatedAt = new Date().toISOString();
-          return { ...o, ...statusUpdate, updatedAt };
-        }
-        return o;
-      });
-      updatedOrder = inMemoryOrders.find((o) => o.id === id || o._id === id) || { id, status };
-    }
-
-    // Create notification for customer if valid customerId exists
-    if (updatedOrder && updatedOrder.customerId && updatedOrder.customerId !== 'guest') {
-      const targetUserId = updatedOrder.customerId;
-      const isReady = status === 'Ready for Collection';
-      const isCompleted = status === 'Completed';
-
-      let notifTitle = `Order Status: ${status}`;
-      let notifMsg = `Your order #${updatedOrder.orderCode || ''} from "${updatedOrder.shopName || 'the shop'}" status is now ${status}.`;
-
-      if (isReady) {
-        notifTitle = '🍱 Food Ready to Collect!';
-        notifMsg = `Your food order #${updatedOrder.orderCode || ''} from "${updatedOrder.shopName || 'the restaurant'}" is ready for collection!`;
-      } else if (isCompleted) {
-        notifTitle = '✅ Food Order Completed';
-        notifMsg = `Thank you! Your order #${updatedOrder.orderCode || ''} from "${updatedOrder.shopName || 'the restaurant'}" has been completed.`;
-      }
-
-      if (mongoose.connection.readyState === 1 && mongoose.Types.ObjectId.isValid(targetUserId)) {
-        try {
-          await Notification.create({
-            userId: targetUserId,
-            type: 'booking',
-            title: notifTitle,
-            message: notifMsg,
-            data: {
-              orderId: updatedOrder.id || updatedOrder._id,
-              orderCode: updatedOrder.orderCode,
-              shopName: updatedOrder.shopName,
-              status: status
-            }
-          });
-        } catch (notifErr) {
-          console.error('[LUNCH API] Error creating status notification:', notifErr?.message || notifErr);
-        }
-      }
-    }
-
-    return res.status(200).json(updatedOrder);
-  } catch (error) {
-    console.error('[LUNCH API] Error updating order status:', error?.message || error);
-    return res.status(500).json({ success: false, message: error.message || 'Error updating order status' });
-  }
-};
-
-// POST /api/lunch/bookings
-export const createTableBooking = async (req, res) => {
-  try {
-    const { customerId, customerName, customerPhone, shopId, shopName, date, time, guests } = req.body;
-    if (!shopId || !date || !time) {
-      return res.status(400).json({ success: false, message: 'Shop ID, date, and time are required' });
-    }
-
-    const bookingData = {
-      customerId: customerId || 'guest',
-      customerName: customerName || 'Guest',
-      customerPhone: customerPhone || '',
-      shopId,
-      shopName: shopName || 'Restaurant',
-      date,
-      time,
-      guests: guests || '2',
-      status: 'Confirmed',
-      createdAt: new Date().toISOString()
-    };
-
-    if (mongoose.connection.readyState === 1) {
-      const booking = new TableBooking(bookingData);
-      const saved = await booking.save();
-      const formatted = { id: saved._id.toString(), ...saved.toObject() };
-      inMemoryBookings.unshift(formatted);
-      return res.status(201).json(formatted);
-    }
-
-    const fallbackBooking = { id: `booking-${Date.now()}`, ...bookingData };
-    inMemoryBookings.unshift(fallbackBooking);
-    return res.status(201).json(fallbackBooking);
-  } catch (error) {
-    console.error('[LUNCH API] Error creating booking:', error?.message || error);
-    return res.status(500).json({ success: false, message: error.message || 'Error creating booking' });
-  }
-};
-
-// PUT /api/lunch/shops/:id
 export const updateShop = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const { name, cuisine, distance, time, image, address, phone, isOpen, whatsapp, operatingHours } = req.body;
-    const updates = {};
-    for (const [key, value] of Object.entries({ name, cuisine, distance, time, image, address, phone, isOpen, whatsapp, operatingHours })) {
-      if (value !== undefined) updates[key] = value;
-    }
-
-    if (mongoose.connection.readyState === 1) {
-      const updated = await Shop.findByIdAndUpdate(
-        id,
-        updates,
-        { new: true }
-      );
-      if (updated) {
-        const formatted = { id: updated._id.toString(), ...updated.toObject() };
-        inMemoryShops = inMemoryShops.map((s) => (s.id === id || s._id === id ? formatted : s));
-        return res.status(200).json(formatted);
-      }
-    }
-
-    inMemoryShops = inMemoryShops.map((s) => {
-      if (s.id === id || s._id === id) {
-        return { ...s, ...updates, updatedAt: new Date().toISOString() };
-      }
-      return s;
-    });
-
-    const shop = inMemoryShops.find((s) => s.id === id || s._id === id);
-    res.status(200).json(shop);
-  } catch (error) {
-    next(error);
-  }
+    if (!requireDatabase(res)) return;
+    const shop = await getOwnedShop(req.params.id, req, res); if (!shop) return;
+    for (const key of ['name', 'cuisine', 'address', 'phone', 'whatsapp', 'image']) if (req.body[key] !== undefined) shop[key] = cleanText(req.body[key], key === 'address' ? 180 : 80);
+    if (typeof req.body.isOpen === 'boolean') shop.isOpen = req.body.isOpen;
+    if (req.body.operatingHours && typeof req.body.operatingHours === 'object') shop.operatingHours = req.body.operatingHours;
+    await shop.save(); return res.json(format(shop));
+  } catch (error) { return next(error); }
 };
 
-// PUT /api/lunch/shops/:id/meals/:mealId
+export const addMealToShop = async (req, res, next) => {
+  try {
+    if (!requireDatabase(res)) return;
+    const shop = await getOwnedShop(req.params.id, req, res); if (!shop) return;
+    const name = cleanText(req.body.name, 100); const price = Number(req.body.price);
+    if (!name || !Number.isFinite(price) || price <= 0 || price > 10000) return res.status(400).json({ success: false, message: 'Enter a valid meal name and price.' });
+    const meal = { id: crypto.randomUUID(), name, description: cleanText(req.body.description, 500), price: Math.round(price * 100) / 100, tag: cleanText(req.body.tag, 40) || 'Popular', image: cleanText(req.body.image, 32) || '🍽️', isAvailable: req.body.isAvailable !== false, addOns: [] };
+    shop.meals.push(meal); await shop.save(); return res.status(201).json(meal);
+  } catch (error) { return next(error); }
+};
+
 export const updateMealInShop = async (req, res, next) => {
   try {
-    const { id, mealId } = req.params;
-    const { name, description, price, tag, image, isAvailable, addOns } = req.body;
-
-    if (mongoose.connection.readyState === 1) {
-      const shop = await Shop.findById(id);
-      if (shop) {
-        const meal = shop.meals.find(m => m.id === mealId);
-        if (meal) {
-          meal.name = name || meal.name;
-          meal.description = description !== undefined ? description : meal.description;
-          meal.price = price !== undefined ? Number(price) : meal.price;
-          meal.tag = tag || meal.tag;
-          meal.image = image || meal.image;
-          meal.isAvailable = isAvailable !== undefined ? isAvailable : meal.isAvailable;
-          meal.addOns = Array.isArray(addOns) ? addOns : meal.addOns;
-          await shop.save();
-        }
-      }
-    }
-
-    inMemoryShops = inMemoryShops.map((s) => {
-      if (s.id === id || s._id === id) {
-        const updatedMeals = s.meals.map((m) => {
-          if (m.id === mealId) {
-            return {
-              ...m,
-              name: name || m.name,
-              description: description !== undefined ? description : m.description,
-              price: price !== undefined ? Number(price) : m.price,
-              tag: tag || m.tag,
-              image: image || m.image,
-              isAvailable: isAvailable !== undefined ? isAvailable : m.isAvailable,
-              addOns: Array.isArray(addOns) ? addOns : m.addOns
-            };
-          }
-          return m;
-        });
-        return { ...s, meals: updatedMeals };
-      }
-      return s;
-    });
-
-    const targetShop = inMemoryShops.find((s) => s.id === id || s._id === id);
-    const targetMeal = targetShop?.meals.find((m) => m.id === mealId);
-    res.status(200).json(targetMeal);
-  } catch (error) {
-    next(error);
-  }
+    if (!requireDatabase(res)) return;
+    const shop = await getOwnedShop(req.params.id, req, res); if (!shop) return;
+    const meal = shop.meals.find((entry) => entry.id === req.params.mealId); if (!meal) return res.status(404).json({ success: false, message: 'Meal not found.' });
+    if (req.body.name !== undefined) meal.name = cleanText(req.body.name, 100);
+    if (req.body.description !== undefined) meal.description = cleanText(req.body.description, 500);
+    if (req.body.tag !== undefined) meal.tag = cleanText(req.body.tag, 40);
+    if (req.body.image !== undefined) meal.image = cleanText(req.body.image, 32);
+    if (req.body.isAvailable !== undefined) meal.isAvailable = Boolean(req.body.isAvailable);
+    if (req.body.price !== undefined) { const price = Number(req.body.price); if (!Number.isFinite(price) || price <= 0 || price > 10000) return res.status(400).json({ success: false, message: 'Enter a valid price.' }); meal.price = Math.round(price * 100) / 100; }
+    await shop.save(); return res.json(meal.toObject());
+  } catch (error) { return next(error); }
 };
 
-// DELETE /api/lunch/shops/:id/meals/:mealId
 export const deleteMealFromShop = async (req, res, next) => {
   try {
-    const { id, mealId } = req.params;
-
-    if (mongoose.connection.readyState === 1) {
-      const shop = await Shop.findById(id);
-      if (shop) {
-        shop.meals = shop.meals.filter(m => m.id !== mealId);
-        await shop.save();
-      }
-    }
-
-    inMemoryShops = inMemoryShops.map((s) => {
-      if (s.id === id || s._id === id) {
-        return { ...s, meals: s.meals.filter(m => m.id !== mealId) };
-      }
-      return s;
-    });
-
-    res.status(200).json({ success: true, message: 'Meal deleted successfully' });
-  } catch (error) {
-    next(error);
-  }
+    if (!requireDatabase(res)) return;
+    const shop = await getOwnedShop(req.params.id, req, res); if (!shop) return;
+    const before = shop.meals.length; shop.meals = shop.meals.filter((meal) => meal.id !== req.params.mealId);
+    if (shop.meals.length === before) return res.status(404).json({ success: false, message: 'Meal not found.' });
+    await shop.save(); return res.json({ success: true });
+  } catch (error) { return next(error); }
 };
 
-// POST /api/lunch/shops/:id/rate
+export const getOrders = async (req, res, next) => {
+  try {
+    if (!requireDatabase(res)) return;
+    const ownedShops = await Shop.find({ ownerId: userId(req) }).select('_id');
+    const orders = await FoodOrder.find({ $or: [{ customerId: userId(req) }, { shopId: { $in: ownedShops.map((shop) => shop._id.toString()) } }] }).sort({ createdAt: -1 });
+    return res.json(orders.map(format));
+  } catch (error) { return next(error); }
+};
+
+export const createOrder = async (req, res, next) => {
+  try {
+    if (!requireDatabase(res)) return;
+    const { shopId, items, customerPhone, customerName, orderComments, scheduledFor } = req.body;
+    if (!validId(shopId) || !Array.isArray(items) || !items.length) return res.status(400).json({ success: false, message: 'Choose a shop and at least one meal.' });
+    const shop = await Shop.findById(shopId); if (!shop || !shop.isOpen) return res.status(409).json({ success: false, message: 'This shop is not accepting orders.' });
+    const normalizedItems = items.map((item) => {
+      const meal = shop.meals.find((entry) => entry.id === item.id);
+      const quantity = Number(item.quantity);
+      if (!meal || !meal.isAvailable || !Number.isInteger(quantity) || quantity < 1 || quantity > 20) return null;
+      return { id: meal.id, name: meal.name, price: meal.price, quantity };
+    });
+    if (normalizedItems.some((item) => !item)) return res.status(409).json({ success: false, message: 'One or more meals are unavailable. Refresh your basket and try again.' });
+    const phone = cleanText(customerPhone, 30); if (!phone) return res.status(400).json({ success: false, message: 'A contact phone number is required.' });
+    const total = normalizedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const requestedTime = scheduledFor ? new Date(scheduledFor) : null;
+    if (requestedTime && (Number.isNaN(requestedTime.getTime()) || requestedTime <= new Date())) return res.status(400).json({ success: false, message: 'Choose a future collection time.' });
+    const order = await FoodOrder.create({ orderCode: `LNCH-${crypto.randomInt(100000, 1000000)}`, customerId: userId(req), customerName: cleanText(customerName, 100) || 'Customer', customerPhone: phone, shopId: shop._id.toString(), shopName: shop.name, shopImage: shop.image, items: normalizedItems, total: Math.round(total * 100) / 100, fulfilment: 'pickup', orderComments: cleanText(orderComments, 500), scheduledFor: requestedTime || undefined, paymentMethod: 'counter', paymentStatus: 'Pay at Counter', status: 'Pending' });
+    await Promise.allSettled([createNotification(userId(req), 'Food order received', `Your order #${order.orderCode} has been sent to ${shop.name}.`, { orderId: order._id, status: order.status }), createNotification(shop.ownerId, 'New food order', `Order #${order.orderCode} is waiting for your confirmation.`, { orderId: order._id, status: order.status })]);
+    return res.status(201).json(format(order));
+  } catch (error) { return next(error); }
+};
+
+export const updateOrderStatus = async (req, res, next) => {
+  try {
+    if (!requireDatabase(res)) return;
+    const status = req.body.status; if (!ORDER_STATUSES.includes(status)) return res.status(400).json({ success: false, message: 'Invalid order status.' });
+    const order = validId(req.params.id) ? await FoodOrder.findById(req.params.id) : null; if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });
+    const shop = await Shop.findById(order.shopId); if (!shop || !isOwner(shop, req)) return res.status(403).json({ success: false, message: 'You do not manage this order.' });
+    order.status = status; if (status === 'Completed') order.completedAt = new Date(); await order.save();
+    await createNotification(order.customerId, 'Food order update', `Order #${order.orderCode} is now ${status}.`, { orderId: order._id, status }); return res.json(format(order));
+  } catch (error) { return next(error); }
+};
+
+export const createTableBooking = async (req, res, next) => {
+  try {
+    if (!requireDatabase(res)) return;
+    const { shopId, date, time, guests, name, phone } = req.body; if (!validId(shopId) || !date || !time) return res.status(400).json({ success: false, message: 'Select a shop, date, and time.' });
+    const shop = await Shop.findById(shopId); if (!shop || !shop.isOpen) return res.status(409).json({ success: false, message: 'This shop is not accepting bookings.' });
+    const requestedAt = new Date(`${date}T${time}:00`); if (Number.isNaN(requestedAt.getTime()) || requestedAt <= new Date()) return res.status(400).json({ success: false, message: 'Choose a future booking time.' });
+    const booking = await TableBooking.create({ customerId: userId(req), customerName: cleanText(name, 100), customerPhone: cleanText(phone, 30), shopId: shop._id.toString(), shopName: shop.name, date, time, guests: String(Math.min(Math.max(Number(guests) || 1, 1), 12)), status: 'Requested' });
+    await createNotification(shop.ownerId, 'New table request', `${booking.customerName} requested a table for ${booking.guests}.`, { bookingId: booking._id }); return res.status(201).json(format(booking));
+  } catch (error) { return next(error); }
+};
+
 export const rateShop = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const { orderId, shopRating = 5, foodRating = 5, comment = '', userName = 'Valued Customer' } = req.body;
-
-    const newReview = {
-      id: `rev-${Date.now()}`,
-      userName,
-      shopRating: Number(shopRating),
-      foodRating: Number(foodRating),
-      comment: comment.trim(),
-      createdAt: new Date()
-    };
-
-    if (mongoose.connection.readyState === 1) {
-      const shop = await Shop.findById(id);
-      if (shop) {
-        shop.reviews = shop.reviews || [];
-        shop.reviews.push(newReview);
-        const currentCount = shop.ratingsCount || shop.reviews.length || 1;
-        const currentScore = parseFloat(shop.rating) || 5.0;
-        const newScore = (((currentScore * currentCount) + Number(shopRating)) / (currentCount + 1)).toFixed(1);
-        shop.rating = newScore.toString();
-        shop.ratingsCount = currentCount + 1;
-        await shop.save();
-      }
-
-      if (orderId) {
-        await FoodOrder.findByIdAndUpdate(orderId, {
-          isRated: true,
-          ratingDetails: newReview
-        });
-      }
-    }
-
-    // In-memory fallback sync
-    inMemoryShops = inMemoryShops.map((s) => {
-      if (s.id === id || s._id === id) {
-        const reviews = [...(s.reviews || []), newReview];
-        const currentCount = s.ratingsCount || reviews.length || 1;
-        const currentScore = parseFloat(s.rating) || 5.0;
-        const newScore = (((currentScore * currentCount) + Number(shopRating)) / (currentCount + 1)).toFixed(1);
-        return {
-          ...s,
-          rating: newScore.toString(),
-          ratingsCount: currentCount + 1,
-          reviews
-        };
-      }
-      return s;
-    });
-
-    if (orderId) {
-      inMemoryOrders = inMemoryOrders.map((o) => {
-        if (o.id === orderId || o._id === orderId) {
-          return { ...o, isRated: true, ratingDetails: newReview };
-        }
-        return o;
-      });
-    }
-
-    const updatedShop = inMemoryShops.find((s) => s.id === id || s._id === id);
-    res.status(200).json({ success: true, shop: updatedShop, review: newReview });
-  } catch (error) {
-    next(error);
-  }
+    if (!requireDatabase(res)) return;
+    const order = validId(req.body.orderId) ? await FoodOrder.findOne({ _id: req.body.orderId, customerId: userId(req), shopId: req.params.id, status: 'Completed', isRated: false }) : null;
+    if (!order) return res.status(403).json({ success: false, message: 'Only a completed order can be reviewed once.' });
+    const shop = await Shop.findById(req.params.id); if (!shop) return res.status(404).json({ success: false, message: 'Shop not found.' });
+    const rating = Number(req.body.shopRating); if (!Number.isInteger(rating) || rating < 1 || rating > 5) return res.status(400).json({ success: false, message: 'Choose a rating from 1 to 5.' });
+    const review = { id: crypto.randomUUID(), userName: cleanText(req.body.userName, 50) || 'Customer', shopRating: rating, foodRating: Math.min(Math.max(Number(req.body.foodRating) || rating, 1), 5), comment: cleanText(req.body.comment, 500) };
+    shop.reviews.push(review); shop.ratingsCount = shop.reviews.length; shop.rating = (shop.reviews.reduce((sum, entry) => sum + entry.shopRating, 0) / shop.reviews.length).toFixed(1); order.isRated = true; order.ratingDetails = review; await Promise.all([shop.save(), order.save()]); return res.json({ success: true, review });
+  } catch (error) { return next(error); }
 };

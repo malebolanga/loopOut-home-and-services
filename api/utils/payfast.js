@@ -1,5 +1,27 @@
 import crypto from 'crypto';
 
+const encodePayfastValue = (value) => encodeURIComponent(String(value).trim()).replace(/%20/g, '+');
+
+export const generatePayfastSignature = (data, passphrase = process.env.PAYFAST_PASSPHRASE) => {
+  const parameterString = Object.entries(data)
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .map(([key, value]) => `${key}=${encodePayfastValue(value)}`)
+    .join('&');
+  const saltedParameterString = passphrase
+    ? `${parameterString}&passphrase=${encodePayfastValue(passphrase)}`
+    : parameterString;
+  return crypto.createHash('md5').update(saltedParameterString).digest('hex');
+};
+
+export const isValidPayfastItn = (payload) => {
+  const { signature, ...data } = payload;
+  if (!signature || !process.env.PAYFAST_PASSPHRASE) return false;
+  const expectedSignature = generatePayfastSignature(data);
+  const received = Buffer.from(signature, 'utf8');
+  const expected = Buffer.from(expectedSignature, 'utf8');
+  return received.length === expected.length && crypto.timingSafeEqual(received, expected);
+};
+
 /**
  * PayFast Payment Configuration
  * This utility generates the necessary data for a PayFast payment.
@@ -35,16 +57,7 @@ export const generatePayfastData = (paymentConfig) => {
     item_name,
   };
 
-  // Generate Signature (optional but HIGHLY recommended for security)
-  // signature = md5( merchant_id=...&merchant_key=...&return_url=... )
-  let signatureString = '';
-  Object.keys(data).forEach((key) => {
-    signatureString += `${key}=${encodeURIComponent(data[key]).replace(/%20/g, "+")}&`;
-  });
-  
-  // Cut the trailing '&'
-  signatureString = signatureString.slice(0, -1);
-  const signature = crypto.createHash('md5').update(signatureString).digest('hex');
+  const signature = generatePayfastSignature(data);
 
   // PayFast Base URL (Sandbox or Live)
   const baseUrl = process.env.PAYFAST_MODE === 'live' 

@@ -37,6 +37,7 @@ import verificationRouter from './routes/verification.route.js';
 import sosRouter from './routes/sos.route.js';
 import aiRouter from './routes/ai.route.js';
 import lunchRouter from './routes/lunch.route.js';
+import uploadRouter from './routes/upload.route.js';
 import { initBookingScheduler } from './utils/bookingScheduler.js';
 
 import path from 'path';
@@ -59,6 +60,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 // --- Security & Performance Middleware ---
@@ -168,11 +170,10 @@ const messagesLimiter = rateLimit({
 // Auth limiter — skipped outside production to avoid 429s during development
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    limit: 100,
+    limit: 10,
     message: { success: false, message: 'Too many sign-in attempts. Please wait a few minutes and try again.' },
     standardHeaders: true,
     legacyHeaders: false,
-    skip: () => process.env.NODE_ENV !== 'production',
 });
 
 // Register auth limiter BEFORE global limiter to avoid double-limiting auth routes
@@ -219,6 +220,7 @@ app.use('/api/sos', sosRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/sell', sellRouter);
 app.use('/api/lunch', lunchRouter);
+app.use('/api/uploads', uploadRouter);
 
 // Serve uploads folder statically
 app.use('/uploads', express.static(path.resolve(__dirname, '../client/public/uploads')));

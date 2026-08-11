@@ -162,7 +162,7 @@ export default function LunchComingSoon() {
 
   // Customer state
   const [orderMode, setOrderMode] = useState('order'); // 'order' or 'table'
-  const [fulfilment, setFulfilment] = useState('pickup'); // 'pickup' or 'delivery'
+  const [fulfilment] = useState('pickup');
   const [shops, setShops] = useState([]);
   const [selectedShopId, setSelectedShopId] = useState('');
   const [cart, setCart] = useState([]);
@@ -308,7 +308,7 @@ export default function LunchComingSoon() {
     }
   };
 
-  // Subscribe to Firestore shops & orders
+  // Public menu polling and authenticated, private order polling.
   useEffect(() => {
     const unsubscribeShops = subscribeToShops((fetchedShops) => {
       setShops(fetchedShops);
@@ -321,15 +321,13 @@ export default function LunchComingSoon() {
       }
     });
 
-    const unsubscribeOrders = subscribeToOrders((fetchedOrders) => {
-      setOrders(fetchedOrders);
-    });
+    const unsubscribeOrders = currentUser ? subscribeToOrders((fetchedOrders) => setOrders(fetchedOrders)) : () => setOrders([]);
 
     return () => {
       unsubscribeShops();
       unsubscribeOrders();
     };
-  }, []);
+  }, [currentUser]);
 
   // Sync default user details when available
   useEffect(() => {
@@ -378,7 +376,7 @@ export default function LunchComingSoon() {
   const myShops = useMemo(() => {
     if (!currentUser) return [];
     const uid = currentUser._id || currentUser.id || 'guest';
-    return shops.filter((s) => s.ownerId === uid || s.ownerId === 'guest');
+    return shops.filter((s) => s.ownerId === uid);
   }, [shops, currentUser]);
 
   // Whether the current user owns at least one shop
@@ -391,14 +389,14 @@ export default function LunchComingSoon() {
 
   // Filter active (uncompleted) orders for customer view banner
   const myCustomerOrders = useMemo(() => {
-    const uid = currentUser?._id || currentUser?.id || 'guest';
-    return orders.filter((o) => (o.customerId === uid || o.customerId === 'guest') && o.status !== 'Completed');
+    const uid = currentUser?._id || currentUser?.id;
+    return orders.filter((o) => o.customerId === uid && o.status !== 'Completed');
   }, [orders, currentUser]);
 
   // Completed orders for customer past history
   const myCompletedCustomerOrders = useMemo(() => {
-    const uid = currentUser?._id || currentUser?.id || 'guest';
-    return orders.filter((o) => (o.customerId === uid || o.customerId === 'guest') && o.status === 'Completed');
+    const uid = currentUser?._id || currentUser?.id;
+    return orders.filter((o) => o.customerId === uid && o.status === 'Completed');
   }, [orders, currentUser]);
 
   // All orders for the current dashboard shop (only owner's shop)
@@ -517,6 +515,7 @@ export default function LunchComingSoon() {
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (!cart.length || !currentShop) return;
+    if (!currentUser) { navigate('/sign-in'); return; }
 
     if (currentShop.isOpen === false) {
       setNotice({ type: 'error', message: `${currentShop.name} is currently closed and cannot accept orders.` });
@@ -537,14 +536,8 @@ export default function LunchComingSoon() {
       return;
     }
 
-    if (fulfilment === 'delivery' && !checkoutData.deliveryAddress) {
-      alert("Please enter your delivery address.");
-      return;
-    }
-
     try {
       const orderPayload = {
-        customerId: currentUser?._id || currentUser?.id || 'guest',
         customerName: checkoutData.customerName || 'Valued Customer',
         customerPhone: checkoutData.customerPhone,
         shopId: currentShop.id,
@@ -553,11 +546,8 @@ export default function LunchComingSoon() {
         items: cart,
         total: totalCartPrice,
         fulfilment,
-        deliveryAddress: checkoutData.deliveryAddress,
-        deliveryNotes: checkoutData.deliveryNotes,
         orderComments: checkoutData.orderComments,
-        scheduledFor: checkoutData.scheduledFor || null,
-        paymentMethod: checkoutData.paymentMethod
+        scheduledFor: checkoutData.scheduledFor || null
       };
 
       const created = await createLunchOrder(orderPayload);
@@ -569,9 +559,7 @@ export default function LunchComingSoon() {
       setNotice({
         type: 'success',
         message: `Order #${created.orderCode} placed successfully! ${
-          checkoutData.paymentMethod === 'counter'
-            ? 'Pay at the store counter upon pickup.'
-            : 'Confirmation sent.'
+          'Pay at the store counter upon pickup.'
         }`
       });
     } catch (err) {
@@ -584,6 +572,7 @@ export default function LunchComingSoon() {
   const handleTableBooking = async (e) => {
     e.preventDefault();
     if (!booking.name || !booking.date || !currentShop) return;
+    if (!currentUser) { navigate('/sign-in'); return; }
     if (isCurrentShopClosed) {
       setNotice({ type: 'error', message: `${currentShop.name} is currently closed and cannot accept table requests.` });
       return;
@@ -593,7 +582,6 @@ export default function LunchComingSoon() {
         ...booking,
         shopId: currentShop.id,
         shopName: currentShop.name,
-        customerId: currentUser?._id || currentUser?.id || 'guest'
       });
       setNotice({
         type: 'success',
@@ -609,10 +597,10 @@ export default function LunchComingSoon() {
   const handleCreateShopSubmit = async (e) => {
     e.preventDefault();
     if (!newShopForm.name) return;
+    if (!currentUser) { navigate('/sign-in'); return; }
     try {
       const newShopId = await createShop({
         ...newShopForm,
-        ownerId: currentUser?._id || currentUser?.id || 'guest',
         ownerName: currentUser?.username || 'Store Manager'
       });
       setShowAddShopModal(false);
@@ -851,6 +839,7 @@ export default function LunchComingSoon() {
                         {isReady ? '🎉 FOOD READY TO COLLECT!' : isPreparing ? '👨‍🍳 CHEF IS COOKING' : `Status: ${ord.status}`}
                       </span>
 
+                      {ord.status === 'Completed' && !ord.isRated && (
                       <button
                         type="button"
                         onClick={(e) => {
@@ -863,6 +852,7 @@ export default function LunchComingSoon() {
                         <Star className="h-3.5 w-3.5 fill-current" />
                         {ord.isRated ? 'Rated order' : 'Rate Food'}
                       </button>
+                      )}
 
                       <span className="text-xs font-extrabold text-amber-800 bg-amber-100/80 px-3 py-1.5 rounded-full border border-amber-300">
                         View Code order
@@ -915,31 +905,7 @@ export default function LunchComingSoon() {
         {viewTab === 'customer' && (
           <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px] min-w-0">
             <section className="min-w-0 overflow-hidden">
-              {/* Mode Toggle: Order Lunch vs Book Table */}
-              <div className="flex rounded-2xl bg-amber-200/50 p-1.5 ring-1 ring-amber-300/40">
-                <button
-                  type="button"
-                  onClick={() => setOrderMode('order')}
-                  className={`flex-1 rounded-xl py-3 text-sm font-black transition ${
-                    orderMode === 'order' ? 'bg-white text-amber-800 shadow-sm' : 'text-amber-900/70 hover:text-amber-900'
-                  }`}
-                >
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <ShoppingBag className="h-4 w-4 text-amber-600" /> Order Lunch
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOrderMode('table')}
-                  className={`flex-1 rounded-xl py-3 text-sm font-black transition ${
-                    orderMode === 'table' ? 'bg-white text-amber-800 shadow-sm' : 'text-amber-900/70 hover:text-amber-900'
-                  }`}
-                >
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <Users className="h-4 w-4 text-amber-600" /> Book a Table
-                  </span>
-                </button>
-              </div>
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-950"><ShoppingBag className="inline h-4 w-4 text-amber-600" /> Food orders are available for pickup. Table bookings will return when each shop can confirm capacity in-app.</div>
 
               {/* Menu search and category filters */}
               <div className="mt-4 rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-4 shadow-sm">
@@ -1249,7 +1215,7 @@ export default function LunchComingSoon() {
                     <div className={`absolute -bottom-16 -left-16 w-64 h-64 ${activeTheme.heroGlow} rounded-full blur-3xl pointer-events-none`} />
 
                     {/* Action Bar (Edit Shop & Add Menu Item) - Responsive flex bar */}
-                    {currentUser && (currentShop.ownerId === (currentUser._id || currentUser.id) || currentShop.ownerId === 'guest') && (
+                    {currentUser && currentShop.ownerId === (currentUser._id || currentUser.id) && (
                       <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 mb-3">
                         <button
                           type="button"
@@ -1392,33 +1358,7 @@ export default function LunchComingSoon() {
 
                   {!showReviewsTab && orderMode === 'order' ? (
                     <>
-                      {/* Fulfillment Method Selector */}
-                      <div className="mt-4 px-3.5 sm:px-0 flex flex-wrap items-center gap-2 max-w-full overflow-hidden">
-                       
-                        {['pickup', 'delivery'].map((option) => (
-                          <button
-                            key={option}
-                            type="button"
-                            disabled={isCurrentShopClosed}
-                            onClick={() => setFulfilment(option)}
-                            className={`rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-black capitalize transition flex items-center gap-1.5 shrink-0 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none disabled:grayscale ${
-                              !isCurrentShopClosed && fulfilment === option
-                                ? 'bg-gray-950 text-white shadow-sm'
-                                : isCurrentShopClosed ? 'bg-gray-200 text-gray-400' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                          >
-                            {option === 'pickup' ? (
-                              <>
-                                <Store className="h-3.5 w-3.5 text-amber-400 shrink-0" /> Pickup (Pay on Counter)
-                              </>
-                            ) : (
-                              <>
-                                <Bike className="h-3.5 w-3.5 text-amber-400 shrink-0" /> Delivery to Door
-                              </>
-                            )}
-                          </button>
-                        ))}
-                      </div>
+                      <p className="mt-4 px-3.5 sm:px-0 text-xs font-bold text-gray-600"><Store className="inline h-4 w-4 text-amber-600" /> Pickup only — pay at the counter. Delivery and online payment are not available yet.</p>
 
                       {/* Meals Menu — Horizontal Side-Slide */}
                       <div className="mt-5">
@@ -1485,7 +1425,7 @@ export default function LunchComingSoon() {
                                   <div className="px-4 pb-4 pt-3 flex items-center justify-between border-t border-gray-100 mt-3">
                                     <span className="text-sm font-extrabold text-amber-700">{formatPrice(meal.price)}</span>
                                     <div className="flex items-center gap-1.5">
-                                      {currentShop && currentUser && (currentShop.ownerId === (currentUser._id || currentUser.id) || currentShop.ownerId === 'guest') && (
+                                      {currentShop && currentUser && currentShop.ownerId === (currentUser._id || currentUser.id) && (
                                         <>
                                           <button
                                             type="button"
@@ -1754,10 +1694,10 @@ export default function LunchComingSoon() {
                   <button
                     type="button"
                     disabled={isCurrentShopClosed}
-                    onClick={() => setShowCheckoutModal(true)}
+                    onClick={() => currentUser ? setShowCheckoutModal(true) : navigate('/sign-in')}
                     className="mt-5 w-full rounded-2xl bg-amber-400 px-4 py-3.5 text-sm font-black text-gray-950 shadow transition hover:bg-amber-300 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none"
                   >
-                    {isCurrentShopClosed ? 'Shop is Closed' : 'Proceed to Checkout'}
+                    {isCurrentShopClosed ? 'Shop is Closed' : currentUser ? 'Proceed to Checkout' : 'Sign in to order'}
                   </button>
                 </>
               ) : (
@@ -1808,7 +1748,7 @@ export default function LunchComingSoon() {
 
                 <button
                   type="button"
-                  onClick={() => setShowAddShopModal(true)}
+                      onClick={() => currentUser ? setShowAddShopModal(true) : navigate('/sign-in')}
                   className="rounded-xl bg-amber-400 px-4 py-2.5 text-xs font-black text-gray-950 shadow transition hover:bg-amber-300"
                 >
                   + {isShopOwner ? 'Add Another Shop' : 'Register My Shop'}
@@ -2135,48 +2075,7 @@ export default function LunchComingSoon() {
                   This shop has closed and is not accepting orders.
                 </p>
               )}
-              {/* Payment Option Selection */}
-              <div>
-                <label className="text-xs font-black uppercase text-gray-700 block mb-1.5">Select Payment Method</label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setCheckoutData({ ...checkoutData, paymentMethod: 'counter' })}
-                    className={`rounded-2xl border p-3 text-center transition ${
-                      checkoutData.paymentMethod === 'counter'
-                        ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-300 font-black text-amber-900'
-                        : 'border-gray-200 text-gray-700 hover:border-amber-200'
-                    }`}
-                  >
-                    <Store className="mx-auto h-5 w-5 mb-1 text-amber-600" />
-                    <span className="block text-xs">Pay at Counter</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCheckoutData({ ...checkoutData, paymentMethod: 'delivery' })}
-                    className={`rounded-2xl border p-3 text-center transition ${
-                      checkoutData.paymentMethod === 'delivery'
-                        ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-300 font-black text-amber-900'
-                        : 'border-gray-200 text-gray-700 hover:border-amber-200'
-                    }`}
-                  >
-                    <Bike className="mx-auto h-5 w-5 mb-1 text-amber-600" />
-                    <span className="block text-xs">Pay on Delivery</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCheckoutData({ ...checkoutData, paymentMethod: 'online' })}
-                    className={`rounded-2xl border p-3 text-center transition ${
-                      checkoutData.paymentMethod === 'online'
-                        ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-300 font-black text-amber-900'
-                        : 'border-gray-200 text-gray-700 hover:border-amber-200'
-                    }`}
-                  >
-                    <CreditCard className="mx-auto h-5 w-5 mb-1 text-amber-600" />
-                    <span className="block text-xs">Card / Instant</span>
-                  </button>
-                </div>
-              </div>
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-950"><Store className="inline h-4 w-4 text-amber-600" /> Payment is made at the counter when you collect your order.</div>
 
               {/* Customer Contact Details */}
               <div className="grid gap-3 sm:grid-cols-2">
@@ -2203,29 +2102,6 @@ export default function LunchComingSoon() {
                 </div>
               </div>
 
-              {fulfilment === 'delivery' && (
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-xs font-bold text-gray-700 block mb-1">Delivery Address *</label>
-                    <input
-                      required
-                      value={checkoutData.deliveryAddress}
-                      onChange={(e) => setCheckoutData({ ...checkoutData, deliveryAddress: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                      placeholder="Street name, house number & suburb"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-gray-700 block mb-1">Driver Instructions / Notes</label>
-                    <input
-                      value={checkoutData.deliveryNotes}
-                      onChange={(e) => setCheckoutData({ ...checkoutData, deliveryNotes: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                      placeholder="Gate code, landmark, etc."
-                    />
-                  </div>
-                </div>
-              )}
 
               <div>
                 <label className="text-xs font-bold text-gray-700 block mb-1">Order Comments</label>
@@ -2236,6 +2112,7 @@ export default function LunchComingSoon() {
                   className="w-full resize-y rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                   placeholder="Add any special requests, allergies, or extra instructions for your food order..."
                 />
+                <p className="mt-1 text-[11px] text-amber-900">Allergy notes are passed to the shop but cannot guarantee an allergen-free meal. Contact the shop directly for severe allergies.</p>
               </div>
 
               <div>
@@ -2255,9 +2132,7 @@ export default function LunchComingSoon() {
                   <span>{formatPrice(totalCartPrice)}</span>
                 </div>
                 <p className="mt-1 text-[11px] text-amber-800">
-                  {checkoutData.paymentMethod === 'counter'
-                    ? 'Payment will be made directly at the store counter upon order collection.'
-                    : 'Order will be recorded instantly.'}
+                  Payment will be made directly at the store counter upon order collection.
                 </p>
               </div>
 
@@ -2327,6 +2202,10 @@ export default function LunchComingSoon() {
               {activeReceiptOrder.isRated ? (
                 <div className="rounded-xl bg-amber-50 p-2.5 text-center text-xs font-bold text-amber-900 border border-amber-200">
                   ⭐ Thank you! You rated this order experience.
+                </div>
+              ) : activeReceiptOrder.status !== 'Completed' ? (
+                <div className="rounded-xl bg-slate-50 p-2.5 text-center text-xs font-bold text-slate-700 border border-slate-200">
+                  Ratings unlock after the shop marks your order as completed.
                 </div>
               ) : (
                 <button
@@ -3269,10 +3148,10 @@ export default function LunchComingSoon() {
             <button
               type="button"
               disabled={isCurrentShopClosed}
-              onClick={() => setShowCheckoutModal(true)}
+              onClick={() => currentUser ? setShowCheckoutModal(true) : navigate('/sign-in')}
               className="rounded-xl bg-slate-950 px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-black text-amber-300 hover:bg-slate-900 transition shadow-lg flex items-center gap-2 cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-500 disabled:text-gray-200 disabled:shadow-none"
             >
-              <span>{isCurrentShopClosed ? 'Shop is Closed' : 'View Basket & Checkout'}</span>
+              <span>{isCurrentShopClosed ? 'Shop is Closed' : currentUser ? 'View Basket & Checkout' : 'Sign in to order'}</span>
               <span>→</span>
             </button>
           </div>

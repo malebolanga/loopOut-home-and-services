@@ -1,23 +1,12 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-
-    // This app uses custom backend auth (MongoDB/Express), NOT Firebase Auth.
-    // request.auth is always null, so we allow uploads by file type + size only.
-
-    // Root-level files (profile avatars, cover photos — uploaded by Profile.jsx)
-    match /{fileName} {
-      allow read: if true;
-      allow write: if request.resource.size < 10 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
-    }
-
-    // Nested paths (shops, avatars, covers, etc.)
+    // The app uses its own JWT accounts, not Firebase Authentication. Direct
+    // browser uploads would bypass authorization, so they are prohibited.
+    // Upload media through an authenticated backend endpoint instead.
     match /{path=**} {
       allow read: if true;
-      allow write: if request.resource.size < 10 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
+      allow write: if false;
     }
-
   }
 }

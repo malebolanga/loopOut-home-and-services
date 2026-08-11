@@ -349,151 +349,190 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
     const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
     const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
 
-    // Create different messages based on property type
+    // Create different messages based on property type — using standard newlines \n to avoid double-encoding corruption
     let message = '';
 
     if (isOvernight) {
       // Overnight stay message - Professional Formatting
-      message = `*✨ NEW RESERVATION REQUEST ✨*%0A%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*🏨 PROPERTY INFORMATION*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `🏠 *Property:* ${listing?.name}%0A`;
-      message += `📌 *Address:* ${listing?.address}%0A`;
+      message = `*✨ NEW RESERVATION REQUEST ✨*\n\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*🏨 PROPERTY INFORMATION*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `🏠 *Property:* ${listing?.name}\n`;
+      message += `📌 *Address:* ${listing?.address}\n`;
       const mapLink = generateMapLink(listing?.address);
-      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
-      message += `💰 *Base Rate:* R${listing?.regularPrice?.toLocaleString()} / night%0A%0A`;
+      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
+      message += `💰 *Base Rate:* R${listing?.regularPrice?.toLocaleString()} / night\n\n`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*👤 GUEST DETAILS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `👤 *Name:* ${bookingDetails.fullName}%0A`;
-      message += `📞 *Phone:* ${bookingDetails.phone}%0A`;
-      message += `👥 *Occupancy:* ${bookingDetails.guests} Guest(s)%0A`;
-      message += `🛏️ *Rooms:* ${bookingDetails.rooms} Room(s)%0A%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*👤 GUEST DETAILS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `👤 *Name:* ${bookingDetails.fullName}\n`;
+      message += `📞 *Phone:* ${bookingDetails.phone}\n`;
+      message += `👥 *Occupancy:* ${bookingDetails.guests} Guest(s)\n`;
+      message += `🛏️ *Rooms:* ${bookingDetails.rooms} Room(s)\n\n`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*📅 STAY DETAILS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `➡️ *Check-in:* ${formatDate(bookingDetails.checkIn)}%0A`;
-      message += `⬅️ *Check-out:* ${formatDate(bookingDetails.checkOut)}%0A`;
-      message += `🌙 *Duration:* ${nights} Night(s)%0A%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*📅 STAY DETAILS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `➡️ *Check-in:* ${formatDate(bookingDetails.checkIn)}\n`;
+      message += `⬅️ *Check-out:* ${formatDate(bookingDetails.checkOut)}\n`;
+      message += `🌙 *Duration:* ${nights} Night(s)\n\n`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*💳 FINANCIAL SUMMARY*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `• Room Fee: R${listing.regularPrice.toLocaleString()} × ${nights}N%0A`;
-      if (bookingDetails.breakfast) message += `• Breakfast: R150 × ${bookingDetails.guests}G × ${nights}N%0A`;
-      if (bookingDetails.guests > 2) message += `• Extra Guest: R200 × ${bookingDetails.guests - 2}G × ${nights}N%0A`;
-      message += `💵 *TOTAL: R${totalPrice.toLocaleString()}*%0A%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*💳 FINANCIAL SUMMARY*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `• Room Fee: R${listing.regularPrice.toLocaleString()} × ${nights}N\n`;
+      if (bookingDetails.breakfast) message += `• Breakfast: R150 × ${bookingDetails.guests}G × ${nights}N\n`;
+      if (bookingDetails.guests > 2) message += `• Extra Guest: R200 × ${bookingDetails.guests - 2}G × ${nights}N\n`;
+      message += `💵 *TOTAL: R${totalPrice.toLocaleString()}*\n\n`;
 
       if (bookingDetails.specialRequests) {
-        message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-        message += `*📝 GUEST NOTES*%0A`;
-        message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-        message += `_"${bookingDetails.specialRequests}"_%0A%0A`;
+        message += `━━━━━━━━━━━━━━━━━━━━\n`;
+        message += `*📝 GUEST NOTES*\n`;
+        message += `━━━━━━━━━━━━━━━━━━━━\n`;
+        message += `_"${bookingDetails.specialRequests}"_\n\n`;
       }
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*⚡ QUICK ACTIONS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      if (acceptLink) message += `✅ *ACCEPT:*%0A${acceptLink}%0A%0A`;
-      if (declineLink) message += `❌ *REJECT:*%0A${declineLink}%0A%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*⚡ QUICK ACTIONS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      if (acceptLink) message += `✅ *ACCEPT:*\n${acceptLink}\n\n`;
+      if (declineLink) message += `❌ *REJECT:*\n${declineLink}\n\n`;
 
-      message += `🔐 *Verification Code:* \`${verificationCode}\`%0A`;
+      message += `🔐 *Verification Code:* \`${verificationCode}\`\n`;
       message += `_Sent via loopOut_`;
     } else if (isOffice) {
       // Office space message - Professional Formatting
-      message = `*🏢 RESORT BOOKING 🏖️*%0A%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*📍 RESORT DETAILS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `🏢 *Space:* ${listing?.name}%0A`;
-      message += `📍 *Location:* ${listing?.address}%0A`;
+      message = `*🏢 RESORT BOOKING 🏖️*\n\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*📍 RESORT DETAILS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `🏢 *Space:* ${listing?.name}\n`;
+      message += `📍 *Location:* ${listing?.address}\n`;
       const mapLink = generateMapLink(listing?.address);
-      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
-      message += `💰 *Rate:* R${listing?.regularPrice?.toLocaleString()} / day%0A%0A`;
+      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
+      message += `💰 *Rate:* R${listing?.regularPrice?.toLocaleString()} / day\n\n`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*👤 CLIENT DETAILS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `👤 *Name:* ${bookingDetails.fullName}%0A`;
-      message += `📞 *Phone:* ${bookingDetails.phone}%0A%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*👤 CLIENT DETAILS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `👤 *Name:* ${bookingDetails.fullName}\n`;
+      message += `📞 *Phone:* ${bookingDetails.phone}\n\n`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*📅 SESSION DETAILS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `📅 *Date:* ${formatDate(bookingDetails.selectedDate)}%0A`;
-      message += `⏰ *Time:* ${bookingDetails.startTime} - ${bookingDetails.endTime}%0A%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*📅 SESSION DETAILS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `📅 *Date:* ${formatDate(bookingDetails.selectedDate)}\n`;
+      message += `⏰ *Time:* ${bookingDetails.startTime} - ${bookingDetails.endTime}\n\n`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*⚡ QUICK ACTIONS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      if (acceptLink) message += `✅ *ACCEPT:*%0A${acceptLink}%0A%0A`;
-      if (declineLink) message += `❌ *REJECT:*%0A${declineLink}%0A%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*⚡ QUICK ACTIONS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      if (acceptLink) message += `✅ *ACCEPT:*\n${acceptLink}\n\n`;
+      if (declineLink) message += `❌ *REJECT:*\n${declineLink}\n\n`;
 
-      message += `🔐 *Verification Code:* \`${verificationCode}\`%0A`;
+      message += `🔐 *Verification Code:* \`${verificationCode}\`\n`;
       message += `_Sent via loopOut_`;
     } else if (isSale || isRent) {
       // Sale or Rent inquiry message - Professional Formatting
-      message = `*🏠 PROPERTY INQUIRY 🏠*%0A%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*📍 PROPERTY OVERVIEW*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `🏠 *Property:* ${listing?.name}%0A`;
-      message += `📍 *Location:* ${listing?.address}%0A`;
+      message = `*🏠 PROPERTY INQUIRY 🏠*\n\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*📍 PROPERTY OVERVIEW*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `🏠 *Property:* ${listing?.name}\n`;
+      message += `📍 *Location:* ${listing?.address}\n`;
       const mapLink = generateMapLink(listing?.address);
-      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
-      message += `💰 *Rate:* R${listing?.regularPrice?.toLocaleString()}${isRent ? '/month' : ''}%0A`;
-      message += `📋 *Type:* ${isSale ? 'For Sale' : 'For Rent'}%0A%0A`;
+      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
+      message += `💰 *Rate:* R${listing?.regularPrice?.toLocaleString()}${isRent ? '/month' : ''}\n`;
+      message += `📋 *Type:* ${isSale ? 'For Sale' : 'For Rent'}\n\n`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*👤 CLIENT DETAILS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `👤 *Name:* ${bookingDetails.fullName}%0A`;
-      message += `📞 *Phone:* ${bookingDetails.phone}%0A%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*👤 CLIENT DETAILS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `👤 *Name:* ${bookingDetails.fullName}\n`;
+      message += `📞 *Phone:* ${bookingDetails.phone}\n\n`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*📝 MESSAGE*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `_"${bookingDetails.specialRequests || "I'm interested in this property. Please provide more information."}"_%0A%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*📝 MESSAGE*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `_"${bookingDetails.specialRequests || "I'm interested in this property. Please provide more information."}"_\n\n`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      message += `*⚡ QUICK ACTIONS*%0A`;
-      message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-      if (acceptLink) message += `✅ *ACCEPT:*%0A${acceptLink}%0A%0A`;
-      if (declineLink) message += `❌ *REJECT:*%0A${declineLink}%0A%0A`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*⚡ QUICK ACTIONS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      if (acceptLink) message += `✅ *ACCEPT:*\n${acceptLink}\n\n`;
+      if (declineLink) message += `❌ *REJECT:*\n${declineLink}\n\n`;
 
-      message += `🔐 *Verification Code:* \`${verificationCode}\`%0A`;
+      message += `🔐 *Verification Code:* \`${verificationCode}\`\n`;
       message += `_Sent via loopOut_`;
     }
 
-    // Save booking to Database
+    // Require sign-in before booking to ensure secure server recording
+    if (!currentUser) {
+      alert('Please sign in to make a booking.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Save booking to Database securely via authenticated API (let server calculate the official price)
+    let savedBookingId = null;
     try {
-      // Determine device type
-      const deviceType = /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
-      const requestLocation = listing?.address || '';
+      let startDateStr = '';
+      let endDateStr = '';
+
+      if (isOvernight) {
+        startDateStr = bookingDetails.checkIn;
+        endDateStr = bookingDetails.checkOut;
+      } else if (isOffice) {
+        startDateStr = bookingDetails.selectedDate + 'T' + bookingDetails.startTime;
+        endDateStr = bookingDetails.selectedDate + 'T' + bookingDetails.endTime;
+      } else {
+        // For rent listings, use today and tomorrow as the default inquiry duration
+        const todayObj = new Date();
+        const tomorrowObj = new Date(Date.now() + 24 * 3600 * 1000);
+        startDateStr = todayObj.toISOString().split('T')[0];
+        endDateStr = tomorrowObj.toISOString().split('T')[0];
+      }
 
       const bookingData = {
-        userId: currentUser?._id || "guest",
         listingId: listing._id,
-        startDate: isOvernight ? bookingDetails.checkIn : bookingDetails.selectedDate + "T" + bookingDetails.startTime,
-        endDate: isOvernight ? bookingDetails.checkOut : bookingDetails.selectedDate + "T" + bookingDetails.endTime,
-        totalPrice: totalPrice,
+        startDate: startDateStr,
+        endDate: endDateStr,
         phone: bookingDetails.phone,
-        message: bookingDetails.specialRequests || message,
-        deviceType,
-        requestLocation,
-        status: 'pending'
+        message: bookingDetails.specialRequests || '',
       };
 
-      await fetch('/api/bookings', {
+      const bookingRes = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(bookingData)
       });
+
+      if (!bookingRes.ok) {
+        const errData = await bookingRes.json().catch(() => ({}));
+        console.error('Booking creation failed. Server error response:', errData);
+        alert(errData.error || 'Could not process the booking. Please check details or select another date.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const bookingResult = await bookingRes.json();
+      savedBookingId = bookingResult.booking?._id;
+      if (Number.isFinite(Number(bookingResult.serverTotalPrice))) {
+        message += `\n\n*Official request total (calculated by LoopOut):* R${Number(bookingResult.serverTotalPrice).toLocaleString('en-ZA')}`;
+      }
     } catch (saveError) {
       console.error('Failed to save booking to database:', saveError);
+      alert('Network error: Could not reach the booking server. Please try again.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Append booking reference to the message text so host receives a matching record reference
+    if (savedBookingId) {
+      message += `\n\n[Booking Ref: ${savedBookingId}]`;
     }
 
     // Send via WhatsApp
@@ -1387,11 +1426,15 @@ export default function Listing() {
       fetchBookingSummary();
       saveToHistory(listing);
     }
-  }, [listing]);
+  }, [listing, currentUser]);
 
   const fetchBookingSummary = async () => {
+    if (!currentUser) {
+      setBookingSummary({ count: 0, recentBookers: [] });
+      return;
+    }
     try {
-      const res = await fetch(`/api/bookings/listing-summary/${listing._id}`);
+      const res = await fetch(`/api/bookings/listing-summary/${listing._id}`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setBookingSummary(data);
@@ -1876,52 +1919,7 @@ export default function Listing() {
         setUiState(prev => ({ ...prev, loading: false, error: false }));
       } catch (err) {
         console.error("Fetch error:", err);
-        // Use mock data for demo
-        const mockListing = {
-          _id: listingId,
-          name: "Modern Luxury Villa with Ocean View",
-          type: "over",
-          regularPrice: 3500,
-          bedrooms: 4,
-          bathrooms: 3,
-          squareFeet: 2800,
-          address: "12 Ocean Drive, Camps Bay, Cape Town",
-          description: "Experience luxury living in this stunning modern villa featuring panoramic ocean views. This beautifully designed property offers spacious living areas, state-of-the-art amenities, and direct access to a private beach. The open-plan living area features floor-to-ceiling windows, gourmet kitchen with marble countertops, and a cozy fireplace. The master suite includes a private balcony, walk-in closet, and spa-like bathroom with rain shower and freestanding tub. Outside, enjoy the infinity pool, outdoor kitchen, and beautifully landscaped garden with panoramic ocean views.",
-          imageUrls: [
-            "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
-            "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
-            "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
-            "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
-            "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
-          ],
-          contact: "0821234567",
-          phone: "0821234567",
-          email: "host@luxurystays.com",
-          userRef: {
-            _id: "user123",
-            username: "John",
-            email: "john@luxurystays.com",
-            avatar: "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800",
-            createdAt: "2022-01-01"
-          },
-          wifi: true,
-          parking: true,
-          pool: true,
-          kitchen: true,
-          stove: true,
-          tv: true,
-          security: true,
-          hot: true,
-          fridge: true,
-          breakfast: true,
-          furnished: true,
-          rules: "No smoking inside the property. Quiet hours from 10 PM to 7 AM. Maximum 8 guests allowed. No parties without prior approval.",
-          near: "• 5 min walk to Camps Bay Beach\n• 10 min drive to Table Mountain\n• 15 min to V&A Waterfront\n• Restaurants within walking distance",
-          cancel: "Free cancellation up to 30 days before check-in. 50% refund if canceled 14-30 days before check-in."
-        };
-
-        setListing(mockListing);
-        setUiState(prev => ({ ...prev, loading: false, error: false }));
+        setUiState(prev => ({ ...prev, loading: false, error: true }));
       }
     };
 
@@ -2950,7 +2948,7 @@ export default function Listing() {
 
 
                 <p className="text-center text-gray-500 text-xs lg:text-sm mt-2">
-                  {isSaleOrRent ? 'Ask questions about this listing' : 'You\'ll receive a confirmation via WhatsApp'}
+                  {isSaleOrRent ? 'Ask questions about this listing' : 'A pending request will be saved and the host notified via WhatsApp'}
                 </p>
 
                 {/* Quick Contact Button */}
@@ -2965,42 +2963,57 @@ export default function Listing() {
               {/* Contact Info Card */}
               <div className="border border-slate-200/50 rounded-3xl p-6 lg:p-8 bg-transparent">
                 <h3 className="font-semibold text-gray-900 mb-3 lg:mb-4">Contact Information</h3>
-                <div className="space-y-2 lg:space-y-3">
-                  {formattedDisplayNumber && (
-                    <a href={`tel:${formattedDisplayNumber}`} className="flex items-center gap-3 p-2 lg:p-3 bg-slate-50/50 rounded-2xl hover:bg-slate-100 transition-all border border-slate-200/30">
-                      <div className="w-8 h-8 lg:w-10 lg:h-10 bg-rose-100 rounded-full flex items-center justify-center shadow-sm">
-                        <PhoneIcon className="w-4 h-4 text-rose-600" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Phone</p>
-                        <p className="font-bold text-gray-900 text-sm lg:text-base tracking-tight">{formattedDisplayNumber}</p>
-                      </div>
-                    </a>
-                  )}
-                  {displayEmail && (
-                    <a href={`mailto:${displayEmail}`} className="flex items-center gap-3 p-2 lg:p-3 bg-slate-50/50 rounded-2xl hover:bg-slate-100 transition-all border border-slate-200/30">
-                      <div className="w-8 h-8 lg:w-10 lg:h-10 bg-blue-100 rounded-full flex items-center justify-center shadow-sm">
-                        <EnvelopeIcon className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Email</p>
-                        <p className="font-bold text-gray-900 text-sm lg:text-base tracking-tight">{displayEmail}</p>
-                      </div>
-                    </a>
-                  )}
-                  {formattedDisplayNumber && (
-                    <a href={`https://wa.me/${formatPhoneNumberForWhatsApp(formattedDisplayNumber)}`} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-2 lg:p-3 bg-green-50/50 rounded-2xl hover:bg-green-100 transition-all border border-green-200/30">
-                      <div className="w-8 h-8 lg:w-10 lg:h-10 bg-green-100 rounded-full flex items-center justify-center shadow-sm">
-                        <ChatBubbleLeftRightIcon className="w-5 h-5 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">WhatsApp</p>
-                        <p className="font-bold text-gray-900 text-sm lg:text-base tracking-tight">Message host</p>
-                      </div>
-                    </a>
-                  )}
-                </div>
+                {currentUser ? (
+                  <div className="space-y-2 lg:space-y-3">
+                    {formattedDisplayNumber && (
+                      <a href={`tel:${formattedDisplayNumber}`} className="flex items-center gap-3 p-2 lg:p-3 bg-slate-50/50 rounded-2xl hover:bg-slate-100 transition-all border border-slate-200/30">
+                        <div className="w-8 h-8 lg:w-10 lg:h-10 bg-rose-100 rounded-full flex items-center justify-center shadow-sm">
+                          <PhoneIcon className="w-4 h-4 text-rose-600" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Phone</p>
+                          <p className="font-bold text-gray-900 text-sm lg:text-base tracking-tight">{formattedDisplayNumber}</p>
+                        </div>
+                      </a>
+                    )}
+                    {displayEmail && (
+                      <a href={`mailto:${displayEmail}`} className="flex items-center gap-3 p-2 lg:p-3 bg-slate-50/50 rounded-2xl hover:bg-slate-100 transition-all border border-slate-200/30">
+                        <div className="w-8 h-8 lg:w-10 lg:h-10 bg-blue-100 rounded-full flex items-center justify-center shadow-sm">
+                          <EnvelopeIcon className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Email</p>
+                          <p className="font-bold text-gray-900 text-sm lg:text-base tracking-tight">{displayEmail}</p>
+                        </div>
+                      </a>
+                    )}
+                    {formattedDisplayNumber && (
+                      <a href={`https://wa.me/${formatPhoneNumberForWhatsApp(formattedDisplayNumber)}`} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-2 lg:p-3 bg-green-50/50 rounded-2xl hover:bg-green-100 transition-all border border-green-200/30">
+                        <div className="w-8 h-8 lg:w-10 lg:h-10 bg-green-100 rounded-full flex items-center justify-center shadow-sm">
+                          <ChatBubbleLeftRightIcon className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">WhatsApp</p>
+                          <p className="font-bold text-gray-900 text-sm lg:text-base tracking-tight">Message host</p>
+                        </div>
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-3 py-4">
+                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                      <UserIcon className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <p className="text-sm text-gray-500 text-center">Sign in to view host contact details</p>
+                    <Link
+                      to="/sign-in"
+                      className="px-5 py-2 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                    >
+                      Sign In
+                    </Link>
+                  </div>
+                )}
               </div>
 
               {/* Report Listing */}

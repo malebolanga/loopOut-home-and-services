@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   XMarkIcon, 
   ChevronRightIcon, 
   ChevronLeftIcon,
-  HomeIcon,
   PlusCircleIcon,
   CalendarDaysIcon,
   SparklesIcon,
@@ -13,19 +13,20 @@ import {
 } from '@heroicons/react/24/outline';
 
 const OnboardingGuide = () => {
+  const location = useLocation();
   const [isVisible, setIsVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
     const hasSeenGuide = localStorage.getItem('hasSeenOnboardingGuide');
-    if (!hasSeenGuide) {
+    if (!hasSeenGuide && location.pathname === '/') {
       // Small delay to let the initial splash screen finish
       const timer = setTimeout(() => {
         setIsVisible(true);
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [location.pathname]);
 
   const steps = [
     {
@@ -134,6 +135,7 @@ const OnboardingGuide = () => {
             <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-between bg-white">
               <button 
                 onClick={handleClose}
+                aria-label="Skip onboarding tour"
                 className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 transition-colors"
               >
                 <XMarkIcon className="w-6 h-6 text-gray-400" />
@@ -175,7 +177,13 @@ const OnboardingGuide = () => {
                   ))}
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={handleClose}
+                    className="px-3 py-2 text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors"
+                  >
+                    Skip tour
+                  </button>
                   {currentStep > 0 && (
                     <button
                       onClick={prevStep}

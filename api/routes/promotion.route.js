@@ -1,13 +1,12 @@
 import express from 'express';
 import { verifyToken } from '../utils/verifyUser.js';
+import Listing from '../models/listing.model.js';
 
 const router = express.Router();
 
 /**
  * POST /api/promotion/payment
  * Handles listing promotion packages (Standard R40, Featured R100).
- * In production this would integrate with a payment gateway.
- * For now it simulates a successful payment and navigates the user forward.
  */
 import { generatePayfastData } from '../utils/payfast.js';
 
@@ -18,22 +17,32 @@ import { generatePayfastData } from '../utils/payfast.js';
  */
 router.post('/payment', verifyToken, async (req, res) => {
   try {
-    const { userId, listingId, package: pkg, name, email, amount } = req.body;
+    const { listingId, package: pkg, name, email } = req.body;
 
-    if (!userId || !listingId) {
-      return res.status(400).json({ success: false, message: 'userId and listingId are required' });
+    if (!listingId || !['standard', 'premium'].includes(pkg)) {
+      return res.status(400).json({ success: false, message: 'A listing and valid promotion package are required' });
     }
 
-    // Generate PayFast data for either R40 (Standard) or R100 (Premium)
+    const listing = await Listing.findOne({ _id: listingId, userRef: req.user.id });
+    if (!listing) {
+      return res.status(404).json({ success: false, message: 'Listing not found or not owned by this account' });
+    }
+
+    if (!process.env.PAYFAST_MERCHANT_ID || !process.env.PAYFAST_MERCHANT_KEY || !process.env.APP_URL || !process.env.BACKEND_URL) {
+      return res.status(503).json({ success: false, message: 'Secure promotion checkout is not configured yet' });
+    }
+
+    const amount = pkg === 'premium' ? '100.00' : '40.00';
+
     const payfast = generatePayfastData({
       merchant_id: process.env.PAYFAST_MERCHANT_ID,
       merchant_key: process.env.PAYFAST_MERCHANT_KEY,
-      amount: amount || (pkg === 'premium' ? '100.00' : '40.00'),
+      amount,
       item_name: `${pkg?.toUpperCase()} Promotion - Listing #${listingId}`,
       name_first: name || 'LoopOut',
       name_last: 'User',
       email_address: email || 'user@example.com',
-      m_payment_id: `promo-pkg-${listingId}-${Date.now()}`,
+      m_payment_id: `promo-${pkg}-${req.user.id}-${listingId}-${Date.now()}`,
     });
 
     return res.status(200).json({

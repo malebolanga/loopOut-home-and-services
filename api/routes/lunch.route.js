@@ -1,4 +1,5 @@
 import express from 'express';
+import { verifyToken } from '../utils/verifyUser.js';
 import { 
   getShops, 
   createShop, 
@@ -16,17 +17,17 @@ import {
 const router = express.Router();
 
 router.get('/shops', getShops);
-router.post('/shops', createShop);
-router.put('/shops/:id', updateShop);
-router.post('/shops/:id/rate', rateShop);
-router.post('/shops/:id/meals', addMealToShop);
-router.put('/shops/:id/meals/:mealId', updateMealInShop);
-router.delete('/shops/:id/meals/:mealId', deleteMealFromShop);
+router.post('/shops', verifyToken, createShop);
+router.put('/shops/:id', verifyToken, updateShop);
+router.post('/shops/:id/rate', verifyToken, rateShop);
+router.post('/shops/:id/meals', verifyToken, addMealToShop);
+router.put('/shops/:id/meals/:mealId', verifyToken, updateMealInShop);
+router.delete('/shops/:id/meals/:mealId', verifyToken, deleteMealFromShop);
 
-router.get('/orders', getOrders);
-router.post('/orders', createOrder);
-router.patch('/orders/:id/status', updateOrderStatus);
+router.get('/orders', verifyToken, getOrders);
+router.post('/orders', verifyToken, createOrder);
+router.patch('/orders/:id/status', verifyToken, updateOrderStatus);
 
-router.post('/bookings', createTableBooking);
+router.post('/bookings', verifyToken, createTableBooking);
 
 export default router;
