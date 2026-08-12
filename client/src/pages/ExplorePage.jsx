@@ -9,6 +9,8 @@ import HelperItem from '../components/HelperItem';
 import EventItem from '../components/EventItem';
 import { useSearchIntelligence } from '../hooks/useSearchIntelligence';
 import { motion } from 'framer-motion';
+import { BrandIcon } from '../components/BrandLogo';
+import { Sparkles } from 'lucide-react';
 
 // Icons
 import {
@@ -37,10 +39,10 @@ const ExplorePage = () => {
   const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const { 
-    searchHistory, 
-    viewHistory, 
+    searchHistory = [], 
+    viewHistory = [], 
     userLocation, 
-    preferredCategories,
+    preferredCategories = [],
     recordSearch,
     updateLocation 
   } = useSearchIntelligence();
@@ -158,11 +160,11 @@ const ExplorePage = () => {
 
       const featuredRes = await fetch(`/api/explore/featured?category=${backendCategory}&limit=6`);
       const featuredData = await featuredRes.json();
-      setFeaturedItems(featuredData || []);
+      setFeaturedItems(Array.isArray(featuredData) ? featuredData : (Array.isArray(featuredData?.items) ? featuredData.items : []));
 
       const trendingRes = await fetch(`/api/explore/trending?category=${backendCategory}&limit=6`);
       const trendingData = await trendingRes.json();
-      setTrendingItems(trendingData || []);
+      setTrendingItems(Array.isArray(trendingData) ? trendingData : (Array.isArray(trendingData?.items) ? trendingData.items : []));
     } catch (error) {
       setFeaturedItems([]);
       setTrendingItems([]);
@@ -188,7 +190,7 @@ const ExplorePage = () => {
 
       const nearbyRes = await fetch(url);
       const nearbyData = await nearbyRes.json();
-      setNearbyItems(nearbyData || []);
+      setNearbyItems(Array.isArray(nearbyData) ? nearbyData : (Array.isArray(nearbyData?.items) ? nearbyData.items : []));
     } catch (error) {
       fetchGenericNearbyItems();
     }
@@ -206,7 +208,7 @@ const ExplorePage = () => {
       const backendCategory = categoryMap[activeCategory] || 'all';
       const nearbyRes = await fetch(`/api/explore/nearby?category=${backendCategory}&limit=6`);
       const nearbyData = await nearbyRes.json();
-      setNearbyItems(nearbyData || []);
+      setNearbyItems(Array.isArray(nearbyData) ? nearbyData : (Array.isArray(nearbyData?.items) ? nearbyData.items : []));
     } catch (error) {
       setNearbyItems([]);
     }
@@ -329,7 +331,7 @@ const ExplorePage = () => {
                       {category.icon}
                     </div>
                     <span className="text-xs font-black uppercase tracking-widest">{category.label}</span>
-                    {preferredCategories[0] === category.id && activeCategory !== category.id && (
+                    {preferredCategories?.[0] === category.id && activeCategory !== category.id && (
                        <div className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[8px] px-2 py-1 rounded-full font-black animate-bounce shadow-lg">SMART CHOICE</div>
                     )}
                   </button>
@@ -351,7 +353,7 @@ const ExplorePage = () => {
               </div>
               {isLoading ? <SkeletonGrid /> : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {featuredItems.map(renderItem)}
+                  {(Array.isArray(featuredItems) ? featuredItems : []).map(renderItem)}
                 </div>
               )}
             </section>
@@ -469,7 +471,7 @@ const ExplorePage = () => {
 
               {isLoading || isLocationLoading ? <SkeletonGrid /> : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {nearbyItems.length > 0 ? nearbyItems.map(renderItem) : (
+                  {(Array.isArray(nearbyItems) && nearbyItems.length > 0) ? nearbyItems.map(renderItem) : (
                     <div className="col-span-full py-20 bg-gray-50 rounded-[4rem] text-center">
                        <FiMapPin className="w-16 h-16 text-gray-200 mx-auto mb-6" />
                        <h3 className="text-xl font-black text-gray-400 uppercase tracking-widest">No local signals detected</h3>

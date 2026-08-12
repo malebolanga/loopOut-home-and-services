@@ -323,11 +323,16 @@ export const getListings = async (req, res, next) => {
     let type = req.query.type;
 
     if (type === undefined || type === 'all') {
-      type = { $in: ['sale', 'rent', 'over', 'office', 'land', 'resort'] };
+      type = { $in: ['sale', 'rent', 'over', 'office', 'land', 'resort', 'guest_house'] };
     }
 
     const searchTerm = req.query.searchTerm || '';
     const address = req.query.address || '';
+    const minPrice = Number(req.query.minPrice);
+    const maxPrice = Number(req.query.maxPrice);
+    const price = {};
+    if (Number.isFinite(minPrice)) price.$gte = minPrice;
+    if (Number.isFinite(maxPrice)) price.$lte = maxPrice;
 
     let bedrooms = req.query.bedrooms;
     if (bedrooms === undefined || bedrooms === '0') {
@@ -370,6 +375,7 @@ export const getListings = async (req, res, next) => {
       type,
       bedrooms,
       bathrooms,
+      ...(Object.keys(price).length && { regularPrice: price }),
     })
       .sort({ [sort]: order })
       .limit(limit)

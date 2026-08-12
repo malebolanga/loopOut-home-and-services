@@ -390,7 +390,7 @@ const SearchInput = ({
         </div>
       )}
       
-      <style jsx>{`
+      <style>{`
         .hide-scrollbar {
           -ms-overflow-style: none;
           scrollbar-width: none;

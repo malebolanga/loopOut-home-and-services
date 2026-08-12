@@ -149,10 +149,11 @@ app.use(helmet({
 app.use(mongoSanitize());
 app.use(compression());
 
-// Global limiter — 200 requests per 5 minutes per IP
+// Global limiter — generous in development to prevent 429s during local testing
+const isProduction = process.env.NODE_ENV === 'production';
 const apiLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
-    limit: 200,
+    limit: isProduction ? 500 : 2000,
     message: { success: false, message: 'Too many requests from this IP, please try again after 5 minutes.' },
     standardHeaders: true,
     legacyHeaders: false,

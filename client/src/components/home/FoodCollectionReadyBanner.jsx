@@ -28,17 +28,21 @@ const FoodCollectionReadyBanner = ({ navigate }) => {
     }
 
     try {
-      const [customerResponse, ownerResponse] = await Promise.all([
-        fetch(`/api/lunch/orders?customerId=${encodeURIComponent(customerId)}`),
-        fetch(`/api/lunch/orders?ownerId=${encodeURIComponent(customerId)}`)
-      ]);
-      const customerOrders = customerResponse.ok ? await customerResponse.json() : [];
-      const incomingOrders = ownerResponse.ok ? await ownerResponse.json() : [];
+      const response = await fetch('/api/lunch/orders', { credentials: 'include' });
+      if (response.status === 429) return;
+      const allOrders = response.ok ? await response.json() : [];
       const activeStatuses = ['Pending', 'Preparing', 'Ready for Collection'];
-      const combined = [
-        ...(Array.isArray(customerOrders) ? customerOrders.map((order) => ({ ...order, audience: 'customer' })) : []),
-        ...(Array.isArray(incomingOrders) ? incomingOrders.map((order) => ({ ...order, audience: 'owner' })) : [])
-      ];
+      const combined = (Array.isArray(allOrders) ? allOrders : []).flatMap((order) => {
+        const isCustomer = String(order.customerId || order.customer?._id) === String(customerId);
+        const entries = [];
+        if (isCustomer) {
+          entries.push({ ...order, audience: 'customer' });
+        }
+        if (!isCustomer) {
+          entries.push({ ...order, audience: 'owner' });
+        }
+        return entries;
+      });
       const uniqueOrders = Array.from(new Map(combined.map((order) => [`${order.id || order._id}:${order.audience}`, order])).values());
       setOrders(uniqueOrders.filter((order) => activeStatuses.includes(order.status)));
     } catch {
@@ -50,7 +54,7 @@ const FoodCollectionReadyBanner = ({ navigate }) => {
     loadActiveOrders();
     if (!customerId) return undefined;
 
-    const interval = window.setInterval(loadActiveOrders, 5000);
+    const interval = window.setInterval(loadActiveOrders, 30000);
     return () => window.clearInterval(interval);
   }, [customerId, loadActiveOrders]);
 

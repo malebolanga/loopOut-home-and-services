@@ -34,17 +34,23 @@ export const getEvents = async (req, res, next) => {
     const startIndex = parseInt(req.query.startIndex) || 0;
 
     const searchTerm = req.query.searchTerm || '';
-    const category = req.query.category;
+    const category = req.query.category || req.query.type;
     const location = req.query.location || req.query.address;
+    const minPrice = Number(req.query.minPrice);
+    const maxPrice = Number(req.query.maxPrice);
+    const price = {};
+    if (Number.isFinite(minPrice)) price.$gte = minPrice;
+    if (Number.isFinite(maxPrice)) price.$lte = maxPrice;
 
     const query = {
       $or: [
-        { title: { $regex: searchTerm, $options: 'i' } },
+        { name: { $regex: searchTerm, $options: 'i' } },
         { description: { $regex: searchTerm, $options: 'i' } },
-        { location: { $regex: searchTerm, $options: 'i' } }
+        { address: { $regex: searchTerm, $options: 'i' } }
       ],
       ...(category && { type: category }),
-      ...(location && { location: { $regex: location, $options: 'i' } })
+      ...(location && { address: { $regex: location, $options: 'i' } }),
+      ...(Object.keys(price).length && { regularPrice: price })
     };
 
     const events = await Event.find(query)

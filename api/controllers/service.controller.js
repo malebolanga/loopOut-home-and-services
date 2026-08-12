@@ -208,6 +208,11 @@ export const getServices = async (req, res, next) => {
     const searchTerm = req.query.searchTerm || '';
     const sort = req.query.sort || 'createdAt';
     const order = req.query.order || 'desc';
+    const minPrice = Number(req.query.minPrice);
+    const maxPrice = Number(req.query.maxPrice);
+    const price = {};
+    if (Number.isFinite(minPrice)) price.$gte = minPrice;
+    if (Number.isFinite(maxPrice)) price.$lte = maxPrice;
     let type = req.query.type;
 
     if (type === undefined || type === 'all') {
@@ -228,6 +233,7 @@ export const getServices = async (req, res, next) => {
       ],
       ...(offer && { offer }),
       ...(type && { type }),
+      ...(Object.keys(price).length && { regularPrice: price }),
       ...(req.query.security && { security: req.query.security === 'true' }),
       ...(req.query.pets && { pets: req.query.pets === 'true' }),
       ...(req.query.kind && { kind: req.query.kind }),

@@ -169,7 +169,7 @@ export default function Header() {
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [prevUnreadCount, setPrevUnreadCount] = useState(0);
+  const prevUnreadCountRef = useRef(0);
   const [isSoundEnabled, setIsSoundEnabled] = useState(() => localStorage.getItem('loopOutSound') !== 'false');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
@@ -269,15 +269,15 @@ export default function Header() {
         signal
       });
 
-      // Silently ignore auth errors and server-not-ready states
-      if (res.status === 401 || res.status === 403 || res.status === 503) return;
+      // Silently ignore auth errors, rate limit states, and server-not-ready states
+      if (res.status === 401 || res.status === 403 || res.status === 429 || res.status === 503) return;
 
       if (res.ok) {
         const data = await res.json();
         const newUnreadCount = data.unreadCount || 0;
 
         // If we have new unread notifications, ring the bell and trigger phone push banner
-        if (newUnreadCount > prevUnreadCount) {
+        if (newUnreadCount > prevUnreadCountRef.current) {
           playNotificationChime();
 
           const latest = data.notifications?.[0];
@@ -302,14 +302,14 @@ export default function Header() {
 
         setNotifications(data.notifications || []);
         setUnreadCount(newUnreadCount);
-        setPrevUnreadCount(newUnreadCount);
+        prevUnreadCountRef.current = newUnreadCount;
       }
     } catch (error) {
       // Ignore AbortError — this is expected on component unmount
       if (error.name === 'AbortError') return;
       console.error('Error fetching notifications:', error);
     }
-  }, [currentUser, prevUnreadCount, playNotificationChime]);
+  }, [currentUser, playNotificationChime]);
 
   useEffect(() => {
     const controller = new AbortController();

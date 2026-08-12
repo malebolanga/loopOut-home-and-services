@@ -149,12 +149,13 @@ export const useSearchIntelligence = () => {
   }, [smartScores]);
 
   return {
-    searchHistory,
-    viewHistory,
+    searchHistory: searchHistory || [],
+    viewHistory: viewHistory || [],
     interactionMetrics,
     userLocation,
     smartScores,
-    topCategories,
+    topCategories: topCategories || [],
+    preferredCategories: topCategories || [],
     recordSearch,
     recordView,
     rankItems,

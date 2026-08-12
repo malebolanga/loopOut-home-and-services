@@ -93,13 +93,13 @@ const CITY_COORDS = {
 // Enhanced Categories Configuration with all user requested categories
 const ALL_CATEGORIES = [
   // Properties & Accommodation
-  { id: 'guesthouse', label: 'Guest House', type: 'properties', icon: HomeIcon, color: 'bg-purple-100 text-purple-800', description: 'Guest houses & B&Bs' },
-  { id: 'rental', label: 'For Rent', type: 'properties', icon: HomeIcon, color: 'bg-blue-100 text-blue-800', description: 'Rental properties' },
-  { id: 'for_sale', label: 'Hotel', type: 'properties', icon: BuildingOfficeIcon, color: 'bg-emerald-100 text-emerald-800', description: 'Hotel rentals' },
-  { id: 'vacation', label: 'Vacation Rental', type: 'properties', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Short-term stays' },
+  { id: 'guest_house', label: 'Guest House', type: 'properties', icon: HomeIcon, color: 'bg-purple-100 text-purple-800', description: 'Guest houses & B&Bs' },
+  { id: 'rent', label: 'For Rent', type: 'properties', icon: HomeIcon, color: 'bg-blue-100 text-blue-800', description: 'Rental properties' },
+  { id: 'sale', label: 'Hotel', type: 'properties', icon: BuildingOfficeIcon, color: 'bg-emerald-100 text-emerald-800', description: 'Hotel rentals' },
+  { id: 'over', label: 'Vacation Rental', type: 'properties', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Short-term stays' },
 
   // Services
-  { id: 'photography', label: 'Photography', type: 'services', icon: CameraIcon, color: 'bg-indigo-100 text-indigo-800', description: 'Photo & video services' },
+  { id: 'photography', label: 'Photography', type: 'helper', icon: CameraIcon, color: 'bg-indigo-100 text-indigo-800', description: 'Photo & video services' },
   { id: 'carwash', label: 'Car Wash', type: 'services', icon: BoltIcon, color: 'bg-cyan-100 text-cyan-800', description: 'Vehicle cleaning' },
   { id: 'landscaping', label: 'Landscaping', type: 'services', icon: SunIcon, color: 'bg-green-100 text-green-800', description: 'Garden & lawn care' },
   { id: 'electrician', label: 'Electrician', type: 'services', icon: BoltIcon, color: 'bg-yellow-100 text-yellow-800', description: 'Electrical services' },
@@ -659,11 +659,6 @@ const SearchPage = () => {
 
   const fetchData = useCallback(async () => {
     const urlParams = new URLSearchParams(location.search);
-    if (!urlParams.toString()) {
-      setListings([]);
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -708,10 +703,11 @@ const SearchPage = () => {
             url += `&address=${encodeURIComponent(currentLocation)}&location=${encodeURIComponent(currentLocation)}`;
           }
 
+        if (minPrice) url += `&minPrice=${encodeURIComponent(minPrice)}`;
+        const maxPriceParam = maxPrice || urlParams.get('priceMax');
+        if (maxPriceParam) url += `&maxPrice=${encodeURIComponent(maxPriceParam)}`;
+
         if (endpoint === 'listing') {
-          if (minPrice) url += `&minPrice=${minPrice}`;
-          const maxPriceParam = maxPrice || urlParams.get('priceMax');
-          if (maxPriceParam) url += `&maxPrice=${maxPriceParam}`;
 
           const bedroomsMin = urlParams.get('bedroomsMin');
           if (bedroomsMin) url += `&bedrooms=${bedroomsMin}`;
@@ -723,11 +719,13 @@ const SearchPage = () => {
         }
 
         if (endpoint === 'helper' && subType && HELPER_CATEGORY_CONFIG[subType]) {
-          url += `&category=${subType}`;
+          const helperType = { maid: 'domestic', nanny: 'domestic', hair: 'beauty', nail: 'beauty' }[subType] || subType;
+          url += `&type=${encodeURIComponent(helperType)}`;
         }
 
         if (endpoint === 'service' && subType && SERVICES_CATEGORY_CONFIG[subType]) {
-          url += `&category=${subType}`;
+          const serviceType = { electrician: 'maintenance', transport: 'moving', daily: 'other' }[subType] || subType;
+          url += `&type=${encodeURIComponent(serviceType)}`;
         }
 
           try {

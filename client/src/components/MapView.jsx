@@ -69,14 +69,15 @@ const MapView = ({
 
       // Helper to create custom price icons
       const createPriceIcon = (item, isSelected) => {
-        const price = item.regularPrice || item.price || 0;
+        const price = Number(item.regularPrice ?? item.price);
+        const priceLabel = Number.isFinite(price) ? price.toLocaleString() : 'On request';
         
         return L.divIcon({
           className: 'custom-price-marker',
           html: `
             <div class="relative flex items-center justify-center transition-all duration-300 ${isSelected ? 'scale-110 z-[1000]' : 'z-[100]'}">
               <div class="relative px-3 py-1.5 ${isSelected ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'} rounded-full shadow-md hover:shadow-lg hover:scale-105 transition-all flex items-center justify-center whitespace-nowrap font-bold text-[13px] border border-gray-200">
-                 R${price.toLocaleString()}
+                 ${priceLabel === 'On request' ? priceLabel : `R${priceLabel}`}
               </div>
             </div>
           `,
@@ -96,8 +97,8 @@ const MapView = ({
           let lat = parseFloat(item.latitude);
           let lng = parseFloat(item.longitude);
           
-          if (isNaN(lat)) lat = defaultCenter.lat + (Math.random() - 0.5) * 0.05;
-          if (isNaN(lng)) lng = defaultCenter.lng + (Math.random() - 0.5) * 0.05;
+          // Never invent a location. A random pin is misleading for customers.
+          if (isNaN(lat) || isNaN(lng)) return;
           
           const marker = L.marker([lat, lng], { 
             icon: createPriceIcon(item, selectedItem?._id === item._id) 

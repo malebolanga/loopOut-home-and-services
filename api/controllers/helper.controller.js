@@ -58,11 +58,17 @@ export const getHelpers = async (req, res, next) => {
     const startIndex = parseInt(req.query.startIndex) || 0;
     const sort = req.query.sort || 'createdAt';
     const order = req.query.order || 'desc';
+    const minPrice = Number(req.query.minPrice);
+    const maxPrice = Number(req.query.maxPrice);
+    const price = {};
+    if (Number.isFinite(minPrice)) price.$gte = minPrice;
+    if (Number.isFinite(maxPrice)) price.$lte = maxPrice;
 
     const helpers = await Helper.find({
       ...(req.query.userId && { userRef: req.query.userId }),
       ...(req.query.type && { type: req.query.type }),
-      ...(req.query.category && { category: req.query.category }),
+      ...(req.query.category && { type: req.query.category }),
+      ...(Object.keys(price).length && { regularPrice: price }),
       ...(req.query.address && { address: { $regex: req.query.address, $options: 'i' } }),
       ...(req.query.location && { address: { $regex: req.query.location, $options: 'i' } }),
       ...(req.query.searchTerm && {
