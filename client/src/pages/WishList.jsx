@@ -28,13 +28,24 @@ import ImageWithFallback from '../components/ImageWithFallback';
 import { getWishlistBackend, toggleWishlistBackend, clearWishlistBackend } from '../services/wishlist.service';
 import { setWishlistCount } from '../redux/frontendSlice';
 
+const getItemPath = (item) => {
+  const type = item.type || item.itemType || 'listing';
+  if (type === 'listing') return `/listing/${item._id}`;
+  if (type === 'event') return `/event/${item._id}`;
+  if (type === 'helper') return `/helper/${item._id}`;
+  return `/service/${item._id}`;
+};
+
 const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onNavigate }, ref) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const getTitle = () => item.name || item.title || 'Untitled Masterpiece';
-  const getPrice = () => item.regularPrice ? `R${item.regularPrice.toLocaleString()}` : item.price ? `R${item.price.toLocaleString()}` : 'Contact';
+  const getPrice = () => {
+    const value = item.regularPrice ?? item.price;
+    return value !== '' && Number.isFinite(Number(value)) ? `R${Number(value).toLocaleString()}` : 'Contact';
+  };
   const getLocation = () => item.address || item.location || 'Private Location';
-  const getRating = () => (item.rating || 4.8).toFixed(1);
+  const getRating = () => Number(item.rating) > 0 ? Number(item.rating).toFixed(1) : 'New';
   const getImage = () => (item.imageUrls && item.imageUrls[0]) || (item.images && item.images[0]) || "https://placehold.co/600x400/E0E0E0/333333?text=No+Image";
 
   const cardVariants = {
@@ -50,7 +61,7 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
          variants={cardVariants}
          exit="exit"
          layout
-         onClick={() => onNavigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`)}
+         onClick={() => onNavigate(getItemPath(item))}
          className="relative bg-white rounded-3xl border border-gray-100 overflow-hidden flex items-center p-4 gap-6 hover:shadow-xl transition-all duration-500 cursor-pointer"
       >
         <div className="w-40 h-40 rounded-2xl overflow-hidden flex-shrink-0">
@@ -73,6 +84,7 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
               <span className="text-xl font-black text-gray-900">{getPrice()}</span>
                <button 
                  onClick={(e) => { e.stopPropagation(); onRemove(item._id, item.type); }}
+                 aria-label={`Remove ${getTitle()} from wishlist`}
                  className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 transition-all border border-gray-100"
                >
                  <Trash2 className="w-4 h-4" />
@@ -92,7 +104,7 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       className="relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
-      onClick={() => onNavigate(`/${item.type === 'listing' ? 'listing' : item.type}/${item._id}`)}
+      onClick={() => onNavigate(getItemPath(item))}
     >
       <div className="absolute inset-0 z-0">
         <ImageWithFallback
@@ -115,6 +127,7 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
             onRemove(item._id, item.type);
           }}
           disabled={isRemoving}
+          aria-label={`Remove ${getTitle()} from wishlist`}
           className="w-10 h-10 bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg flex items-center justify-center text-gray-900 hover:bg-rose-500 hover:text-white transition-all active:scale-90 pointer-events-auto"
         >
           {isRemoving ? <Sparkles className="w-3.5 h-3.5 text-gray-900 animate-spin" /> : <Trash2 className="w-4 h-4" />}
@@ -175,6 +188,8 @@ const WishList = () => {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('all');
   const [removingId, setRemovingId] = useState(null);
+  const [isClearing, setIsClearing] = useState(false);
+  const [actionError, setActionError] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
 
   const categories = [
@@ -197,12 +212,22 @@ const WishList = () => {
     if (!window.confirm('Are you sure you want to remove all saved items from your wishlist?')) {
       return;
     }
-    setWishlist([]);
-    Object.values(WISHLIST_KEYS).forEach(key => localStorage.removeItem(key));
-    window.dispatchEvent(new Event('storage'));
-    dispatch(setWishlistCount(0));
-    if (currentUser) {
-      await clearWishlistBackend('all');
+    setActionError('');
+    setIsClearing(true);
+    try {
+      if (currentUser) {
+        const result = await clearWishlistBackend('all');
+        if (!result?.success) throw new Error(result?.message || 'Unable to clear your wishlist.');
+      } else {
+        Object.values(WISHLIST_KEYS).forEach(key => localStorage.removeItem(key));
+        window.dispatchEvent(new Event('storage'));
+      }
+      setWishlist([]);
+      dispatch(setWishlistCount(0));
+    } catch (error) {
+      setActionError(error.message || 'Unable to clear your wishlist.');
+    } finally {
+      setIsClearing(false);
     }
   };
 
@@ -221,7 +246,7 @@ const WishList = () => {
       const merged = Object.entries(WISHLIST_KEYS).flatMap(([type, key]) => {
         try {
           const items = JSON.parse(localStorage.getItem(key)) || [];
-          return items.map(item => ({ ...item, type: item.type || type }));
+          return items.map(item => ({ ...item, itemType: item.itemType || item.type || type, type }));
         } catch {
           return [];
         }
@@ -244,7 +269,7 @@ const WishList = () => {
       if (currentUser) {
         // Fetch live database favorites for logged in user
         const dbWishlist = await getWishlistBackend();
-        if (Array.isArray(dbWishlist) && dbWishlist.length >= 0) {
+        if (Array.isArray(dbWishlist)) {
           setWishlist(dbWishlist);
           return;
         }
@@ -261,24 +286,22 @@ const WishList = () => {
 
   const removeFromWishlist = async (id, type) => {
     setRemovingId(id);
+    setActionError('');
     try {
-      // 1. Immediate optimistic UI removal
-      setWishlist(prev => prev.filter(item => item._id !== id));
-
-      // 2. Update local storage cache
+      if (currentUser) {
+        const result = await toggleWishlistBackend(id, type);
+        if (!result?.success || result.isFavorite !== false) throw new Error(result?.message || 'Unable to remove this saved item.');
+      }
       const storageKey = WISHLIST_KEYS[type] || WISHLIST_KEYS.listing;
       const stored = JSON.parse(localStorage.getItem(storageKey)) || [];
-      const filtered = stored.filter(item => item._id !== id);
-      localStorage.setItem(storageKey, JSON.stringify(filtered));
+      localStorage.setItem(storageKey, JSON.stringify(stored.filter(item => item._id !== id)));
       window.dispatchEvent(new Event('storage'));
-
-      // 3. Update database backend if user is logged in
-      if (currentUser) {
-        await toggleWishlistBackend(id, type);
-      }
+      const nextWishlist = wishlist.filter(item => !(item._id === id && item.type === type));
+      setWishlist(nextWishlist);
+      dispatch(setWishlistCount(nextWishlist.length));
     } catch (error) {
       console.error('Failed to remove item:', error);
-      loadWishlist(); // Re-sync on failure
+      setActionError(error.message || 'Unable to remove this saved item.');
     } finally {
       setRemovingId(null);
     }
@@ -349,10 +372,11 @@ const WishList = () => {
             {wishlist.length > 0 && (
               <button
                 onClick={handleClearAll}
+                disabled={isClearing}
                 className="flex items-center gap-2 px-6 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-2xl font-black uppercase tracking-[0.15em] text-xs transition-all active:scale-95 border border-rose-100 shadow-sm self-start md:self-auto"
               >
                 <Trash2 className="w-4 h-4" />
-                Clear All Wishlist
+                {isClearing ? 'Clearing...' : 'Clear All Wishlist'}
               </button>
             )}
           </motion.div>
@@ -385,12 +409,14 @@ const WishList = () => {
           <div className="flex items-center shrink-0 gap-4 bg-white p-2 rounded-2xl shadow-xl shadow-gray-100 border border-gray-50 max-w-fit">
             <button 
               onClick={() => setViewMode('grid')}
+              aria-label="Grid view"
               className={`p-3 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-gray-900 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-50'}`}
             >
               <Layers className="w-5 h-5" />
             </button>
             <button 
               onClick={() => setViewMode('list')}
+              aria-label="List view"
               className={`p-3 rounded-xl transition-all ${viewMode === 'list' ? 'bg-gray-900 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-50'}`}
             >
               <Search className="w-5 h-5" />
@@ -401,6 +427,7 @@ const WishList = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6">
+        {actionError && <p role="alert" className="mt-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">{actionError}</p>}
 
         {/* Results Grid */}
         <div className="py-16">

@@ -232,7 +232,6 @@ const AnimatedRoutes = () => {
         <Route path="/update-service/:serviceId" element={<PageTransition><UpdateService /></PageTransition>} />
 
         {/* User Routes */}
-        <Route path="/wishlist" element={<PageTransition><Wishlist /></PageTransition>} />
         <Route path="/users" element={<PageTransition><Users /></PageTransition>} />
         <Route path="/events/:id" element={<PageTransition><Events /></PageTransition>} />
         <Route path="/notifications" element={<PageTransition><Notifications /></PageTransition>} />
@@ -290,6 +289,7 @@ const AnimatedRoutes = () => {
         <Route element={<PrivateRoute />}>
           <Route path="/sale" element={<PageTransition><Sale /></PageTransition>} />
           <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
+          <Route path="/wishlist" element={<PageTransition><Wishlist /></PageTransition>} />
           <Route path="/rewards" element={<PageTransition><Rewards /></PageTransition>} />
           <Route path="/matchmaker" element={<PageTransition><Matchmaker /></PageTransition>} />
           <Route path="/radar" element={<PageTransition><Radar /></PageTransition>} />

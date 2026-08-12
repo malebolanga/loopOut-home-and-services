@@ -2,28 +2,7 @@ import User from '../models/user.model.js';
 import { errorHandler } from '../utils/error.js';
 
 export const sendOTP = async (req, res, next) => {
-  const { type, value } = req.body;
-  const userId = req.user.id;
-
-  try {
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { otp, otpExpiry },
-      { new: true }
-    );
-
-    if (!user) return next(errorHandler(404, 'User not found'));
-
-    // In a real scenario, you would send the SMS/Email here using a utility
-    console.log(`[BACKEND] Sent OTP ${otp} to ${value} via ${type}`);
-
-    res.status(200).json({ success: true, message: `OTP sent successfully to ${value}` });
-  } catch (error) {
-    next(error);
-  }
+  return next(errorHandler(503, 'Identity OTP delivery is not configured. Use the account email-verification flow instead.'));
 };
 
 export const verifyOTP = async (req, res, next) => {
@@ -42,14 +21,11 @@ export const verifyOTP = async (req, res, next) => {
       return next(errorHandler(400, 'OTP signal expired'));
     }
 
-    // Step verification success - we don't mark isVerified yet unless all steps are done
-    // But for this simplified flow, we'll mark as verified
-    user.isVerified = true;
     user.otp = undefined;
     user.otpExpiry = undefined;
     await user.save();
 
-    res.status(200).json({ success: true, message: 'Identity verified via signal' });
+    res.status(200).json({ success: true, message: 'Verification signal confirmed. Identity verification remains subject to review.' });
   } catch (error) {
     next(error);
   }
@@ -65,9 +41,9 @@ export const verifyFace = async (req, res, next) => {
       {
         $set: {
           'faceData.imageUrl': imageUrl,
-          'faceData.verified': true,
+          'faceData.verified': false,
           'faceData.detectedAt': new Date(),
-          isVerified: true // Mark as fully verified for this demo
+          kycStatus: 'pending'
         }
       },
       { new: true }
@@ -75,7 +51,7 @@ export const verifyFace = async (req, res, next) => {
 
     if (!user) return next(errorHandler(404, 'User not found'));
 
-    res.status(200).json({ success: true, message: 'Neural face scan synced to backend' });
+    res.status(202).json({ success: true, message: 'Face scan submitted for review.' });
   } catch (error) {
     next(error);
   }
@@ -94,9 +70,9 @@ export const submitKyc = async (req, res, next) => {
           liveSelfieUrl,
           kycStatus: 'pending', // Pending review by admin
           'faceData.imageUrl': liveSelfieUrl,
-          'faceData.verified': true,
+          'faceData.verified': false,
           'faceData.detectedAt': new Date(),
-          isVerified: true // Set to true here so it takes immediate effect contextually for the Demo MVP
+          kycStatus: 'pending'
         }
       },
       { new: true }
@@ -104,7 +80,7 @@ export const submitKyc = async (req, res, next) => {
 
     if (!user) return next(errorHandler(404, 'User not found'));
 
-    res.status(200).json({ success: true, message: 'KYC documents submitted. Identity verified for MVP.', user });
+    res.status(202).json({ success: true, message: 'KYC documents submitted for review.', user });
   } catch (error) {
     next(error);
   }

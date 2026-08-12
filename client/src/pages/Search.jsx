@@ -541,6 +541,7 @@ const SearchPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState('map');
   const [loading, setLoading] = useState(false);
+  const [searchError, setSearchError] = useState('');
   const [listings, setListings] = useState([]);
   const { city: detectedCity } = useLocationCoords();
   const [filters, setFilters] = useState({
@@ -660,6 +661,7 @@ const SearchPage = () => {
   const fetchData = useCallback(async () => {
     const urlParams = new URLSearchParams(location.search);
     setLoading(true);
+    setSearchError('');
 
     try {
       const type = normalizeSearchType(urlParams.get('type'));
@@ -694,6 +696,7 @@ const SearchPage = () => {
           if (config) endpoints = [config.endpoint];
         }
 
+        let successfulRequests = 0;
         const fetchPromises = endpoints.map(async (endpoint) => {
           let url = `/api/${endpoint}/get?limit=${DEFAULT_LISTING_LIMIT}`;
 
@@ -732,12 +735,14 @@ const SearchPage = () => {
             const res = await fetch(url);
             if (res.ok) {
               const data = await res.json();
+              successfulRequests += 1;
               return data.map(item => ({
                 ...item,
                 itemType: endpoint,
                 subType: item.type || item.category || subType
               }));
             }
+            console.error(`Search request failed for ${endpoint}:`, res.status);
           } catch (err) {
             console.error(`Error fetching from ${endpoint}:`, err);
           }
@@ -746,10 +751,13 @@ const SearchPage = () => {
 
         const results = await Promise.all(fetchPromises);
         let combinedResults = results.flat();
+        if (endpoints.length > 0 && successfulRequests === 0) {
+          throw new Error('We could not load search results. Please try again.');
+        }
 
         if (minRating) {
           const ratingThreshold = parseFloat(minRating);
-          combinedResults = combinedResults.filter(item => (item.rating || 4.5) >= ratingThreshold);
+          combinedResults = combinedResults.filter(item => Number(item.rating) >= ratingThreshold);
         }
         return combinedResults;
       };
@@ -774,10 +782,17 @@ const SearchPage = () => {
         }
       }
 
-      setListings(finalResults);
+      const seen = new Set();
+      setListings(finalResults.filter(item => {
+        const key = `${item.itemType || item.type}:${item._id || item.id}`;
+        if (!item._id && !item.id || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }));
     } catch (error) {
       console.error('Search Database error:', error);
       setListings([]);
+      setSearchError(error.message || 'We could not load search results. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -830,6 +845,15 @@ const SearchPage = () => {
   }, [filters, searchSubType, searchTerm, searchType, viewMode]);
 
   const handleSearch = useCallback(() => {
+    const minPrice = Number(filters.minPrice);
+    const maxPrice = Number(filters.maxPrice);
+    if ((filters.minPrice && (!Number.isFinite(minPrice) || minPrice < 0)) ||
+        (filters.maxPrice && (!Number.isFinite(maxPrice) || maxPrice < 0)) ||
+        (Number.isFinite(minPrice) && Number.isFinite(maxPrice) && minPrice > maxPrice)) {
+      setSearchError('Enter a valid price range where the minimum is not greater than the maximum.');
+      return;
+    }
+    setSearchError('');
     const urlParams = buildSearchParams();
 
     // Geocode location if searching for a specific place
@@ -856,7 +880,7 @@ const SearchPage = () => {
       setRecentSearches(newRecent);
       localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(newRecent));
     }
-  }, [buildSearchParams, filters.location, navigate, recentSearches, searchTerm]);
+  }, [buildSearchParams, filters.location, filters.minPrice, filters.maxPrice, navigate, recentSearches, searchTerm]);
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -912,17 +936,19 @@ const SearchPage = () => {
         <div className="max-w-[2520px] mx-auto px-6 py-3 flex items-center gap-4">
 
           {/* Logo */}
-          <div onClick={() => navigate('/')} className="hidden md:flex items-center gap-2 cursor-pointer flex-shrink-0">
+          <button onClick={() => navigate('/')} aria-label="Go to home" className="hidden md:flex items-center gap-2 cursor-pointer flex-shrink-0">
             <div className="w-9 h-9 bg-gray-950 rounded-xl flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <span className="text-lg font-black tracking-tighter">loopOut</span>
-          </div>
+          </button>
 
           {/* Compact Search Bar */}
           <div className="flex-1 max-w-2xl mx-auto">
-            <div
+            <button
+              type="button"
               onClick={() => setShowFilters(true)}
+              aria-label="Open search filters"
               className="flex items-center gap-3 bg-white border border-gray-300 rounded-full px-5 py-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
             >
               <SearchIconLucide className="w-4 h-4 text-gray-500 flex-shrink-0" />
@@ -936,7 +962,7 @@ const SearchPage = () => {
               <div className="flex-shrink-0 w-7 h-7 bg-rose-500 rounded-full flex items-center justify-center">
                 <AdjustmentsHorizontalIcon className="w-4 h-4 text-white" />
               </div>
-            </div>
+            </button>
           </div>
 
           {/* Map Toggle - Desktop */}
@@ -1012,12 +1038,14 @@ const SearchPage = () => {
               <div className="flex items-center gap-1 lg:hidden">
                 <button
                   onClick={() => setViewMode('grid')}
+                  aria-label="Show results as a grid"
                   className={`p-2 rounded-lg transition-colors ${ viewMode === 'grid' ? 'text-gray-900' : 'text-gray-400'}`}
                 >
                   <Squares2X2Icon className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setViewMode('map')}
+                  aria-label="Show results on the map"
                   className={`p-2 rounded-lg transition-colors ${ viewMode === 'map' ? 'text-gray-900' : 'text-gray-400'}`}
                 >
                   <MapIcon className="w-5 h-5" />
@@ -1026,6 +1054,12 @@ const SearchPage = () => {
             </div>
 
             {/* Results Grid */}
+            {searchError && (
+              <div role="alert" className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700">
+                <span>{searchError}</span>
+                <button onClick={fetchData} className="font-bold underline underline-offset-4">Retry</button>
+              </div>
+            )}
             {loading ? (
               <div className={`grid gap-5 ${ viewMode === 'map' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'}`}>
                 {[1,2,3,4,5,6,7,8].map(i => <SkeletonCard key={i} />)}

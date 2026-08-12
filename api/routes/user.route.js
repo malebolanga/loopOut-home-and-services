@@ -20,7 +20,8 @@ import {
     getFollowers,
     getFollowing,
     getMutualFriends,
-    getUserByPhone
+    getUserByPhone,
+    downloadUserData
 } from '../controllers/user.controller.js';
 
 import { verifyToken } from '../utils/verifyUser.js';
@@ -37,6 +38,7 @@ router.put('/update/:id', verifyToken, updateUser);
 
 // Route to delete user
 router.delete('/delete/:id', verifyToken, deleteUser);
+router.get('/export/:id', verifyToken, downloadUserData);
 
 // Route to get all listings for a user
 router.get('/listings/:id', verifyToken, getUserListings);

@@ -71,7 +71,7 @@ export const getWishlistBackend = async () => {
       headers: getAuthHeaders(),
       credentials: 'include',
     });
-    if (!response.ok) return [];
+    if (!response.ok) return null;
     const data = await response.json();
     if (Array.isArray(data)) {
       syncWishlistLocalCache(data);
@@ -79,7 +79,7 @@ export const getWishlistBackend = async () => {
     return data;
   } catch (error) {
     console.error('Error fetching wishlist from backend:', error);
-    return [];
+    return null;
   }
 };
 
@@ -112,11 +112,10 @@ export const clearWishlistBackend = async (category = 'all') => {
       body: JSON.stringify({ category }),
     });
     const data = await response.json();
-    clearWishlistLocalCache(category);
+    if (response.ok && data.success !== false) clearWishlistLocalCache(category);
     return data;
   } catch (error) {
     console.error('Error clearing wishlist backend:', error);
-    clearWishlistLocalCache(category);
     return { success: false, message: error.message };
   }
 };
@@ -136,5 +135,4 @@ export const voteWishlistItem = async (itemId, itemType, voteType) => {
     return { success: false, message: error.message };
   }
 };
-
 

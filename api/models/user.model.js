@@ -172,6 +172,38 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    profileVisibility: {
+        type: Boolean,
+        default: true
+    },
+    contactVisibility: {
+        type: String,
+        enum: ['public', 'private'],
+        default: 'private'
+    },
+    notificationPreferences: {
+        security: {
+            loginAttempts: { type: Boolean, default: true },
+            passwordChanges: { type: Boolean, default: true }
+        },
+        activity: {
+            bookingUpdates: { type: Boolean, default: true },
+            paymentReceipts: { type: Boolean, default: true }
+        },
+        promotions: {
+            specialOffers: { type: Boolean, default: false },
+            platformUpdates: { type: Boolean, default: true }
+        }
+    },
+    dataSharing: {
+        marketing: { type: Boolean, default: false },
+        research: { type: Boolean, default: false }
+    },
+    sharedInfo: {
+        bookingHistory: { type: Boolean, default: false },
+        reviews: { type: Boolean, default: true },
+        socialConnections: { type: Boolean, default: false }
+    },
     otp: {
         type: String,
     },

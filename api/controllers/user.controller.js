@@ -32,10 +32,9 @@ export const updateUser = async (req, res, next) => {
     const allowedFields = [
       'username', 'email', 'avatar', 'coverPhoto', 'location', 'bio', 'phone',
       'occupation', 'interests', 'website', 'socialMedia',
-      'faceData', 'whatsappNumber', 'whatsappVerified',
-      'twoFactorEnabled', 'profileVisibility', 'contactVisibility',
+      'faceData', 'profileVisibility', 'contactVisibility',
       'sharedInfo', 'dataSharing', 'securitySettings', 'plannerTasks',
-      'contacts', 'accessContacts'
+      'contacts', 'accessContacts', 'notificationPreferences'
     ];
 
     const updateData = {};
@@ -58,9 +57,18 @@ export const updateUser = async (req, res, next) => {
     // Always update timestamp
     updateData.updatedAt = new Date();
 
-    // Only hash and update password if provided
-    if (req.body.password) {
-      updateData.password = bcryptjs.hashSync(req.body.password, 10);
+    if (req.body.newPassword !== undefined || req.body.currentPassword !== undefined) {
+      if (!req.body.currentPassword || !req.body.newPassword) {
+        return next(errorHandler(400, 'Enter your current password and a new password.'));
+      }
+      const existingUser = await User.findById(req.params.id).select('+password');
+      if (!existingUser || !bcryptjs.compareSync(req.body.currentPassword, existingUser.password)) {
+        return next(errorHandler(401, 'Your current password is incorrect.'));
+      }
+      if (req.body.newPassword.length < 12) {
+        return next(errorHandler(400, 'Your new password must contain at least 12 characters.'));
+      }
+      updateData.password = bcryptjs.hashSync(req.body.newPassword, 12);
     }
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -84,9 +92,29 @@ export const deleteUser = async (req, res, next) => {
   if (req.user.id !== req.params.id)
     return next(errorHandler(401, 'You can only delete your own account!'));
   try {
+    const currentPassword = String(req.body?.currentPassword || '');
+    const user = await User.findById(req.params.id).select('+password');
+    if (!currentPassword || !user || !bcryptjs.compareSync(currentPassword, user.password)) {
+      return next(errorHandler(401, 'Enter your current password to delete your account.'));
+    }
     await User.findByIdAndDelete(req.params.id);
     res.clearCookie('access_token');
     res.status(200).json('User has been deleted!');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const downloadUserData = async (req, res, next) => {
+  if (req.user.id !== req.params.id) return next(errorHandler(401, 'You can only download your own data.'));
+  try {
+    const user = await User.findById(req.params.id)
+      .select('-password -otp -otpExpiry -otpAttempts -otpPurpose -idDocumentUrl -liveSelfieUrl -faceData -contacts -plannerTasks -__v')
+      .lean();
+    if (!user) return next(errorHandler(404, 'User not found.'));
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename="loopout-account-data.json"');
+    res.status(200).send(JSON.stringify({ exportedAt: new Date().toISOString(), account: user }, null, 2));
   } catch (error) {
     next(error);
   }
@@ -334,34 +362,7 @@ export const getHostRatings = async (req, res, next) => {
 };
 
 export const verifyWhatsApp = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { whatsappNumber } = req.body;
-
-    if (req.user.id !== id) {
-      return next(errorHandler(401, 'You can only verify your own WhatsApp!'));
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      {
-        $set: {
-          whatsappNumber,
-          whatsappVerified: true,
-          isVerified: true,
-          },
-      },
-      { new: true }
-    ).select('-password');
-
-    res.status(200).json({
-      success: true,
-      message: 'WhatsApp number verified successfully!',
-      user: updatedUser,
-    });
-  } catch (error) {
-    next(error);
-  }
+  return next(errorHandler(410, 'WhatsApp connection cannot be used as account verification.'));
 };
 
 export const getPublicUser = async (req, res, next) => {

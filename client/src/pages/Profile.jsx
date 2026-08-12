@@ -125,7 +125,7 @@ const colors = {
 };
 
 // Reusable InputField Component - Airbnb Style
-const InputField = ({ label, id, type = "text", value, handleChange, helperText, placeholder, icon: Icon }) => (
+const InputField = ({ label, id, type = "text", value, handleChange, helperText, placeholder, icon: Icon, readOnly = false }) => (
   <div className="mb-6">
     <label htmlFor={id} className="block text-sm font-semibold text-[#484848] mb-2">
       {label}
@@ -142,6 +142,7 @@ const InputField = ({ label, id, type = "text", value, handleChange, helperText,
         className={`w-full px-4 py-3 border border-[#DDDDDD] rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F] transition-all outline-none text-[#484848] placeholder-[#767676] ${Icon ? 'pl-10' : ''}`}
         value={value || ''}
         onChange={handleChange}
+        readOnly={readOnly}
         placeholder={placeholder || `Enter your ${label.toLowerCase()}`}
       />
     </div>
@@ -265,8 +266,6 @@ export default function Profile() {
   const navigate = useNavigate();
   const [counts, setCounts] = useState({ rental: 0, sale: 0, overnight: 0 });
   const [fetchError, setFetchError] = useState(false);
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [twoFactorMethod, setTwoFactorMethod] = useState('');
   const [profileVisibility, setProfileVisibility] = useState(true);
   const [contactVisibility, setContactVisibility] = useState('private');
   const fileRef = useRef(null);
@@ -297,7 +296,7 @@ export default function Profile() {
   useEffect(() => {
     if (currentUser?.faceData) {
       setFaceData(currentUser.faceData);
-      setIsFaceVerified(true);
+      setIsFaceVerified(false);
     }
     if (currentUser?.whatsappNumber) {
       setWhatsappNumber(currentUser.whatsappNumber);
@@ -307,6 +306,10 @@ export default function Profile() {
     if (currentUser?.accessContacts) {
       setAccessContacts(currentUser.accessContacts);
     }
+    if (currentUser?.notificationPreferences) setNotifications(currentUser.notificationPreferences);
+    if (typeof currentUser?.profileVisibility === 'boolean') setProfileVisibility(currentUser.profileVisibility);
+    if (currentUser?.sharedInfo) setSharedInfo(currentUser.sharedInfo);
+    if (currentUser?.dataSharing) setDataSharing(currentUser.dataSharing);
   }, [currentUser]);
 
   const [accessContacts, setAccessContacts] = useState(false);
@@ -316,6 +319,7 @@ export default function Profile() {
   const [otpSent, setOtpSent] = useState(false);
   const [verificationError, setVerificationError] = useState('');
   const [otpDebug, setOtpDebug] = useState(''); // Only for dev mode
+  const [securityForm, setSecurityForm] = useState({ currentPassword: '', newPassword: '' });
 
   useEffect(() => {
     if (file) {
@@ -418,33 +422,6 @@ export default function Profile() {
 
     const whatsappUrl = `https://wa.me/${formattedNumber}?text=${encodeURIComponent(defaultMessage)}`;
     window.open(whatsappUrl, '_blank');
-  };
-
-  const handleVerifyWhatsApp = async () => {
-    try {
-      const res = await fetch(`/api/user/verify-whatsapp/${currentUser._id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          whatsappNumber,
-          isVerified: true
-        })
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        setWhatsappVerified(true);
-        setUpdateSuccess(true);
-        setTimeout(() => setUpdateSuccess(false), 3000);
-      } else {
-        alert(data.message || 'Verification failed');
-      }
-    } catch (error) {
-      console.error('WhatsApp verification error:', error);
-      alert('Failed to verify WhatsApp number');
-    }
   };
 
   const handleRequestPhoneOtp = async () => {
@@ -605,8 +582,7 @@ export default function Profile() {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                faceData: newFaceData,
-                isVerified: true
+                faceData: newFaceData
               }),
             });
 
@@ -766,11 +742,60 @@ export default function Profile() {
     }
   };
 
+  const saveSettings = async (settings) => {
+    try {
+      dispatch(updateUserStart());
+      const res = await fetch(`/api/user/update/${currentUser._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+      });
+      const data = await res.json();
+      if (!res.ok || data.success === false) throw new Error(data.message || 'Unable to save settings.');
+      dispatch(updateUserSuccess(data));
+      setUpdateSuccess(true);
+      setTimeout(() => setUpdateSuccess(false), 3000);
+    } catch (err) {
+      dispatch(updateUserFailure(err.message));
+    }
+  };
+
+  const handleSecuritySubmit = async (e) => {
+    e.preventDefault();
+    if (securityForm.newPassword.length < 12) {
+      dispatch(updateUserFailure('Your new password must contain at least 12 characters.'));
+      return;
+    }
+    await saveSettings(securityForm);
+    setSecurityForm({ currentPassword: '', newPassword: '' });
+  };
+
+  const handleDownloadData = async () => {
+    try {
+      const res = await fetch(`/api/user/export/${currentUser._id}`);
+      if (!res.ok) throw new Error('Unable to prepare your data export.');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'loopout-account-data.json';
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      dispatch(updateUserFailure(err.message));
+    }
+  };
+
   const handleDeleteUser = async () => {
+    if (!window.confirm('Delete your account permanently? This cannot be undone.')) return;
+    const currentPassword = window.prompt('Enter your current password to confirm account deletion:');
+    if (!currentPassword) return;
     try {
       dispatch(deleteUserStart());
       const res = await fetch(`/api/user/delete/${currentUser._id}`, {
         method: "DELETE",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword }),
       });
       const data = await res.json();
       if (data.success === false) {
@@ -997,10 +1022,12 @@ export default function Profile() {
                 <h1 className="text-4xl lg:text-5xl font-black text-white tracking-tighter italic">
                   {currentUser?.username || 'ELITE USER'}
                 </h1>
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.1)]">
-                  <CheckBadgeIcon className="w-5 h-5 text-blue-500" />
-                  <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Verified</span>
-                </div>
+                {currentUser?.isVerified && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.1)]">
+                    <CheckBadgeIcon className="w-5 h-5 text-blue-500" />
+                    <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Email verified</span>
+                  </div>
+                )}
               </div>
               <p className="text-gray-400 font-medium mb-6 flex items-center justify-center md:justify-start gap-2">
                 <EnvelopeIcon className="w-4 h-4 text-rose-500" />
@@ -1009,10 +1036,10 @@ export default function Profile() {
 
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-6">
                  {[
-                   { label: "Elite Points", value: currentUser?.points || 1250, color: "text-purple-400" },
-                   { label: "Trust Score", value: "99.8%", color: "text-emerald-400" },
+                   { label: "Elite Points", value: currentUser?.points ?? 0, color: "text-purple-400" },
+                   { label: "Email status", value: currentUser?.isVerified ? "Verified" : "Unverified", color: currentUser?.isVerified ? "text-emerald-400" : "text-amber-400" },
                    { label: "Deployments", value: postCount || "0", color: "text-blue-400" },
-                   { label: "Active Connections", value: "124", color: "text-indigo-400" }
+                   { label: "Active Connections", value: currentUser?.followers?.length || 0, color: "text-indigo-400" }
                  ].map((stat, i) => (
                    <div key={i} className="flex flex-col">
                       <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em]">{stat.label}</span>
@@ -1206,6 +1233,8 @@ export default function Profile() {
                           id="email"
                           value={formData.email || currentUser?.email || ''}
                           handleChange={handleChange}
+                          readOnly
+                          helperText="Email changes require account verification support."
                           icon={EnvelopeIcon}
                         />
                       </div>
@@ -1286,16 +1315,16 @@ export default function Profile() {
                             <div>
                               <p className="font-medium text-[#484848]">Face Recognition</p>
                               <p className="text-sm text-[#767676] mt-1">
-                                Verify your identity via face scan
+                                Complete identity verification through the secure verification flow
                               </p>
                             </div>
                             {!isFaceVerified ? (
                               <button
                                 type="button"
-                                onClick={startCamera}
+                                onClick={handleNavigateToVerification}
                                 className="px-4 py-2 border border-[#484848] rounded-lg text-[#484848] font-medium hover:bg-white transition-colors"
                               >
-                                Scan
+                                Verify identity
                               </button>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-[#00A699] font-medium bg-[#00A699]/10 px-3 py-1 rounded-full">
@@ -1309,9 +1338,9 @@ export default function Profile() {
                           <div className="flex flex-col gap-4 p-4 bg-gray-50 rounded-xl">
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="font-medium text-[#484848]">Phone Verification</p>
+                                <p className="font-medium text-[#484848]">Email Verification</p>
                                 <p className="text-sm text-[#767676] mt-1">
-                                  Secure your account via SMS
+                                  Confirm that you control your account email address
                                 </p>
                               </div>
                               {currentUser?.isVerified ? (
@@ -1335,7 +1364,7 @@ export default function Profile() {
                                 {!otpSent ? (
                                   <div className="flex flex-col gap-3">
                                     <p className="text-xs text-[#767676]">
-                                      We will send a code to <strong>{currentUser?.phone || formData.phone || 'your phone'}</strong>
+                                      We will send a code to <strong>{currentUser?.email}</strong>
                                     </p>
                                     <button
                                       type="button"
@@ -1462,7 +1491,7 @@ export default function Profile() {
             {/* Login & Security Section */}
             {activeSection === "login" && (
               <SectionCard title="Login & security" icon={ShieldCheckIcon}>
-                <div className="max-w-2xl space-y-8">
+                <form onSubmit={handleSecuritySubmit} className="max-w-2xl space-y-8">
                   <div>
                     <h4 className="font-semibold text-[#484848] mb-4">Password</h4>
                     <div className="space-y-4">
@@ -1470,35 +1499,26 @@ export default function Profile() {
                         label="Current password"
                         type="password"
                         id="currentPassword"
-                        handleChange={handleChange}
+                        value={securityForm.currentPassword}
+                        handleChange={(e) => setSecurityForm(prev => ({ ...prev, currentPassword: e.target.value }))}
                       />
                       <InputField
                         label="New password"
                         type="password"
                         id="newPassword"
-                        handleChange={handleChange}
+                        value={securityForm.newPassword}
+                        helperText="Use at least 12 characters."
+                        handleChange={(e) => setSecurityForm(prev => ({ ...prev, newPassword: e.target.value }))}
                       />
                     </div>
                   </div>
 
-                  <div className="pt-6 border-t border-[#DDDDDD]">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-semibold text-[#484848]">Two-factor authentication</h4>
-                        <p className="text-sm text-[#767676] mt-1">
-                          Add an extra layer of security
-                        </p>
-                      </div>
-                      <ToggleSwitch enabled={twoFactorEnabled} setEnabled={setTwoFactorEnabled} />
-                    </div>
-                  </div>
-
                   <div className="pt-6 flex justify-end">
-                    <button className="bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors">
+                    <button type="submit" className="bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors">
                       Save changes
                     </button>
                   </div>
-                </div>
+                </form>
               </SectionCard>
             )}
 
@@ -1549,7 +1569,7 @@ export default function Profile() {
                   </div>
 
                   <div className="pt-6 flex justify-end">
-                    <button className="bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors">
+                    <button type="button" onClick={() => saveSettings({ notificationPreferences: notifications })} className="bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors">
                       Save preferences
                     </button>
                   </div>
@@ -1572,10 +1592,16 @@ export default function Profile() {
                     </div>
                   </div>
 
+                  <div className="flex justify-end">
+                    <button type="button" onClick={() => saveSettings({ profileVisibility, sharedInfo, dataSharing })} className="bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors">
+                      Save privacy settings
+                    </button>
+                  </div>
+
                   <div className="pt-6 border-t border-[#DDDDDD]">
                     <h4 className="font-semibold text-[#484848] mb-4">Data management</h4>
                     <div className="space-y-3">
-                      <button className="flex items-center justify-between w-full p-4 border border-[#DDDDDD] rounded-lg hover:bg-[#F7F7F7] transition-colors">
+                      <button type="button" onClick={handleDownloadData} className="flex items-center justify-between w-full p-4 border border-[#DDDDDD] rounded-lg hover:bg-[#F7F7F7] transition-colors">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-[#F7F7F7] flex items-center justify-center">
                             <ArrowDownTrayIcon className="w-5 h-5 text-[#484848]" />
@@ -2007,42 +2033,17 @@ export default function Profile() {
                 icon={PhoneIcon}
               />
 
-              {!whatsappConnected ? (
-                <button
-                  onClick={handleConnectWhatsApp}
-                  className="w-full bg-[#FF5A5F] text-white py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors flex items-center justify-center gap-2"
-                >
-                  <FaWhatsapp size={20} />
-                  Connect WhatsApp
-                </button>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
-                    <CheckCircleIcon className="w-5 h-5" />
-                    <span className="font-medium">Connected: {whatsappNumber}</span>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={handleVerifyWhatsApp}
-                      disabled={whatsappVerified}
-                      className="flex-1 py-3 border border-[#484848] text-[#484848] rounded-lg font-medium hover:bg-[#F7F7F7] transition-colors disabled:opacity-50"
-                    >
-                      {whatsappVerified ? 'Verified' : 'Verify number'}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setWhatsappConnected(false);
-                        setWhatsappVerified(false);
-                        setWhatsappNumber('');
-                      }}
-                      className="flex-1 py-3 border border-red-200 text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors"
-                    >
-                      Disconnect
-                    </button>
-                  </div>
-                </div>
-              )}
+              <p className="text-xs text-[#767676] mb-4">
+                Opening WhatsApp does not verify your account or grant access to your number.
+              </p>
+              <button
+                type="button"
+                onClick={handleConnectWhatsApp}
+                className="w-full bg-[#FF5A5F] text-white py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors flex items-center justify-center gap-2"
+              >
+                <FaWhatsapp size={20} />
+                Open WhatsApp
+              </button>
             </div>
           </div>
         </div>

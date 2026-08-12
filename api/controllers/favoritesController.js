@@ -1,5 +1,9 @@
 import mongoose from 'mongoose';
 import User from '../models/user.model.js';
+import Listing from '../models/listing.model.js';
+import Service from '../models/service.model.js';
+import Helper from '../models/helper.model.js';
+import Event from '../models/event.model.js';
 import { errorHandler } from '../utils/error.js';
 
 export const toggleFavorite = async (req, res, next) => {
@@ -8,6 +12,9 @@ export const toggleFavorite = async (req, res, next) => {
 
   if (!itemId || !itemType) {
     return next(errorHandler(400, 'Item ID and Type are required'));
+  }
+  if (!mongoose.isValidObjectId(itemId)) {
+    return next(errorHandler(400, 'Invalid item ID'));
   }
 
   try {
@@ -22,21 +29,30 @@ export const toggleFavorite = async (req, res, next) => {
     if (['events', 'event'].includes(type)) type = 'event';
 
     let favoriteArray;
+    let ItemModel;
     switch (type) {
       case 'listing':
         favoriteArray = 'favorites';
+        ItemModel = Listing;
         break;
       case 'service':
         favoriteArray = 'favoriteServices';
+        ItemModel = Service;
         break;
       case 'helper':
         favoriteArray = 'favoriteHelpers';
+        ItemModel = Helper;
         break;
       case 'event':
         favoriteArray = 'favoriteEvents';
+        ItemModel = Event;
         break;
       default:
         return next(errorHandler(400, 'Invalid item type'));
+    }
+
+    if (!await ItemModel.exists({ _id: itemId })) {
+      return next(errorHandler(404, 'This item is no longer available'));
     }
 
     if (!user[favoriteArray]) {
@@ -140,9 +156,10 @@ export const clearWishlist = async (req, res, next) => {
     } else {
       let type = (category || '').toLowerCase();
       if (['property', 'properties', 'listings', 'listing'].includes(type)) user.favorites = [];
-      if (['services', 'service'].includes(type)) user.favoriteServices = [];
-      if (['helpers', 'helper'].includes(type)) user.favoriteHelpers = [];
-      if (['events', 'event'].includes(type)) user.favoriteEvents = [];
+      else if (['services', 'service'].includes(type)) user.favoriteServices = [];
+      else if (['helpers', 'helper'].includes(type)) user.favoriteHelpers = [];
+      else if (['events', 'event'].includes(type)) user.favoriteEvents = [];
+      else return next(errorHandler(400, 'Invalid wishlist category'));
     }
 
     await user.save();
