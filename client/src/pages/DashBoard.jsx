@@ -322,7 +322,7 @@ export default function DashBoard() {
           ? `/api/bookings/host/${currentUser._id}`
           : `/api/bookings/user/${currentUser._id}`;
           
-        const res = await fetch(endpoint);
+        const res = await fetch(endpoint, { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
 
@@ -430,6 +430,7 @@ export default function DashBoard() {
       const res = await fetch(`/api/bookings/update/${bookingId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ 
           status: newStatus,
           cancelledBy: newStatus === 'cancelled' ? (dashboardMode === 'hosting' ? 'host' : 'user') : undefined
@@ -437,6 +438,7 @@ export default function DashBoard() {
       });
       if (res.ok) {
         setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: newStatus } : b));
+        fetchNotifications();
       }
     } catch (error) {
       console.error('Failed to update status:', error);
@@ -610,7 +612,14 @@ export default function DashBoard() {
                       notifications.map((notif, idx) => (
                         <div 
                           key={notif._id || idx}
-                          className={`p-3 rounded-2xl border transition-all ${notif.read ? 'bg-white border-gray-50' : 'bg-rose-50/30 border-rose-100'}`}
+                          onClick={() => {
+                            if (notif.data?.bookingId) {
+                              scrollToBooking(notif.data.bookingId);
+                            } else if (notif.title?.includes('Food') || notif.data?.orderId) {
+                              navigate('/lunch');
+                            }
+                          }}
+                          className={`p-3 rounded-2xl border transition-all cursor-pointer hover:shadow-sm ${notif.read ? 'bg-white border-gray-50' : 'bg-rose-50/30 border-rose-100'}`}
                         >
                            <div className="flex items-center gap-3">
                               <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs ${

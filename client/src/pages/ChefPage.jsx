@@ -1661,6 +1661,7 @@ export default function ChefPage() {
     fetch('/api/bookings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(bookingToSave)
     }).catch(err => console.error('Failed to save quick booking:', err));
 
@@ -1982,6 +1983,7 @@ export default function ChefPage() {
     fetch('/api/bookings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(bookingToSave)
     }).catch(err => console.error('Failed to save booking:', err));
 

@@ -28,9 +28,11 @@ export default function Notifications() {
             if (selectedNotification?.data?.bookingId) {
                 setLoadingBooking(true);
                 try {
+                    const token = localStorage.getItem('token');
                     const res = await fetch(`/api/bookings/${selectedNotification.data.bookingId}`, {
+                        credentials: 'include',
                         headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                         }
                     });
                     if (res.ok) {
@@ -59,9 +61,11 @@ export default function Notifications() {
             setError(null);
             let apiNotifs = [];
             try {
+                const token = localStorage.getItem('token');
                 const res = await fetch('/api/notifications', {
+                    credentials: 'include',
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                     }
                 });
                 if (res.ok) {
@@ -110,10 +114,12 @@ export default function Notifications() {
 
     const markAsRead = async (id) => {
         try {
+            const token = localStorage.getItem('token');
             await fetch(`/api/notifications/${id}/read`, {
                 method: 'PUT',
+                credentials: 'include',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                 }
             }).catch(() => {});
         } catch (err) {
@@ -133,10 +139,12 @@ export default function Notifications() {
 
     const deleteNotification = async (id) => {
         try {
+            const token = localStorage.getItem('token');
             await fetch(`/api/notifications/${id}`, {
                 method: 'DELETE',
+                credentials: 'include',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                 }
             }).catch(() => {});
         } catch (err) {
@@ -156,10 +164,12 @@ export default function Notifications() {
 
     const markAllAsRead = async () => {
         try {
+            const token = localStorage.getItem('token');
             await fetch('/api/notifications/read-all', {
                 method: 'PUT',
+                credentials: 'include',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                 }
             }).catch(() => {});
         } catch (err) {
@@ -179,10 +189,12 @@ export default function Notifications() {
 
     const clearAllNotifications = async () => {
         try {
+            const token = localStorage.getItem('token');
             await fetch('/api/notifications/clear-all', {
                 method: 'DELETE',
+                credentials: 'include',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                 }
             }).catch(() => {});
         } catch (err) {
@@ -519,17 +531,20 @@ export default function Notifications() {
                                                                 <button
                                                                     onClick={async () => {
                                                                         try {
+                                                                            const token = localStorage.getItem('token');
                                                                             const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
                                                                                 method: 'POST',
+                                                                                credentials: 'include',
                                                                                 headers: {
                                                                                     'Content-Type': 'application/json',
-                                                                                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                                                                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                                                                                 },
-                                                                                body: JSON.stringify({ status: 'cancelled', cancelledBy: 'host' })
+                                                                                body: JSON.stringify({ status: 'declined', cancelledBy: 'host' })
                                                                             });
                                                                             if (res.ok) {
                                                                                 const updatedBooking = await res.json();
                                                                                 setBookingDetails(updatedBooking);
+                                                                                fetchNotifications();
                                                                             }
                                                                         } catch (err) {
                                                                             console.error('Failed to decline booking:', err);
@@ -542,17 +557,20 @@ export default function Notifications() {
                                                                 <button
                                                                     onClick={async () => {
                                                                         try {
+                                                                            const token = localStorage.getItem('token');
                                                                             const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
                                                                                 method: 'POST',
+                                                                                credentials: 'include',
                                                                                 headers: {
                                                                                     'Content-Type': 'application/json',
-                                                                                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                                                                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                                                                                 },
                                                                                 body: JSON.stringify({ status: 'confirmed' })
                                                                             });
                                                                             if (res.ok) {
                                                                                 const updatedBooking = await res.json();
                                                                                 setBookingDetails(updatedBooking);
+                                                                                fetchNotifications();
                                                                             }
                                                                         } catch (err) {
                                                                             console.error('Failed to approve booking:', err);
@@ -563,6 +581,37 @@ export default function Notifications() {
                                                                     Approve
                                                                 </button>
                                                             </div>
+                                                        )}
+
+                                                        {(bookingDetails.status === 'pending' || bookingDetails.status === 'confirmed') && (selectedNotification.title !== 'New Booking Request' || bookingDetails.status === 'confirmed') && (
+                                                            <button
+                                                                onClick={async () => {
+                                                                    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+                                                                    try {
+                                                                        const token = localStorage.getItem('token');
+                                                                        const isUser = (currentUser?._id || currentUser?.id) === (bookingDetails.user?._id || bookingDetails.user);
+                                                                        const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
+                                                                            method: 'POST',
+                                                                            credentials: 'include',
+                                                                            headers: {
+                                                                                'Content-Type': 'application/json',
+                                                                                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                                                                            },
+                                                                            body: JSON.stringify({ status: 'cancelled', cancelledBy: isUser ? 'user' : 'host' })
+                                                                        });
+                                                                        if (res.ok) {
+                                                                            const updatedBooking = await res.json();
+                                                                            setBookingDetails(updatedBooking);
+                                                                            fetchNotifications();
+                                                                        }
+                                                                    } catch (err) {
+                                                                        console.error('Failed to cancel booking:', err);
+                                                                    }
+                                                                }}
+                                                                className="px-4 py-1.5 text-xs text-red-600 bg-red-50 hover:bg-red-100 font-bold rounded-lg transition-colors border border-red-200"
+                                                            >
+                                                                Cancel Booking
+                                                            </button>
                                                         )}
                                                     </div>
                                                 </div>

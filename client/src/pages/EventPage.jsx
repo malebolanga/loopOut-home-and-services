@@ -332,6 +332,7 @@ export default function EventPage() {
       await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           userId: currentUser?._id || 'guest',
           eventId: event._id,

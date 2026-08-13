@@ -14,13 +14,13 @@ export const checkBookingsAndActions = async () => {
     const now = new Date();
     
     // -------------------------------------------------------------
-    // TASK 1: REMINDER DISPATCHER (12 Hours Before booking starts)
+    // TASK 1: REMINDER DISPATCHER (6 Hours Before booking starts)
     // -------------------------------------------------------------
-    const twelveHoursLater = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+    const sixHoursLater = new Date(now.getTime() + 6 * 60 * 60 * 1000);
     
-    // Find bookings starting within the next 12 hours that haven't been reminded yet
+    // Find bookings starting within the next 6 hours that haven't been reminded yet
     const upcomingBookings = await Booking.find({
-      startDate: { $gt: now, $lte: twelveHoursLater },
+      startDate: { $gt: now, $lte: sixHoursLater },
       status: { $in: ['pending', 'confirmed', 'approved', 'assigned', 'enroute', 'ongoing'] },
       reminderSent: { $ne: true }
     })
@@ -35,6 +35,7 @@ export const checkBookingsAndActions = async () => {
 
       const item = booking.listing || booking.helper || booking.service || booking.event;
       const itemName = item ? item.name || item.title : 'Service Request';
+      const hoursRemaining = Math.max(1, Math.round((new Date(booking.startDate).getTime() - now.getTime()) / (1000 * 60 * 60)));
       const formattedDate = new Date(booking.startDate).toLocaleDateString('en-ZA', { 
         weekday: 'long', 
         day: 'numeric', 
@@ -53,8 +54,8 @@ export const checkBookingsAndActions = async () => {
       const localNotification = new Notification({
         userId: booking.user._id,
         type: 'booking',
-        title: '⏰ Upcoming Booking Reminder',
-        message: `Hi ${username}, this is a reminder that you have a booking for "${itemName}" scheduled on ${formattedDate} at ${formattedTime}.`,
+        title: `⏰ Reminder: ${hoursRemaining} Hours Left`,
+        message: `Hi ${username}, your appointment for "${itemName}" is coming up in ${hoursRemaining} hours (${formattedTime} on ${formattedDate}).`,
         data: { bookingId: booking._id, type: 'reminder' }
       });
       await localNotification.save();

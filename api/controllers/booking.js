@@ -127,19 +127,34 @@ export const createBooking = async (req, res) => {
     if (serviceId) await Service.findByIdAndUpdate(serviceId, { $inc: { bookingsCount: 1 } });
     if (eventId) await Event.findByIdAndUpdate(eventId, { $inc: { bookingsCount: 1 } });
 
-    // Notify host
+    // Notify host & guest
+    const itemName = item ? (item.name || item.title || 'Service') : 'Service';
     try {
       if (item && item.userRef) {
         await new Notification({
           userId: item.userRef,
           type: 'booking',
           title: 'New Booking Request',
-          message: `You have a new booking request for "${item.name}" - ZAR ${serverTotalPrice.toLocaleString()}`,
+          message: `You have a new booking request for "${itemName}" - ZAR ${serverTotalPrice.toLocaleString()}`,
           data: { bookingId: newBooking._id, type: listingId ? 'stay' : 'service' }
         }).save();
       }
     } catch (notifErr) {
       console.error('Failed to create host notification:', notifErr);
+    }
+
+    try {
+      if (authenticatedUserId) {
+        await new Notification({
+          userId: authenticatedUserId,
+          type: 'booking',
+          title: 'Booking Request Placed',
+          message: `Your booking request for "${itemName}" has been submitted (ZAR ${serverTotalPrice.toLocaleString()}).`,
+          data: { bookingId: newBooking._id, type: listingId ? 'stay' : 'service' }
+        }).save();
+      }
+    } catch (notifErr) {
+      console.error('Failed to create guest notification:', notifErr);
     }
 
     res.status(201).json({
@@ -199,21 +214,25 @@ export const getHostBookings = async (req, res) => {
     const listings = await Listing.find({ userRef: hostId });
     const helpers = await Helper.find({ userRef: hostId });
     const services = await Service.find({ userRef: hostId });
+    const events = await Event.find({ userRef: hostId });
 
     const listingIds = listings.map(l => l._id);
     const helperIds = helpers.map(h => h._id);
     const serviceIds = services.map(s => s._id);
+    const eventIds = events.map(e => e._id);
 
     const bookings = await Booking.find({
       $or: [
         { listing: { $in: listingIds } },
         { helper: { $in: helperIds } },
-        { service: { $in: serviceIds } }
+        { service: { $in: serviceIds } },
+        { event: { $in: eventIds } }
       ]
     })
       .populate({ path: 'listing', populate: { path: 'userRef' } })
       .populate({ path: 'helper', populate: { path: 'userRef' } })
       .populate({ path: 'service', populate: { path: 'userRef' } })
+      .populate({ path: 'event', populate: { path: 'userRef' } })
       .populate('user')
       .sort({ createdAt: -1 });
 
@@ -307,6 +326,7 @@ export const updateBookingStatus = async (req, res) => {
       .populate({ path: 'listing', populate: { path: 'userRef' } })
       .populate({ path: 'helper', populate: { path: 'userRef' } })
       .populate({ path: 'service', populate: { path: 'userRef' } })
+      .populate({ path: 'event', populate: { path: 'userRef' } })
       .populate('user');
 
     if (!booking) {
@@ -323,7 +343,7 @@ export const updateBookingStatus = async (req, res) => {
     }
 
     const allowedByGuest = ['cancelled'];
-    const allowedByHost = ['confirmed', 'declined', 'cancelled', 'completed'];
+    const allowedByHost = ['confirmed', 'approved', 'declined', 'cancelled', 'completed', 'assigned', 'enroute', 'ongoing'];
     if (!req.user.isAdmin) {
       const allowedStatuses = callerId === bookingUserId ? allowedByGuest : allowedByHost;
       if (!allowedStatuses.includes(status)) {
@@ -335,26 +355,32 @@ export const updateBookingStatus = async (req, res) => {
     booking.status = status;
     await booking.save();
 
+    const itemName = item?.name || item?.title || 'Service';
+
     // Notify relevant party of status change
     if (status !== previousStatus) {
       try {
         let recipientId;
         let title = 'Booking Update';
-        let messageText = `The status of your booking for "${item?.name}" has been updated to ${status}.`;
+        let messageText = `The status of your booking for "${itemName}" has been updated to ${status}.`;
 
         if (status === 'cancelled') {
           title = 'Booking Cancelled';
           if (cancelledBy === 'user') {
             recipientId = hostId;
-            messageText = `Client ${booking.user?.username || 'User'} has cancelled their booking for "${item?.name}".`;
+            messageText = `Client ${booking.user?.username || 'User'} has cancelled their booking for "${itemName}".`;
           } else {
             recipientId = bookingUserId;
-            messageText = `Your booking for "${item?.name}" has been cancelled by the host.`;
+            messageText = `Your booking for "${itemName}" has been cancelled by the host.`;
           }
-        } else if (status === 'confirmed') {
+        } else if (status === 'confirmed' || status === 'approved') {
           title = 'Booking Confirmed';
           recipientId = bookingUserId;
-          messageText = `Your booking for "${item?.name}" has been confirmed!`;
+          messageText = `Your booking for "${itemName}" has been confirmed!`;
+        } else if (status === 'declined') {
+          title = 'Booking Declined';
+          recipientId = bookingUserId;
+          messageText = `Your booking for "${itemName}" was declined by the host.`;
         } else {
           recipientId = bookingUserId;
         }
