@@ -76,18 +76,32 @@ export const createBooking = async (req, res) => {
     // Server-side total price — never trust client-supplied totalPrice
     const start = new Date(startDate);
     const end = new Date(endDate);
-    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) {
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
       console.warn('[createBooking] validation failed: invalid date range', { startDate, endDate });
       return res.status(400).json({ error: 'Invalid date range' });
     }
-    const timeDifference = end.getTime() - start.getTime();
+    const timeDifference = Math.max(0, end.getTime() - start.getTime());
     const numberOfUnits = Math.max(1, Math.ceil(timeDifference / (1000 * 3600 * 24)));
     const serverTotalPrice = (item.regularPrice || 0) * numberOfUnits;
 
     // Overlap check to prevent double-booking
+    // For single-time appointments (like helpers/services where start == end), treat slot window as 1 hour
+    const slotStart = new Date(startDate);
+    const slotEnd = end.getTime() === start.getTime()
+      ? new Date(start.getTime() + 60 * 60 * 1000)
+      : new Date(endDate);
+
     const overlapQuery = {
-      status: { $in: ['pending', 'confirmed', 'approved', 'ongoing', 'assigned'] },
-      $and: [{ startDate: { $lt: new Date(endDate) } }, { endDate: { $gt: new Date(startDate) } }]
+      status: { $in: ['confirmed', 'approved', 'ongoing', 'assigned'] },
+      $and: [
+        { startDate: { $lt: slotEnd } },
+        { 
+          $or: [
+            { endDate: { $gt: slotStart } },
+            { $and: [{ endDate: { $gte: slotStart } }, { startDate: { $lte: slotStart } }] }
+          ]
+        }
+      ]
     };
     if (listingId) overlapQuery.listing = listingId;
     else if (helperId) overlapQuery.helper = helperId;
@@ -129,14 +143,17 @@ export const createBooking = async (req, res) => {
 
     // Notify host & guest
     const itemName = item ? (item.name || item.title || 'Service') : 'Service';
+    const itemType = listingId ? 'listing' : helperId ? 'helper' : serviceId ? 'service' : 'event';
+    const itemId = listingId || helperId || serviceId || eventId;
+    const hostUserId = item ? (item.userRef?._id || item.userRef || item.creator?._id || item.creator) : null;
     try {
-      if (item && item.userRef) {
+      if (hostUserId) {
         await new Notification({
-          userId: item.userRef,
+          userId: hostUserId,
           type: 'booking',
           title: 'New Booking Request',
           message: `You have a new booking request for "${itemName}" - ZAR ${serverTotalPrice.toLocaleString()}`,
-          data: { bookingId: newBooking._id, type: listingId ? 'stay' : 'service' }
+          data: { bookingId: newBooking._id, itemType, itemId }
         }).save();
       }
     } catch (notifErr) {
@@ -150,7 +167,7 @@ export const createBooking = async (req, res) => {
           type: 'booking',
           title: 'Booking Request Placed',
           message: `Your booking request for "${itemName}" has been submitted (ZAR ${serverTotalPrice.toLocaleString()}).`,
-          data: { bookingId: newBooking._id, type: listingId ? 'stay' : 'service' }
+          data: { bookingId: newBooking._id, itemType, itemId }
         }).save();
       }
     } catch (notifErr) {
@@ -207,13 +224,9 @@ export const getHostBookings = async (req, res) => {
       return res.status(400).json({ error: 'Valid Host ID is required' });
     }
 
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ error: 'Database connecting, please retry' });
-    }
-
     const listings = await Listing.find({ userRef: hostId });
     const helpers = await Helper.find({ userRef: hostId });
-    const services = await Service.find({ userRef: hostId });
+    const services = await Service.find({ $or: [{ userRef: hostId }, { creator: hostId }] });
     const events = await Event.find({ userRef: hostId });
 
     const listingIds = listings.map(l => l._id);
@@ -231,7 +244,7 @@ export const getHostBookings = async (req, res) => {
     })
       .populate({ path: 'listing', populate: { path: 'userRef' } })
       .populate({ path: 'helper', populate: { path: 'userRef' } })
-      .populate({ path: 'service', populate: { path: 'userRef' } })
+      .populate({ path: 'service', populate: [{ path: 'userRef' }, { path: 'creator' }] })
       .populate({ path: 'event', populate: { path: 'userRef' } })
       .populate('user')
       .sort({ createdAt: -1 });
@@ -260,16 +273,12 @@ export const getUserBookings = async (req, res) => {
       return res.status(400).json({ error: 'Valid User ID is required' });
     }
 
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ error: 'Database connecting, please retry' });
-    }
-
     let bookings;
     try {
       bookings = await Booking.find({ user: userId })
         .populate({ path: 'listing', select: 'name title imageUrls address regularPrice userRef', populate: { path: 'userRef', select: 'username avatar' } })
         .populate({ path: 'helper', select: 'name title imageUrls address regularPrice userRef', populate: { path: 'userRef', select: 'username avatar' } })
-        .populate({ path: 'service', select: 'name title imageUrls address price userRef', populate: { path: 'userRef', select: 'username avatar' } })
+        .populate({ path: 'service', select: 'name title imageUrls address price userRef creator', populate: { path: 'userRef', select: 'username avatar' } })
         .populate({ path: 'event', select: 'name title imageUrls address price userRef', populate: { path: 'userRef', select: 'username avatar' } })
         .populate('user', 'username avatar email phone')
         .sort({ createdAt: -1 })
@@ -293,7 +302,7 @@ export const getBookingById = async (req, res) => {
     const booking = await Booking.findById(id)
       .populate({ path: 'listing', populate: { path: 'userRef' } })
       .populate({ path: 'helper', populate: { path: 'userRef' } })
-      .populate({ path: 'service', populate: { path: 'userRef' } })
+      .populate({ path: 'service', populate: [{ path: 'userRef' }, { path: 'creator' }] })
       .populate('user', 'username email avatar phone')
       .populate({ path: 'event', populate: { path: 'userRef' } });
 
@@ -302,7 +311,7 @@ export const getBookingById = async (req, res) => {
     }
 
     const item = booking.listing || booking.helper || booking.service || booking.event;
-    const hostId = item?.userRef?._id?.toString() || item?.userRef?.toString();
+    const hostId = item?.userRef?._id?.toString() || item?.userRef?.toString() || item?.creator?._id?.toString() || item?.creator?.toString();
     const bookingUserId = booking.user?._id?.toString() || booking.user?.toString();
     const callerId = req.user.id;
 
@@ -325,7 +334,7 @@ export const updateBookingStatus = async (req, res) => {
     const booking = await Booking.findById(bookingId)
       .populate({ path: 'listing', populate: { path: 'userRef' } })
       .populate({ path: 'helper', populate: { path: 'userRef' } })
-      .populate({ path: 'service', populate: { path: 'userRef' } })
+      .populate({ path: 'service', populate: [{ path: 'userRef' }, { path: 'creator' }] })
       .populate({ path: 'event', populate: { path: 'userRef' } })
       .populate('user');
 
@@ -334,7 +343,7 @@ export const updateBookingStatus = async (req, res) => {
     }
 
     const item = booking.listing || booking.helper || booking.service || booking.event;
-    const hostId = item?.userRef?._id?.toString() || item?.userRef?.toString();
+    const hostId = item?.userRef?._id?.toString() || item?.userRef?.toString() || item?.creator?._id?.toString() || item?.creator?.toString();
     const bookingUserId = booking.user?._id?.toString() || booking.user?.toString();
     const callerId = req.user.id;
 

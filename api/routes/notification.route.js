@@ -8,12 +8,6 @@ const router = express.Router();
 // Get all notifications for current user
 router.get('/', verifyToken, async(req, res) => {
     try {
-        // Check if database is connected first
-        if (mongoose.connection.readyState !== 1) {
-            console.warn('[NOTIF] Database not ready, state:', mongoose.connection.readyState);
-            return res.status(503).json({ success: false, message: 'Database connecting, please retry', notifications: [], unreadCount: 0 });
-        }
-
         if (!req.user || !req.user.id) {
             console.error('[NOTIF] Error: req.user.id is missing');
             return res.status(401).json({ success: false, message: 'Unauthorized: No user ID in token' });

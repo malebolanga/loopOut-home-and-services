@@ -209,7 +209,7 @@ export default function Notifications() {
 
     const getNotificationIcon = (type) => {
         switch (type) {
-            case 'booking': return <span className="text-blue-500 bg-blue-100 p-2 rounded-full">🍱</span>;
+            case 'booking': return <span className="text-blue-500 bg-blue-100 p-2 rounded-full">📅</span>;
             case 'message': return <span className="text-green-500 bg-green-100 p-2 rounded-full">💬</span>;
             case 'comment': return <span className="text-amber-500 bg-amber-100 p-2 rounded-full">📝</span>;
             case 'review': return <span className="text-yellow-500 bg-yellow-100 p-2 rounded-full">⭐</span>;
@@ -233,6 +233,12 @@ export default function Notifications() {
             
             if (orderId || orderCode || (notification.title && notification.title.includes('Food'))) {
                 navigate('/lunch');
+            } else if (notification.type === 'booking' && itemType && itemId) {
+                // Navigate directly to the booked item's page
+                navigate(`/${itemType}/${itemId}`);
+            } else if (notification.type === 'booking') {
+                // Fallback: go to user's bookings page
+                navigate('/my-bookings');
             } else if (notification.type === 'new_post' || notification.type === 'comment') {
                 if (itemType && itemId) {
                     navigate(`/${itemType}/${itemId}`);
@@ -242,6 +248,8 @@ export default function Notifications() {
             }
         } else if (notification.title && notification.title.includes('Food')) {
             navigate('/lunch');
+        } else if (notification.type === 'booking') {
+            navigate('/my-bookings');
         }
         setSelectedNotification(null);
     };

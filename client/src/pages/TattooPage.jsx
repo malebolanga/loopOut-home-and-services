@@ -1663,6 +1663,11 @@ export default function TattooPage() {
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify(bookingToSave)
+    }).then(async (res) => {
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error('Booking save failed:', err?.error || res.status);
+      }
     }).catch(err => console.error('Failed to save quick booking:', err));
 
     window.open(whatsappUrl, '_blank');
@@ -1976,6 +1981,11 @@ export default function TattooPage() {
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify(bookingToSave)
+    }).then(async (res) => {
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error('Booking save failed:', err?.error || res.status);
+      }
     }).catch(err => console.error('Failed to save booking:', err));
 
     window.open(whatsappUrl, '_blank');
