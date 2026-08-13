@@ -2,6 +2,7 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
+import { X, Camera } from 'lucide-react';
 import { useSelector } from "react-redux";
 import { useRef, useState, useEffect } from "react";
 import {

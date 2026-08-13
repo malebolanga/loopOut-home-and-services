@@ -41,7 +41,7 @@ export const sendEmail = async (to, subject, text, html) => {
 
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: process.env.EMAIL_PORT || 587,
+      port: Number(process.env.EMAIL_PORT) || 587,
       secure: process.env.EMAIL_SECURE === 'true',
       auth: {
         user: process.env.EMAIL_USER,
@@ -60,11 +60,11 @@ export const sendEmail = async (to, subject, text, html) => {
       html: html || text,
     });
 
-    console.log('✅ Email sent: %s', info.messageId);
+    console.log('✅ Email sent successfully to %s: %s', to, info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Error sending email:', error.message);
-    return { success: false, error };
+    console.error('❌ Error sending email to %s:', to, error.message);
+    return { success: false, error: error.message };
   }
 };
 

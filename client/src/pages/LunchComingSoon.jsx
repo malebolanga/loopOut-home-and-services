@@ -53,6 +53,13 @@ import {
 
 const formatPrice = (price) => `R${Number(price || 0).toFixed(2)}`;
 
+const PRESET_MOODS = [
+  { id: 'quick', label: '⚡ Quick Lunch' },
+  { id: 'budget', label: '💰 Under R100' },
+  { id: 'healthy', label: '🥗 Healthy & Fresh' },
+  { id: 'comfort', label: '🍲 Comfort Food' },
+];
+
 const SHOP_THEMES = [
   {
     id: 'amber',
@@ -168,6 +175,19 @@ export default function LunchComingSoon() {
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
   const [notice, setNotice] = useState(null);
+
+  // AI Matchmaker states
+  const [showAiLunchSection, setShowAiLunchSection] = useState(false);
+  const [selectedMood, setSelectedMood] = useState('quick');
+  const [customFoodQuery, setCustomFoodQuery] = useState('');
+  const [aiMealMatches, setAiMealMatches] = useState([]);
+  const [aiRecommendationIndex, setAiRecommendationIndex] = useState(0);
+
+  const handleRunAiMatchmaker = (mood, query = '') => {
+    setSelectedMood(mood);
+    if (query) setCustomFoodQuery(query);
+    setAiRecommendationIndex(0);
+  };
 
   // Form states for checkout & delivery
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);

@@ -14,11 +14,22 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:3000',
+        changeOrigin: true,
         secure: false,
+        ws: true,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, res) => {
+            console.warn('[Vite Proxy Error]', err.message);
+            if (res && !res.headersSent && typeof res.writeHead === 'function') {
+              res.writeHead(503, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, message: 'Backend server is starting or unavailable' }));
+            }
+          });
+        },
       },
     },
   },
-    plugins: [react()],
+  plugins: [react()],
   build: {
     sourcemap: false,
     minify: 'esbuild',

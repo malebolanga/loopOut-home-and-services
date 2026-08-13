@@ -237,7 +237,7 @@ export default function RentPage() {
       history = history.filter((h) => h._id !== listing._id);
       history.unshift({ ...listing, itemType: "listing", viewedAt: new Date().toISOString() });
       localStorage.setItem("recentlyViewed", JSON.stringify(history.slice(0, 20)));
-    } catch (_) {}
+    } catch (_) { /* ignore */ }
   }, [listing]);
 
   const openGallery = (i = 0) => { setGalleryStart(i); setShowGallery(true); };

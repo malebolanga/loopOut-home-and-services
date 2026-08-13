@@ -41,7 +41,7 @@ export default function DailySpinWheelModal({ isOpen, onClose }) {
       setHasSpunToday(true);
       const savedPrize = localStorage.getItem('loopout_today_prize');
       if (savedPrize) {
-        try { setWonPrize(JSON.parse(savedPrize)); } catch (e) {}
+        try { setWonPrize(JSON.parse(savedPrize)); } catch (_e) { /* ignore */ }
       }
     }
     const savedVouchers = JSON.parse(localStorage.getItem('loopout_user_vouchers') || '[]');

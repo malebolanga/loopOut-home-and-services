@@ -180,8 +180,20 @@ export const getHostBookings = async (req, res) => {
   try {
     const { hostId } = req.params;
 
+    if (!hostId || hostId === 'undefined' || hostId === 'null') {
+      return res.status(400).json({ error: 'Valid Host ID is required' });
+    }
+
     if (req.user.id !== hostId && !req.user.isAdmin) {
       return res.status(403).json({ error: 'Access denied' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(hostId)) {
+      return res.status(400).json({ error: 'Valid Host ID is required' });
+    }
+
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ error: 'Database connecting, please retry' });
     }
 
     const listings = await Listing.find({ userRef: hostId });
@@ -205,9 +217,10 @@ export const getHostBookings = async (req, res) => {
       .populate('user')
       .sort({ createdAt: -1 });
 
-    res.json(bookings);
+    return res.json(bookings);
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('[HOST BOOKINGS] Error:', error.message);
+    return res.status(500).json({ error: 'Server error', message: error.message });
   }
 };
 

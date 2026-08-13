@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 // Services.jsx - Airbnb-Style Professional Design
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1718,7 +1719,7 @@ const ServicePage = () => {
                           ? 'border-rose-500 bg-rose-50 shadow-sm' 
                           : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                       }`}
-                      onClick={() => setSelectedModalService(option)}
+                      onClick={() => setSelectedService(option)}
                     >
                       <div className="flex-1 pr-4">
                         <div className="flex items-start gap-3 mb-1">

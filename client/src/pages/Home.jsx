@@ -693,142 +693,7 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
   );
 };
 
-const CommunityNeedsSection = ({ navigate }) => {
-  const [needs, setNeeds] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const { currentUser } = useSelector((state) => state.user);
-
-  const fetchNeeds = async () => {
-    try {
-      const res = await fetch('/api/looking-for/get?limit=6');
-      if (res.ok) {
-        const data = await res.json();
-        setNeeds(data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchNeeds();
-  }, []);
-
-  const handleInteraction = async (id, type) => {
-    if (!currentUser) return navigate('/sign-in');
-    
-    // Optimistic UI update
-    setNeeds(prevNeeds => prevNeeds.map(need => {
-      if (need._id === id) {
-        let { likes = [], dislikes = [] } = need;
-        const userId = currentUser._id;
-        
-        if (type === 'like') {
-          if (likes.includes(userId)) {
-            likes = likes.filter(uid => uid !== userId);
-          } else {
-            likes = [...likes, userId];
-            dislikes = dislikes.filter(uid => uid !== userId);
-          }
-        } else if (type === 'dislike') {
-          if (dislikes.includes(userId)) {
-            dislikes = dislikes.filter(uid => uid !== userId);
-          } else {
-            dislikes = [...dislikes, userId];
-            likes = likes.filter(uid => uid !== userId);
-          }
-        }
-        return { ...need, likes, dislikes };
-      }
-      return need;
-    }));
-
-    try {
-      const res = await fetch(`/api/looking-for/${type}/${id}`, {
-        method: 'POST',
-      });
-      if (!res.ok) {
-        fetchNeeds(); // revert on fail
-      }
-    } catch (err) {
-      console.error(err);
-      fetchNeeds(); // revert on fail
-    }
-  };
-
-  if (loading || needs.length === 0) return null;
-
-  return (
-    <motion.section
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true }}
-      variants={containerVariants}
-      className="mb-20 mt-10 relative"
-    >
-      {/* Cinematic Orbital Backdrop */}
-
-
-      <div className="flex justify-between items-end mb-10">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-            <span className="text-[10px] font-black text-rose-500 tracking-[0.3em] uppercase">Intelligence Feed</span>
-          </div>
-          <h2 className="text-2xl font-black text-gray-950 tracking-tighter leading-none">
-            COMMUNITY <br />
-            <span className="text-gray-400">PULSE</span>
-          </h2>
-        </div>
-        <button
-          onClick={() => navigate('/looking-for')}
-          className="text-[10px] font-black text-rose-500 uppercase tracking-widest border-b-2 border-rose-500/10 hover:border-rose-500 transition-all pb-1 flex items-center gap-2"
-        >
-          <span>Sync All Signals</span>
-          <ArrowRightIcon className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-        </button>
-      </div>
-
-      <div className="relative -mx-8 px-8 ">
-        <Swiper
-          modules={[FreeMode]}
-          freeMode={true}
-          slidesPerView={'auto'}
-          spaceBetween={16}
-          observer={true}
-          observeParents={true}
-          className="community-feed-swiper !overflow-visible"
-          breakpoints={{
-            320: { slidesPerView: 2.1, spaceBetween: 12 },
-            640: { slidesPerView: 2.2, spaceBetween: 16 },
-            1024: { slidesPerView: 3.2, spaceBetween: 20 },
-            1280: { slidesPerView: 4, spaceBetween: 24 }
-          }}
-        >
-          {needs.map((need, idx) => (
-            <SwiperSlide key={need._id} className="h-full">
-              <motion.div
-                variants={itemVariants}
-                custom={idx}
-                className="h-full"
-              >
-                <StatusCard
-                  request={need}
-                  currentUser={currentUser}
-                  onLike={(id) => handleInteraction(id, 'like')}
-                  onDislike={(id) => handleInteraction(id, 'dislike')}
-                  navigate={navigate}
-                />
-              </motion.div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
-    </motion.section>
-  );
-};
+const CommunityNeedsSection = () => null;
 
 function MobileAppHomepage({
   featuredProperties, featuredServices, featuredHelpers, featuredEvents,
@@ -1302,7 +1167,7 @@ function MobileAppHomepage({
       <MyBookingsConsumer isOpen={isBookingsOpen} onClose={() => setIsBookingsOpen(false)} />
     </div>
   );
-};
+}
 
 // --- Airbnb-Style Desktop Homepage ---
 function DesktopHomepage({
@@ -1515,7 +1380,7 @@ function DesktopHomepage({
       <MyBookingsConsumer isOpen={isBookingsOpen} onClose={() => setIsBookingsOpen(false)} />
     </div>
   );
-};
+}
 
 // --- Main Component ---
 const Home = () => {

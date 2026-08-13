@@ -41,6 +41,8 @@ const PulseItem = forwardRef(({ item }, ref) => {
     </motion.div>
   );
 });
+PulseItem.displayName = 'PulseItem';
+
 
 const LoopOutPulse = () => {
   const [items, setItems] = useState([

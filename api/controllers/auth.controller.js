@@ -3,8 +3,7 @@ import bcryptjs from 'bcryptjs';
 import { errorHandler } from '../utils/error.js';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { getApps, initializeApp, cert, applicationDefault } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
+
 import { sendEmail } from '../utils/email.js';
 import { sendSMS } from '../utils/sms.js';
 
@@ -45,15 +44,25 @@ const sendVerificationCode = async (user, subject = 'Your LoopOut verification c
   await user.save();
   const text = `Your LoopOut verification code is: ${otp}. It expires in 10 minutes.`;
   const html = `<p>Use this code to verify your LoopOut account. It expires in <strong>10 minutes</strong>.</p><p style="font-size:28px;letter-spacing:6px"><strong>${otp}</strong></p>`;
+  
   try {
-    await sendEmail(user.email, subject, text, html);
+    const emailResult = await sendEmail(user.email, subject, text, html);
+    if (!emailResult.success) {
+      console.warn(`\n⚠️ [VERIFICATION CODE] Email delivery to ${user.email} failed: ${emailResult.error}`);
+      console.warn(`👉 VERIFICATION CODE FOR ${user.email}: [ ${otp} ]\n`);
+    }
     if (user.phone) await sendSMS(user.phone, text);
+    return { success: emailResult.success, otp };
   } catch (error) {
     console.error('Verification code delivery failed:', error.message);
+    console.warn(`👉 FALLBACK VERIFICATION CODE FOR ${user.email}: [ ${otp} ]\n`);
+    return { success: false, otp };
   }
 };
 
-const firebaseAuth = () => {
+const firebaseAuth = async () => {
+  const { getApps, initializeApp, cert, applicationDefault } = await import('firebase-admin/app');
+  const { getAuth } = await import('firebase-admin/auth');
   if (!getApps().length) {
     const rawServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
     if (rawServiceAccount) initializeApp({ credential: cert(JSON.parse(rawServiceAccount)) });
@@ -62,6 +71,7 @@ const firebaseAuth = () => {
   }
   return getAuth();
 };
+
 
 const validateSignup = ({ username, email, password, phone, location, acceptedTerms }) => {
   if (!/^[a-zA-Z0-9_]{3,30}$/.test(String(username || '').trim())) return 'Choose a username with 3–30 letters, numbers, or underscores.';
@@ -118,7 +128,7 @@ export const google = async (req, res, next) => {
   try {
     if (!req.body.idToken || typeof req.body.idToken !== 'string') return next(errorHandler(400, 'A Google identity token is required.'));
     let decoded;
-    try { decoded = await firebaseAuth().verifyIdToken(req.body.idToken, true); }
+    try { decoded = await (await firebaseAuth()).verifyIdToken(req.body.idToken, true); }
     catch (error) {
       if (error.message === 'Firebase Admin credentials are not configured.') return next(errorHandler(503, 'Google sign-in is temporarily unavailable.'));
       return next(errorHandler(401, 'Google sign-in could not be verified.'));

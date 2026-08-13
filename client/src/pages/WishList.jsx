@@ -179,6 +179,8 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
     </motion.div>
   );
 });
+AirbnbCard.displayName = 'AirbnbCard';
+
 
 const WishList = () => {
   const navigate = useNavigate();

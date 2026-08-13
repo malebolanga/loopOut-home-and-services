@@ -370,7 +370,7 @@ const SearchInput = ({
           </div>
           
           {/* Debug info - remove in production */}
-          {process.env.NODE_ENV === 'development' && (
+          {import.meta.env.DEV && (
             <div className="p-2 border-t border-gray-100 bg-gray-50 text-xs text-gray-500">
               History loaded: {isHistoryLoaded ? 'Yes' : 'No'} | 
               Items: {searchHistory.length} | 

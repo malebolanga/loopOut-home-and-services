@@ -766,8 +766,7 @@ export default function Header() {
                           { label: 'Create Stay', icon: HomeIcon, tab: 'stays' },
                           { label: 'Create Helper', icon: UserGroupIcon, tab: 'online' },
                           { label: 'Create Event', icon: BellIcon, tab: 'events' },
-                          { label: 'Create Service', icon: BriefcaseIcon, tab: 'experiences' },
-                          { label: 'Create Request', icon: QuestionMarkCircleIcon, path: '/create-request' }
+                          { label: 'Create Service', icon: BriefcaseIcon, tab: 'experiences' }
                         ].map((item, idx) => (
                           <button
                             key={idx}

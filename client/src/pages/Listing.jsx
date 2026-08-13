@@ -29,7 +29,8 @@ import {
   FaShieldAlt, FaHotTub, FaDog, FaBolt, FaSnowflake, FaUserFriends, FaCoffee,
   FaCouch, FaShower, FaWind, FaDesktop, FaTree, FaUmbrellaBeach, FaDumbbell,
   FaSmokingBan, FaHome, FaFacebook, FaInstagram, FaTwitter, FaLinkedin, FaTiktok, FaGlobe,
-  FaHeart, FaWhatsapp, FaUsers, FaClock, FaReceipt, FaSpinner, FaBed, FaBath, FaChevronLeft, FaChevronRight, FaHotel
+  FaHeart, FaWhatsapp, FaUsers, FaClock, FaReceipt, FaSpinner, FaBed, FaBath, FaChevronLeft, FaChevronRight, FaHotel,
+  FaTimes, FaRegCommentDots, FaEnvelope, FaPhone
 } from "react-icons/fa";
 import { MdCleanHands, MdOutlineGppGood, MdLogin, MdChat, MdLocationOn, MdAttachMoney, MdKingBed, MdBathtub, MdClose } from "react-icons/md";
 import NeuralLoader from "../components/NeuralLoader";
@@ -2779,7 +2780,7 @@ export default function Listing() {
                             rule.trim() && (
                               <p key={i} className="flex items-start gap-2 leading-relaxed">
                                 <CheckCircleIcon className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                                {rule.replace(/^[•\-\*]\s*/, '')}
+                                {rule.replace(/^[-•*]\s*/, '')}
                               </p>
                             )
                           ))
@@ -2805,7 +2806,7 @@ export default function Listing() {
                             rule.trim() && (
                               <p key={i} className="flex items-start gap-2 leading-relaxed">
                                 <CheckCircleIcon className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                                {rule.replace(/^[•\-\*]\s*/, '')}
+                                {rule.replace(/^[-•*]\s*/, '')}
                               </p>
                             )
                           ))

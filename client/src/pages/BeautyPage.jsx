@@ -62,7 +62,8 @@ import {
   FaTruck, FaUser, FaPhone, FaWhatsapp, FaInfoCircle, FaShieldAlt,
   FaHandHoldingHeart, FaRing, FaBrush, FaSmile, FaUtensils, FaCookie, FaShoppingBasket,
   FaShoePrints, FaSoap, FaTint, FaWater, FaCogs, FaBath, FaSun, FaDog, FaPaw, FaFish,
-  FaUserFriends, FaHome, FaCat, FaDove, FaHorse, FaArrowRight, FaSprayCan, FaWind, FaCar
+  FaUserFriends, FaHome, FaCat, FaDove, FaHorse, FaArrowRight, FaSprayCan, FaWind, FaCar,
+  FaExclamationTriangle, FaHeart, FaSpinner
 } from 'react-icons/fa';
 import { FiShare2, FiMessageSquare, FiMapPin, FiHeart, FiClock, FiStar, FiChevronRight, FiChevronLeft } from 'react-icons/fi';
 import { MdCleanHands, MdOutlineGppGood, MdLogin, MdChat, MdLocationOn, MdAttachMoney, MdVerified } from 'react-icons/md';

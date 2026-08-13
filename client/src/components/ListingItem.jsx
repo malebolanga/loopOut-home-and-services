@@ -397,6 +397,6 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
       </div>
     </motion.div>
   );
-};
+}
 
 export default ListingItem;

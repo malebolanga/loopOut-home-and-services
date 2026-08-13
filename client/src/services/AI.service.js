@@ -1,7 +1,7 @@
 // src/services/AI.service.js
 const AI = {
   // Add missing methods
-  calculateEngagementScore(path, userId) {
+  calculateEngagementScore(path, _userId) {
     // Temporary implementation
     const baseScores = {
       'for-rent': 0.8,

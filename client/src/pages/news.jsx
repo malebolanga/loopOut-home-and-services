@@ -1,7 +1,35 @@
-// ... (previous code)
+import { useState } from 'react';
+import { FaHeart, FaRegHeart, FaBed, FaBath } from 'react-icons/fa';
+import { MdShare } from 'react-icons/md';
+
+// Helper utilities
+const enhancedImages = [];
+const getPropertyTypeName = (type) => type || 'Property';
+const formatPrice = (price) => price ? `R${price.toLocaleString()}` : 'Price on request';
 
 function ListingItem({ listing = "", compactMode = false }) {
-  // ... (previous state and effects)
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [showShareOptions, setShowShareOptions] = useState(false);
+  const isNewListing = listing?.createdAt
+    ? (Date.now() - new Date(listing.createdAt).getTime()) < 7 * 24 * 60 * 60 * 1000
+    : false;
+
+  const toggleFavorite = () => setIsFavorite(f => !f);
+
+  const shareListing = (platform) => {
+    const url = encodeURIComponent(window.location.href);
+    const links = {
+      whatsapp: `https://wa.me/?text=${url}`,
+      facebook: `https://facebook.com/sharer/sharer.php?u=${url}`,
+      copy: null,
+    };
+    if (platform === 'copy') {
+      navigator.clipboard.writeText(window.location.href).catch(() => {});
+    } else if (links[platform]) {
+      window.open(links[platform], '_blank');
+    }
+    setShowShareOptions(false);
+  };
 
   return (
     <div className={`bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-200 hover:shadow-lg ${compactMode ? 'h-full' : ''}`}>

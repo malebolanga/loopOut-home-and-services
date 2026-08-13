@@ -53,14 +53,6 @@ export const TOP_CATEGORIES = [
     emoji: '📦'
   },
   {
-    id: 'usedbooks',
-    name: 'Used Books',
-    image: 'https://images.pexels.com/photos/159711/books-bookstore-book-reading-159711.jpeg?auto=compress&cs=tinysrgb&w=400',
-    count: '142',
-    color: 'from-orange-600 to-amber-500',
-    emoji: '📚'
-  },
-  {
     id: 'photograph',
     name: 'Photography',
     image: '/3d_helper_icon_1775252697443.png',
@@ -252,22 +244,6 @@ export const TOP_CATEGORIES = [
     count: '76',
     color: 'from-orange-800 to-brown-600',
     emoji: '🪵'
-  },
-  {
-    id: 'roommate',
-    name: 'Finding Roommate',
-    image: 'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800',
-    count: '340',
-    color: 'from-emerald-500 to-teal-400',
-    emoji: '👤'
-  },
-  {
-    id: 'nanny-need',
-    name: 'Looking for Nanny',
-    image: 'https://images.pexels.com/photos/3768914/pexels-photo-3768914.jpeg?auto=compress&cs=tinysrgb&w=800',
-    count: '120',
-    color: 'from-pink-400 to-rose-400',
-    emoji: '🍼'
   },
   {
     id: 'catering',

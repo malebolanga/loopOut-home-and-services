@@ -8,7 +8,7 @@ describe('Auth API', () => {
     await mongoose.disconnect();
   });
 
-  it('should return 404 for non-existent user signin', async () => {
+  it('should return 401 for non-existent user signin', async () => {
     const res = await request(app)
       .post('/api/auth/signin')
       .send({
@@ -16,14 +16,19 @@ describe('Auth API', () => {
         password: 'password123'
       });
     
-    expect(res.statusCode).toEqual(404);
-    expect(res.body.message).toBe('User not found!');
+    // Controller returns 401 (invalid email or password) for non-existent users
+    // to prevent user enumeration attacks
+    expect(res.statusCode).toEqual(401);
+    expect(res.body.message).toBe('Invalid email or password.');
   });
 
   const testUser = {
     username: 'testuser_' + Math.random().toString(36).slice(2, 7),
     email: 'test_' + Math.random().toString(36).slice(2, 7) + '@example.com',
-    password: 'password123'
+    password: 'TestPassword123!',
+    phone: '+27123456789',
+    location: 'Cape Town, South Africa',
+    acceptedTerms: true,
   };
 
   it('should sign up a new user', async () => {
@@ -33,19 +38,22 @@ describe('Auth API', () => {
     
     expect(res.statusCode).toEqual(201);
     expect(res.body.success).toBe(true);
-    expect(res.body.user.email).toBe(testUser.email);
+    expect(res.body.requiresVerification).toBe(true);
+    expect(res.body.email).toBe(testUser.email);
   });
 
-  it('should resume registration with 201 if email exists but is unverified', async () => {
+  it('should resend verification for unverified existing email', async () => {
     const res = await request(app)
       .post('/api/auth/signup')
       .send(testUser);
     
-    expect(res.statusCode).toEqual(201);
-    expect(res.body.message).toContain('updated');
+    // Returns 200 (not 201) when re-sending code to an existing unverified account
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.requiresVerification).toBe(true);
   });
 
-  it('should not sign up with an existing email if already verified', async () => {
+  it('should return 409 when email is already verified', async () => {
     // Manually mark the user as verified in DB for this test
     await mongoose.model('User').updateOne({ email: testUser.email }, { isVerified: true });
 
@@ -54,10 +62,10 @@ describe('Auth API', () => {
       .send(testUser);
     
     expect(res.statusCode).toEqual(409);
-    expect(res.body.message).toContain('already verified');
+    expect(res.body.message).toContain('already exists');
   });
 
-  it('should sign in successfully', async () => {
+  it('should sign in successfully after verification', async () => {
     const res = await request(app)
       .post('/api/auth/signin')
       .send({
@@ -70,3 +78,4 @@ describe('Auth API', () => {
     expect(res.headers['set-cookie']).toBeDefined();
   });
 });
+

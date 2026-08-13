@@ -128,7 +128,7 @@ export default function Notifications() {
                 const updated = list.map(n => ((n._id === id || n.id === id) ? { ...n, read: true } : n));
                 localStorage.setItem('loopout_local_notifications', JSON.stringify(updated));
             }
-        } catch (e) {}
+        } catch (_e) { /* ignore */ }
     };
 
     const deleteNotification = async (id) => {
@@ -151,7 +151,7 @@ export default function Notifications() {
                 const updated = list.filter(n => n._id !== id && n.id !== id);
                 localStorage.setItem('loopout_local_notifications', JSON.stringify(updated));
             }
-        } catch (e) {}
+        } catch (_e) { /* ignore */ }
     };
 
     const markAllAsRead = async () => {
@@ -174,7 +174,7 @@ export default function Notifications() {
                 const updated = list.map(n => ({ ...n, read: true }));
                 localStorage.setItem('loopout_local_notifications', JSON.stringify(updated));
             }
-        } catch (e) {}
+        } catch (_e) { /* ignore */ }
     };
 
     const clearAllNotifications = async () => {
@@ -192,7 +192,7 @@ export default function Notifications() {
         setNotifications([]);
         try {
             localStorage.removeItem('loopout_local_notifications');
-        } catch (e) {}
+        } catch (_e) { /* ignore */ }
     };
 
     const getNotificationIcon = (type) => {

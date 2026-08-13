@@ -80,7 +80,9 @@ function EventItem({ event, className = "" }) {
       localStorage.setItem('eventClicks', JSON.stringify(storedClicks));
       setClickCount(storedClicks[event._id]);
       navigate(`/event/${event._id}`);
-    } catch (error) {}
+    } catch (_err) {
+      // Ignore localStorage error
+    }
   };
 
   if (!event?._id) return <div className="bg-slate-50 rounded-[2.5rem] w-full p-4 h-[400px] animate-pulse" />;

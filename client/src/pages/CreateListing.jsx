@@ -1899,22 +1899,6 @@ export default function CreateListing() {
                     selected={selectedCategory === 'events'}
                     onSelect={setSelectedCategory}
                   />
-                  <CategoryCard
-                    id="needs"
-                    icon={QuestionMarkCircleIcon}
-                    label="Post a Need"
-                    description="Looking for something? Ask the community"
-                    selected={selectedCategory === 'needs'}
-                    onSelect={() => navigate('/create-request')}
-                  />
-                  <CategoryCard
-                    id="selling"
-                    icon={TagIcon}
-                    label="Selling"
-                    description="Sell furniture, electronics, clothes, etc."
-                    selected={selectedCategory === 'selling'}
-                    onSelect={setSelectedCategory}
-                  />
                 </div>
               </SectionCard>
             )}

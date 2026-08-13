@@ -19,7 +19,6 @@ import {
   FaRegCheckCircle
 } from 'react-icons/fa';
 import { 
-  IoCheckmarkCircleSharp, 
   IoTimeOutline,
   IoLocationOutline,
   IoCallOutline,
@@ -784,7 +783,7 @@ export default function Helper() {
       )}
 
       {/* Add custom styles for Swiper */}
-      <style jsx>{`
+      <style>{`
         .thumbnail-gallery .swiper-slide {
           opacity: 0.6;
           transition: opacity 0.3s ease;

@@ -56,5 +56,13 @@
     "mongodb-memory-server": "^10.1.4",
     "nodemon": "^3.1.10",
     "supertest": "^7.2.2"
+  },
+  "jest": {
+    "extensionsToTreatAsEsm": [".jsx"],
+    "transform": {},
+    "moduleNameMapper": {
+      "^firebase-admin/app$": "<rootDir>/api/__mocks__/firebase-admin-app.js",
+      "^firebase-admin/auth$": "<rootDir>/api/__mocks__/firebase-admin-auth.js"
+    }
   }
 }

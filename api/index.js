@@ -171,7 +171,7 @@ const messagesLimiter = rateLimit({
 // Auth limiter — skipped outside production to avoid 429s during development
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    limit: 10,
+    limit: isProduction ? 10 : 1000,
     message: { success: false, message: 'Too many sign-in attempts. Please wait a few minutes and try again.' },
     standardHeaders: true,
     legacyHeaders: false,
